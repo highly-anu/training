@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "exercise.schema.json",
+  "title": "Exercise",
+  "description": "An atomic training element. Carries all metadata needed for filtering (equipment, injury), prerequisite checking (requires/unlocks), and progression chaining.",
+  "type": "object",
+  "required": ["id", "name", "category", "modality", "equipment", "effort"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug. e.g. 'kb_swing_two_hand', 'back_squat', 'ruck'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. 'Kettlebell Swing (two-hand)'"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["barbell", "kettlebell", "bodyweight", "aerobic", "loaded_carry", "sandbag", "mobility", "skill", "rehab"],
+      "description": "Which exercise library file this lives in."
+    },
+    "modality": {
+      "type": "array",
+      "description": "Which modalities this exercise develops. An exercise can develop more than one.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "max_strength", "strength_endurance", "relative_strength",
+          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+          "power", "mobility", "movement_skill", "durability",
+          "combat_sport", "rehab"
+        ]
+      },
+      "minItems": 1
+    },
+    "equipment": {
+      "type": "array",
+      "description": "Equipment required. All items must be present for this exercise to be available.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "barbell", "rack", "plates", "kettlebell", "dumbbell",
+          "pull_up_bar", "rings", "parallettes", "rower", "bike",
+          "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
+          "medicine_ball", "resistance_band", "rope", "box",
+          "ghd", "jump_rope", "open_space", "none"
+        ]
+      }
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "max"],
+      "description": "Typical effort level when performed as written. Used for session load management. low = recovery work; max = 1RM attempts, max-effort sprints."
+    },
+    "bilateral": {
+      "type": "boolean",
+      "description": "True if the exercise loads both sides symmetrically. False for unilateral exercises (single-leg, single-arm). Used for injury substitution logic.",
+      "default": true
+    },
+    "movement_patterns": {
+      "type": "array",
+      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "hip_hinge", "squat", "horizontal_push", "horizontal_pull",
+          "vertical_push", "vertical_pull", "loaded_carry", "rotation",
+          "hip_flexion", "knee_extension", "locomotion", "ballistic",
+          "olympic_lift", "isometric", "aerobic_monostructural"
+        ]
+      },
+      "default": []
+    },
+    "requires": {
+      "type": "array",
+      "description": "Prerequisite IDs that must be mastered before this exercise can be programmed. Can reference other exercise IDs or abstract skill IDs (e.g. 'hip_hinge_pattern', 'bracing_mechanics').",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "unlocks": {
+      "type": "array",
+      "description": "Exercise IDs that become available once this exercise is mastered. Defines the edges of the prerequisite graph.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "contraindicated_with": {
+      "type": "array",
+      "description": "Injury flag IDs. If any of these flags are active in the constraint layer, this exercise is excluded from selection.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "progressions": {
+      "type": "object",
+      "description": "How this exercise advances over time. At least one progression axis should be defined.",
+      "properties": {
+        "load": {
+          "type": "string",
+          "description": "How load progresses. e.g. 'increase_bell_weight', 'add_5kg_per_session', 'add_weight_vest'"
+        },
+        "volume": {
+          "type": "string",
+          "description": "How volume progresses. e.g. 'increase_reps_per_set', 'add_sets', 'increase_duration'"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Exercise ID to progress to when this movement is mastered. e.g. 'kb_swing_single_arm'"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scaling_down": {
+      "type": "array",
+      "description": "Exercise IDs to substitute when this exercise is too demanding or prerequisites are not met.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "typical_volume": {
+      "type": "object",
+      "description": "Typical set/rep or time parameters when this exercise appears in a session. Used as default if archetype slot doesn't specify.",
+      "properties": {
+        "sets":        { "type": "integer" },
+        "reps":        { "type": ["integer", "string"] },
+        "duration_sec":{ "type": "integer" },
+        "distance_m":  { "type": "integer" }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": { "type": "string" }
+  }
+}

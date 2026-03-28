@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "modality.schema.json",
+  "title": "Training Modality",
+  "description": "A category of physical quality. Goal profiles weight these; the scheduler uses recovery cost and compatibility rules to place sessions. One file per modality.",
+  "type": "object",
+  "required": ["id", "name", "recovery_cost", "session_position"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug matching the enum used in other schemas. e.g. 'aerobic_base', 'max_strength'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. 'Aerobic Base'"
+    },
+    "description": {
+      "type": "string",
+      "description": "One-sentence definition. e.g. 'Zone 1-2 steady-state work building the aerobic engine.'"
+    },
+    "recovery_cost": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "How demanding this modality is on recovery. Governs minimum rest before repeating. low = can stack on adjacent days; medium = 24h; high = 48h minimum."
+    },
+    "recovery_hours_min": {
+      "type": "integer",
+      "description": "Minimum hours before this modality can be repeated or paired with another high-cost modality.",
+      "minimum": 0
+    },
+    "session_position": {
+      "type": "string",
+      "enum": ["first", "last", "any", "standalone"],
+      "description": "Where in a session this modality should appear when paired with others. 'standalone' means it should not be combined."
+    },
+    "compatible_in_session_with": {
+      "type": "array",
+      "description": "Modality IDs that can share a session with this one. Order matters — list higher-priority pairings first.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "incompatible_in_session_with": {
+      "type": "array",
+      "description": "Modality IDs that must not share a session with this one.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "min_weekly_minutes": {
+      "type": "integer",
+      "description": "Minimum effective weekly volume in minutes. Below this, adaptation does not occur.",
+      "minimum": 0
+    },
+    "max_weekly_minutes": {
+      "type": "integer",
+      "description": "Maximum recoverable weekly volume in minutes. Above this, performance degrades.",
+      "minimum": 0
+    },
+    "typical_session_minutes": {
+      "type": "object",
+      "description": "Typical session length range in minutes.",
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "integer", "minimum": 5 },
+        "max": { "type": "integer", "minimum": 5 }
+      },
+      "additionalProperties": false
+    },
+    "progression_model": {
+      "type": "string",
+      "description": "ID of the primary progression model that governs advancement in this modality.",
+      "enum": [
+        "linear_load", "density", "volume_block", "complexity",
+        "time_to_task", "intensity_split_shift", "rpe_autoregulation",
+        "pentathlon_rpm", "range_progression"
+      ]
+    },
+    "intensity_zones": {
+      "type": "array",
+      "description": "Intensity levels meaningful for this modality. Not all modalities use heart-rate zones.",
+      "items": {
+        "type": "object",
+        "required": ["label", "description"],
+        "properties": {
+          "label":       { "type": "string" },
+          "description": { "type": "string" },
+          "hr_pct_min":  { "type": "number", "minimum": 0, "maximum": 100 },
+          "hr_pct_max":  { "type": "number", "minimum": 0, "maximum": 100 }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": { "type": "string" }
+  }
+}

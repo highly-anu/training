@@ -1,0 +1,44 @@
+id: strength_endurance
+name: Strength Endurance
+description: Higher-rep work under significant load — circuits, complexes, and density intervals that develop the capacity to sustain force output over time.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+
+incompatible_in_session_with:
+  - max_strength
+  - aerobic_base
+
+min_weekly_minutes: 45
+max_weekly_minutes: 240
+
+typical_session_minutes:
+  min: 30
+  max: 75
+
+progression_model: density
+
+intensity_zones:
+  - label: moderate
+    description: 50-65% 1RM, high rep — muscular endurance focus
+  - label: hard
+    description: 65-80% 1RM, moderate rep — strength-endurance threshold
+
+sources:
+  - CrossFit
+  - Gym Jones
+  - Horsemen GPP
+  - Mark Wildman / RKC Kettlebell
+
+notes: >
+  The primary domain of barbell complexes, KB circuits, AMRAP formats, and
+  high-rep sets. Gym Jones identifies this as the most operationally relevant
+  quality for tactical athletes. Do not programme on the same day as max strength —
+  the metabolic fatigue from strength endurance work degrades motor unit recruitment
+  needed for heavy singles and triples. Works well as a standalone day or as a
+  second session 8+ hours after a morning aerobic session.

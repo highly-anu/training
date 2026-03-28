@@ -1,0 +1,446 @@
+exercises:
+
+  - id: hip_circle
+    name: Hip Circle
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [hip_flexion, rotation]
+    requires: []
+    unlocks: [hip_90_90]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 2
+      reps: 10
+    sources: [Ido Portal, Horsemen]
+    notes: Standing hip circumduction — large circles in both directions. Standard joint prep for any lower body session. Low threshold entry movement for hip mobility warm-up sequences.
+
+  - id: hip_90_90
+    name: Hip 90/90 Stretch
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, rotation]
+    requires: []
+    unlocks: [pigeon_pose]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+      complexity: hip_90_90_with_transition
+    scaling_down: [hip_circle]
+    typical_volume:
+      sets: 2
+      duration_sec: 60
+    sources: [Ido Portal]
+    notes: Seated with both hips at 90 degrees — one internally rotated, one externally rotated. Addresses both internal and external hip rotation. Transition between sides is itself a mobility drill. Hold or apply gentle oscillating pressure.
+
+  - id: hip_flexor_stretch
+    name: Hip Flexor Stretch (kneeling)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion]
+    requires: []
+    unlocks: [couch_stretch]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+      complexity: couch_stretch
+    scaling_down: []
+    typical_volume:
+      sets: 2
+      duration_sec: 60
+    sources: [Horsemen, Ido Portal]
+    notes: Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.
+
+  - id: pigeon_pose
+    name: Pigeon Pose
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, rotation]
+    requires: []
+    unlocks: []
+    contraindicated_with: [knee_meniscus_acute]
+    progressions:
+      volume: increase_duration
+    scaling_down: [hip_90_90]
+    typical_volume:
+      sets: 2
+      duration_sec: 90
+    sources: [Ido Portal]
+    notes: External hip rotation stretch targeting piriformis and external rotators. Can be performed supine (figure-4) for those with knee discomfort. Contraindicated with acute meniscus injury due to knee flexion under hip rotation load.
+
+  - id: ankle_circle
+    name: Ankle Circle
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 1
+      reps: 15
+    sources: [Horsemen, Ido Portal]
+    notes: Non-weight-bearing ankle circumduction. Standard joint prep before any lower body or locomotive work. Perform both clockwise and counterclockwise.
+
+  - id: ankle_calf_stretch
+    name: Ankle Calf Stretch (gastrocnemius)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: []
+    unlocks: [soleus_stretch]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: [ankle_circle]
+    typical_volume:
+      sets: 2
+      duration_sec: 60
+    sources: [Ido Portal]
+    notes: Straight-leg calf stretch targeting gastrocnemius. Wall-lean or step-edge variant. Address dorsiflexion restriction before squat depth work.
+
+  - id: soleus_stretch
+    name: Soleus Stretch (bent-knee calf)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: [ankle_calf_stretch]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: [ankle_calf_stretch]
+    typical_volume:
+      sets: 2
+      duration_sec: 60
+    sources: [Ido Portal]
+    notes: Bent-knee ankle flexion stretch isolating soleus. Critical for deep squat dorsiflexion. More directly relevant to squat mechanics than straight-leg variant.
+
+  - id: thoracic_rotation
+    name: Thoracic Rotation (quadruped or seated)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [rotation]
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 2
+      reps: 10
+    sources: [Ido Portal]
+    notes: Quadruped open-book rotation or seated thoracic rotation. Targets mid-back rotational mobility. Prerequisite context for overhead work and rotational patterns. Perform slowly with exhale at end range.
+
+  - id: thoracic_extension_foam_roll
+    name: Thoracic Extension (foam roll)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: [lumbar_disc]
+    progressions:
+      volume: increase_duration
+    scaling_down: [thoracic_rotation]
+    typical_volume:
+      sets: 2
+      duration_sec: 60
+    sources: [Horsemen, Ido Portal]
+    notes: Foam roller placed perpendicular to spine at mid-back. Segment-by-segment extension over roller. Avoid rolling lumbar spine directly. Contraindicated with active lumbar disc pathology due to spinal extension load.
+
+  - id: shoulder_circle
+    name: Shoulder Circle
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: []
+    requires: []
+    unlocks: [shoulder_dislocate_pvc]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 1
+      reps: 15
+    sources: [Ido Portal, Horsemen]
+    notes: Standing arm circles in both directions at varied speeds. Standard shoulder joint prep before any upper body or overhead work. Both forward and backward directions required.
+
+  - id: shoulder_dislocate_pvc
+    name: Shoulder Dislocate (PVC pipe)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [vertical_push, horizontal_pull]
+    requires: [shoulder_circle]
+    unlocks: []
+    contraindicated_with: [shoulder_instability, wrist_injury, shoulder_impingement]
+    progressions:
+      volume: increase_reps_per_set
+      load: narrow_grip
+    scaling_down: [shoulder_circle, band_pull_apart]
+    typical_volume:
+      sets: 2
+      reps: 10
+    sources: [Ido Portal]
+    notes: Wide-grip PVC pass from front to overhead to behind back and return. Progressively narrow grip as shoulder mobility improves. Contraindicated with shoulder instability (hypermobility) or wrist pathology. Use resistance band as regression if PVC feels binding.
+
+  - id: band_pull_apart
+    name: Band Pull-Apart
+    category: mobility
+    modality: [mobility]
+    equipment: [resistance_band]
+    effort: low
+    bilateral: true
+    movement_patterns: [horizontal_pull]
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      load: increase_band_resistance
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 20
+    sources: [Horsemen, Ido Portal]
+    notes: Horizontal band pull-apart at chest height or overhead. Activates posterior deltoid, infraspinatus, and lower trapezius. Critical for shoulder health maintenance. Prehab staple for any pressing-heavy program.
+
+  - id: face_pull
+    name: Face Pull (band or cable)
+    category: mobility
+    modality: [mobility]
+    equipment: [resistance_band]
+    effort: low
+    bilateral: true
+    movement_patterns: [horizontal_pull]
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      load: increase_band_resistance
+      volume: increase_reps_per_set
+    scaling_down: [band_pull_apart]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [Horsemen]
+    notes: Pull toward face with thumbs-up grip, elbows high and flared. Full external rotation at end range. Targets rotator cuff, posterior deltoid, and lower/mid trapezius. High-frequency exercise; can be performed daily as prehab without recovery cost.
+
+  - id: wrist_circle
+    name: Wrist Circle
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: []
+    requires: []
+    unlocks: [wrist_flexion_stretch, wrist_extension_stretch]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 1
+      reps: 15
+    sources: [Ido Portal]
+    notes: Wrist circumduction in both directions. Part of Ido Portal wrist prep routine. Perform before any load-bearing hand position (push-ups, handstands, kettlebell work).
+
+  - id: wrist_flexion_stretch
+    name: Wrist Flexion Stretch
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: [wrist_circle]
+    unlocks: []
+    contraindicated_with: [wrist_injury]
+    progressions:
+      volume: increase_duration
+    scaling_down: [wrist_circle]
+    typical_volume:
+      sets: 2
+      duration_sec: 30
+    sources: [Ido Portal]
+    notes: Extend arm forward, pull fingers back toward body to stretch wrist flexors. Part of Ido Portal wrist routine. Contraindicated with acute wrist injury.
+
+  - id: wrist_extension_stretch
+    name: Wrist Extension Stretch
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: [wrist_circle]
+    unlocks: []
+    contraindicated_with: [wrist_injury]
+    progressions:
+      volume: increase_duration
+    scaling_down: [wrist_circle]
+    typical_volume:
+      sets: 2
+      duration_sec: 30
+    sources: [Ido Portal]
+    notes: Point fingers down and press back of hand away to stretch wrist extensors. Counterbalances flexion stretch. Use floor press (quadruped wrist mobility) as loaded variant.
+
+  - id: squat_clinic
+    name: Ido Portal Squat Clinic Routine
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [squat, hip_flexion]
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: [ankle_calf_stretch, hip_flexor_stretch]
+    typical_volume:
+      sets: 1
+      duration_sec: 300
+    sources: [Ido Portal]
+    notes: Ido Portal's standardized squat mobility sequence — includes deep squat hold, weight shift, heel raises, internal/external rotation exploration, and ankle mobilization. Performed as one continuous set at session start. Duration 3-5 min. Part of the standard Floreio warm-up.
+
+  - id: scapula_mobilization
+    name: Scapula Mobilization
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: [shoulder_circle]
+    typical_volume:
+      sets: 3
+      duration_sec: 60
+    sources: [Ido Portal]
+    notes: Scapular protraction/retraction, depression/elevation, and circumduction. Listed in Ido Portal's cool-down (3 sets, 60-sec rest). Addresses scapulohumeral rhythm restrictions. Perform as cool-down staple after any overhead or pushing session.
+
+  - id: couch_stretch
+    name: Couch Stretch (hip flexor/quad)
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, knee_extension]
+    requires: [hip_flexor_stretch]
+    unlocks: []
+    contraindicated_with: [knee_meniscus_acute, patellar_tendinopathy_acute]
+    progressions:
+      volume: increase_duration
+    scaling_down: [hip_flexor_stretch]
+    typical_volume:
+      sets: 2
+      duration_sec: 120
+    sources: [Horsemen, Ido Portal]
+    notes: Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.
+
+  - id: world_greatest_stretch
+    name: World Greatest Stretch
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, rotation, squat]
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: [hip_flexor_stretch, thoracic_rotation]
+    typical_volume:
+      sets: 2
+      reps: 5
+    sources: [Horsemen]
+    notes: Lunge forward, drop elbow to floor inside front foot, rotate arm overhead — combined hip flexor, thoracic rotation, and ankle mobility in one movement. Standard pre-session prep. Performed slowly with 3-sec pause at each position for maximum benefit.
+
+  - id: neck_rotation
+    name: Neck Rotation
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: [cervical_spine_injury]
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 1
+      reps: 10
+    sources: [Horsemen]
+    notes: Slow, controlled cervical rotation to each side. Standard joint prep. No forceful range of motion. Contraindicated with active cervical spine injury.
+
+  - id: neck_lateral_flexion
+    name: Neck Lateral Flexion
+    category: mobility
+    modality: [mobility]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: [cervical_spine_injury]
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 1
+      reps: 10
+    sources: [Horsemen]
+    notes: Slow ear-to-shoulder lateral neck flexion. Targets scalenes and lateral cervical musculature. Complements neck rotation in cervical joint prep sequence. Contraindicated with active cervical spine injury.

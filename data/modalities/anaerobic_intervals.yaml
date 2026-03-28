@@ -1,0 +1,50 @@
+id: anaerobic_intervals
+name: Anaerobic Intervals
+description: Short, maximal-effort intervals at Zone 4-5 — Tabata, 400m sprints, 30-sec all-out pieces — targeting VO2max and lactic capacity.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+
+incompatible_in_session_with:
+  - max_strength
+  - aerobic_base
+  - mixed_modal_conditioning
+
+min_weekly_minutes: 20
+max_weekly_minutes: 90
+
+typical_session_minutes:
+  min: 20
+  max: 45
+
+progression_model: time_to_task
+
+intensity_zones:
+  - label: zone_4
+    description: Threshold to VO2max pace — sustainable for 3-8 min intervals, HR 85-92% max
+    hr_pct_min: 85
+    hr_pct_max: 92
+  - label: zone_5
+    description: Maximal output — sub-30 sec to 2 min, full sprint effort, HR 92-100% max
+    hr_pct_min: 92
+    hr_pct_max: 100
+
+sources:
+  - CrossFit
+  - CrossFit Endurance
+  - Gym Jones
+
+notes: >
+  Includes Tabata intervals, 500m row pieces, 400m sprint repeats, and 30-sec
+  all-out sprints with full rest. Gym Jones prescribes 1:2 work-to-rest ratio
+  for threshold intervals and 1:4 or more for maximal sprint work. High
+  neurological and metabolic cost requires 48h before a repeat session or before
+  any other high-cost modality. Do not programme on the same day or adjacent day
+  as max strength — both draw from the same CNS and glycolytic reserves. Weekly
+  cap of 90 min prevents chronic sympathetic overreaching; below 20 min per week
+  provides insufficient stimulus. Mobility may follow as cool-down.

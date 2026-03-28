@@ -1,0 +1,47 @@
+id: combat_sport
+name: Combat Sport
+description: BJJ drilling, positional sparring, grip conditioning, and isometric endurance work specific to grappling sports — mat time that has no substitute.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+  - rehab
+
+incompatible_in_session_with:
+  - max_strength
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+
+min_weekly_minutes: 60
+max_weekly_minutes: 420
+
+typical_session_minutes:
+  min: 60
+  max: 120
+
+progression_model: density
+
+intensity_zones:
+  - label: drilling
+    description: Technical drilling and positional repetition — low intensity, high focus
+  - label: sparring
+    description: Live rolling — high physical and neurological demand, full systemic stress
+
+sources:
+  - BJJ (combat sport as modality and constraint)
+
+notes: >
+  Mat time is non-transferable; sparring has no substitute. The conditioning
+  demands of BJJ are isometric endurance (hip escapes, frames, clinch), explosive
+  hip extension, and grip endurance. A full sparring session is classified high
+  recovery cost — equivalent to a hard mixed modal session in systemic stress.
+  Drilling alone is medium cost but combined sessions (drilling + rounds) warrant
+  48h. Joint health (shoulders, knees, neck) must be actively maintained alongside
+  this modality. Mobility and rehab are the only modalities that can appear in
+  the same session — as warm-up joint prep or post-session tissue work.
+  Weekly volume ceiling of 420 min (7h) reflects serious competitor load;
+  recreational practitioners should cap at 180-240 min.

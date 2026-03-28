@@ -1,0 +1,49 @@
+id: movement_skill
+name: Movement / Skill
+description: Locomotion, coordination, pattern acquisition, and movement quality — tumbling, balance, crawling, flow sequences, and technical skill practice at sub-maximal intensity.
+
+recovery_cost: medium
+recovery_hours_min: 24
+
+session_position: any
+
+compatible_in_session_with:
+  - mobility
+  - aerobic_base
+  - relative_strength
+
+incompatible_in_session_with:
+  - max_strength
+  - strength_endurance
+  - anaerobic_intervals
+
+min_weekly_minutes: 20
+max_weekly_minutes: 180
+
+typical_session_minutes:
+  min: 15
+  max: 60
+
+progression_model: complexity
+
+intensity_zones:
+  - label: acquisition
+    description: New pattern learning — slow, deliberate, fragmented repetition
+  - label: integration
+    description: Practiced patterns at normal speed — chaining movements, flow states
+  - label: expression
+    description: Spontaneous movement — improvisation, full-speed application under novel constraint
+
+sources:
+  - Ido Portal
+
+notes: >
+  Encompasses Ido Portal's movement practice: locomotion (crawling, rolling,
+  jumping, climbing), groundwork (floreio, capoeira patterns), balance, and
+  coordination drills. The progression model is complexity: isolation of a
+  single pattern → integration into sequences → spontaneous expression. Medium
+  recovery cost because skill acquisition is neurologically demanding but not
+  mechanically stressful enough to require 48h. Works well early in a session
+  before fatigue degrades motor learning, or as a standalone practice. Avoid
+  pairing with heavy lifting or high-intensity conditioning — accumulated
+  fatigue blocks motor learning.

@@ -1,0 +1,91 @@
+id: sof_operator
+name: SOF Operator / Horsemen Standard
+description: >
+  For special operations personnel or high-performing tactical athletes targeting
+  the Horsemen GPP standard. Emphasizes repeatable output under fatigue, structural
+  durability, broad work capacity, and strength endurance across all domains.
+
+event_date: null
+
+priorities:
+  durability: 0.30
+  strength_endurance: 0.25
+  aerobic_base: 0.20
+  max_strength: 0.15
+  power: 0.10
+
+primary_sources:
+  - horsemen_gpp
+  - gym_jones
+  - crossfit
+  - wildman_kettlebell
+
+phase_sequence:
+  - phase: base
+    weeks: 6
+    focus: >
+      Establish aerobic base and structural strength. 3×5 linear barbell
+      progression (squat, deadlift, press). Zone 2 runs 3–4×/week. KB
+      ballistic technique development. Joint prep daily. No max effort yet.
+  - phase: build
+    weeks: 6
+    focus: >
+      Increase work capacity and strength endurance. Introduce sandbag
+      complexes, loaded carries, EMOM density work. Ruck distances extend.
+      SSST prep begins (KB snatch volume). Strength transitions to 5×5
+      and power endurance circuits.
+    priority_override:
+      strength_endurance: 0.30
+      durability: 0.30
+      aerobic_base: 0.20
+      max_strength: 0.10
+      power: 0.10
+  - phase: maintenance
+    weeks: 4
+    focus: >
+      Sport/job-specific conditioning. PT test standards (3-mile run, pull-ups,
+      push-ups, SSST). Named Horsemen workouts at test intensity. Strength
+      holds at maintenance volume (2×/week). Mental durability emphasis.
+    priority_override:
+      strength_endurance: 0.30
+      durability: 0.25
+      aerobic_base: 0.20
+      power: 0.15
+      max_strength: 0.10
+  - phase: maintenance
+    weeks: 4
+    focus: >
+      Sustain achieved fitness. Reduced volume, maintained intensity.
+      Alternating recovery weeks (active 65% MHR) with test-intensity
+      sessions. Keep SSST and run standards sharp. Avoid overtraining.
+    priority_override:
+      durability: 0.30
+      strength_endurance: 0.25
+      aerobic_base: 0.25
+      max_strength: 0.10
+      power: 0.10
+
+minimum_prerequisites:
+  pull_up_reps: 10
+  back_squat_bw_pct: 1.0
+  deadlift_bw_pct: 1.5
+  run_3mile_min: 27
+  ssst_reps: 100
+
+incompatible_with: []
+
+framework_selection:
+  default_framework: concurrent_training
+  alternatives:
+    - framework_id: gpp_circuits
+      condition: days_per_week <= 4
+    - framework_id: block_periodization
+      condition: max_strength_deficit == true
+
+notes: >
+  Horsemen GPP is the primary source: durability over peak performance,
+  repeatable output under fatigue. Gym Jones principles govern mental
+  approach and block structure. Crossfit's mixed-modal conditioning fills
+  job-specific slots. KB ballistics (Wildman/RKC) drive SSST prep and
+  power endurance. Horsemen benchmark targets: deadlift 2.5×BW,
+  3-mile run sub-20:00, SSST 200+ reps (Team Guy Standard), pull-ups 15+.

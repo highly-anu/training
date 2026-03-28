@@ -1,0 +1,316 @@
+exercises:
+
+  - id: sb_deadlift
+    name: Sandbag Deadlift
+    category: sandbag
+    modality: [max_strength, durability]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [hip_hinge]
+    requires: [hip_hinge_pattern, bracing_mechanics]
+    unlocks: [sb_clean, sb_bent_row]
+    contraindicated_with: [lumbar_disc, acute_low_back]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [hip_hinge_pattern]
+    typical_volume:
+      sets: 4
+      reps: 6
+    sources: [Horsemen]
+    notes: Foundational sandbag pattern. Bag sits on floor; grip around middle or handles. Unstable load demands strong bracing compared to barbell equivalent.
+
+  - id: sb_clean
+    name: Sandbag Clean
+    category: sandbag
+    modality: [power, strength_endurance]
+    equipment: [sandbag]
+    effort: high
+    bilateral: true
+    movement_patterns: [hip_hinge, ballistic, olympic_lift]
+    requires: [sb_deadlift, hip_hinge_pattern]
+    unlocks: [sb_clean_press, sb_complex]
+    contraindicated_with: [lumbar_disc, acute_low_back, wrist_injury]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [sb_deadlift]
+    typical_volume:
+      sets: 4
+      reps: 5
+    sources: [Horsemen]
+    notes: Power clean mechanics applied to sandbag. Clean to shoulder or front rack position depending on bag style. Unstable load requires strong lat engagement at pull initiation.
+
+  - id: sb_clean_press
+    name: Sandbag Clean and Press
+    category: sandbag
+    modality: [power, strength_endurance, durability]
+    equipment: [sandbag]
+    effort: high
+    bilateral: true
+    movement_patterns: [hip_hinge, ballistic, vertical_push, olympic_lift]
+    requires: [sb_clean, vertical_push_pattern]
+    unlocks: [sb_complex]
+    contraindicated_with: [shoulder_impingement, shoulder_instability, wrist_injury, lumbar_disc]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [sb_clean, sb_press_overhead]
+    typical_volume:
+      sets: 5
+      reps: 3
+    sources: [Horsemen]
+    notes: Core Horsemen compound — clean to shoulder then strict or push press overhead. Used in complexes and EMOM density work. Contraindicated with shoulder and wrist injuries due to overhead demand under unstable load.
+
+  - id: sb_squat
+    name: Sandbag Back Squat (shoulder carry)
+    category: sandbag
+    modality: [max_strength, durability, strength_endurance]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [squat]
+    requires: [squat_pattern, bracing_mechanics]
+    unlocks: [sb_squat_jump, sb_lunge]
+    contraindicated_with: [lumbar_disc, acute_low_back, knee_meniscus_acute]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [bodyweight_squat]
+    typical_volume:
+      sets: 4
+      reps: 8
+    sources: [Horsemen]
+    notes: Bag draped over one or both shoulders (bearhug or shoulder carry). Asymmetric loading variant challenges lateral bracing. Count toward durability due to non-standard carry position.
+
+  - id: sb_front_squat
+    name: Sandbag Front Squat
+    category: sandbag
+    modality: [max_strength, durability]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [squat]
+    requires: [squat_pattern, bracing_mechanics, sb_clean]
+    unlocks: [sb_squat_jump]
+    contraindicated_with: [lumbar_disc, acute_low_back, knee_meniscus_acute, wrist_injury]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [sb_squat, bodyweight_squat]
+    typical_volume:
+      sets: 4
+      reps: 6
+    sources: [Horsemen]
+    notes: Bag held in front rack / bearhug position. Demands strong thoracic extension and anterior bracing. Appears in Horsemen strength days and named complexes.
+
+  - id: sb_bent_row
+    name: Sandbag Bent-Over Row
+    category: sandbag
+    modality: [max_strength, durability]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [horizontal_pull, hip_hinge]
+    requires: [hip_hinge_pattern, bracing_mechanics]
+    unlocks: []
+    contraindicated_with: [lumbar_disc, acute_low_back]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [sb_deadlift]
+    typical_volume:
+      sets: 4
+      reps: 8
+    sources: [Horsemen]
+    notes: Hinge to roughly 45-degree torso angle; pull bag to lower chest. Unstable bag challenges grip and lat engagement throughout.
+
+  - id: sb_carry_shoulder
+    name: Sandbag Shoulder Carry (single shoulder)
+    category: sandbag
+    modality: [durability, strength_endurance]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: false
+    movement_patterns: [loaded_carry]
+    requires: [bracing_mechanics]
+    unlocks: [sb_getup]
+    contraindicated_with: [lumbar_disc, acute_low_back, shoulder_instability]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_duration
+    scaling_down: [sb_carry_bearhug]
+    typical_volume:
+      sets: 4
+      duration_sec: 60
+    sources: [Horsemen]
+    notes: Bag loaded on one shoulder for distance or time. Heavily asymmetric — trains lateral bracing and single-side stability. Alternate shoulders each set or each round.
+
+  - id: sb_carry_bearhug
+    name: Sandbag Bearhug Carry
+    category: sandbag
+    modality: [durability, strength_endurance]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [loaded_carry]
+    requires: [bracing_mechanics]
+    unlocks: [sb_carry_shoulder]
+    contraindicated_with: [lumbar_disc, acute_low_back]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 4
+      duration_sec: 60
+    sources: [Horsemen]
+    notes: Bag held tight against chest, arms wrapped around. Compresses anterior chain; excellent for work capacity circuits. Used in Horsemen GPP carries and loaded intervals.
+
+  - id: sb_getup
+    name: Sandbag Get-Up
+    category: sandbag
+    modality: [durability, strength_endurance]
+    equipment: [sandbag]
+    effort: high
+    bilateral: false
+    movement_patterns: [hip_hinge, isometric]
+    requires: [kb_tgu, hip_hinge_pattern, bracing_mechanics]
+    unlocks: [sb_complex]
+    contraindicated_with: [lumbar_disc, shoulder_instability, knee_meniscus_acute]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [kb_tgu, sb_carry_shoulder]
+    typical_volume:
+      sets: 5
+      reps: 20
+    sources: [Horsemen]
+    notes: TGU mechanics with sandbag on shoulder instead of kettlebell overhead. Used in Horsemen warm-ups and SMMF challenges (100 get-ups at 85-95#). Asymmetric load is more forgiving than overhead KB but demands robust bracing. Cited volume — 20 reps each shoulder at 80# — is a standard warm-up block.
+
+  - id: sb_lunge
+    name: Sandbag Lunge
+    category: sandbag
+    modality: [strength_endurance, durability]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: false
+    movement_patterns: [squat, locomotion]
+    requires: [squat_pattern, bracing_mechanics]
+    unlocks: [sb_complex]
+    contraindicated_with: [knee_meniscus_acute, lumbar_disc]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [bodyweight_lunge]
+    typical_volume:
+      sets: 4
+      reps: 10
+    sources: [Horsemen]
+    notes: Walking lunge with bag on shoulder or in bearhug. Appears in Horsemen power endurance work ("Counting Dead Bodies") and SMMF 500m lunge challenge. Alternate carry position every 50m in long-distance variants.
+
+  - id: sb_halfmoon
+    name: Sandbag Half Moon
+    category: sandbag
+    modality: [durability, strength_endurance, power]
+    equipment: [sandbag]
+    effort: high
+    bilateral: false
+    movement_patterns: [rotation, hip_hinge, ballistic]
+    requires: [bracing_mechanics, hip_hinge_pattern]
+    unlocks: [sb_slam]
+    contraindicated_with: [lumbar_disc, lumbar_rotation_injury]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [sb_bent_row]
+    typical_volume:
+      sets: 3
+      reps: 8
+    sources: [Horsemen]
+    notes: "From Horsemen notes — 'reach over body, pick up, arc high overhead, place down other side.' Heavy rotational ballistic. Strong bracing absolutely required throughout arc. Contraindicated with lumbar disc pathology due to combination of flexion-rotation under load."
+
+  - id: sb_squat_jump
+    name: Sandbag Squat Jump
+    category: sandbag
+    modality: [power, strength_endurance]
+    equipment: [sandbag]
+    effort: high
+    bilateral: true
+    movement_patterns: [squat, ballistic]
+    requires: [squat_pattern, bracing_mechanics, sb_squat]
+    unlocks: [sb_complex]
+    contraindicated_with: [knee_meniscus_acute, lumbar_disc, patellar_tendinopathy_acute]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [sb_squat, bodyweight_squat_jump]
+    typical_volume:
+      sets: 4
+      reps: 6
+    sources: [Horsemen]
+    notes: Explosive jump from squat position while holding sandbag in bearhug or shoulder carry. Appears in Horsemen power work and leg blaster variants. Land soft; prioritize triple extension at peak.
+
+  - id: sb_slam
+    name: Sandbag Slam
+    category: sandbag
+    modality: [power, mixed_modal_conditioning]
+    equipment: [sandbag]
+    effort: high
+    bilateral: true
+    movement_patterns: [ballistic, vertical_push]
+    requires: [bracing_mechanics]
+    unlocks: []
+    contraindicated_with: [lumbar_disc, shoulder_instability, acute_low_back]
+    progressions:
+      load: increase_sandbag_weight
+      volume: increase_reps_per_set
+    scaling_down: [medicine_ball_slam]
+    typical_volume:
+      sets: 4
+      reps: 10
+    sources: [Horsemen]
+    notes: Lift bag overhead and throw/slam it down with maximal force. Unlike medicine ball slams, the bag doesn't bounce — requires picking it back up, adding a hip hinge rep per slam. Metabolically demanding. Used in Tabata Hell (Horsemen) and conditioning circuits.
+
+  - id: sb_press_overhead
+    name: Sandbag Overhead Press
+    category: sandbag
+    modality: [max_strength, durability]
+    equipment: [sandbag]
+    effort: medium
+    bilateral: true
+    movement_patterns: [vertical_push]
+    requires: [vertical_push_pattern, bracing_mechanics, sb_clean]
+    unlocks: [sb_clean_press]
+    contraindicated_with: [shoulder_impingement, shoulder_instability, wrist_injury, lumbar_disc]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [sb_clean]
+    typical_volume:
+      sets: 4
+      reps: 5
+    sources: [Horsemen]
+    notes: Strict press from shoulder or front rack position. Unstable bag demands more shoulder stabilizer activation than barbell. Can be pressed from one shoulder for unilateral challenge.
+
+  - id: sb_complex
+    name: Horsemen Sandbag Complex
+    category: sandbag
+    modality: [strength_endurance, durability, mixed_modal_conditioning]
+    equipment: [sandbag]
+    effort: max
+    bilateral: false
+    movement_patterns: [hip_hinge, squat, vertical_push, loaded_carry, ballistic]
+    requires: [sb_clean, sb_front_squat, sb_clean_press, sb_lunge, bracing_mechanics]
+    unlocks: []
+    contraindicated_with: [lumbar_disc, shoulder_impingement, shoulder_instability, knee_meniscus_acute]
+    progressions:
+      load: increase_sandbag_weight
+      volume: add_sets
+    scaling_down: [sb_clean_press, sb_front_squat]
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources: [Horsemen]
+    notes: "Named Horsemen complex — multiple sandbag movements chained without rest. Example sequence: clean to shoulder → 5 deep squats → carry 40ft → drag back (ref: Double Eagle). Other variants chain clean + press + lunge. Used in EMOM format: 2× clean & squat + 3 burpees every minute for 20 min ('Teabag Your Buddy Tonight'). Treat reps as complex rounds — one rep = full sequence."

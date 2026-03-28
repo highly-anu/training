@@ -1,0 +1,78 @@
+id: gpp_circuits
+name: GPP Circuits (Horsemen / SOF-style)
+source_philosophy: horsemen_gpp
+
+goals_served:
+  - durability
+  - strength_endurance
+  - mixed_modal_conditioning
+  - max_strength
+
+sessions_per_week:
+  durability: 2
+  mixed_modal_conditioning: 1
+  max_strength: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.10
+  zone3_pct: 0.35
+  zone4_5_pct: 0.35
+  max_effort_pct: 0.20
+
+progression_model: time_to_task
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 2
+  days_per_week_max: 5
+  goal_priority_min:
+    durability: 0.2
+
+incompatible_with:
+  - framework_id: linear_progression
+    reason: >
+      GPP circuit volume and mixed-modal fatigue accumulation interferes with the
+      full systemic recovery required by linear progression. High-rep, multi-modal
+      circuit work elevates cortisol and delays muscle protein synthesis on barbell
+      training days.
+    interference_level: manageable
+    mitigation: >
+      Reduce circuit frequency to 1 session/week during active linear progression.
+      Schedule circuit day as far as possible from heavy barbell sessions (e.g.
+      Saturday if strength days are Mon/Wed/Fri). Keep circuit intensity moderate.
+  - framework_id: polarized_80_20
+    reason: >
+      GPP circuits operate predominantly in Zone 3-4, accumulating the type of
+      moderate-high intensity fatigue that polarized theory explicitly avoids to
+      protect aerobic base development quality.
+    interference_level: manageable
+    mitigation: >
+      If aerobic base is the primary goal, replace circuit sessions with Zone 1-2
+      aerobic work and limit GPP circuits to 1 session/week as a supplementary
+      work capacity stimulus. Do not count circuit sessions as aerobic base volume.
+
+sources:
+  - "Horsemen Training Program 2008"
+  - "Gym Jones — Operator Fitness I & II (Twight)"
+  - "Dan John — Never Let Go"
+  - "CrossFit — GPP methodology (Glassman)"
+
+notes: >
+  GPP (General Physical Preparedness) circuits build broad work capacity, durability,
+  and repeatable output under fatigue — the Horsemen core standard. Circuit formats
+  include sandbag complexes (5-8 movements, 3-5 rounds), loaded carry circuits
+  (farmer/rack/overhead), and bodyweight circuits (push/pull/hinge/squat time domain).
+  Progression via time-to-task: the same circuit completed faster, with more load, or
+  with less rest. Named benchmarks serve as fixed-task standards (e.g. "Fan Dance":
+  22km, +1000m elevation, 30kg pack, 4h). Horsemen SMMF (Slow Massive Movement)
+  workouts — 100-rep challenges, 500m lunge, 1-mile heavy bag carry — are the
+  extreme end of this framework: single massive efforts testing work capacity and
+  mental durability simultaneously (Twight: "The mind is the primary limiter").
+  Equipment-minimal approach: sandbag, barbell, bodyweight, and a ruck cover the
+  full framework. 4-day Horsemen weekly template: Mon strength complex (sandbag or
+  barbell), Tue conditioning (AMRAP/circuit), Thu loaded carries + bodyweight, Sat
+  long ruck or GPP circuit.

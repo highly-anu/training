@@ -1,0 +1,89 @@
+id: gym_jones_operator_strength
+name: "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)"
+modality: max_strength
+category: strength
+duration_estimate_minutes: 60
+required_equipment:
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+notes: >
+  Gym Jones Operator Fitness I and II primary strength session structure.
+  Opens with a wall squat mobility drill, then progresses to the unilateral
+  strength block: single-leg squat (box) or weighted step-up. The session
+  closes with the Front Leaning Rest (FLR) on rings — 300 accumulated seconds
+  of ring support hold as a shoulder and core endurance block.
+  Principle: relative strength over absolute strength. No bilateral barbell
+  work in this template — all primary loading is unilateral.
+
+slots:
+  - role: warm_up_mobility
+    slot_type: sets_reps
+    sets: 3
+    reps: 5
+    intensity: low
+    exercise_filter:
+      movement_pattern: squat
+      category: mobility
+    notes: "Wall squat mobility drill. 3×5 before any lower body session."
+
+  - role: primary_strength
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    intensity: heavy
+    exercise_filter:
+      movement_pattern: squat
+      category: bodyweight
+    notes: >
+      Unilateral squat strength. Single-leg squat (box) 5×5 each side.
+      Progress by lowering box height toward pistol range.
+      If box pistols are mastered, advance to weighted step-up.
+
+  - role: loaded_step
+    slot_type: sets_reps
+    sets: 5
+    reps: 2
+    intensity: heavy
+    exercise_filter:
+      movement_pattern: step_up
+    notes: >
+      Weighted step-up 5×2 each side at heavy load (work up to 95–135 lb
+      barbell or equivalent DB). Rest 60 sec between sets. Eliminate all
+      trailing-leg assistance.
+
+  - role: shoulder_core_endurance
+    slot_type: static_hold
+    sets: 5
+    hold_seconds: 60
+    intensity: medium
+    exercise_filter:
+      movement_pattern: isometric
+      category: bodyweight
+    notes: >
+      FLR (Front Leaning Rest) on rings — 300 accumulated seconds.
+      5×60 sec ring support hold, rings turned out. Rest as needed between sets.
+      If rings are unavailable, substitute plank hold on floor.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: "Reduce to 3×3 on the strength block. Hold FLR for 3×30 sec. Keep mobility drill unchanged."
+  time_limited:
+    drop_slots:
+      - loaded_step
+    notes: "Drop loaded step-up if time < 40 min. Prioritize mobility + primary unilateral strength + FLR."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: rings
+        substitute_approach: "Substitute plank hold (floor or push-up position) for ring support hold."

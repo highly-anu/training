@@ -1,0 +1,61 @@
+id: ruck_session
+name: "Ruck Session (Distance × Load)"
+modality: durability
+category: gpp_durability
+duration_estimate_minutes: 90
+required_equipment:
+  - ruck_pack
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+sources:
+  - "Horsemen"
+  - "Uphill Athlete"
+notes: >
+  Rucking session — sustained loaded walking or hiking. The primary GPP and durability
+  builder in Horsemen and SOF-style programming. Develops aerobic base, posterior chain
+  and spinal loading tolerance, foot and ankle durability, and mental conditioning.
+  Progression is via distance, then load, then speed (time-to-task). Elite standard
+  (Fan Dance): 22km, +1000m elevation gain, 30kg pack, under 4 hours.
+  Personal benchmarks: entry = 2km in 10 min with pack; intermediate = 10km in 48 min
+  unloaded; advanced = 20km in 2h20 with pack.
+  Ruck in any terrain (flat, hills, trail); elevation gain is premium for mountain/alpine goals.
+  HR should stay at Zone 2 on flat; Zone 3 on ascents is acceptable. This is not a run.
+  Load range: 10–30 kg. Start athletes at 10–15 kg and progress load only after
+  distance is comfortable.
+
+slots:
+  - role: ruck_main
+    slot_type: distance
+    distance_m: 12000
+    intensity: zone2
+    exercise_filter:
+      movement_pattern: ruck
+      category: aerobic
+    notes: >
+      Default 12km ruck. Adjust distance_m at generation time per phase and athlete level:
+        Entry: 5–8 km, 10–15 kg pack
+        Intermediate: 10–15 km, 15–20 kg pack
+        Advanced: 15–25 km, 20–30 kg pack
+        Elite: 22 km + 1000m elevation, 30 kg, <4 hours (Fan Dance standard)
+      Terrain: flat for base building; add elevation in build and peak phases.
+      Effort: conversational pace on flat sections. Push on hills.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce distance by 40% and drop pack weight 5 kg. Deload ruck should feel easy — regenerative not stressful."
+  time_limited:
+    drop_slots: []
+    notes: >
+      Ruck is a single-slot session. Shorten by reducing distance. Minimum useful ruck
+      is ~30 min (~4–5 km) to get cardiovascular and tissue loading benefit.
+      Below 30 min, switch to a different archetype.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: ruck_pack
+        substitute_approach: "Use a backpack loaded with books, water bottles, or sandbag filler. Purpose-built ruck packs are preferred for weight distribution but any sturdy pack works."

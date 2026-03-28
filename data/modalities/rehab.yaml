@@ -1,0 +1,50 @@
+id: rehab
+name: Rehab
+description: Injury-specific therapeutic loading — isometrics, low-load progressive exercises, joint prep, and clinical protocols applied under injury or post-operative constraints.
+
+recovery_cost: low
+recovery_hours_min: 0
+
+session_position: any
+
+compatible_in_session_with:
+  - mobility
+  - aerobic_base
+  - combat_sport
+
+incompatible_in_session_with:
+  - max_strength
+  - power
+  - anaerobic_intervals
+
+min_weekly_minutes: 20
+max_weekly_minutes: 120
+
+typical_session_minutes:
+  min: 10
+  max: 40
+
+progression_model: range_progression
+
+intensity_zones:
+  - label: therapeutic
+    description: Sub-pain-threshold loading — isometrics, quad sets, SLR, band work
+  - label: progressive_load
+    description: Graduated mechanical load — step-ups, split squats, face pulls, eccentric work
+
+sources:
+  - Marcus Filly / Functional Bodybuilding
+  - ATG / Knees Over Toes
+  - Kelly Starrett / Supple Leopard
+
+notes: >
+  Rehab is a first-class modality in this system, not an interruption. It is
+  active during the rehab and post_op training phases and may be woven into any
+  phase as a maintenance layer for a managed injury. Low recovery cost because
+  loads are sub-maximal and the intent is therapeutic — tissue stimulation without
+  systemic stress. Can be performed daily. Progression model is range_progression:
+  load and ROM increase as tissue tolerance improves. Specific protocols are
+  defined in plan.md Section 10. Examples: knee rehab (quad sets → SLR → heel
+  slides → step-ups → Bulgarian split squat → partial squat); shoulder rehab
+  (band pull-aparts → face pulls → landmine press → TGU rack hold). Always
+  operates within the constraints of active injury flags.

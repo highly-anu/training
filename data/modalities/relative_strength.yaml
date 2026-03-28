@@ -1,0 +1,45 @@
+id: relative_strength
+name: Relative Strength
+description: Strength expressed as a ratio of bodyweight — gymnastics, calisthenics, ring work, and weighted bodyweight movements demanding high skill alongside force production.
+
+recovery_cost: medium
+recovery_hours_min: 24
+
+session_position: first
+
+compatible_in_session_with:
+  - mobility
+  - movement_skill
+  - aerobic_base
+
+incompatible_in_session_with:
+  - max_strength
+
+min_weekly_minutes: 30
+max_weekly_minutes: 180
+
+typical_session_minutes:
+  min: 20
+  max: 60
+
+progression_model: volume_block
+
+intensity_zones:
+  - label: skill_practice
+    description: Sub-max effort — technique, ring support, bodyweight holds
+  - label: loaded
+    description: Weighted pull-ups, dips, HSPU progressions — strength stimulus
+
+sources:
+  - Ido Portal
+  - CrossFit
+  - Horsemen GPP
+
+notes: >
+  Encompasses strict pull-ups, ring dips, HSPU progressions, front lever work,
+  and other bodyweight or lightly loaded gymnastics movements. Medium recovery
+  cost because the loads are sub-maximal relative to absolute strength, but the
+  neurological and connective tissue demand is significant. Can be paired with
+  movement skill or short aerobic work in the same session. Incompatible with
+  max strength because heavy barbell training impairs the fine motor control and
+  relative body tension required for gymnastics quality.

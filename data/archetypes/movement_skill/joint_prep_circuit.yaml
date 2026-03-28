@@ -1,0 +1,102 @@
+id: joint_prep_circuit
+name: "Joint Prep Circuit (Pre-Session Mobility)"
+modality: mobility
+category: movement_skill
+duration_estimate_minutes: 15
+required_equipment:
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - deload
+  - maintenance
+  - rehab
+  - post_op
+sources:
+  - "Ido Portal"
+  - "Kelly Starrett"
+notes: >
+  10–15 minute pre-session joint preparation circuit. Not a warm-up in the
+  cardiovascular sense — this is tissue and range-of-motion preparation that
+  reduces injury risk and ensures the movement patterns used in the main session
+  are available at their full range before load is applied. Ido Portal: "joint
+  preparation is non-negotiable before loading." Kelly Starrett: movement quality
+  is testable and correctable. Structured around three joint regions: wrist/shoulder,
+  hip/spine, ankle/knee. Each region gets 3–5 minutes of targeted work.
+  This archetype should precede any strength or skill session. It can be the
+  entire session on deload, rehab, or rest days.
+
+slots:
+  - role: wrist_shoulder_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 4
+    duration_sec: 240
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Wrist routine: circles, extension, flexion, loaded compression (on fists).
+      Shoulder ROM: arm circles (forward/back), cross-body reach, behind-the-back
+      reach, 90/90 shoulder rotation. Shoulder stabilization: band pull-aparts or
+      banded external rotation (or bodyweight if no bands). ~4 min.
+
+  - role: hip_spine_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 5
+    duration_sec: 300
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Hip circles (standing, both directions, 10 per side), 90/90 hip switch (10 reps),
+      deep squat oscillations (10 reps), couch stretch or hip flexor stretch (60 sec
+      per side), cat-cow (10 reps), spinal rotation in squat (10 reps per side).
+      Ido Portal squat clinic: deep squat hold with controlled breathing. ~5 min.
+
+  - role: ankle_knee_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 3
+    duration_sec: 180
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Ankle circles (10 per side), calf raise heel drops off step (10 reps each foot),
+      knee circles and tracking work (10 reps per side), ATG split squat bodyweight
+      (5 reps per side focusing on ROM). Tibialis raise against wall if available.
+      ~3 min. Prioritize if athlete has ankle or knee history.
+
+  - role: movement_specific_activation
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 3
+    duration_sec: 180
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      3-min movement-specific activation matching the main session's primary patterns:
+        - Before squat session: goblet squat holds, box squats, ankle dorsiflexion
+        - Before press session: band pull-aparts, face pulls, scapula push-ups
+        - Before hinge session: cat-cow, hip hinge drill with dowel, GHD back extension
+        - Before locomotion/skill: locomotion pattern sampling at very easy effort
+      Selector populates this based on the following session archetype.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "On deload days expand this to a full 20–30 min session. Add passive stretching and extended holds. No load reduction needed — this is already unloaded."
+  time_limited:
+    drop_slots:
+      - movement_specific_activation
+    notes: "Drop the movement-specific activation. Prioritize hip/spine and wrist/shoulder prep as the highest-value regions."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: resistance_band
+        substitute_approach: "All resistance band movements (pull-aparts, external rotation) can be replaced with bodyweight or gymnastic equivalents. No bands required for this archetype."

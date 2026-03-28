@@ -1,0 +1,48 @@
+id: power
+name: Power / Explosiveness
+description: Fast force production — Olympic lifts, kettlebell ballistics, plyometrics, and depth jumps where rate of force development is the primary training target.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: first
+
+compatible_in_session_with:
+  - mobility
+  - max_strength
+
+incompatible_in_session_with:
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  - strength_endurance
+
+min_weekly_minutes: 20
+max_weekly_minutes: 120
+
+typical_session_minutes:
+  min: 20
+  max: 60
+
+progression_model: linear_load
+
+intensity_zones:
+  - label: technical
+    description: Sub-maximal loads at competition speed — technique and bar velocity focus (70-80% 1RM)
+  - label: maximal
+    description: Near-max loads or max-effort plyometric — 1RM testing, broad/depth jumps
+
+sources:
+  - Mark Wildman / RKC Kettlebell
+  - Horsemen GPP
+  - CrossFit
+
+notes: >
+  Covers Olympic lifts (clean, jerk, snatch, power clean), kettlebell ballistics
+  (swing, snatch, clean), and plyometric work (box jumps, depth jumps, broad
+  jumps, clapping pull-ups). Horsemen "Not Now Chief" (5×3 DL @ 90-95% + depth
+  jumps) and "Fuckin Skanks" (5×3 weighted pull-up + clapping pull-ups) are
+  canonical power sessions. Must appear first in a session if paired with max
+  strength; the two modalities share neurological demands and can be sequenced
+  together with appropriate rest. High recovery cost because near-max velocity
+  work is neurologically expensive even when loads are moderate. Weekly volume
+  cap is low — quality over quantity.

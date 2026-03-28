@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "constraints.schema.json",
+  "title": "Athlete Constraints",
+  "description": "The runtime input that filters which building blocks are valid for a given athlete and context. This is what the athlete provides, not a library item.",
+  "type": "object",
+  "required": ["equipment", "days_per_week", "session_time_minutes", "training_level"],
+  "additionalProperties": false,
+  "properties": {
+    "equipment": {
+      "type": "array",
+      "description": "Equipment the athlete has reliable access to. Used to filter archetypes and exercises.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "barbell", "rack", "plates", "kettlebell", "dumbbell",
+          "pull_up_bar", "rings", "parallettes", "rower", "bike",
+          "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
+          "medicine_ball", "resistance_band", "rope", "box",
+          "ghd", "jump_rope", "open_space"
+        ]
+      },
+      "minItems": 1
+    },
+    "equipment_profile": {
+      "type": "string",
+      "enum": ["barbell_gym", "home_kb_only", "bodyweight_only", "outdoor_ruck_only", "custom"],
+      "description": "Convenience label for common equipment setups. If 'custom', the equipment array is used directly.",
+      "default": "custom"
+    },
+    "days_per_week": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7,
+      "description": "Number of training days available per week."
+    },
+    "session_time_minutes": {
+      "type": "integer",
+      "minimum": 15,
+      "description": "Maximum session length in minutes. Filters out archetypes longer than this value."
+    },
+    "training_level": {
+      "type": "string",
+      "enum": ["novice", "intermediate", "advanced", "elite"],
+      "description": "Athlete's general training age and capacity. Used for framework selection and prerequisite checking."
+    },
+    "injury_flags": {
+      "type": "array",
+      "description": "Active injury or limitation IDs. Any exercise contraindicated with a listed flag is excluded from selection.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "knee_meniscus_post_op", "shoulder_impingement", "shoulder_instability",
+          "lumbar_disc", "ankle_sprain", "wrist_injury",
+          "hip_flexor_strain", "tennis_elbow", "golfers_elbow", "neck_strain",
+          "achilles_tendinopathy", "patellar_tendinopathy"
+        ]
+      },
+      "default": []
+    },
+    "avoid_movements": {
+      "type": "array",
+      "description": "Movement pattern IDs to exclude regardless of injury flags. Use for preferences or additional clinical restrictions.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "hip_hinge", "squat", "horizontal_push", "horizontal_pull",
+          "vertical_push", "vertical_pull", "loaded_carry", "rotation",
+          "hip_flexion", "knee_extension", "locomotion", "ballistic",
+          "olympic_lift", "isometric", "aerobic_monostructural"
+        ]
+      },
+      "default": []
+    },
+    "training_phase": {
+      "type": "string",
+      "enum": ["active", "base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op"],
+      "description": "Current phase of training. Filters available archetypes (e.g. no peaking templates during base phase).",
+      "default": "base"
+    },
+    "periodization_week": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Current week within the active phase. Used by progression models to calculate load targets."
+    },
+    "fatigue_state": {
+      "type": "string",
+      "enum": ["fresh", "normal", "accumulated", "overreached"],
+      "description": "Athlete's current accumulated fatigue level. Modifies session intensity and volume. 'overreached' triggers automatic deload.",
+      "default": "normal"
+    },
+    "constraint_priority": {
+      "type": "object",
+      "description": "Marks individual constraints as hard (cannot be violated) or soft (prefer to respect, can override). Defaults to hard if not specified.",
+      "properties": {
+        "equipment":          { "type": "string", "enum": ["hard", "soft"], "default": "hard" },
+        "days_per_week":      { "type": "string", "enum": ["hard", "soft"], "default": "hard" },
+        "session_time_minutes": { "type": "string", "enum": ["hard", "soft"], "default": "soft" },
+        "injury_flags":       { "type": "string", "enum": ["hard", "soft"], "default": "hard" },
+        "avoid_movements":    { "type": "string", "enum": ["hard", "soft"], "default": "hard" }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes about this athlete's context. Not used by the algorithm."
+    }
+  }
+}

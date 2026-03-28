@@ -1,0 +1,101 @@
+id: bodyweight_circuit
+name: "Bodyweight Circuit (Push / Pull / Hinge / Squat)"
+modality: strength_endurance
+category: gpp_durability
+duration_estimate_minutes: 45
+required_equipment:
+  - pull_up_bar
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - maintenance
+sources:
+  - "Horsemen"
+  - "CrossFit"
+  - "Gym Jones"
+notes: >
+  Time-domain bodyweight circuit cycling through the four fundamental human movement
+  patterns: squat, hinge, push, pull. No equipment beyond a pull-up bar. Rounds are
+  timed; athlete performs a set number of reps per movement and immediately transitions.
+  Gym Jones "Chelsea" variant: EMOM 30 min, 5 pull-ups + 10 push-ups + 15 squats.
+  Horsemen variants: "Appeal to God" (static holds circuit), wall ball + sit-up rounds.
+  This archetype is designed to be fully scalable — accessible to any fitness level
+  while still delivering GPP value to well-trained athletes (add tempo, harder variants,
+  weighted vest). The target stimulus is muscular endurance and systemic work capacity.
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 480
+    intensity: light
+    notes: "8-min general warm-up: joint circles, 10 air squats, 5 inchworms, 5 hip hinges, shoulder arm swings."
+
+  - role: squat_component
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    intensity: bodyweight
+    rest_sec: 0
+    exercise_filter:
+      movement_pattern: squat
+    notes: >
+      15 reps air squat per round as the squat component. Scaling up: jump squat,
+      pistol squat, Bulgarian split squat. Scaling down: box squat to higher box,
+      partial range. No rest between components within the circuit.
+
+  - role: hinge_component
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    intensity: bodyweight
+    rest_sec: 0
+    exercise_filter:
+      movement_pattern: hinge
+    notes: >
+      10 reps single-leg Romanian deadlift (bodyweight) or hip hinge per round.
+      Scaling up: single-leg RDL with reach, Nordic hamstring curl, good morning.
+      Scaling down: bilateral hip hinge against wall (beginner pattern drill).
+
+  - role: push_component
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    intensity: bodyweight
+    rest_sec: 0
+    exercise_filter:
+      movement_pattern: push
+    notes: >
+      10 push-ups per round. Scaling up: archer push-up, ring push-up, HSPU,
+      pike push-up. Scaling down: incline push-up on box, knee push-up.
+
+  - role: pull_component
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    intensity: bodyweight
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: pull
+      equipment_required:
+        - pull_up_bar
+    notes: >
+      5 pull-ups per round. Rest 60 sec after completing all four components before
+      starting the next round. Scaling up: weighted pull-up, L-sit pull-up.
+      Scaling down: jumping pull-up, ring row, band-assisted.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce to 3 rounds. Drop squat and hinge reps by 30%. Maintain all four movement patterns. Deload is about volume reduction, not pattern omission."
+  time_limited:
+    drop_slots:
+      - hinge_component
+    notes: "If very pressed, drop the hinge component and run squat + push + pull. Minimum is 3 rounds of 3 movements."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: pull_up_bar
+        substitute_approach: "Replace pull-ups with inverted row under a table, ring rows, or bodyweight bicep curl with a backpack. Cannot fully replicate vertical pulling without a bar or rings."

@@ -1,0 +1,77 @@
+id: 3x5_linear
+name: "3×5 Linear Strength"
+modality: max_strength
+category: strength
+duration_estimate_minutes: 60
+required_equipment:
+  - barbell
+  - rack
+  - plates
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+training_levels:
+  - novice
+sources:
+  - "Starting Strength"
+  - "Rippetoe"
+notes: >
+  Novice linear progression. Three barbell compound lifts per session; load increases
+  every session until the model stalls. Session A and B alternate: A = squat/press/deadlift,
+  B = squat/bench/power clean. The deadlift is a single work set; the squat and upper
+  presses are 3 work sets. Rest long enough to perform every rep.
+
+slots:
+  - role: primary_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 5
+    intensity: progressing
+    intensity_pct_1rm: 0.80
+    rest_sec: 240
+    exercise_filter:
+      movement_pattern: squat
+      category: barbell
+      bilateral: true
+    notes: "Add 2.5–5 kg each session. If squat has stalled, reduce load 10% and reset."
+
+  - role: upper_press
+    slot_type: sets_reps
+    sets: 3
+    reps: 5
+    intensity: progressing
+    intensity_pct_1rm: 0.80
+    rest_sec: 180
+    exercise_filter:
+      movement_pattern: press
+      category: barbell
+    notes: "Alternate overhead press and bench press across sessions."
+
+  - role: primary_pull
+    slot_type: sets_reps
+    sets: 1
+    reps: 5
+    intensity: progressing
+    intensity_pct_1rm: 0.80
+    rest_sec: 300
+    exercise_filter:
+      movement_pattern: hinge
+      category: barbell
+      bilateral: true
+    notes: "Single top set. Deadlift increases 5 kg per session early on; power clean 2.5 kg."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Drop to 2 sets per lift at 90% of current working weight. Maintain movement quality."
+  time_limited:
+    drop_slots:
+      - upper_press
+    notes: "If under 45 min, perform squat and deadlift only. Never drop the squat."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: rack
+        substitute_approach: "Use trap bar deadlift for lower body; floor press replaces bench. Cannot replicate back squat without rack."

@@ -1,0 +1,49 @@
+id: durability
+name: Durability / Work Capacity
+description: Loaded carries, rucking, sandbag work, and GPP circuits that build the capacity for sustained output under fatigue — the foundation of operational and expedition fitness.
+
+recovery_cost: medium
+recovery_hours_min: 24
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+  - aerobic_base
+
+incompatible_in_session_with:
+  - max_strength
+  - power
+
+min_weekly_minutes: 45
+max_weekly_minutes: 300
+
+typical_session_minutes:
+  min: 30
+  max: 120
+
+progression_model: time_to_task
+
+intensity_zones:
+  - label: work_pace
+    description: Sustained load-bearing — ruck pace, farmer carry sets, sandbag circuits
+  - label: accumulation
+    description: High-volume, moderate-load — SMMF challenges, 500m lunge, 100-rep sandbag complexes
+
+sources:
+  - Horsemen GPP
+  - Gym Jones
+  - Uphill Athlete
+
+notes: >
+  The defining quality of the Horsemen standard: durability over peak performance,
+  repeatable output under fatigue. Includes rucking (distance × load progressions),
+  farmer carries, sandbag complexes, and single massive movement efforts (SMMF —
+  100 sandbag get-ups, 500m lunge, 1-mile heavy bag carry). Progression model is
+  time_to_task: a fixed distance or task is completed faster, or load increases
+  while time holds constant. Medium recovery cost because loads are sub-maximal
+  and aerobic, but the cumulative mechanical stress on connective tissue and joints
+  warrants 24h minimum. Can be preceded or followed by an easy aerobic session
+  on the same day if total volume is managed. Rucking benchmarks from plan.md:
+  entry = 2km with pack, advanced = 20km in 2h20, elite = Fan Dance (22km +1000m,
+  30kg, 4h).

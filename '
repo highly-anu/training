@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/65469/programming/training -type f -exec du -h {})",
+      "Bash(python3 main.py)"
+    ]
+  }
+}

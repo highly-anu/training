@@ -1,0 +1,95 @@
+id: injury_rehab
+name: Injury Rehab — Return to Sport
+description: >
+  For athletes recovering from injury, surgery, or significant overuse breakdown.
+  Treats injury as a training phase — not an interruption — with progressive
+  tissue loading under clinical constraints. Targets full return to sport-ready
+  fitness through a structured post-op → rehab → base → build arc.
+
+event_date: null
+
+priorities:
+  rehab: 0.50
+  mobility: 0.30
+  aerobic_base: 0.20
+
+primary_sources:
+  - marcus_filly
+  - kelly_starrett
+  - uphill_athlete
+
+phase_sequence:
+  - phase: rehab
+    weeks: 4
+    focus: >
+      Post-operative or acute injury phase. Clinical constraints govern all
+      movement selection. Quad sets, SLR, heel slides, ankle pumps, hamstring
+      sets (knee protocol). Isometrics, face pulls, band pull-aparts (shoulder
+      protocol). Upper or lower body split training around the injured site.
+      Stationary bike, swimming, or anti-gravity treadmill for aerobic
+      maintenance where cleared. No loading of injured tissue.
+    priority_override:
+      rehab: 0.70
+      mobility: 0.20
+      aerobic_base: 0.10
+  - phase: rehab
+    weeks: 8
+    focus: >
+      Progressive tissue loading. Mid-phase rehab: single-leg press (light,
+      progressing), Bulgarian split squats, step-ups, SL deadlifts (knee).
+      Landmine press, eccentric push-ups, TGU, KB rack carry (shoulder).
+      Aerobic base resumes on non-impacted modalities (row, bike, swim).
+      Daily mobility and tissue quality work. RPE-based autoregulation throughout.
+    priority_override:
+      rehab: 0.45
+      mobility: 0.30
+      aerobic_base: 0.25
+  - phase: base
+    weeks: 8
+    focus: >
+      Return to general training. Cleared for full movement library on
+      injured site with load restrictions. Reintroduce barbell compound
+      lifts at conservative loads (bodyweight or below). Aerobic base
+      resumes normally. Strength endurance circuits to rebuild work
+      capacity. Weekly reassessment of movement quality.
+    priority_override:
+      rehab: 0.20
+      mobility: 0.30
+      aerobic_base: 0.30
+      max_strength: 0.20
+  - phase: build
+    weeks: 4
+    focus: >
+      Sport-specific return. Full movement library available if cleared.
+      Progressive loading on previously injured tissue. Return to
+      sport-specific conditioning. Transition to target goal profile
+      once athlete meets minimum prerequisites for that profile.
+    priority_override:
+      rehab: 0.10
+      mobility: 0.20
+      aerobic_base: 0.30
+      max_strength: 0.25
+      strength_endurance: 0.15
+
+minimum_prerequisites: {}
+
+incompatible_with: []
+
+framework_selection:
+  default_framework: rpe_autoregulation
+  alternatives:
+    - framework_id: concurrent_training
+      condition: phase == base or phase == build
+
+notes: >
+  Injury is a first-class training phase in this system. Marcus Filly RPE
+  autoregulation is mandatory throughout — no percentage-based loading
+  during rehab phases. Kelly Starrett movement quality principles govern
+  what movements are cleared at each phase. Uphill Athlete aerobic
+  maintenance principles apply to non-injured systems (keep the engine
+  running while the chassis heals). All clinical decisions (clearances,
+  restrictions, progression gates) must be confirmed with treating
+  clinician; this system provides structure but does not replace medical
+  guidance. Injury flags in the constraint layer (e.g.
+  right_knee_meniscus_post_op, shoulder_impingement) should be set and
+  will filter the exercise library accordingly.

@@ -1,0 +1,70 @@
+id: gym_jones_breathing_ladder
+name: "Gym Jones KB Breathing Ladder (1–20–1)"
+modality: strength_endurance
+category: conditioning
+duration_estimate_minutes: 45
+required_equipment:
+  - kettlebell
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+notes: >
+  Gym Jones breathing ladder: perform 1 KB swing, take 1 breath, perform
+  2 swings, take 2 breaths... climb to 20, descend back to 1. Total: ~400 swings.
+  The breath count equals the rep count — this enforces structured, complete
+  recovery between micro-sets. Not a conditioning WOD; it is a test of mental
+  endurance and breath management under cumulative fatigue.
+  KB weight: 24 kg (53 lb) for trained athletes; scale down to 16 kg for
+  early intermediate. Mark Twight: "The breathing ladder is a test of will
+  as much as fitness." Warm up with the same bell at 1–5–1 before the full ladder.
+
+slots:
+  - role: warm_up_swing
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: low
+    exercise_filter:
+      movement_pattern: swing
+    notes: "3×10 swings at sub-maximal effort with the working bell. Groove the pattern before the ladder."
+
+  - role: breathing_ladder
+    slot_type: amrap
+    duration_sec: 2400
+    intensity: high
+    exercise_filter:
+      movement_pattern: swing
+    notes: >
+      Breathing ladder 1–20–1 (~400 total swings). Rep count = breath count between sets.
+      Complete the full descending half — do not stop at 20. Total work duration
+      will vary 30–45 min depending on athlete speed. Use a 24 kg bell.
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+    notes: "10 min easy walking or light movement. Let heart rate return to baseline."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Run a 1–10–1 ladder (~100 swings) instead of the full 1–20–1. Reduce bell weight by one size (e.g. 24→16 kg)."
+  time_limited:
+    drop_slots:
+      - cool_down
+    notes: "Drop cool-down. The ladder is the non-negotiable block. If time is very short, run 1–15–1 instead of full ladder."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: kettlebell
+        substitute_approach: "This archetype requires a kettlebell. No direct barbell or dumbbell substitute preserves the ballistic nature. Skip this archetype if no KB is available."

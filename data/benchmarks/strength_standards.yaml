@@ -1,0 +1,326 @@
+- id: back_squat_bw_ratio
+  name: Back Squat (bodyweight ratio)
+  domain: max_strength
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max back squat expressed as a multiple of bodyweight. The most
+    broadly applicable measure of lower-body strength and overall athletic
+    development. Squat strength is a proxy for general development (Rippetoe).
+    Horsemen standard: 2.0–2.5×BW.
+  test_protocol: >
+    After a thorough warm-up (multiple progressive sets), perform 1 rep
+    maximum effort back squat to legal depth (hip crease below knee).
+    Full equipment or raw (record which). Rest 3–5 min between heavy attempts.
+    Divide load (kg or lb) by bodyweight in the same unit.
+  levels:
+    entry:
+      male: 0.75
+      female: 0.55
+      note: Can complete first barbell session; novice baseline.
+    intermediate:
+      male: 1.50
+      female: 1.10
+      note: SS novice completion standard. Solid general fitness baseline.
+    advanced:
+      male: 2.00
+      female: 1.50
+      note: >
+        Strong intermediate. Horsemen lower-range standard.
+        Suitable for most tactical/mountain objectives.
+    elite:
+      male: 2.50
+      female: 2.00
+      note: >
+        Horsemen performance goal. Competitive powerlifting territory.
+        Upper end of tactical athlete range.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - alpine_climbing
+    - general_gpp
+  sources:
+    - starting_strength
+    - horsemen_gpp
+    - gym_jones
+  notes: >
+    Horsemen benchmark is 2.5×BW. SS novice completion is 1.5×BW.
+    Female standards reflect strength-to-weight ratios adjusted for
+    average sex-based lean mass distribution.
+
+- id: deadlift_bw_ratio
+  name: Deadlift (bodyweight ratio)
+  domain: max_strength
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max conventional deadlift expressed as a multiple of bodyweight.
+    The deadlift is the most complete measure of posterior chain and overall
+    pulling strength. Horsemen standard is 2.5×BW.
+  test_protocol: >
+    Conventional or sumo stance (record which). After a thorough warm-up,
+    perform 1 rep maximum effort deadlift from floor. Rest 3–5 min between
+    heavy attempts. Divide load by bodyweight.
+  levels:
+    entry:
+      male: 1.00
+      female: 0.75
+      note: Basic functional pulling strength.
+    intermediate:
+      male: 2.00
+      female: 1.50
+      note: SS novice completion standard. General fitness baseline.
+    advanced:
+      male: 2.50
+      female: 2.00
+      note: >
+        Horsemen benchmark. Serious athletic standard applicable to
+        tactical, mountain, and strength-sport contexts.
+    elite:
+      male: 3.00
+      female: 2.50
+      note: Competitive powerlifting. Exceptional athletic development.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - general_gpp
+    - alpine_climbing
+  sources:
+    - starting_strength
+    - horsemen_gpp
+    - gym_jones
+  notes: >
+    Horsemen target is 2.5×BW. Elite 3.0×BW is world-class powerlifting
+    territory. Tactical standards typically target the advanced tier (2.5×BW).
+
+- id: strict_press_bw_ratio
+  name: Strict Press (bodyweight ratio)
+  domain: max_strength
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max strict overhead press (no leg drive) expressed as a multiple
+    of bodyweight. A demanding test of shoulder and overhead pressing strength.
+    Horsemen standard is 1.0×BW military press.
+  test_protocol: >
+    Standing strict press: feet hip-width, no knee bend, bar from rack or
+    cleaned to shoulders. After warm-up, perform 1 rep max overhead.
+    Rest 3–5 min between attempts. Divide load by bodyweight.
+  levels:
+    entry:
+      male: 0.40
+      female: 0.30
+      note: Basic pressing ability. Can train the movement.
+    intermediate:
+      male: 0.75
+      female: 0.55
+      note: SS novice completion standard. Solid general fitness.
+    advanced:
+      male: 1.00
+      female: 0.75
+      note: >
+        Horsemen military press standard. Strong athletic baseline
+        for pressing-dependent activities.
+    elite:
+      male: 1.25
+      female: 0.90
+      note: Exceptional pressing strength. Competitive overhead level.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - general_gpp
+  sources:
+    - starting_strength
+    - horsemen_gpp
+  notes: >
+    Horsemen benchmark is 1×BW military press. SS novice completion is 0.75×BW.
+    One of the most honest upper-body strength tests as no momentum assistance
+    is permitted.
+
+- id: bench_press_bw_ratio
+  name: Bench Press (bodyweight ratio)
+  domain: max_strength
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max flat barbell bench press expressed as a multiple of bodyweight.
+    Standard test of horizontal pushing strength. Horsemen benchmark is 1.5×BW.
+  test_protocol: >
+    Flat bench, bar to chest, full lockout. No extreme arch (powerlifting
+    federation rules acceptable). After warm-up, perform 1 rep max.
+    Rest 3–5 min between attempts. Divide load by bodyweight.
+  levels:
+    entry:
+      male: 0.60
+      female: 0.45
+      note: Basic horizontal pressing strength.
+    intermediate:
+      male: 1.00
+      female: 0.75
+      note: General athletic baseline.
+    advanced:
+      male: 1.50
+      female: 1.10
+      note: Horsemen benchmark. Strong upper-body pressing standard.
+    elite:
+      male: 2.00
+      female: 1.50
+      note: Competitive powerlifting. Exceptional upper-body strength.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - general_gpp
+  sources:
+    - horsemen_gpp
+    - starting_strength
+  notes: >
+    Horsemen benchmark is 1.5×BW. Horsemen PT Test II includes 10×BW bench
+    press (10 reps at bodyweight), which is a strength endurance variant.
+
+- id: power_clean_bw_ratio
+  name: Power Clean (bodyweight ratio)
+  domain: power
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max power clean (bar received above parallel) expressed as a multiple
+    of bodyweight. Tests explosive hip extension, bar speed, and pulling power.
+    A primary power development and assessment tool in Olympic and tactical
+    strength programs.
+  test_protocol: >
+    Power clean from floor. Bar received in partial squat (above parallel hip).
+    After warm-up covering technique and progressive loads, perform 1 rep max.
+    Rest 3–5 min between heavy attempts. Divide load by bodyweight.
+  levels:
+    entry:
+      male: 0.50
+      female: 0.35
+      note: Technique established, can train the movement productively.
+    intermediate:
+      male: 0.85
+      female: 0.65
+      note: Solid power expression. General athletic baseline.
+    advanced:
+      male: 1.10
+      female: 0.85
+      note: >
+        Strong power output. Tactical and mountain athlete standard.
+        Horsemen Olympic day range.
+    elite:
+      male: 1.35
+      female: 1.00
+      note: >
+        Competitive weightlifting territory. Exceptional power development.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - general_gpp
+    - alpine_climbing
+  sources:
+    - starting_strength
+    - horsemen_gpp
+    - crossfit
+  notes: >
+    Horsemen Olympic day workouts use 80–90% 1RM in wave patterns.
+    Power clean is a key SS program exercise at intermediate level.
+
+- id: pull_up_reps
+  name: Pull-ups (max unweighted reps)
+  domain: relative_strength
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Maximum consecutive strict dead-hang pull-ups (chin over bar, full arm
+    extension at bottom). The most practical measure of relative upper-body
+    pulling strength and bodyweight mastery. Horsemen PT standard is 15+.
+  test_protocol: >
+    Dead hang from bar (overhand grip, shoulder-width). From full arm extension,
+    pull until chin clears bar. No kipping, no momentum. Count reps to failure.
+    No rest between reps. One attempt after adequate warm-up.
+  levels:
+    entry:
+      male: 1
+      female: 1
+      note: First unassisted pull-up. Can begin pull-up strength program.
+    intermediate:
+      male: 10
+      female: 5
+      note: >
+        SS relative strength standard. Solid general fitness baseline.
+        Can begin weighted pull-ups.
+    advanced:
+      male: 20
+      female: 12
+      note: >
+        Strong relative pulling strength. Horsemen PT test target and beyond.
+        Suitable for SOF and tactical standards.
+    elite:
+      male: 30
+      female: 20
+      note: >
+        Exceptional calisthenic pulling endurance. Top tier tactical athlete.
+        Horsemen PT Test II includes 15 reps at +25# added weight.
+  goal_relevance:
+    - sof_operator
+    - bjj_competitor
+    - general_gpp
+    - alpine_climbing
+    - max_strength_focus
+  sources:
+    - horsemen_gpp
+    - starting_strength
+    - crossfit
+  notes: >
+    Horsemen PT standard is 15+ strict pull-ups. Horsemen PT Test II
+    requires 15 reps at +25# added weight — use pull_up_weighted_bw_ratio
+    for that standard. Female standards reflect body composition differences
+    in upper-body lean mass.
+
+- id: pull_up_weighted_bw_ratio
+  name: Weighted Pull-up 1RM (added load as BW ratio)
+  domain: relative_strength
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    1-rep max weighted pull-up expressed as the added load as a ratio of
+    bodyweight (not total load). Tests maximal relative upper-body pulling
+    strength beyond bodyweight capacity. Horsemen PT Test II requires
+    15 reps at +25# added weight as a strength endurance standard.
+  test_protocol: >
+    Dead-hang pull-up with weight belt or vest. Added load only (excluding
+    bodyweight). From full arm extension, pull until chin clears bar.
+    After warm-up including bodyweight and progressive loaded sets,
+    perform 1 rep max. Rest 3–5 min between attempts.
+    Divide added load by bodyweight.
+  levels:
+    entry:
+      male: 0.10
+      female: 0.05
+      note: Can add minimal load to bodyweight pull-up.
+    intermediate:
+      male: 0.25
+      female: 0.15
+      note: >
+        Horsemen PT Test II (15 reps at +25#) falls in this range for
+        heavier athletes. Solid relative pulling strength.
+    advanced:
+      male: 0.50
+      female: 0.35
+      note: Substantial added load. Serious upper-body strength.
+    elite:
+      male: 0.75
+      female: 0.55
+      note: >
+        Exceptional weighted pulling strength. Competitive calisthenics
+        and tactical athlete peak level.
+  goal_relevance:
+    - sof_operator
+    - max_strength_focus
+    - general_gpp
+  sources:
+    - horsemen_gpp
+    - starting_strength
+  notes: >
+    Horsemen Riley Black protocol includes weighted pull-up ladders at
+    85%/90%/95% of 1RM. PT Test II standard of 15 reps at +25# is a
+    strength endurance target, not a 1RM; map to pull_up_reps for that test.

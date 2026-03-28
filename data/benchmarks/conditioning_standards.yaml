@@ -1,0 +1,221 @@
+- id: run_3mile_minutes
+  name: 3-Mile Run (time in minutes)
+  domain: aerobic_base
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Timed 3-mile run on flat ground at maximum sustainable pace. The primary
+    aerobic conditioning test in Horsemen GPP and military/tactical fitness
+    standards. Horsemen performance target is sub-20:00. PT test standard
+    is sub-22:30.
+  test_protocol: >
+    Flat, measured 3-mile course (road, track, or treadmill at 0% grade).
+    Maximum effort run — no prescribed warm-up, but standard pre-run
+    mobility acceptable. Record time to nearest second; convert to decimal
+    minutes. Athlete should be rested (not within 24h of hard training).
+  levels:
+    entry:
+      male: 36.0
+      female: 42.0
+      note: Basic aerobic fitness. Can sustain a continuous jog for 3 miles.
+    intermediate:
+      male: 27.0
+      female: 32.0
+      note: >
+        Solid aerobic base. General fitness threshold. Horsemen PT test
+        passing range (sub-22:30 male). Suitable for base training phases.
+    advanced:
+      male: 22.5
+      female: 27.0
+      note: >
+        Horsemen PT test standard (sub-22:30 for men). Strong aerobic
+        conditioning. Tactical athlete competitive range.
+    elite:
+      male: 20.0
+      female: 24.0
+      note: >
+        Horsemen performance goal: sub-20:00. High-performance tactical
+        and endurance athlete standard.
+  goal_relevance:
+    - sof_operator
+    - ultra_endurance
+    - general_gpp
+    - alpine_climbing
+  sources:
+    - horsemen_gpp
+    - crossfit
+  notes: >
+    Horsemen performance benchmark is sub-20:00 (male). PT test standard is
+    sub-22:30. PT Test II includes a 5-mile run standard (sub-35:00).
+    Female thresholds adjusted proportionally by typical sex-based aerobic
+    capacity differences (~15%).
+
+- id: ssst_reps
+  name: Secret Service Snatch Test (SSST) — Reps in 10 Minutes
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    10-minute kettlebell snatch test using a 24kg (53 lb) bell. Can switch
+    hands as many times as needed; cannot put the bell down. The premier test
+    of power endurance, grip endurance, aerobic capacity, and mental toughness
+    in the Horsemen and tactical fitness world. Team Guy Standard is 200 reps.
+    Record is 275 reps per Horsemen documentation.
+  test_protocol: >
+    Use a 24kg (53 lb) kettlebell for male athletes (16kg/35 lb for females).
+    From a standing start, snatch the bell continuously for 10 full minutes.
+    Can switch hands freely but may not rest the bell on the ground, rack it
+    on the forearm, or otherwise stop movement. Count every completed snatch
+    rep (hand switch counts as a rep opportunity — must lock out overhead for
+    each rep to count). Record total reps at 10:00. Test should be attempted
+    only after establishing solid snatch mechanics and adequate grip conditioning.
+  levels:
+    entry:
+      male: 100
+      female: 80
+      note: >
+        Basic work capacity. Can complete the test without putting the bell
+        down. Starting point for serious snatch conditioning.
+    intermediate:
+      male: 150
+      female: 120
+      note: >
+        Horsemen Team Guy Standard is described at 150 range in program notes.
+        Solid tactical fitness baseline. Denotes real work capacity.
+    advanced:
+      male: 200
+      female: 160
+      note: >
+        Horsemen Team Guy Standard (200 reps). Represents elite tactical
+        conditioning. Requires systematic training to achieve.
+    elite:
+      male: 250
+      female: 200
+      note: >
+        Horsemen: 250 reps is "ridiculous." 275 is the documented record.
+        World-class power endurance and grip capacity.
+  goal_relevance:
+    - sof_operator
+    - general_gpp
+    - ultra_endurance
+  sources:
+    - horsemen_gpp
+    - wildman_kettlebell
+  notes: >
+    Horsemen documentation: 200+ reps = Team Guy Standard; 250 = "ridiculous";
+    275 = record. Female standard uses 16kg (35 lb) bell. This test combines
+    aerobic, anaerobic, grip, and mental endurance in a single 10-minute window —
+    it is both a benchmark and a training tool. SSST prep requires progressive
+    KB snatch volume work over 4–8 weeks before testing.
+
+- id: row_2km_minutes
+  name: 2km Row (time in minutes)
+  domain: anaerobic_intervals
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Maximum effort 2000m ergometer row (Concept2 or equivalent). Tests
+    aerobic power, anaerobic capacity, and upper/lower body pulling endurance.
+    A universal fitness benchmark used across CrossFit, Gym Jones, Horsemen,
+    and rowing-specific programs.
+  test_protocol: >
+    Concept2 rowing ergometer, damper setting 4–6 (or test-consistent setting;
+    record the setting used). Full 2000m time trial at maximum sustainable
+    effort. Standard warm-up: 5–10 min light rowing + 2–3 bursts at race pace.
+    Record total time to nearest second; convert to decimal minutes.
+    Athlete must be rested (not within 24h of hard training session).
+  levels:
+    entry:
+      male: 10.0
+      female: 11.5
+      note: Basic rowing capacity. No significant rowing background required.
+    intermediate:
+      male: 8.0
+      female: 9.5
+      note: >
+        Solid work capacity. CrossFit fitness baseline. Can complete 2k
+        at a competitive training pace.
+    advanced:
+      male: 7.0
+      female: 8.5
+      note: >
+        Strong aerobic power. Horsemen and Gym Jones competitive range.
+        Sub-7:00 male is a meaningful athletic marker.
+    elite:
+      male: 6.5
+      female: 7.75
+      note: >
+        Competitive rowing fitness. Top tactical and CrossFit athlete level.
+        Sub-6:30 male approaches competitive rowing club standards.
+  goal_relevance:
+    - sof_operator
+    - general_gpp
+    - ultra_endurance
+    - alpine_climbing
+  sources:
+    - horsemen_gpp
+    - crossfit
+    - gym_jones
+  notes: >
+    Horsemen workouts include 500m row sub-1:30 + 400m run as a power
+    cardiovascular benchmark (maps to ~6:00/2k pace territory).
+    CrossFit uses 2k row as a standard benchmark. Gym Jones uses rowing
+    extensively for power endurance testing. Female standards adjusted
+    for typical sex-based aerobic and mass differences.
+
+- id: run_1mile_minutes
+  name: 1-Mile Run (time in minutes)
+  domain: anaerobic_intervals
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Timed 1-mile run at maximum sustainable effort. Tests aerobic power
+    and anaerobic threshold capacity — sits at the overlap of aerobic
+    and anaerobic energy systems. Used as a conditioning benchmark and
+    prerequisite test for several goal profiles.
+  test_protocol: >
+    Flat, measured 1-mile course (track preferred: 4 laps standard track).
+    Maximum effort. Brief warm-up (5–10 min light jog + 2–3 strides)
+    acceptable. Record time to nearest second; convert to decimal minutes.
+    Athlete should be rested.
+  levels:
+    entry:
+      male: 12.0
+      female: 14.0
+      note: >
+        Basic running fitness. Can sustain continuous running for 1 mile.
+        BJJ competitor and general GPP entry prerequisite range.
+    intermediate:
+      male: 9.0
+      female: 11.0
+      note: >
+        Solid aerobic/anaerobic capacity. General fitness competitive range.
+        Suitable for most concurrent program entry requirements.
+    advanced:
+      male: 7.0
+      female: 8.5
+      note: >
+        Strong running fitness. High-performance athletic standard.
+        Tactical and endurance athlete competitive range.
+    elite:
+      male: 5.5
+      female: 6.5
+      note: >
+        Exceptional running speed. Competitive distance runner fitness.
+        Top-tier tactical athlete level.
+  goal_relevance:
+    - bjj_competitor
+    - general_gpp
+    - sof_operator
+    - ultra_endurance
+    - alpine_climbing
+  sources:
+    - crossfit
+    - horsemen_gpp
+    - uphill_athlete
+  notes: >
+    BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min).
+    Used as an aerobic readiness gate — athletes who cannot run a sub-10
+    mile lack the aerobic base to sustain hard rolling without excessive
+    cardiac drift. Female standards adjusted for typical sex-based
+    aerobic capacity differences.

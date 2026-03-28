@@ -1,0 +1,202 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Theme Architecture:
+ * - All color tokens are CSS custom properties
+ * - @theme inline maps them to Tailwind utility classes (bg-background, text-foreground, etc.)
+ * - To add a new theme: add a new CSS class (e.g. .theme-ocean) with overridden vars
+ * - next-themes toggles the .dark class on <html>
+ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-sans-family);
+  --font-mono: var(--font-mono-family);
+}
+
+/* ─── Light Theme ──────────────────────────────────────────── */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+
+  /* Amber-500 primary — same in both themes for brand consistency */
+  --primary: oklch(0.769 0.188 70.08);
+  --primary-foreground: oklch(0.282 0.065 51.617);
+
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.769 0.188 70.08);
+
+  --radius: 0.5rem;
+
+  --font-sans-family: ui-sans-serif, system-ui, sans-serif;
+  --font-mono-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+}
+
+/* ─── Dark Theme ───────────────────────────────────────────── */
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+
+  --primary: oklch(0.769 0.188 70.08);
+  --primary-foreground: oklch(0.282 0.065 51.617);
+
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.704 0.191 22.216);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.769 0.188 70.08);
+}
+
+/* ─── Military Theme ──────────────────────────────────────── */
+.military {
+  --background: oklch(0.17 0.02 100);
+  --foreground: oklch(0.89 0.03 95);
+  --card: oklch(0.22 0.022 100);
+  --card-foreground: oklch(0.89 0.03 95);
+  --popover: oklch(0.22 0.022 100);
+  --popover-foreground: oklch(0.89 0.03 95);
+  --primary: oklch(0.58 0.13 130);
+  --primary-foreground: oklch(0.14 0.015 130);
+  --secondary: oklch(0.27 0.022 100);
+  --secondary-foreground: oklch(0.82 0.03 95);
+  --muted: oklch(0.27 0.022 100);
+  --muted-foreground: oklch(0.62 0.025 100);
+  --accent: oklch(0.27 0.022 100);
+  --accent-foreground: oklch(0.82 0.03 95);
+  --destructive: oklch(0.62 0.17 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.58 0.13 130);
+  --radius: 0.25rem;
+  --font-sans-family: "IBM Plex Mono", ui-monospace, monospace;
+  --font-mono-family: "IBM Plex Mono", ui-monospace, monospace;
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.55 0.1 130 / 0.5) transparent;
+}
+
+.military body {
+  /* Tactical dot-grid overlay using primary color */
+  background-image: radial-gradient(circle, oklch(0.58 0.13 130 / 0.14) 1px, transparent 1px);
+  background-size: 20px 20px;
+  letter-spacing: -0.01em;
+}
+
+/* Webkit scrollbar — minimal 4px, no rounding */
+.military ::-webkit-scrollbar        { width: 4px; height: 4px; }
+.military ::-webkit-scrollbar-track  { background: transparent; }
+.military ::-webkit-scrollbar-thumb  { background: oklch(0.55 0.1 130 / 0.5); border-radius: 0; }
+
+/* ─── Zen Theme ────────────────────────────────────────────── */
+.zen {
+  --background: oklch(0.97 0.012 90);
+  --foreground: oklch(0.27 0.02 80);
+  --card: oklch(0.99 0.006 90);
+  --card-foreground: oklch(0.27 0.02 80);
+  --popover: oklch(0.99 0.006 90);
+  --popover-foreground: oklch(0.27 0.02 80);
+  --primary: oklch(0.55 0.1 155);
+  --primary-foreground: oklch(0.97 0.01 155);
+  --secondary: oklch(0.93 0.016 90);
+  --secondary-foreground: oklch(0.35 0.02 80);
+  --muted: oklch(0.93 0.016 90);
+  --muted-foreground: oklch(0.54 0.025 80);
+  --accent: oklch(0.93 0.016 90);
+  --accent-foreground: oklch(0.35 0.02 80);
+  --destructive: oklch(0.52 0.18 25);
+  --border: oklch(0.87 0.018 90);
+  --input: oklch(0.87 0.018 90);
+  --ring: oklch(0.55 0.1 155);
+  --radius: 0.75rem;
+  --font-sans-family: "Lora", Georgia, serif;
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.62 0.08 155 / 0.45) transparent;
+}
+
+.zen body {
+  /* Soft organic gradient washes — sage at top-left, warm stone at bottom-right */
+  background-image:
+    radial-gradient(ellipse 75% 55% at 15% 5%,  oklch(0.91 0.04 155 / 0.28) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 45% at 85% 95%, oklch(0.91 0.03 80  / 0.22) 0%, transparent 60%);
+  letter-spacing: 0.012em;
+  line-height: 1.65;
+}
+
+/* Webkit scrollbar — soft 6px pill */
+.zen ::-webkit-scrollbar        { width: 6px; height: 6px; }
+.zen ::-webkit-scrollbar-track  { background: transparent; }
+.zen ::-webkit-scrollbar-thumb  { background: oklch(0.62 0.08 155 / 0.45); border-radius: 999px; }
+
+/* ─── Base Styles ──────────────────────────────────────────── */
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans-family);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -1,0 +1,101 @@
+id: kb_ballistic_session
+name: "KB Ballistic Session (Swings / Cleans / Snatches)"
+modality: power
+category: kettlebell
+duration_estimate_minutes: 50
+required_equipment:
+  - kettlebell
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+sources:
+  - "Wildman"
+  - "RKC"
+  - "Gym Jones"
+  - "Horsemen"
+notes: >
+  Kettlebell ballistic session developing power-conditioning through hip-hinge based
+  explosive movements. Wildman/RKC principle: ballistic patterning (swing → clean →
+  snatch) builds power and conditioning simultaneously. Breathing mechanics govern
+  intensity ceiling — the athlete's ability to maintain biomechanical bracing and
+  proper breathing determines how much volume they can handle. Progression through
+  the ballistic hierarchy: two-hand swing → single-arm swing → clean → snatch →
+  double KB variations. This session is not a strength session — the load is
+  submaximal and moved explosively. Rest periods are long enough to reset breathing
+  and posture before the next set. Gym Jones uses a breathing ladder format (1–20–1)
+  for ballistic conditioning. 25–53 lb KB range for conditioning; 53–70 lb for
+  heavier ballistic work in advanced athletes.
+
+slots:
+  - role: hip_hinge_warm_up
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: light
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: hinge
+      category: kettlebell
+    notes: >
+      3 × 10 two-hand KB swings at warm-up weight (approx 60% of session weight).
+      Establish hip-hinge pattern, hip snap, and breathing mechanics before heavier work.
+      Gym Jones KB warm-up progression: 25 → 35 → 44 → 53 lb across 4 warm-up sets.
+
+  - role: primary_ballistic
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    intensity: heavy
+    rest_sec: 90
+    exercise_filter:
+      movement_pattern: swing
+      category: kettlebell
+    notes: >
+      Primary ballistic movement: 5 × 10 at working weight. Default: single-arm swing
+      (5 per side per set). Selector upgrades to clean or snatch based on athlete
+      prerequisite flags. All three movements share the hip-hinge pattern; clean and
+      snatch layer in trajectory control and overhead position respectively.
+      Working weight: 35–53 lb for conditioning emphasis; 53–70 lb for strength-power.
+
+  - role: secondary_ballistic
+    slot_type: sets_reps
+    sets: 4
+    reps: 8
+    intensity: moderate
+    rest_sec: 75
+    exercise_filter:
+      movement_pattern: clean
+      category: kettlebell
+    notes: >
+      Secondary ballistic — different movement from primary. If primary was swings, use
+      cleans. If primary was cleans, use snatches. Builds volume in the ballistic pattern
+      hierarchy. Single arm, 8 reps per side per set.
+
+  - role: breathing_ladder_finisher
+    slot_type: time_domain
+    duration_sec: 900
+    intensity: moderate
+    exercise_filter:
+      movement_pattern: swing
+      category: kettlebell
+    notes: >
+      Optional Gym Jones breathing ladder finisher: KB swing 1–20 ascending (or 1–10
+      for shorter session), prescribed breath count between rungs. Athlete continues
+      until they can no longer complete the round or the ladder is complete. ~15 min.
+      53 lb target for well-conditioned athletes. Drop this slot in time-limited sessions.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce primary to 3 × 8. Drop secondary ballistic. Drop breathing ladder. Reduce load one level (e.g. 53 lb → 44 lb)."
+  time_limited:
+    drop_slots:
+      - breathing_ladder_finisher
+    notes: "Drop the breathing ladder first. Reduce to primary + secondary ballistic blocks only (~25 min total)."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: kettlebell
+        substitute_approach: "Dumbbell swings are a suboptimal substitute. The KB handle shape and pendulum arc are integral to the ballistic pattern. If only dumbbells available, use Romanian deadlift + dumbbell high pull combination to approximate the stimulus."

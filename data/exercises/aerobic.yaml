@@ -1,0 +1,534 @@
+exercises:
+
+  - id: run_easy
+    name: Easy Run (Zone 1–2)
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - open_space
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+    requires: []
+    unlocks:
+      - run_tempo
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - patellar_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: increase_distance
+    scaling_down: []
+    typical_volume:
+      duration_sec: 4500
+    sources:
+      - Uphill Athlete
+      - CrossFit Endurance
+    notes: >
+      Conversational pace; heart rate at or below aerobic threshold (AeT), typically
+      <135 bpm or Maffetone (180 − age). Uphill Athlete: 80% of all aerobic volume
+      at this intensity. Gym Jones recovery days: 60–120 min at conversational pace.
+      Primary aerobic base builder. Nasal breathing is a useful intensity governor.
+
+  - id: run_tempo
+    name: Tempo Run (Zone 3–4)
+    category: aerobic
+    modality:
+      - aerobic_base
+      - anaerobic_intervals
+    equipment:
+      - open_space
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+    requires:
+      - run_easy
+    unlocks:
+      - run_interval
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - patellar_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: increase_distance
+    scaling_down:
+      - run_easy
+    typical_volume:
+      duration_sec: 2400
+      distance_m: 5000
+    sources:
+      - Uphill Athlete
+      - CrossFit Endurance
+    notes: >
+      Comfortably hard; can speak in short sentences. Near or at lactate
+      threshold 2 (LT2) pace. CrossFit Endurance: threshold intervals 3–5 ×
+      8 min at Zone 4. Uphill Athlete base-to-build phase transition increases
+      this zone's proportion from 10% to 20% of weekly volume.
+
+  - id: run_interval
+    name: Interval Run (Zone 4–5)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+    equipment:
+      - open_space
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+    requires:
+      - run_tempo
+    unlocks:
+      - run_sprint
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - patellar_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - run_tempo
+    typical_volume:
+      sets: 6
+      distance_m: 400
+    sources:
+      - CrossFit Endurance
+      - Gym Jones
+    notes: >
+      Gym Jones: 5× 1-min all-out, 4-min active recovery; or 4× 800 yards at
+      10% faster than 2-mile PR pace. CrossFit Endurance pyramid intervals:
+      1-2-3-4-3-2-1 min at Zone 3–4. Work:rest ratio typically 1:2 to 1:4.
+
+  - id: run_sprint
+    name: Sprint Run (Max Effort)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+      - power
+    equipment:
+      - open_space
+    effort: max
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+      - ballistic
+    requires:
+      - run_interval
+    unlocks: []
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - patellar_tendinopathy
+      - knee_meniscus_post_op
+      - hamstring_strain
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - run_interval
+    typical_volume:
+      sets: 6
+      distance_m: 50
+    sources:
+      - CrossFit Endurance
+      - Gym Jones
+    notes: >
+      Flat-out maximal effort, ≤60 sec duration per rep. Gym Jones 3-mile time
+      trial is the primary run performance test. Sprint work builds top-end
+      speed and anaerobic capacity. Full warm-up mandatory; do not programme
+      on days following high lower-body strength volume.
+
+  - id: row_easy
+    name: Easy Row (Zone 1–2)
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - rower
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires: []
+    unlocks:
+      - row_threshold
+    contraindicated_with:
+      - lumbar_disc_pathology
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      duration_sec: 3600
+    sources:
+      - Gym Jones
+      - CrossFit
+    notes: >
+      Concept II rower rated highest for metabolic conditioning by CrossFit
+      Journal. Gym Jones recovery day format A: 60–120 min easy row at
+      conversational pace. Damper setting 4–6 for most athletes. Stroke rate
+      18–22 SPM at recovery pace.
+
+  - id: row_threshold
+    name: Threshold Row (Zone 3–4)
+    category: aerobic
+    modality:
+      - aerobic_base
+      - anaerobic_intervals
+    equipment:
+      - rower
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires:
+      - row_easy
+    unlocks:
+      - row_interval
+    contraindicated_with:
+      - lumbar_disc_pathology
+    progressions:
+      volume: increase_duration
+    scaling_down:
+      - row_easy
+    typical_volume:
+      sets: 4
+      duration_sec: 480
+    sources:
+      - Gym Jones
+      - CrossFit Endurance
+    notes: >
+      Gym Jones: 6× 500m at ~15 sec per 500m slower than PR pace, 3-min active
+      rest between pieces (1:2 work:rest). CrossFit Endurance threshold row
+      format mirrors run threshold protocol. Stroke rate 24–28 SPM.
+
+  - id: row_interval
+    name: Interval Row (Zone 4–5)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+    equipment:
+      - rower
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires:
+      - row_threshold
+    unlocks:
+      - row_500m_test
+    contraindicated_with:
+      - lumbar_disc_pathology
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - row_threshold
+    typical_volume:
+      sets: 15
+      duration_sec: 30
+    sources:
+      - Gym Jones
+    notes: >
+      Gym Jones format: 15× (30-sec row / 90-sec rest), with target distance
+      incrementing 1m per set (150m→165m). Alternatively: 4× 20-sec all-out /
+      10-sec rest (Tabata row). High CNS demand; limit to 2× per week.
+
+  - id: row_500m_test
+    name: 500m Row Time Trial
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+      - mixed_modal_conditioning
+    equipment:
+      - rower
+    effort: max
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires:
+      - row_interval
+    unlocks: []
+    contraindicated_with:
+      - lumbar_disc_pathology
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - row_interval
+    typical_volume:
+      sets: 1
+      distance_m: 500
+    sources:
+      - Gym Jones
+      - CrossFit
+    notes: >
+      Gym Jones benchmark: establish 500m PR pace; all interval training
+      references this pace. CrossFit benchmark Jackie includes 1000m row.
+      All-out effort; use as test 1–2× per training block, not as regular
+      conditioning stimulus.
+
+  - id: bike_easy
+    name: Easy Bike (Zone 1–2)
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - bike
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires: []
+    unlocks:
+      - bike_interval
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      duration_sec: 3600
+    sources:
+      - Uphill Athlete
+      - CrossFit Endurance
+    notes: >
+      Stationary or outdoor. Preferred aerobic rehabilitation modality when
+      running is contraindicated (knee post-op, lower leg injuries). Uphill
+      Athlete uses bike for aerobic base when impact work is unavailable.
+      Minimal joint load; high aerobic adaptation per unit time.
+
+  - id: bike_interval
+    name: Interval Bike (Zone 4–5)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+    equipment:
+      - bike
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires:
+      - bike_easy
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - bike_easy
+    typical_volume:
+      sets: 8
+      duration_sec: 20
+    sources:
+      - CrossFit Endurance
+    notes: >
+      Tabata-protocol intervals or longer threshold intervals on bike.
+      Assault bike commonly used for mixed-modal conditioning (e.g., Echo bike
+      calories). Low injury risk relative to running intervals; useful when
+      running is contraindicated.
+
+  - id: ruck
+    name: Ruck (Loaded Walk / Run)
+    category: aerobic
+    modality:
+      - aerobic_base
+      - durability
+    equipment:
+      - ruck_pack
+      - open_space
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+      - loaded_carry
+    requires: []
+    unlocks: []
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - lumbar_disc_pathology
+    progressions:
+      load: increase_pack_weight
+      volume: increase_distance
+    scaling_down:
+      - run_easy
+    typical_volume:
+      duration_sec: 5400
+      distance_m: 10000
+    sources:
+      - Horsemen
+      - Uphill Athlete
+      - Gym Jones
+    notes: >
+      Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation,
+      30kg pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight.
+      Gym Jones recovery endurance hike: 90–120 min with 20–30# pack.
+      Progressions: distance first, then load, then speed. Simple, durable
+      training modality requiring minimal equipment.
+
+  - id: swim_easy
+    name: Easy Swim (Zone 1–2)
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - pool
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_distance
+    scaling_down: []
+    typical_volume:
+      duration_sec: 2400
+      distance_m: 1500
+    sources:
+      - Gym Jones
+    notes: >
+      Gym Jones recovery day format A includes swimming at conversational pace.
+      Zero-impact; excellent when lower-limb injuries are present. Requires
+      pool access. Technique-intensive; freestyle recommended for conditioning
+      efficiency.
+
+  - id: ski_erg_easy
+    name: Ski Erg (Zone 1–2)
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - ski_erg
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires: []
+    unlocks:
+      - ski_erg_interval
+    contraindicated_with:
+      - shoulder_impingement
+      - lumbar_disc_pathology
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      duration_sec: 2400
+    sources:
+      - CrossFit Endurance
+    notes: >
+      Double-pole motion on Concept II SkiErg. Predominantly upper-body and
+      core-driven aerobic demand; lower-limb contribution from hip hinge. Useful
+      for aerobic base when running is contraindicated. Low stroke rate at
+      Zone 1–2.
+
+  - id: ski_erg_interval
+    name: Ski Erg Interval (Zone 4–5)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+    equipment:
+      - ski_erg
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+    requires:
+      - ski_erg_easy
+    unlocks: []
+    contraindicated_with:
+      - shoulder_impingement
+      - lumbar_disc_pathology
+    progressions:
+      volume: add_sets
+    scaling_down:
+      - ski_erg_easy
+    typical_volume:
+      sets: 8
+      duration_sec: 20
+    sources:
+      - CrossFit Endurance
+    notes: >
+      Tabata or 30/15-format intervals. High metabolic demand; upper-body
+      fatigue accumulates quickly. Useful mixed-modal conditioning variation
+      when rowing and running are both programmed in the same week.
+
+  - id: jump_rope_single_under
+    name: Jump Rope (Single Under)
+    category: aerobic
+    modality:
+      - aerobic_base
+      - movement_skill
+    equipment:
+      - jump_rope
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+    requires: []
+    unlocks:
+      - jump_rope_double_under
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: increase_duration
+      complexity: jump_rope_double_under
+    scaling_down: []
+    typical_volume:
+      duration_sec: 300
+    sources:
+      - CrossFit
+    notes: >
+      Foundation jump rope skill. Light impact; builds rhythm and coordination
+      prerequisite for double unders. CrossFit bodyweight WODs use single
+      unders as the accessible scaling option. 1 double under = 3 single
+      unders in most scaling schemes.
+
+  - id: jump_rope_double_under
+    name: Jump Rope (Double Under)
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+      - movement_skill
+    equipment:
+      - jump_rope
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+      - ballistic
+    requires:
+      - jump_rope_single_under
+    unlocks: []
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down:
+      - jump_rope_single_under
+    typical_volume:
+      sets: 5
+      reps: 50
+    sources:
+      - CrossFit
+    notes: >
+      Rope passes twice per jump. CrossFit benchmark Annie: 50-40-30-20-10
+      double unders alternated with sit-ups. Requires rope speed, timing, and
+      consistent jump height. Higher cardiovascular demand than single unders.
+      Wrist mechanics and rope length are the primary limiting factors for
+      beginners.

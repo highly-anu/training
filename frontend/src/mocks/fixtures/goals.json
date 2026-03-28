@@ -1,0 +1,176 @@
+[
+  {
+    "id": "general_gpp",
+    "name": "General GPP",
+    "description": "Balanced general physical preparedness across strength, conditioning, mobility, and work capacity. No single quality dominates.",
+    "priorities": {
+      "max_strength": 0.20,
+      "aerobic_base": 0.20,
+      "strength_endurance": 0.20,
+      "durability": 0.15,
+      "mobility": 0.15,
+      "power": 0.10
+    },
+    "primary_sources": ["horsemen_gpp", "crossfit", "wildman_kettlebell", "marcus_filly", "kelly_starrett"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 8, "focus": "Foundation — linear barbell 3×/week, Z2 aerobic, KB technique" },
+      { "phase": "build", "weeks": 8, "focus": "5×5 strength, threshold intervals, volume increase" },
+      { "phase": "deload", "weeks": 1, "focus": "50% volume reduction, mobility focus" },
+      { "phase": "build", "weeks": 8, "focus": "Wave loading, mixed modal AMRAP" }
+    ],
+    "minimum_prerequisites": {},
+    "incompatible_with": [],
+    "framework_selection": { "default_framework": "concurrent_training", "alternatives": [] },
+    "notes": "Best starting goal for athletes transitioning from sport-specific to GPP."
+  },
+  {
+    "id": "alpine_climbing",
+    "name": "Alpine Climbing",
+    "description": "Aerobic engine dominates. High volume Z2 and rucking, with strength as a supporting quality for summit days.",
+    "priorities": {
+      "aerobic_base": 0.50,
+      "durability": 0.20,
+      "max_strength": 0.15,
+      "mobility": 0.10,
+      "power": 0.05
+    },
+    "primary_sources": ["uphill_athlete", "horsemen_gpp", "kelly_starrett"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 8, "focus": "Z1/Z2 volume, 3×5 strength, mobility, joint prep" },
+      { "phase": "build", "weeks": 6, "focus": "Aerobic volume + vertical, pack weight rucks, thresholds" },
+      { "phase": "peak", "weeks": 4, "focus": "Sport-specific: long rucks, sustained thresholds" },
+      { "phase": "taper", "weeks": 2, "focus": "Volume reduction 40-50%, intensity maintained" }
+    ],
+    "minimum_prerequisites": {
+      "run_5km_time_min": 35,
+      "back_squat_bw_pct": 0.85,
+      "pull_up_reps": 3
+    },
+    "incompatible_with": ["max_strength_focus"],
+    "framework_selection": { "default_framework": "polarized_80_20", "alternatives": [] },
+    "event_date": null,
+    "notes": "Polarized 80/20 is the governing framework. Avoid high-intensity strength during aerobic blocks."
+  },
+  {
+    "id": "sof_operator",
+    "name": "SOF Operator",
+    "description": "Durability and work capacity first. Prepare for selection and sustainment of operational fitness: rucking, SSST, PT standards.",
+    "priorities": {
+      "durability": 0.30,
+      "strength_endurance": 0.25,
+      "aerobic_base": 0.20,
+      "max_strength": 0.15,
+      "power": 0.10
+    },
+    "primary_sources": ["horsemen_gpp", "gym_jones", "crossfit", "wildman_kettlebell"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 6, "focus": "3×5 linear, Z2 runs, KB ballistics, joint prep" },
+      { "phase": "build", "weeks": 6, "focus": "Sandbag complexes, loaded carries, EMOM, ruck extension" },
+      { "phase": "maintenance", "weeks": 4, "focus": "PT test standards, SSST prep, named Horsemen WODs" },
+      { "phase": "maintenance", "weeks": 4, "focus": "Sustain fitness, alternating recovery/test intensity" }
+    ],
+    "minimum_prerequisites": {
+      "pull_up_reps": 10,
+      "back_squat_bw_pct": 1.0,
+      "deadlift_bw_pct": 1.5,
+      "run_3mile_min": 27,
+      "ssst_reps": 100
+    },
+    "incompatible_with": ["ultra_endurance"],
+    "framework_selection": { "default_framework": "gpp_circuits", "alternatives": [] },
+    "notes": "SOF fitness is durability over peak. High-rep, high-frequency, sub-maximal efforts."
+  },
+  {
+    "id": "bjj_competitor",
+    "name": "BJJ Competitor",
+    "description": "Mat fitness is non-transferable. Supplement rolling with strength endurance, grip conditioning, and aerobic base.",
+    "priorities": {
+      "strength_endurance": 0.30,
+      "combat_sport": 0.25,
+      "aerobic_base": 0.20,
+      "max_strength": 0.15,
+      "mobility": 0.10
+    },
+    "primary_sources": ["bjj", "horsemen_gpp", "marcus_filly"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 6, "focus": "Aerobic base, hip mobility, grip conditioning, rolling volume" },
+      { "phase": "build", "weeks": 6, "focus": "Strength endurance, positional drilling, live rounds" },
+      { "phase": "peak", "weeks": 4, "focus": "Competition simulation, reduced strength work, sharpening" },
+      { "phase": "taper", "weeks": 1, "focus": "Light drilling only, movement quality" }
+    ],
+    "minimum_prerequisites": {},
+    "incompatible_with": [],
+    "framework_selection": { "default_framework": "concurrent_training", "alternatives": [] },
+    "notes": "Rolling frequency is sacred — never reduce mat time for S&C gains."
+  },
+  {
+    "id": "ultra_endurance",
+    "name": "Ultra Endurance",
+    "description": "Aerobic base is the entire program. Strength is maintenance only. Maximum time on feet, fat adaptation, zone-2 dominance.",
+    "priorities": {
+      "aerobic_base": 0.60,
+      "durability": 0.20,
+      "mobility": 0.10,
+      "power": 0.05,
+      "max_strength": 0.05
+    },
+    "primary_sources": ["uphill_athlete", "crossfit_endurance"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 12, "focus": "Zone 1/2 volume, fat adaptation, strength maintenance" },
+      { "phase": "build", "weeks": 8, "focus": "Threshold work introduction, back-to-backs" },
+      { "phase": "peak", "weeks": 4, "focus": "Longest efforts, event simulation" },
+      { "phase": "taper", "weeks": 3, "focus": "Significant volume cut, maintain intensity" }
+    ],
+    "minimum_prerequisites": {
+      "run_5km_time_min": 40
+    },
+    "incompatible_with": ["max_strength_focus", "sof_operator"],
+    "framework_selection": { "default_framework": "polarized_80_20", "alternatives": [] },
+    "notes": "Interference with strength is real. Keep strength work minimal and separatedin time."
+  },
+  {
+    "id": "max_strength_focus",
+    "name": "Max Strength",
+    "description": "Barbell dominates. Linear or block periodization. Minimal conditioning interference. For novice-to-intermediate strength development.",
+    "priorities": {
+      "max_strength": 0.60,
+      "relative_strength": 0.20,
+      "power": 0.10,
+      "mobility": 0.05,
+      "aerobic_base": 0.05
+    },
+    "primary_sources": ["starting_strength", "horsemen_gpp"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 12, "focus": "Linear progression — squat/press/deadlift 3×/week" },
+      { "phase": "build", "weeks": 8, "focus": "5×5, Texas Method, HLM variation" },
+      { "phase": "peak", "weeks": 4, "focus": "Wave loading, 1RM testing" },
+      { "phase": "deload", "weeks": 1, "focus": "40% volume, movement quality" }
+    ],
+    "minimum_prerequisites": {},
+    "incompatible_with": ["ultra_endurance", "alpine_climbing"],
+    "framework_selection": { "default_framework": "linear_progression", "alternatives": [] },
+    "notes": "Concurrent aerobic work at >20% of training time impairs strength adaptation."
+  },
+  {
+    "id": "injury_rehab",
+    "name": "Injury Rehab",
+    "description": "Injury is a phase, not a break. Structured return to training with clinical constraints respected.",
+    "priorities": {
+      "rehab": 0.50,
+      "mobility": 0.25,
+      "aerobic_base": 0.15,
+      "max_strength": 0.05,
+      "power": 0.05
+    },
+    "primary_sources": ["marcus_filly", "kelly_starrett", "clinical_protocols"],
+    "phase_sequence": [
+      { "phase": "post_op", "weeks": 4, "focus": "Isometrics, early mobility, pain-free movement" },
+      { "phase": "rehab", "weeks": 8, "focus": "Progressive loading, tissue adaptation, aerobic maintenance" },
+      { "phase": "base", "weeks": 6, "focus": "Return to sport — gradual load reintroduction" }
+    ],
+    "minimum_prerequisites": {},
+    "incompatible_with": ["max_strength_focus", "sof_operator"],
+    "framework_selection": { "default_framework": "rpe_autoregulation", "alternatives": [] },
+    "notes": "All loads RPE-based. Pain is always a hard stop signal."
+  }
+]

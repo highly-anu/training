@@ -1,0 +1,44 @@
+id: marcus_filly
+name: "Marcus Filly / Functional Bodybuilding"
+core_principles:
+  - rpe_based_autoregulation_prevents_overtraining
+  - aesthetics_and_function_are_compatible_goals
+  - shoulder_and_joint_health_require_dedicated_maintenance
+  - controlled_eccentrics_and_isometrics_build_tissue_resilience
+  - sustainable_training_over_max_intensity
+  - tempo_and_intent_matter_as_much_as_load
+  - concurrent_training_managed_through_fatigue_awareness
+scope:
+  - max_strength
+  - strength_endurance
+  - relative_strength
+  - mixed_modal_conditioning
+  - durability
+  - rehab
+bias:
+  - strength_endurance
+  - durability
+  - rehab
+avoid_with: []
+required_equipment:
+  - barbell
+  - dumbbell
+  - pull_up_bar
+  - rings
+  - resistance_band
+intensity_model: autoregulation_rpe
+progression_philosophy: feel_based
+sources:
+  - "Marcus Filly — Functional Bodybuilding methodology and programming"
+  - "plan.md section 10 (Rehab Protocol: Shoulder)"
+notes: >
+  RPE governs load selection session-to-session; athlete rates perceived effort
+  and adjusts accordingly rather than following fixed percentages. Tempo prescriptions
+  (e.g. 3-1-1, slow eccentric) are a hallmark — they increase time under tension
+  without requiring heavier loads, making the method compatible with joint-sensitive
+  populations. Rehab integration is first-class: isometric holds, eccentric
+  push-ups, landmine presses, face pulls, and band pull-aparts are programmed
+  alongside performance work. Shoulder protocol: dip support holds, side plank with
+  lat activation, landmine press, eccentric push-up on parallettes, face pull
+  (thumbs-up, elbows high), elbow-out rows, DB external rotation, band pull-aparts.
+  Useful for injury rehab → return to sport transitions.

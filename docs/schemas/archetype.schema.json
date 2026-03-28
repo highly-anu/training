@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "archetype.schema.json",
+  "title": "Workout Archetype",
+  "description": "A reusable workout shape. Defines the structure of a session — how many slots, of what type, in what format — without specifying which exercises fill them. The selector populates slots with exercises at generation time.",
+  "type": "object",
+  "required": ["id", "name", "modality", "category", "duration_estimate_minutes", "slots"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug. e.g. '3x5_linear', 'long_zone_2', 'amrap_20min'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. '3×5 Linear Strength', 'Long Zone 2 Run'"
+    },
+    "modality": {
+      "type": "string",
+      "enum": [
+        "max_strength", "strength_endurance", "relative_strength",
+        "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+        "power", "mobility", "movement_skill", "durability",
+        "combat_sport", "rehab"
+      ],
+      "description": "Primary modality this archetype develops."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["strength", "conditioning", "movement_skill", "gpp_durability", "kettlebell", "recovery", "rehab"],
+      "description": "Broad session category used for scheduling and tagging."
+    },
+    "duration_estimate_minutes": {
+      "type": "integer",
+      "minimum": 5,
+      "description": "Expected session length in minutes, including warm-up and cool-down. Used to match against constraint session_time_minutes."
+    },
+    "slots": {
+      "type": "array",
+      "description": "Ordered list of exercise slots within the session. Each slot defines what role an exercise should play and the volume parameters for that role.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "slot_type"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "What this slot does in the session. e.g. 'primary_compound', 'accessory', 'conditioning_finisher', 'skill_practice'"
+          },
+          "slot_type": {
+            "type": "string",
+            "enum": ["sets_reps", "time_domain", "distance", "amrap", "emom", "for_time", "skill_practice", "static_hold"],
+            "description": "The format that determines how volume is measured."
+          },
+          "sets":           { "type": "integer", "minimum": 1 },
+          "reps":           { "type": ["integer", "string"], "description": "Integer or range string e.g. '3-5'" },
+          "duration_sec":   { "type": "integer", "minimum": 1, "description": "For time_domain or emom slots." },
+          "distance_m":     { "type": "integer", "minimum": 1, "description": "For distance slots." },
+          "intensity":      {
+            "type": "string",
+            "enum": ["max", "heavy", "progressing", "moderate", "light", "bodyweight", "zone1", "zone2", "zone3", "zone4", "zone5"],
+            "description": "Intensity target for this slot."
+          },
+          "intensity_pct_1rm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Exact %1RM if applicable. e.g. 0.80 = 80%."
+          },
+          "rest_sec":       { "type": "integer", "minimum": 0, "description": "Rest in seconds between sets." },
+          "exercise_filter": {
+            "type": "object",
+            "description": "Constraints on which exercises can fill this slot. Narrows exercise selection.",
+            "properties": {
+              "category":    { "type": "string" },
+              "movement_pattern": { "type": "string" },
+              "bilateral":   { "type": "boolean" },
+              "equipment_required": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "scaling": {
+      "type": "object",
+      "description": "How the archetype adapts under common constraint scenarios.",
+      "properties": {
+        "deload": {
+          "type": "object",
+          "description": "Modifications applied during a deload week.",
+          "properties": {
+            "volume_multiplier": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+            "intensity_pct":     { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+            "notes":             { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "time_limited": {
+          "type": "object",
+          "description": "How to abbreviate if session_time_minutes is shorter than duration_estimate_minutes.",
+          "properties": {
+            "drop_slots": { "type": "array", "items": { "type": "string" }, "description": "Role names to drop first." },
+            "notes":      { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "equipment_limited": {
+          "type": "object",
+          "description": "Substitute equipment or approaches if required equipment is unavailable.",
+          "properties": {
+            "substitutions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["missing_equipment", "substitute_approach"],
+                "properties": {
+                  "missing_equipment":    { "type": "string" },
+                  "substitute_approach":  { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "required_equipment": {
+      "type": "array",
+      "description": "Equipment needed to run this archetype as written. If any item is missing and no scaling.equipment_limited rule exists, this archetype is unavailable.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "barbell", "rack", "plates", "kettlebell", "dumbbell",
+          "pull_up_bar", "rings", "parallettes", "rower", "bike",
+          "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
+          "medicine_ball", "resistance_band", "rope", "box",
+          "ghd", "jump_rope", "open_space"
+        ]
+      },
+      "default": []
+    },
+    "applicable_phases": {
+      "type": "array",
+      "description": "Training phases in which this archetype is appropriate. If empty, applicable in all phases.",
+      "items": {
+        "type": "string",
+        "enum": ["active", "base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op"]
+      },
+      "default": []
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": { "type": "string" }
+  }
+}

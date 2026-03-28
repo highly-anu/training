@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "benchmark.schema.json",
+  "title": "Performance Benchmark",
+  "description": "A measurable standard used to assess athlete readiness, track progress, and enforce goal profile prerequisites. Benchmarks can be time-based, load-based, rep-based, or skill-based.",
+  "type": "object",
+  "required": ["id", "name", "domain", "metric_type", "levels"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug. e.g. 'back_squat_bw_ratio', 'run_3mile_time', 'ssst_reps'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. 'Back Squat (bodyweight ratio)', '3-Mile Run', 'Secret Service Snatch Test'"
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "max_strength", "strength_endurance", "relative_strength",
+        "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+        "power", "mobility", "movement_skill", "durability",
+        "combat_sport", "rehab", "general"
+      ],
+      "description": "Which modality this benchmark primarily measures."
+    },
+    "description": {
+      "type": "string",
+      "description": "What this benchmark tests and why it matters."
+    },
+    "metric_type": {
+      "type": "string",
+      "enum": ["bw_ratio", "time_seconds", "time_minutes", "reps", "distance_m", "height_inches", "score", "boolean"],
+      "description": "The unit in which this benchmark is measured. Determines how level thresholds are compared."
+    },
+    "lower_is_better": {
+      "type": "boolean",
+      "description": "True for time-based benchmarks (faster = better). False for load, reps, distance benchmarks.",
+      "default": false
+    },
+    "test_protocol": {
+      "type": "string",
+      "description": "How to administer this test. Include warm-up requirements, equipment, and single vs. repeated effort."
+    },
+    "levels": {
+      "type": "object",
+      "description": "Performance thresholds by tier. At minimum define the tiers relevant to this benchmark. Values match metric_type.",
+      "properties": {
+        "entry":        { "$ref": "#/definitions/level_value" },
+        "intermediate": { "$ref": "#/definitions/level_value" },
+        "advanced":     { "$ref": "#/definitions/level_value" },
+        "elite":        { "$ref": "#/definitions/level_value" },
+        "I":            { "$ref": "#/definitions/level_value" },
+        "II":           { "$ref": "#/definitions/level_value" },
+        "III":          { "$ref": "#/definitions/level_value" },
+        "IV":           { "$ref": "#/definitions/level_value" },
+        "V":            { "$ref": "#/definitions/level_value" }
+      },
+      "additionalProperties": false
+    },
+    "goal_relevance": {
+      "type": "array",
+      "description": "Goal profile IDs for which this benchmark is a meaningful readiness indicator.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "sources": {
+      "type": "array",
+      "description": "Where these standards come from.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": { "type": "string" }
+  },
+  "definitions": {
+    "level_value": {
+      "description": "A threshold value, optionally broken down by sex.",
+      "oneOf": [
+        {
+          "type": "number",
+          "description": "Single value applying to all athletes."
+        },
+        {
+          "type": "string",
+          "description": "Descriptive standard when a number doesn't apply. e.g. 'Unassisted pull-up'"
+        },
+        {
+          "type": "object",
+          "description": "Sex-differentiated values.",
+          "properties": {
+            "male":   { "type": ["number", "string"] },
+            "female": { "type": ["number", "string"] },
+            "note":   { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

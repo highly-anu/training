@@ -1,0 +1,96 @@
+id: ultra_endurance
+name: Ultra / Expedition Endurance
+description: >
+  For athletes preparing for ultra-marathons, expedition-style events, or
+  multi-day endurance efforts. Targets a dominant aerobic engine, metabolic
+  efficiency, fat adaptation, structural durability under time-on-feet, and
+  the movement quality to sustain form across extreme duration.
+
+event_date: null
+
+priorities:
+  aerobic_base: 0.60
+  durability: 0.20
+  strength_endurance: 0.10
+  mobility: 0.10
+
+primary_sources:
+  - uphill_athlete
+  - crossfit
+  - kelly_starrett
+
+phase_sequence:
+  - phase: base
+    weeks: 10
+    focus: >
+      Maximum aerobic base development. Zone 1–2 only — no intensity work
+      until aerobic threshold improves. Long slow distance 5–6×/week with
+      one very long effort per week (3–5h). Structural strength 2×/week
+      (single-leg focus: SL deadlift, split squat, step-up). Daily mobility,
+      foot/ankle prep, and thoracic work.
+  - phase: build
+    weeks: 8
+    focus: >
+      Extend long efforts toward race simulation distance. Introduce
+      back-to-back long days (Friday/Saturday) for glycogen depletion
+      adaptation. Add 1×/week threshold intervals. Strength shifts to
+      maintenance (1×/week). Ruck and loaded carry training for expedition goals.
+      Increase total weekly vertical gain.
+    priority_override:
+      aerobic_base: 0.55
+      durability: 0.25
+      strength_endurance: 0.10
+      mobility: 0.10
+  - phase: peak
+    weeks: 4
+    focus: >
+      Race-specific simulation. Long efforts at target race pace. Practice
+      nutrition and pacing strategy. Cutback weeks alternate with simulation
+      efforts. Drop strength entirely. Increase mobility and tissue work.
+      Heat, altitude, or terrain adaptation if relevant to event.
+    priority_override:
+      aerobic_base: 0.60
+      durability: 0.25
+      mobility: 0.15
+      strength_endurance: 0.00
+  - phase: taper
+    weeks: 2
+    focus: >
+      Volume reduction 40–60% over 2 weeks. Maintain workout intensity but
+      shorten duration. Leg freshening priority. Zero strength work. Full
+      joint prep and tissue quality sessions. Sleep, nutrition, race logistics.
+    priority_override:
+      aerobic_base: 0.50
+      mobility: 0.35
+      durability: 0.15
+      strength_endurance: 0.00
+
+minimum_prerequisites:
+  run_3mile_min: 30
+
+incompatible_with:
+  - goal_id: max_strength_focus
+    reason: >
+      Extreme aerobic volume creates direct interference with maximal strength
+      adaptation. High cortisol environment suppresses hypertrophic and neural
+      strength responses. Concurrent pursuit of both produces suboptimal results
+      in each domain.
+
+framework_selection:
+  default_framework: polarized_80_20
+  alternatives:
+    - framework_id: concurrent_training
+      condition: days_per_week <= 4
+    - framework_id: block_periodization
+      condition: event_date is not null and weeks_to_event >= 20
+
+notes: >
+  Uphill Athlete's polarized model is the primary driver: 80% Zone 1–2,
+  20% above threshold. Fat adaptation requires sustained low-intensity
+  volume — no junk miles, but also no chronic intensity. CrossFit Endurance
+  principles inform interval structure in the build phase. Starrett protocols
+  address the cumulative tissue stress of ultra training (foot, ankle, hip
+  flexor, IT band). Strength work is purely structural and supportive —
+  single-leg patterns that prevent the muscle imbalances typical in high-mileage
+  athletes. Nutrition strategy (fat adaptation, fueling windows) is a critical
+  parallel layer not captured here.

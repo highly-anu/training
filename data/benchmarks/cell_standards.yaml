@@ -1,0 +1,279 @@
+# The Cell Fitness Standards
+# Source: The Cell Fitness (thecellfitness.com.au), Cockburn Central, WA, Australia
+# Five-tier benchmark system across multiple physical domains.
+#
+# Level descriptions:
+#   I:   Basic fitness; minimum for functional daily life; 3-12 months to achieve
+#   II:  Sound fitness for a well-rounded beginner; 6 months - several years after Level I
+#   III: Intermediate; appropriate for competitive athletes, military, law enforcement; 1-3 years
+#   IV:  Advanced; few possess this; 3-5 years total investment
+#   V:   Elite; supreme commitment; attainable by all
+
+standards:
+  hips:
+    air_squat:
+      description: "Bodyweight squat for reps in 2 minutes"
+      levels:
+        I: { reps: 40, time_sec: 120 }
+        II: { reps: 50, time_sec: 120 }
+        III: { reps: 100, time_sec: 120 }
+        IV: { reps: 10, note: "pistols each leg" }
+        V: { reps: 25, note: "pistols each leg" }
+
+    back_squat:
+      description: "1RM back squat as fraction of bodyweight"
+      levels:
+        I:   { female_bw_pct: 0.50, male_bw_pct: 0.85 }
+        II:  { female_bw_pct: 0.75, male_bw_pct: 1.25 }
+        III: { female_bw_pct: 0.90, male_bw_pct: 1.50 }
+        IV:  { female_bw_pct: 1.15, male_bw_pct: 1.75 }
+        V:   { female_bw_pct: 1.50, male_bw_pct: 2.00 }
+
+    box_jump:
+      description: "Maximum box jump height"
+      levels:
+        I:   { female_inches: 12 }
+        II:  { female_inches: 18, male_inches: 21 }
+        III: { female_inches: 24, male_inches: 30 }
+        IV:  { female_inches: 30, male_inches: 42 }
+        V:   { female_inches: 42, male_inches: 50 }
+
+    broad_jump:
+      description: "Horizontal standing broad jump distance"
+      levels:
+        I:   { metres: 1.00 }
+        II:  { metres: 1.50 }
+        III: { metres: 2.00 }
+        IV:  { metres: 2.25 }
+        V:   { metres: 2.50 }
+
+  push:
+    push_up:
+      description: "Strict push-ups; Level IV+ use rings"
+      levels:
+        I:   { female: "20 reps on knees" }
+        II:  { female_reps: 15, male_reps: 20 }
+        III: { female_reps: 25, male_reps: 40 }
+        IV:  { female: "Ring push-up: 30 reps", male: "Ring push-up: 45 reps" }
+        V:   { female: "Ring push-up: 45 reps", male: "Ring push-up: 60 reps" }
+
+    dip:
+      description: "Parallel bar dips; Level IV+ use rings"
+      levels:
+        I:   { female: "5 reps on any power band" }
+        II:  { female: "5 reps on small power band" }
+        III: { female_reps: 10, male_reps: 20 }
+        IV:  { female: "Ring dip: 20 reps", male: "Ring dip: 30 reps" }
+        V:   { female: "Ring dip: 30 reps", male: "Ring dip: 40 reps" }
+
+    shoulder_press:
+      description: "Strict overhead press as fraction of bodyweight"
+      levels:
+        I:   { female_bw_pct: 0.30, male_bw_pct: 0.50 }
+        II:  { female_bw_pct: 0.40, male_bw_pct: 0.60 }
+        III: { female_bw_pct: 0.50, male_bw_pct: 0.70 }
+        IV:  { female_bw_pct: 0.60, male_bw_pct: 0.85 }
+        V:   { female_bw_pct: 0.70, male_bw_pct: 1.00 }
+
+    handstand_push_up:
+      description: "Handstand push-up; Level I/II = skill progression"
+      levels:
+        I:   { female: "Kick up to handstand, hold 5 sec" }
+        II:  { female: "Handstand hold 30 sec" }
+        III: { female: "1 HSPU head to ab mat", male: "1 HSPU head to floor" }
+        IV:  { female: "1 HSPU head to floor", male: "4 HSPU, hands on 25kg plates" }
+        V:   { female: "4 HSPU, hands on 25kg plates", male: "4 Ring HSPU, rings 1 fist above floor" }
+
+  pull:
+    pull_up:
+      description: "Strict pull-ups + 1 weighted rep"
+      levels:
+        I:   { female: "10 reps on any power band" }
+        II:  { female: "10 reps on small power band" }
+        III: { female: "15 reps + 1 rep at 15% BW", male: "25 reps + 1 rep at 25% BW" }
+        IV:  { female: "25 reps + 1 rep at 25% BW", male: "40 reps + 1 rep at 50% BW" }
+        V:   { female: "35 reps + 1 rep at 50% BW", male: "50 reps + 1 rep at 75% BW" }
+
+    deadlift:
+      description: "1RM deadlift as fraction of bodyweight"
+      levels:
+        I:   { female_bw_pct: 0.50, male_bw_pct: 0.80 }
+        II:  { female_bw_pct: 0.85, male_bw_pct: 1.50 }
+        III: { female_bw_pct: 1.15, male_bw_pct: 1.75 }
+        IV:  { female_bw_pct: 1.50, male_bw_pct: 2.15 }
+        V:   { female_bw_pct: 1.75, male_bw_pct: 2.50 }
+
+    power_clean:
+      description: "1RM power clean as fraction of bodyweight"
+      levels:
+        I:   { female_bw_pct: 0.30, male_bw_pct: 0.50 }
+        II:  { female_bw_pct: 0.50, male_bw_pct: 0.75 }
+        III: { female_bw_pct: 0.65, male_bw_pct: 1.10 }
+        IV:  { female_bw_pct: 0.85, male_bw_pct: 1.25 }
+        V:   { female_bw_pct: 1.05, male_bw_pct: 1.50 }
+
+    rope_climb:
+      description: "Rope ascents (5m rope)"
+      levels:
+        I:   { standard: "5 Cell scaled climbs" }
+        II:  { standard: "1 ascent with legs" }
+        III: { standard: "2 ascents in 45 seconds" }
+        IV:  { standard: "3 ascents touch & go" }
+        V:   { standard: "5 ascents touch & go" }
+
+  core:
+    four_point_ab_bridge:
+      description: "4-point isometric plank hold"
+      levels:
+        I:   { time_min: 1.0 }
+        II:  { time_min: 1.5 }
+        III: { time_min: 2.0 }
+        IV:  { time_min: 3.0 }
+        V:   { time_min: 4.0 }
+
+    l_sit:
+      description: "L-sit hold duration"
+      levels:
+        I:   { standard: "N/A" }
+        II:  { standard: "Tuck sit 10 seconds" }
+        III: { time_sec: 15 }
+        IV:  { time_sec: 30 }
+        V:   { time_min: 1.0 }
+
+    overhead_squat:
+      description: "1RM OHS as fraction of bodyweight"
+      levels:
+        I:   { female: "Ladies Olympic bar (15kg)", male: "Men's Olympic bar (20kg)" }
+        II:  { female_bw_pct: 0.35, male_bw_pct: 0.45 }
+        III: { female_bw_pct: 0.55, male_bw_pct: 0.65 }
+        IV:  { female_bw_pct: 0.80, male_bw_pct: 1.00 }
+        V:   { female_bw_pct: 1.00, male_bw_pct: 1.25 }
+
+  work_capacity:
+    kb_american_swing:
+      description: "Kettlebell American swing, 50 reps"
+      levels:
+        I:   { female_kg: 8,  male_kg: 12, reps: 50 }
+        II:  { female_kg: 10, male_kg: 16, reps: 50 }
+        III: { female_kg: 16, male_kg: 24, reps: 50 }
+        IV:  { female_kg: 20, male_kg: 28, reps: 50 }
+        V:   { female_kg: 24, male_kg: 32, reps: 50 }
+
+    kb_snatch:
+      description: "Kettlebell snatch for reps in time"
+      levels:
+        I:   { female_kg: 8,  male_kg: 12, reps: 30,  time_min: 3 }
+        II:  { female_kg: 10, male_kg: 16, reps: 50,  time_min: 5 }
+        III: { female_kg: 12, male_kg: 20, reps: 75,  time_min: 5 }
+        IV:  { female_kg: 16, male_kg: 24, reps: 100, time_min: 5 }
+        V:   { female_kg: 16, male_kg: 24, reps: 200, time_min: 10 }
+
+    kb_clean_and_jerk:
+      description: "KB clean & jerk for reps in time"
+      levels:
+        I:   { female_kg: 8,  male_kg: 12, volume: "25 reps each side", time_min: 5 }
+        II:  { female_kg: 10, male_kg: 16, volume: "25 reps double KB",  time_min: 5 }
+        III: { female_kg: 12, male_kg: 20, volume: "50 reps double KB",  time_min: 5 }
+        IV:  { female_kg: 16, male_kg: 24, volume: "75 reps double KB",  time_min: 10 }
+        V:   { female_kg: 20, male_kg: 32, volume: "60 reps double KB",  time_min: 10 }
+
+    thruster:
+      description: "Barbell thruster for reps"
+      levels:
+        I:   { female_bw_pct: 0.25, male_bw_pct: 0.35, reps: 15 }
+        II:  { female_bw_pct: 0.30, male_bw_pct: 0.40, reps: 21 }
+        III: { female_bw_pct: 0.40, male_bw_pct: 0.50, reps: 21 }
+        IV:  { female_bw_pct: 0.50, male_bw_pct: 0.60, reps: 21 }
+        V:   { female_bw_pct: 0.60, male_bw_pct: 0.70, reps: 30 }
+
+  endurance:
+    row_500m:
+      description: "500m row best effort"
+      levels:
+        I:   { female_time: "2:25", male_time: "2:10" }
+        II:  { female_time: "2:15", male_time: "1:50" }
+        III: { female_time: "2:02", male_time: "1:40" }
+        IV:  { female_time: "1:53", male_time: "1:35" }
+        V:   { female_time: "1:46", male_time: "1:28" }
+
+    row_1km:
+      description: "1km row best effort"
+      levels:
+        I:   { female_time: "5:10", male_time: "4:40" }
+        II:  { female_time: "4:49", male_time: "3:59" }
+
+    row_2km:
+      description: "2km row best effort"
+      levels:
+        III: { female_time: "9:30", male_time: "8:00" }
+        IV:  { female_time: "8:30", male_time: "7:30" }
+        V:   { female_time: "8:00", male_time: "7:00" }
+
+    row_5km:
+      description: "5km row best effort"
+      levels:
+        II:  { female_time: "26:00", male_time: "22:00" }
+        III: { female_time: "24:00", male_time: "20:30" }
+        IV:  { female_time: "22:30", male_time: "19:30" }
+        V:   { female_time: "21:30", male_time: "18:30" }
+
+    run_400m:
+      description: "400m run best effort"
+      levels:
+        I:   { female_time: "2:15", male_time: "2:05" }
+        II:  { female_time: "2:05", male_time: "1:50" }
+        III: { female_time: "1:50", male_time: "1:30" }
+        IV:  { female_time: "1:30", male_time: "1:10" }
+        V:   { female_time: "1:10", male_time: "1:00" }
+
+    run_800m:
+      description: "800m run best effort"
+      levels:
+        I:   { female_time: "5:10", male_time: "5:00" }
+        II:  { female_time: "5:00", male_time: "4:20" }
+        III: { female_time: "4:20", male_time: "3:30" }
+        IV:  { female_time: "3:30", male_time: "2:50" }
+        V:   { female_time: "2:50", male_time: "2:20" }
+
+    run_1_mile:
+      description: "1-mile run best effort"
+      levels:
+        I:   { female_time: "9:45", male_time: "8:30" }
+        II:  { note: "1.5-mile run", female_time: "15:00", male_time: "13:30" }
+
+    run_3_mile:
+      description: "3-mile run best effort"
+      levels:
+        III: { female_time: "23:30", male_time: "21:30" }
+        IV:  { female_time: "21:30", male_time: "19:30" }
+        V:   { female_time: "19:30", male_time: "17:30" }
+
+  skill:
+    double_under:
+      description: "Double-unders in time window"
+      levels:
+        I:   { reps: 2,  time_sec: 30 }
+        II:  { reps: 10, time_sec: 60 }
+        III: { reps: 40, time_sec: 90 }
+        IV:  { reps: 60, time_sec: 90 }
+        V:   { reps: 80, time_sec: 90 }
+
+  benchmark_wods:
+    eva:
+      description: "3 rounds: 600m run + 30 KB American swings + 15 pull-ups"
+      levels:
+        I:   { scaling: "Scaled (8/12kg, band pull-ups)", time: "Sub 30 min" }
+        II:  { scaling: "Scaled (10/16kg, small band)", time: "Sub 30 min" }
+        III: { scaling: "As Rx'd", time: "Sub 60 min" }
+        IV:  { scaling: "As Rx'd", time: "Sub 50 min" }
+        V:   { scaling: "As Rx'd", time: "Sub 40 min" }
+
+    fran:
+      description: "21-15-9 thrusters + pull-ups"
+      levels:
+        III: { female_time: "6:30", male_time: "5:30" }
+
+    fight_gone_bad:
+      description: "3 rounds 1-min AMRAP: wall ball, SDHP, box jump, push press, row"
+      levels:
+        IV: { female_score: 325, male_score: 350, note: "points (reps total)" }

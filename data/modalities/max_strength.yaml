@@ -1,0 +1,47 @@
+id: max_strength
+name: Max Strength
+description: Low-rep (1-5RM) compound loading with barbell or kettlebell targeting maximum force production and neuromuscular recruitment.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: first
+
+compatible_in_session_with:
+  - mobility
+  - movement_skill
+
+incompatible_in_session_with:
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  - aerobic_base
+
+min_weekly_minutes: 60
+max_weekly_minutes: 270
+
+typical_session_minutes:
+  min: 45
+  max: 90
+
+progression_model: linear_load
+
+intensity_zones:
+  - label: submaximal
+    description: 70-84% 1RM — volume work, technique refinement
+  - label: near_max
+    description: 85-94% 1RM — primary training zone for strength stimulus
+  - label: maximal
+    description: 95-100% 1RM — testing or peaking sets only
+
+sources:
+  - Starting Strength
+  - Horsemen GPP
+  - Gym Jones
+
+notes: >
+  Must be placed first in any combined session — CNS and mechanical demand must
+  be met before accumulated fatigue degrades bar speed and coordination. Requires
+  48h minimum before repeating or before programming another high-cost modality
+  on the same muscle groups. Novices can recover in 48h; intermediate and advanced
+  athletes may need 72h at higher intensities. Hard/easy patterning (Gym Jones)
+  applies: every heavy strength day should be followed by a low-recovery-cost day.

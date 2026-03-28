@@ -1,0 +1,377 @@
+{
+  "goal": {
+    "id": "alpine_climbing",
+    "name": "Alpine Climbing",
+    "description": "Aerobic engine dominates. High volume Z2 and rucking, with strength as a supporting quality for summit days.",
+    "priorities": {
+      "aerobic_base": 0.50,
+      "durability": 0.20,
+      "max_strength": 0.15,
+      "mobility": 0.10,
+      "power": 0.05
+    },
+    "primary_sources": ["uphill_athlete", "horsemen_gpp", "kelly_starrett"],
+    "phase_sequence": [
+      { "phase": "base", "weeks": 8, "focus": "Z1/Z2 volume, 3×5 strength, mobility, joint prep" },
+      { "phase": "build", "weeks": 6, "focus": "Aerobic volume + vertical, pack weight rucks, thresholds" },
+      { "phase": "peak", "weeks": 4, "focus": "Sport-specific: long rucks, sustained thresholds" },
+      { "phase": "taper", "weeks": 2, "focus": "Volume reduction 40-50%, intensity maintained" }
+    ],
+    "minimum_prerequisites": {},
+    "incompatible_with": [],
+    "framework_selection": { "default_framework": "polarized_80_20", "alternatives": [] }
+  },
+  "constraints": {
+    "equipment": ["barbell", "rack", "plates", "kettlebell", "pull_up_bar", "ruck_pack", "open_space"],
+    "days_per_week": 5,
+    "session_time_minutes": 75,
+    "training_level": "intermediate",
+    "injury_flags": [],
+    "avoid_movements": [],
+    "training_phase": "base",
+    "periodization_week": 1,
+    "fatigue_state": "normal"
+  },
+  "validation": {
+    "feasible": true,
+    "errors": [],
+    "warnings": [
+      {
+        "code": "W001",
+        "message": "No event date provided. Phase timeline is calculated from today without a target event.",
+        "suggested_fix": "Set an event_date in your goal to enable auto-phase calculation."
+      }
+    ],
+    "info": [
+      {
+        "code": "I001",
+        "message": "Using polarized 80/20 framework. 80% of aerobic sessions below aerobic threshold."
+      }
+    ]
+  },
+  "weeks": [
+    {
+      "week_number": 1,
+      "week_in_phase": 1,
+      "phase": "base",
+      "is_deload": false,
+      "schedule": {
+        "Monday": [
+          {
+            "modality": "aerobic_base",
+            "archetype": {
+              "id": "long_zone_2",
+              "name": "Long Zone 2",
+              "modality": "aerobic_base",
+              "category": "conditioning",
+              "duration_estimate_minutes": 75,
+              "required_equipment": ["open_space"],
+              "applicable_phases": ["base", "build"],
+              "training_levels": ["novice", "intermediate", "advanced"],
+              "slots": [],
+              "sources": ["Uphill Athlete"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "run",
+                  "name": "Run (Zone 2)",
+                  "category": "aerobic",
+                  "modality": ["aerobic_base"],
+                  "equipment": ["open_space"],
+                  "effort": "low",
+                  "bilateral": true,
+                  "movement_patterns": ["locomotion"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": {},
+                  "sources": ["Uphill Athlete"]
+                },
+                "load": {
+                  "duration_minutes": 75,
+                  "zone_target": "Zone 2 — HR < 135 bpm",
+                  "intensity": "conversational pace"
+                },
+                "meta": false,
+                "slot_role": "main",
+                "notes": "Nasal breathing test: if you can't breathe through your nose, slow down."
+              }
+            ]
+          }
+        ],
+        "Tuesday": [
+          {
+            "modality": "max_strength",
+            "archetype": {
+              "id": "3x5_linear",
+              "name": "3×5 Linear Progression",
+              "modality": "max_strength",
+              "category": "strength",
+              "duration_estimate_minutes": 60,
+              "required_equipment": ["barbell", "rack", "plates"],
+              "applicable_phases": ["base", "build"],
+              "training_levels": ["novice", "intermediate"],
+              "slots": [],
+              "sources": ["Starting Strength"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "back_squat",
+                  "name": "Back Squat",
+                  "category": "barbell",
+                  "modality": ["max_strength"],
+                  "equipment": ["barbell", "rack", "plates"],
+                  "effort": "high",
+                  "bilateral": true,
+                  "movement_patterns": ["squat"],
+                  "requires": [],
+                  "unlocks": ["front_squat"],
+                  "contraindicated_with": [],
+                  "progressions": { "load": "add 2.5–5kg/session" },
+                  "sources": ["Starting Strength"]
+                },
+                "load": { "sets": 3, "reps": 5, "weight_kg": 90, "target_rpe": 7 },
+                "meta": false,
+                "slot_role": "main",
+                "notes": "Add 2.5kg next session."
+              },
+              {
+                "exercise": {
+                  "id": "overhead_press",
+                  "name": "Overhead Press",
+                  "category": "barbell",
+                  "modality": ["max_strength"],
+                  "equipment": ["barbell", "rack", "plates"],
+                  "effort": "high",
+                  "bilateral": true,
+                  "movement_patterns": ["press"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": { "load": "add 2.5kg/session" },
+                  "sources": ["Starting Strength"]
+                },
+                "load": { "sets": 3, "reps": 5, "weight_kg": 52.5, "target_rpe": 7 },
+                "meta": false,
+                "slot_role": "main",
+                "notes": "Add 2.5kg next session."
+              },
+              {
+                "exercise": {
+                  "id": "deadlift",
+                  "name": "Deadlift",
+                  "category": "barbell",
+                  "modality": ["max_strength"],
+                  "equipment": ["barbell", "plates"],
+                  "effort": "max",
+                  "bilateral": true,
+                  "movement_patterns": ["hip_hinge"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": { "load": "add 5kg/session" },
+                  "sources": ["Starting Strength"]
+                },
+                "load": { "sets": 1, "reps": 5, "weight_kg": 120, "target_rpe": 8 },
+                "meta": false,
+                "slot_role": "main",
+                "notes": "Add 5kg next session."
+              }
+            ]
+          }
+        ],
+        "Wednesday": [
+          {
+            "modality": "aerobic_base",
+            "archetype": {
+              "id": "long_zone_2",
+              "name": "Long Zone 2",
+              "modality": "aerobic_base",
+              "category": "conditioning",
+              "duration_estimate_minutes": 60,
+              "required_equipment": ["open_space"],
+              "applicable_phases": ["base"],
+              "training_levels": ["novice", "intermediate", "advanced"],
+              "slots": [],
+              "sources": ["Uphill Athlete"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "run",
+                  "name": "Run (Zone 2)",
+                  "category": "aerobic",
+                  "modality": ["aerobic_base"],
+                  "equipment": ["open_space"],
+                  "effort": "low",
+                  "bilateral": true,
+                  "movement_patterns": ["locomotion"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": {},
+                  "sources": ["Uphill Athlete"]
+                },
+                "load": { "duration_minutes": 60, "zone_target": "Zone 2 — HR < 135 bpm" },
+                "meta": false,
+                "slot_role": "main",
+                "notes": ""
+              }
+            ]
+          },
+          {
+            "modality": "mobility",
+            "archetype": {
+              "id": "joint_prep_circuit",
+              "name": "Joint Prep Circuit",
+              "modality": "mobility",
+              "category": "movement_skill",
+              "duration_estimate_minutes": 20,
+              "required_equipment": [],
+              "applicable_phases": ["base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op", "active"],
+              "training_levels": ["novice", "intermediate", "advanced", "elite"],
+              "slots": [],
+              "sources": ["Kelly Starrett", "Ido Portal"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "hip_hinge_drill",
+                  "name": "Hip Hinge Drill",
+                  "category": "mobility",
+                  "modality": ["mobility"],
+                  "equipment": [],
+                  "effort": "low",
+                  "bilateral": true,
+                  "movement_patterns": ["hip_hinge"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": {},
+                  "sources": ["Kelly Starrett"]
+                },
+                "load": { "sets": 2, "reps": 10, "focus": "hip mobility" },
+                "meta": false,
+                "slot_role": "main",
+                "notes": ""
+              }
+            ]
+          }
+        ],
+        "Thursday": [
+          {
+            "modality": "max_strength",
+            "archetype": {
+              "id": "3x5_linear",
+              "name": "3×5 Linear Progression",
+              "modality": "max_strength",
+              "category": "strength",
+              "duration_estimate_minutes": 60,
+              "required_equipment": ["barbell", "rack", "plates"],
+              "applicable_phases": ["base"],
+              "training_levels": ["novice", "intermediate"],
+              "slots": [],
+              "sources": ["Starting Strength"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "back_squat",
+                  "name": "Back Squat",
+                  "category": "barbell",
+                  "modality": ["max_strength"],
+                  "equipment": ["barbell", "rack", "plates"],
+                  "effort": "high",
+                  "bilateral": true,
+                  "movement_patterns": ["squat"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": {},
+                  "sources": ["Starting Strength"]
+                },
+                "load": { "sets": 3, "reps": 5, "weight_kg": 92.5, "target_rpe": 7 },
+                "meta": false,
+                "slot_role": "main",
+                "notes": ""
+              },
+              {
+                "exercise": {
+                  "id": "bench_press",
+                  "name": "Bench Press",
+                  "category": "barbell",
+                  "modality": ["max_strength"],
+                  "equipment": ["barbell", "rack", "plates"],
+                  "effort": "high",
+                  "bilateral": true,
+                  "movement_patterns": ["press"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": {},
+                  "sources": ["Starting Strength"]
+                },
+                "load": { "sets": 3, "reps": 5, "weight_kg": 75, "target_rpe": 7 },
+                "meta": false,
+                "slot_role": "main",
+                "notes": ""
+              }
+            ]
+          }
+        ],
+        "Saturday": [
+          {
+            "modality": "durability",
+            "archetype": {
+              "id": "ruck_session",
+              "name": "Ruck Session",
+              "modality": "durability",
+              "category": "gpp_durability",
+              "duration_estimate_minutes": 90,
+              "required_equipment": ["ruck_pack"],
+              "applicable_phases": ["base", "build", "peak"],
+              "training_levels": ["intermediate", "advanced"],
+              "slots": [],
+              "sources": ["Horsemen", "Uphill Athlete"]
+            },
+            "exercises": [
+              {
+                "exercise": {
+                  "id": "ruck",
+                  "name": "Ruck (Loaded)",
+                  "category": "aerobic",
+                  "modality": ["durability", "aerobic_base"],
+                  "equipment": ["ruck_pack"],
+                  "effort": "medium",
+                  "bilateral": true,
+                  "movement_patterns": ["carry", "locomotion"],
+                  "requires": [],
+                  "unlocks": [],
+                  "contraindicated_with": [],
+                  "progressions": { "load": "add 2kg/2 weeks" },
+                  "sources": ["Horsemen"]
+                },
+                "load": { "duration_minutes": 90, "distance_km": 12, "intensity": "20% BW load", "zone_target": "Zone 2" },
+                "meta": false,
+                "slot_role": "main",
+                "notes": "Start with 20% BW. Increase pack weight 2kg every two weeks."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "volume_summary": [
+    {
+      "week_number": 1,
+      "strength_sets": 13,
+      "cond_minutes": 135,
+      "dur_minutes": 90,
+      "mob_minutes": 20,
+      "total_minutes": 335
+    }
+  ]
+}

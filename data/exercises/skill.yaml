@@ -1,0 +1,334 @@
+exercises:
+
+  - id: role_basic
+    name: Basic Roll (Corta Capim / Role)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [locomotion]
+    requires: []
+    unlocks: [au_cortado, cartwheel]
+    contraindicated_with: [cervical_spine_injury, shoulder_instability]
+    progressions:
+      volume: increase_duration
+      complexity: au_cortado
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      duration_sec: 120
+    sources: [Ido Portal]
+    notes: Ido Portal corta capim / role work — continuous rolling patterns on the floor. Entry to all floreio ground work. 2-5 min continuous practice with 30-sec rest. Advanced variants include improvisation of learned movements. Contraindicated with cervical spine injury due to neck loading in rolls.
+
+  - id: au_cortado
+    name: Au Cortado (Capoeira Cartwheel Variation)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: false
+    movement_patterns: [ballistic, locomotion]
+    requires: [role_basic, bridge_low]
+    unlocks: [au_cortado_press, floreio_sequence]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_reps_per_set
+      complexity: au_cortado_press
+    scaling_down: [role_basic, cartwheel]
+    typical_volume:
+      sets: 3
+      reps: 12
+    sources: [Ido Portal]
+    notes: "Capoeira-derived cartwheel-like movement — lateral hand-to-floor transition with inversion. Requires simultaneous bridge mobility and role foundation. Intermediate floreio element. Ido Portal programs 10-14 reps per set with 60-sec rest. Progression: Half Au Cortado → Au Cortado → Au Cortado Press."
+
+  - id: bridge_low
+    name: Low Bridge (Rotations Into Low Bridge)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [isometric]
+    requires: []
+    unlocks: [bridge_high, au_cortado, bridge_walk]
+    contraindicated_with: [lumbar_disc, shoulder_instability]
+    progressions:
+      volume: increase_reps_per_set
+      complexity: bridge_high
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [Ido Portal]
+    notes: Ground-level bridge from supine — low backbend with weight on hands and feet, hips low. Multiple difficulty levels of approach. Ido Portal programs 10 reps rotating into bridge. Slide into low bridge variant uses 5 reps × 5-sec hold. Foundation for all Floreio arch work.
+
+  - id: bridge_high
+    name: High Bridge (Full Backbend)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [isometric, vertical_push]
+    requires: [bridge_low]
+    unlocks: [bridge_walk, floreio_sequence]
+    contraindicated_with: [lumbar_disc, shoulder_impingement, shoulder_instability]
+    progressions:
+      volume: increase_duration
+      complexity: bridge_walk
+    scaling_down: [bridge_low]
+    typical_volume:
+      sets: 3
+      duration_sec: 30
+    sources: [Ido Portal]
+    notes: Full wheel / gymnastic bridge — hips driven high, arms and legs extended. Must master low bridge first. Static hold 30 sec (can be broken into attempts). Requires wrist, shoulder, thoracic, and hip flexor mobility simultaneously. Ido Portal programs rotations into high bridge (10 reps) and static high bridge hold (30 sec) as separate drill.
+
+  - id: bridge_walk
+    name: Bridge Walk (Front or Back)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [locomotion, isometric]
+    requires: [bridge_high]
+    unlocks: [floreio_sequence]
+    contraindicated_with: [lumbar_disc, shoulder_impingement, shoulder_instability]
+    progressions:
+      volume: increase_duration
+      complexity: floreio_sequence
+    scaling_down: [bridge_high]
+    typical_volume:
+      sets: 3
+      distance_m: 12
+    sources: [Ido Portal]
+    notes: Locomotion in bridge position — front bridge walking (12m intermediate) or back bridge walking (15m advanced). Part of Ido Portal locomotion circuit programmed 3-5 rounds. Beginner variant is static hold 30 sec. Demands sustained spinal extension, shoulder stability, and hip flexor length under load.
+
+  - id: qdr_rotational_pushup
+    name: QDR Rotational Push-Up (Quadruped)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: false
+    movement_patterns: [horizontal_push, rotation]
+    requires: []
+    unlocks: [floreio_sequence]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_reps_per_set
+      complexity: qdr_rotational_pushup_advanced
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 12
+    sources: [Ido Portal]
+    notes: Ido Portal QDR (quadruped development) rotational push-up. Beginner 10-14 reps, 60-sec rest. Advanced variant lifts feet — 10 reps. Also programs QDR Circles (10 reps per side). Central element in Floreio Basic tri-set. Develops shoulder stability, scapular control, and thoracic rotation simultaneously.
+
+  - id: handstand_walk
+    name: Handstand Walk
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [locomotion, isometric, vertical_push]
+    requires: [handstand_hold]
+    unlocks: [floreio_sequence]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_duration
+      complexity: handstand_walk_elbow_to_knee
+    scaling_down: [handstand_freestanding, handstand_wall_drill]
+    typical_volume:
+      sets: 3
+      distance_m: 12
+    sources: [Ido Portal]
+    notes: "Freestanding handstand walking. Requires established freestanding handstand balance. Ido Portal locomotion circuit: beginner 12m (swinging to initiate), intermediate 12m, advanced 15m with elbow-to-knee variation. 3-5 rounds with 90-120-sec rest. Programs this as part of locomotion circuit with duck walk, horse walk, lizard walk, and ostrich walk."
+
+  - id: handstand_freestanding
+    name: Handstand (Freestanding)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [isometric, vertical_push]
+    requires: [handstand_wall_drill]
+    unlocks: [handstand_walk]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_duration
+      complexity: handstand_walk
+    scaling_down: [handstand_wall_drill, balance_frog_stance]
+    typical_volume:
+      sets: 5
+      duration_sec: 30
+    sources: [Ido Portal]
+    notes: "Freestanding handstand balance. Prerequisite to handstand walk. Ido Portal equilibre section: wall drill first (10-30 sec, 3-5 sets, 45-60 sec rest), then straighten into line (30-45 sec total, 2-3 sets, 90-sec rest). Handstand body line is primary quality — not duration."
+
+  - id: locomotion_duck_walk
+    name: Duck Walk
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [squat, locomotion]
+    requires: []
+    unlocks: [floreio_sequence]
+    contraindicated_with: [knee_meniscus_acute]
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      distance_m: 24
+    sources: [Ido Portal]
+    notes: Low squat walking. Ido Portal locomotion circuit — beginner and intermediate 24m, advanced 30m. Develops deep hip flexion, ankle dorsiflexion, and knee tolerance. Contraindicated with acute meniscus injury. One of five locomotion patterns programmed in circuit with 90-120-sec rest between rounds.
+
+  - id: locomotion_horse_walk
+    name: Horse Walk
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [locomotion]
+    requires: []
+    unlocks: [floreio_sequence]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      distance_m: 24
+    sources: [Ido Portal]
+    notes: Quadruped locomotion with knees bent and floating above floor. Ido Portal locomotion circuit — beginner and intermediate 24m, advanced 30m. Develops hip mobility, shoulder stability, and proprioceptive coordination. Part of 3-5 round locomotion circuit.
+
+  - id: locomotion_lizard_walk
+    name: Lizard Walk
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [locomotion, horizontal_push]
+    requires: []
+    unlocks: [floreio_sequence]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_duration
+      complexity: lizard_walk_advanced
+    scaling_down: [locomotion_horse_walk]
+    typical_volume:
+      sets: 3
+      distance_m: 12
+    sources: [Ido Portal]
+    notes: "Low crawl pattern with hip and shoulder close to floor — derived from lizard movement. Ido Portal locomotion circuit: beginner 12m (beginner variant), intermediate 12m (advanced variant), advanced 15m. More shoulder-intensive than horse walk. Beginner and advanced variants differ in arm mechanics."
+
+  - id: locomotion_ostrich_walk
+    name: Ostrich Walk
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [locomotion, hip_hinge]
+    requires: []
+    unlocks: [floreio_sequence]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      distance_m: 24
+    sources: [Ido Portal]
+    notes: Hip-hinge-based walk — forward locomotion with torso pitched far forward and leg swing from hip. Ido Portal locomotion circuit — beginner and intermediate 24m, advanced 30m. Develops hamstring extensibility and hip hinge motor pattern under locomotor demand.
+
+  - id: balance_frog_stance
+    name: Frog Stance (Balance)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: true
+    movement_patterns: [isometric]
+    requires: []
+    unlocks: [handstand_freestanding]
+    contraindicated_with: [wrist_injury]
+    progressions:
+      volume: increase_duration
+      complexity: handstand_freestanding
+    scaling_down: []
+    typical_volume:
+      sets: 5
+      duration_sec: 20
+    sources: [Ido Portal]
+    notes: Ido Portal equilibre entry — squat with knees resting on elbows, feet lifted, balance on hands. 15-30 sec per set, 3-5 sets, 60-sec rest. Builds wrist strength, shoulder stability, and proprioceptive feedback required for handstand progression. First step in the balance skill tree.
+
+  - id: air_baby
+    name: Air Baby Extensions (Ido Portal)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: false
+    movement_patterns: [isometric, rotation]
+    requires: [balance_frog_stance]
+    unlocks: [floreio_sequence]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      volume: increase_reps_per_set
+      complexity: floreio_sequence
+    scaling_down: [balance_frog_stance]
+    typical_volume:
+      sets: 3
+      reps: 8
+    sources: [Ido Portal]
+    notes: "Ido Portal equilibre movement — from ground support position, extend one leg laterally while counter-rotating upper body. Air Baby Extensions: 5-10 reps per side. Static Air Baby hold: 10-15 sec per side. Demands single-arm ground support strength, hip abductor mobility, and contralateral coordination."
+
+  - id: floreio_sequence
+    name: Floreio Sequence (Combined Movement Flow)
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: medium
+    bilateral: true
+    movement_patterns: [locomotion, rotation, ballistic, isometric]
+    requires: [role_basic, bridge_high, au_cortado, qdr_rotational_pushup]
+    unlocks: []
+    contraindicated_with: [shoulder_instability, lumbar_disc, wrist_injury]
+    progressions:
+      complexity: improvisation_floreio
+      volume: increase_duration
+    scaling_down: [role_basic, au_cortado, bridge_high]
+    typical_volume:
+      sets: 3
+      duration_sec: 120
+    sources: [Ido Portal]
+    notes: Ido Portal floreio — chained sequence of role, bridge, au cortado, and QDR movements without pause. Represents the integration tier (isolation → integration → spontaneous expression). Ido Portal programs as 2-min continuous role work with improvisation of learned elements, 3 sets, 30-sec rest. WOTD format uses descending pyramid (10/8/6 reps of sequence).
+
+  - id: cartwheel
+    name: Cartwheel
+    category: skill
+    modality: [movement_skill]
+    equipment: [open_space]
+    effort: low
+    bilateral: false
+    movement_patterns: [locomotion, ballistic]
+    requires: [role_basic]
+    unlocks: [au_cortado]
+    contraindicated_with: [shoulder_instability, wrist_injury]
+    progressions:
+      complexity: au_cortado
+      volume: increase_reps_per_set
+    scaling_down: [role_basic]
+    typical_volume:
+      sets: 3
+      reps: 8
+    sources: [Ido Portal]
+    notes: Standard cartwheel — prerequisite bridge between role work and au cortado. Establishes lateral inversion mechanics and hand-to-floor weight transfer. Both directions required. Progression toward au cortado once mechanics are clean and bilateral.

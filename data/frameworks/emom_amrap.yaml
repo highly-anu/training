@@ -1,0 +1,75 @@
+id: emom_amrap
+name: EMOM / AMRAP Conditioning
+source_philosophy: crossfit
+
+goals_served:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - anaerobic_intervals
+  - power
+
+sessions_per_week:
+  mixed_modal_conditioning: 3
+  strength_endurance: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.05
+  zone3_pct: 0.30
+  zone4_5_pct: 0.50
+  max_effort_pct: 0.15
+
+progression_model: density
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 2
+  days_per_week_max: 5
+  goal_priority_min:
+    mixed_modal_conditioning: 0.25
+
+incompatible_with:
+  - framework_id: linear_progression
+    reason: >
+      Frequent high-intensity conditioning sessions accumulate systemic fatigue
+      that prevents the recovery required for session-to-session load increases.
+      More than 2 EMOM/AMRAP sessions per week will stall or reverse linear
+      strength progression.
+    interference_level: high
+    mitigation: >
+      Limit to 1 short conditioning session per week (under 15 min, lower intensity).
+      Schedule on a day between strength sessions, never the day before a heavy
+      barbell day. Accept that linear strength progression will slow.
+  - framework_id: polarized_80_20
+    reason: >
+      EMOM/AMRAP work predominantly sits in Zone 3-4 ("moderate intensity danger
+      zone" in polarized theory), which accumulates fatigue without contributing
+      to aerobic base development. Substituting Zone 1-2 sessions with EMOM work
+      violates the 80% low-intensity rule.
+    interference_level: manageable
+    mitigation: >
+      Treat EMOM/AMRAP sessions as the 20% high-intensity allocation only. Do not
+      add EMOM work on top of the polarized interval quota. Total high-intensity
+      sessions remain capped at 20% of weekly volume.
+
+sources:
+  - "CrossFit Training Guide (Glassman)"
+  - "CrossFit Endurance methodology"
+  - "Horsemen Training Program 2008 — Density/EMOM workouts"
+  - "Gym Jones — Accumulation Day protocols"
+
+notes: >
+  EMOM (Every Minute On the Minute) and AMRAP (As Many Rounds/Reps As Possible)
+  are session formats, not standalone periodization systems. As a framework, they
+  represent a conditioning-dominant programming approach where the session structure
+  itself is the progression vehicle: same movements in less time (AMRAP), or
+  maintaining output across all intervals (EMOM). Density progression means the
+  athlete's ability to complete more work within the fixed time domain. EMOM format
+  can be applied to strength movements (EMOM strength waves: 10×1 at 85-95%) or
+  pure conditioning (Horsemen "Purple Church": 10 min EMOM, 3 power clean + 3 hang
+  squat clean + 3 push press). AMRAP format (CrossFit metcons, Horsemen "PBR":
+  AMRAP 20 min) targets mixed-modal work capacity. Can be used as a standalone
+  conditioning framework or as conditioning days within a concurrent training block.

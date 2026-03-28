@@ -1,0 +1,99 @@
+# Equipment Profiles
+# Preset convenience configurations for common training setups.
+# IDs match the equipment_profile enum in constraints.schema.json.
+# The 'equipment' arrays use the item enum from constraints.schema.json.
+#
+# Note: 'pool' is a valid equipment ID (enables swim_easy) but is intentionally
+# excluded from all presets — it must be explicitly selected by the user.
+
+equipment_profiles:
+
+  - id: barbell_gym
+    name: Full Barbell Gym
+    equipment:
+      - barbell
+      - rack
+      - plates
+      - kettlebell
+      - dumbbell
+      - pull_up_bar
+      - rings
+      - rower
+      - box
+      - ghd
+      - medicine_ball
+      - rope
+      - jump_rope
+      - open_space
+    notes: >
+      Full commercial or well-equipped garage gym. Supports all modalities including
+      Olympic lifting, gymnastics, and aerobic monostructural work. Horsemen and
+      Gym Jones programming is fully available. No equipment-based restrictions
+      on archetype selection.
+
+  - id: home_kb_only
+    name: Home — Kettlebell and Bodyweight
+    equipment:
+      - kettlebell
+      - dumbbell
+      - pull_up_bar
+      - resistance_band
+      - jump_rope
+      - open_space
+    notes: >
+      Typical home setup without a barbell. Supports kettlebell ballistics
+      (swing, clean, snatch, TGU), bodyweight strength, band-assisted pulling
+      progressions, and aerobic work via jump rope and open space runs.
+      Barbell-dependent archetypes (5×5, barbell complex, Olympic lifts) are
+      excluded. KB pentathlon training is fully supported. Wildman and bodyweight
+      relative strength programming are the primary available frameworks.
+
+  - id: bodyweight_only
+    name: Bodyweight Only
+    equipment:
+      - pull_up_bar
+      - rings
+      - parallettes
+      - jump_rope
+      - box
+      - open_space
+    notes: >
+      No external load. Supports gymnastics, calisthenics, and relative strength
+      work (pull-ups, dips, HSPU progressions, ring support holds). Plyometric
+      work (box jumps) and aerobic work (jump rope, running in open space) are
+      available. No barbell or kettlebell archetypes. Ido Portal movement skill
+      and mobility programming is well-suited. Suitable for travel or
+      minimal-equipment contexts.
+
+  - id: outdoor_ruck_only
+    name: Outdoor — Ruck Pack Only
+    equipment:
+      - ruck_pack
+      - open_space
+    notes: >
+      Field or travel setup with only a loaded ruck and open terrain.
+      Supports rucking (loaded carry progressions), bodyweight aerobic locomotion
+      (walking, hiking, running unloaded), and unloaded bodyweight work.
+      Strength and conditioning archetypes requiring equipment are excluded.
+      Primary modalities available: durability (rucking), aerobic base (walking/hiking),
+      and bodyweight movement skill. Horsemen ruck progressions and Uphill Athlete
+      time-on-feet work apply directly.
+
+  - id: home_barbell
+    name: Home — Barbell Setup
+    equipment:
+      - barbell
+      - rack
+      - plates
+      - kettlebell
+      - pull_up_bar
+      - box
+      - open_space
+    notes: >
+      Home gym with a power rack and barbell — the Starting Strength and Horsemen
+      strength-focused baseline. Supports all barbell compound lifts (squat, deadlift,
+      press, bench, power clean, front squat), kettlebell conditioning, and
+      bodyweight gymnastics. No rower, GHD, or rings. Aerobic work relies on
+      running or outdoor locomotion in open space. Covers ~80% of Gym Jones and
+      Horsemen programming. Sufficient for max strength, strength endurance,
+      power, and durability modalities.

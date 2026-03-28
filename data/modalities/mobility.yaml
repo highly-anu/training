@@ -1,0 +1,53 @@
+id: mobility
+name: Mobility / Tissue Prep
+description: Joint health, range of motion development, and tissue preparation — loaded stretches, joint circles, fascial work, and active mobility drills.
+
+recovery_cost: low
+recovery_hours_min: 0
+
+session_position: any
+
+compatible_in_session_with:
+  - max_strength
+  - strength_endurance
+  - relative_strength
+  - aerobic_base
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  - power
+  - movement_skill
+  - durability
+  - combat_sport
+  - rehab
+
+incompatible_in_session_with: []
+
+min_weekly_minutes: 30
+max_weekly_minutes: 120
+
+typical_session_minutes:
+  min: 10
+  max: 45
+
+progression_model: range_progression
+
+intensity_zones:
+  - label: tissue_prep
+    description: Light, gentle — pre-session joint circles, banded mobilisations, soft tissue work
+  - label: loaded_stretch
+    description: Active or loaded range work — Jefferson curl, ATG split squat, weighted dislocates
+
+sources:
+  - Kelly Starrett / Supple Leopard
+  - Ido Portal
+  - ATG / Knees Over Toes
+
+notes: >
+  The most universally compatible modality — can attach to any session as
+  warm-up (position any), as cool-down (position last), or as a standalone
+  daily practice. Session position is "any" because its role depends entirely
+  on context. Pre-session tissue prep is 10-15 min; a dedicated mobility session
+  can run 30-45 min. Progression model is range_progression: depth and load
+  under stretch increase incrementally over weeks. Ido Portal recommends daily
+  practice habits over occasional focused sessions. Never contributes to
+  accumulated fatigue — can be performed daily.

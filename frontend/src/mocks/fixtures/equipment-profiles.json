@@ -1,0 +1,32 @@
+[
+  {
+    "id": "barbell_gym",
+    "name": "Full Barbell Gym",
+    "equipment": ["barbell", "rack", "plates", "kettlebell", "dumbbell", "pull_up_bar", "rings", "rower", "box", "ghd", "medicine_ball", "rope", "jump_rope", "open_space"],
+    "notes": "Full commercial or well-equipped garage gym. Supports all modalities including Olympic lifting, gymnastics, and aerobic monostructural work."
+  },
+  {
+    "id": "home_kb_only",
+    "name": "Home — Kettlebell and Bodyweight",
+    "equipment": ["kettlebell", "dumbbell", "pull_up_bar", "resistance_band", "jump_rope", "open_space"],
+    "notes": "Typical home setup without a barbell. Supports kettlebell ballistics, bodyweight strength, and aerobic work."
+  },
+  {
+    "id": "bodyweight_only",
+    "name": "Bodyweight Only",
+    "equipment": ["pull_up_bar", "rings", "parallettes", "jump_rope", "box", "open_space"],
+    "notes": "No external load. Supports gymnastics, calisthenics, and relative strength work."
+  },
+  {
+    "id": "outdoor_ruck_only",
+    "name": "Outdoor — Ruck Pack Only",
+    "equipment": ["ruck_pack", "open_space"],
+    "notes": "Field or travel setup with only a loaded ruck and open terrain. Supports rucking and bodyweight aerobic locomotion."
+  },
+  {
+    "id": "home_barbell",
+    "name": "Home — Barbell Setup",
+    "equipment": ["barbell", "rack", "plates", "kettlebell", "pull_up_bar", "box", "open_space"],
+    "notes": "Home gym with a power rack and barbell. Supports all barbell compound lifts and kettlebell conditioning."
+  }
+]

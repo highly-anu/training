@@ -1,0 +1,82 @@
+id: gym_jones_accumulation
+name: "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)"
+modality: mixed_modal_conditioning
+category: conditioning
+duration_estimate_minutes: 50
+required_equipment:
+  - kettlebell
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - maintenance
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+notes: >
+  Gym Jones accumulation-style circuit combining a high-rep squat movement,
+  locomotion, and a loaded carry. Emphasis on total volume and time under load
+  rather than maximal intensity. Used as a GPP conditioning day between heavier
+  strength sessions. Movements cycle through lower push, locomotion, and carry
+  patterns. Rest is minimal between movements; take 2–3 min between rounds.
+  Target: 3–5 rounds depending on fitness level.
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 480
+    intensity: zone2
+    exercise_filter:
+      category: aerobic
+    notes: "8-min easy movement prep. Light jogging or dynamic mobility."
+
+  - role: squat_volume
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    intensity: medium
+    exercise_filter:
+      movement_pattern: squat
+      category: kettlebell
+    notes: >
+      High-rep goblet squat with a moderate KB (16–24 kg). 3×20.
+      Accumulate squat volume — this is endurance, not max strength.
+
+  - role: locomotion_block
+    slot_type: distance
+    distance_m: 20
+    sets: 3
+    intensity: medium
+    exercise_filter:
+      movement_pattern: locomotion
+      category: bodyweight
+    notes: "Bear crawl 3×20 m. Minimal rest between lengths. Builds shoulder stability and hip flexor endurance."
+
+  - role: carry_finisher
+    slot_type: distance
+    distance_m: 40
+    sets: 3
+    intensity: medium
+    exercise_filter:
+      movement_pattern: farmer_carry
+    notes: >
+      Farmer carry 3×40 m. Use heavy KBs or DBs — challenging but completable.
+      Grip endurance is the limiting factor. Alternate farmer, rack, and overhead
+      carry week to week for variety.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: "Reduce to 2 rounds. Drop squat reps to 10. Reduce carry distance to 20 m."
+  time_limited:
+    drop_slots:
+      - carry_finisher
+    notes: "Drop carry if session time < 35 min. Prioritize squat volume and locomotion block."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: kettlebell
+        substitute_approach: "Substitute dumbbell goblet squat. Use dumbbells for farmer carry. All movements can be performed with DB."

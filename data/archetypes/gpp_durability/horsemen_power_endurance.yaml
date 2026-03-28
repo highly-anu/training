@@ -1,0 +1,98 @@
+id: horsemen_power_endurance
+name: "Horsemen Power Endurance (Run + TGU + Loaded Movement)"
+modality: strength_endurance
+category: gpp_durability
+duration_estimate_minutes: 55
+required_equipment:
+  - kettlebell
+  - open_space
+applicable_phases:
+  - build
+  - peak
+  - maintenance
+sources:
+  - "Horsemen"
+  - "Gym Jones"
+notes: >
+  Horsemen power endurance format combining short runs with loaded movements to build
+  lactic capacity and repeatable output under fatigue. Representative workouts from
+  Horsemen source material:
+    - "Counting Dead Bodies": 5 lunges + 5 push press while holding 45 lb bar, 400m loop (20–30 min)
+    - "Get-ups Till You Throw Up": 100 sandbag get-ups @ 85–95 lb then sprint every 30 sec for 10 min
+    - TGU + Jumping Lunge + Run descending ladder: 10/7/5/3 TGUs + 40/30/20/10 lunges + 400m runs between
+  This archetype implements the TGU + run ladder variant as the default structure.
+  The combination of slow grinding loaded movement (TGU) followed immediately by
+  cardiovascular output (run) is the defining feature — the body transitions between
+  strength demand and aerobic demand with no rest, simulating operational fatigue patterns.
+  Mental durability is trained alongside physical output. Gym Jones: "Discomfort is the
+  training stimulus."
+
+slots:
+  - role: warm_up_run
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      category: aerobic
+    notes: "10-min easy run to warm up. Include dynamic mobility: leg swings, hip circles, shoulder rolls."
+
+  - role: tgu_block
+    slot_type: sets_reps
+    sets: 4
+    reps: "3-10"
+    intensity: moderate
+    intensity_pct_1rm: 0.60
+    rest_sec: 0
+    exercise_filter:
+      movement_pattern: tgu
+      category: kettlebell
+    notes: >
+      TGU sets in descending ladder: 10 / 7 / 5 / 3 reps (alternating sides each rep).
+      Immediately after completing TGU set, move to lunge block — no rest between TGU
+      and lunges. Weight: moderate — 16 kg for intermediate, 24 kg for advanced.
+      The point is sustained movement quality under accumulated fatigue.
+
+  - role: lunge_block
+    slot_type: sets_reps
+    sets: 4
+    reps: "10-40"
+    intensity: bodyweight
+    rest_sec: 0
+    notes: >
+      Jumping lunges in descending ladder: 40 / 30 / 20 / 10 reps matching TGU rounds.
+      Bodyweight or light load. Immediately after completing lunges, perform the run
+      interval. No rest.
+
+  - role: run_interval
+    slot_type: distance
+    distance_m: 400
+    intensity: zone3
+    exercise_filter:
+      category: aerobic
+    notes: >
+      400m run between each TGU + lunge round (4 total runs). Intensity: Zone 3,
+      not a sprint — but not easy either. Athlete should be breathing hard at the
+      start of each TGU block. This is the lactic capacity stimulus: loaded movement
+      → cardiovascular output → loaded movement again.
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_sec: 300
+    intensity: zone1
+    notes: "5-min easy walk/jog cool-down. Passive hip flexor and shoulder stretches."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce TGU ladder to 5/3 (2 rounds only). Drop run distance to 200m. This is a demanding archetype — in true deload weeks, substitute a gentler GPP format."
+  time_limited:
+    drop_slots:
+      - cool_down
+    notes: "Drop cool-down. Reduce ladder to 2 rounds (10 TGU + 40 lunges + 400m run) × 2. Minimum is 2 complete rounds."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: kettlebell
+        substitute_approach: "Substitute dumbbell TGU. Load adjustment needed — dumbbell TGU is harder to balance, reduce weight by 20%."
+      - missing_equipment: open_space
+        substitute_approach: "Replace 400m run with 500m row or 2-min max effort bike. The run is preferred for the specific fatigue pattern, but any aerobic modality creates the same stimulus."

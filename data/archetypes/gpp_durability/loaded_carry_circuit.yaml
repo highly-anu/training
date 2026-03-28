@@ -1,0 +1,94 @@
+id: loaded_carry_circuit
+name: "Loaded Carry Circuit (Farmer / Rack / Overhead)"
+modality: durability
+category: gpp_durability
+duration_estimate_minutes: 45
+required_equipment:
+  - kettlebell
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+sources:
+  - "Gym Jones"
+  - "Horsemen"
+notes: >
+  Rotating loaded carry circuit using three carry variations: farmer carry (bilateral
+  or suitcase), rack carry (single or double KB at chest), and overhead carry
+  (single or double KB locked out). Each variation stresses a different stability
+  demand — farmer is grip and lat, rack is anti-rotation and thoracic, overhead is
+  shoulder stability and core bracing under load. Distance or time per variation;
+  circuit repeated 3–5 rounds. Gym Jones includes farmer carry and bear crawl with
+  DBs as a loaded carry complex. Horsemen uses loaded carries as active rest between
+  strength sets and as standalone GPP. This is durability training — moderate load,
+  sustained tension, quality posture throughout. Not a cardio workout; not a max
+  strength workout.
+
+slots:
+  - role: joint_prep
+    slot_type: time_domain
+    duration_sec: 300
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: "5-min shoulder, wrist, and hip warm-up. Wrist circles, shoulder circles, hip hinge pattern, light KB deadlift × 10."
+
+  - role: farmer_carry
+    slot_type: for_time
+    distance_m: 40
+    intensity: heavy
+    exercise_filter:
+      movement_pattern: farmer_carry
+    notes: >
+      Farmer carry: bilateral, heaviest KB pair that maintains upright posture.
+      Target ~75% of max farmer carry load. 40m per set (20m out, 20m back).
+      Set down the bells, rest 30 sec, move to next carry variation.
+      Dumbbell or barbell farmer carry if no kettlebells.
+
+  - role: rack_carry
+    slot_type: for_time
+    distance_m: 40
+    intensity: moderate
+    exercise_filter:
+      movement_pattern: rack_carry
+    notes: >
+      Single or double KB rack carry. Bell(s) held at shoulder in rack position.
+      Challenges thoracic uprightness and anti-rotation. 40m per set.
+      If only one KB available, alternate sides each round (right rack out, left rack back).
+
+  - role: overhead_carry
+    slot_type: for_time
+    distance_m: 40
+    intensity: moderate
+    exercise_filter:
+      movement_pattern: vertical_push
+      category: loaded_carry
+    notes: >
+      Single or double KB overhead carry, arm(s) fully locked out, scapula packed.
+      This is a shoulder stability and overhead position trainer. Load is lighter than
+      farmer or rack — typically 50% of farmer carry load. 40m per set.
+      Drop to bottoms-up KB carry for enhanced shoulder stability demand at lower load.
+
+  - role: circuit_rounds_structure
+    slot_type: sets_reps
+    sets: 4
+    reps: 1
+    rest_sec: 90
+    intensity: moderate
+    skip_exercise: true
+    notes: "Meta-slot: 4 complete rounds of farmer → rack → overhead carry. Rest 90 sec between rounds. Total: 480m of carrying."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce to 2 circuit rounds. Drop farmer carry load 20%, rack and overhead load 15%."
+  time_limited:
+    drop_slots:
+      - overhead_carry
+    notes: "Drop overhead carry first (highest skill demand). Run farmer + rack for 3 rounds if pressed for time."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: kettlebell
+        substitute_approach: "Use dumbbells for all three carry variations. Overhead carry can use a weight plate held at arm's length. Farmer carry with barbell (suitcase deadlift position) if only barbell available."

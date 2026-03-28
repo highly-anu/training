@@ -1,0 +1,38 @@
+id: bjj
+name: "BJJ / Brazilian Jiu-Jitsu (Combat Sport Modality)"
+core_principles:
+  - mat_time_is_non_transferable_sparring_has_no_substitute
+  - rolling_is_both_training_stimulus_and_test
+  - conditioning_targets_isometric_endurance_hip_explosiveness_grip_endurance
+  - joint_health_must_be_actively_maintained
+  - positional_drilling_before_live_sparring
+  - sport_specific_strength_endurance_over_general_max_strength
+  - tap_early_protect_joints_for_long_term_training
+scope:
+  - combat_sport
+  - strength_endurance
+  - anaerobic_intervals
+  - mobility
+  - durability
+  - relative_strength
+bias:
+  - combat_sport
+  - strength_endurance
+avoid_with: []
+required_equipment: []
+intensity_model: hard_easy_alternation
+progression_philosophy: time_based
+sources:
+  - "plan.md section 1 (BJJ)"
+notes: >
+  BJJ as a philosophy entry governs how the system allocates and protects mat time.
+  Required equipment is empty — the sport itself requires only a mat and partner;
+  S&C support work varies. Conditioning priorities derived from sport demands:
+  isometric endurance (maintaining frames and grips under sustained pressure),
+  hip explosiveness (guard sweeps, takedowns, hip escapes), grip endurance (6-min
+  rounds of sustained pulling). Vulnerable joints: shoulders (from armbars,
+  kimuras), knees (leg locks, guard passing), and neck (from guillotines, mat
+  posture). Intensity model is hard_easy_alternation because hard rolling days must
+  be followed by drilling or technique days to manage cumulative joint stress.
+  Progression is time_based: mat hours and drilling volume are the primary
+  advancement mechanism, not load or complexity increments.

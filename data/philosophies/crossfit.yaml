@@ -1,0 +1,46 @@
+id: crossfit
+name: "CrossFit / CrossFit Endurance (Glassman)"
+core_principles:
+  - intensity_over_volume
+  - broad_gpp_is_protective_and_transferable
+  - mixed_modal_conditioning_reveals_weaknesses
+  - constant_variation_prevents_accommodation
+  - functional_movement_over_machine_based_isolation
+  - form_mastery_before_load_or_speed
+  - benchmark_testing_tracks_adaptation
+  - cfe_applies_cf_principles_to_monostructural_domains
+scope:
+  - max_strength
+  - strength_endurance
+  - aerobic_base
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  - power
+  - relative_strength
+bias:
+  - mixed_modal_conditioning
+  - anaerobic_intervals
+  - strength_endurance
+avoid_with:
+  - starting_strength
+  - uphill_athlete
+required_equipment:
+  - barbell
+  - rack
+  - plates
+  - pull_up_bar
+  - jump_rope
+  - box
+intensity_model: constant_variation
+progression_philosophy: density_based
+sources:
+  - "CrossFit Journal 2002–2012 (Glassman, Rippetoe, Starr, Dougherty, Takano, Vaughn)"
+  - "data/crossfit/crossfit journal/"
+notes: >
+  CrossFit's progression mechanism is primarily density-based: same benchmark WOD
+  completed faster or with more rounds. Load-based progression exists for barbell
+  work (linear on beginner program) but is secondary to time/rounds as the primary
+  metric. Constant variation is intentional — the anti-periodization stance.
+  CFE (CrossFit Endurance) applies the same high-intensity, low-volume philosophy
+  to running, rowing, and cycling; it explicitly rejects high-mileage base building.
+  Rhabdo risk on first exposure requires mandatory scaling.

@@ -1,0 +1,81 @@
+id: tabata
+name: "Tabata Protocol (8 × 20s/10s)"
+modality: anaerobic_intervals
+category: conditioning
+duration_estimate_minutes: 25
+required_equipment: []
+applicable_phases:
+  - peak
+  - maintenance
+sources:
+  - "CrossFit"
+  - "Horsemen"
+notes: >
+  Classic Tabata interval protocol: 8 rounds of 20 seconds maximum effort followed
+  by 10 seconds rest. Total work block is 4 minutes. The Tabata protocol can be
+  applied to any movement that allows continuous maximal output — air squats, push-ups,
+  rowing, KB swings, burpees, box jumps, ball slams. In Horsemen programming this
+  format appears as "Tabata Hell": multiple movements applied sequentially with 1-min
+  rest between each 4-minute block. The original Tabata research used cycling ergometer;
+  row and ski erg are the closest gym-based equivalents for stimulus purity.
+  Score method: total reps across all 8 rounds (Tabata score = lowest round in CF
+  methodology, total reps in Horsemen style). Maximal effort from round 1; do not
+  pace conservatively.
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    notes: "10-min general warm-up. Include movement-specific activation for whatever movement will be used in the Tabata blocks."
+
+  - role: tabata_block_1
+    slot_type: emom
+    sets: 8
+    duration_sec: 20
+    intensity: max
+    notes: >
+      8 intervals of 20 sec max effort / 10 sec rest. Select movement based on goal:
+      - Power/conditioning: KB swing, box jump, ball slam
+      - Aerobic capacity: row, ski erg, bike
+      - Bodyweight: air squat, push-up, burpee
+      Rest period is 10 sec — this is structural, do not extend it.
+
+  - role: tabata_block_2
+    slot_type: emom
+    sets: 8
+    duration_sec: 20
+    intensity: max
+    notes: >
+      Second 4-minute Tabata block after 60-sec rest. Use a different movement pattern
+      than block 1 (e.g., if block 1 was lower body, block 2 is upper push or pull).
+      Optional in shorter sessions; include when full Horsemen Tabata Hell format is prescribed.
+
+  - role: tabata_block_3
+    slot_type: emom
+    sets: 8
+    duration_sec: 20
+    intensity: max
+    notes: "Third block. Third modality (e.g., core or monostructural). Optional; include only when 3+ blocks are prescribed."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_sec: 300
+    intensity: zone1
+    notes: "5-min easy movement and deep breathing. Passive stretching of primary movers used in the blocks."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce to 1 Tabata block only at ~85% max effort (not true max). Deload weeks should generally avoid Tabata entirely."
+  time_limited:
+    drop_slots:
+      - tabata_block_3
+      - tabata_block_2
+      - cool_down
+    notes: "Drop blocks 3 and 2 first, then cool-down. Minimum viable session is 1 block + warm-up."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: rower
+        substitute_approach: "Substitute air squats, burpees, or running in place for monostructural blocks. Any movement permitting max effort output qualifies."

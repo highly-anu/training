@@ -1,0 +1,113 @@
+id: gym_jones_circuit
+name: "Gym Jones Operator Circuit"
+modality: mixed_modal_conditioning
+category: conditioning
+duration_estimate_minutes: 75
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+  - rower
+applicable_phases:
+  - base
+  - build
+  - peak
+sources:
+  - "Gym Jones"
+  - "Horsemen"
+notes: >
+  Gym Jones Strength Day format as described in Operator Fitness I/II.
+  Structure: warm-up complex → primary strength work → core/skill block → conditioning finisher.
+  This is not a conditioning-only session — it is the Gym Jones definition of a "strength day,"
+  which always includes a structural finisher to build work tolerance alongside neural strength.
+  The barbell complex warm-up (Six-Way or DB equivalent) primes the movement patterns and
+  elevates heart rate before the primary strength lift. Core block includes TGU and plank/FLR.
+  Finisher is a timed rowing piece for systemic endurance. Mark Twight: "We value horsepower
+  ahead of appearance." This format delivers both.
+  Rest: 3–5 min between heavy barbell sets, 1–2 min between complex sets.
+
+slots:
+  - role: barbell_complex_warm_up
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    intensity: light
+    intensity_pct_1rm: 0.45
+    rest_sec: 90
+    exercise_filter:
+      category: barbell
+    notes: >
+      Six-Way Barbell Complex: deadlift → bent row → hang clean → front squat → push press
+      → back squat → push-up, 6 reps each, no rest within complex. Progressive loading:
+      75–85–95–105 lb across 4 sets. This is a warm-up; weight stays light to moderate.
+      DB Complex (hi-pull / row / hang clean / front squat push press / OHS / push-up)
+      can substitute at 20–25 lb DBs.
+
+  - role: primary_strength
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    intensity: heavy
+    intensity_pct_1rm: 0.80
+    rest_sec: 240
+    exercise_filter:
+      movement_pattern: hinge
+      category: barbell
+      bilateral: true
+    notes: >
+      Primary barbell lift at 80% 1RM. Default: deadlift 5×3. Alternate options:
+      front squat 10×2 @ 1-min rest (density format), or OHS 5×3 @ 3–4 min rest.
+      Selection rotates across the training week to avoid pattern fatigue.
+
+  - role: core_skill_block
+    slot_type: sets_reps
+    sets: 5
+    reps: 6
+    intensity: moderate
+    rest_sec: 60
+    exercise_filter:
+      category: kettlebell
+    notes: >
+      TGU 5×6 at 25 lb combined with a 60-sec FLR (front leaning rest / plank) hold
+      during each rest period. Develops anti-rotation core strength, shoulder stability,
+      and movement coordination. Pull-up ladder (5 sets of 1–6 ascending) is the
+      alternate format when TGUs have been done recently.
+
+  - role: static_hold
+    slot_type: static_hold
+    sets: 5
+    duration_sec: 60
+    intensity: moderate
+    notes: "FLR (front leaning rest / high plank) hold, 60 sec per set, as the rest between TGU sets. Accumulated 300-sec total."
+
+  - role: conditioning_finisher
+    slot_type: for_time
+    distance_m: 2000
+    intensity: heavy
+    exercise_filter:
+      category: aerobic
+      equipment_required:
+        - rower
+    notes: >
+      1000–2000m row for time as the conditioning finisher. Athlete pushes hard; this is
+      not a recovery row. Target ~85–90% max effort. If no rower is available, substitute
+      a 1600m run for time or a 10-min AMRAP of burpees + box jumps.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce primary strength to 3×3 at 80% of current load. Shorten rowing finisher to 1000m. Keep the complex as-is."
+  time_limited:
+    drop_slots:
+      - static_hold
+      - conditioning_finisher
+    notes: "Drop the FLR holds and finisher row first. If very short on time, trim the complex to 2 sets and do 3×3 primary lift only."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: rower
+        substitute_approach: "Replace rowing finisher with 1600m run for time or 10-min AMRAP of burpees + box jumps."
+      - missing_equipment: barbell
+        substitute_approach: "Replace barbell complex with DB complex (20–25 lb). Replace primary deadlift with heaviest available KB double deadlift."
+      - missing_equipment: pull_up_bar
+        substitute_approach: "Replace pull-up ladder in core block with ring rows or TGU volume."

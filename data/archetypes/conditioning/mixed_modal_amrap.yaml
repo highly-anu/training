@@ -1,0 +1,82 @@
+id: mixed_modal_amrap
+name: "Mixed Modal AMRAP 20"
+modality: mixed_modal_conditioning
+category: conditioning
+duration_estimate_minutes: 40
+required_equipment:
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+sources:
+  - "CrossFit"
+  - "Horsemen"
+notes: >
+  CrossFit-style 20-minute AMRAP (As Many Rounds As Possible). Three to four
+  movements cycling through squat, pull, push, and/or monostructural patterns.
+  Stimulus is sustained aerobic-anaerobic output — athletes should be able to
+  maintain movement for the full 20 minutes, slowing but not stopping. Load is
+  moderate; the workout is won through pacing strategy and movement efficiency,
+  not raw strength. Score is total rounds + partial reps. Intensity: high but
+  sustainable — pace should feel like Z3/Z4, not sprint.
+  Classic examples: PBR (Horsemen: FS + pull-ups + sit-ups + push-ups),
+  Chelsea (EMOM 30 variant).
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      category: aerobic
+    notes: "10-min general warm-up including dynamic mobility and light movement prep. Include a few reps of each AMRAP movement at easy pace."
+
+  - role: amrap_main
+    slot_type: amrap
+    duration_sec: 1200
+    intensity: heavy
+    exercise_filter:
+      movement_pattern: squat
+    notes: "Squatting movement for the 20-min AMRAP. Sets the primary loading pattern."
+
+  - role: amrap_pull
+    slot_type: amrap_movement
+    reps_per_round: 10
+    exercise_filter:
+      movement_pattern: pull
+      exclude_movement_pattern: isometric
+    notes: "Pulling movement within the AMRAP. Typically pull-ups or ring rows."
+
+  - role: amrap_push
+    slot_type: amrap_movement
+    reps_per_round: 10
+    exercise_filter:
+      movement_pattern: push
+      exclude_movement_pattern: ballistic
+    notes: "Pushing movement within the AMRAP. Typically push-ups or dips."
+
+  - role: cool_down_mobility
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone1
+    exercise_filter:
+      category: mobility
+    notes: "10-min easy movement and breathing. Basic hip and shoulder mobility work."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce AMRAP duration to 12 minutes. Reduce load on barbell movements by 20%. Maintain all movement patterns."
+  time_limited:
+    drop_slots:
+      - cool_down_mobility
+    notes: "Drop or shorten the cool-down. The AMRAP block is the non-negotiable core."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: pull_up_bar
+        substitute_approach: "Substitute ring rows or bent-over barbell rows for pull-up component."
+      - missing_equipment: barbell
+        substitute_approach: "Use kettlebell goblet squat or double KB front squat to replace barbell squat component."

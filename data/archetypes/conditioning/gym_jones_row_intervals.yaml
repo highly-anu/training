@@ -1,0 +1,70 @@
+id: gym_jones_row_intervals
+name: "Gym Jones Row Intervals (6 × 500 m)"
+modality: anaerobic_intervals
+category: conditioning
+duration_estimate_minutes: 50
+required_equipment:
+  - rower
+applicable_phases:
+  - base
+  - build
+  - peak
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+notes: >
+  Gym Jones rowing interval session: 6 × 500 m on the ergometer with 3-min
+  active rest between efforts. One of the most reliable power-endurance tests
+  and builders in the Gym Jones canon. Stimulus is anaerobic threshold to
+  VO2max — athletes should sustain a pace close to their 2000m race-pace split.
+  Target splits narrow over the program cycle; consistency across intervals is
+  the primary goal (don't go out too hot on interval 1).
+  Mark Twight: "Row hard. You can't fake the erg." The rower provides
+  objective, unfalsifiable data — use it to track progress.
+
+slots:
+  - role: warm_up_row
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      category: aerobic
+    notes: "10-min progressive warm-up on the rower. Start Z1, build to Z2. Include 2×15-sec picks at target pace in final 3 min."
+
+  - role: row_interval
+    slot_type: emom
+    sets: 6
+    distance_m: 500
+    intensity: zone4
+    exercise_filter:
+      category: aerobic
+    notes: >
+      6 × 500 m at consistent target pace. Rest 3 min active (easy row or walk)
+      between intervals. Target: within 5 sec of 2000m race pace split.
+      All 6 splits should be within 5 sec of each other — pacing discipline is
+      the key skill. Slower but consistent > fast first, crash later.
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+    notes: "10-min easy row. Flush lactate. Note all 6 splits."
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: "Reduce to 4 × 500 m at 90% of target pace. Maintain 3-min rest. Deload weeks: never skip rest."
+  time_limited:
+    drop_slots:
+      - cool_down
+    notes: "Drop cool-down. Can reduce warm-up to 5 min. Do not reduce below 5 intervals."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: rower
+        substitute_approach: "Substitute 400 m run intervals at equivalent Zone 4 effort. The erg is strongly preferred — it provides objective split data that running cannot replicate precisely."

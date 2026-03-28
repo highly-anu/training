@@ -1,0 +1,38 @@
+id: kelly_starrett
+name: "Kelly Starrett / Supple Leopard"
+core_principles:
+  - movement_quality_is_testable_and_correctable
+  - tissue_prep_before_training_reduces_injury_risk
+  - global_and_local_joint_mobility_have_distinct_protocols
+  - breathing_and_bracing_are_mechanical_skills_not_assumptions
+  - upstream_and_downstream_joints_affect_target_joint_function
+  - mobilization_is_not_stretching_it_is_position_restoration
+  - motor_control_must_be_established_before_adding_load
+scope:
+  - mobility
+  - durability
+  - rehab
+  - max_strength
+bias:
+  - mobility
+  - rehab
+avoid_with: []
+required_equipment:
+  - resistance_band
+intensity_model: skill_based
+progression_philosophy: range_based
+sources:
+  - "Becoming a Supple Leopard (Starrett & Cordoza, 2013)"
+  - "Ready to Run (Starrett, 2014)"
+  - "Deskbound (Starrett, 2016)"
+notes: >
+  Not a standalone training program — functions as a mobility and movement quality
+  layer applied on top of any other methodology. Primary tools: banded joint
+  distraction, soft tissue work (lacrosse ball / foam roller), contract-relax
+  mobilizations, and positional assessments. Ten physical archetypes (hip extension,
+  internal rotation, ankle, thoracic spine, etc.) each have a testing standard and
+  a prescribed mobilization sequence. Breathing and bracing sequence (360 degrees
+  of air, IAP) is a prerequisite for any loaded movement. Tissue prep is prescribed
+  before sessions (2 min minimum per target joint); mobilization is also effective
+  post-session and throughout the day. Resistance bands are the core tool for joint
+  distraction work; no heavy equipment required.

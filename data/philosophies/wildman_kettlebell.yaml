@@ -1,0 +1,38 @@
+id: wildman_kettlebell
+name: "Mark Wildman / RKC Kettlebell"
+core_principles:
+  - ballistic_patterning_builds_power_and_conditioning_simultaneously
+  - breathing_mechanics_govern_intensity_and_technique_ceiling
+  - progression_follows_established_skill_ladder
+  - pentathlon_as_benchmark_and_competition_format
+  - rpm_targets_define_work_capacity_standards
+  - single_bell_mastery_before_double_bell_work
+  - hip_hinge_is_the_foundation_of_all_ballistic_patterns
+scope:
+  - power
+  - strength_endurance
+  - aerobic_base
+  - relative_strength
+bias:
+  - power
+  - strength_endurance
+avoid_with: []
+required_equipment:
+  - kettlebell
+intensity_model: operator_readiness
+progression_philosophy: rpm_based
+sources:
+  - "data/kettlebell/ — Wildman programming materials"
+  - "plan.md section 1 (Wildman/RKC) and section 9 (KB Pentathlon scoring)"
+notes: >
+  Skill ladder is non-negotiable: two-hand swing → single-arm swing → clean →
+  clean & jerk → TGU → goblet squat → snatch → double KB work. Each step has a
+  prerequisite. Breathing mechanics (hissing/nasal breathing patterns) set the
+  ceiling for both intensity and technical quality — if breathing breaks down,
+  intensity is too high. Pentathlon format: 6 min per exercise, 5 min rest
+  between; 5 exercises (cleans, long cycle press, jerks, half snatch, push press).
+  RPM targets: cleans 20 RPM, long cycle press 10 RPM, jerks 20 RPM, half snatch
+  18 RPM, push press 20 RPM. Scoring scales with bell weight (8kg=1pt per rep,
+  16kg=2pt, 24kg=3pt). Intensity model is operator_readiness because session load
+  is self-regulated based on technique quality and breathing control, not a fixed
+  weekly structure.

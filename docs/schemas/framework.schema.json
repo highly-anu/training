@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "framework.schema.json",
+  "title": "Methodological Framework",
+  "description": "A structured programming approach. This is the level where session allocation decisions are made — how many of what type of session per week, and in what proportion.",
+  "type": "object",
+  "required": ["id", "name", "source_philosophy", "sessions_per_week", "progression_model"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug. e.g. 'linear_progression', 'polarized_80_20', 'concurrent_training'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. 'Linear Progression (SS)'"
+    },
+    "source_philosophy": {
+      "type": "string",
+      "description": "ID of the philosophy this framework derives from. Must match a philosophy.id."
+    },
+    "goals_served": {
+      "type": "array",
+      "description": "Modality IDs this framework is designed to develop.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "max_strength", "strength_endurance", "relative_strength",
+          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+          "power", "mobility", "movement_skill", "durability",
+          "combat_sport", "rehab"
+        ]
+      }
+    },
+    "sessions_per_week": {
+      "type": "object",
+      "description": "How many sessions of each type this framework prescribes per week. Keys are modality IDs or session type labels.",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 7
+      },
+      "examples": [{ "max_strength": 3, "aerobic_base": 2, "mobility": 1 }]
+    },
+    "intensity_distribution": {
+      "type": "object",
+      "description": "What fraction of sessions fall into each intensity zone. Fractions should sum to 1.0.",
+      "properties": {
+        "zone1_2_pct": { "type": "number", "minimum": 0, "maximum": 1 },
+        "zone3_pct":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "zone4_5_pct": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_effort_pct": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "progression_model": {
+      "type": "string",
+      "description": "ID of the progression model that governs advancement in this framework.",
+      "enum": [
+        "linear_load", "density", "volume_block", "complexity",
+        "time_to_task", "intensity_split_shift", "rpe_autoregulation",
+        "pentathlon_rpm", "range_progression"
+      ]
+    },
+    "applicable_when": {
+      "type": "object",
+      "description": "Conditions under which the system should select this framework. All specified conditions must be met.",
+      "properties": {
+        "training_level": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["novice", "intermediate", "advanced", "elite"] }
+        },
+        "days_per_week_min": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "days_per_week_max": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "goal_priority_min": {
+          "type": "object",
+          "description": "Minimum priority weight required in the goal profile for any modality listed.",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "incompatible_with": {
+      "type": "array",
+      "description": "Other framework IDs that cannot run concurrently with this one, with a reason.",
+      "items": {
+        "type": "object",
+        "required": ["framework_id", "reason", "interference_level"],
+        "additionalProperties": false,
+        "properties": {
+          "framework_id": { "type": "string" },
+          "reason": { "type": "string" },
+          "interference_level": {
+            "type": "string",
+            "enum": ["low", "manageable", "high"],
+            "description": "low = monitor; manageable = apply mitigation rule; high = do not combine"
+          },
+          "mitigation": {
+            "type": "string",
+            "description": "What to do if both are needed anyway. e.g. 'Use SS on strength days, CFE rules on conditioning days'"
+          }
+        }
+      },
+      "default": []
+    },
+    "deload_protocol": {
+      "type": "object",
+      "description": "How a deload week looks within this framework.",
+      "properties": {
+        "frequency_weeks": {
+          "type": "integer",
+          "description": "Deload every N weeks. e.g. 4 = deload on week 4 of every block."
+        },
+        "volume_reduction_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Reduce volume to this fraction of peak week. e.g. 0.6 = 60% of normal."
+        },
+        "intensity_change": {
+          "type": "string",
+          "enum": ["maintain", "reduce_slightly", "reduce_significantly"],
+          "description": "What happens to intensity during deload."
+        }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": { "type": "string" }
+  }
+}

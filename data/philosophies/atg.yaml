@@ -1,0 +1,38 @@
+id: atg
+name: "ATG / Knees Over Toes Guy (Ben Patrick)"
+core_principles:
+  - posterior_chain_health_is_foundation_of_durability
+  - reverse_movements_accelerate_recovery_and_joint_health
+  - progressive_range_of_motion_is_as_important_as_progressive_load
+  - full_range_terminal_extension_work_is_key_to_knee_health
+  - knee_health_is_achievable_through_targeted_progressive_loading
+  - pain_free_range_before_loaded_range
+  - tibialis_and_soleus_strength_underpin_lower_body_durability
+scope:
+  - durability
+  - mobility
+  - rehab
+  - relative_strength
+bias:
+  - durability
+  - rehab
+  - mobility
+avoid_with: []
+required_equipment:
+  - sled
+  - resistance_band
+intensity_model: autoregulation_rpe
+progression_philosophy: range_based
+sources:
+  - "ATG (Athletic Truth Group) — Ben Patrick published methodology and programs"
+notes: >
+  Core movement vehicles: backward sled drag (reverse sled), Nordic curl, reverse
+  tib raises, tibialis raises, calf raises (full ROM), split squats progressing
+  to ATG split squat, and step-ups. Reverse sled is considered the foundational
+  entry movement — zero eccentric load, builds knee tolerance from scratch. Range
+  of motion progression precedes load progression: athlete must demonstrate pain-free
+  full ROM before adding resistance. Progressive range is the primary adaptation
+  target, not 1RM. Sled (for reverse dragging) and resistance bands (tibialis work)
+  are the minimum viable equipment. The system is compatible with concurrent
+  strength training but mandates its own lower-body prep work regardless of other
+  modalities in the program.

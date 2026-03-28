@@ -1,0 +1,44 @@
+id: mixed_modal_conditioning
+name: Mixed Modal Conditioning
+description: Multiple movement types combined under time pressure — AMRAPs, chippers, GPP circuits, and barbell/KB complexes that tax systemic conditioning broadly.
+
+recovery_cost: high
+recovery_hours_min: 48
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+
+incompatible_in_session_with:
+  - max_strength
+  - anaerobic_intervals
+
+min_weekly_minutes: 30
+max_weekly_minutes: 210
+
+typical_session_minutes:
+  min: 20
+  max: 60
+
+progression_model: density
+
+intensity_zones:
+  - label: moderate_mixed
+    description: Sustainable effort across multiple modalities — AMRAP pace, GPP circuits
+  - label: high_mixed
+    description: Near-max sustained effort — chippers, time-priority WODs
+
+sources:
+  - CrossFit
+  - Gym Jones
+  - Horsemen GPP
+
+notes: >
+  The primary format of CrossFit benchmark workouts (Fran, Grace, Helen, Chelsea)
+  and Horsemen circuit days. Combines strength, gymnastics, and monostructural
+  elements in a single session. Because it taxes multiple energy systems and
+  movement patterns simultaneously, recovery cost is classified high even when
+  individual loads are moderate. Gym Jones circuit days and accumulation days fall
+  here. Do not follow with max strength within 48h. Mobility as a cool-down
+  is appropriate and encouraged.

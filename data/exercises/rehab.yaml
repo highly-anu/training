@@ -1,0 +1,507 @@
+exercises:
+
+  # ── KNEE REHAB ──────────────────────────────────────────────────────────────
+
+  - id: quad_set
+    name: Quad Set (Isometric Quad Contraction)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [knee_extension, isometric]
+    requires: []
+    unlocks: [straight_leg_raise, terminal_knee_extension_band]
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Early-phase knee rehab. Lying flat — roll towel under knee, contract quad to press knee down, hold 5-10 sec. No joint movement. Programs within days of surgery or acute injury. Does not require cleared ROM. Activate VMO focus.
+
+  - id: straight_leg_raise
+    name: Straight Leg Raise (SLR)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, knee_extension, isometric]
+    requires: [quad_set]
+    unlocks: [heel_slide, step_up_low]
+    contraindicated_with: []
+    progressions:
+      load: add_ankle_weight
+      volume: increase_reps_per_set
+    scaling_down: [quad_set]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Supine — contract quad fully on affected leg, keep knee locked, lift to 45 degrees and hold 2 sec. Early phase knee rehab. Progresses to ankle weight (0.5kg increments). Program bilateral to maintain quad symmetry on unaffected side.
+
+  - id: heel_slide
+    name: Heel Slide
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_flexion, knee_extension]
+    requires: [quad_set]
+    unlocks: [stationary_bike_easy]
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: [quad_set]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Supine — slide heel toward glute to increase knee flexion ROM, hold at max range 5 sec, return. Early phase knee rehab for restoring flexion ROM. Active or assisted. Track ROM progress toward 90 degrees then full range milestones.
+
+  - id: ankle_pump
+    name: Ankle Pump
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: []
+    requires: []
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 20
+    sources: [plan.md section 10]
+    notes: Immediate post-op or injury — repeated ankle dorsiflexion/plantarflexion while leg is elevated. Promotes venous return and reduces swelling. Can be performed in bed or chair. High frequency (every 1-2 hours) in acute phase. No contraindications.
+
+  - id: step_up_low
+    name: Step-Up Low (Rehab, 4-6 inch)
+    category: rehab
+    modality: [rehab]
+    equipment: [box]
+    effort: low
+    bilateral: false
+    movement_patterns: [squat, knee_extension]
+    requires: [straight_leg_raise, quad_set]
+    unlocks: [bulgarian_split_squat_light, leg_press_single_light]
+    contraindicated_with: []
+    progressions:
+      complexity: step_up_standard
+      volume: increase_reps_per_set
+    scaling_down: [straight_leg_raise]
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: Rehab step-up on 4-6 inch platform only. Controlled eccentric down. Focus on single-leg control and avoiding knee valgus. Mid-phase knee rehab milestone. Progression to higher box only when 10 reps pain-free at current height. Use bodyweight only — no added load.
+
+  - id: terminal_knee_extension_band
+    name: Terminal Knee Extension (Band)
+    category: rehab
+    modality: [rehab]
+    equipment: [resistance_band]
+    effort: low
+    bilateral: false
+    movement_patterns: [knee_extension, isometric]
+    requires: [quad_set]
+    unlocks: [reverse_nordic]
+    contraindicated_with: []
+    progressions:
+      load: increase_band_resistance
+      volume: increase_reps_per_set
+    scaling_down: [quad_set]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Band looped behind knee, standing. Drive knee to full extension against band resistance. Targets VMO and terminal knee extension mechanics — critical for patellofemoral function and post-op quad recruitment. ATG-style application. Program early to mid phase.
+
+  - id: leg_press_single_light
+    name: Single-Leg Press (Light, Rehab)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [squat, knee_extension]
+    requires: [step_up_low, straight_leg_raise]
+    unlocks: [bulgarian_split_squat_light]
+    contraindicated_with: []
+    progressions:
+      load: add_weight_in_small_increments
+      volume: increase_reps_per_set
+    scaling_down: [step_up_low]
+    typical_volume:
+      sets: 3
+      reps: 12
+    sources: [plan.md section 10]
+    notes: "Machine leg press — single leg, very light load, controlled ROM. Mid-phase knee rehab for tissue loading with joint protection. Progress ROM from partial to full as tolerated. Bilateral press as stepping-stone if single-leg is too demanding. Note in programming: requires active knee rehab flag."
+
+  - id: bulgarian_split_squat_light
+    name: Bulgarian Split Squat (Light, Rehab)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [squat, knee_extension, hip_flexion]
+    requires: [step_up_low, leg_press_single_light]
+    unlocks: [single_leg_deadlift_light]
+    contraindicated_with: []
+    progressions:
+      load: add_dumbbells
+      volume: increase_reps_per_set
+    scaling_down: [step_up_low, leg_press_single_light]
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: "Rear foot elevated split squat, bodyweight only initially. Mid-phase knee rehab. Controls single-leg depth while rear foot provides stability assist. Progress load only when pain-free through full ROM. Note: requires active knee rehab flag to program."
+
+  - id: single_leg_deadlift_light
+    name: Single-Leg Deadlift (Light, Rehab)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_hinge]
+    requires: [step_up_low, straight_leg_raise]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      load: add_light_dumbbell
+      volume: increase_reps_per_set
+    scaling_down: [step_up_low]
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: Single-leg Romanian deadlift with bodyweight or very light load. Mid-phase knee rehab — builds posterior chain without high knee compression. Emphasizes hip hinge and proprioceptive knee control. Requires active knee rehab flag to program.
+
+  - id: stationary_bike_easy
+    name: Stationary Bike (Easy, Rehab)
+    category: rehab
+    modality: [rehab]
+    equipment: [bike]
+    effort: low
+    bilateral: true
+    movement_patterns: [aerobic_monostructural]
+    requires: [heel_slide]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+      load: add_slight_resistance
+    scaling_down: [ankle_pump, heel_slide]
+    typical_volume:
+      sets: 1
+      duration_sec: 1200
+    sources: [plan.md section 10]
+    notes: Low-resistance cycling as rehab modality. Use when sufficient knee flexion ROM restored (typically 90+ degrees). No-impact cardiovascular maintenance during knee rehab phase. Progress from 10 min to 20-30 min. Seat height set high initially to minimize flexion demand.
+
+  # ── SHOULDER REHAB ──────────────────────────────────────────────────────────
+
+  - id: external_rotation_db
+    name: DB External Rotation (Elbow on Knee)
+    category: rehab
+    modality: [rehab]
+    equipment: [dumbbell]
+    effort: low
+    bilateral: false
+    movement_patterns: [isometric]
+    requires: []
+    unlocks: [band_pull_apart_rehab, tgu_light]
+    contraindicated_with: []
+    progressions:
+      load: add_light_dumbbell_weight
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Seated — elbow resting on knee, forearm hanging. Rotate forearm upward against light dumbbell resistance. Targets infraspinatus and teres minor. Cornerstone rotator cuff rehab exercise. Start with 1-2 kg. Slow controlled tempo — 3 sec up, 3 sec down.
+
+  - id: band_pull_apart_rehab
+    name: Band Pull-Apart (Rehab variant)
+    category: rehab
+    modality: [rehab]
+    equipment: [resistance_band]
+    effort: low
+    bilateral: true
+    movement_patterns: [horizontal_pull]
+    requires: []
+    unlocks: [face_pull_rehab]
+    contraindicated_with: []
+    progressions:
+      load: increase_band_resistance
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 20
+    sources: [plan.md section 10]
+    notes: "Light resistance band horizontal pull-apart at chest height. Shoulder rehab variant — use lightest band available initially. Multiple directions: horizontal, diagonal, overhead. High frequency safe — can program daily. Addresses posterior deltoid and lower trapezius weakness contributing to impingement."
+
+  - id: face_pull_rehab
+    name: Face Pull (Rehab variant)
+    category: rehab
+    modality: [rehab]
+    equipment: [resistance_band]
+    effort: low
+    bilateral: true
+    movement_patterns: [horizontal_pull]
+    requires: [band_pull_apart_rehab]
+    unlocks: [side_plank_lat_activation, dip_support_hold]
+    contraindicated_with: []
+    progressions:
+      load: increase_band_resistance
+      volume: increase_reps_per_set
+    scaling_down: [band_pull_apart_rehab]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Rehab-weight face pull — thumbs-up grip, elbows high, full external rotation at end range. Used in shoulder impingement and instability protocols per Marcus Filly approach. Cue external rotation at end range — do not let elbows drop. Contraindication-free; safe in virtually all shoulder pathologies.
+
+  - id: landmine_press
+    name: Landmine Press
+    category: rehab
+    modality: [rehab]
+    equipment: [barbell]
+    effort: low
+    bilateral: false
+    movement_patterns: [horizontal_push, vertical_push]
+    requires: [face_pull_rehab, band_pull_apart_rehab]
+    unlocks: [eccentric_push_up]
+    contraindicated_with: []
+    progressions:
+      load: add_weight_to_barbell
+      volume: increase_reps_per_set
+    scaling_down: [band_pull_apart_rehab]
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: Single-arm press into barbell fixed in corner at angle. Path is angled rather than vertical — reduces subacromial impingement compared to overhead press. Shoulder rehab pushing pattern per Marcus Filly protocol. No contraindications in typical shoulder rehab scenarios.
+
+  - id: eccentric_push_up
+    name: Eccentric Push-Up (Rehab, on parallettes)
+    category: rehab
+    modality: [rehab]
+    equipment: [parallettes]
+    effort: low
+    bilateral: true
+    movement_patterns: [horizontal_push]
+    requires: [landmine_press]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+      complexity: standard_push_up
+    scaling_down: [landmine_press]
+    typical_volume:
+      sets: 3
+      reps: 8
+    sources: [plan.md section 10]
+    notes: Push-up on parallettes with slow 5-sec eccentric (lowering phase) and assisted or step-up concentric. Reduces wrist deviation compared to floor push-up. Shoulder rehab pushing pattern — eccentric loading for tendon remodeling. Marcus Filly protocol. Parallettes allow greater ROM and neutral wrist position.
+
+  - id: dip_support_hold
+    name: Dip Support Hold (Isometric)
+    category: rehab
+    modality: [rehab]
+    equipment: [parallettes]
+    effort: low
+    bilateral: true
+    movement_patterns: [isometric, vertical_push]
+    requires: [face_pull_rehab]
+    unlocks: [side_plank_lat_activation]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+    scaling_down: [landmine_press]
+    typical_volume:
+      sets: 3
+      duration_sec: 30
+    sources: [plan.md section 10]
+    notes: Supported on dip bars or parallettes, arms locked, hold isometric top position. Shoulder rehab isometric per Marcus Filly — builds scapular depression and lat engagement without joint movement. Cue scapular depression throughout hold. Progress duration before adding dynamic dip range.
+
+  - id: side_plank_lat_activation
+    name: Side Plank with Lat Activation
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [isometric]
+    requires: []
+    unlocks: [tgu_light]
+    contraindicated_with: []
+    progressions:
+      volume: increase_duration
+      complexity: side_plank_with_rotation
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      duration_sec: 30
+    sources: [plan.md section 10]
+    notes: Standard side plank with deliberate lat/serratus activation — cue pulling shoulder blade down and away from ear. Shoulder rehabilitation isometric. Programs alongside dip support hold in shoulder protocol. Addresses serratus anterior weakness common in impingement presentations.
+
+  - id: tgu_light
+    name: Turkish Get-Up (Rehab weight)
+    category: rehab
+    modality: [rehab]
+    equipment: [kettlebell]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_hinge, squat, isometric, vertical_push]
+    requires: [side_plank_lat_activation, external_rotation_db]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      load: increase_bell_weight
+      complexity: kb_tgu
+    scaling_down: [side_plank_lat_activation, dip_support_hold]
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources: [plan.md section 10]
+    notes: TGU with very light KB (4-8 kg) as progressive carry and shoulder stability rehab. Marcus Filly progressive carry protocol. Entire TGU movement pattern challenges shoulder in multiple planes through full ROM — ideal late-stage shoulder rehab. Progress load incrementally once full pain-free TGU is achieved.
+
+  # ── GENERAL REHAB ───────────────────────────────────────────────────────────
+
+  - id: dead_bug
+    name: Dead Bug
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [isometric, hip_flexion]
+    requires: []
+    unlocks: [bird_dog]
+    contraindicated_with: []
+    progressions:
+      complexity: dead_bug_with_band
+      volume: increase_reps_per_set
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: Supine — opposite arm and leg extend slowly while lumbar spine presses into floor. Core anti-extension rehab. Lumbar spine position — not neutral — pressed flat throughout. Foundational spinal stability exercise for any back, hip, or knee rehab phase.
+
+  - id: bird_dog
+    name: Bird Dog
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [isometric, hip_hinge]
+    requires: [dead_bug]
+    unlocks: [glute_bridge]
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+      complexity: bird_dog_with_pause
+    scaling_down: [dead_bug]
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources: [plan.md section 10]
+    notes: Quadruped — extend opposite arm and leg simultaneously, hold 3-5 sec, return. Core stability and anti-rotation. Follows dead bug in rehab progressions. Essential for lumbar, hip, and shoulder rehab as stabilizer recruitment baseline.
+
+  - id: glute_bridge
+    name: Glute Bridge
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [hip_hinge, isometric]
+    requires: []
+    unlocks: [single_leg_glute_bridge]
+    contraindicated_with: []
+    progressions:
+      complexity: single_leg_glute_bridge
+      volume: increase_duration
+    scaling_down: [dead_bug]
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources: [plan.md section 10]
+    notes: Supine, feet flat, drive hips to full extension and hold 2 sec. Bilateral glute activation for knee and hip rehab. Targets glute max and posterior chain without knee loading. Programs in all lower extremity rehab phases — often combined with quad set early phase.
+
+  - id: single_leg_glute_bridge
+    name: Single-Leg Glute Bridge
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: false
+    movement_patterns: [hip_hinge, isometric]
+    requires: [glute_bridge]
+    unlocks: [nordic_hamstring_curl]
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+      load: add_band_resistance
+    scaling_down: [glute_bridge]
+    typical_volume:
+      sets: 3
+      reps: 12
+    sources: [plan.md section 10]
+    notes: Single-leg glute bridge — non-working leg either extended in air or crossed over. Identifies and addresses bilateral glute strength asymmetry. Mid-phase rehab progression from bilateral glute bridge. Excellent for hip and knee rehab without significant joint load.
+
+  - id: nordic_hamstring_curl
+    name: Nordic Hamstring Curl (ATG)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [knee_extension, hip_hinge]
+    requires: [single_leg_glute_bridge]
+    unlocks: [reverse_nordic]
+    contraindicated_with: [proximal_hamstring_tendinopathy_acute]
+    progressions:
+      volume: increase_reps_per_set
+      complexity: nordic_hamstring_unassisted
+    scaling_down: [single_leg_glute_bridge, glute_bridge]
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources: [plan.md section 10]
+    notes: ATG Nordic hamstring curl — feet anchored, lower body toward floor under eccentric hamstring control. Highest-evidence exercise for hamstring strain prevention and rehab. Begin with hands available to catch descent. Progress to full unassisted lowering. Contraindicated with acute proximal hamstring tendinopathy.
+
+  - id: reverse_nordic
+    name: Reverse Nordic Curl (ATG Terminal Knee Extension)
+    category: rehab
+    modality: [rehab]
+    equipment: [none]
+    effort: low
+    bilateral: true
+    movement_patterns: [knee_extension]
+    requires: [terminal_knee_extension_band, quad_set]
+    unlocks: []
+    contraindicated_with: []
+    progressions:
+      volume: increase_reps_per_set
+      complexity: reverse_nordic_full
+    scaling_down: [terminal_knee_extension_band, quad_set]
+    typical_volume:
+      sets: 3
+      reps: 8
+    sources: [plan.md section 10]
+    notes: ATG reverse Nordic curl — kneel on soft surface, lean body backward under eccentric quad control. Directly targets rectus femoris and VMO through full knee extension range. ATG approach to terminal knee extension and patellofemoral rehab. Requires adequate knee flexion tolerance. Begin with partial range and progress to full lean.

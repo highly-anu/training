@@ -1,0 +1,53 @@
+id: aerobic_base
+name: Aerobic Base
+description: Zone 1-2 steady-state work — running, rowing, cycling, hiking, or swimming at conversational pace — building the aerobic engine and fat oxidation capacity.
+
+recovery_cost: low
+recovery_hours_min: 0
+
+session_position: standalone
+
+compatible_in_session_with:
+  - mobility
+  - movement_skill
+  - relative_strength
+
+incompatible_in_session_with:
+  - max_strength
+  - anaerobic_intervals
+  - strength_endurance
+
+min_weekly_minutes: 90
+max_weekly_minutes: 600
+
+typical_session_minutes:
+  min: 30
+  max: 180
+
+progression_model: intensity_split_shift
+
+intensity_zones:
+  - label: zone_1
+    description: Active recovery pace, very easy conversation, HR <65% max
+    hr_pct_min: 55
+    hr_pct_max: 65
+  - label: zone_2
+    description: Aerobic base — comfortable, conversational, HR 65-75% max
+    hr_pct_min: 65
+    hr_pct_max: 75
+
+sources:
+  - Uphill Athlete
+  - CrossFit Endurance
+  - Gym Jones
+
+notes: >
+  The foundation of all sustained output. Uphill Athlete prescribes 80% of total
+  training volume here (polarized model). Low recovery cost means it can be
+  performed on consecutive days and stacked after strength sessions. A short Z1-Z2
+  aerobic session (30-45 min) can appear as the second block of a concurrent
+  strength + aerobic day without meaningful interference, provided the strength
+  session comes first. Marked standalone because sessions longer than 60 min
+  should not be combined with other high-demand modalities. Progression model is
+  intensity_split_shift: as the base builds, the Z1/Z2 proportion gives way to
+  more Z3-Z4 work (base → build transition).

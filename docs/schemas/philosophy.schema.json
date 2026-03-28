@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "philosophy.schema.json",
+  "title": "Training Philosophy",
+  "description": "A source's non-negotiable guiding principles. Governs what the system will and won't do when drawing from this methodology.",
+  "type": "object",
+  "required": ["id", "name", "core_principles", "scope", "bias"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique slug. Used as reference key across the system. e.g. 'starting_strength', 'uphill_athlete'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name. e.g. 'Starting Strength / Mark Rippetoe'"
+    },
+    "core_principles": {
+      "type": "array",
+      "description": "Non-negotiable beliefs expressed as short slug strings. These are the axioms — the system won't violate them when this source is active.",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "examples": [["linear_progression", "compound_lifts", "sra_cycle"]]
+    },
+    "scope": {
+      "type": "array",
+      "description": "Which modalities this philosophy claims authority over. The system only applies this source's rules in sessions belonging to these modalities.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "max_strength", "strength_endurance", "relative_strength",
+          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+          "power", "mobility", "movement_skill", "durability",
+          "combat_sport", "rehab"
+        ]
+      },
+      "minItems": 1
+    },
+    "bias": {
+      "type": "array",
+      "description": "Modalities this philosophy actively emphasizes. Subset of scope.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "max_strength", "strength_endurance", "relative_strength",
+          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+          "power", "mobility", "movement_skill", "durability",
+          "combat_sport", "rehab"
+        ]
+      }
+    },
+    "avoid_with": {
+      "type": "array",
+      "description": "Philosophy IDs or general patterns this source conflicts with. Used to trigger warnings when combining sources.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "required_equipment": {
+      "type": "array",
+      "description": "Equipment that must be present for this philosophy to be applicable. If missing, system cannot draw from this source.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "barbell", "rack", "plates", "kettlebell", "dumbbell",
+          "pull_up_bar", "rings", "parallettes", "rower", "bike",
+          "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
+          "medicine_ball", "resistance_band", "rope", "box",
+          "ghd", "jump_rope", "open_space"
+        ]
+      },
+      "default": []
+    },
+    "intensity_model": {
+      "type": "string",
+      "description": "How this philosophy approaches intensity across the week.",
+      "enum": [
+        "linear_progression",
+        "polarized_80_20",
+        "block_periodization",
+        "autoregulation_rpe",
+        "constant_variation",
+        "skill_based",
+        "hard_easy_alternation",
+        "operator_readiness"
+      ]
+    },
+    "progression_philosophy": {
+      "type": "string",
+      "description": "Primary mechanism by which this source defines progress.",
+      "enum": [
+        "load_based",
+        "volume_based",
+        "complexity_based",
+        "time_based",
+        "density_based",
+        "feel_based",
+        "rpm_based",
+        "range_based"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "description": "Source documents or URLs this entry was derived from.",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes, known gaps, or caveats about this entry."
+    }
+  }
+}
