@@ -7,6 +7,9 @@ import {
   User,
   Activity,
   BookOpen,
+  Upload,
+  HeartPulse,
+  Terminal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
@@ -19,6 +22,9 @@ const NAV_ITEMS = [
   { to: '/exercises', label: 'Exercises', icon: Dumbbell },
   { to: '/profile', label: 'Profile', icon: User },
   { to: '/philosophies', label: 'Philosophies', icon: BookOpen },
+  { to: '/import', label: 'Import Workouts', icon: Upload },
+  { to: '/bio', label: 'Bio Log', icon: HeartPulse },
+  { to: '/dev', label: 'Dev Lab', icon: Terminal },
 ]
 
 export function Sidebar() {

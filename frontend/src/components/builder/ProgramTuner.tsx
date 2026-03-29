@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Info, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderStore } from '@/store/builderStore'
@@ -6,6 +6,7 @@ import { useGoals } from '@/api/goals'
 import { useFrameworks } from '@/api/frameworks'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { sortPriorities } from '@/lib/prioritySort'
+import { frameworkImpliedPriorities } from '@/lib/frameworkPriorities'
 import { FrameworkDetailModal } from './FrameworkDetailModal'
 import type { Framework, ModalityId } from '@/api/types'
 
@@ -49,26 +50,32 @@ export function ProgramTuner() {
     ) as Partial<Record<ModalityId, number>>
   }, [goals, selectedGoalIds, goalWeights])
 
-  // Default priority sliders to the goal's priorities (only on first mount for this goal set)
+  // Default priority sliders to goal priorities on first mount
   useEffect(() => {
     if (!priorityOverrides) {
       setPriorityOverrides({ ...blendedPriorities })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const activePriorities = priorityOverrides ?? blendedPriorities
-  const sortedPriorities = sortPriorities(activePriorities)
+  // When the user picks a different framework, suggest its implied priorities.
+  // Skip on initial mount (isMounted tracks that) so saved sessions aren't silently overwritten.
+  const isMounted = useRef(false)
+  const prevFwId = useRef(selectedFrameworkId)
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return }
+    if (selectedFrameworkId === prevFwId.current) return
+    prevFwId.current = selectedFrameworkId
 
-  // Total raw for normalization display
-  const totalRaw = Object.values(activePriorities).reduce((s, v) => s + (v ?? 0), 0) || 1
-
-  function updatePriority(mod: ModalityId, rawValue: number) {
-    setPriorityOverrides({ ...activePriorities, [mod]: rawValue })
-  }
-
-  function resetPriorities() {
-    setPriorityOverrides({ ...blendedPriorities })
-  }
+    if (selectedFrameworkId === null) {
+      // Deselected → revert to goal defaults
+      setPriorityOverrides({ ...blendedPriorities })
+    } else {
+      const fw = frameworks?.find((f) => f.id === selectedFrameworkId)
+      if (fw) {
+        setPriorityOverrides(frameworkImpliedPriorities(fw, blendedPriorities))
+      }
+    }
+  }, [selectedFrameworkId, frameworks, blendedPriorities]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine which goal(s) to use for framework options
   const primaryGoal = goals?.find((g) => g.id === selectedGoalIds[0])
@@ -89,6 +96,26 @@ export function ProgramTuner() {
   }, [goals, selectedGoalIds])
 
   const relevantFrameworks = frameworks?.filter((f) => relevantFrameworkIds.includes(f.id)) ?? []
+
+  // The active framework object (null when auto)
+  const activeFw = frameworks?.find(
+    (f) => f.id === (selectedFrameworkId ?? relevantFrameworks[0]?.id),
+  ) ?? null
+
+  // Framework-implied defaults for the reset button (null when fw has no sessions_per_week)
+  const fwDefaultPriorities = useMemo(() => {
+    if (!activeFw?.sessions_per_week) return null
+    return frameworkImpliedPriorities(activeFw, blendedPriorities)
+  }, [activeFw, blendedPriorities])
+
+  const activePriorities = priorityOverrides ?? blendedPriorities
+  const sortedPriorities = sortPriorities(activePriorities)
+
+  const totalRaw = Object.values(activePriorities).reduce((s, v) => s + (v ?? 0), 0) || 1
+
+  function updatePriority(mod: ModalityId, rawValue: number) {
+    setPriorityOverrides({ ...activePriorities, [mod]: rawValue })
+  }
 
   // Total phase weeks for the primary goal
   const defaultNumWeeks = useMemo(() => {
@@ -207,7 +234,7 @@ export function ProgramTuner() {
 
       {/* ── Priority weights ── */}
       <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold text-foreground">Training Priorities</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -216,12 +243,22 @@ export function ProgramTuner() {
                 : 'Override the default emphasis for each domain.'}
             </p>
           </div>
-          <button
-            onClick={resetPriorities}
-            className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 shrink-0 ml-4"
-          >
-            Reset to goal default
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            {fwDefaultPriorities && (
+              <button
+                onClick={() => setPriorityOverrides(fwDefaultPriorities)}
+                className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Framework default
+              </button>
+            )}
+            <button
+              onClick={() => setPriorityOverrides({ ...blendedPriorities })}
+              className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              Goal default
+            </button>
+          </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">

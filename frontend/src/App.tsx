@@ -10,6 +10,10 @@ import { SessionDetail } from '@/pages/SessionDetail'
 import { ExerciseCatalog } from '@/pages/ExerciseCatalog'
 import { ProfileBenchmarks } from '@/pages/ProfileBenchmarks'
 import { Philosophies } from '@/pages/Philosophies'
+import { WorkoutImport } from '@/pages/WorkoutImport'
+import { BioLog } from '@/pages/BioLog'
+import { DevLab } from '@/pages/DevLab'
+import { HealthDataProvider } from '@/components/HealthDataProvider'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +29,7 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} themes={['light', 'dark', 'military', 'zen']}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <HealthDataProvider>
           <Routes>
             <Route element={<RootLayout />}>
               <Route index element={<Dashboard />} />
@@ -34,8 +39,12 @@ export default function App() {
               <Route path="exercises" element={<ExerciseCatalog />} />
               <Route path="profile" element={<ProfileBenchmarks />} />
               <Route path="philosophies" element={<Philosophies />} />
+              <Route path="import" element={<WorkoutImport />} />
+              <Route path="bio" element={<BioLog />} />
+              <Route path="dev" element={<DevLab />} />
             </Route>
           </Routes>
+          </HealthDataProvider>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

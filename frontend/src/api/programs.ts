@@ -4,7 +4,7 @@ import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { useUiStore } from '@/store/uiStore'
-import type { AthleteConstraints, CustomInjuryFlag, GeneratedProgram, ModalityId } from './types'
+import type { AthleteConstraints, CustomInjuryFlag, GeneratedProgram, ModalityId, TracedProgram } from './types'
 
 interface GenerateParams {
   goalId: string
@@ -39,9 +39,16 @@ export function useGenerateProgram() {
   return useMutation({
     mutationFn: (params: GenerateParams) =>
       apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
-    onSuccess: (data) => {
+    onSuccess: (data, params) => {
       queryClient.setQueryData(queryKeys.programs.current, data)
-      useProgramStore.getState().setCurrentProgram(data)
+      const store = useProgramStore.getState()
+      store.setCurrentProgram(data)
+      store.setEventDate(params.eventDate ?? null)
+      const ids = (params.goalIds ?? [params.goalId]).filter((id) => id !== '_blended')
+      store.setSourceGoals(ids, params.goalWeights ?? {})
+      if (!store.programStartDate) {
+        store.setProgramStartDate(new Date().toISOString().slice(0, 10))
+      }
       useBuilderStore.getState().reset()
       useUiStore.getState().setSelectedWeekIndex(0)
     },
@@ -78,4 +85,12 @@ export function useRegenerateFromWeek() {
 
 export function useCurrentProgram(): GeneratedProgram | undefined {
   return useProgramStore((s) => s.currentProgram) ?? undefined
+}
+
+// Dev-only: generates with full trace, does NOT update the program store
+export function useGenerateWithTrace() {
+  return useMutation({
+    mutationFn: (params: GenerateParams) =>
+      apiClient.post('/programs/generate?trace=1', buildPostBody(params)) as unknown as Promise<TracedProgram>,
+  })
 }

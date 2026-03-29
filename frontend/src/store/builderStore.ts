@@ -27,6 +27,13 @@ interface BuilderStore {
   setPriorityOverrides: (overrides: Partial<Record<ModalityId, number>> | null) => void
   setNumWeeks: (n: number | null) => void
   reset: () => void
+  loadFromProgram: (opts: {
+    goalIds: string[]
+    goalWeights: Record<string, number>
+    constraints: Partial<AthleteConstraints>
+    numWeeks: number
+    eventDate: string | null
+  }) => void
 }
 
 const defaultConstraints: Partial<AthleteConstraints> = {
@@ -84,6 +91,18 @@ export const useBuilderStore = create<BuilderStore>()(
           selectedFrameworkId: null,
           priorityOverrides: null,
           numWeeks: null,
+        }),
+      loadFromProgram: ({ goalIds, goalWeights, constraints, numWeeks, eventDate }) =>
+        set({
+          step: goalIds.length > 1 ? 2 : 3,
+          direction: 'forward',
+          selectedGoalIds: goalIds,
+          goalWeights,
+          constraints,
+          eventDate,
+          selectedFrameworkId: null,
+          priorityOverrides: null,
+          numWeeks,
         }),
     }),
     {

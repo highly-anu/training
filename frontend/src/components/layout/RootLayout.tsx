@@ -36,7 +36,7 @@ export function RootLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
             <Outlet />
           </AnimatePresence>

@@ -95,6 +95,9 @@ def _resolve_session(sessions: list, archetypes: list,
     return resolved
 
 
+_GEN_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+
 def generate(
     goal_id: str | None,
     constraints: dict,
@@ -103,6 +106,7 @@ def generate(
     phase_schedule: list[dict] | None = None,
     extra_injury_flags: dict | None = None,
     goal_dict: dict | None = None,
+    include_trace: bool = False,
 ) -> str | dict:
     """
     Generate a training program.
@@ -154,29 +158,52 @@ def generate(
         for mod_id, mod in modalities.items()
     }
 
+    generation_trace: dict | None = {'weeks': []} if include_trace else None
+
     for entry in entries:
         phase          = entry['phase']
         week_in_phase  = entry['week_in_phase']
         week_in_program = entry.get('week_in_program', week_in_phase)
 
         # 1. Build the modality→day schedule
-        sched_result = schedule_week(goal, constraints, data, phase, week_in_phase)
+        sched_result = schedule_week(goal, constraints, data, phase, week_in_phase,
+                                     collect_trace=include_trace)
         week_schedule = sched_result['schedule']
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
+
+        week_trace: dict | None = None
+        if include_trace:
+            week_trace = {
+                'week_number': week_in_program,
+                'week_in_phase': week_in_phase,
+                'phase': phase,
+                'is_deload': is_deload,
+                'scheduler': sched_result.get('scheduler_trace', {}),
+                'sessions': {},
+            }
 
         # 2. Populate each session with archetype + exercises + loads
         populated_schedule: dict[int, list] = {}
 
         for day in sorted(week_schedule.keys()):
             populated_sessions = []
+            day_name = _GEN_DAY_NAMES[day - 1] if 1 <= day <= 7 else f'Day {day}'
+            day_session_traces: list[dict] = []
+
             for session in _resolve_session(week_schedule[day], archetypes, constraints, phase):
                 # Select archetype + exercises
                 populated = populate_session(
                     session, goal, constraints, exercises, archetypes,
                     injury_flags_data, phase, week_in_phase,
                     recent_arch_ids, recent_ex_ids,
+                    collect_trace=include_trace,
                 )
+
+                session_trace: dict | None = None
+                if include_trace:
+                    session_trace = populated.pop('session_trace', {})
+                    session_trace['progression'] = []
 
                 # Calculate load for each exercise slot
                 mod_id = session['modality']
@@ -185,7 +212,7 @@ def generate(
                 for ea in populated.get('exercises', []):
                     if ea.get('exercise') is None:
                         continue
-                    ea['load'] = calculate_load(
+                    load = calculate_load(
                         ea['exercise'],
                         ea['slot'],
                         prog,
@@ -195,6 +222,22 @@ def generate(
                         is_deload,
                         session_time_minutes=constraints.get('session_time_minutes', 75),
                     )
+                    ea['load'] = load
+
+                    if include_trace and session_trace is not None:
+                        session_trace['progression'].append({
+                            'exercise_id': ea['exercise']['id'],
+                            'exercise_name': ea['exercise'].get('name', ''),
+                            'slot_role': ea.get('slot_role', ''),
+                            'slot_type': ea['slot'].get('slot_type', ''),
+                            'model': prog,
+                            'week': week_in_phase,
+                            'phase': phase,
+                            'level': constraints.get('training_level', 'intermediate'),
+                            'is_deload': is_deload,
+                            'output': dict(load),
+                        })
+
                     # Track exercise variety
                     recent_ex_ids.append(ea['exercise']['id'])
                     if len(recent_ex_ids) > 40:
@@ -206,7 +249,12 @@ def generate(
                         recent_arch_ids.pop(0)
 
                 populated_sessions.append(populated)
+                if include_trace and session_trace is not None:
+                    day_session_traces.append(session_trace)
+
             populated_schedule[day] = populated_sessions
+            if include_trace and week_trace is not None:
+                week_trace['sessions'][day_name] = day_session_traces
 
         program['weeks'].append({
             'week_number':    week_in_program,
@@ -216,8 +264,12 @@ def generate(
             'schedule':       populated_schedule,
             'framework':      framework['id'],
         })
+        if include_trace and generation_trace is not None and week_trace is not None:
+            generation_trace['weeks'].append(week_trace)
 
     if output_format == 'dict':
+        if include_trace and generation_trace is not None:
+            program['generation_trace'] = generation_trace
         return program
 
     return format_program(program, goal, constraints, validation)

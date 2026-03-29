@@ -20,8 +20,8 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
 
   if (!session) {
     return (
-      <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center">
-        <Dumbbell className="size-8 text-muted-foreground/40 mx-auto mb-2" />
+      <div className="h-full rounded-xl border border-dashed border-border/60 bg-card/50 p-6 flex flex-col items-center justify-center text-center">
+        <Dumbbell className="size-8 text-muted-foreground/40 mb-2" />
         <p className="text-sm font-medium text-muted-foreground">Rest Day</p>
         <p className="text-xs text-muted-foreground/60 mt-1">
           {format(new Date(), 'EEEE, MMMM d')}
@@ -34,7 +34,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0, transition: { duration: 0.3 } }}
-      className="rounded-xl border bg-card p-5 shadow-sm space-y-3"
+      className="h-full rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -54,7 +54,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
 
       <Button
         size="sm"
-        className="w-full gap-2"
+        className="w-full gap-2 mt-auto"
         onClick={() => navigate(`/program/${(weekData.week_number)}/${today}`)}
       >
         Start Session <ArrowRight className="size-3.5" />

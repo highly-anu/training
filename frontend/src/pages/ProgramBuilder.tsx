@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { StepIndicator } from '@/components/builder/StepIndicator'
 import { GoalGrid } from '@/components/builder/GoalGrid'
@@ -8,6 +9,8 @@ import { ConstraintsForm } from '@/components/builder/ConstraintsForm'
 import { ReviewGenerate } from '@/components/builder/ReviewGenerate'
 import { useBuilderStore } from '@/store/builderStore'
 import { useGoals } from '@/api/goals'
+
+const GOAL_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#f43f5e', '#0ea5e9', '#a855f7']
 
 const STEP_TITLES = {
   1: { title: 'Choose your Goal', sub: 'Select one or more training profiles that match your objective' },
@@ -72,36 +75,87 @@ export function ProgramBuilder() {
               <GoalGrid selectedIds={selectedGoalIds} onToggle={toggleGoal} />
 
               {/* Weight controls — shown when 2+ goals selected */}
-              {selectedGoalIds.length >= 2 && (
-                <div className="rounded-xl border bg-card p-4 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Goal Weights
-                  </p>
-                  {selectedGoalIds.map((id) => {
-                    const goalName = goals?.find((g) => g.id === id)?.name ?? id.replace(/_/g, ' ')
-                    const raw = goalWeights[id] ?? 50
-                    const totalRaw = selectedGoalIds.reduce((s, gid) => s + (goalWeights[gid] ?? 50), 0)
-                    const pct = Math.round((raw / totalRaw) * 100)
-                    return (
-                      <div key={id} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="truncate capitalize">{goalName}</span>
-                          <span className="font-medium ml-2 shrink-0">{pct}%</span>
+              {selectedGoalIds.length >= 2 && (() => {
+                const totalRaw = selectedGoalIds.reduce((s, gid) => s + (goalWeights[gid] ?? 50), 0)
+                const pieData = selectedGoalIds.map((id, i) => ({
+                  id,
+                  name: goals?.find((g) => g.id === id)?.name ?? id.replace(/_/g, ' '),
+                  value: Math.round(((goalWeights[id] ?? 50) / totalRaw) * 100),
+                  raw: goalWeights[id] ?? 50,
+                  color: GOAL_COLORS[i % GOAL_COLORS.length],
+                }))
+                return (
+                  <div className="rounded-xl border bg-card p-4 space-y-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Goal Weights
+                    </p>
+
+                    {/* Pie chart */}
+                    <div className="relative">
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={44}
+                            outerRadius={68}
+                            paddingAngle={3}
+                            dataKey="value"
+                            animationBegin={0}
+                            animationDuration={500}
+                          >
+                            {pieData.map((entry) => (
+                              <Cell key={entry.id} fill={entry.color} stroke="transparent" />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              color: 'var(--foreground)',
+                            }}
+                            formatter={(v, name) => [`${String(v)}%`, String(name)]}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Sliders */}
+                    <div className="space-y-3">
+                      {pieData.map((entry) => (
+                        <div key={entry.id} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className="size-2 rounded-full shrink-0"
+                                style={{ backgroundColor: entry.color }}
+                              />
+                              <span className="truncate capitalize">{entry.name}</span>
+                            </div>
+                            <span className="font-semibold ml-2 shrink-0 tabular-nums">
+                              {entry.value}%
+                            </span>
+                          </div>
+                          <input
+                            type="range" min={5} max={95} step={5}
+                            value={entry.raw}
+                            onChange={(e) => setGoalWeight(entry.id, parseInt(e.target.value))}
+                            style={{ accentColor: entry.color }}
+                            className="w-full"
+                          />
                         </div>
-                        <input
-                          type="range" min={5} max={95} step={5}
-                          value={raw}
-                          onChange={(e) => setGoalWeight(id, parseInt(e.target.value))}
-                          className="w-full accent-primary"
-                        />
-                      </div>
-                    )
-                  })}
-                  <p className="text-[10px] text-muted-foreground">
-                    Weights control how much each goal's priorities shape the generated program.
-                  </p>
-                </div>
-              )}
+                      ))}
+                    </div>
+
+                    <p className="text-[10px] text-muted-foreground">
+                      Weights control how much each goal's priorities shape the generated program.
+                    </p>
+                  </div>
+                )
+              })()}
             </motion.div>
           )}
 

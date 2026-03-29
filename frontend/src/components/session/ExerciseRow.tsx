@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { SetLogger } from './SetLogger'
+import { PerformanceLogger } from './PerformanceLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
 import type { ExerciseAssignment } from '@/api/types'
@@ -53,7 +53,13 @@ export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps)
             )}
           </div>
           {hasSets && (
-            <SetLogger sets={assignment.load.sets!} exerciseId={assignment.exercise.id} sessionKey={sessionKey} />
+            <PerformanceLogger
+              sets={assignment.load.sets!}
+              exerciseId={assignment.exercise.id}
+              sessionKey={sessionKey}
+              prescribedRpe={assignment.load.target_rpe}
+              prescribedWeightKg={assignment.load.weight_kg}
+            />
           )}
         </div>
         {assignment.notes && (

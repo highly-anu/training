@@ -80,7 +80,7 @@ framework_selection:
   default_framework: polarized_80_20
   alternatives:
     - framework_id: concurrent_training
-      condition: days_per_week <= 4
+      condition: days_per_week <= 3
     - framework_id: block_periodization
       condition: event_date is not null and weeks_to_event >= 20
 
