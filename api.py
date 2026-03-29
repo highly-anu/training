@@ -7,7 +7,7 @@ import sys
 from datetime import date as _date
 
 import yaml
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, request
 from flask_cors import CORS
 
 # Ensure src/ is importable when running from repo root
@@ -444,6 +444,8 @@ def _generate_program_inner(body):
     phase_total = sum(p.get('weeks', 0) for p in goal.get('phase_sequence', []))
     num_weeks = body.get('num_weeks', phase_total or 4)
 
+    include_trace = bool(body.get('include_trace')) or request.args.get('trace') == '1'
+
     if not validation.feasible:
         raw = {'weeks': []}
     else:
@@ -457,17 +459,541 @@ def _generate_program_inner(body):
             phase_schedule=phase_schedule_override,
             output_format='dict',
             extra_injury_flags=extra_injury_flags or None,
+            include_trace=include_trace,
         )
 
     result = _transform_program(raw, goal, constraints, validation)
+    if include_trace and 'generation_trace' in raw:
+        result['generation_trace'] = raw['generation_trace']
     return jsonify(result)
+
+
+@app.get('/api/oauth/strava/status')
+def strava_status():
+    import oauth as _oauth
+    _oauth.init_db()
+    return jsonify(_oauth.get_strava_status())
+
+
+@app.get('/api/oauth/strava/authorize')
+def strava_authorize():
+    import oauth as _oauth
+    _oauth.init_db()
+    if not _oauth.is_configured():
+        return jsonify({'detail': 'STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET not set in environment'}), 503
+    return jsonify({'auth_url': _oauth.generate_auth_url()})
+
+
+@app.get('/api/oauth/strava/callback')
+def strava_callback():
+    import oauth as _oauth
+    _oauth.init_db()
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    error = request.args.get('error')
+    if error:
+        return redirect(f'{frontend_url}/import?strava=error&reason={error}')
+    code = request.args.get('code', '')
+    state = request.args.get('state', '')
+    try:
+        _oauth.handle_callback(code, state)
+        return redirect(f'{frontend_url}/import?strava=connected')
+    except Exception as e:
+        return redirect(f'{frontend_url}/import?strava=error&reason={e}')
+
+
+@app.delete('/api/oauth/strava/disconnect')
+def strava_disconnect():
+    import oauth as _oauth
+    _oauth.init_db()
+    _oauth.disconnect()
+    return jsonify({'disconnected': True})
+
+
+@app.post('/api/oauth/strava/sync')
+def strava_sync():
+    import oauth as _oauth
+    _oauth.init_db()
+    status = _oauth.get_strava_status()
+    if not status.get('connected'):
+        return jsonify({'detail': 'Strava not connected'}), 401
+    body = request.get_json(silent=True) or {}
+    since = body.get('since_timestamp')
+    activities = _oauth.sync_activities(since_timestamp=since)
+    return jsonify({'activities': activities, 'count': len(activities)})
+
+
+def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> list:
+    """Remove sensor lock-on artifacts and smooth outliers from HR sample lists.
+
+    1. Startup trim  — drop readings in the first 30 s that are below 75 % of
+       session average HR, but only for real exercise sessions (avg > 100 bpm).
+       This eliminates the optical-HR cold-start lag common on Apple Watch.
+    2. Rolling median — replace every sample with the median of its ±7.5 s
+       neighbourhood (min 3 neighbours required) to suppress mid-workout spikes
+       without distorting genuine effort changes.
+    """
+    from statistics import median as _median
+    from datetime import datetime, timezone
+
+    if not samples:
+        return samples
+
+    # Parse timestamps once
+    parsed: list[tuple[float, int, str]] = []  # (unix_ts, bpm, iso_str)
+    for s in samples:
+        try:
+            dt = datetime.fromisoformat(s['timestamp'])
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            parsed.append((dt.timestamp(), int(s['bpm']), s['timestamp']))
+        except Exception:
+            continue
+
+    if not parsed:
+        return samples
+
+    # 1 — Startup trim: drop all leading readings below threshold until HR first
+    #     stabilises at exercise level. Handles cold-start lag of any duration
+    #     (Apple Watch can take 3-5 min to lock on). Guard: never trim > 5 min.
+    avg = session_avg_hr or (sum(b for _, b, _ in parsed) / len(parsed))
+    if avg > 100:
+        threshold = avg * 0.75
+        start_ts = parsed[0][0]
+        first_valid = next(
+            (i for i, (ts, bpm, _) in enumerate(parsed)
+             if bpm >= threshold or ts - start_ts > 300),
+            0,
+        )
+        parsed = parsed[first_valid:]
+
+    if not parsed:
+        return samples
+
+    # 2 — Rolling median (±7.5 s window)
+    cleaned = []
+    for ts, bpm, iso in parsed:
+        window = sorted(b for t, b, _ in parsed if abs(t - ts) <= 7.5)
+        smoothed = int(round(_median(window))) if len(window) >= 3 else bpm
+        cleaned.append({'timestamp': iso, 'bpm': smoothed})
+
+    return cleaned
+
+
+@app.post('/api/workouts/parse')
+def parse_workout_file():
+    """Server-side workout file parser for large exports (> 50 MB).
+    Accepts multipart/form-data with field 'workout_file'.
+    Supports Apple Health XML (.xml) and Strava activities JSON (.json).
+    Returns a list of ImportedWorkout-shaped objects.
+    """
+    import xml.etree.ElementTree as ET
+    import json as _json
+    import math
+
+    f = request.files.get('workout_file')
+    if not f:
+        return jsonify({'detail': 'workout_file field required'}), 400
+
+    filename = (f.filename or '').lower()
+
+    APPLE_HEALTH_MAP = {
+        'HKWorkoutActivityTypeRunning': 'aerobic_base',
+        'HKWorkoutActivityTypeCycling': 'aerobic_base',
+        'HKWorkoutActivityTypeSwimming': 'aerobic_base',
+        'HKWorkoutActivityTypeWalking': 'durability',
+        'HKWorkoutActivityTypeHiking': 'durability',
+        'HKWorkoutActivityTypeHighIntensityIntervalTraining': 'anaerobic_intervals',
+        'HKWorkoutActivityTypeCrossTraining': 'mixed_modal_conditioning',
+        'HKWorkoutActivityTypeTraditionalStrengthTraining': 'max_strength',
+        'HKWorkoutActivityTypeFunctionalStrengthTraining': 'strength_endurance',
+        'HKWorkoutActivityTypeCoreTraining': 'strength_endurance',
+        'HKWorkoutActivityTypeYoga': 'mobility',
+        'HKWorkoutActivityTypeFlexibility': 'mobility',
+        'HKWorkoutActivityTypeMartialArts': 'combat_sport',
+        'HKWorkoutActivityTypeBoxing': 'combat_sport',
+        'HKWorkoutActivityTypeRowingMachine': 'aerobic_base',
+    }
+
+    STRAVA_MAP = {
+        'Run': 'aerobic_base', 'TrailRun': 'aerobic_base', 'VirtualRun': 'aerobic_base',
+        'Ride': 'aerobic_base', 'VirtualRide': 'aerobic_base', 'Swim': 'aerobic_base',
+        'Walk': 'durability', 'Hike': 'durability',
+        'WeightTraining': 'max_strength',
+        'HIIT': 'anaerobic_intervals', 'Crossfit': 'mixed_modal_conditioning',
+        'Workout': 'mixed_modal_conditioning', 'Yoga': 'mobility', 'Rowing': 'aerobic_base',
+        'MartialArts': 'combat_sport',
+    }
+
+    import uuid as _uuid
+    import hashlib as _hashlib
+
+    def _deterministic_id(source, start_time, activity_type, duration_minutes):
+        raw = f"{source}|{start_time}|{activity_type}|{duration_minutes}"
+        h = _hashlib.sha256(raw.encode()).hexdigest()[:24]
+        return f"{source}-{h}"
+
+    def _minutes_between(start_str, end_str):
+        from datetime import datetime
+        try:
+            fmt = '%Y-%m-%d %H:%M:%S %z'
+            s = datetime.strptime(start_str, fmt)
+            e = datetime.strptime(end_str, fmt)
+            return round((e - s).total_seconds() / 60)
+        except Exception:
+            return 0
+
+    def _local_date(iso_str):
+        from datetime import datetime
+        try:
+            d = datetime.fromisoformat(iso_str.replace(' +', '+').replace(' -', '-'))
+            return d.strftime('%Y-%m-%d')
+        except Exception:
+            return iso_str[:10]
+
+    if filename.endswith('.xml'):
+        results = []
+        try:
+            context = ET.iterparse(f.stream, events=('start',))
+            for _event, elem in context:
+                if elem.tag != 'Workout':
+                    continue
+                activity_type = elem.get('workoutActivityType', '')
+                start_date = elem.get('startDate', '')
+                end_date = elem.get('endDate', '')
+                if not start_date or not end_date:
+                    continue
+
+                hr_avg = hr_max = hr_min = None
+                calories = None
+                distance_val = distance_unit = None
+
+                for child in elem:
+                    t = child.get('type', '')
+                    if t == 'HKQuantityTypeIdentifierHeartRate':
+                        avg = child.get('average')
+                        mx = child.get('maximum')
+                        mn = child.get('minimum')
+                        if avg: hr_avg = float(avg)
+                        if mx: hr_max = float(mx)
+                        if mn: hr_min = float(mn)
+                    elif t == 'HKQuantityTypeIdentifierActiveEnergyBurned':
+                        s = child.get('sum')
+                        if s: calories = math.floor(float(s))
+                    elif t in ('HKQuantityTypeIdentifierDistanceWalkingRunning',
+                               'HKQuantityTypeIdentifierDistanceCycling'):
+                        s = child.get('sum')
+                        u = child.get('unit', '')
+                        if s:
+                            distance_val = float(s)
+                            distance_unit = 'km' if 'km' in u.lower() else 'm'
+
+                dur = _minutes_between(start_date, end_date)
+                workout = {
+                    'id': _deterministic_id('apple_health', start_date, activity_type, dur),
+                    'source': 'apple_health',
+                    'date': _local_date(start_date),
+                    'startTime': start_date,
+                    'endTime': end_date,
+                    'durationMinutes': dur,
+                    'activityType': activity_type,
+                    'inferredModalityId': APPLE_HEALTH_MAP.get(activity_type),
+                    'heartRate': {
+                        'avg': hr_avg, 'max': hr_max, 'min': hr_min, 'samples': []
+                    },
+                    'calories': calories,
+                    'distance': {'value': distance_val, 'unit': distance_unit} if distance_val else None,
+                    'rawData': {},
+                }
+                results.append(workout)
+                elem.clear()  # free memory
+        except ET.ParseError as e:
+            return jsonify({'detail': f'XML parse error: {e}'}), 422
+        return jsonify(results)
+
+    elif filename.endswith('.json'):
+        try:
+            data = _json.load(f.stream)
+        except _json.JSONDecodeError as e:
+            return jsonify({'detail': f'JSON parse error: {e}'}), 422
+        if not isinstance(data, list):
+            return jsonify({'detail': 'Expected a JSON array of Strava activities'}), 422
+        results = []
+        for a in data:
+            if not isinstance(a, dict) or not a.get('start_date'):
+                continue
+            sport_type = a.get('sport_type') or a.get('type') or 'Workout'
+            elapsed = a.get('elapsed_time', 0)
+            from datetime import datetime, timezone
+            try:
+                start_dt = datetime.fromisoformat(a['start_date'].replace('Z', '+00:00'))
+                end_dt = datetime.fromtimestamp(start_dt.timestamp() + elapsed, tz=timezone.utc)
+            except Exception:
+                continue
+            dist = a.get('distance', 0)
+            kj = a.get('kilojoules')
+            dur_min = round(elapsed / 60)
+            results.append({
+                'id': _deterministic_id('strava', start_dt.isoformat(), sport_type, dur_min),
+                'source': 'strava',
+                'date': start_dt.strftime('%Y-%m-%d'),
+                'startTime': start_dt.isoformat(),
+                'endTime': end_dt.isoformat(),
+                'durationMinutes': dur_min,
+                'activityType': sport_type,
+                'inferredModalityId': STRAVA_MAP.get(sport_type),
+                'heartRate': {
+                    'avg': a.get('average_heartrate'),
+                    'max': a.get('max_heartrate'),
+                    'min': None,
+                    'samples': [],
+                },
+                'calories': round(kj * 0.239) if kj else None,
+                'distance': {'value': round(dist / 1000, 3), 'unit': 'km'} if dist else None,
+                'rawData': {},
+            })
+        return jsonify(results)
+
+    elif filename.endswith('.fit'):
+        try:
+            import fitparse as _fitparse
+        except ImportError:
+            return jsonify({'detail': 'fitparse library not installed — run pip install fitparse'}), 503
+
+        from datetime import datetime as _dt, timezone as _tz
+
+        _FIT_SPORT_MAP = {
+            'running':           'aerobic_base',
+            'cycling':           'aerobic_base',
+            'swimming':          'aerobic_base',
+            'walking':           'durability',
+            'hiking':            'durability',
+            'rowing':            'aerobic_base',
+            'elliptical':        'aerobic_base',
+            'yoga':              'mobility',
+            'flexibility':       'mobility',
+            'training':          'mixed_modal_conditioning',
+            'generic':           'mixed_modal_conditioning',
+            'strength_training': 'max_strength',
+            'cardio':            'aerobic_base',
+            'cross_training':    'mixed_modal_conditioning',
+            'hiit':              'anaerobic_intervals',
+            'boxing':            'combat_sport',
+            'martial_arts':      'combat_sport',
+        }
+
+        # Semicircles → degrees conversion factor
+        _SEMI_TO_DEG = 180.0 / (2 ** 31)
+
+        try:
+            fit = _fitparse.FitFile(f.stream)
+
+            # ── Collect all record-level data (GPS, HR, altitude, cadence, power) ──
+            records = []
+            for rec in fit.get_messages('record'):
+                ts = rec.get_value('timestamp')
+                if ts is None:
+                    continue
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=_tz.utc)
+
+                lat_semi = rec.get_value('position_lat')
+                lon_semi = rec.get_value('position_long')
+                lat = float(lat_semi) * _SEMI_TO_DEG if lat_semi is not None else None
+                lng = float(lon_semi) * _SEMI_TO_DEG if lon_semi is not None else None
+
+                records.append({
+                    'timestamp': ts.isoformat(),
+                    'lat':       lat,
+                    'lng':       lng,
+                    'altitude':  float(rec.get_value('enhanced_altitude') or rec.get_value('altitude') or 0) if (rec.get_value('enhanced_altitude') or rec.get_value('altitude')) is not None else None,
+                    'bpm':       int(rec.get_value('heart_rate')) if rec.get_value('heart_rate') is not None else None,
+                    'cadence':   int(rec.get_value('cadence')) if rec.get_value('cadence') is not None else None,
+                    'power':     int(rec.get_value('power')) if rec.get_value('power') is not None else None,
+                    'speed':     float(rec.get_value('enhanced_speed') or rec.get_value('speed') or 0) if (rec.get_value('enhanced_speed') or rec.get_value('speed')) is not None else None,
+                })
+
+            # Build GPS track (only points with coordinates)
+            gps_track = [
+                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'], 'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                for r in records if r['lat'] is not None and r['lng'] is not None
+            ]
+
+            # Build HR samples (all points with valid HR, filter zeros)
+            hr_samples = _clean_hr_samples(
+                [{'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                 for r in records if r['bpm'] is not None and r['bpm'] > 0]
+            )
+
+            # ── Session-level summary (unchanged logic) ──
+            results = []
+            for session in fit.get_messages('session'):
+                sport = str(session.get_value('sport') or 'generic').lower()
+                sub_sport = str(session.get_value('sub_sport') or '').lower()
+
+                start_time = session.get_value('start_time')  # UTC naive datetime
+                elapsed = float(
+                    session.get_value('total_elapsed_time')
+                    or session.get_value('total_timer_time')
+                    or 0
+                )
+
+                if not start_time:
+                    continue
+
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=_tz.utc)
+                end_time = _dt.fromtimestamp(start_time.timestamp() + elapsed, tz=_tz.utc)
+
+                # Prefer sub_sport, but skip 'generic' since it's uninformative
+                modality = (
+                    (_FIT_SPORT_MAP.get(sub_sport) if sub_sport not in ('generic', 'none', '') else None)
+                    or _FIT_SPORT_MAP.get(sport)
+                )
+                avg_hr  = session.get_value('avg_heart_rate')
+                max_hr  = session.get_value('max_heart_rate')
+                calories = session.get_value('total_calories')
+                dist_m   = session.get_value('total_distance')  # meters
+
+                # Elevation gain/loss from records
+                elev_gain = 0.0
+                elev_loss = 0.0
+                prev_alt = None
+                for pt in gps_track:
+                    if pt['altitude'] is not None:
+                        if prev_alt is not None:
+                            diff = pt['altitude'] - prev_alt
+                            if diff > 0:
+                                elev_gain += diff
+                            else:
+                                elev_loss += abs(diff)
+                        prev_alt = pt['altitude']
+
+                # Use sub_sport for display when it adds meaning
+                display_type = (
+                    sub_sport
+                    if sub_sport and sub_sport not in ('generic', 'none', '')
+                    else sport
+                ).replace('_', ' ').title()
+
+                fit_dur = round(elapsed / 60)
+                results.append({
+                    'id':                _deterministic_id('fit_file', start_time.isoformat(), display_type, fit_dur),
+                    'source':            'fit_file',
+                    'date':              start_time.strftime('%Y-%m-%d'),
+                    'startTime':         start_time.isoformat(),
+                    'endTime':           end_time.isoformat(),
+                    'durationMinutes':   fit_dur,
+                    'activityType':      display_type,
+                    'inferredModalityId': modality,
+                    'heartRate': {
+                        'avg': float(avg_hr)  if avg_hr  is not None else None,
+                        'max': float(max_hr)  if max_hr  is not None else None,
+                        'min': None,
+                        'samples': hr_samples,
+                    },
+                    'calories':  int(calories) if calories is not None else None,
+                    'distance':  {'value': round(float(dist_m) / 1000, 3), 'unit': 'km'} if dist_m else None,
+                    'gpsTrack':  gps_track if gps_track else None,
+                    'elevation': {'gain': round(elev_gain), 'loss': round(elev_loss)} if elev_gain or elev_loss else None,
+                    'rawData':   {'sport': sport, 'sub_sport': sub_sport},
+                })
+
+            return jsonify(results)
+        except Exception as e:
+            return jsonify({'detail': f'FIT parse error: {e}'}), 422
+
+    return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
+
+
+# ---------------------------------------------------------------------------
+# Health data storage
+# ---------------------------------------------------------------------------
+
+from src import health_store as _health
+
+
+@app.get('/api/health/snapshot')
+def health_snapshot():
+    _health.init_db()
+    return jsonify({
+        'workouts':       _health.get_workouts(),
+        'sessionLogs':    _health.get_session_logs(),
+        'dailyBio':       _health.get_daily_bio(),
+        'matches':        _health.get_matches(),
+        'performanceLogs': _health.get_performance_logs(),
+    })
+
+
+@app.post('/api/health/workouts')
+def health_upsert_workouts():
+    _health.init_db()
+    body = request.get_json(silent=True) or {}
+    workouts = body.get('workouts', [])
+    if not isinstance(workouts, list):
+        return jsonify({'detail': 'workouts must be an array'}), 400
+    _health.upsert_workouts(workouts)
+    return jsonify({'saved': len(workouts)})
+
+
+@app.delete('/api/health/workouts/<workout_id>')
+def health_delete_workout(workout_id: str):
+    _health.init_db()
+    _health.delete_workout(workout_id)
+    return jsonify({'deleted': workout_id})
+
+
+@app.put('/api/health/sessions/<path:session_key>')
+def health_upsert_session(session_key: str):
+    _health.init_db()
+    log = request.get_json(silent=True) or {}
+    log['sessionKey'] = session_key
+    _health.upsert_session_log(log)
+    return jsonify({'saved': session_key})
+
+
+@app.put('/api/health/bio/<date>')
+def health_upsert_bio(date: str):
+    _health.init_db()
+    entry = request.get_json(silent=True) or {}
+    entry['date'] = date
+    _health.upsert_daily_bio(entry)
+    return jsonify({'saved': date})
+
+
+@app.post('/api/health/matches')
+def health_upsert_match():
+    _health.init_db()
+    match = request.get_json(silent=True) or {}
+    _health.upsert_match(match)
+    return jsonify({'saved': match.get('importedWorkoutId')})
+
+
+@app.post('/api/health/performance')
+def health_add_performance():
+    _health.init_db()
+    body = request.get_json(silent=True) or {}
+    benchmark_id = body.get('benchmarkId', '')
+    value = body.get('value')
+    logged_at = body.get('loggedAt', '')
+    if not benchmark_id or value is None:
+        return jsonify({'detail': 'benchmarkId and value required'}), 400
+    _health.add_performance_entry(benchmark_id, float(value), logged_at)
+    return jsonify({'saved': benchmark_id})
+
+
+@app.delete('/api/health/performance/<benchmark_id>')
+def health_delete_performance(benchmark_id: str):
+    _health.init_db()
+    _health.delete_performance_log(benchmark_id)
+    return jsonify({'deleted': benchmark_id})
 
 
 @app.errorhandler(Exception)
 def handle_error(e):
     import traceback as _tb
     msg = _tb.format_exc()
-    with open('C:/tmp/api_errors.txt', 'a') as _f:
+    err_path = os.path.join(os.path.dirname(__file__), 'data', 'api_errors.txt')
+    with open(err_path, 'a') as _f:
         _f.write(msg + '\n---\n')
     app.logger.exception(e)
     return jsonify({'detail': str(e)}), 500

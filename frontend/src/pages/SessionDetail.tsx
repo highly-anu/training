@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SessionHeader } from '@/components/session/SessionHeader'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
+import { SessionNotes } from '@/components/session/SessionNotes'
+import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
 import { useProfileStore } from '@/store/profileStore'
+import { useBioStore } from '@/store/bioStore'
 
 export function SessionDetail() {
   const { week, day } = useParams<{ week: string; day: string }>()
@@ -34,15 +37,26 @@ export function SessionDetail() {
   }
 
   const { sessionLogs, setSessionLog } = useProfileStore()
+  const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
 
   const weekNumber = parseInt(week ?? '1', 10)
-  const weekData = program.weeks.find((w) => w.week_number === weekNumber)
+  const weekIdx = program.weeks.findIndex((w) => w.week_number === weekNumber)
+  const weekData = weekIdx >= 0 ? program.weeks[weekIdx] : undefined
   const sessions = weekData?.schedule[day ?? ''] ?? []
 
   const sessionKey = `${weekNumber}-${day ?? ''}`
   const isComplete = sessionLogs[sessionKey]?.[0] === true
   function toggleComplete() {
-    setSessionLog(sessionKey, [!isComplete])
+    const next = !isComplete
+    setSessionLog(sessionKey, [next])
+    if (next) {
+      upsertSessionPerformance({
+        sessionKey,
+        exercises: {},
+        notes: '',
+        completedAt: new Date().toISOString(),
+      })
+    }
   }
 
   if (!weekData || sessions.length === 0) {
@@ -101,6 +115,12 @@ export function SessionDetail() {
             </div>
           </div>
         ))}
+
+        {/* Workout summary (HR data if imported workout is matched) */}
+        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIdx >= 0 ? weekIdx : undefined} />
+
+        {/* Session notes + fatigue rating */}
+        <SessionNotes sessionKey={sessionKey} />
 
         <Separator />
 

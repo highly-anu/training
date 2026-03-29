@@ -272,6 +272,95 @@ export interface GeneratedProgram {
   volume_summary?: WeekVolumeSummary[]
 }
 
+// ─── Generation Trace ─────────────────────────────────────────────────────────
+
+export interface CandidateScore {
+  id: string
+  name: string
+  score: number
+  breakdown: Record<string, number>
+}
+
+export interface ArchetypeTrace {
+  selected_id: string | null
+  filter_counts: Record<string, number>
+  candidates: CandidateScore[]
+}
+
+export interface SlotTrace {
+  slot_index: number
+  slot_role: string
+  slot_type: string
+  meta: boolean
+  movement_pattern: string | null
+  selected_id: string | null
+  injury_blocked: boolean
+  filter_counts: Record<string, number>
+  candidates: CandidateScore[]
+}
+
+export interface ProgressionEntry {
+  exercise_id: string
+  exercise_name: string
+  slot_role: string
+  slot_type: string
+  model: string
+  week: number
+  phase: string
+  level: string
+  is_deload: boolean
+  output: Record<string, number | string>
+}
+
+export interface SessionTrace {
+  modality: string
+  archetype: ArchetypeTrace
+  slots: SlotTrace[]
+  progression: ProgressionEntry[]
+}
+
+export interface FrameworkSelectionTrace {
+  forced_override: string | null
+  default_id: string
+  alternatives_checked: Array<{ framework_id: string; condition: string; matched: boolean }>
+  selected_id: string
+  selection_reason: string
+  days_constraint?: { athlete_days: number; framework_min: number; framework_max: number; days_fallback: string | null }
+}
+
+export interface SchedulerTrace {
+  framework_selection: FrameworkSelectionTrace
+  allocation: {
+    phase_priorities: Record<string, number>
+    raw: Record<string, number>
+    final: Record<string, number>
+  }
+  day_assignment: {
+    modality_order: string[]
+    day_pool: number[]
+    assignments: Record<string, string[]>
+  }
+  is_deload: boolean
+  deload_freq_weeks: number
+}
+
+export interface WeekTrace {
+  week_number: number
+  week_in_phase: number
+  phase: string
+  is_deload: boolean
+  scheduler: SchedulerTrace
+  sessions: Record<string, SessionTrace[]>
+}
+
+export interface GenerationTrace {
+  weeks: WeekTrace[]
+}
+
+export interface TracedProgram extends GeneratedProgram {
+  generation_trace?: GenerationTrace
+}
+
 // ─── Benchmarks ───────────────────────────────────────────────────────────────
 
 export type BenchmarkLevel = 'entry' | 'intermediate' | 'advanced' | 'elite'
@@ -366,4 +455,129 @@ export interface ExerciseFilters {
   category?: string
   effort?: EffortLevel[]
   equipment?: EquipmentId[]
+}
+
+// ─── Bio / Performance Data ────────────────────────────────────────────────────
+
+export type ImportSource = 'apple_health' | 'strava' | 'manual' | 'apple_watch_live' | 'fit_file'
+export type RPE = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+export type FatigueRating = 1 | 2 | 3 | 4 | 5
+export type MatchConfidence = 'auto' | 'manual' | 'rejected'
+
+export interface HRSample {
+  timestamp: string // ISO
+  bpm: number
+}
+
+export interface GPSPoint {
+  lat: number
+  lng: number
+  altitude?: number | null
+  timestamp: string // ISO
+  bpm?: number | null
+}
+
+export interface HRZoneDistribution {
+  z1: number // % of time
+  z2: number
+  z3: number
+  z4: number
+  z5: number
+  method: 'samples' | 'summary_estimate'
+}
+
+export interface ImportedWorkout {
+  id: string
+  source: ImportSource
+  date: string // YYYY-MM-DD
+  startTime: string // ISO
+  endTime: string // ISO
+  durationMinutes: number
+  activityType: string // raw source label
+  inferredModalityId?: ModalityId
+  heartRate: { avg?: number; max?: number; min?: number; samples?: HRSample[] }
+  calories?: number
+  distance?: { value: number; unit: 'km' | 'm' }
+  gpsTrack?: GPSPoint[] | null
+  elevation?: { gain: number; loss: number } | null
+  rawData: Record<string, unknown>
+}
+
+export interface SetPerformance {
+  setIndex: number
+  repsActual?: number
+  weightKg?: number
+  rpe?: RPE
+  completed: boolean
+  durationSeconds?: number
+}
+
+export interface ExercisePerformance {
+  sets: SetPerformance[]
+  rpe?: RPE
+  notes?: string
+}
+
+export interface SessionPerformanceLog {
+  sessionKey: string
+  importedWorkoutId?: string
+  exercises: Record<string, ExercisePerformance>
+  notes: string
+  fatigueRating?: FatigueRating
+  completedAt: string
+}
+
+export interface DailyBioLog {
+  date: string // YYYY-MM-DD
+  restingHR?: number
+  hrv?: number // RMSSD ms
+  notes?: string
+}
+
+export interface WorkoutMatch {
+  importedWorkoutId: string
+  sessionKey: string
+  matchConfidence: MatchConfidence
+  matchedAt: string
+}
+
+export interface PendingMatch {
+  importedWorkout: ImportedWorkout
+  candidateSessionKeys: string[]
+}
+
+// ─── Session Insights ────────────────────────────────────────────────────────
+
+export type InsightSeverity = 'positive' | 'neutral' | 'warning'
+
+export interface InsightItem {
+  key: string
+  label: string
+  detail: string
+  severity: InsightSeverity
+  metric?: { prescribed: string; actual: string; unit: string }
+}
+
+export interface SessionInsight {
+  sessionKey: string
+  complianceScore: number // 0-100
+  status: 'green' | 'yellow' | 'red'
+  insights: InsightItem[]
+}
+
+export interface WeekInsightSummary {
+  weekNumber: number
+  sessionsMatched: number
+  sessionsTotal: number
+  avgCompliance: number
+  status: 'green' | 'yellow' | 'red'
+  topFlags: InsightItem[]
+}
+
+export interface DevelopmentTrend {
+  metric: string
+  label: string
+  dataPoints: { weekNumber: number; value: number }[]
+  direction: 'improving' | 'stable' | 'declining'
+  detail: string
 }

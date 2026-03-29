@@ -46,23 +46,45 @@ def _eval_condition(condition: str, constraints: dict) -> bool:
     return False
 
 
-def select_framework(goal: dict, constraints: dict) -> dict:
-    """Select the best framework for the given goal and constraints."""
+def select_framework(goal: dict, constraints: dict,
+                     _trace: dict | None = None) -> dict:
+    """Select the best framework for the given goal and constraints.
+
+    If _trace dict is provided it will be populated with framework selection details.
+    """
     # Explicit override from the API request (set by api.py from body.framework_id)
     forced = constraints.get('forced_framework')
+    fw_sel = goal.get('framework_selection', {})
+    default_id = fw_sel.get('default_framework', 'concurrent_training')
+
+    if _trace is not None:
+        _trace['forced_override'] = forced
+        _trace['default_id'] = default_id
+        _trace['alternatives_checked'] = []
+
     if forced:
         try:
-            return loader.load_framework(forced)
+            fw = loader.load_framework(forced)
+            if _trace is not None:
+                _trace['selected_id'] = fw['id']
+                _trace['selection_reason'] = 'forced_override'
+            return fw
         except FileNotFoundError:
             pass  # fall through to normal selection
 
-    fw_sel = goal.get('framework_selection', {})
-    default_id = fw_sel.get('default_framework', 'concurrent_training')
     selected_id = default_id
 
     # First matching alternative condition wins
     for alt in fw_sel.get('alternatives', []):
-        if _eval_condition(alt.get('condition', ''), constraints):
+        cond = alt.get('condition', '')
+        matched = _eval_condition(cond, constraints)
+        if _trace is not None:
+            _trace['alternatives_checked'].append({
+                'framework_id': alt['framework_id'],
+                'condition': cond,
+                'matched': matched,
+            })
+        if matched:
             selected_id = alt['framework_id']
             break
 
@@ -77,6 +99,7 @@ def select_framework(goal: dict, constraints: dict) -> dict:
     max_days = applicable.get('days_per_week_max', 7)
     days = constraints.get('days_per_week', 5)
 
+    days_fallback = None
     if not (min_days <= days <= max_days):
         # Try alternatives that fit the days constraint
         for alt in fw_sel.get('alternatives', []):
@@ -84,10 +107,25 @@ def select_framework(goal: dict, constraints: dict) -> dict:
                 candidate = loader.load_framework(alt['framework_id'])
                 c = candidate.get('applicable_when', {})
                 if c.get('days_per_week_min', 1) <= days <= c.get('days_per_week_max', 7):
+                    days_fallback = candidate['id']
                     fw = candidate
                     break
             except FileNotFoundError:
                 continue
+
+    if _trace is not None:
+        _trace['selected_id'] = fw['id']
+        _trace['days_constraint'] = {
+            'athlete_days': days,
+            'framework_min': min_days,
+            'framework_max': max_days,
+            'days_fallback': days_fallback,
+        }
+        _trace['selection_reason'] = (
+            'forced_override' if forced
+            else ('days_fallback' if days_fallback else
+                  ('alternative_condition' if selected_id != default_id else 'default'))
+        )
 
     return fw
 
@@ -100,8 +138,9 @@ def _proportional_round(raw: dict, target: int) -> dict:
     """Round fractional session counts preserving total (largest-remainder method)."""
     floors = {k: math.floor(v) for k, v in raw.items()}
     deficit = target - sum(floors.values())
-    # Sort by fractional part descending to assign extra sessions
-    by_remainder = sorted(raw.items(), key=lambda x: x[1] - math.floor(x[1]), reverse=True)
+    # Round fractional parts to 9 dp to avoid floating-point comparison artifacts
+    # (e.g. 2.4 - floor(2.4) = 0.3999... which would incorrectly rank below 0.4)
+    by_remainder = sorted(raw.items(), key=lambda x: round(x[1] - math.floor(x[1]), 9), reverse=True)
     result = dict(floors)
     for i, (k, _) in enumerate(by_remainder):
         if i >= deficit:
@@ -111,15 +150,45 @@ def _proportional_round(raw: dict, target: int) -> dict:
 
 
 def allocate_sessions(priorities: dict, days_per_week: int, framework: dict) -> dict:
-    """Convert priority vector + framework to session counts per modality."""
+    """Convert priority vector + framework to session counts per modality.
+
+    Goal priorities are always the primary driver.  When the framework defines
+    sessions_per_week, it guides the *ratio* among overlapping modalities, but
+    modalities the goal does not prioritise are excluded and the freed slots
+    flow to goal-priority modalities not covered by the framework.
+    """
     fw_sessions = framework.get('sessions_per_week', {})
 
     if fw_sessions:
-        fw_total = sum(fw_sessions.values())
-        if fw_total == 0:
-            return {}
-        scale = days_per_week / fw_total
-        raw = {mod: count * scale for mod, count in fw_sessions.items()}
+        # Only keep framework modalities the goal actually prioritises
+        active_fw = {mod: cnt for mod, cnt in fw_sessions.items()
+                     if priorities.get(mod, 0) > 0}
+        active_total = sum(active_fw.values())
+
+        if not active_fw or active_total == 0:
+            # No overlap — fall back to pure goal priorities
+            raw = {mod: weight * days_per_week
+                   for mod, weight in priorities.items() if weight > 0}
+        else:
+            total_prio = sum(w for w in priorities.values() if w > 0) or 1
+            fw_covered_prio = sum(priorities.get(m, 0) for m in active_fw)
+            goal_only_prio = total_prio - fw_covered_prio
+
+            # Slots allocated to fw-covered modalities (proportional to their priority share)
+            fw_slots = days_per_week * (fw_covered_prio / total_prio)
+            # Slots for goal modalities absent from the framework
+            goal_only_slots = days_per_week * (goal_only_prio / total_prio)
+
+            # Framework modalities: keep their relative ratio within fw_slots
+            raw = {mod: (cnt / active_total) * fw_slots for mod, cnt in active_fw.items()}
+
+            # Goal-only modalities: split goal_only_slots by their relative priority
+            goal_only = {mod: w for mod, w in priorities.items()
+                         if w > 0 and mod not in fw_sessions}
+            if goal_only:
+                goal_only_total = sum(goal_only.values()) or 1
+                for mod, w in goal_only.items():
+                    raw[mod] = (w / goal_only_total) * goal_only_slots
     else:
         raw = {mod: weight * days_per_week
                for mod, weight in priorities.items() if weight > 0}
@@ -369,7 +438,8 @@ def _order_day(modality_list: list, modalities: dict) -> list:
 # ---------------------------------------------------------------------------
 
 def schedule_week(goal: dict, constraints: dict, data: dict,
-                  phase: str, week_number: int) -> dict:
+                  phase: str, week_number: int,
+                  collect_trace: bool = False) -> dict:
     """
     Build a weekly schedule.
 
@@ -379,10 +449,13 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
           'framework': dict,
           'is_deload': bool,
           'allocation': {modality: count},
+          'scheduler_trace': dict  (only when collect_trace=True)
         }
     """
     priorities = get_phase_priorities(goal, phase)
-    framework = select_framework(goal, constraints)
+
+    fw_trace: dict | None = {} if collect_trace else None
+    framework = select_framework(goal, constraints, _trace=fw_trace)
 
     forced_workout: List[int] = sorted(
         d for d in (constraints.get('preferred_days') or []) if 1 <= d <= 7
@@ -412,9 +485,69 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         ordered = _order_day(raw[day], data['modalities'])
         schedule[day] = [{'modality': m, 'is_deload': is_deload} for m in ordered]
 
-    return {
+    result = {
         'schedule': schedule,
         'framework': framework,
         'is_deload': is_deload,
         'allocation': allocation,
     }
+
+    if collect_trace:
+        # Build raw allocation for trace (before rounding)
+        fw_sessions = framework.get('sessions_per_week', {})
+        active_fw = {mod: cnt for mod, cnt in fw_sessions.items()
+                     if priorities.get(mod, 0) > 0}
+        active_total = sum(active_fw.values()) or 1
+        total_prio = sum(w for w in priorities.values() if w > 0) or 1
+        fw_covered_prio = sum(priorities.get(m, 0) for m in active_fw)
+        goal_only_prio = total_prio - fw_covered_prio
+
+        if active_fw:
+            fw_slots = len(pool) * (fw_covered_prio / total_prio)
+            goal_only_slots = len(pool) * (goal_only_prio / total_prio)
+            raw_alloc = {mod: (cnt / active_total) * fw_slots for mod, cnt in active_fw.items()}
+            goal_only = {mod: w for mod, w in priorities.items()
+                         if w > 0 and mod not in fw_sessions}
+            if goal_only:
+                go_total = sum(goal_only.values()) or 1
+                for mod, w in goal_only.items():
+                    raw_alloc[mod] = (w / go_total) * goal_only_slots
+        else:
+            raw_alloc = {mod: w * len(pool) for mod, w in priorities.items() if w > 0}
+
+        # Modality placement order (sorted by recovery cost desc — same as assign_to_days)
+        modality_order = [
+            m for m, _ in sorted(
+                allocation.items(),
+                key=lambda kv: _RECOVERY_COST_RANK.get(
+                    data['modalities'].get(kv[0], {}).get('recovery_cost', 'low'), 1
+                ),
+                reverse=True,
+            )
+        ]
+
+        # Day-name mapping for assignments display
+        _DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        day_assignments: dict[str, list[str]] = {}
+        for day_int in sorted(raw.keys()):
+            if raw[day_int]:
+                day_name = _DAY_NAMES[day_int - 1] if 1 <= day_int <= 7 else str(day_int)
+                day_assignments[day_name] = list(raw[day_int])
+
+        result['scheduler_trace'] = {
+            'framework_selection': fw_trace,
+            'allocation': {
+                'phase_priorities': dict(priorities),
+                'raw': {k: round(v, 3) for k, v in raw_alloc.items()},
+                'final': dict(allocation),
+            },
+            'day_assignment': {
+                'modality_order': modality_order,
+                'day_pool': pool,
+                'assignments': day_assignments,
+            },
+            'is_deload': is_deload,
+            'deload_freq_weeks': deload_freq,
+        }
+
+    return result

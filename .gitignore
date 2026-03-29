@@ -32,3 +32,8 @@ Thumbs.db
 # Misc
 .pdflibs/
 .claude/
+
+# Personal health data & local databases
+data/apple_health_export/
+data/*.db
+*.db
