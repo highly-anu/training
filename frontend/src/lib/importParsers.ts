@@ -1,4 +1,53 @@
-import type { ImportedWorkout, ModalityId } from '@/api/types'
+import type { ImportedWorkout, ModalityId, HRSample } from '@/api/types'
+
+// ── HR outlier cleaning ───────────────────────────────────────────────────────
+
+/**
+ * Remove sensor lock-on artifacts and smooth outliers from an HR sample array.
+ *
+ * 1. Startup trim  — drop readings in the first 30 s below 75 % of session avg
+ *    HR (only for exercise sessions where avg > 100 bpm). Eliminates the optical
+ *    cold-start lag common on Apple Watch and similar wrist sensors.
+ * 2. Rolling median — replace each sample with the median of its ±7.5 s window
+ *    (requires ≥ 3 neighbours) to suppress mid-workout spikes without flattening
+ *    genuine effort changes.
+ */
+export function cleanHRSamples(samples: HRSample[], avgHR?: number): HRSample[] {
+  if (samples.length === 0) return samples
+
+  const avg = avgHR ?? samples.reduce((s, p) => s + p.bpm, 0) / samples.length
+  const startMs = new Date(samples[0].timestamp).getTime()
+
+  // 1 — Startup trim: drop all leading readings below threshold until HR first
+  //     stabilises at exercise level. Handles cold-start lag of any duration.
+  //     Guard: never trim more than 5 minutes of data.
+  let trimmed = samples
+  if (avg > 100) {
+    const threshold = avg * 0.75
+    const firstValid = samples.findIndex((s) => {
+      const elapsed = (new Date(s.timestamp).getTime() - startMs) / 1000
+      return s.bpm >= threshold || elapsed > 300
+    })
+    trimmed = firstValid > 0 ? samples.slice(firstValid) : samples
+    if (trimmed.length === 0) trimmed = samples
+  }
+
+  // 2 — Rolling median (±7.5 s window, min 3 samples)
+  return trimmed.map((s) => {
+    const tsMs = new Date(s.timestamp).getTime()
+    const window = trimmed
+      .filter((p) => Math.abs(new Date(p.timestamp).getTime() - tsMs) <= 7500)
+      .map((p) => p.bpm)
+      .sort((a, b) => a - b)
+    if (window.length < 3) return s
+    const mid = Math.floor(window.length / 2)
+    const median =
+      window.length % 2 === 0
+        ? Math.round((window[mid - 1] + window[mid]) / 2)
+        : window[mid]
+    return { ...s, bpm: median }
+  })
+}
 
 // ── Activity type → ModalityId mapping ────────────────────────────────────────
 

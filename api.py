@@ -522,6 +522,63 @@ def strava_sync():
     return jsonify({'activities': activities, 'count': len(activities)})
 
 
+def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> list:
+    """Remove sensor lock-on artifacts and smooth outliers from HR sample lists.
+
+    1. Startup trim  — drop readings in the first 30 s that are below 75 % of
+       session average HR, but only for real exercise sessions (avg > 100 bpm).
+       This eliminates the optical-HR cold-start lag common on Apple Watch.
+    2. Rolling median — replace every sample with the median of its ±7.5 s
+       neighbourhood (min 3 neighbours required) to suppress mid-workout spikes
+       without distorting genuine effort changes.
+    """
+    from statistics import median as _median
+    from datetime import datetime, timezone
+
+    if not samples:
+        return samples
+
+    # Parse timestamps once
+    parsed: list[tuple[float, int, str]] = []  # (unix_ts, bpm, iso_str)
+    for s in samples:
+        try:
+            dt = datetime.fromisoformat(s['timestamp'])
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            parsed.append((dt.timestamp(), int(s['bpm']), s['timestamp']))
+        except Exception:
+            continue
+
+    if not parsed:
+        return samples
+
+    # 1 — Startup trim: drop all leading readings below threshold until HR first
+    #     stabilises at exercise level. Handles cold-start lag of any duration
+    #     (Apple Watch can take 3-5 min to lock on). Guard: never trim > 5 min.
+    avg = session_avg_hr or (sum(b for _, b, _ in parsed) / len(parsed))
+    if avg > 100:
+        threshold = avg * 0.75
+        start_ts = parsed[0][0]
+        first_valid = next(
+            (i for i, (ts, bpm, _) in enumerate(parsed)
+             if bpm >= threshold or ts - start_ts > 300),
+            0,
+        )
+        parsed = parsed[first_valid:]
+
+    if not parsed:
+        return samples
+
+    # 2 — Rolling median (±7.5 s window)
+    cleaned = []
+    for ts, bpm, iso in parsed:
+        window = sorted(b for t, b, _ in parsed if abs(t - ts) <= 7.5)
+        smoothed = int(round(_median(window))) if len(window) >= 3 else bpm
+        cleaned.append({'timestamp': iso, 'bpm': smoothed})
+
+    return cleaned
+
+
 @app.post('/api/workouts/parse')
 def parse_workout_file():
     """Server-side workout file parser for large exports (> 50 MB).
@@ -762,10 +819,10 @@ def parse_workout_file():
             ]
 
             # Build HR samples (all points with valid HR, filter zeros)
-            hr_samples = [
-                {'timestamp': r['timestamp'], 'bpm': r['bpm']}
-                for r in records if r['bpm'] is not None and r['bpm'] > 0
-            ]
+            hr_samples = _clean_hr_samples(
+                [{'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                 for r in records if r['bpm'] is not None and r['bpm'] > 0]
+            )
 
             # ── Session-level summary (unchanged logic) ──
             results = []
