@@ -469,6 +469,14 @@ export interface HRSample {
   bpm: number
 }
 
+export interface GPSPoint {
+  lat: number
+  lng: number
+  altitude?: number | null
+  timestamp: string // ISO
+  bpm?: number | null
+}
+
 export interface HRZoneDistribution {
   z1: number // % of time
   z2: number
@@ -490,6 +498,8 @@ export interface ImportedWorkout {
   heartRate: { avg?: number; max?: number; min?: number; samples?: HRSample[] }
   calories?: number
   distance?: { value: number; unit: 'km' | 'm' }
+  gpsTrack?: GPSPoint[] | null
+  elevation?: { gain: number; loss: number } | null
   rawData: Record<string, unknown>
 }
 
@@ -534,4 +544,40 @@ export interface WorkoutMatch {
 export interface PendingMatch {
   importedWorkout: ImportedWorkout
   candidateSessionKeys: string[]
+}
+
+// ─── Session Insights ────────────────────────────────────────────────────────
+
+export type InsightSeverity = 'positive' | 'neutral' | 'warning'
+
+export interface InsightItem {
+  key: string
+  label: string
+  detail: string
+  severity: InsightSeverity
+  metric?: { prescribed: string; actual: string; unit: string }
+}
+
+export interface SessionInsight {
+  sessionKey: string
+  complianceScore: number // 0-100
+  status: 'green' | 'yellow' | 'red'
+  insights: InsightItem[]
+}
+
+export interface WeekInsightSummary {
+  weekNumber: number
+  sessionsMatched: number
+  sessionsTotal: number
+  avgCompliance: number
+  status: 'green' | 'yellow' | 'red'
+  topFlags: InsightItem[]
+}
+
+export interface DevelopmentTrend {
+  metric: string
+  label: string
+  dataPoints: { weekNumber: number; value: number }[]
+  direction: 'improving' | 'stable' | 'declining'
+  detail: string
 }

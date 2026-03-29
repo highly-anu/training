@@ -64,6 +64,13 @@ function minutesBetween(start: string, end: string): number {
   return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)
 }
 
+function deterministicId(source: string, startTime: string, activityType: string, durationMinutes: number): string {
+  const raw = `${source}|${startTime}|${activityType}|${durationMinutes}`
+  let hash = 0
+  for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0
+  return `${source}-${Math.abs(hash).toString(36)}-${startTime.replace(/\D/g, '').slice(0, 12)}`
+}
+
 export function parseAppleHealthXml(xmlText: string): ImportedWorkout[] {
   const parser = new DOMParser()
   const doc = parser.parseFromString(xmlText, 'text/xml')
@@ -117,13 +124,14 @@ export function parseAppleHealthXml(xmlText: string): ImportedWorkout[] {
         }
       }
 
+      const duration = minutesBetween(startDate, endDate)
       return {
-        id: crypto.randomUUID(),
+        id: deterministicId('apple_health', startDate, activityType, duration),
         source: 'apple_health',
         date: parseLocalDate(startDate),
         startTime: startDate,
         endTime: endDate,
-        durationMinutes: minutesBetween(startDate, endDate),
+        durationMinutes: duration,
         activityType,
         inferredModalityId: mapActivityType(activityType, 'apple_health'),
         heartRate: { avg: hrAvg, max: hrMax, min: hrMin, samples: [] },
@@ -170,7 +178,7 @@ export function parseStravaJson(json: unknown): ImportedWorkout[] {
       }
 
       return {
-        id: crypto.randomUUID(),
+        id: deterministicId('strava', startTime, sportType, durationMinutes),
         source: 'strava',
         date: new Date(a.start_date).toLocaleDateString('en-CA'),
         startTime,

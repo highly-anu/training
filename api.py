@@ -568,6 +568,12 @@ def parse_workout_file():
     }
 
     import uuid as _uuid
+    import hashlib as _hashlib
+
+    def _deterministic_id(source, start_time, activity_type, duration_minutes):
+        raw = f"{source}|{start_time}|{activity_type}|{duration_minutes}"
+        h = _hashlib.sha256(raw.encode()).hexdigest()[:24]
+        return f"{source}-{h}"
 
     def _minutes_between(start_str, end_str):
         from datetime import datetime
@@ -624,13 +630,14 @@ def parse_workout_file():
                             distance_val = float(s)
                             distance_unit = 'km' if 'km' in u.lower() else 'm'
 
+                dur = _minutes_between(start_date, end_date)
                 workout = {
-                    'id': str(_uuid.uuid4()),
+                    'id': _deterministic_id('apple_health', start_date, activity_type, dur),
                     'source': 'apple_health',
                     'date': _local_date(start_date),
                     'startTime': start_date,
                     'endTime': end_date,
-                    'durationMinutes': _minutes_between(start_date, end_date),
+                    'durationMinutes': dur,
                     'activityType': activity_type,
                     'inferredModalityId': APPLE_HEALTH_MAP.get(activity_type),
                     'heartRate': {
@@ -667,13 +674,14 @@ def parse_workout_file():
                 continue
             dist = a.get('distance', 0)
             kj = a.get('kilojoules')
+            dur_min = round(elapsed / 60)
             results.append({
-                'id': str(_uuid.uuid4()),
+                'id': _deterministic_id('strava', start_dt.isoformat(), sport_type, dur_min),
                 'source': 'strava',
                 'date': start_dt.strftime('%Y-%m-%d'),
                 'startTime': start_dt.isoformat(),
                 'endTime': end_dt.isoformat(),
-                'durationMinutes': round(elapsed / 60),
+                'durationMinutes': dur_min,
                 'activityType': sport_type,
                 'inferredModalityId': STRAVA_MAP.get(sport_type),
                 'heartRate': {
@@ -716,10 +724,51 @@ def parse_workout_file():
             'martial_arts':      'combat_sport',
         }
 
+        # Semicircles → degrees conversion factor
+        _SEMI_TO_DEG = 180.0 / (2 ** 31)
+
         try:
             fit = _fitparse.FitFile(f.stream)
-            results = []
 
+            # ── Collect all record-level data (GPS, HR, altitude, cadence, power) ──
+            records = []
+            for rec in fit.get_messages('record'):
+                ts = rec.get_value('timestamp')
+                if ts is None:
+                    continue
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=_tz.utc)
+
+                lat_semi = rec.get_value('position_lat')
+                lon_semi = rec.get_value('position_long')
+                lat = float(lat_semi) * _SEMI_TO_DEG if lat_semi is not None else None
+                lng = float(lon_semi) * _SEMI_TO_DEG if lon_semi is not None else None
+
+                records.append({
+                    'timestamp': ts.isoformat(),
+                    'lat':       lat,
+                    'lng':       lng,
+                    'altitude':  float(rec.get_value('enhanced_altitude') or rec.get_value('altitude') or 0) if (rec.get_value('enhanced_altitude') or rec.get_value('altitude')) is not None else None,
+                    'bpm':       int(rec.get_value('heart_rate')) if rec.get_value('heart_rate') is not None else None,
+                    'cadence':   int(rec.get_value('cadence')) if rec.get_value('cadence') is not None else None,
+                    'power':     int(rec.get_value('power')) if rec.get_value('power') is not None else None,
+                    'speed':     float(rec.get_value('enhanced_speed') or rec.get_value('speed') or 0) if (rec.get_value('enhanced_speed') or rec.get_value('speed')) is not None else None,
+                })
+
+            # Build GPS track (only points with coordinates)
+            gps_track = [
+                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'], 'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                for r in records if r['lat'] is not None and r['lng'] is not None
+            ]
+
+            # Build HR samples (all points with valid HR, filter zeros)
+            hr_samples = [
+                {'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                for r in records if r['bpm'] is not None and r['bpm'] > 0
+            ]
+
+            # ── Session-level summary (unchanged logic) ──
+            results = []
             for session in fit.get_messages('session'):
                 sport = str(session.get_value('sport') or 'generic').lower()
                 sub_sport = str(session.get_value('sub_sport') or '').lower()
@@ -738,11 +787,29 @@ def parse_workout_file():
                     start_time = start_time.replace(tzinfo=_tz.utc)
                 end_time = _dt.fromtimestamp(start_time.timestamp() + elapsed, tz=_tz.utc)
 
-                modality = _FIT_SPORT_MAP.get(sub_sport) or _FIT_SPORT_MAP.get(sport)
+                # Prefer sub_sport, but skip 'generic' since it's uninformative
+                modality = (
+                    (_FIT_SPORT_MAP.get(sub_sport) if sub_sport not in ('generic', 'none', '') else None)
+                    or _FIT_SPORT_MAP.get(sport)
+                )
                 avg_hr  = session.get_value('avg_heart_rate')
                 max_hr  = session.get_value('max_heart_rate')
                 calories = session.get_value('total_calories')
                 dist_m   = session.get_value('total_distance')  # meters
+
+                # Elevation gain/loss from records
+                elev_gain = 0.0
+                elev_loss = 0.0
+                prev_alt = None
+                for pt in gps_track:
+                    if pt['altitude'] is not None:
+                        if prev_alt is not None:
+                            diff = pt['altitude'] - prev_alt
+                            if diff > 0:
+                                elev_gain += diff
+                            else:
+                                elev_loss += abs(diff)
+                        prev_alt = pt['altitude']
 
                 # Use sub_sport for display when it adds meaning
                 display_type = (
@@ -751,23 +818,26 @@ def parse_workout_file():
                     else sport
                 ).replace('_', ' ').title()
 
+                fit_dur = round(elapsed / 60)
                 results.append({
-                    'id':                str(_uuid.uuid4()),
+                    'id':                _deterministic_id('fit_file', start_time.isoformat(), display_type, fit_dur),
                     'source':            'fit_file',
                     'date':              start_time.strftime('%Y-%m-%d'),
                     'startTime':         start_time.isoformat(),
                     'endTime':           end_time.isoformat(),
-                    'durationMinutes':   round(elapsed / 60),
+                    'durationMinutes':   fit_dur,
                     'activityType':      display_type,
                     'inferredModalityId': modality,
                     'heartRate': {
                         'avg': float(avg_hr)  if avg_hr  is not None else None,
                         'max': float(max_hr)  if max_hr  is not None else None,
                         'min': None,
-                        'samples': [],
+                        'samples': hr_samples,
                     },
                     'calories':  int(calories) if calories is not None else None,
                     'distance':  {'value': round(float(dist_m) / 1000, 3), 'unit': 'km'} if dist_m else None,
+                    'gpsTrack':  gps_track if gps_track else None,
+                    'elevation': {'gain': round(elev_gain), 'loss': round(elev_loss)} if elev_gain or elev_loss else None,
                     'rawData':   {'sport': sport, 'sub_sport': sub_sport},
                 })
 
@@ -865,7 +935,8 @@ def health_delete_performance(benchmark_id: str):
 def handle_error(e):
     import traceback as _tb
     msg = _tb.format_exc()
-    with open('C:/tmp/api_errors.txt', 'a') as _f:
+    err_path = os.path.join(os.path.dirname(__file__), 'data', 'api_errors.txt')
+    with open(err_path, 'a') as _f:
         _f.write(msg + '\n---\n')
     app.logger.exception(e)
     return jsonify({'detail': str(e)}), 500

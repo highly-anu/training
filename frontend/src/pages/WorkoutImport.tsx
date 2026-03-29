@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2 } from 'lucide-react'
+import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2, ChevronRight } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
 import { StravaConnect } from '@/components/bio/StravaConnect'
 import { parseAppleHealthXml, parseStravaJson } from '@/lib/importParsers'
-import { autoMatchWorkouts } from '@/lib/workoutMatcher'
+import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
@@ -16,11 +17,22 @@ import type { ImportedWorkout, PendingMatch } from '@/api/types'
 
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
+function sessionLabel(sessionKey: string): string {
+  const parts = sessionKey.split('-')
+  if (parts.length < 2) return sessionKey
+  return `Week ${parts[0]} — ${parts.slice(1).join('-')}`
+}
+
 export function WorkoutImport() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const linkToSession = searchParams.get('linkTo')
   const [status, setStatus] = useState<ParseStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [parsed, setParsed] = useState<ImportedWorkout[]>([])
   const [activePending, setActivePending] = useState<PendingMatch | null>(null)
+  const [linkedSuccess, setLinkedSuccess] = useState<string | null>(null)
+  const [duplicateCount, setDuplicateCount] = useState(0)
 
   const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
   const addAutoMatch = useBioStore((s) => s.addAutoMatch)
@@ -77,6 +89,12 @@ export function WorkoutImport() {
       }
 
       setParsed(workouts)
+
+      // Track how many are genuinely new vs duplicates
+      const existingIds = new Set(importedWorkouts.map((w) => w.id))
+      const novelCount = workouts.filter((w) => !existingIds.has(w.id)).length
+      setDuplicateCount(workouts.length - novelCount)
+
       addImportedWorkouts(workouts)
 
       // Run matching if we have a program + start date
@@ -89,6 +107,28 @@ export function WorkoutImport() {
         )
         confirmed.forEach((m) => addAutoMatch(m.importedWorkoutId, m.sessionKey))
         setPendingMatches(pending)
+
+        // If we came from a specific session, try to link
+        if (linkToSession) {
+          const wasLinked = confirmed.some((m) => m.sessionKey === linkToSession)
+          if (wasLinked) {
+            setLinkedSuccess(linkToSession)
+          } else {
+            // Find workouts on the target date and offer manual match
+            const dashIdx = linkToSession.indexOf('-')
+            const weekNumber = parseInt(linkToSession.slice(0, dashIdx), 10)
+            const dayName = linkToSession.slice(dashIdx + 1)
+            const weekIdx = program.weeks.findIndex(w => w.week_number === weekNumber)
+            const calDate = weekIdx >= 0 ? sessionCalendarDate(programStartDate, weekIdx, dayName) : ''
+            const dateWorkouts = workouts.filter((w) => w.date === calDate)
+            if (dateWorkouts.length > 0) {
+              setActivePending({
+                importedWorkout: dateWorkouts[0],
+                candidateSessionKeys: [linkToSession],
+              })
+            }
+          }
+        }
       }
 
       setStatus('done')
@@ -174,11 +214,20 @@ export function WorkoutImport() {
       {status === 'done' && (
         <div className="flex items-center gap-2 text-sm text-emerald-500">
           <CheckCircle2 className="size-4" />
-          Imported {parsed.length} workout{parsed.length !== 1 ? 's' : ''}
-          {pendingMatches.length > 0 && (
-            <span className="text-amber-500">
-              — {pendingMatches.length} need{pendingMatches.length === 1 ? 's' : ''} manual matching
-            </span>
+          {duplicateCount === parsed.length ? (
+            <span className="text-muted-foreground">All {parsed.length} workout{parsed.length !== 1 ? 's' : ''} already imported</span>
+          ) : (
+            <>
+              Imported {parsed.length - duplicateCount} workout{parsed.length - duplicateCount !== 1 ? 's' : ''}
+              {duplicateCount > 0 && (
+                <span className="text-muted-foreground">({duplicateCount} already imported)</span>
+              )}
+              {pendingMatches.length > 0 && (
+                <span className="text-amber-500">
+                  — {pendingMatches.length} need{pendingMatches.length === 1 ? 's' : ''} manual matching
+                </span>
+              )}
+            </>
           )}
         </div>
       )}
@@ -186,6 +235,27 @@ export function WorkoutImport() {
         <div className="flex items-center gap-2 text-sm text-red-500">
           <AlertCircle className="size-4" />
           {errorMsg}
+        </div>
+      )}
+
+      {/* Linked success banner */}
+      {linkedSuccess && (
+        <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-emerald-500">
+            <CheckCircle2 className="size-4" />
+            Workout linked to {sessionLabel(linkedSuccess)}
+          </div>
+          <Button size="sm" variant="outline" onClick={() => navigate('/')}>
+            Back to Dashboard
+          </Button>
+        </div>
+      )}
+
+      {/* Link-to context banner */}
+      {linkToSession && !linkedSuccess && status !== 'done' && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+          <Link2 className="size-4" />
+          Importing for {sessionLabel(linkToSession)}
         </div>
       )}
 
@@ -226,7 +296,11 @@ export function WorkoutImport() {
                 return (
                   <div
                     key={w.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/import/${w.id}`)}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${w.id}`)}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
                   >
                     <FileText className="size-4 shrink-0 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
@@ -260,7 +334,7 @@ export function WorkoutImport() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)}
+                        onClick={(e) => { e.stopPropagation(); setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null) }}
                         className="text-xs text-amber-500 hover:text-amber-400"
                       >
                         Match
@@ -268,12 +342,13 @@ export function WorkoutImport() {
                     )}
                     <button
                       type="button"
-                      onClick={() => removeImportedWorkout(w.id)}
+                      onClick={(e) => { e.stopPropagation(); removeImportedWorkout(w.id) }}
                       className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
                       aria-label="Remove workout"
                     >
                       <X className="size-3.5" />
                     </button>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
                   </div>
                 )
               })}

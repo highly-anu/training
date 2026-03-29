@@ -33,9 +33,30 @@ def init_db() -> None:
                 calories            INTEGER,
                 distance_value      REAL,
                 distance_unit       TEXT,
-                raw_data            TEXT DEFAULT '{}'
+                raw_data            TEXT DEFAULT '{}',
+                gps_track           TEXT,
+                elevation_gain      INTEGER,
+                elevation_loss      INTEGER,
+                hr_samples          TEXT
             )
         ''')
+        # Migrate existing tables that lack new columns
+        try:
+            conn.execute('ALTER TABLE workouts ADD COLUMN gps_track TEXT')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute('ALTER TABLE workouts ADD COLUMN elevation_gain INTEGER')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute('ALTER TABLE workouts ADD COLUMN elevation_loss INTEGER')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute('ALTER TABLE workouts ADD COLUMN hr_samples TEXT')
+        except sqlite3.OperationalError:
+            pass
         conn.execute('''
             CREATE TABLE IF NOT EXISTS session_logs (
                 session_key     TEXT PRIMARY KEY,
@@ -78,13 +99,17 @@ def upsert_workouts(workouts: list[dict]) -> None:
         for w in workouts:
             hr   = w.get('heartRate') or {}
             dist = w.get('distance') or {}
+            elev = w.get('elevation') or {}
+            gps = w.get('gpsTrack')
+            hr_samples = (hr.get('samples') or [])
             conn.execute('''
                 INSERT OR REPLACE INTO workouts
                 (id, source, date, start_time, end_time, duration_minutes,
                  activity_type, inferred_modality_id,
                  hr_avg, hr_max, hr_min, calories,
-                 distance_value, distance_unit, raw_data)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 distance_value, distance_unit, raw_data,
+                 gps_track, elevation_gain, elevation_loss, hr_samples)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 w['id'], w['source'], w['date'], w['startTime'], w['endTime'],
                 w['durationMinutes'], w['activityType'],
@@ -93,6 +118,9 @@ def upsert_workouts(workouts: list[dict]) -> None:
                 w.get('calories'),
                 dist.get('value'), dist.get('unit'),
                 json.dumps(w.get('rawData', {})),
+                json.dumps(gps) if gps else None,
+                elev.get('gain'), elev.get('loss'),
+                json.dumps(hr_samples) if hr_samples else None,
             ))
 
 
@@ -112,6 +140,11 @@ def _row_to_workout(row) -> dict:
     dist = None
     if row['distance_value'] is not None:
         dist = {'value': row['distance_value'], 'unit': row['distance_unit']}
+    elev = None
+    if row['elevation_gain'] is not None or row['elevation_loss'] is not None:
+        elev = {'gain': row['elevation_gain'] or 0, 'loss': row['elevation_loss'] or 0}
+    gps = json.loads(row['gps_track']) if row['gps_track'] else None
+    hr_samples = json.loads(row['hr_samples']) if row['hr_samples'] else []
     return {
         'id':                 row['id'],
         'source':             row['source'],
@@ -125,10 +158,12 @@ def _row_to_workout(row) -> dict:
             'avg':     row['hr_avg'],
             'max':     row['hr_max'],
             'min':     row['hr_min'],
-            'samples': [],
+            'samples': hr_samples,
         },
         'calories': row['calories'],
         'distance': dist,
+        'gpsTrack': gps,
+        'elevation': elev,
         'rawData':  json.loads(row['raw_data'] or '{}'),
     }
 

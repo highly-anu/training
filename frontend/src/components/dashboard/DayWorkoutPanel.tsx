@@ -11,11 +11,12 @@ import type { WeekData } from '@/api/types'
 
 interface DayWorkoutPanelProps {
   weekData: WeekData
+  weekIndex: number
   day: string
   onClose: () => void
 }
 
-export function DayWorkoutPanel({ weekData, day, onClose }: DayWorkoutPanelProps) {
+export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkoutPanelProps) {
   const sessions = weekData.schedule[day] ?? []
   const sessionKey = `${weekData.week_number}-${day}`
 
@@ -89,7 +90,7 @@ export function DayWorkoutPanel({ weekData, day, onClose }: DayWorkoutPanelProps
           </div>
         ))}
 
-        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} />
+        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIndex} />
         <SessionNotes sessionKey={sessionKey} />
 
         <Separator />

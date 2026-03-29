@@ -14,6 +14,7 @@ import { VolumeBar } from '@/components/dashboard/VolumeBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
+import { DevelopmentWidget } from '@/components/dashboard/DevelopmentWidget'
 import { Separator } from '@/components/ui/separator'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
@@ -159,8 +160,8 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Today + Readiness row */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-stretch">
+          {/* Today + Readiness + Development row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:items-stretch">
             <div className="flex flex-col gap-2">
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today</h2>
               <div className="flex-1 flex flex-col">
@@ -173,6 +174,14 @@ export function Dashboard() {
               </h2>
               <div className="flex-1 flex flex-col">
                 <ReadinessWidget />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Development
+              </h2>
+              <div className="flex-1 flex flex-col">
+                <DevelopmentWidget />
               </div>
             </div>
           </div>
@@ -250,6 +259,7 @@ export function Dashboard() {
             <div className="w-[420px] h-full overflow-y-auto">
               <DayWorkoutPanel
                 weekData={currentWeek}
+                weekIndex={weekIndex}
                 day={selectedDay}
                 onClose={() => setSelectedDay(null)}
               />

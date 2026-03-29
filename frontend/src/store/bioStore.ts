@@ -11,6 +11,7 @@ import type {
 } from '@/api/types'
 import * as healthApi from '@/api/health'
 import type { HealthSnapshot } from '@/api/health'
+import { useProfileStore } from '@/store/profileStore'
 
 interface BioStore {
   importedWorkouts: ImportedWorkout[]
@@ -106,7 +107,16 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       matchedAt: new Date().toISOString(),
     }
     healthApi.saveMatch(match)
-    set((s) => ({ workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'auto') }))
+    useProfileStore.getState().setSessionLog(sessionKey, [true])
+    set((s) => {
+      const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
+      const updated = existing.completedAt ? existing : { ...existing, completedAt: new Date().toISOString() }
+      if (!existing.completedAt) healthApi.saveSessionLog(updated)
+      return {
+        workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'auto'),
+        sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated },
+      }
+    })
   },
 
   confirmMatch: (importedWorkoutId, sessionKey) => {
@@ -117,10 +127,17 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       matchedAt: new Date().toISOString(),
     }
     healthApi.saveMatch(match)
-    set((s) => ({
-      workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'manual'),
-      pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
-    }))
+    useProfileStore.getState().setSessionLog(sessionKey, [true])
+    set((s) => {
+      const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
+      const updated = existing.completedAt ? existing : { ...existing, completedAt: new Date().toISOString() }
+      if (!existing.completedAt) healthApi.saveSessionLog(updated)
+      return {
+        workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'manual'),
+        pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
+        sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated },
+      }
+    })
   },
 
   rejectMatch: (importedWorkoutId) => {

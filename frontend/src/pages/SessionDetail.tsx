@@ -40,7 +40,8 @@ export function SessionDetail() {
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
 
   const weekNumber = parseInt(week ?? '1', 10)
-  const weekData = program.weeks.find((w) => w.week_number === weekNumber)
+  const weekIdx = program.weeks.findIndex((w) => w.week_number === weekNumber)
+  const weekData = weekIdx >= 0 ? program.weeks[weekIdx] : undefined
   const sessions = weekData?.schedule[day ?? ''] ?? []
 
   const sessionKey = `${weekNumber}-${day ?? ''}`
@@ -116,7 +117,7 @@ export function SessionDetail() {
         ))}
 
         {/* Workout summary (HR data if imported workout is matched) */}
-        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} />
+        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIdx >= 0 ? weekIdx : undefined} />
 
         {/* Session notes + fatigue rating */}
         <SessionNotes sessionKey={sessionKey} />

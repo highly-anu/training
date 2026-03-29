@@ -22,15 +22,21 @@ function modalityFamily(modality: ModalityId): string {
   return 'other'
 }
 
-function sessionCalendarDate(programStartDate: string, weekNumber: number, dayName: string): string {
+/**
+ * Compute the calendar date for a given week/day in the program.
+ * @param programStartDate YYYY-MM-DD — the date the program started (auto-set to "today" on generation)
+ * @param weekIndex 0-based array position in program.weeks (NOT week_number)
+ * @param dayName 'Monday' | ... | 'Sunday'
+ */
+export function sessionCalendarDate(programStartDate: string, weekIndex: number, dayName: string): string {
   const dayIndex = DAY_NAMES.indexOf(dayName)
   if (dayIndex < 0) return ''
   const start = parseISO(programStartDate)
-  const offset = (weekNumber - 1) * 7 + dayIndex
+  const offset = weekIndex * 7 + dayIndex
   return format(addDays(start, offset), 'yyyy-MM-dd')
 }
 
-function scoreMatch(workout: ImportedWorkout, sessionModality: ModalityId, sessionDuration: number): number {
+export function scoreMatch(workout: ImportedWorkout, sessionModality: ModalityId, sessionDuration: number): number {
   let score = 0
 
   if (workout.inferredModalityId) {
@@ -68,9 +74,10 @@ export function autoMatchWorkouts(
   const dateIndex: Map<string, { sessionKey: string; modality: ModalityId; duration: number }[]> =
     new Map()
 
-  for (const week of program.weeks) {
+  for (let weekIndex = 0; weekIndex < program.weeks.length; weekIndex++) {
+    const week = program.weeks[weekIndex]
     for (const [dayName, sessions] of Object.entries(week.schedule)) {
-      const calDate = sessionCalendarDate(programStartDate, week.week_number, dayName)
+      const calDate = sessionCalendarDate(programStartDate, weekIndex, dayName)
       if (!calDate) continue
       const sessionKey = `${week.week_number}-${dayName}`
       for (const session of sessions) {
@@ -123,10 +130,7 @@ export function autoMatchWorkouts(
     } else if (best.score >= 2) {
       pending.push({
         importedWorkout: workout,
-        candidateSessionKeys: scored
-          .filter((s) => s.score >= 2)
-          .sort((a, b) => b.score - a.score)
-          .map((s) => s.sessionKey),
+        candidateSessionKeys: [best.sessionKey],
       })
     }
   }

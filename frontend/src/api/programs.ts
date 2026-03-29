@@ -46,9 +46,16 @@ export function useGenerateProgram() {
       store.setEventDate(params.eventDate ?? null)
       const ids = (params.goalIds ?? [params.goalId]).filter((id) => id !== '_blended')
       store.setSourceGoals(ids, params.goalWeights ?? {})
-      if (!store.programStartDate) {
-        store.setProgramStartDate(new Date().toISOString().slice(0, 10))
-      }
+      // Auto-calculate programStartDate: the Monday of the week containing today,
+      // adjusted so that weekIndex=0 in the program maps to the current calendar week.
+      // When the program starts at e.g. week_number=4 (due to event date), the first
+      // week in the array IS the current week, so programStartDate = this week's Monday.
+      const today = new Date()
+      const dayOfWeek = today.getDay() // 0=Sun, 1=Mon, ...
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const monday = new Date(today)
+      monday.setDate(today.getDate() + mondayOffset)
+      store.setProgramStartDate(monday.toISOString().slice(0, 10))
       useBuilderStore.getState().reset()
       useUiStore.getState().setSelectedWeekIndex(0)
     },

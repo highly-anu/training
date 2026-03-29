@@ -11,6 +11,7 @@ import { ExerciseCatalog } from '@/pages/ExerciseCatalog'
 import { ProfileBenchmarks } from '@/pages/ProfileBenchmarks'
 import { Philosophies } from '@/pages/Philosophies'
 import { WorkoutImport } from '@/pages/WorkoutImport'
+import { WorkoutDetail } from '@/pages/WorkoutDetail'
 import { BioLog } from '@/pages/BioLog'
 import { DevLab } from '@/pages/DevLab'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="profile" element={<ProfileBenchmarks />} />
               <Route path="philosophies" element={<Philosophies />} />
               <Route path="import" element={<WorkoutImport />} />
+              <Route path="import/:workoutId" element={<WorkoutDetail />} />
               <Route path="bio" element={<BioLog />} />
               <Route path="dev" element={<DevLab />} />
             </Route>
