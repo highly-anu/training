@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { BenchmarkStandard } from './types'
+import benchmarksData from '@/data/static/benchmarks.json'
 
 export function useBenchmarks() {
   return useQuery({
     queryKey: queryKeys.benchmarks.all,
-    queryFn: () => apiClient.get('/benchmarks') as unknown as Promise<BenchmarkStandard[]>,
+    queryFn: () => Promise.resolve(benchmarksData as BenchmarkStandard[]),
     staleTime: Infinity,
   })
 }

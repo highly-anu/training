@@ -1,0 +1,580 @@
+[
+  {
+    "id": "knee_meniscus_post_op",
+    "name": "Knee Meniscus Post-Op",
+    "excluded_movement_patterns": [
+      "squat",
+      "knee_extension",
+      "ballistic",
+      "locomotion"
+    ],
+    "excluded_exercises": [
+      "barbell_squat",
+      "front_squat",
+      "overhead_squat",
+      "goblet_squat",
+      "box_jump",
+      "jump_squat",
+      "tuck_jump",
+      "split_jump",
+      "jumping_lunge",
+      "running",
+      "sprinting",
+      "depth_jump",
+      "broad_jump",
+      "leg_press_full_rom",
+      "step_up_heavy"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "barbell_squat",
+        "use": "quad_set"
+      },
+      {
+        "instead_of": "running",
+        "use": "stationary_bike"
+      },
+      {
+        "instead_of": "box_jump",
+        "use": "heel_slide"
+      },
+      {
+        "instead_of": "jumping_lunge",
+        "use": "straight_leg_raise"
+      },
+      {
+        "instead_of": "step_up_heavy",
+        "use": "step_up_bodyweight"
+      },
+      {
+        "instead_of": "front_squat",
+        "use": "bulgarian_split_squat_partial_rom"
+      }
+    ],
+    "training_phase_forced": "post_op",
+    "notes": "Weeks 0-8 post-meniscus surgery. Early phase: quad sets, straight leg raises, heel slides, ankle pumps, hamstring sets. Mid phase (cleared by surgeon): single-leg press light, step-ups, SL deadlift, stationary bike. Late phase: partial-range barbell squat, swimming, elliptical. No bilateral loaded squatting, running, or impact until surgical clearance. Upper body and aerobic work (swimming, bike) permitted from early post-op.\n"
+  },
+  {
+    "id": "shoulder_impingement",
+    "name": "Shoulder Impingement",
+    "excluded_movement_patterns": [
+      "vertical_push",
+      "ballistic",
+      "olympic_lift"
+    ],
+    "excluded_exercises": [
+      "overhead_press",
+      "push_press",
+      "jerk",
+      "snatch",
+      "kipping_pull_up",
+      "dumbbell_overhead_press",
+      "kettlebell_overhead_press",
+      "overhead_squat",
+      "wall_ball",
+      "handstand_push_up",
+      "ring_dip",
+      "upright_row"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "overhead_press",
+        "use": "landmine_press"
+      },
+      {
+        "instead_of": "push_press",
+        "use": "floor_press"
+      },
+      {
+        "instead_of": "kipping_pull_up",
+        "use": "strict_pull_up_partial_rom"
+      },
+      {
+        "instead_of": "ring_dip",
+        "use": "dip_support_hold_isometric"
+      },
+      {
+        "instead_of": "upright_row",
+        "use": "face_pull"
+      },
+      {
+        "instead_of": "overhead_squat",
+        "use": "front_squat"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Sub-acromial impingement reduces supraspinatus clearance during overhead motion. Avoid all pressing above shoulder height. Permitted: landmine press (shoulder-friendly angle), floor press, face pulls (elbows high, full ROM), eccentric push-ups, isometric dip support holds, band pull-aparts, DB external rotation. Priority is rotator cuff strengthening and scapular stability before reloading overhead patterns.\n"
+  },
+  {
+    "id": "shoulder_instability",
+    "name": "Shoulder Instability",
+    "excluded_movement_patterns": [
+      "vertical_push",
+      "horizontal_push",
+      "ballistic",
+      "olympic_lift"
+    ],
+    "excluded_exercises": [
+      "overhead_press",
+      "push_press",
+      "jerk",
+      "snatch",
+      "bench_press",
+      "ring_dip",
+      "kipping_pull_up",
+      "kb_snatch",
+      "kb_clean",
+      "push_up_wide_grip",
+      "muscle_up"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "bench_press",
+        "use": "floor_press_neutral_grip"
+      },
+      {
+        "instead_of": "overhead_press",
+        "use": "landmine_press"
+      },
+      {
+        "instead_of": "kb_snatch",
+        "use": "kb_deadlift"
+      },
+      {
+        "instead_of": "ring_dip",
+        "use": "ring_support_hold_isometric"
+      },
+      {
+        "instead_of": "push_up_wide_grip",
+        "use": "push_up_narrow_grip"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Instability (labrum, hypermobility, or post-dislocation) requires avoiding end-range loading in abduction and external rotation. Horizontal pressing is also restricted until the joint capsule is stable. Focus on rotator cuff activation, scapular retraction, and controlled closed-chain loading (bear crawl, TGU with weight below shoulder). Progress to loaded pressing only after demonstrating full isometric stability. Distinguish from impingement: instability patients may tolerate more range but less end-range load.\n"
+  },
+  {
+    "id": "lumbar_disc",
+    "name": "Lumbar Disc Injury",
+    "excluded_movement_patterns": [
+      "hip_hinge",
+      "rotation",
+      "ballistic",
+      "olympic_lift",
+      "loaded_carry"
+    ],
+    "excluded_exercises": [
+      "deadlift",
+      "romanian_deadlift",
+      "good_morning",
+      "barbell_row",
+      "kb_swing",
+      "kb_snatch",
+      "kb_clean",
+      "power_clean",
+      "hang_clean",
+      "sit_up",
+      "v_sit",
+      "russian_twist",
+      "back_extension",
+      "barbell_squat_high_load",
+      "overhead_squat",
+      "farmers_carry_heavy"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "deadlift",
+        "use": "hip_hinge_bodyweight_only"
+      },
+      {
+        "instead_of": "barbell_row",
+        "use": "chest_supported_db_row"
+      },
+      {
+        "instead_of": "kb_swing",
+        "use": "goblet_squat_light"
+      },
+      {
+        "instead_of": "sit_up",
+        "use": "dead_bug"
+      },
+      {
+        "instead_of": "farmers_carry_heavy",
+        "use": "farmers_carry_light"
+      },
+      {
+        "instead_of": "barbell_squat_high_load",
+        "use": "goblet_squat_moderate"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Lumbar disc pathology (herniation, bulge, or degenerative disc disease) with active symptoms. Avoid flexion under load and rotational loading. McGill Big Three (bird dog, dead bug, side plank) are appropriate. Neutral spine must be maintained at all times. Stationary bike and swimming are preferred aerobic modes — running is permitted only if asymptomatic. Progress hip hinge loading cautiously under symptom monitoring. Kettlebell swings and Olympic lifts are deferred until asymptomatic and cleared by a clinician.\n"
+  },
+  {
+    "id": "ankle_sprain",
+    "name": "Ankle Sprain",
+    "excluded_movement_patterns": [
+      "locomotion",
+      "ballistic"
+    ],
+    "excluded_exercises": [
+      "running",
+      "sprinting",
+      "box_jump",
+      "jump_squat",
+      "split_jump",
+      "jumping_lunge",
+      "broad_jump",
+      "depth_jump",
+      "kettlebell_swing_heavy",
+      "single_leg_squat"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "running",
+        "use": "stationary_bike"
+      },
+      {
+        "instead_of": "box_jump",
+        "use": "seated_calf_raise"
+      },
+      {
+        "instead_of": "single_leg_squat",
+        "use": "double_leg_squat_partial_rom"
+      },
+      {
+        "instead_of": "sprinting",
+        "use": "upper_body_ergometer"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Grade I-III lateral ankle sprain. Acute phase: RICE, non-weight-bearing aerobic (swimming, upper body ergometer). Sub-acute: seated calf raises, alphabet ankle circles, proprioception board work. Return to loading: double-leg squat → step-up → single-leg balance → jogging → sprinting. No impact or single-leg landing until full proprioceptive control is restored. Peroneal strengthening is key for preventing recurrence.\n"
+  },
+  {
+    "id": "wrist_injury",
+    "name": "Wrist Injury",
+    "excluded_movement_patterns": [
+      "horizontal_push",
+      "vertical_push",
+      "olympic_lift"
+    ],
+    "excluded_exercises": [
+      "push_up",
+      "bench_press",
+      "overhead_press",
+      "push_press",
+      "jerk",
+      "snatch",
+      "barbell_front_rack",
+      "kb_clean",
+      "kb_snatch",
+      "kb_jerk",
+      "plank",
+      "handstand",
+      "handstand_push_up",
+      "wrist_roller"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "push_up",
+        "use": "push_up_on_fists"
+      },
+      {
+        "instead_of": "bench_press",
+        "use": "floor_press_neutral_grip_db"
+      },
+      {
+        "instead_of": "barbell_front_rack",
+        "use": "safety_bar_squat"
+      },
+      {
+        "instead_of": "kb_clean",
+        "use": "kb_deadlift"
+      },
+      {
+        "instead_of": "plank",
+        "use": "forearm_plank"
+      },
+      {
+        "instead_of": "overhead_press",
+        "use": "landmine_press"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Covers TFCC tears, scaphoid stress, distal radius fractures, and general wrist inflammation. Neutral or fist grip positions reduce wrist extension stress. Forearm plank replaces standard plank; push-ups on fists or parallettes reduce wrist load. Lower body and aerobic work is unrestricted. Barbell front rack is particularly aggravating — safety bar or high-bar back squat substitution. Return to full wrist loading requires pain-free passive extension to 90 degrees.\n"
+  },
+  {
+    "id": "hip_flexor_strain",
+    "name": "Hip Flexor Strain",
+    "excluded_movement_patterns": [
+      "hip_flexion",
+      "ballistic",
+      "locomotion"
+    ],
+    "excluded_exercises": [
+      "running",
+      "sprinting",
+      "sit_up",
+      "v_sit",
+      "flutter_kick",
+      "leg_raise",
+      "mountain_climber",
+      "power_clean",
+      "hang_clean",
+      "jumping_lunge",
+      "high_step_up"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "running",
+        "use": "stationary_bike_low_resistance"
+      },
+      {
+        "instead_of": "sit_up",
+        "use": "dead_bug"
+      },
+      {
+        "instead_of": "power_clean",
+        "use": "trap_bar_deadlift"
+      },
+      {
+        "instead_of": "mountain_climber",
+        "use": "side_plank"
+      },
+      {
+        "instead_of": "leg_raise",
+        "use": "bird_dog"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Iliopsoas or rectus femoris strain. Avoid active hip flexion under load, especially at full hip extension range (lunge bottom position). Running is typically aggravating — stationary bike at low resistance is the preferred aerobic substitute as it keeps hip ROM limited. Eccentric loading of the hip flexor (controlled lengthening) is the rehabilitation approach once acute symptoms subside. Strength work above the hip (upper body, upper back) is unrestricted.\n"
+  },
+  {
+    "id": "tennis_elbow",
+    "name": "Tennis Elbow (Lateral Epicondylitis)",
+    "excluded_movement_patterns": [
+      "horizontal_pull",
+      "vertical_pull"
+    ],
+    "excluded_exercises": [
+      "barbell_row",
+      "dumbbell_row",
+      "pull_up",
+      "chin_up",
+      "lat_pulldown",
+      "kb_snatch",
+      "kb_clean",
+      "rope_climb",
+      "dead_hang",
+      "farmers_carry_heavy",
+      "wrist_extension_loaded"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "pull_up",
+        "use": "ring_row_supinated_grip"
+      },
+      {
+        "instead_of": "barbell_row",
+        "use": "chest_supported_db_row_supinated"
+      },
+      {
+        "instead_of": "kb_snatch",
+        "use": "kb_deadlift"
+      },
+      {
+        "instead_of": "farmers_carry_heavy",
+        "use": "farmers_carry_light"
+      },
+      {
+        "instead_of": "rope_climb",
+        "use": "ring_row"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Lateral epicondylitis — extensor origin tendinopathy at the lateral elbow. Aggravated by gripping with wrist in neutral-to-extension under load. Pulling movements are typically provocative. Eccentric wrist extension (Tyler Twist with TheraBand FlexBar) is the primary rehabilitation exercise. Supinated grip pulling is better tolerated than pronated. Lower body and pressing work is unrestricted. Pain-free grip strength is the return-to-sport criterion.\n"
+  },
+  {
+    "id": "golfers_elbow",
+    "name": "Golfer's Elbow (Medial Epicondylitis)",
+    "excluded_movement_patterns": [
+      "horizontal_push",
+      "vertical_push",
+      "horizontal_pull"
+    ],
+    "excluded_exercises": [
+      "bench_press",
+      "push_up",
+      "overhead_press",
+      "push_press",
+      "barbell_row",
+      "pull_up",
+      "kb_clean",
+      "kb_snatch",
+      "kb_swing",
+      "rope_climb",
+      "farmers_carry_heavy"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "bench_press",
+        "use": "floor_press_light"
+      },
+      {
+        "instead_of": "overhead_press",
+        "use": "landmine_press"
+      },
+      {
+        "instead_of": "pull_up",
+        "use": "ring_row_pronated_grip"
+      },
+      {
+        "instead_of": "kb_swing",
+        "use": "kb_deadlift"
+      },
+      {
+        "instead_of": "barbell_row",
+        "use": "chest_supported_db_row_light"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Medial epicondylitis — flexor-pronator origin tendinopathy at the medial elbow. Aggravated by wrist flexion and forearm pronation under load. Both pushing and pulling movements can provoke symptoms depending on grip orientation. Eccentric wrist flexion exercise is the primary rehab tool. Distinct from tennis elbow — medial vs lateral — so supinated pulling that helps lateral epicondylitis may aggravate medial. Lower body work is unrestricted.\n"
+  },
+  {
+    "id": "neck_strain",
+    "name": "Neck Strain",
+    "excluded_movement_patterns": [
+      "vertical_push",
+      "vertical_pull",
+      "loaded_carry",
+      "olympic_lift"
+    ],
+    "excluded_exercises": [
+      "overhead_press",
+      "push_press",
+      "jerk",
+      "snatch",
+      "pull_up_kipping",
+      "barbell_back_squat_high_bar",
+      "farmers_carry_heavy",
+      "overhead_carry",
+      "neck_bridge",
+      "headstand",
+      "handstand",
+      "barbell_shrug"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "overhead_press",
+        "use": "landmine_press"
+      },
+      {
+        "instead_of": "barbell_back_squat_high_bar",
+        "use": "safety_bar_squat"
+      },
+      {
+        "instead_of": "farmers_carry_heavy",
+        "use": "farmers_carry_light"
+      },
+      {
+        "instead_of": "pull_up_kipping",
+        "use": "strict_pull_up_controlled"
+      },
+      {
+        "instead_of": "jerk",
+        "use": "front_squat"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Acute or chronic cervical strain. Avoid axial loading of the cervical spine and forced neck flexion or extension under load. Overhead work places the neck in end-range extension; heavy barbell back squat compresses the cervical spine through the bar contact point. Low-load cervical isometrics (hand-resist gentle push in all directions) and scapular stabilisation (band pull-aparts, rows) are appropriate. Aerobic work is generally unrestricted unless head positioning (e.g., rower pull-through) is provocative.\n"
+  },
+  {
+    "id": "achilles_tendinopathy",
+    "name": "Achilles Tendinopathy",
+    "excluded_movement_patterns": [
+      "locomotion",
+      "ballistic"
+    ],
+    "excluded_exercises": [
+      "running",
+      "sprinting",
+      "box_jump",
+      "jump_squat",
+      "split_jump",
+      "jumping_lunge",
+      "broad_jump",
+      "depth_jump",
+      "double_under",
+      "single_under"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "running",
+        "use": "stationary_bike"
+      },
+      {
+        "instead_of": "box_jump",
+        "use": "heel_raise_eccentric"
+      },
+      {
+        "instead_of": "jump_squat",
+        "use": "goblet_squat"
+      },
+      {
+        "instead_of": "double_under",
+        "use": "rowing"
+      },
+      {
+        "instead_of": "sprinting",
+        "use": "swimming"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Mid-portion or insertional Achilles tendinopathy. Avoid compression at insertional site (insertional: also restrict deep ankle dorsiflexion). Gold-standard rehabilitation: Alfredson protocol — eccentric heel drops on a step, 3×15 straight knee + 3×15 bent knee, twice daily. No impact loading until pain-free during and 24h after eccentric work. Stationary bike is the primary aerobic substitute. Swimming with a pull buoy avoids plantarflexion demand. Return to running follows a graded return-to-run protocol.\n"
+  },
+  {
+    "id": "patellar_tendinopathy",
+    "name": "Patellar Tendinopathy",
+    "excluded_movement_patterns": [
+      "squat",
+      "knee_extension",
+      "ballistic",
+      "locomotion"
+    ],
+    "excluded_exercises": [
+      "barbell_squat",
+      "front_squat",
+      "box_jump",
+      "jump_squat",
+      "split_jump",
+      "jumping_lunge",
+      "leg_extension_machine",
+      "running_downhill",
+      "lunges_heavy",
+      "depth_jump"
+    ],
+    "modified_exercises": [
+      {
+        "instead_of": "barbell_squat",
+        "use": "leg_press_45deg_limited_rom"
+      },
+      {
+        "instead_of": "running",
+        "use": "stationary_bike"
+      },
+      {
+        "instead_of": "box_jump",
+        "use": "isometric_wall_sit"
+      },
+      {
+        "instead_of": "lunges_heavy",
+        "use": "step_up_controlled"
+      },
+      {
+        "instead_of": "front_squat",
+        "use": "goblet_squat_shallow_rom"
+      }
+    ],
+    "training_phase_forced": "rehab",
+    "notes": "Patellar tendon overuse pathology — typically aggravated by eccentric knee loading (landing, running downhill, deep squatting). Isometric loading (isometric wall sit at 60-70 degrees knee flexion, 5×45 sec) provides immediate analgesia and is the first-line rehabilitation tool. Progress to isotonic loading (Spanish squat, leg press, slow squats with limited ROM). Avoid reactive loading (jumping, bounding) until tendon is pain-free through isotonic range. Stationary bike and swimming are preferred aerobic substitutes. Distinguish from patellofemoral syndrome — patellar tendinopathy is infrapatellar pain, PFPS is retropatellar.\n"
+  }
+]

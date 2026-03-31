@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { EquipmentProfile, InjuryFlag } from './types'
+import equipmentProfilesData from '@/data/static/equipment_profiles.json'
+import injuryFlagsData from '@/data/static/injury_flags.json'
 
 export function useEquipmentProfiles() {
   return useQuery({
     queryKey: queryKeys.constraints.equipmentProfiles,
-    queryFn: () => apiClient.get('/constraints/equipment-profiles') as unknown as Promise<EquipmentProfile[]>,
+    queryFn: () => Promise.resolve(equipmentProfilesData as EquipmentProfile[]),
     staleTime: Infinity,
   })
 }
@@ -14,7 +15,7 @@ export function useEquipmentProfiles() {
 export function useInjuryFlags() {
   return useQuery({
     queryKey: queryKeys.constraints.injuryFlags,
-    queryFn: () => apiClient.get('/constraints/injury-flags') as unknown as Promise<InjuryFlag[]>,
+    queryFn: () => Promise.resolve(injuryFlagsData as InjuryFlag[]),
     staleTime: Infinity,
   })
 }

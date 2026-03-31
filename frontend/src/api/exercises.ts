@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { Exercise, ExerciseFilters } from './types'
+import exercisesData from '@/data/static/exercises.json'
+
+const _exercises = exercisesData as Exercise[]
 
 function applyFilters(exercises: Exercise[], filters?: ExerciseFilters): Exercise[] {
   if (!filters) return exercises
@@ -32,7 +34,7 @@ function applyFilters(exercises: Exercise[], filters?: ExerciseFilters): Exercis
 export function useExercises(filters?: ExerciseFilters) {
   return useQuery({
     queryKey: filters ? queryKeys.exercises.filtered(filters) : queryKeys.exercises.all,
-    queryFn: () => apiClient.get('/exercises') as unknown as Promise<Exercise[]>,
+    queryFn: () => Promise.resolve(_exercises),
     staleTime: Infinity,
     select: (data) => applyFilters(data, filters),
   })

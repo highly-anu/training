@@ -1,0 +1,496 @@
+[
+  {
+    "id": "aerobic_base",
+    "name": "Aerobic Base",
+    "description": "Zone 1-2 steady-state work — running, rowing, cycling, hiking, or swimming at conversational pace — building the aerobic engine and fat oxidation capacity.",
+    "recovery_cost": "low",
+    "recovery_hours_min": 0,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility",
+      "movement_skill",
+      "relative_strength"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "anaerobic_intervals",
+      "strength_endurance"
+    ],
+    "min_weekly_minutes": 90,
+    "max_weekly_minutes": 600,
+    "typical_session_minutes": {
+      "min": 30,
+      "max": 180
+    },
+    "progression_model": "intensity_split_shift",
+    "intensity_zones": [
+      {
+        "label": "zone_1",
+        "description": "Active recovery pace, very easy conversation, HR <65% max",
+        "hr_pct_min": 55,
+        "hr_pct_max": 65
+      },
+      {
+        "label": "zone_2",
+        "description": "Aerobic base — comfortable, conversational, HR 65-75% max",
+        "hr_pct_min": 65,
+        "hr_pct_max": 75
+      }
+    ],
+    "sources": [
+      "Uphill Athlete",
+      "CrossFit Endurance",
+      "Gym Jones"
+    ],
+    "notes": "The foundation of all sustained output. Uphill Athlete prescribes 80% of total training volume here (polarized model). Low recovery cost means it can be performed on consecutive days and stacked after strength sessions. A short Z1-Z2 aerobic session (30-45 min) can appear as the second block of a concurrent strength + aerobic day without meaningful interference, provided the strength session comes first. Marked standalone because sessions longer than 60 min should not be combined with other high-demand modalities. Progression model is intensity_split_shift: as the base builds, the Z1/Z2 proportion gives way to more Z3-Z4 work (base → build transition).\n"
+  },
+  {
+    "id": "anaerobic_intervals",
+    "name": "Anaerobic Intervals",
+    "description": "Short, maximal-effort intervals at Zone 4-5 — Tabata, 400m sprints, 30-sec all-out pieces — targeting VO2max and lactic capacity.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "aerobic_base",
+      "mixed_modal_conditioning"
+    ],
+    "min_weekly_minutes": 20,
+    "max_weekly_minutes": 90,
+    "typical_session_minutes": {
+      "min": 20,
+      "max": 45
+    },
+    "progression_model": "time_to_task",
+    "intensity_zones": [
+      {
+        "label": "zone_4",
+        "description": "Threshold to VO2max pace — sustainable for 3-8 min intervals, HR 85-92% max",
+        "hr_pct_min": 85,
+        "hr_pct_max": 92
+      },
+      {
+        "label": "zone_5",
+        "description": "Maximal output — sub-30 sec to 2 min, full sprint effort, HR 92-100% max",
+        "hr_pct_min": 92,
+        "hr_pct_max": 100
+      }
+    ],
+    "sources": [
+      "CrossFit",
+      "CrossFit Endurance",
+      "Gym Jones"
+    ],
+    "notes": "Includes Tabata intervals, 500m row pieces, 400m sprint repeats, and 30-sec all-out sprints with full rest. Gym Jones prescribes 1:2 work-to-rest ratio for threshold intervals and 1:4 or more for maximal sprint work. High neurological and metabolic cost requires 48h before a repeat session or before any other high-cost modality. Do not programme on the same day or adjacent day as max strength — both draw from the same CNS and glycolytic reserves. Weekly cap of 90 min prevents chronic sympathetic overreaching; below 20 min per week provides insufficient stimulus. Mobility may follow as cool-down.\n"
+  },
+  {
+    "id": "combat_sport",
+    "name": "Combat Sport",
+    "description": "BJJ drilling, positional sparring, grip conditioning, and isometric endurance work specific to grappling sports — mat time that has no substitute.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility",
+      "rehab"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "anaerobic_intervals",
+      "mixed_modal_conditioning"
+    ],
+    "min_weekly_minutes": 60,
+    "max_weekly_minutes": 420,
+    "typical_session_minutes": {
+      "min": 60,
+      "max": 120
+    },
+    "progression_model": "density",
+    "intensity_zones": [
+      {
+        "label": "drilling",
+        "description": "Technical drilling and positional repetition — low intensity, high focus"
+      },
+      {
+        "label": "sparring",
+        "description": "Live rolling — high physical and neurological demand, full systemic stress"
+      }
+    ],
+    "sources": [
+      "BJJ (combat sport as modality and constraint)"
+    ],
+    "notes": "Mat time is non-transferable; sparring has no substitute. The conditioning demands of BJJ are isometric endurance (hip escapes, frames, clinch), explosive hip extension, and grip endurance. A full sparring session is classified high recovery cost — equivalent to a hard mixed modal session in systemic stress. Drilling alone is medium cost but combined sessions (drilling + rounds) warrant 48h. Joint health (shoulders, knees, neck) must be actively maintained alongside this modality. Mobility and rehab are the only modalities that can appear in the same session — as warm-up joint prep or post-session tissue work. Weekly volume ceiling of 420 min (7h) reflects serious competitor load; recreational practitioners should cap at 180-240 min.\n"
+  },
+  {
+    "id": "durability",
+    "name": "Durability / Work Capacity",
+    "description": "Loaded carries, rucking, sandbag work, and GPP circuits that build the capacity for sustained output under fatigue — the foundation of operational and expedition fitness.",
+    "recovery_cost": "medium",
+    "recovery_hours_min": 24,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility",
+      "aerobic_base"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "power"
+    ],
+    "min_weekly_minutes": 45,
+    "max_weekly_minutes": 300,
+    "typical_session_minutes": {
+      "min": 30,
+      "max": 120
+    },
+    "progression_model": "time_to_task",
+    "intensity_zones": [
+      {
+        "label": "work_pace",
+        "description": "Sustained load-bearing — ruck pace, farmer carry sets, sandbag circuits"
+      },
+      {
+        "label": "accumulation",
+        "description": "High-volume, moderate-load — SMMF challenges, 500m lunge, 100-rep sandbag complexes"
+      }
+    ],
+    "sources": [
+      "Horsemen GPP",
+      "Gym Jones",
+      "Uphill Athlete"
+    ],
+    "notes": "The defining quality of the Horsemen standard: durability over peak performance, repeatable output under fatigue. Includes rucking (distance × load progressions), farmer carries, sandbag complexes, and single massive movement efforts (SMMF — 100 sandbag get-ups, 500m lunge, 1-mile heavy bag carry). Progression model is time_to_task: a fixed distance or task is completed faster, or load increases while time holds constant. Medium recovery cost because loads are sub-maximal and aerobic, but the cumulative mechanical stress on connective tissue and joints warrants 24h minimum. Can be preceded or followed by an easy aerobic session on the same day if total volume is managed. Rucking benchmarks from plan.md: entry = 2km with pack, advanced = 20km in 2h20, elite = Fan Dance (22km +1000m, 30kg, 4h).\n"
+  },
+  {
+    "id": "max_strength",
+    "name": "Max Strength",
+    "description": "Low-rep (1-5RM) compound loading with barbell or kettlebell targeting maximum force production and neuromuscular recruitment.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "first",
+    "compatible_in_session_with": [
+      "mobility",
+      "movement_skill"
+    ],
+    "incompatible_in_session_with": [
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "aerobic_base"
+    ],
+    "min_weekly_minutes": 60,
+    "max_weekly_minutes": 270,
+    "typical_session_minutes": {
+      "min": 45,
+      "max": 90
+    },
+    "progression_model": "linear_load",
+    "intensity_zones": [
+      {
+        "label": "submaximal",
+        "description": "70-84% 1RM — volume work, technique refinement"
+      },
+      {
+        "label": "near_max",
+        "description": "85-94% 1RM — primary training zone for strength stimulus"
+      },
+      {
+        "label": "maximal",
+        "description": "95-100% 1RM — testing or peaking sets only"
+      }
+    ],
+    "sources": [
+      "Starting Strength",
+      "Horsemen GPP",
+      "Gym Jones"
+    ],
+    "notes": "Must be placed first in any combined session — CNS and mechanical demand must be met before accumulated fatigue degrades bar speed and coordination. Requires 48h minimum before repeating or before programming another high-cost modality on the same muscle groups. Novices can recover in 48h; intermediate and advanced athletes may need 72h at higher intensities. Hard/easy patterning (Gym Jones) applies: every heavy strength day should be followed by a low-recovery-cost day.\n"
+  },
+  {
+    "id": "mixed_modal_conditioning",
+    "name": "Mixed Modal Conditioning",
+    "description": "Multiple movement types combined under time pressure — AMRAPs, chippers, GPP circuits, and barbell/KB complexes that tax systemic conditioning broadly.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "anaerobic_intervals"
+    ],
+    "min_weekly_minutes": 30,
+    "max_weekly_minutes": 210,
+    "typical_session_minutes": {
+      "min": 20,
+      "max": 60
+    },
+    "progression_model": "density",
+    "intensity_zones": [
+      {
+        "label": "moderate_mixed",
+        "description": "Sustainable effort across multiple modalities — AMRAP pace, GPP circuits"
+      },
+      {
+        "label": "high_mixed",
+        "description": "Near-max sustained effort — chippers, time-priority WODs"
+      }
+    ],
+    "sources": [
+      "CrossFit",
+      "Gym Jones",
+      "Horsemen GPP"
+    ],
+    "notes": "The primary format of CrossFit benchmark workouts (Fran, Grace, Helen, Chelsea) and Horsemen circuit days. Combines strength, gymnastics, and monostructural elements in a single session. Because it taxes multiple energy systems and movement patterns simultaneously, recovery cost is classified high even when individual loads are moderate. Gym Jones circuit days and accumulation days fall here. Do not follow with max strength within 48h. Mobility as a cool-down is appropriate and encouraged.\n"
+  },
+  {
+    "id": "mobility",
+    "name": "Mobility / Tissue Prep",
+    "description": "Joint health, range of motion development, and tissue preparation — loaded stretches, joint circles, fascial work, and active mobility drills.",
+    "recovery_cost": "low",
+    "recovery_hours_min": 0,
+    "session_position": "any",
+    "compatible_in_session_with": [
+      "max_strength",
+      "strength_endurance",
+      "relative_strength",
+      "aerobic_base",
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "power",
+      "movement_skill",
+      "durability",
+      "combat_sport",
+      "rehab"
+    ],
+    "incompatible_in_session_with": [],
+    "min_weekly_minutes": 30,
+    "max_weekly_minutes": 120,
+    "typical_session_minutes": {
+      "min": 10,
+      "max": 45
+    },
+    "progression_model": "range_progression",
+    "intensity_zones": [
+      {
+        "label": "tissue_prep",
+        "description": "Light, gentle — pre-session joint circles, banded mobilisations, soft tissue work"
+      },
+      {
+        "label": "loaded_stretch",
+        "description": "Active or loaded range work — Jefferson curl, ATG split squat, weighted dislocates"
+      }
+    ],
+    "sources": [
+      "Kelly Starrett / Supple Leopard",
+      "Ido Portal",
+      "ATG / Knees Over Toes"
+    ],
+    "notes": "The most universally compatible modality — can attach to any session as warm-up (position any), as cool-down (position last), or as a standalone daily practice. Session position is \"any\" because its role depends entirely on context. Pre-session tissue prep is 10-15 min; a dedicated mobility session can run 30-45 min. Progression model is range_progression: depth and load under stretch increase incrementally over weeks. Ido Portal recommends daily practice habits over occasional focused sessions. Never contributes to accumulated fatigue — can be performed daily.\n"
+  },
+  {
+    "id": "movement_skill",
+    "name": "Movement / Skill",
+    "description": "Locomotion, coordination, pattern acquisition, and movement quality — tumbling, balance, crawling, flow sequences, and technical skill practice at sub-maximal intensity.",
+    "recovery_cost": "medium",
+    "recovery_hours_min": 24,
+    "session_position": "any",
+    "compatible_in_session_with": [
+      "mobility",
+      "aerobic_base",
+      "relative_strength"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "strength_endurance",
+      "anaerobic_intervals"
+    ],
+    "min_weekly_minutes": 20,
+    "max_weekly_minutes": 180,
+    "typical_session_minutes": {
+      "min": 15,
+      "max": 60
+    },
+    "progression_model": "complexity",
+    "intensity_zones": [
+      {
+        "label": "acquisition",
+        "description": "New pattern learning — slow, deliberate, fragmented repetition"
+      },
+      {
+        "label": "integration",
+        "description": "Practiced patterns at normal speed — chaining movements, flow states"
+      },
+      {
+        "label": "expression",
+        "description": "Spontaneous movement — improvisation, full-speed application under novel constraint"
+      }
+    ],
+    "sources": [
+      "Ido Portal"
+    ],
+    "notes": "Encompasses Ido Portal's movement practice: locomotion (crawling, rolling, jumping, climbing), groundwork (floreio, capoeira patterns), balance, and coordination drills. The progression model is complexity: isolation of a single pattern → integration into sequences → spontaneous expression. Medium recovery cost because skill acquisition is neurologically demanding but not mechanically stressful enough to require 48h. Works well early in a session before fatigue degrades motor learning, or as a standalone practice. Avoid pairing with heavy lifting or high-intensity conditioning — accumulated fatigue blocks motor learning.\n"
+  },
+  {
+    "id": "power",
+    "name": "Power / Explosiveness",
+    "description": "Fast force production — Olympic lifts, kettlebell ballistics, plyometrics, and depth jumps where rate of force development is the primary training target.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "first",
+    "compatible_in_session_with": [
+      "mobility",
+      "max_strength"
+    ],
+    "incompatible_in_session_with": [
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "strength_endurance"
+    ],
+    "min_weekly_minutes": 20,
+    "max_weekly_minutes": 120,
+    "typical_session_minutes": {
+      "min": 20,
+      "max": 60
+    },
+    "progression_model": "linear_load",
+    "intensity_zones": [
+      {
+        "label": "technical",
+        "description": "Sub-maximal loads at competition speed — technique and bar velocity focus (70-80% 1RM)"
+      },
+      {
+        "label": "maximal",
+        "description": "Near-max loads or max-effort plyometric — 1RM testing, broad/depth jumps"
+      }
+    ],
+    "sources": [
+      "Mark Wildman / RKC Kettlebell",
+      "Horsemen GPP",
+      "CrossFit"
+    ],
+    "notes": "Covers Olympic lifts (clean, jerk, snatch, power clean), kettlebell ballistics (swing, snatch, clean), and plyometric work (box jumps, depth jumps, broad jumps, clapping pull-ups). Horsemen \"Not Now Chief\" (5×3 DL @ 90-95% + depth jumps) and \"Fuckin Skanks\" (5×3 weighted pull-up + clapping pull-ups) are canonical power sessions. Must appear first in a session if paired with max strength; the two modalities share neurological demands and can be sequenced together with appropriate rest. High recovery cost because near-max velocity work is neurologically expensive even when loads are moderate. Weekly volume cap is low — quality over quantity.\n"
+  },
+  {
+    "id": "rehab",
+    "name": "Rehab",
+    "description": "Injury-specific therapeutic loading — isometrics, low-load progressive exercises, joint prep, and clinical protocols applied under injury or post-operative constraints.",
+    "recovery_cost": "low",
+    "recovery_hours_min": 0,
+    "session_position": "any",
+    "compatible_in_session_with": [
+      "mobility",
+      "aerobic_base",
+      "combat_sport"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "power",
+      "anaerobic_intervals"
+    ],
+    "min_weekly_minutes": 20,
+    "max_weekly_minutes": 120,
+    "typical_session_minutes": {
+      "min": 10,
+      "max": 40
+    },
+    "progression_model": "range_progression",
+    "intensity_zones": [
+      {
+        "label": "therapeutic",
+        "description": "Sub-pain-threshold loading — isometrics, quad sets, SLR, band work"
+      },
+      {
+        "label": "progressive_load",
+        "description": "Graduated mechanical load — step-ups, split squats, face pulls, eccentric work"
+      }
+    ],
+    "sources": [
+      "Marcus Filly / Functional Bodybuilding",
+      "ATG / Knees Over Toes",
+      "Kelly Starrett / Supple Leopard"
+    ],
+    "notes": "Rehab is a first-class modality in this system, not an interruption. It is active during the rehab and post_op training phases and may be woven into any phase as a maintenance layer for a managed injury. Low recovery cost because loads are sub-maximal and the intent is therapeutic — tissue stimulation without systemic stress. Can be performed daily. Progression model is range_progression: load and ROM increase as tissue tolerance improves. Specific protocols are defined in plan.md Section 10. Examples: knee rehab (quad sets → SLR → heel slides → step-ups → Bulgarian split squat → partial squat); shoulder rehab (band pull-aparts → face pulls → landmine press → TGU rack hold). Always operates within the constraints of active injury flags.\n"
+  },
+  {
+    "id": "relative_strength",
+    "name": "Relative Strength",
+    "description": "Strength expressed as a ratio of bodyweight — gymnastics, calisthenics, ring work, and weighted bodyweight movements demanding high skill alongside force production.",
+    "recovery_cost": "medium",
+    "recovery_hours_min": 24,
+    "session_position": "first",
+    "compatible_in_session_with": [
+      "mobility",
+      "movement_skill",
+      "aerobic_base"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength"
+    ],
+    "min_weekly_minutes": 30,
+    "max_weekly_minutes": 180,
+    "typical_session_minutes": {
+      "min": 20,
+      "max": 60
+    },
+    "progression_model": "volume_block",
+    "intensity_zones": [
+      {
+        "label": "skill_practice",
+        "description": "Sub-max effort — technique, ring support, bodyweight holds"
+      },
+      {
+        "label": "loaded",
+        "description": "Weighted pull-ups, dips, HSPU progressions — strength stimulus"
+      }
+    ],
+    "sources": [
+      "Ido Portal",
+      "CrossFit",
+      "Horsemen GPP"
+    ],
+    "notes": "Encompasses strict pull-ups, ring dips, HSPU progressions, front lever work, and other bodyweight or lightly loaded gymnastics movements. Medium recovery cost because the loads are sub-maximal relative to absolute strength, but the neurological and connective tissue demand is significant. Can be paired with movement skill or short aerobic work in the same session. Incompatible with max strength because heavy barbell training impairs the fine motor control and relative body tension required for gymnastics quality.\n"
+  },
+  {
+    "id": "strength_endurance",
+    "name": "Strength Endurance",
+    "description": "Higher-rep work under significant load — circuits, complexes, and density intervals that develop the capacity to sustain force output over time.",
+    "recovery_cost": "high",
+    "recovery_hours_min": 48,
+    "session_position": "standalone",
+    "compatible_in_session_with": [
+      "mobility"
+    ],
+    "incompatible_in_session_with": [
+      "max_strength",
+      "aerobic_base"
+    ],
+    "min_weekly_minutes": 45,
+    "max_weekly_minutes": 240,
+    "typical_session_minutes": {
+      "min": 30,
+      "max": 75
+    },
+    "progression_model": "density",
+    "intensity_zones": [
+      {
+        "label": "moderate",
+        "description": "50-65% 1RM, high rep — muscular endurance focus"
+      },
+      {
+        "label": "hard",
+        "description": "65-80% 1RM, moderate rep — strength-endurance threshold"
+      }
+    ],
+    "sources": [
+      "CrossFit",
+      "Gym Jones",
+      "Horsemen GPP",
+      "Mark Wildman / RKC Kettlebell"
+    ],
+    "notes": "The primary domain of barbell complexes, KB circuits, AMRAP formats, and high-rep sets. Gym Jones identifies this as the most operationally relevant quality for tactical athletes. Do not programme on the same day as max strength — the metabolic fatigue from strength endurance work degrades motor unit recruitment needed for heavy singles and triples. Works well as a standalone day or as a second session 8+ hours after a morning aerobic session.\n"
+  }
+]

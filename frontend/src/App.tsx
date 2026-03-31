@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -14,7 +15,10 @@ import { WorkoutImport } from '@/pages/WorkoutImport'
 import { WorkoutDetail } from '@/pages/WorkoutDetail'
 import { BioLog } from '@/pages/BioLog'
 import { DevLab } from '@/pages/DevLab'
+import { LoginPage } from '@/pages/LoginPage'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { useAuthStore } from '@/store/authStore'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,28 +29,44 @@ const queryClient = new QueryClient({
   },
 })
 
+function AuthInit({ children }: { children: React.ReactNode }) {
+  const init = useAuthStore((s) => s.init)
+  useEffect(() => {
+    const unsub = init()
+    return unsub
+  }, [init])
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} themes={['light', 'dark', 'military', 'zen']}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <HealthDataProvider>
-          <Routes>
-            <Route element={<RootLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="builder" element={<ProgramBuilder />} />
-              <Route path="program" element={<ProgramView />} />
-              <Route path="program/:week/:day" element={<SessionDetail />} />
-              <Route path="exercises" element={<ExerciseCatalog />} />
-              <Route path="profile" element={<ProfileBenchmarks />} />
-              <Route path="philosophies" element={<Philosophies />} />
-              <Route path="import" element={<WorkoutImport />} />
-              <Route path="import/:workoutId" element={<WorkoutDetail />} />
-              <Route path="bio" element={<BioLog />} />
-              <Route path="dev" element={<DevLab />} />
-            </Route>
-          </Routes>
-          </HealthDataProvider>
+          <AuthInit>
+            <HealthDataProvider>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route element={
+                  <ProtectedRoute>
+                    <RootLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="builder" element={<ProgramBuilder />} />
+                  <Route path="program" element={<ProgramView />} />
+                  <Route path="program/:week/:day" element={<SessionDetail />} />
+                  <Route path="exercises" element={<ExerciseCatalog />} />
+                  <Route path="profile" element={<ProfileBenchmarks />} />
+                  <Route path="philosophies" element={<Philosophies />} />
+                  <Route path="import" element={<WorkoutImport />} />
+                  <Route path="import/:workoutId" element={<WorkoutDetail />} />
+                  <Route path="bio" element={<BioLog />} />
+                  <Route path="dev" element={<DevLab />} />
+                </Route>
+              </Routes>
+            </HealthDataProvider>
+          </AuthInit>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

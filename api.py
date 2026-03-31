@@ -17,10 +17,12 @@ from src import loader
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.validator import validate
+from src.auth import require_auth
+from flask import g
 
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": os.environ.get('FRONTEND_URL', '*')}})
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -335,6 +337,7 @@ def get_philosophies():
 
 
 @app.post('/api/programs/generate')
+@require_auth
 def generate_program():
     import traceback as _tb
     body = request.get_json(silent=True) or {}
@@ -915,6 +918,145 @@ def parse_workout_file():
             return jsonify({'detail': f'FIT parse error: {e}'}), 422
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
+
+
+# ---------------------------------------------------------------------------
+# User profile & program (Supabase Postgres)
+# ---------------------------------------------------------------------------
+
+def _profile_to_frontend(row: dict) -> dict:
+    return {
+        'trainingLevel':     row.get('training_level', 'intermediate'),
+        'equipment':         row.get('equipment') or [],
+        'injuryFlags':       row.get('injury_flags') or [],
+        'customInjuryFlags': row.get('custom_injury_flags') or [],
+        'activeGoalId':      row.get('active_goal_id'),
+        'dateOfBirth':       str(row['date_of_birth']) if row.get('date_of_birth') else None,
+    }
+
+
+@app.get('/api/profile')
+@require_auth
+def get_profile():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('SELECT * FROM user_profiles WHERE id = %s', (user_id,))
+                row = cur.fetchone()
+                if row is None:
+                    cur.execute(
+                        'INSERT INTO user_profiles (id) VALUES (%s) RETURNING *', (user_id,)
+                    )
+                    row = cur.fetchone()
+                    conn.commit()
+        return jsonify(_profile_to_frontend(dict(row)) if row else {})
+    except RuntimeError as e:
+        # DATABASE_URL not set — return empty profile for local dev
+        app.logger.warning(str(e))
+        return jsonify({})
+
+
+@app.put('/api/profile')
+@require_auth
+def update_profile():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        body = request.get_json(silent=True) or {}
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    INSERT INTO user_profiles
+                        (id, training_level, equipment, injury_flags,
+                         custom_injury_flags, active_goal_id, date_of_birth, updated_at)
+                    VALUES (%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE SET
+                        training_level      = EXCLUDED.training_level,
+                        equipment           = EXCLUDED.equipment,
+                        injury_flags        = EXCLUDED.injury_flags,
+                        custom_injury_flags = EXCLUDED.custom_injury_flags,
+                        active_goal_id      = EXCLUDED.active_goal_id,
+                        date_of_birth       = EXCLUDED.date_of_birth,
+                        updated_at          = NOW()
+                ''', (
+                    user_id,
+                    body.get('trainingLevel', 'intermediate'),
+                    _json.dumps(body.get('equipment', [])),
+                    _json.dumps(body.get('injuryFlags', [])),
+                    _json.dumps(body.get('customInjuryFlags', [])),
+                    body.get('activeGoalId'),
+                    body.get('dateOfBirth'),
+                ))
+                conn.commit()
+        return jsonify({'saved': True})
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify({'saved': False, 'detail': str(e)}), 503
+
+
+@app.get('/api/user/program')
+@require_auth
+def get_user_program():
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('SELECT * FROM user_programs WHERE user_id = %s', (user_id,))
+                row = cur.fetchone()
+        if not row:
+            return jsonify(None)
+        return jsonify({
+            'currentProgram':    row.get('current_program'),
+            'programStartDate':  str(row['program_start_date']) if row.get('program_start_date') else None,
+            'eventDate':         str(row['event_date']) if row.get('event_date') else None,
+            'sourceGoalIds':     row.get('source_goal_ids') or [],
+            'sourceGoalWeights': row.get('source_goal_weights') or {},
+        })
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify(None)
+
+
+@app.put('/api/user/program')
+@require_auth
+def save_user_program():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        body = request.get_json(silent=True) or {}
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    INSERT INTO user_programs
+                        (user_id, current_program, program_start_date,
+                         event_date, source_goal_ids, source_goal_weights, updated_at)
+                    VALUES (%s, %s::jsonb, %s, %s, %s::jsonb, %s::jsonb, NOW())
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        current_program     = EXCLUDED.current_program,
+                        program_start_date  = EXCLUDED.program_start_date,
+                        event_date          = EXCLUDED.event_date,
+                        source_goal_ids     = EXCLUDED.source_goal_ids,
+                        source_goal_weights = EXCLUDED.source_goal_weights,
+                        updated_at          = NOW()
+                ''', (
+                    user_id,
+                    _json.dumps(body.get('currentProgram')),
+                    body.get('programStartDate'),
+                    body.get('eventDate'),
+                    _json.dumps(body.get('sourceGoalIds', [])),
+                    _json.dumps(body.get('sourceGoalWeights', {})),
+                ))
+                conn.commit()
+        return jsonify({'saved': True})
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify({'saved': False, 'detail': str(e)}), 503
 
 
 # ---------------------------------------------------------------------------

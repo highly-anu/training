@@ -1,0 +1,523 @@
+[
+  {
+    "id": "block_periodization",
+    "name": "Block Periodization",
+    "source_philosophy": "gym_jones",
+    "goals_served": [
+      "max_strength",
+      "strength_endurance",
+      "power",
+      "mixed_modal_conditioning"
+    ],
+    "sessions_per_week": {
+      "max_strength": 2,
+      "mixed_modal_conditioning": 2,
+      "durability": 1,
+      "aerobic_base": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.2,
+      "zone3_pct": 0.15,
+      "zone4_5_pct": 0.25,
+      "max_effort_pct": 0.4
+    },
+    "progression_model": "volume_block",
+    "applicable_when": {
+      "training_level": [
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 4,
+      "days_per_week_max": 6,
+      "goal_priority_min": {
+        "max_strength": 0.2
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "Block periodization assumes accumulated training history and deliberate phase shifts. Linear progression's session-by-session load increases are incompatible with block volume/intensity sequencing.\n",
+        "interference_level": "high",
+        "mitigation": "Do not combine. Exhaust linear progression first, then transition to block work.\n"
+      },
+      {
+        "framework_id": "rpe_autoregulation",
+        "reason": "Block periodization uses pre-planned percentage-based loading within each phase. RPE autoregulation replaces prescribed percentages with feel-based load decisions, which undermines the structured volume-to-intensity progression of each block.\n",
+        "interference_level": "manageable",
+        "mitigation": "Use RPE to fine-tune load within block targets (e.g. RPE 8 on the top set of a volume block). Do not use RPE to bypass block phase structure.\n"
+      }
+    ],
+    "deload_protocol": {
+      "frequency_weeks": 4,
+      "volume_reduction_pct": 0.6,
+      "intensity_change": "maintain"
+    },
+    "sources": [
+      "Gym Jones — Operator Fitness I & II (Twight)",
+      "Gym Jones — Soldier of Steel",
+      "Horsemen Training Program 2008",
+      "Supertraining, Verkhoshansky"
+    ],
+    "notes": "Organizes training into sequential 4-6 week phases: Accumulation (high volume, moderate intensity) → Transmutation (moderate volume, higher intensity) → Realization (low volume, peak intensity/performance). Used by Gym Jones for operator fitness programming and by Horsemen across their 4-month macro (Month 1 Strength → Month 2 Power Endurance → Month 3 Job Specific → Month 4 Maintenance). Hard/easy day alternation is built into the weekly structure. Progression levers: reduce rest periods for bodyweight-based work; increase load for barbell/KB work — never both simultaneously (Twight rule).\n"
+  },
+  {
+    "id": "concurrent_training",
+    "name": "Concurrent Training (GPP / Balanced Fitness)",
+    "source_philosophy": "horsemen_gpp",
+    "goals_served": [
+      "max_strength",
+      "aerobic_base",
+      "mixed_modal_conditioning",
+      "durability",
+      "strength_endurance"
+    ],
+    "sessions_per_week": {
+      "max_strength": 2,
+      "aerobic_base": 2,
+      "mixed_modal_conditioning": 1,
+      "durability": 1,
+      "strength_endurance": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.3,
+      "zone3_pct": 0.15,
+      "zone4_5_pct": 0.25,
+      "max_effort_pct": 0.3
+    },
+    "progression_model": "rpe_autoregulation",
+    "applicable_when": {
+      "training_level": [
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 4,
+      "days_per_week_max": 6,
+      "goal_priority_min": {
+        "aerobic_base": 0.15
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "Concurrent training's conditioning volume and fatigue accumulation prevents the session-to-session recovery that linear progression requires. The interference effect is well-documented: endurance work blunts strength adaptation when both are pursued at full volume.\n",
+        "interference_level": "high",
+        "mitigation": "If a novice needs both, run a minimal linear progression (3×/week barbell) and strictly cap conditioning at 2 low-intensity sessions/week. Accept slower strength gains. Transition to true concurrent programming once linear progress stalls.\n"
+      },
+      {
+        "framework_id": "high_frequency_skill",
+        "reason": "Adding daily skill sessions on top of a full concurrent training week creates excessive total training volume and degrades movement quality — the opposite of what high-frequency skill work is designed to achieve.\n",
+        "interference_level": "manageable",
+        "mitigation": "Replace one conditioning session with a skill session, or limit skill practice to 10-15 min movement prep before existing sessions rather than standalone daily sessions.\n"
+      }
+    ],
+    "deload_protocol": {
+      "frequency_weeks": 4,
+      "volume_reduction_pct": 0.6,
+      "intensity_change": "reduce_slightly"
+    },
+    "sources": [
+      "Horsemen Training Program 2008",
+      "Gym Jones — Operator Fitness I & II (Twight)",
+      "Concurrent Training: A Meta-Analysis, Wilson et al.",
+      "Uphill Athlete — Concurrent supplementary strength protocols"
+    ],
+    "notes": "Concurrent training alternates strength and conditioning sessions within the same week. The primary challenge is interference: endurance adaptations (mitochondrial biogenesis, slow-twitch hypertrophy) can blunt strength/power adaptations when both are maximally pursued. Fatigue management is the governing concern, not progressive overload on any single quality. Goal priority weighting drives session allocation: a goal profile with aerobic_base 0.5 + max_strength 0.2 allocates more session slots and total weekly volume to aerobic work. Horsemen 4-day template (Mon strength, Tue conditioning, Thu carries + bodyweight, Sat long ruck/GPP) is a canonical implementation. RPE autoregulation governs load daily to account for accumulated fatigue across modalities.\n"
+  },
+  {
+    "id": "emom_amrap",
+    "name": "EMOM / AMRAP Conditioning",
+    "source_philosophy": "crossfit",
+    "goals_served": [
+      "mixed_modal_conditioning",
+      "strength_endurance",
+      "anaerobic_intervals",
+      "power"
+    ],
+    "sessions_per_week": {
+      "mixed_modal_conditioning": 3,
+      "strength_endurance": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.05,
+      "zone3_pct": 0.3,
+      "zone4_5_pct": 0.5,
+      "max_effort_pct": 0.15
+    },
+    "progression_model": "density",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 2,
+      "days_per_week_max": 5,
+      "goal_priority_min": {
+        "mixed_modal_conditioning": 0.25
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "Frequent high-intensity conditioning sessions accumulate systemic fatigue that prevents the recovery required for session-to-session load increases. More than 2 EMOM/AMRAP sessions per week will stall or reverse linear strength progression.\n",
+        "interference_level": "high",
+        "mitigation": "Limit to 1 short conditioning session per week (under 15 min, lower intensity). Schedule on a day between strength sessions, never the day before a heavy barbell day. Accept that linear strength progression will slow.\n"
+      },
+      {
+        "framework_id": "polarized_80_20",
+        "reason": "EMOM/AMRAP work predominantly sits in Zone 3-4 (\"moderate intensity danger zone\" in polarized theory), which accumulates fatigue without contributing to aerobic base development. Substituting Zone 1-2 sessions with EMOM work violates the 80% low-intensity rule.\n",
+        "interference_level": "manageable",
+        "mitigation": "Treat EMOM/AMRAP sessions as the 20% high-intensity allocation only. Do not add EMOM work on top of the polarized interval quota. Total high-intensity sessions remain capped at 20% of weekly volume.\n"
+      }
+    ],
+    "sources": [
+      "CrossFit Training Guide (Glassman)",
+      "CrossFit Endurance methodology",
+      "Horsemen Training Program 2008 — Density/EMOM workouts",
+      "Gym Jones — Accumulation Day protocols"
+    ],
+    "notes": "EMOM (Every Minute On the Minute) and AMRAP (As Many Rounds/Reps As Possible) are session formats, not standalone periodization systems. As a framework, they represent a conditioning-dominant programming approach where the session structure itself is the progression vehicle: same movements in less time (AMRAP), or maintaining output across all intervals (EMOM). Density progression means the athlete's ability to complete more work within the fixed time domain. EMOM format can be applied to strength movements (EMOM strength waves: 10×1 at 85-95%) or pure conditioning (Horsemen \"Purple Church\": 10 min EMOM, 3 power clean + 3 hang squat clean + 3 push press). AMRAP format (CrossFit metcons, Horsemen \"PBR\": AMRAP 20 min) targets mixed-modal work capacity. Can be used as a standalone conditioning framework or as conditioning days within a concurrent training block.\n"
+  },
+  {
+    "id": "gpp_circuits",
+    "name": "GPP Circuits (Horsemen / SOF-style)",
+    "source_philosophy": "horsemen_gpp",
+    "goals_served": [
+      "durability",
+      "strength_endurance",
+      "mixed_modal_conditioning",
+      "max_strength"
+    ],
+    "sessions_per_week": {
+      "durability": 2,
+      "mixed_modal_conditioning": 1,
+      "max_strength": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.1,
+      "zone3_pct": 0.35,
+      "zone4_5_pct": 0.35,
+      "max_effort_pct": 0.2
+    },
+    "progression_model": "time_to_task",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 2,
+      "days_per_week_max": 5,
+      "goal_priority_min": {
+        "durability": 0.2
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "GPP circuit volume and mixed-modal fatigue accumulation interferes with the full systemic recovery required by linear progression. High-rep, multi-modal circuit work elevates cortisol and delays muscle protein synthesis on barbell training days.\n",
+        "interference_level": "manageable",
+        "mitigation": "Reduce circuit frequency to 1 session/week during active linear progression. Schedule circuit day as far as possible from heavy barbell sessions (e.g. Saturday if strength days are Mon/Wed/Fri). Keep circuit intensity moderate.\n"
+      },
+      {
+        "framework_id": "polarized_80_20",
+        "reason": "GPP circuits operate predominantly in Zone 3-4, accumulating the type of moderate-high intensity fatigue that polarized theory explicitly avoids to protect aerobic base development quality.\n",
+        "interference_level": "manageable",
+        "mitigation": "If aerobic base is the primary goal, replace circuit sessions with Zone 1-2 aerobic work and limit GPP circuits to 1 session/week as a supplementary work capacity stimulus. Do not count circuit sessions as aerobic base volume.\n"
+      }
+    ],
+    "sources": [
+      "Horsemen Training Program 2008",
+      "Gym Jones — Operator Fitness I & II (Twight)",
+      "Dan John — Never Let Go",
+      "CrossFit — GPP methodology (Glassman)"
+    ],
+    "notes": "GPP (General Physical Preparedness) circuits build broad work capacity, durability, and repeatable output under fatigue — the Horsemen core standard. Circuit formats include sandbag complexes (5-8 movements, 3-5 rounds), loaded carry circuits (farmer/rack/overhead), and bodyweight circuits (push/pull/hinge/squat time domain). Progression via time-to-task: the same circuit completed faster, with more load, or with less rest. Named benchmarks serve as fixed-task standards (e.g. \"Fan Dance\": 22km, +1000m elevation, 30kg pack, 4h). Horsemen SMMF (Slow Massive Movement) workouts — 100-rep challenges, 500m lunge, 1-mile heavy bag carry — are the extreme end of this framework: single massive efforts testing work capacity and mental durability simultaneously (Twight: \"The mind is the primary limiter\"). Equipment-minimal approach: sandbag, barbell, bodyweight, and a ruck cover the full framework. 4-day Horsemen weekly template: Mon strength complex (sandbag or barbell), Tue conditioning (AMRAP/circuit), Thu loaded carries + bodyweight, Sat long ruck or GPP circuit.\n"
+  },
+  {
+    "id": "high_frequency_skill",
+    "name": "High-Frequency Skill Practice (Ido Portal)",
+    "source_philosophy": "ido_portal",
+    "goals_served": [
+      "movement_skill",
+      "mobility",
+      "relative_strength"
+    ],
+    "sessions_per_week": {
+      "movement_skill": 5,
+      "mobility": 3
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.7,
+      "zone3_pct": 0.1,
+      "zone4_5_pct": 0.05,
+      "max_effort_pct": 0.15
+    },
+    "progression_model": "complexity",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 3,
+      "days_per_week_max": 7,
+      "goal_priority_min": {
+        "movement_skill": 0.2
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "concurrent_training",
+        "reason": "Daily skill practice requires neurological freshness and attentional bandwidth. Full concurrent training volume leaves insufficient recovery for daily movement quality sessions — fatigue degrades motor learning and undermines the purpose of high-frequency skill practice.\n",
+        "interference_level": "manageable",
+        "mitigation": "Embed 10-15 min of movement practice as pre-session warm-up within existing concurrent training sessions rather than scheduling standalone daily sessions. Reserve full skill sessions for lower-volume training phases.\n"
+      },
+      {
+        "framework_id": "emom_amrap",
+        "reason": "High-output conditioning sessions generate muscular fatigue that directly impairs the motor control precision required for skill acquisition. Scheduling skill sessions after EMOM/AMRAP work produces poor-quality movement practice.\n",
+        "interference_level": "manageable",
+        "mitigation": "Always schedule skill practice before conditioning, or on separate days. Treat conditioning as the quality to reduce if skill acquisition is the primary goal.\n"
+      }
+    ],
+    "sources": [
+      "Ido Portal Method — Movement Culture",
+      "Motor Learning and Control, Schmidt & Lee",
+      "Pavel Tsatsouline — Greasing the Groove (GTG) methodology"
+    ],
+    "notes": "The core insight is that skill acquisition follows the law of practice: frequency beats duration. Short, daily exposures to a movement pattern produce faster neural adaptation than infrequent long sessions. Ido Portal's framework organizes skill work into three stages: isolation (controlled environment, single pattern), integration (combining patterns, adding load or complexity), and spontaneous expression (reactive, improvised, environment-driven). Joint preparation is mandatory before loading — tissue prep is not warm-up, it is prerequisite. Complexity progression means advancing to harder movement variants (e.g. cartwheel → aerial → side flip, or support hold → tuck planche → straddle planche) only when the current level is \"owned\" — fluent under fatigue, in varied environments, without cueing. Daily practice targets (time-based, not rep-based) are preferred: e.g. \"10 min of locomotion practice daily.\" Overlaps with GTG (Pavel): practice a lift or skill at 50-60% effort multiple times per day, never to failure.\n"
+  },
+  {
+    "id": "kb_pentathlon",
+    "name": "Kettlebell Pentathlon Training (Wildman)",
+    "source_philosophy": "wildman_kettlebell",
+    "goals_served": [
+      "strength_endurance",
+      "power",
+      "aerobic_base",
+      "mixed_modal_conditioning"
+    ],
+    "sessions_per_week": {
+      "strength_endurance": 2,
+      "aerobic_base": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.15,
+      "zone3_pct": 0.3,
+      "zone4_5_pct": 0.4,
+      "max_effort_pct": 0.15
+    },
+    "progression_model": "pentathlon_rpm",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 2,
+      "days_per_week_max": 4,
+      "goal_priority_min": {
+        "strength_endurance": 0.25
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "KB pentathlon training generates significant grip, posterior chain, and cardiovascular fatigue. Running pentathlon sessions concurrently with linear barbell progression competes for recovery and impairs bar speed and neural drive on heavy barbell days.\n",
+        "interference_level": "manageable",
+        "mitigation": "Schedule pentathlon sessions on non-barbell days. Reduce pentathlon session frequency to 1/week during active linear progression phases. Prioritize barbell recovery over pentathlon volume.\n"
+      },
+      {
+        "framework_id": "high_frequency_skill",
+        "reason": "Pentathlon training requires fresh neuromuscular state for technique quality at sustained RPM. Daily skill practice adds neurological load that reduces the quality of ballistic KB work.\n",
+        "interference_level": "low",
+        "mitigation": "Limit daily skill sessions to short movement prep (10 min) before pentathlon training days. Avoid heavy locomotion or arm-intensive skill work the day before a pentathlon session.\n"
+      }
+    ],
+    "sources": [
+      "Mark Wildman — Kettlebell Fundamentals and Pentathlon methodology",
+      "IKFF (International Kettlebell and Fitness Federation) competition standards",
+      "Pavel Tsatsouline — Enter the Kettlebell, Kettlebell Simple & Sinister"
+    ],
+    "notes": "The KB Pentathlon is a 5-event competition format: Cleans (120 reps target / 20 RPM), Long Cycle Press (60 reps / 10 RPM), Jerks (120 reps / 20 RPM), Half Snatch (108 reps / 18 RPM), Push Press (120 reps / 20 RPM). Each event is 6 minutes with 5 minutes rest between. Points scale with bell weight: 8kg=1pt, 12kg=1.5pt, 16kg=2pt, 20kg=2.5pt, 24kg=3pt, 28kg=3.5pt per rep. Progression via pentathlon_rpm: establish baseline RPM at current bell weight, train to hit target RPM consistently, then step up bell weight. Breathing mechanics govern the intensity ceiling — Wildman principle: breathing pattern determines whether a ballistic set stays aerobic or goes anaerobic. Progression sequence: two-hand swing → single-arm swing → clean → clean & press → TGU → squat → snatch → double KB. The framework also serves as a conditioning benchmark: SSST (Secret Service Snatch Test) standard is 200+ reps in 10 min at 53# (Horsemen \"Team Guy Standard\"), 250 = excellent, 275 = record.\n"
+  },
+  {
+    "id": "linear_progression",
+    "name": "Linear Progression (SS)",
+    "source_philosophy": "starting_strength",
+    "goals_served": [
+      "max_strength"
+    ],
+    "sessions_per_week": {
+      "max_strength": 3
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.0,
+      "zone3_pct": 0.0,
+      "zone4_5_pct": 0.0,
+      "max_effort_pct": 1.0
+    },
+    "progression_model": "linear_load",
+    "applicable_when": {
+      "training_level": [
+        "novice"
+      ],
+      "days_per_week_min": 3,
+      "days_per_week_max": 4,
+      "goal_priority_min": {
+        "max_strength": 0.3
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "polarized_80_20",
+        "reason": "High-frequency barbell loading requires full systemic recovery between sessions. Adding aerobic volume competes for recovery resources and blunts strength adaptation.\n",
+        "interference_level": "manageable",
+        "mitigation": "Cap conditioning at 2 sessions/week, Zone 1-2 only. Schedule aerobic sessions on off-days or post-strength as cool-down. Do not run concurrent polarized volume phases.\n"
+      },
+      {
+        "framework_id": "emom_amrap",
+        "reason": "EMOM/AMRAP conditioning elevates systemic fatigue and undermines session-to-session load progression that linear progression depends on.\n",
+        "interference_level": "high",
+        "mitigation": "If conditioning is required, limit to 1 short EMOM session/week on a non-strength day. Reduce to 10-15 min max duration. Accept slower strength progress.\n"
+      },
+      {
+        "framework_id": "block_periodization",
+        "reason": "Block periodization is designed for intermediate/advanced trainees. Combining it with linear progression is redundant and disruptive — linear progression should run to failure before transitioning to block work.\n",
+        "interference_level": "high",
+        "mitigation": "Do not combine. Run linear progression to stall, then transition to block periodization.\n"
+      }
+    ],
+    "deload_protocol": {
+      "frequency_weeks": 4,
+      "volume_reduction_pct": 0.6,
+      "intensity_change": "maintain"
+    },
+    "sources": [
+      "Starting Strength, Mark Rippetoe (3rd ed.)",
+      "Practical Programming for Strength Training, Rippetoe & Kilgore"
+    ],
+    "notes": "The canonical novice protocol. Three full-body sessions per week (Mon/Wed/Fri or equivalent). Each session adds weight to the bar — typically 5 lb/session on squat and deadlift, 2.5 lb on press. The squat is performed every session. Session structure: Squat 3×5, Press or Bench 3×5 (alternating), Deadlift 1×5. Run until linear gains stall (3 consecutive sessions without progress on a lift), then transition to intermediate programming. Conditioning is minimized or eliminated during this phase to preserve recovery capacity.\n"
+  },
+  {
+    "id": "polarized_80_20",
+    "name": "Polarized 80/20 Training (Uphill Athlete)",
+    "source_philosophy": "uphill_athlete",
+    "goals_served": [
+      "aerobic_base",
+      "anaerobic_intervals",
+      "durability"
+    ],
+    "sessions_per_week": {
+      "aerobic_base": 4,
+      "anaerobic_intervals": 1,
+      "max_strength": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.8,
+      "zone3_pct": 0.0,
+      "zone4_5_pct": 0.2,
+      "max_effort_pct": 0.0
+    },
+    "progression_model": "intensity_split_shift",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 4,
+      "days_per_week_max": 7,
+      "goal_priority_min": {
+        "aerobic_base": 0.4
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "linear_progression",
+        "reason": "High aerobic training volume competes for systemic recovery with barbell linear progression. Zone 2 volume accumulation is incompatible with the full-body session-to-session stress-recovery-adaptation cycle that linear progression depends on.\n",
+        "interference_level": "manageable",
+        "mitigation": "Cap conditioning at 2 sessions/week, Zone 1-2 only. Place aerobic sessions on off-days from strength. Do not run full polarized volume concurrently with linear progression — treat strength as the priority and aerobic work as supplementary maintenance.\n"
+      },
+      {
+        "framework_id": "emom_amrap",
+        "reason": "EMOM/AMRAP work typically falls in Zone 3-4 (the \"moderate intensity danger zone\"), which accumulates fatigue without the aerobic base development benefit of Zone 1-2 or the top-end stimulus of Zone 4-5 intervals.\n",
+        "interference_level": "manageable",
+        "mitigation": "Limit EMOM/AMRAP to the 20% high-intensity allocation. Do not add EMOM work on top of the 20% interval quota. Replace interval sessions with EMOM format if preferred, but total high-intensity volume stays capped.\n"
+      },
+      {
+        "framework_id": "rpe_autoregulation",
+        "reason": "RPE autoregulation and polarized 80/20 address different aspects of training and serve complementary roles. Low interference when RPE governs strength sessions only.\n",
+        "interference_level": "low",
+        "mitigation": "Use RPE to govern load on the supplementary strength session. Keep aerobic sessions governed by HR zones, not RPE.\n"
+      }
+    ],
+    "deload_protocol": {
+      "frequency_weeks": 4,
+      "volume_reduction_pct": 0.6,
+      "intensity_change": "maintain"
+    },
+    "sources": [
+      "Training for the New Alpinism, Steve House & Scott Johnston",
+      "The Uphill Athlete, Johnston, House & Jornet",
+      "80/20 Running, Matt Fitzgerald"
+    ],
+    "notes": "The Uphill Athlete polarized model requires establishing an Aerobic Threshold (AeT) via the nose-breathe test or MAF method (180-age), then keeping 80% of training volume at or below AeT heart rate. The 20% high-intensity allocation is reserved for Zone 4-5 interval sessions (threshold intervals, hill sprints). Zone 3 work (\"moderate intensity danger zone\") is actively avoided as it accumulates fatigue without providing a clear adaptive stimulus. Progression follows intensity_split_shift: base phase holds strict 80/20 with increasing volume; build phase shifts toward 70/30 as the event date approaches. Supplementary strength (1 session/week) uses simple compound movements to prevent strength loss without generating excess fatigue.\n"
+  },
+  {
+    "id": "rpe_autoregulation",
+    "name": "RPE Autoregulation (Functional Bodybuilding)",
+    "source_philosophy": "marcus_filly",
+    "goals_served": [
+      "max_strength",
+      "strength_endurance",
+      "relative_strength",
+      "durability"
+    ],
+    "sessions_per_week": {
+      "max_strength": 3,
+      "mobility": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.05,
+      "zone3_pct": 0.1,
+      "zone4_5_pct": 0.35,
+      "max_effort_pct": 0.5
+    },
+    "progression_model": "rpe_autoregulation",
+    "applicable_when": {
+      "training_level": [
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 3,
+      "days_per_week_max": 6,
+      "goal_priority_min": {
+        "max_strength": 0.2
+      }
+    },
+    "incompatible_with": [
+      {
+        "framework_id": "polarized_80_20",
+        "reason": "RPE autoregulation governs strength load; polarized 80/20 governs aerobic intensity distribution. These address different training qualities and can be applied simultaneously with low conflict — RPE on strength days, HR zones on aerobic days.\n",
+        "interference_level": "low",
+        "mitigation": "Use RPE to govern load on strength sessions. Govern aerobic sessions strictly by HR zone, not RPE. Do not apply RPE-based load reduction to aerobic base sessions — the feel-based approach does not map to aerobic zone work.\n"
+      }
+    ],
+    "sources": [
+      "Marcus Filly — Functional Bodybuilding",
+      "Mike Tuchscherer — Reactive Training Systems (RTS)",
+      "The RTS Manual, Mike Tuchscherer",
+      "Renaissance Periodization, Mike Israetel et al."
+    ],
+    "notes": "RPE (Rate of Perceived Exertion) autoregulation replaces fixed percentage-based loading with daily readiness-adjusted load selection. An RPE 8 means 2 reps left in the tank at the end of a set; RPE 9 means 1 rep left; RPE 10 is true max effort. The key advantage: when an athlete is under-recovered (poor sleep, accumulated fatigue, high life stress), the load self-adjusts downward rather than forcing a prescribed percentage that may be a true max that day. Marcus Filly applies RPE within a sustainable training philosophy — aesthetics and function are compatible, joint health requires dedicated maintenance, controlled eccentrics and isometrics build tissue resilience. Deload triggers: when multiple sessions in a row come in at RPE 9-10 at weights that previously felt like RPE 7-8, a deload is indicated rather than waiting for the scheduled week. Controlled eccentrics (3-5 sec negatives) and isometric holds are first-class tools in this framework, not accessories.\n"
+  }
+]
