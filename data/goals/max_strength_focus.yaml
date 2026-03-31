@@ -100,3 +100,16 @@ notes: >
   (1×/week Zone 2) but not enough to create meaningful interference.
   This profile is intended as a finite block (13 weeks rolling) before
   the athlete returns to a concurrent or GPP program.
+
+expectations:
+  min_weeks: 11
+  ideal_weeks: 13
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 45
+  ideal_session_minutes: 75
+  supports_split_days: false
+  notes: >
+    Strength sessions require adequate warm-up and recovery between sets —
+    60–75 min is the effective range. More days add volume but require careful
+    fatigue management. Secondary sessions add little value for pure strength goals.

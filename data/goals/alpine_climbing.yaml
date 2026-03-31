@@ -89,3 +89,17 @@ notes: >
   the structural base for load-bearing. Starrett mobility protocols protect
   hip, ankle, and thoracic integrity under extended pack loads. Vertical
   gain and time-on-feet trump gym PRs as the relevant performance metric.
+
+expectations:
+  min_weeks: 14
+  ideal_weeks: 20
+  min_days_per_week: 3
+  ideal_days_per_week: 5
+  min_session_minutes: 45
+  ideal_session_minutes: 75
+  ideal_long_session_minutes: 210
+  supports_split_days: true
+  notes: >
+    Weekend long efforts (3–5h hikes or ruck marches) are non-negotiable for
+    alpine prep. Weekday sessions are shorter strength and aerobic work (60–90 min).
+    Secondary sessions (joint prep, foot/ankle work) pair well with primary days.

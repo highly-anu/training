@@ -89,3 +89,16 @@ notes: >
   job-specific slots. KB ballistics (Wildman/RKC) drive SSST prep and
   power endurance. Horsemen benchmark targets: deadlift 2.5×BW,
   3-mile run sub-20:00, SSST 200+ reps (Team Guy Standard), pull-ups 15+.
+
+expectations:
+  min_weeks: 16
+  ideal_weeks: 20
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 75
+  supports_split_days: true
+  notes: >
+    Tactical fitness demands high weekly frequency. Sessions under 60 min
+    will drop lower-priority modalities. Secondary sessions pair well with
+    primary conditioning days to maintain joint health under high training loads.

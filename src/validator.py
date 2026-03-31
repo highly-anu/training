@@ -95,7 +95,13 @@ def _check_days(goal, constraints, result):
 
 
 def _check_session_time(goal, constraints, archetypes, result):
-    session_time = constraints.get('session_time_minutes', 75)
+    weekday = constraints.get('weekday_session_minutes')
+    weekend = constraints.get('weekend_session_minutes')
+    if weekday and weekend:
+        # Weighted average: 5 weekday sessions + 2 weekend sessions per week
+        session_time = round((weekday * 5 + weekend * 2) / 7)
+    else:
+        session_time = constraints.get('session_time_minutes', 75)
     if session_time < 20:
         result.add_error(
             'SESSION_TOO_SHORT',

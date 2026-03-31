@@ -16,7 +16,7 @@ priorities:
 primary_sources:
   - marcus_filly
   - kelly_starrett
-  - uphill_athlete
+  - atg
 
 phase_sequence:
   - phase: rehab
@@ -93,3 +93,16 @@ notes: >
   guidance. Injury flags in the constraint layer (e.g.
   right_knee_meniscus_post_op, shoulder_impingement) should be set and
   will filter the exercise library accordingly.
+
+expectations:
+  min_weeks: 20
+  ideal_weeks: 24
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 30
+  ideal_session_minutes: 45
+  supports_split_days: true
+  notes: >
+    Rehab phases require consistency over intensity — shorter, more frequent
+    sessions are preferable to long infrequent ones. Secondary sessions (joint
+    prep, movement flow) are especially valuable and can be done in 15–20 min.

@@ -94,3 +94,17 @@ notes: >
   single-leg patterns that prevent the muscle imbalances typical in high-mileage
   athletes. Nutrition strategy (fat adaptation, fueling windows) is a critical
   parallel layer not captured here.
+
+expectations:
+  min_weeks: 20
+  ideal_weeks: 24
+  min_days_per_week: 4
+  ideal_days_per_week: 6
+  min_session_minutes: 45
+  ideal_session_minutes: 75
+  ideal_long_session_minutes: 210
+  supports_split_days: true
+  notes: >
+    5–6 aerobic sessions per week (60–90 min each, Zone 1–2) plus one weekly
+    long effort (3–5h). Mobility as a secondary session on primary days is
+    strongly recommended to manage cumulative tissue stress.

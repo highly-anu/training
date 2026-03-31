@@ -4,7 +4,7 @@ from __future__ import annotations
 import glob
 import os
 import sys
-from datetime import date as _date
+from datetime import date as _date, timedelta as _timedelta
 
 import yaml
 from flask import Flask, jsonify, redirect, request
@@ -405,6 +405,16 @@ def _generate_program_inner(body):
         goal_dict_for_generate = goal
 
     phase_schedule_override = None
+    program_start_monday = None
+    start_date_str = body.get('start_date')
+    if start_date_str:
+        try:
+            sd = _date.fromisoformat(start_date_str)
+            # Monday of the week containing start_date (weekday() is 0 for Mon)
+            program_start_monday = sd - _timedelta(days=sd.weekday())
+        except ValueError:
+            pass
+
     event_date_str = body.get('event_date')
     if event_date_str:
         try:
@@ -465,6 +475,8 @@ def _generate_program_inner(body):
     result = _transform_program(raw, goal, constraints, validation)
     if include_trace and 'generation_trace' in raw:
         result['generation_trace'] = raw['generation_trace']
+    if program_start_monday:
+        result['program_start_date'] = program_start_monday.isoformat()
     return jsonify(result)
 
 

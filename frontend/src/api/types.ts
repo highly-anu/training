@@ -105,15 +105,38 @@ export interface GoalProfile {
   framework_selection: FrameworkSelection
   event_date?: string | null
   notes?: string
+  expectations?: GoalExpectations
+}
+
+export interface GoalExpectations {
+  min_weeks: number
+  ideal_weeks: number
+  min_days_per_week: number
+  ideal_days_per_week: number
+  min_session_minutes: number
+  ideal_session_minutes: number        // typical session length (most days)
+  ideal_long_session_minutes?: number  // weekly long effort, if the goal has one
+  supports_split_days: boolean
+  notes?: string
 }
 
 // ─── Constraints ──────────────────────────────────────────────────────────────
+
+export interface DayConfig {
+  minutes: number         // 0 = rest day
+  has_secondary: boolean  // true = add a short mobility/skill session after the primary
+}
 
 export interface AthleteConstraints {
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
   days_per_week: number
   session_time_minutes: number
+  weekday_session_minutes?: number
+  weekend_session_minutes?: number
+  allow_split_sessions?: boolean
+  secondary_days?: number[]           // specific days (1-7) with secondary sessions enabled
+  day_configs?: Record<number, DayConfig>  // per-day availability; drives derived fields
   training_level: TrainingLevel
   injury_flags: InjuryFlagId[]
   avoid_movements: string[]
@@ -270,6 +293,7 @@ export interface GeneratedProgram {
   validation: ValidationResult
   weeks: WeekData[]
   volume_summary?: WeekVolumeSummary[]
+  program_start_date?: string
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────
