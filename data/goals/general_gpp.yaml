@@ -91,3 +91,16 @@ notes: >
   cumulative overtraining in a concurrent program. Rolling structure means
   no fixed event date — program repeats build→deload→build indefinitely
   until the athlete pivots to a specialized goal profile.
+
+expectations:
+  min_weeks: 17
+  ideal_weeks: 25
+  min_days_per_week: 3
+  ideal_days_per_week: 5
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: true
+  notes: >
+    Concurrent training across all domains requires moderate sessions across
+    most days. Shorter sessions are viable — the program adapts by dropping
+    lower-priority modalities. Secondary mobility sessions add significant value.

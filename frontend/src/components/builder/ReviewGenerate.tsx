@@ -4,18 +4,22 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ValidationAlert } from '@/components/shared/ValidationAlert'
+import { FeasibilityPanel } from './FeasibilityPanel'
 import { useBuilderStore } from '@/store/builderStore'
 import { useProfileStore } from '@/store/profileStore'
+import { useFeasibility } from '@/hooks/useFeasibility'
 import { useGenerateProgram } from '@/api/programs'
 import type { AthleteConstraints } from '@/api/types'
 
 export function ReviewGenerate() {
   const navigate = useNavigate()
-  const { selectedGoalIds, goalWeights, constraints, eventDate, selectedFrameworkId, priorityOverrides, numWeeks } = useBuilderStore()
+  const { selectedGoalIds, goalWeights, constraints, eventDate, startDate, selectedFrameworkId, priorityOverrides, numWeeks } = useBuilderStore()
   const setActiveGoalId = useProfileStore((s) => s.setActiveGoalId)
   const { customInjuryFlags } = useProfileStore()
   const { mutate, isPending, error, data } = useGenerateProgram()
 
+  const feasibilitySignals = useFeasibility()
+  const hasFeasibilityErrors = feasibilitySignals.some((s) => s.severity === 'error')
   const hasErrors = data?.validation && !data.validation.feasible
   const isMultiGoal = selectedGoalIds.length > 1
 
@@ -34,6 +38,7 @@ export function ReviewGenerate() {
         goalWeights: isMultiGoal ? normalizedWeights : undefined,
         constraints: constraints as AthleteConstraints,
         eventDate: eventDate ?? undefined,
+        startDate: startDate ?? undefined,
         numWeeks: numWeeks ?? undefined,
         frameworkId: selectedFrameworkId,
         priorityOverrides: priorityOverrides,
@@ -77,17 +82,30 @@ export function ReviewGenerate() {
           )}
           {numWeeks && <Row label="Duration" value={`${numWeeks} weeks`} />}
           <Row label="Days / week" value={String(constraints.days_per_week ?? 4)} />
-          <Row label="Session time" value={`${constraints.session_time_minutes ?? 60} min`} />
+          <Row
+            label="Session time"
+            value={
+              constraints.weekday_session_minutes != null &&
+              constraints.weekend_session_minutes != null &&
+              constraints.weekday_session_minutes !== constraints.weekend_session_minutes
+                ? `${constraints.weekday_session_minutes}m weekdays / ${constraints.weekend_session_minutes}m weekends`
+                : `${constraints.weekday_session_minutes ?? constraints.session_time_minutes ?? 60} min`
+            }
+          />
           <Row label="Level" value={constraints.training_level ?? 'intermediate'} />
           <Row label="Phase" value={constraints.training_phase ?? 'base'} />
           <Row label="Fatigue" value={constraints.fatigue_state ?? 'normal'} />
           <Row label="Equipment" value={`${(constraints.equipment ?? []).length} items`} />
           <Row label="Injuries" value={(constraints.injury_flags ?? []).length === 0 ? 'None' : (constraints.injury_flags ?? []).length + ' flags'} />
+          {startDate && <Row label="Program start" value={startDate} />}
           {eventDate && <Row label="Event Date" value={eventDate} />}
         </dl>
       </div>
 
-      {/* Validation feedback */}
+      {/* Pre-generation feasibility */}
+      {!data && <FeasibilityPanel mode="full" />}
+
+      {/* Post-generation validation feedback */}
       {data?.validation && <ValidationAlert validation={data.validation} />}
       {error && (
         <p className="text-sm text-destructive">{(error as Error).message}</p>
@@ -102,7 +120,7 @@ export function ReviewGenerate() {
           size="lg"
           className="w-full gap-2"
           onClick={handleGenerate}
-          disabled={isPending || !selectedGoalIds.length || hasErrors === true}
+          disabled={isPending || !selectedGoalIds.length || hasErrors === true || hasFeasibilityErrors}
         >
           {isPending ? (
             <>

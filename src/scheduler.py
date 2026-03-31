@@ -433,6 +433,56 @@ def _order_day(modality_list: list, modalities: dict) -> list:
     )
 
 
+def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
+                        constraints: dict) -> None:
+    """Append a secondary mobility/skill session to primary training days.
+
+    Mutates *raw* in place. Only adds a secondary session when:
+    - the day already has exactly one primary session
+    - the secondary modality is compatible with the existing session
+    - the day's available time has at least 20 min of headroom after the primary
+    """
+    # Days 6-7 are Sat/Sun; everything else is weekday (Mon-Fri)
+    weekday_time = constraints.get('weekday_session_minutes') or constraints.get('session_time_minutes', 75)
+    weekend_time = constraints.get('weekend_session_minutes') or constraints.get('session_time_minutes', 75)
+    secondary_min_time = 20  # minimum spare minutes required to add a secondary session
+
+    secondary_days = constraints.get('secondary_days') or []
+    day_configs = constraints.get('day_configs') or {}
+
+    # Add secondary sessions to active training days
+    for day in sorted(raw.keys()):
+        # If specific secondary_days are given, only process those
+        if secondary_days and day not in secondary_days:
+            continue
+
+        existing = raw[day]
+        if len(existing) != 1:
+            continue  # only add to single-session days
+
+        day_cfg = day_configs.get(day) or day_configs.get(str(day))
+        if day_cfg:
+            available_time = day_cfg.get('minutes', 0)
+        else:
+            available_time = weekend_time if day >= 6 else weekday_time
+
+        # Primary session rough estimate: assume 60 min if we can't determine exactly
+        if available_time - 60 < secondary_min_time:
+            continue
+
+        for secondary in ('mobility', 'movement_skill'):
+            sec_data = modalities.get(secondary, {})
+            if _session_compatible(day, secondary, sec_data, {day: existing}, modalities):
+                raw[day] = existing + [secondary]
+                break
+
+    # Add mobility-only sessions to rest days that the user marked for mobility
+    for day in secondary_days:
+        if day in raw:
+            continue  # already has a training session (handled above)
+        raw[day] = ['mobility']
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -479,6 +529,9 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         is_deload = True
 
     raw = assign_to_days(allocation, data['modalities'], len(pool), pool)
+
+    if constraints.get('allow_split_sessions'):
+        _add_split_sessions(raw, data['modalities'], constraints)
 
     schedule = {}
     for day in sorted(raw.keys()):

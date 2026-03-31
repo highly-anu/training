@@ -17,6 +17,7 @@ priorities:
 
 primary_sources:
   - bjj
+  - ido_portal
   - gym_jones
   - kelly_starrett
   - marcus_filly
@@ -89,3 +90,16 @@ notes: >
   Marcus Filly RPE autoregulation prevents overtraining when BJJ volume is high.
   Joint health for shoulders, knees, and neck must be actively maintained
   throughout; any pain flags redirect training immediately.
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 16
+  min_days_per_week: 3
+  ideal_days_per_week: 5
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: true
+  notes: >
+    BJJ-specific conditioning requires moderate weekly frequency alongside mat
+    training. Short sessions (45 min) are viable. Secondary mobility sessions
+    are highly recommended given the shoulder, neck, and knee stress of grappling.

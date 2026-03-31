@@ -6,12 +6,20 @@ import { useBuilderStore } from '@/store/builderStore'
 import { useUiStore } from '@/store/uiStore'
 import type { AthleteConstraints, CustomInjuryFlag, GeneratedProgram, ModalityId, TracedProgram } from './types'
 
+function getMondayOf(date: Date): string {
+  const d = new Date(date)
+  const day = d.getDay() // 0=Sun
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day))
+  return d.toISOString().slice(0, 10)
+}
+
 interface GenerateParams {
   goalId: string
   goalIds?: string[]
   goalWeights?: Record<string, number>
   constraints: AthleteConstraints
   eventDate?: string
+  startDate?: string | null
   numWeeks?: number
   customInjuryFlags?: CustomInjuryFlag[]
   frameworkId?: string | null
@@ -26,6 +34,7 @@ function buildPostBody(params: GenerateParams) {
       : { goal_id: params.goalId }),
     constraints: params.constraints,
     ...(params.eventDate ? { event_date: params.eventDate } : {}),
+    ...(params.startDate ? { start_date: params.startDate } : {}),
     ...(params.numWeeks ? { num_weeks: params.numWeeks } : {}),
     ...(params.frameworkId ? { framework_id: params.frameworkId } : {}),
     ...(params.priorityOverrides ? { priority_overrides: params.priorityOverrides } : {}),
@@ -46,16 +55,10 @@ export function useGenerateProgram() {
       store.setEventDate(params.eventDate ?? null)
       const ids = (params.goalIds ?? [params.goalId]).filter((id) => id !== '_blended')
       store.setSourceGoals(ids, params.goalWeights ?? {})
-      // Auto-calculate programStartDate: the Monday of the week containing today,
-      // adjusted so that weekIndex=0 in the program maps to the current calendar week.
-      // When the program starts at e.g. week_number=4 (due to event date), the first
-      // week in the array IS the current week, so programStartDate = this week's Monday.
-      const today = new Date()
-      const dayOfWeek = today.getDay() // 0=Sun, 1=Mon, ...
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-      const monday = new Date(today)
-      monday.setDate(today.getDate() + mondayOffset)
-      store.setProgramStartDate(monday.toISOString().slice(0, 10))
+      // Use program_start_date from backend when a start_date was passed (anchors to
+      // that week's Monday). Otherwise fall back to Monday of the current week.
+      const startMonday = data.program_start_date ?? getMondayOf(new Date())
+      store.setProgramStartDate(startMonday)
       useBuilderStore.getState().reset()
       useUiStore.getState().setSelectedWeekIndex(0)
     },

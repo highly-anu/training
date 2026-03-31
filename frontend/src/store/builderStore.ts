@@ -12,6 +12,7 @@ interface BuilderStore {
   goalWeights: Record<string, number>
   constraints: Partial<AthleteConstraints>
   eventDate: string | null
+  startDate: string | null
 
   // Step 2 — tune
   selectedFrameworkId: string | null
@@ -23,6 +24,7 @@ interface BuilderStore {
   setGoalWeight: (id: string, weight: number) => void
   updateConstraints: (patch: Partial<AthleteConstraints>) => void
   setEventDate: (date: string | null) => void
+  setStartDate: (date: string | null) => void
   setFramework: (id: string | null) => void
   setPriorityOverrides: (overrides: Partial<Record<ModalityId, number>> | null) => void
   setNumWeeks: (n: number | null) => void
@@ -39,6 +41,16 @@ interface BuilderStore {
 const defaultConstraints: Partial<AthleteConstraints> = {
   days_per_week: 4,
   session_time_minutes: 60,
+  weekday_session_minutes: 60,
+  weekend_session_minutes: 90,
+  allow_split_sessions: false,
+  preferred_days: [1, 3, 5, 7],
+  day_configs: {
+    1: { minutes: 60, has_secondary: false },
+    3: { minutes: 60, has_secondary: false },
+    5: { minutes: 60, has_secondary: false },
+    7: { minutes: 90, has_secondary: false },
+  },
   training_level: 'intermediate',
   training_phase: 'base',
   periodization_week: 1,
@@ -57,6 +69,7 @@ export const useBuilderStore = create<BuilderStore>()(
       goalWeights: {},
       constraints: defaultConstraints,
       eventDate: null,
+      startDate: null,
       selectedFrameworkId: null,
       priorityOverrides: null,
       numWeeks: null,
@@ -77,6 +90,7 @@ export const useBuilderStore = create<BuilderStore>()(
       updateConstraints: (patch) =>
         set((s) => ({ constraints: { ...s.constraints, ...patch } })),
       setEventDate: (date) => set({ eventDate: date }),
+      setStartDate: (date) => set({ startDate: date }),
       setFramework: (id) => set({ selectedFrameworkId: id }),
       setPriorityOverrides: (overrides) => set({ priorityOverrides: overrides }),
       setNumWeeks: (n) => set({ numWeeks: n }),
@@ -88,6 +102,7 @@ export const useBuilderStore = create<BuilderStore>()(
           goalWeights: {},
           constraints: defaultConstraints,
           eventDate: null,
+          startDate: null,
           selectedFrameworkId: null,
           priorityOverrides: null,
           numWeeks: null,

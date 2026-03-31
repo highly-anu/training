@@ -1,0 +1,103 @@
+id: endurance_mobility
+name: "Endurance Mobility (Foot/Ankle & Hip Flexor Focus)"
+modality: mobility
+category: movement_skill
+duration_estimate_minutes: 20
+required_equipment:
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - deload
+  - maintenance
+sources:
+  - "Uphill Athlete"
+  - "Kelly Starrett"
+notes: >
+  20-minute mobility session targeting the tissues most stressed by high-mileage
+  endurance and mountain sports: foot/ankle complex, hip flexors shortened from
+  running volume, and thoracic rotation lost to forward-lean fatigue posture.
+  Uphill Athlete: ankle and foot prep is the single highest-leverage injury
+  prevention investment for mountain athletes. Kelly Starrett: address the
+  downstream position — if the ankle is locked, the hip and spine compensate.
+  Designed as a secondary session after primary endurance work or on active
+  recovery days.
+
+slots:
+  - role: foot_ankle_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 6
+    duration_sec: 360
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Ankle circles (10 per side), calf stretch against wall (60 sec per side),
+      soleus stretch with bent knee (45 sec per side), single-leg calf raise
+      eccentrics off a step (10 reps each foot slow lowering), tibialis raise
+      against wall (15 reps each side). ATG approach: full range eccentric loading
+      through the calf-achilles-plantar chain. Direct injury prevention for
+      athletes accumulating significant vert or mileage. ~6 min.
+
+  - role: hip_flexor_release
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 6
+    duration_sec: 360
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Couch stretch (90 sec per side), standing hip flexor stretch with posterior
+      pelvic tilt (60 sec per side), hip 90/90 switching (10 reps each direction),
+      deep lunge with reach (5 reps per side). Addresses the anterior chain
+      shortening accumulated from repeated hip flexion under running volume.
+      Kelly Starrett: psoas tightness limits hip extension at toe-off, increasing
+      glute load and reducing running economy. ~6 min.
+
+  - role: thoracic_rotation
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 5
+    duration_sec: 300
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Thoracic rotation in seated 90/90 (10 reps per side), world's greatest
+      stretch (5 reps per side), open books lying on side (10 reps per side),
+      cat-cow with lateral flexion (10 reps). Counters the forward-lean fatigue
+      posture that accumulates over long mountain or road sessions. Restores
+      rotational capacity needed for arm swing efficiency and breathing mechanics.
+      ~5 min.
+
+  - role: activation_cooldown
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 3
+    duration_sec: 180
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Hip circles (10 per side), pigeon pose (60 sec per side). Parasympathetic
+      cool-down to close the session. Pigeon pose targets the external rotators
+      stressed during uphill terrain. End with 5 slow diaphragmatic breaths in
+      each position. ~3 min.
+
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    intensity_pct: 1.0
+    notes: "On deload days extend holds by 30 sec and move slowly through full ranges. No load — this is already unloaded."
+  time_limited:
+    drop_slots:
+      - activation_cooldown
+    notes: "Drop the cooldown. Prioritize foot/ankle prep and hip flexor release as highest-value for mileage athletes."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: step
+        substitute_approach: "Perform calf eccentrics on flat ground with single-leg bodyweight only."

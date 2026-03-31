@@ -1,0 +1,111 @@
+id: grappling_mobility
+name: "Grappling Mobility (Hip Rotation, Shoulder & Wrist Focus)"
+modality: mobility
+category: movement_skill
+duration_estimate_minutes: 20
+required_equipment:
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - deload
+  - maintenance
+sources:
+  - "Ido Portal"
+  - "Kelly Starrett"
+  - "Gym Jones"
+notes: >
+  20-minute mobility session targeting the joint demands unique to grappling:
+  hip rotation range for guard and passing, shoulder and wrist integrity under
+  grip and underhook loads, and cervical safety under collar chokes and scrambles.
+  Ido Portal: ground-based movement begins with hip rotation capacity — without
+  full internal and external rotation, guard work is permanently compromised.
+  Kelly Starrett: protect the joints that bear asymmetric loading in grappling;
+  the wrist and shoulder are the most vulnerable and the most neglected.
+  Designed as a secondary session after BJJ practice or strength training, or
+  on active recovery days.
+
+slots:
+  - role: hip_rotation_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 6
+    duration_sec: 360
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Hip 90/90 switching (10 reps, controlled), pigeon pose (90 sec per side),
+      hip circles standing (10 per direction per side), lying hip rotation
+      internal/external (10 reps per side). Ido Portal: 90/90 is the most
+      direct test and trainer of hip rotation range — a grappler who cannot
+      sit comfortably in 90/90 is carrying a structural liability into every
+      round. Full hip internal rotation is required for deep guard and for
+      hip escape mechanics. ~6 min.
+
+  - role: shoulder_wrist_prep
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 6
+    duration_sec: 360
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Shoulder circles forward and back (10 each direction), scapula mobilization:
+      push-up plus (10 reps), cross-body shoulder stretch (45 sec per side),
+      wrist circles (10 per direction per hand), wrist flexion and extension
+      loading on fists (10 reps each), wrist flexion stretch palm-down (30 sec
+      per side). Kelly Starrett: the wrist takes asymmetric torsional load in
+      grip-fighting and underhooks that no other sport replicates. Routine
+      maintenance prevents the chronic wrist pain that sidelines grapplers.
+      Scapula stability under shoulder pressure is the other key — address it
+      before it becomes a labrum issue. ~6 min.
+
+  - role: thoracic_neck
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 5
+    duration_sec: 300
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Thoracic rotation seated or in 90/90 (10 reps per side), open books lying
+      on side (10 reps per side), neck rotation slow and controlled (10 reps per
+      side — OMIT if athlete has cervical injury flag), neck lateral flexion (5
+      reps per side, no overpressure). Thoracic rotation directly transfers to
+      guard retention and submission finishing mechanics. Cervical work requires
+      caution: skip neck rotation for any athlete with neck injury flag. The
+      thoracic work alone is valuable and should always be included. ~5 min.
+
+  - role: hip_flexor_cooldown
+    slot_type: skill_practice
+    sets: 1
+    duration_minutes: 3
+    duration_sec: 180
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      Couch stretch (60 sec per side), world's greatest stretch (5 reps per side).
+      Cool-down targeting hip flexors stressed by guard work and repeated sprawling.
+      World's greatest stretch combines hip flexor opening with thoracic rotation —
+      a single movement that closes the session by integrating both priority areas.
+      End with 5 slow diaphragmatic breaths. ~3 min.
+
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    intensity_pct: 1.0
+    notes: "On deload days extend holds by 30 sec. Hip 90/90 holds become passive (no active switching). No intensity reduction needed."
+  time_limited:
+    drop_slots:
+      - hip_flexor_cooldown
+    notes: "Drop the cooldown. Prioritize hip rotation and shoulder/wrist prep as the highest-value regions for grapplers."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: resistance_band
+        substitute_approach: "All band work replaced with bodyweight scapula mobilization (push-up plus, prone Y/T). No bands required for this archetype."
