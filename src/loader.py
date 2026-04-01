@@ -1,7 +1,10 @@
 """Load and cache training data from YAML files."""
+import logging
 import os
 import glob
 import yaml
+
+_log = logging.getLogger(__name__)
 
 _DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
 
@@ -54,6 +57,8 @@ def load_all_exercises() -> dict:
     for path in glob.glob(_data_path('exercises', '*.yaml')):
         data = _load_yaml(path)
         for ex in data.get('exercises', []):
+            if ex['id'] in result:
+                _log.warning('Duplicate exercise id %r in %s — previous definition overwritten', ex['id'], path)
             result[ex['id']] = ex
     return result
 
