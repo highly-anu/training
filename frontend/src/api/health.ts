@@ -1,3 +1,4 @@
+import { apiClient } from './client'
 import type {
   ImportedWorkout,
   SessionPerformanceLog,
@@ -13,48 +14,30 @@ export interface HealthSnapshot {
   performanceLogs: Record<string, Array<{ value: number; date: string }>>
 }
 
-const BASE = '/api/health'
+const BASE = '/health'
 
 export async function fetchHealthSnapshot(): Promise<HealthSnapshot> {
-  const res = await fetch(`${BASE}/snapshot`)
-  if (!res.ok) throw new Error('Failed to load health data')
-  return res.json()
+  return apiClient.get(`${BASE}/snapshot`) as unknown as Promise<HealthSnapshot>
 }
 
 export function saveWorkouts(workouts: ImportedWorkout[]): void {
-  void fetch(`${BASE}/workouts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ workouts }),
-  })
+  void apiClient.post(`${BASE}/workouts`, { workouts })
 }
 
 export function removeWorkout(id: string): void {
-  void fetch(`${BASE}/workouts/${id}`, { method: 'DELETE' })
+  void apiClient.delete(`${BASE}/workouts/${id}`)
 }
 
 export function saveSessionLog(log: SessionPerformanceLog): void {
-  void fetch(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(log),
-  })
+  void apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log)
 }
 
 export function saveDailyBio(entry: DailyBioLog): void {
-  void fetch(`${BASE}/bio/${entry.date}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry),
-  })
+  void apiClient.put(`${BASE}/bio/${entry.date}`, entry)
 }
 
 export function saveMatch(match: WorkoutMatch): void {
-  void fetch(`${BASE}/matches`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(match),
-  })
+  void apiClient.post(`${BASE}/matches`, match)
 }
 
 export function savePerformanceEntry(
@@ -62,15 +45,9 @@ export function savePerformanceEntry(
   value: number,
   loggedAt: string
 ): void {
-  void fetch(`${BASE}/performance`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ benchmarkId, value, loggedAt }),
-  })
+  void apiClient.post(`${BASE}/performance`, { benchmarkId, value, loggedAt })
 }
 
 export function deletePerformanceLog(benchmarkId: string): void {
-  void fetch(`${BASE}/performance/${encodeURIComponent(benchmarkId)}`, {
-    method: 'DELETE',
-  })
+  void apiClient.delete(`${BASE}/performance/${encodeURIComponent(benchmarkId)}`)
 }

@@ -7,6 +7,8 @@ import sys
 from datetime import date as _date, timedelta as _timedelta
 
 import yaml
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, jsonify, redirect, request
 from flask_cors import CORS
 
@@ -184,21 +186,33 @@ def _week_volume(week_data: dict) -> dict:
     durability_mods = {'durability'}
     mobility_mods   = {'mobility', 'movement_skill'}
 
-    strength_sets = cond_min = dur_min = mob_min = total_min = 0
+    strength_sets = strength_minutes = cond_min = dur_min = mob_min = total_min = 0
 
     for day_sessions in week_data['schedule'].values():
         for session in day_sessions:
             modality = session.get('modality', '')
             arch = session.get('archetype') or {}
-            arch_duration = arch.get('duration_estimate_minutes', 0) or 0
+
+            # Prefer computed duration from exercise loads (reflects week-by-week progression);
+            # fall back to the static YAML estimate only when no loads are present.
+            computed_dur = sum(
+                ea.get('load', {}).get('duration_minutes', 0)
+                for ea in session.get('exercises', [])
+                if not ea.get('meta') and ea.get('load')
+            )
+            arch_duration = computed_dur if computed_dur > 0 else (arch.get('duration_estimate_minutes', 0) or 0)
             total_min += arch_duration
 
             if modality in strength_mods:
-                strength_sets += sum(
+                sets_counted = sum(
                     ea['load']['sets']
                     for ea in session.get('exercises', [])
                     if not ea.get('meta') and ea.get('load') and 'sets' in ea['load']
                 )
+                strength_sets += sets_counted
+                if sets_counted == 0 and computed_dur > 0:
+                    # time-domain strength session (e.g. KB pentathlon, breathing ladder)
+                    strength_minutes += computed_dur
             elif modality in cardio_mods:
                 cond_min += arch_duration
             elif modality in durability_mods:
@@ -207,12 +221,13 @@ def _week_volume(week_data: dict) -> dict:
                 mob_min += arch_duration
 
     return {
-        'week_number':    week_data['week_number'],
-        'strength_sets':  strength_sets,
-        'cond_minutes':   cond_min,
-        'dur_minutes':    dur_min,
-        'mob_minutes':    mob_min,
-        'total_minutes':  total_min,
+        'week_number':      week_data['week_number'],
+        'strength_sets':    strength_sets,
+        'strength_minutes': strength_minutes,
+        'cond_minutes':     cond_min,
+        'dur_minutes':      dur_min,
+        'mob_minutes':      mob_min,
+        'total_minutes':    total_min,
     }
 
 
@@ -484,19 +499,21 @@ def _generate_program_inner(body):
 
 
 @app.get('/api/oauth/strava/status')
+@require_auth
 def strava_status():
     import oauth as _oauth
     _oauth.init_db()
-    return jsonify(_oauth.get_strava_status())
+    return jsonify(_oauth.get_strava_status(g.user_id))
 
 
 @app.get('/api/oauth/strava/authorize')
+@require_auth
 def strava_authorize():
     import oauth as _oauth
     _oauth.init_db()
     if not _oauth.is_configured():
         return jsonify({'detail': 'STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET not set in environment'}), 503
-    return jsonify({'auth_url': _oauth.generate_auth_url()})
+    return jsonify({'auth_url': _oauth.generate_auth_url(g.user_id)})
 
 
 @app.get('/api/oauth/strava/callback')
@@ -517,23 +534,25 @@ def strava_callback():
 
 
 @app.delete('/api/oauth/strava/disconnect')
+@require_auth
 def strava_disconnect():
     import oauth as _oauth
     _oauth.init_db()
-    _oauth.disconnect()
+    _oauth.disconnect(g.user_id)
     return jsonify({'disconnected': True})
 
 
 @app.post('/api/oauth/strava/sync')
+@require_auth
 def strava_sync():
     import oauth as _oauth
     _oauth.init_db()
-    status = _oauth.get_strava_status()
+    status = _oauth.get_strava_status(g.user_id)
     if not status.get('connected'):
         return jsonify({'detail': 'Strava not connected'}), 401
     body = request.get_json(silent=True) or {}
     since = body.get('since_timestamp')
-    activities = _oauth.sync_activities(since_timestamp=since)
+    activities = _oauth.sync_activities(g.user_id, since_timestamp=since)
     return jsonify({'activities': activities, 'count': len(activities)})
 
 
@@ -1067,78 +1086,78 @@ from src import health_store as _health
 
 
 @app.get('/api/health/snapshot')
+@require_auth
 def health_snapshot():
-    _health.init_db()
     return jsonify({
-        'workouts':       _health.get_workouts(),
-        'sessionLogs':    _health.get_session_logs(),
-        'dailyBio':       _health.get_daily_bio(),
-        'matches':        _health.get_matches(),
-        'performanceLogs': _health.get_performance_logs(),
+        'workouts':        _health.get_workouts(g.user_id),
+        'sessionLogs':     _health.get_session_logs(g.user_id),
+        'dailyBio':        _health.get_daily_bio(g.user_id),
+        'matches':         _health.get_matches(g.user_id),
+        'performanceLogs': _health.get_performance_logs(g.user_id),
     })
 
 
 @app.post('/api/health/workouts')
+@require_auth
 def health_upsert_workouts():
-    _health.init_db()
     body = request.get_json(silent=True) or {}
     workouts = body.get('workouts', [])
     if not isinstance(workouts, list):
         return jsonify({'detail': 'workouts must be an array'}), 400
-    _health.upsert_workouts(workouts)
+    _health.upsert_workouts(g.user_id, workouts)
     return jsonify({'saved': len(workouts)})
 
 
 @app.delete('/api/health/workouts/<workout_id>')
+@require_auth
 def health_delete_workout(workout_id: str):
-    _health.init_db()
-    _health.delete_workout(workout_id)
+    _health.delete_workout(g.user_id, workout_id)
     return jsonify({'deleted': workout_id})
 
 
 @app.put('/api/health/sessions/<path:session_key>')
+@require_auth
 def health_upsert_session(session_key: str):
-    _health.init_db()
     log = request.get_json(silent=True) or {}
     log['sessionKey'] = session_key
-    _health.upsert_session_log(log)
+    _health.upsert_session_log(g.user_id, log)
     return jsonify({'saved': session_key})
 
 
 @app.put('/api/health/bio/<date>')
+@require_auth
 def health_upsert_bio(date: str):
-    _health.init_db()
     entry = request.get_json(silent=True) or {}
     entry['date'] = date
-    _health.upsert_daily_bio(entry)
+    _health.upsert_daily_bio(g.user_id, entry)
     return jsonify({'saved': date})
 
 
 @app.post('/api/health/matches')
+@require_auth
 def health_upsert_match():
-    _health.init_db()
     match = request.get_json(silent=True) or {}
-    _health.upsert_match(match)
+    _health.upsert_match(g.user_id, match)
     return jsonify({'saved': match.get('importedWorkoutId')})
 
 
 @app.post('/api/health/performance')
+@require_auth
 def health_add_performance():
-    _health.init_db()
     body = request.get_json(silent=True) or {}
     benchmark_id = body.get('benchmarkId', '')
     value = body.get('value')
     logged_at = body.get('loggedAt', '')
     if not benchmark_id or value is None:
         return jsonify({'detail': 'benchmarkId and value required'}), 400
-    _health.add_performance_entry(benchmark_id, float(value), logged_at)
+    _health.add_performance_entry(g.user_id, benchmark_id, float(value), logged_at)
     return jsonify({'saved': benchmark_id})
 
 
 @app.delete('/api/health/performance/<benchmark_id>')
+@require_auth
 def health_delete_performance(benchmark_id: str):
-    _health.init_db()
-    _health.delete_performance_log(benchmark_id)
+    _health.delete_performance_log(g.user_id, benchmark_id)
     return jsonify({'deleted': benchmark_id})
 
 

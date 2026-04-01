@@ -12,9 +12,10 @@ function getTodayName(): string {
 
 interface WeekCalendarProps {
   weekData: WeekData
+  isCurrentWeek: boolean
 }
 
-export function WeekCalendar({ weekData }: WeekCalendarProps) {
+export function WeekCalendar({ weekData, isCurrentWeek }: WeekCalendarProps) {
   const today = getTodayName()
 
   return (
@@ -26,7 +27,7 @@ export function WeekCalendar({ weekData }: WeekCalendarProps) {
             day={day}
             sessions={weekData.schedule[day] ?? []}
             weekNumber={weekData.week_number}
-            isToday={day === today}
+            isToday={isCurrentWeek && day === today}
           />
         ))}
       </div>

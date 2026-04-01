@@ -82,6 +82,16 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       })
       return { currentProgram: { ...state.currentProgram, weeks } }
     })
+    const s = get()
+    if (s.currentProgram) {
+      saveUserProgram({
+        currentProgram:     s.currentProgram,
+        programStartDate:   s.programStartDate,
+        eventDate:          s.eventDate,
+        sourceGoalIds:      s.sourceGoalIds,
+        sourceGoalWeights:  s.sourceGoalWeights,
+      })
+    }
   },
 
   loadFromServer: async () => {

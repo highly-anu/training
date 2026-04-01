@@ -82,14 +82,27 @@ def _resolve_session(sessions: list, archetypes: list,
                      constraints: dict, phase: str) -> list:
     """
     Replace sessions whose modality has no archetype for the current phase
-    with an aerobic_base session (the universal fallback).
+    with the first available fallback modality that does.
+
+    Fallback order: aerobic_base → durability → mobility.
+    If no fallback resolves, the session is passed through unchanged (will
+    produce an empty session in output, preferable to a silent wrong substitution).
     """
+    _FALLBACKS = ('aerobic_base', 'durability', 'mobility')
     resolved = []
     for session in sessions:
         modality = session['modality']
         if not _has_archetype(modality, archetypes, constraints, phase):
-            # Substitute aerobic_base — always has archetypes in any phase
-            resolved.append({**session, 'modality': 'aerobic_base'})
+            substituted = False
+            for fallback in _FALLBACKS:
+                if fallback == modality:
+                    continue  # skip if same as the failing modality
+                if _has_archetype(fallback, archetypes, constraints, phase):
+                    resolved.append({**session, 'modality': fallback})
+                    substituted = True
+                    break
+            if not substituted:
+                resolved.append(session)  # pass through; archetype will be None
         else:
             resolved.append(session)
     return resolved

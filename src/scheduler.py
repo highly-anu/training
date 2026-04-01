@@ -459,6 +459,8 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
         existing = raw[day]
         if len(existing) != 1:
             continue  # only add to single-session days
+        if existing[0] in ('mobility', 'movement_skill'):
+            continue  # already a mobility-only day — do not stack another
 
         day_cfg = day_configs.get(day) or day_configs.get(str(day))
         if day_cfg:
