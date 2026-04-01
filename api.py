@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 import sys
+import tempfile
 from datetime import date as _date, timedelta as _timedelta
 
 import yaml
@@ -244,6 +246,7 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'injury_skip': bool(ea.get('injury_skip')),
         'error':       ea.get('error'),
         'load_note':   load_note,
+        'notes':       (ea.get('slot') or {}).get('notes'),
     }
 
 
@@ -380,12 +383,15 @@ def create_archetype():
     body = request.get_json(silent=True) or {}
     if not body.get('id') or not body.get('name'):
         return jsonify({'detail': 'id and name are required'}), 400
+    arch_id = body['id']
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', arch_id):
+        return jsonify({'detail': 'id must contain only letters, digits, underscores, and hyphens'}), 400
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
-    if body['id'] in existing_ids:
-        return jsonify({'detail': f"Archetype id '{body['id']}' already exists"}), 409
+    if arch_id in existing_ids:
+        return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
     custom_dir = os.path.join(_DATA_DIR, 'archetypes', 'custom')
     os.makedirs(custom_dir, exist_ok=True)
-    out_path = os.path.join(custom_dir, f"{body['id']}.yaml")
+    out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
         yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(body), 201
@@ -400,9 +406,7 @@ def generate_program():
         return _generate_program_inner(body)
     except Exception as e:
         msg = _tb.format_exc()
-        import os as _os
-        _os.makedirs('C:/tmp', exist_ok=True)
-        with open('C:/tmp/api_errors.txt', 'a') as _f:
+        with open(os.path.join(tempfile.gettempdir(), 'api_errors.txt'), 'a') as _f:
             import json as _json
             _f.write(f'body: {_json.dumps(body)}\n{msg}\n---\n')
         raise

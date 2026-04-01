@@ -13,6 +13,7 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
   const user = useAuthStore((s) => s.user)
   const initBio = useBioStore((s) => s.init)
   const initPerformanceLogs = useProfileStore((s) => s.initPerformanceLogs)
+  const initSessionLogs = useProfileStore((s) => s.initSessionLogs)
   const loadProfile = useProfileStore((s) => s.loadFromServer)
   const loadProgram = useProgramStore((s) => s.loadFromServer)
 
@@ -28,6 +29,12 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
       .then((snapshot) => {
         initBio(snapshot)
         initPerformanceLogs(snapshot.performanceLogs)
+        // Derive completion flags from session performance logs (completedAt set = done)
+        const completionFlags: Record<string, boolean[]> = {}
+        for (const [key, log] of Object.entries(snapshot.sessionLogs)) {
+          if (log.completedAt) completionFlags[key] = [true]
+        }
+        initSessionLogs(completionFlags)
       })
       .catch(() => {
         // Backend not running — stores stay empty, app continues

@@ -30,6 +30,8 @@ interface ProfileStore {
   setDateOfBirth: (dob: string | null) => void
   // Hydrate performance logs from server health snapshot
   initPerformanceLogs: (logs: Record<string, PerformanceEntry[]>) => void
+  // Hydrate session completion from server health snapshot
+  initSessionLogs: (sessionLogs: Record<string, boolean[]>) => void
   // Load full profile from server (called on login)
   loadFromServer: () => Promise<void>
 }
@@ -109,6 +111,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     _sync({ ...get(), dateOfBirth })
   },
   initPerformanceLogs: (logs) => set({ performanceLogs: logs }),
+  initSessionLogs: (logs) => set({ sessionLogs: logs }),
 
   loadFromServer: async () => {
     const data = await fetchProfile()

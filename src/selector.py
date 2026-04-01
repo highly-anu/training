@@ -618,6 +618,18 @@ def populate_session(
                     }),
                 })
 
+    # Compute the effective duration (deload-scaled and time-capped) and store it on
+    # the archetype so output.py and the frontend render the correct session length.
+    effective_duration = arch.get('duration_estimate_minutes', 60)
+    if is_deload:
+        deload_sc = arch.get('scaling', {}).get('deload', {})
+        effective_duration = deload_sc.get('duration_estimate_minutes', int(effective_duration * 0.7))
+    session_time = constraints.get('session_time_minutes', 9999)
+    if effective_duration > session_time:
+        effective_duration = session_time
+    if effective_duration != arch.get('duration_estimate_minutes'):
+        arch = {**arch, 'duration_estimate_minutes': effective_duration}
+
     result = {**session, 'archetype': arch, 'exercises': exercise_assignments}
     if collect_trace:
         result['session_trace'] = {

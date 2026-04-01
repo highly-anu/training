@@ -91,7 +91,7 @@ notes: >
   restrictions, progression gates) must be confirmed with treating
   clinician; this system provides structure but does not replace medical
   guidance. Injury flags in the constraint layer (e.g.
-  right_knee_meniscus_post_op, shoulder_impingement) should be set and
+  knee_meniscus_post_op, shoulder_impingement) should be set and
   will filter the exercise library accordingly.
 
 expectations:
