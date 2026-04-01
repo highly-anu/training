@@ -7,6 +7,8 @@ import sys
 from datetime import date as _date, timedelta as _timedelta
 
 import yaml
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, jsonify, redirect, request
 from flask_cors import CORS
 
@@ -17,10 +19,12 @@ from src import loader
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.validator import validate
+from src.auth import require_auth
+from flask import g
 
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": os.environ.get('FRONTEND_URL', '*')}})
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -182,21 +186,33 @@ def _week_volume(week_data: dict) -> dict:
     durability_mods = {'durability'}
     mobility_mods   = {'mobility', 'movement_skill'}
 
-    strength_sets = cond_min = dur_min = mob_min = total_min = 0
+    strength_sets = strength_minutes = cond_min = dur_min = mob_min = total_min = 0
 
     for day_sessions in week_data['schedule'].values():
         for session in day_sessions:
             modality = session.get('modality', '')
             arch = session.get('archetype') or {}
-            arch_duration = arch.get('duration_estimate_minutes', 0) or 0
+
+            # Prefer computed duration from exercise loads (reflects week-by-week progression);
+            # fall back to the static YAML estimate only when no loads are present.
+            computed_dur = sum(
+                ea.get('load', {}).get('duration_minutes', 0)
+                for ea in session.get('exercises', [])
+                if not ea.get('meta') and ea.get('load')
+            )
+            arch_duration = computed_dur if computed_dur > 0 else (arch.get('duration_estimate_minutes', 0) or 0)
             total_min += arch_duration
 
             if modality in strength_mods:
-                strength_sets += sum(
+                sets_counted = sum(
                     ea['load']['sets']
                     for ea in session.get('exercises', [])
                     if not ea.get('meta') and ea.get('load') and 'sets' in ea['load']
                 )
+                strength_sets += sets_counted
+                if sets_counted == 0 and computed_dur > 0:
+                    # time-domain strength session (e.g. KB pentathlon, breathing ladder)
+                    strength_minutes += computed_dur
             elif modality in cardio_mods:
                 cond_min += arch_duration
             elif modality in durability_mods:
@@ -205,12 +221,13 @@ def _week_volume(week_data: dict) -> dict:
                 mob_min += arch_duration
 
     return {
-        'week_number':    week_data['week_number'],
-        'strength_sets':  strength_sets,
-        'cond_minutes':   cond_min,
-        'dur_minutes':    dur_min,
-        'mob_minutes':    mob_min,
-        'total_minutes':  total_min,
+        'week_number':      week_data['week_number'],
+        'strength_sets':    strength_sets,
+        'strength_minutes': strength_minutes,
+        'cond_minutes':     cond_min,
+        'dur_minutes':      dur_min,
+        'mob_minutes':      mob_min,
+        'total_minutes':    total_min,
     }
 
 
@@ -335,6 +352,7 @@ def get_philosophies():
 
 
 @app.post('/api/programs/generate')
+@require_auth
 def generate_program():
     import traceback as _tb
     body = request.get_json(silent=True) or {}
@@ -481,19 +499,21 @@ def _generate_program_inner(body):
 
 
 @app.get('/api/oauth/strava/status')
+@require_auth
 def strava_status():
     import oauth as _oauth
     _oauth.init_db()
-    return jsonify(_oauth.get_strava_status())
+    return jsonify(_oauth.get_strava_status(g.user_id))
 
 
 @app.get('/api/oauth/strava/authorize')
+@require_auth
 def strava_authorize():
     import oauth as _oauth
     _oauth.init_db()
     if not _oauth.is_configured():
         return jsonify({'detail': 'STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET not set in environment'}), 503
-    return jsonify({'auth_url': _oauth.generate_auth_url()})
+    return jsonify({'auth_url': _oauth.generate_auth_url(g.user_id)})
 
 
 @app.get('/api/oauth/strava/callback')
@@ -514,23 +534,25 @@ def strava_callback():
 
 
 @app.delete('/api/oauth/strava/disconnect')
+@require_auth
 def strava_disconnect():
     import oauth as _oauth
     _oauth.init_db()
-    _oauth.disconnect()
+    _oauth.disconnect(g.user_id)
     return jsonify({'disconnected': True})
 
 
 @app.post('/api/oauth/strava/sync')
+@require_auth
 def strava_sync():
     import oauth as _oauth
     _oauth.init_db()
-    status = _oauth.get_strava_status()
+    status = _oauth.get_strava_status(g.user_id)
     if not status.get('connected'):
         return jsonify({'detail': 'Strava not connected'}), 401
     body = request.get_json(silent=True) or {}
     since = body.get('since_timestamp')
-    activities = _oauth.sync_activities(since_timestamp=since)
+    activities = _oauth.sync_activities(g.user_id, since_timestamp=since)
     return jsonify({'activities': activities, 'count': len(activities)})
 
 
@@ -918,6 +940,145 @@ def parse_workout_file():
 
 
 # ---------------------------------------------------------------------------
+# User profile & program (Supabase Postgres)
+# ---------------------------------------------------------------------------
+
+def _profile_to_frontend(row: dict) -> dict:
+    return {
+        'trainingLevel':     row.get('training_level', 'intermediate'),
+        'equipment':         row.get('equipment') or [],
+        'injuryFlags':       row.get('injury_flags') or [],
+        'customInjuryFlags': row.get('custom_injury_flags') or [],
+        'activeGoalId':      row.get('active_goal_id'),
+        'dateOfBirth':       str(row['date_of_birth']) if row.get('date_of_birth') else None,
+    }
+
+
+@app.get('/api/profile')
+@require_auth
+def get_profile():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('SELECT * FROM user_profiles WHERE id = %s', (user_id,))
+                row = cur.fetchone()
+                if row is None:
+                    cur.execute(
+                        'INSERT INTO user_profiles (id) VALUES (%s) RETURNING *', (user_id,)
+                    )
+                    row = cur.fetchone()
+                    conn.commit()
+        return jsonify(_profile_to_frontend(dict(row)) if row else {})
+    except RuntimeError as e:
+        # DATABASE_URL not set — return empty profile for local dev
+        app.logger.warning(str(e))
+        return jsonify({})
+
+
+@app.put('/api/profile')
+@require_auth
+def update_profile():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        body = request.get_json(silent=True) or {}
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    INSERT INTO user_profiles
+                        (id, training_level, equipment, injury_flags,
+                         custom_injury_flags, active_goal_id, date_of_birth, updated_at)
+                    VALUES (%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE SET
+                        training_level      = EXCLUDED.training_level,
+                        equipment           = EXCLUDED.equipment,
+                        injury_flags        = EXCLUDED.injury_flags,
+                        custom_injury_flags = EXCLUDED.custom_injury_flags,
+                        active_goal_id      = EXCLUDED.active_goal_id,
+                        date_of_birth       = EXCLUDED.date_of_birth,
+                        updated_at          = NOW()
+                ''', (
+                    user_id,
+                    body.get('trainingLevel', 'intermediate'),
+                    _json.dumps(body.get('equipment', [])),
+                    _json.dumps(body.get('injuryFlags', [])),
+                    _json.dumps(body.get('customInjuryFlags', [])),
+                    body.get('activeGoalId'),
+                    body.get('dateOfBirth'),
+                ))
+                conn.commit()
+        return jsonify({'saved': True})
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify({'saved': False, 'detail': str(e)}), 503
+
+
+@app.get('/api/user/program')
+@require_auth
+def get_user_program():
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('SELECT * FROM user_programs WHERE user_id = %s', (user_id,))
+                row = cur.fetchone()
+        if not row:
+            return jsonify(None)
+        return jsonify({
+            'currentProgram':    row.get('current_program'),
+            'programStartDate':  str(row['program_start_date']) if row.get('program_start_date') else None,
+            'eventDate':         str(row['event_date']) if row.get('event_date') else None,
+            'sourceGoalIds':     row.get('source_goal_ids') or [],
+            'sourceGoalWeights': row.get('source_goal_weights') or {},
+        })
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify(None)
+
+
+@app.put('/api/user/program')
+@require_auth
+def save_user_program():
+    import json as _json
+    try:
+        from src.db import get_conn
+        user_id = g.user_id
+        body = request.get_json(silent=True) or {}
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    INSERT INTO user_programs
+                        (user_id, current_program, program_start_date,
+                         event_date, source_goal_ids, source_goal_weights, updated_at)
+                    VALUES (%s, %s::jsonb, %s, %s, %s::jsonb, %s::jsonb, NOW())
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        current_program     = EXCLUDED.current_program,
+                        program_start_date  = EXCLUDED.program_start_date,
+                        event_date          = EXCLUDED.event_date,
+                        source_goal_ids     = EXCLUDED.source_goal_ids,
+                        source_goal_weights = EXCLUDED.source_goal_weights,
+                        updated_at          = NOW()
+                ''', (
+                    user_id,
+                    _json.dumps(body.get('currentProgram')),
+                    body.get('programStartDate'),
+                    body.get('eventDate'),
+                    _json.dumps(body.get('sourceGoalIds', [])),
+                    _json.dumps(body.get('sourceGoalWeights', {})),
+                ))
+                conn.commit()
+        return jsonify({'saved': True})
+    except RuntimeError as e:
+        app.logger.warning(str(e))
+        return jsonify({'saved': False, 'detail': str(e)}), 503
+
+
+# ---------------------------------------------------------------------------
 # Health data storage
 # ---------------------------------------------------------------------------
 
@@ -925,78 +1086,78 @@ from src import health_store as _health
 
 
 @app.get('/api/health/snapshot')
+@require_auth
 def health_snapshot():
-    _health.init_db()
     return jsonify({
-        'workouts':       _health.get_workouts(),
-        'sessionLogs':    _health.get_session_logs(),
-        'dailyBio':       _health.get_daily_bio(),
-        'matches':        _health.get_matches(),
-        'performanceLogs': _health.get_performance_logs(),
+        'workouts':        _health.get_workouts(g.user_id),
+        'sessionLogs':     _health.get_session_logs(g.user_id),
+        'dailyBio':        _health.get_daily_bio(g.user_id),
+        'matches':         _health.get_matches(g.user_id),
+        'performanceLogs': _health.get_performance_logs(g.user_id),
     })
 
 
 @app.post('/api/health/workouts')
+@require_auth
 def health_upsert_workouts():
-    _health.init_db()
     body = request.get_json(silent=True) or {}
     workouts = body.get('workouts', [])
     if not isinstance(workouts, list):
         return jsonify({'detail': 'workouts must be an array'}), 400
-    _health.upsert_workouts(workouts)
+    _health.upsert_workouts(g.user_id, workouts)
     return jsonify({'saved': len(workouts)})
 
 
 @app.delete('/api/health/workouts/<workout_id>')
+@require_auth
 def health_delete_workout(workout_id: str):
-    _health.init_db()
-    _health.delete_workout(workout_id)
+    _health.delete_workout(g.user_id, workout_id)
     return jsonify({'deleted': workout_id})
 
 
 @app.put('/api/health/sessions/<path:session_key>')
+@require_auth
 def health_upsert_session(session_key: str):
-    _health.init_db()
     log = request.get_json(silent=True) or {}
     log['sessionKey'] = session_key
-    _health.upsert_session_log(log)
+    _health.upsert_session_log(g.user_id, log)
     return jsonify({'saved': session_key})
 
 
 @app.put('/api/health/bio/<date>')
+@require_auth
 def health_upsert_bio(date: str):
-    _health.init_db()
     entry = request.get_json(silent=True) or {}
     entry['date'] = date
-    _health.upsert_daily_bio(entry)
+    _health.upsert_daily_bio(g.user_id, entry)
     return jsonify({'saved': date})
 
 
 @app.post('/api/health/matches')
+@require_auth
 def health_upsert_match():
-    _health.init_db()
     match = request.get_json(silent=True) or {}
-    _health.upsert_match(match)
+    _health.upsert_match(g.user_id, match)
     return jsonify({'saved': match.get('importedWorkoutId')})
 
 
 @app.post('/api/health/performance')
+@require_auth
 def health_add_performance():
-    _health.init_db()
     body = request.get_json(silent=True) or {}
     benchmark_id = body.get('benchmarkId', '')
     value = body.get('value')
     logged_at = body.get('loggedAt', '')
     if not benchmark_id or value is None:
         return jsonify({'detail': 'benchmarkId and value required'}), 400
-    _health.add_performance_entry(benchmark_id, float(value), logged_at)
+    _health.add_performance_entry(g.user_id, benchmark_id, float(value), logged_at)
     return jsonify({'saved': benchmark_id})
 
 
 @app.delete('/api/health/performance/<benchmark_id>')
+@require_auth
 def health_delete_performance(benchmark_id: str):
-    _health.init_db()
-    _health.delete_performance_log(benchmark_id)
+    _health.delete_performance_log(g.user_id, benchmark_id)
     return jsonify({'deleted': benchmark_id})
 
 

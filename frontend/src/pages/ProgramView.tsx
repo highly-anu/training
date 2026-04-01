@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { Wand2, ShieldAlert } from 'lucide-react'
 import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
@@ -15,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import { useProfileStore } from '@/store/profileStore'
+import { useProgramStore } from '@/store/programStore'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
@@ -36,9 +38,17 @@ export function ProgramView() {
     toggleInjuryFlag,
   } = useProfileStore()
 
+  const programStartDate = useProgramStore((s) => s.programStartDate)
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
   const regenerate = useRegenerateFromWeek()
+
+  // Which array index is the real current calendar week?
+  const currentCalendarWeekIdx = useMemo(() => {
+    if (!programStartDate) return -1
+    const days = differenceInCalendarDays(new Date(), parseISO(programStartDate))
+    return Math.floor(days / 7)
+  }, [programStartDate])
 
   // Scroll to active week when weekIndex changes (only on calendar tab)
   useEffect(() => {
@@ -169,7 +179,7 @@ export function ProgramView() {
                     </span>
                   )}
                 </div>
-                <WeekCalendar weekData={weekData} />
+                <WeekCalendar weekData={weekData} isCurrentWeek={idx === currentCalendarWeekIdx} />
               </div>
             ))}
           </div>

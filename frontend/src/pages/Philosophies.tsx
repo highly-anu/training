@@ -36,10 +36,12 @@ function BiasChip({ id }: { id: string }) {
 
 function ConnectionCount({ connections }: { connections: Philosophy['system_connections'] }) {
   const parts: string[] = []
-  if (connections.frameworks.length)
-    parts.push(`${connections.frameworks.length} framework${connections.frameworks.length > 1 ? 's' : ''}`)
-  if (connections.goals.length)
-    parts.push(`${connections.goals.length} goal${connections.goals.length > 1 ? 's' : ''}`)
+  const frameworks = connections?.frameworks ?? []
+  const goals = connections?.goals ?? []
+  if (frameworks.length)
+    parts.push(`${frameworks.length} framework${frameworks.length > 1 ? 's' : ''}`)
+  if (goals.length)
+    parts.push(`${goals.length} goal${goals.length > 1 ? 's' : ''}`)
   if (!parts.length) return null
   return <span className="text-[10px] text-muted-foreground">{parts.join(' · ')}</span>
 }

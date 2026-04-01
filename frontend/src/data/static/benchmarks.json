@@ -1,0 +1,296 @@
+[
+  {
+    "id": "back_squat_bw_ratio",
+    "name": "Back Squat (bodyweight ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.75,
+      "intermediate": 1.5,
+      "advanced": 2.0,
+      "elite": 2.5
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen benchmark is 2.5×BW. SS novice completion is 1.5×BW. Female standards reflect strength-to-weight ratios adjusted for average sex-based lean mass distribution."
+  },
+  {
+    "id": "deadlift_bw_ratio",
+    "name": "Deadlift (bodyweight ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 1.0,
+      "intermediate": 2.0,
+      "advanced": 2.5,
+      "elite": 3.0
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen target is 2.5×BW. Elite 3.0×BW is world-class powerlifting territory. Tactical standards typically target the advanced tier (2.5×BW)."
+  },
+  {
+    "id": "strict_press_bw_ratio",
+    "name": "Strict Press (bodyweight ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.4,
+      "intermediate": 0.75,
+      "advanced": 1.0,
+      "elite": 1.25
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen benchmark is 1×BW military press. SS novice completion is 0.75×BW. One of the most honest upper-body strength tests as no momentum assistance is permitted."
+  },
+  {
+    "id": "bench_press_bw_ratio",
+    "name": "Bench Press (bodyweight ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.6,
+      "intermediate": 1.0,
+      "advanced": 1.5,
+      "elite": 2.0
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen benchmark is 1.5×BW. Horsemen PT Test II includes 10×BW bench press (10 reps at bodyweight), which is a strength endurance variant."
+  },
+  {
+    "id": "power_clean_bw_ratio",
+    "name": "Power Clean (bodyweight ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.5,
+      "intermediate": 0.85,
+      "advanced": 1.1,
+      "elite": 1.35
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen Olympic day workouts use 80–90% 1RM in wave patterns. Power clean is a key SS program exercise at intermediate level."
+  },
+  {
+    "id": "pull_up_reps",
+    "name": "Pull-ups (max unweighted reps)",
+    "category": "strength",
+    "unit": " reps",
+    "standards": {
+      "entry": 1,
+      "intermediate": 10,
+      "advanced": 20,
+      "elite": 30
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen PT standard is 15+ strict pull-ups. Horsemen PT Test II requires 15 reps at +25# added weight — use pull_up_weighted_bw_ratio for that standard. Female standards reflect body composition differences in upper-body lean mass."
+  },
+  {
+    "id": "pull_up_weighted_bw_ratio",
+    "name": "Weighted Pull-up 1RM (added load as BW ratio)",
+    "category": "strength",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.1,
+      "intermediate": 0.25,
+      "advanced": 0.5,
+      "elite": 0.75
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen Riley Black protocol includes weighted pull-up ladders at 85%/90%/95% of 1RM. PT Test II standard of 15 reps at +25# is a strength endurance target, not a 1RM; map to pull_up_reps for that test."
+  },
+  {
+    "id": "run_3mile_minutes",
+    "name": "3-Mile Run (time in minutes)",
+    "category": "conditioning",
+    "unit": " min",
+    "standards": {
+      "entry": 36.0,
+      "intermediate": 27.0,
+      "advanced": 22.5,
+      "elite": 20.0
+    },
+    "lower_is_better": true,
+    "notes": "Horsemen performance benchmark is sub-20:00 (male). PT test standard is sub-22:30. PT Test II includes a 5-mile run standard (sub-35:00). Female thresholds adjusted proportionally by typical sex-based aerobic capacity differences (~15%)."
+  },
+  {
+    "id": "ssst_reps",
+    "name": "Secret Service Snatch Test (SSST) — Reps in 10 Minutes",
+    "category": "conditioning",
+    "unit": " reps",
+    "standards": {
+      "entry": 100,
+      "intermediate": 150,
+      "advanced": 200,
+      "elite": 250
+    },
+    "lower_is_better": false,
+    "notes": "Horsemen documentation: 200+ reps = Team Guy Standard; 250 = \"ridiculous\"; 275 = record. Female standard uses 16kg (35 lb) bell. This test combines aerobic, anaerobic, grip, and mental endurance in a single 10-minute window — it is both a benchmark and a training tool. SSST prep requires progressive KB snatch volume work over 4–8 weeks before testing."
+  },
+  {
+    "id": "row_2km_minutes",
+    "name": "2km Row (time in minutes)",
+    "category": "conditioning",
+    "unit": " min",
+    "standards": {
+      "entry": 10.0,
+      "intermediate": 8.0,
+      "advanced": 7.0,
+      "elite": 6.5
+    },
+    "lower_is_better": true,
+    "notes": "Horsemen workouts include 500m row sub-1:30 + 400m run as a power cardiovascular benchmark (maps to ~6:00/2k pace territory). CrossFit uses 2k row as a standard benchmark. Gym Jones uses rowing extensively for power endurance testing. Female standards adjusted for typical sex-based aerobic and mass differences."
+  },
+  {
+    "id": "run_1mile_minutes",
+    "name": "1-Mile Run (time in minutes)",
+    "category": "conditioning",
+    "unit": " min",
+    "standards": {
+      "entry": 12.0,
+      "intermediate": 9.0,
+      "advanced": 7.0,
+      "elite": 5.5
+    },
+    "lower_is_better": true,
+    "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences."
+  },
+  {
+    "id": "cell_hips_back_squat",
+    "name": "Back Squat",
+    "category": "cell",
+    "domain": "hips",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.85,
+      "intermediate": 1.25,
+      "advanced": 1.5,
+      "elite": 1.75
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_hips_broad_jump",
+    "name": "Broad Jump",
+    "category": "cell",
+    "domain": "hips",
+    "unit": " m",
+    "standards": {
+      "entry": 1.0,
+      "intermediate": 1.5,
+      "advanced": 2.0,
+      "elite": 2.25
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_push_shoulder_press",
+    "name": "Shoulder Press",
+    "category": "cell",
+    "domain": "push",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.5,
+      "intermediate": 0.6,
+      "advanced": 0.7,
+      "elite": 0.85
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_pull_deadlift",
+    "name": "Deadlift",
+    "category": "cell",
+    "domain": "pull",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.8,
+      "intermediate": 1.5,
+      "advanced": 1.75,
+      "elite": 2.15
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_pull_power_clean",
+    "name": "Power Clean",
+    "category": "cell",
+    "domain": "pull",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.5,
+      "intermediate": 0.75,
+      "advanced": 1.1,
+      "elite": 1.25
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_core_four_point_ab_bridge",
+    "name": "Plank Hold",
+    "category": "cell",
+    "domain": "core",
+    "unit": " min",
+    "standards": {
+      "entry": 1.0,
+      "intermediate": 1.5,
+      "advanced": 2.0,
+      "elite": 3.0
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_skill_double_under",
+    "name": "Double-Under",
+    "category": "cell",
+    "domain": "skill",
+    "unit": " reps",
+    "standards": {
+      "entry": 2.0,
+      "intermediate": 10.0,
+      "advanced": 40.0,
+      "elite": 60.0
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "cell_endurance_run_400m",
+    "name": "400m Run",
+    "category": "cell",
+    "domain": "endurance",
+    "unit": " min",
+    "standards": {
+      "entry": 2.083,
+      "intermediate": 1.833,
+      "advanced": 1.5,
+      "elite": 1.167
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "cell_endurance_run_800m",
+    "name": "800m Run",
+    "category": "cell",
+    "domain": "endurance",
+    "unit": " min",
+    "standards": {
+      "entry": 5.0,
+      "intermediate": 4.333,
+      "advanced": 3.5,
+      "elite": 2.833
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "cell_endurance_row_500m",
+    "name": "500m Row",
+    "category": "cell",
+    "domain": "endurance",
+    "unit": " min",
+    "standards": {
+      "entry": 2.167,
+      "intermediate": 1.833,
+      "advanced": 1.667,
+      "elite": 1.583
+    },
+    "lower_is_better": true
+  }
+]

@@ -7,6 +7,7 @@ required_equipment: []
 applicable_phases:
   - base
   - build
+  - peak
   - taper
   - maintenance
 sources:

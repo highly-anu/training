@@ -1,0 +1,444 @@
+[
+  {
+    "id": "atg",
+    "name": "ATG / Knees Over Toes Guy (Ben Patrick)",
+    "core_principles": [
+      "posterior_chain_health_is_foundation_of_durability",
+      "reverse_movements_accelerate_recovery_and_joint_health",
+      "progressive_range_of_motion_is_as_important_as_progressive_load",
+      "full_range_terminal_extension_work_is_key_to_knee_health",
+      "knee_health_is_achievable_through_targeted_progressive_loading",
+      "pain_free_range_before_loaded_range",
+      "tibialis_and_soleus_strength_underpin_lower_body_durability"
+    ],
+    "scope": [
+      "durability",
+      "mobility",
+      "rehab",
+      "relative_strength"
+    ],
+    "bias": [
+      "durability",
+      "rehab",
+      "mobility"
+    ],
+    "avoid_with": [],
+    "required_equipment": [
+      "sled",
+      "resistance_band"
+    ],
+    "intensity_model": "autoregulation_rpe",
+    "progression_philosophy": "range_based",
+    "sources": [
+      "ATG (Athletic Truth Group) — Ben Patrick published methodology and programs"
+    ],
+    "notes": "Core movement vehicles: backward sled drag (reverse sled), Nordic curl, reverse tib raises, tibialis raises, calf raises (full ROM), split squats progressing to ATG split squat, and step-ups. Reverse sled is considered the foundational entry movement — zero eccentric load, builds knee tolerance from scratch. Range of motion progression precedes load progression: athlete must demonstrate pain-free full ROM before adding resistance. Progressive range is the primary adaptation target, not 1RM. Sled (for reverse dragging) and resistance bands (tibialis work) are the minimum viable equipment. The system is compatible with concurrent strength training but mandates its own lower-body prep work regardless of other modalities in the program.\n"
+  },
+  {
+    "id": "bjj",
+    "name": "BJJ / Brazilian Jiu-Jitsu (Combat Sport Modality)",
+    "core_principles": [
+      "mat_time_is_non_transferable_sparring_has_no_substitute",
+      "rolling_is_both_training_stimulus_and_test",
+      "conditioning_targets_isometric_endurance_hip_explosiveness_grip_endurance",
+      "joint_health_must_be_actively_maintained",
+      "positional_drilling_before_live_sparring",
+      "sport_specific_strength_endurance_over_general_max_strength",
+      "tap_early_protect_joints_for_long_term_training"
+    ],
+    "scope": [
+      "combat_sport",
+      "strength_endurance",
+      "anaerobic_intervals",
+      "mobility",
+      "durability",
+      "relative_strength"
+    ],
+    "bias": [
+      "combat_sport",
+      "strength_endurance"
+    ],
+    "avoid_with": [],
+    "required_equipment": [],
+    "intensity_model": "hard_easy_alternation",
+    "progression_philosophy": "time_based",
+    "sources": [
+      "plan.md section 1 (BJJ)"
+    ],
+    "notes": "BJJ as a philosophy entry governs how the system allocates and protects mat time. Required equipment is empty — the sport itself requires only a mat and partner; S&C support work varies. Conditioning priorities derived from sport demands: isometric endurance (maintaining frames and grips under sustained pressure), hip explosiveness (guard sweeps, takedowns, hip escapes), grip endurance (6-min rounds of sustained pulling). Vulnerable joints: shoulders (from armbars, kimuras), knees (leg locks, guard passing), and neck (from guillotines, mat posture). Intensity model is hard_easy_alternation because hard rolling days must be followed by drilling or technique days to manage cumulative joint stress. Progression is time_based: mat hours and drilling volume are the primary advancement mechanism, not load or complexity increments.\n"
+  },
+  {
+    "id": "crossfit",
+    "name": "CrossFit / CrossFit Endurance (Glassman)",
+    "core_principles": [
+      "intensity_over_volume",
+      "broad_gpp_is_protective_and_transferable",
+      "mixed_modal_conditioning_reveals_weaknesses",
+      "constant_variation_prevents_accommodation",
+      "functional_movement_over_machine_based_isolation",
+      "form_mastery_before_load_or_speed",
+      "benchmark_testing_tracks_adaptation",
+      "cfe_applies_cf_principles_to_monostructural_domains"
+    ],
+    "scope": [
+      "max_strength",
+      "strength_endurance",
+      "aerobic_base",
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "power",
+      "relative_strength"
+    ],
+    "bias": [
+      "mixed_modal_conditioning",
+      "anaerobic_intervals",
+      "strength_endurance"
+    ],
+    "avoid_with": [
+      "starting_strength",
+      "uphill_athlete"
+    ],
+    "required_equipment": [
+      "barbell",
+      "rack",
+      "plates",
+      "pull_up_bar",
+      "jump_rope",
+      "box"
+    ],
+    "intensity_model": "constant_variation",
+    "progression_philosophy": "density_based",
+    "sources": [
+      "CrossFit Journal 2002–2012 (Glassman, Rippetoe, Starr, Dougherty, Takano, Vaughn)",
+      "data/crossfit/crossfit journal/"
+    ],
+    "notes": "CrossFit's progression mechanism is primarily density-based: same benchmark WOD completed faster or with more rounds. Load-based progression exists for barbell work (linear on beginner program) but is secondary to time/rounds as the primary metric. Constant variation is intentional — the anti-periodization stance. CFE (CrossFit Endurance) applies the same high-intensity, low-volume philosophy to running, rowing, and cycling; it explicitly rejects high-mileage base building. Rhabdo risk on first exposure requires mandatory scaling.\n"
+  },
+  {
+    "id": "gym_jones",
+    "name": "Gym Jones / Mark Twight",
+    "core_principles": [
+      "mind_is_primary_limiter",
+      "work_tolerance_is_most_trainable_characteristic",
+      "horsepower_over_appearance",
+      "fit_for_whatever_comes_next_not_peaked_in_one_domain",
+      "maintain_60_to_70_pct_across_all_fitness_domains",
+      "hard_day_followed_by_recovery_day",
+      "general_fitness_before_sport_specific",
+      "no_shortcuts",
+      "power_endurance_and_strength_endurance_over_max_strength",
+      "reduce_rest_periods_or_increase_weight_not_both_simultaneously"
+    ],
+    "scope": [
+      "max_strength",
+      "strength_endurance",
+      "aerobic_base",
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "power",
+      "durability"
+    ],
+    "bias": [
+      "strength_endurance",
+      "mixed_modal_conditioning",
+      "durability"
+    ],
+    "avoid_with": [
+      "starting_strength",
+      "uphill_athlete"
+    ],
+    "required_equipment": [
+      "barbell",
+      "plates",
+      "kettlebell",
+      "dumbbell",
+      "pull_up_bar",
+      "rower",
+      "box",
+      "medicine_ball"
+    ],
+    "intensity_model": "hard_easy_alternation",
+    "progression_philosophy": "volume_based",
+    "sources": [
+      "data/gym jones/operator fitness I.pdf",
+      "data/gym jones/operator fitness II.pdf",
+      "data/gym jones/soldier of steel.pdf"
+    ],
+    "notes": "Six-day week: 3 key sessions (strength, circuit, accumulation), 2 recovery sessions, 1 long endurance, 1 full rest. Intensity model is hard/easy alternation — not polarized (no 80/20 split), but structured hard-day/recovery-day cycling. Progression levers are deliberate: reduce rest (bodyweight work) OR increase load (barbell/KB), never both simultaneously. Excessive max strength / max speed development is explicitly de-emphasized; power-endurance and strength-endurance are the primary targets. Operator context: relative strength + aerobic capacity + mental durability. Programs are 1-month blocks, repeatable 2–3× or cycled between Operator I / Operator II.\n"
+  },
+  {
+    "id": "horsemen_gpp",
+    "name": "Horsemen GPP / SOF-Style Training",
+    "core_principles": [
+      "durability_over_peak_performance",
+      "elite_fitness_across_broad_base_no_single_domain_specialization",
+      "repeatable_output_under_fatigue",
+      "simple_equipment_sandbag_barbell_kb_bodyweight_rower",
+      "function_under_extreme_environment_and_operational_load",
+      "strength_standards_are_prerequisites_not_goals",
+      "job_specific_conditioning_drives_programming_in_later_phases",
+      "block_structure_shifts_from_strength_to_power_endurance_to_job_specific"
+    ],
+    "scope": [
+      "max_strength",
+      "strength_endurance",
+      "aerobic_base",
+      "anaerobic_intervals",
+      "mixed_modal_conditioning",
+      "power",
+      "durability",
+      "relative_strength"
+    ],
+    "bias": [
+      "durability",
+      "strength_endurance",
+      "mixed_modal_conditioning"
+    ],
+    "avoid_with": [
+      "starting_strength",
+      "uphill_athlete"
+    ],
+    "required_equipment": [
+      "barbell",
+      "plates",
+      "kettlebell",
+      "sandbag",
+      "pull_up_bar",
+      "rower",
+      "box",
+      "medicine_ball",
+      "sled",
+      "tire",
+      "rope"
+    ],
+    "intensity_model": "block_periodization",
+    "progression_philosophy": "volume_based",
+    "sources": [
+      "data/horsemen/horsemen.pdf (Horsemen Training Program 2008)"
+    ],
+    "notes": "4-month macro: Month 1 strength-dominant (4×strength/14 days), Month 2 power-endurance dominant, Month 3 job-specific dominant, Month 4 maintenance. Draws explicitly from Gym Jones (Twight), Mountain Athlete (Shaul), CrossFit (Glassman), and Dan John. Strength standards are prerequisites for the program, not training goals: deadlift 2.5× BW, front squat 1.5× BW, bench 1.5× BW, military press 1× BW. PT test standards: 15+ pull-ups, 200+ SSST reps (KB snatch 10min @ 53#), 3-mile run under 20:00. Sandbag get-ups, barbell complexes, and SMMF (Slow Massive Movement) challenges are signature formats. Recovery sessions are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black, Russian Aggression, SMMF) are distinct from generic archetypes.\n"
+  },
+  {
+    "id": "ido_portal",
+    "name": "Ido Portal / Movement Culture",
+    "core_principles": [
+      "movement_quality_precedes_loading_and_complexity",
+      "joint_preparation_is_non_negotiable_before_loading",
+      "skill_acquisition_isolation_to_integration_to_spontaneous_expression",
+      "daily_practice_habits_matter_more_than_session_intensity",
+      "complexity_and_novelty_are_forms_of_progression",
+      "prerequisite_hierarchy_must_be_respected",
+      "time_based_practice_over_rep_based_intensity",
+      "improvisation_is_the_highest_expression_of_skill"
+    ],
+    "scope": [
+      "mobility",
+      "movement_skill",
+      "relative_strength",
+      "durability"
+    ],
+    "bias": [
+      "movement_skill",
+      "mobility"
+    ],
+    "avoid_with": [
+      "starting_strength",
+      "crossfit"
+    ],
+    "required_equipment": [
+      "open_space",
+      "jump_rope"
+    ],
+    "intensity_model": "skill_based",
+    "progression_philosophy": "complexity_based",
+    "sources": [
+      "data/portal/Ido Portal Floreio Routines.pdf",
+      "plan.md section 1 (Ido Portal)"
+    ],
+    "notes": "Prerequisite hierarchy is strictly enforced: low bridge before high bridge, basic handstand before handstand walk, simple movement before sequences, sequences before improvisation (role work). Warm-up protocol is standardized across all sessions: 5-min jump rope, wrists routine, squat clinic, shoulder ROM and stabilization, 5-min joint mobility, scapula mobilization cool-down. Rep schemes: light 6–10, standard 10–14, high-volume 14–30; time holds 10–30s; continuous movement (role work) 2–5 min. Three locomotion levels (beginner / intermediate / advanced) define session difficulty. Floreio and locomotion patterns form the core archetypes. No barbell or heavy loading is prescribed — open space and bodyweight are the primary tools.\n"
+  },
+  {
+    "id": "kelly_starrett",
+    "name": "Kelly Starrett / Supple Leopard",
+    "core_principles": [
+      "movement_quality_is_testable_and_correctable",
+      "tissue_prep_before_training_reduces_injury_risk",
+      "global_and_local_joint_mobility_have_distinct_protocols",
+      "breathing_and_bracing_are_mechanical_skills_not_assumptions",
+      "upstream_and_downstream_joints_affect_target_joint_function",
+      "mobilization_is_not_stretching_it_is_position_restoration",
+      "motor_control_must_be_established_before_adding_load"
+    ],
+    "scope": [
+      "mobility",
+      "durability",
+      "rehab",
+      "max_strength"
+    ],
+    "bias": [
+      "mobility",
+      "rehab"
+    ],
+    "avoid_with": [],
+    "required_equipment": [
+      "resistance_band"
+    ],
+    "intensity_model": "skill_based",
+    "progression_philosophy": "range_based",
+    "sources": [
+      "Becoming a Supple Leopard (Starrett & Cordoza, 2013)",
+      "Ready to Run (Starrett, 2014)",
+      "Deskbound (Starrett, 2016)"
+    ],
+    "notes": "Not a standalone training program — functions as a mobility and movement quality layer applied on top of any other methodology. Primary tools: banded joint distraction, soft tissue work (lacrosse ball / foam roller), contract-relax mobilizations, and positional assessments. Ten physical archetypes (hip extension, internal rotation, ankle, thoracic spine, etc.) each have a testing standard and a prescribed mobilization sequence. Breathing and bracing sequence (360 degrees of air, IAP) is a prerequisite for any loaded movement. Tissue prep is prescribed before sessions (2 min minimum per target joint); mobilization is also effective post-session and throughout the day. Resistance bands are the core tool for joint distraction work; no heavy equipment required.\n"
+  },
+  {
+    "id": "marcus_filly",
+    "name": "Marcus Filly / Functional Bodybuilding",
+    "core_principles": [
+      "rpe_based_autoregulation_prevents_overtraining",
+      "aesthetics_and_function_are_compatible_goals",
+      "shoulder_and_joint_health_require_dedicated_maintenance",
+      "controlled_eccentrics_and_isometrics_build_tissue_resilience",
+      "sustainable_training_over_max_intensity",
+      "tempo_and_intent_matter_as_much_as_load",
+      "concurrent_training_managed_through_fatigue_awareness"
+    ],
+    "scope": [
+      "max_strength",
+      "strength_endurance",
+      "relative_strength",
+      "mixed_modal_conditioning",
+      "durability",
+      "rehab"
+    ],
+    "bias": [
+      "strength_endurance",
+      "durability",
+      "rehab"
+    ],
+    "avoid_with": [],
+    "required_equipment": [
+      "barbell",
+      "dumbbell",
+      "pull_up_bar",
+      "rings",
+      "resistance_band"
+    ],
+    "intensity_model": "autoregulation_rpe",
+    "progression_philosophy": "feel_based",
+    "sources": [
+      "Marcus Filly — Functional Bodybuilding methodology and programming",
+      "plan.md section 10 (Rehab Protocol: Shoulder)"
+    ],
+    "notes": "RPE governs load selection session-to-session; athlete rates perceived effort and adjusts accordingly rather than following fixed percentages. Tempo prescriptions (e.g. 3-1-1, slow eccentric) are a hallmark — they increase time under tension without requiring heavier loads, making the method compatible with joint-sensitive populations. Rehab integration is first-class: isometric holds, eccentric push-ups, landmine presses, face pulls, and band pull-aparts are programmed alongside performance work. Shoulder protocol: dip support holds, side plank with lat activation, landmine press, eccentric push-up on parallettes, face pull (thumbs-up, elbows high), elbow-out rows, DB external rotation, band pull-aparts. Useful for injury rehab → return to sport transitions.\n"
+  },
+  {
+    "id": "starting_strength",
+    "name": "Starting Strength / Mark Rippetoe",
+    "core_principles": [
+      "linear_progression_is_fastest_novice_path",
+      "barbell_compound_lifts_are_primary_stress_stimulus",
+      "stress_recovery_adaptation_cycle",
+      "squat_is_proxy_for_overall_development",
+      "add_weight_every_session_until_stalled",
+      "form_mastery_before_load_increase"
+    ],
+    "scope": [
+      "max_strength",
+      "relative_strength",
+      "power"
+    ],
+    "bias": [
+      "max_strength"
+    ],
+    "avoid_with": [
+      "crossfit",
+      "uphill_athlete",
+      "horsemen_gpp"
+    ],
+    "required_equipment": [
+      "barbell",
+      "rack",
+      "plates"
+    ],
+    "intensity_model": "linear_progression",
+    "progression_philosophy": "load_based",
+    "sources": [
+      "Starting Strength: Basic Barbell Training (Rippetoe, 3rd ed.)",
+      "data/crossfit/crossfit journal/ — Rippetoe squatting article (2006)"
+    ],
+    "notes": "Strictly a novice-to-early-intermediate barbell methodology. Not designed for concurrent training; Rippetoe explicitly argues against mixing heavy conditioning with linear progression due to recovery interference. Scope limited to strength domains — this philosophy has no conditioning prescription beyond \"don't do much.\" Novice completion benchmarks: squat 1.5× BW, deadlift 2× BW, press 0.75× BW.\n"
+  },
+  {
+    "id": "uphill_athlete",
+    "name": "Uphill Athlete / Steve House & Scott Johnston",
+    "core_principles": [
+      "aerobic_base_is_foundation_of_mountain_performance",
+      "polarized_intensity_80pct_easy_20pct_hard",
+      "strength_is_supplementary_not_dominant",
+      "sport_specific_load_matters_more_than_gym_prs",
+      "periodization_orients_toward_objective_date",
+      "aerobic_threshold_self_test_governs_zone_boundaries",
+      "volume_before_intensity_in_base_phase"
+    ],
+    "scope": [
+      "aerobic_base",
+      "anaerobic_intervals",
+      "max_strength",
+      "durability"
+    ],
+    "bias": [
+      "aerobic_base",
+      "durability"
+    ],
+    "avoid_with": [
+      "starting_strength",
+      "crossfit"
+    ],
+    "required_equipment": [
+      "ruck_pack"
+    ],
+    "intensity_model": "polarized_80_20",
+    "progression_philosophy": "volume_based",
+    "sources": [
+      "Training for the New Alpinism (House & Johnston, 2014)",
+      "Uphill Athlete website — training methodology articles"
+    ],
+    "notes": "Designed for alpinism, ski mountaineering, and mountain endurance events. Zone boundaries set by individual aerobic threshold (AeT) test, not generic HR formulas. Strength work (max strength, core) is prescribed in small doses to support movement efficiency on terrain. Periodization is goal-date-anchored: base → build → peak → taper. Intensity split shifts progressively from 90/10 in base toward 80/20 in build. Ruck pack is required for specificity; open terrain is the primary training environment.\n"
+  },
+  {
+    "id": "wildman_kettlebell",
+    "name": "Mark Wildman / RKC Kettlebell",
+    "core_principles": [
+      "ballistic_patterning_builds_power_and_conditioning_simultaneously",
+      "breathing_mechanics_govern_intensity_and_technique_ceiling",
+      "progression_follows_established_skill_ladder",
+      "pentathlon_as_benchmark_and_competition_format",
+      "rpm_targets_define_work_capacity_standards",
+      "single_bell_mastery_before_double_bell_work",
+      "hip_hinge_is_the_foundation_of_all_ballistic_patterns"
+    ],
+    "scope": [
+      "power",
+      "strength_endurance",
+      "aerobic_base",
+      "relative_strength"
+    ],
+    "bias": [
+      "power",
+      "strength_endurance"
+    ],
+    "avoid_with": [],
+    "required_equipment": [
+      "kettlebell"
+    ],
+    "intensity_model": "operator_readiness",
+    "progression_philosophy": "rpm_based",
+    "sources": [
+      "data/kettlebell/ — Wildman programming materials",
+      "plan.md section 1 (Wildman/RKC) and section 9 (KB Pentathlon scoring)"
+    ],
+    "notes": "Skill ladder is non-negotiable: two-hand swing → single-arm swing → clean → clean & jerk → TGU → goblet squat → snatch → double KB work. Each step has a prerequisite. Breathing mechanics (hissing/nasal breathing patterns) set the ceiling for both intensity and technical quality — if breathing breaks down, intensity is too high. Pentathlon format: 6 min per exercise, 5 min rest between; 5 exercises (cleans, long cycle press, jerks, half snatch, push press). RPM targets: cleans 20 RPM, long cycle press 10 RPM, jerks 20 RPM, half snatch 18 RPM, push press 20 RPM. Scoring scales with bell weight (8kg=1pt per rep, 16kg=2pt, 24kg=3pt). Intensity model is operator_readiness because session load is self-regulated based on technique quality and breathing control, not a fixed weekly structure.\n"
+  }
+]

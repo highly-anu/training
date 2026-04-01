@@ -39,7 +39,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d')}</p>
-          <h3 className="text-base font-bold text-foreground mt-0.5">{session.archetype.name}</h3>
+          <h3 className="text-base font-bold text-foreground mt-0.5">{session.archetype?.name ?? session.modality}</h3>
         </div>
         <ModalityBadge modality={session.modality} />
       </div>
@@ -47,7 +47,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <Clock className="size-3.5" />
-          ~{session.archetype.duration_estimate_minutes} min
+          {session.archetype?.duration_estimate_minutes ? `~${session.archetype.duration_estimate_minutes} min` : '—'}
         </span>
         <span>{session.exercises.length} exercises</span>
       </div>

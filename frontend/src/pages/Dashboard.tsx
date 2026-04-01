@@ -32,6 +32,19 @@ export function Dashboard() {
   const daysToEvent = eventDate ? differenceInCalendarDays(parseISO(eventDate), new Date()) : null
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
 
+  const currentWeek = program?.weeks[weekIndex]
+
+  const weekComplete = useMemo(() => {
+    if (!currentWeek) return false
+    return DAYS.every((day) => {
+      const sessions = currentWeek.schedule[day] ?? []
+      if (sessions.length === 0) return true
+      return sessionLogs[`${currentWeek.week_number}-${day}`]?.[0] === true
+    })
+  }, [currentWeek, sessionLogs])
+
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
+
   if (!program) {
     return (
       <motion.div
@@ -52,20 +65,7 @@ export function Dashboard() {
     )
   }
 
-  const currentWeek = program.weeks[weekIndex]
-
-  const weekComplete = useMemo(() => {
-    if (!currentWeek) return false
-    return DAYS.every((day) => {
-      const sessions = currentWeek.schedule[day] ?? []
-      if (sessions.length === 0) return true
-      return sessionLogs[`${currentWeek.week_number}-${day}`]?.[0] === true
-    })
-  }, [currentWeek, sessionLogs])
-
   const canAdvance = weekComplete && weekIndex < program.weeks.length - 1
-
-  const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   // Reset selected day when week changes
   const handleWeekChange = (delta: number) => {

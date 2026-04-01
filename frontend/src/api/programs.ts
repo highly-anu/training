@@ -50,15 +50,16 @@ export function useGenerateProgram() {
       apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
     onSuccess: (data, params) => {
       queryClient.setQueryData(queryKeys.programs.current, data)
-      const store = useProgramStore.getState()
-      store.setCurrentProgram(data)
-      store.setEventDate(params.eventDate ?? null)
       const ids = (params.goalIds ?? [params.goalId]).filter((id) => id !== '_blended')
-      store.setSourceGoals(ids, params.goalWeights ?? {})
-      // Use program_start_date from backend when a start_date was passed (anchors to
-      // that week's Monday). Otherwise fall back to Monday of the current week.
       const startMonday = data.program_start_date ?? getMondayOf(new Date())
-      store.setProgramStartDate(startMonday)
+      // Single atomic update + server persist
+      useProgramStore.getState().setFullProgram(
+        data,
+        params.eventDate ?? null,
+        startMonday,
+        ids,
+        params.goalWeights ?? {}
+      )
       useBuilderStore.getState().reset()
       useUiStore.getState().setSelectedWeekIndex(0)
     },
