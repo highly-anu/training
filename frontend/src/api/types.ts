@@ -101,7 +101,7 @@ export interface GoalProfile {
   primary_sources: string[]
   phase_sequence: PhaseEntry[]
   minimum_prerequisites: Record<string, number>
-  incompatible_with: string[]
+  incompatible_with: Array<string | { goal_id: string; reason?: string }>
   framework_selection: FrameworkSelection
   event_date?: string | null
   notes?: string
@@ -162,7 +162,9 @@ export interface InjuryFlag {
   description: string
   excluded_movement_patterns: string[]
   excluded_exercises: string[]
+  modified_exercises?: Array<{ instead_of: string; use: string }>
   training_phase_forced?: TrainingPhase
+  notes?: string
 }
 
 // ─── Exercise ─────────────────────────────────────────────────────────────────
@@ -187,7 +189,7 @@ export interface Exercise {
   contraindicated_with: InjuryFlagId[]
   progressions: ExerciseProgressions
   scaling_down?: string[]
-  typical_volume?: { sets: number; reps: number }
+  typical_volume?: { sets?: number; reps?: number; duration_sec?: number; distance_m?: number }
   sources: string[]
   notes?: string
 }
@@ -414,6 +416,10 @@ export interface Modality {
   min_weekly_minutes: number
   max_weekly_minutes: number
   progression_model: string
+  typical_session_minutes?: { min: number; max: number }
+  intensity_zones?: Array<{ label: string; description?: string; hr_pct_range?: [number, number] }>
+  sources?: string[]
+  notes?: string
 }
 
 // ─── Philosophy ───────────────────────────────────────────────────────────────

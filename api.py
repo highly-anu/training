@@ -351,6 +351,46 @@ def get_philosophies():
     return jsonify(loader.load_philosophies())
 
 
+@app.get('/api/archetypes')
+def get_archetypes():
+    return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))
+
+
+@app.post('/api/exercises')
+def create_exercise():
+    body = request.get_json(silent=True) or {}
+    if not body.get('id') or not body.get('name'):
+        return jsonify({'detail': 'id and name are required'}), 400
+    existing_ids = {ex['id'] for ex in _all_exercises()}
+    if body['id'] in existing_ids:
+        return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
+    custom_path = os.path.join(_DATA_DIR, 'exercises', 'custom.yaml')
+    if os.path.exists(custom_path):
+        data = _load_yaml(custom_path) or {'exercises': []}
+    else:
+        data = {'exercises': []}
+    data['exercises'].append(body)
+    with open(custom_path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(body), 201
+
+
+@app.post('/api/archetypes')
+def create_archetype():
+    body = request.get_json(silent=True) or {}
+    if not body.get('id') or not body.get('name'):
+        return jsonify({'detail': 'id and name are required'}), 400
+    existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
+    if body['id'] in existing_ids:
+        return jsonify({'detail': f"Archetype id '{body['id']}' already exists"}), 409
+    custom_dir = os.path.join(_DATA_DIR, 'archetypes', 'custom')
+    os.makedirs(custom_dir, exist_ok=True)
+    out_path = os.path.join(custom_dir, f"{body['id']}.yaml")
+    with open(out_path, 'w', encoding='utf-8') as f:
+        yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(body), 201
+
+
 @app.post('/api/programs/generate')
 @require_auth
 def generate_program():
