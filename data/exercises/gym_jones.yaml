@@ -172,7 +172,7 @@ exercises:
       - plank_hold
     typical_volume:
       sets: 5
-      hold_seconds: 60
+      duration_sec: 60
     sources:
       - Gym Jones
     notes: >

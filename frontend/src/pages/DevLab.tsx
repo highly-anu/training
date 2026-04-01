@@ -19,6 +19,7 @@ import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { ValidationPanel } from '@/components/devlab/ValidationPanel'
 import { SchedulerPanel } from '@/components/devlab/SchedulerPanel'
 import { SessionsPanel } from '@/components/devlab/SessionsPanel'
+import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import type { EquipmentId, TrainingLevel, TrainingPhase, TracedProgram, WeekData } from '@/api/types'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
@@ -178,16 +179,47 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!goalId && !generateMutation.isPending
 
+  const [devTab, setDevTab] = useState<'pipeline' | 'browser'>('pipeline')
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
         <Terminal className="size-5 text-primary" />
         <h1 className="text-lg font-semibold">Dev Lab</h1>
-        <span className="text-sm text-muted-foreground">Pipeline trace visualizer</span>
+        <div className="ml-4 flex gap-1">
+          <button
+            onClick={() => setDevTab('pipeline')}
+            className={cn(
+              'px-3 py-1 rounded text-xs border transition-colors',
+              devTab === 'pipeline'
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted'
+            )}
+          >
+            Pipeline Trace
+          </button>
+          <button
+            onClick={() => setDevTab('browser')}
+            className={cn(
+              'px-3 py-1 rounded text-xs border transition-colors',
+              devTab === 'browser'
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted'
+            )}
+          >
+            Object Browser
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {devTab === 'browser' && (
+        <div className="flex-1 min-h-0">
+          <ObjectBrowser />
+        </div>
+      )}
+
+      {devTab === 'pipeline' && <div className="flex-1 overflow-y-auto">
         {/* ── Program Selector ── */}
         <div className="border-b bg-muted/20 px-6 py-4 shrink-0">
           <div className="max-w-5xl space-y-3">
@@ -412,7 +444,7 @@ export function DevLab() {
             </Tabs>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   )
 }

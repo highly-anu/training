@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { Exercise, ExerciseFilters } from './types'
-import exercisesData from '@/data/static/exercises.json'
-
-const _exercises = exercisesData as Exercise[]
 
 function applyFilters(exercises: Exercise[], filters?: ExerciseFilters): Exercise[] {
   if (!filters) return exercises
@@ -34,8 +32,19 @@ function applyFilters(exercises: Exercise[], filters?: ExerciseFilters): Exercis
 export function useExercises(filters?: ExerciseFilters) {
   return useQuery({
     queryKey: filters ? queryKeys.exercises.filtered(filters) : queryKeys.exercises.all,
-    queryFn: () => Promise.resolve(_exercises),
+    queryFn: () => apiClient.get<Exercise[]>('/exercises') as unknown as Promise<Exercise[]>,
     staleTime: Infinity,
     select: (data) => applyFilters(data, filters),
+  })
+}
+
+export function useCreateExercise() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (exercise: Partial<Exercise>) =>
+      apiClient.post('/exercises', exercise) as unknown as Promise<Exercise>,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.exercises.all })
+    },
   })
 }

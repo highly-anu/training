@@ -28,4 +28,7 @@ export const queryKeys = {
   frameworks: {
     all: ['frameworks'] as const,
   },
+  archetypes: {
+    all: ['archetypes'] as const,
+  },
 } as const
