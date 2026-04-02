@@ -388,17 +388,29 @@ def get_ontology():
         m = _load_yaml(path)
         modalities.append({'id': m['id'], 'name': m.get('name', m['id'])})
 
-    # Archetypes
+    # Archetypes — include slot exercise_filter so the heatmap can reflect actual selection logic
     archetypes = []
     for arch in loader.load_all_archetypes():
+        slots = []
+        for slot in arch.get('slots', []):
+            ef = slot.get('exercise_filter') or {}
+            slots.append({
+                'role': slot.get('role', ''),
+                'skip_exercise': bool(slot.get('skip_exercise', False)),
+                'exercise_filter': {
+                    'movement_pattern': ef.get('movement_pattern'),
+                    'category': ef.get('category'),
+                },
+            })
         archetypes.append({
             'id': arch['id'],
             'name': arch.get('name', arch['id']),
             'modality': arch.get('modality'),
+            'slots': slots,
         })
     archetypes.sort(key=lambda a: a['id'])
 
-    # Exercises
+    # Exercises — include movement_patterns for slot-filter matching in heatmap
     exercises = []
     all_ex = loader.load_all_exercises()
     for ex in sorted(all_ex.values(), key=lambda e: e['id']):
@@ -410,6 +422,7 @@ def get_ontology():
             'name': ex.get('name', ex['id']),
             'category': ex.get('category'),
             'modality': mod,
+            'movement_patterns': ex.get('movement_patterns', []),
         })
 
     return jsonify({

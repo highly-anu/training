@@ -5,12 +5,7 @@ interface HeatmapLegendProps {
   totalExercisesInOntology: number
 }
 
-export function HeatmapLegend({ data, totalExercisesInOntology }: HeatmapLegendProps) {
-  const coverage = totalExercisesInOntology > 0
-    ? Math.round((data.uniqueExercisesUsed / totalExercisesInOntology) * 100)
-    : 0
-  const activePaths = data.edges.filter(e => e.rawCount > 0).length
-  const totalPaths = data.edges.length
+export function HeatmapLegend({ data: _data, totalExercisesInOntology: _total }: HeatmapLegendProps) {
 
   return (
     <div className="flex items-center gap-6 px-2 text-xs text-muted-foreground">
@@ -31,18 +26,6 @@ export function HeatmapLegend({ data, totalExercisesInOntology }: HeatmapLegendP
         <span>hot</span>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-4 font-mono">
-        <span>
-          {data.uniqueExercisesUsed}/{totalExercisesInOntology} exercises ({coverage}%)
-        </span>
-        <span>
-          {activePaths}/{totalPaths} paths active
-        </span>
-        <span>
-          {data.totalExerciseUsages} total usages
-        </span>
-      </div>
     </div>
   )
 }

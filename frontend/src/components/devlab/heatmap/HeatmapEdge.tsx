@@ -13,7 +13,7 @@ interface HeatmapEdgeProps {
 }
 
 export function HeatmapEdge({ edge, x1, y1, x2, y2, highlighted }: HeatmapEdgeProps) {
-  let color = '#94a3b8' // slate-400
+  let color = '#94a3b8'
   if (edge.modalityHint && edge.modalityHint in MODALITY_COLORS) {
     color = MODALITY_COLORS[edge.modalityHint as ModalityId].hex
   }
@@ -25,21 +25,20 @@ export function HeatmapEdge({ edge, x1, y1, x2, y2, highlighted }: HeatmapEdgePr
   const strokeOpacity = dimmed ? 0.02 : bright ? Math.max(0.5, baseOpacity) : baseOpacity
   const strokeWidth = dimmed ? 0.3 : 0.5 + edge.heat * 2.5
 
-  // Quadratic bezier: control point at midpoint vertically, offset horizontally toward midpoint
   const midY = (y1 + y2) / 2
-  const path = `M ${x1} ${y1} Q ${x1} ${midY}, ${(x1 + x2) / 2} ${midY} T ${x2} ${y2}`
+  const d = `M ${x1} ${y1} Q ${x1} ${midY}, ${(x1 + x2) / 2} ${midY} T ${x2} ${y2}`
 
   return (
     <motion.path
-      d={path}
       fill="none"
       stroke={color}
       initial={false}
-      animate={{
-        strokeOpacity,
-        strokeWidth,
+      animate={{ d, strokeOpacity, strokeWidth }}
+      transition={{
+        d: { type: 'spring', damping: 25, stiffness: 180 },
+        strokeOpacity: { duration: 0.2 },
+        strokeWidth: { duration: 0.2 },
       }}
-      transition={{ duration: 0.2 }}
     />
   )
 }

@@ -12,3 +12,7 @@ export type ModelType =
 export interface NavigateToFn {
   (type: ModelType, id: string): void
 }
+
+export interface OpenInOntologyFn {
+  (nodeId: string): void
+}

@@ -1,11 +1,13 @@
+import { Network } from 'lucide-react'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
 import { CrossRefBadge } from '../CrossRefBadge'
 import type { Archetype } from '@/api/types'
-import type { NavigateToFn } from '../types'
+import type { NavigateToFn, OpenInOntologyFn } from '../types'
 
 interface ArchetypeDetailProps {
   archetype: Archetype
   navigateTo: NavigateToFn
+  onOpenInOntology?: OpenInOntologyFn
 }
 
 function Pills({ items }: { items: string[] }) {
@@ -21,12 +23,23 @@ function Pills({ items }: { items: string[] }) {
   )
 }
 
-export function ArchetypeDetail({ archetype: a, navigateTo }: ArchetypeDetailProps) {
+export function ArchetypeDetail({ archetype: a, navigateTo, onOpenInOntology }: ArchetypeDetailProps) {
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-base font-semibold">{a.name}</h2>
-        <p className="text-xs text-muted-foreground font-mono mt-0.5">{a.id}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">{a.name}</h2>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">{a.id}</p>
+        </div>
+        {onOpenInOntology && (
+          <button
+            onClick={() => onOpenInOntology(`archetype::${a.id}`)}
+            className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Network className="size-3" />
+            Ontology
+          </button>
+        )}
       </div>
 
       {/* Metadata */}

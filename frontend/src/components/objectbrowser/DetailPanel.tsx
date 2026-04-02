@@ -10,7 +10,7 @@ import { PhilosophyDetail } from './detail/PhilosophyDetail'
 import { BenchmarkDetail } from './detail/BenchmarkDetail'
 import { InjuryFlagDetail } from './detail/InjuryFlagDetail'
 import { EquipmentProfileDetail } from './detail/EquipmentProfileDetail'
-import type { ModelType, NavigateToFn } from './types'
+import type { ModelType, NavigateToFn, OpenInOntologyFn } from './types'
 import type {
   Exercise, Archetype, Modality, GoalProfile, Framework,
   Philosophy, BenchmarkStandard, InjuryFlag, EquipmentProfile,
@@ -34,9 +34,10 @@ interface DetailPanelProps {
   selectedId: string | null
   data: AllData
   navigateTo: NavigateToFn
+  onOpenInOntology?: OpenInOntologyFn
 }
 
-export function DetailPanel({ type, selectedId, data, navigateTo }: DetailPanelProps) {
+export function DetailPanel({ type, selectedId, data, navigateTo, onOpenInOntology }: DetailPanelProps) {
   if (!selectedId) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
@@ -64,7 +65,7 @@ export function DetailPanel({ type, selectedId, data, navigateTo }: DetailPanelP
       case 'archetypes': {
         const item = data.archetypes.find(a => a.id === selectedId)
         if (!item) return null
-        return <ArchetypeDetail archetype={item} navigateTo={navigateTo} />
+        return <ArchetypeDetail archetype={item} navigateTo={navigateTo} onOpenInOntology={onOpenInOntology} />
       }
       case 'modalities': {
         const item = data.modalities.find(m => m.id === selectedId)
@@ -75,6 +76,7 @@ export function DetailPanel({ type, selectedId, data, navigateTo }: DetailPanelP
             archetypes={data.archetypes}
             goals={data.goals}
             navigateTo={navigateTo}
+            onOpenInOntology={onOpenInOntology}
           />
         )
       }
@@ -86,12 +88,12 @@ export function DetailPanel({ type, selectedId, data, navigateTo }: DetailPanelP
       case 'frameworks': {
         const item = data.frameworks.find(f => f.id === selectedId)
         if (!item) return null
-        return <FrameworkDetail framework={item} navigateTo={navigateTo} />
+        return <FrameworkDetail framework={item} navigateTo={navigateTo} onOpenInOntology={onOpenInOntology} />
       }
       case 'philosophies': {
         const item = data.philosophies.find(p => p.id === selectedId)
         if (!item) return null
-        return <PhilosophyDetail philosophy={item} navigateTo={navigateTo} />
+        return <PhilosophyDetail philosophy={item} navigateTo={navigateTo} onOpenInOntology={onOpenInOntology} />
       }
       case 'benchmarks': {
         const item = data.benchmarks.find(b => b.id === selectedId)

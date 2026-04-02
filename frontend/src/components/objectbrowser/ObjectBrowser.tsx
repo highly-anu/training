@@ -7,9 +7,9 @@ import { DetailPanel } from './DetailPanel'
 import { AddExerciseDialog } from './AddExerciseDialog'
 import { AddArchetypeDialog } from './AddArchetypeDialog'
 import { useAllData } from './useAllData'
-import type { ModelType } from './types'
+import type { ModelType, OpenInOntologyFn } from './types'
 
-export function ObjectBrowser() {
+export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInOntologyFn }) {
   const [selectedType, setSelectedType] = useState<ModelType>('exercises')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -106,6 +106,7 @@ export function ObjectBrowser() {
           selectedId={selectedId}
           data={allData}
           navigateTo={navigateTo}
+          onOpenInOntology={onOpenInOntology}
         />
       </div>
 

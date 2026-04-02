@@ -19,11 +19,10 @@ function getNodeColor(node: HeatNode): string {
   if (node.modalityHint && node.modalityHint in MODALITY_COLORS) {
     return MODALITY_COLORS[node.modalityHint as ModalityId].hex
   }
-  // Default colors by layer
   switch (node.layer) {
-    case 'philosophy': return '#a78bfa'   // violet-400
-    case 'framework': return '#60a5fa'    // blue-400
-    default: return '#94a3b8'             // slate-400
+    case 'philosophy': return '#a78bfa'
+    case 'framework': return '#60a5fa'
+    default: return '#94a3b8'
   }
 }
 
@@ -41,7 +40,6 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
     ? `${node.label}${isExpanded ? ' ▲' : ' ▼'}`
     : node.label
 
-  // Truncate long labels
   const maxChars = Math.floor(width / 6.5)
   const displayLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label
 
@@ -52,13 +50,17 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
       onClick={() => onClick(node.id)}
       style={{ cursor: 'pointer' }}
       initial={false}
-      animate={{ opacity: dimmed ? 0.3 : 1 }}
-      transition={{ duration: 0.2 }}
+      animate={{ x, y, opacity: dimmed ? 0.3 : 1 }}
+      transition={{
+        x: { type: 'spring', damping: 25, stiffness: 200 },
+        y: { type: 'spring', damping: 25, stiffness: 200 },
+        opacity: { duration: 0.2 },
+      }}
     >
       {glowRadius > 0 && (
         <rect
-          x={x - 2}
-          y={y - 2}
+          x={-2}
+          y={-2}
           width={width + 4}
           height={height + 4}
           rx={6}
@@ -70,8 +72,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
         />
       )}
       <rect
-        x={x}
-        y={y}
+        x={0}
+        y={0}
         width={width}
         height={height}
         rx={4}
@@ -82,8 +84,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
         strokeOpacity={strokeOpacity}
       />
       <text
-        x={x + width / 2}
-        y={y + height / 2}
+        x={width / 2}
+        y={height / 2}
         textAnchor="middle"
         dominantBaseline="central"
         fontSize={10}
@@ -95,8 +97,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
       </text>
       {node.rawCount > 0 && !dimmed && (
         <text
-          x={x + width - 4}
-          y={y + 8}
+          x={width - 4}
+          y={8}
           textAnchor="end"
           fontSize={7}
           fontFamily="ui-monospace, monospace"

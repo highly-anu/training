@@ -1,13 +1,15 @@
+import { Network } from 'lucide-react'
 import { CrossRefBadge } from '../CrossRefBadge'
 import type { Framework } from '@/api/types'
-import type { NavigateToFn } from '../types'
+import type { NavigateToFn, OpenInOntologyFn } from '../types'
 
 interface FrameworkDetailProps {
   framework: Framework
   navigateTo: NavigateToFn
+  onOpenInOntology?: OpenInOntologyFn
 }
 
-export function FrameworkDetail({ framework: fw, navigateTo }: FrameworkDetailProps) {
+export function FrameworkDetail({ framework: fw, navigateTo, onOpenInOntology }: FrameworkDetailProps) {
   const sessionsPerWeek = fw.sessions_per_week
     ? Object.entries(fw.sessions_per_week).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
     : []
@@ -20,9 +22,20 @@ export function FrameworkDetail({ framework: fw, navigateTo }: FrameworkDetailPr
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-base font-semibold">{fw.name}</h2>
-        <p className="text-xs text-muted-foreground font-mono mt-0.5">{fw.id}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">{fw.name}</h2>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">{fw.id}</p>
+        </div>
+        {onOpenInOntology && (
+          <button
+            onClick={() => onOpenInOntology(`framework::${fw.id}`)}
+            className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Network className="size-3" />
+            Ontology
+          </button>
+        )}
       </div>
 
       {/* Source philosophy */}
