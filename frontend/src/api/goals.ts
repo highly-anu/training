@@ -3,7 +3,7 @@ import { queryKeys } from './queryKeys'
 import type { GoalProfile } from './types'
 import goalsData from '@/data/static/goals.json'
 
-const _goals = goalsData as GoalProfile[]
+const _goals = goalsData as unknown as GoalProfile[]
 
 export function useGoals() {
   return useQuery({

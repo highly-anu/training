@@ -437,7 +437,7 @@ export function DevLab() {
                     ))}
                   </div>
                   {result.weeks[outputWeekIdx] && (
-                    <WeekCalendar weekData={result.weeks[outputWeekIdx] as WeekData} />
+                    <WeekCalendar weekData={result.weeks[outputWeekIdx] as WeekData} isCurrentWeek={false} />
                   )}
                 </div>
               </TabsContent>

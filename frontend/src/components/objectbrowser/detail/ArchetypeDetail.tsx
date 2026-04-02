@@ -83,20 +83,20 @@ export function ArchetypeDetail({ archetype: a, navigateTo }: ArchetypeDetailPro
                   {slot.sets != null && slot.reps != null && (
                     <span>{slot.sets}×{slot.reps}</span>
                   )}
-                  {slot.duration_sec != null && (
-                    <span>{Math.floor(slot.duration_sec / 60) > 0 ? `${Math.floor(slot.duration_sec / 60)}min` : `${slot.duration_sec}s`}</span>
+                  {(slot as unknown as Record<string, unknown>).duration_sec != null && (
+                    <span>{Math.floor(((slot as unknown as Record<string, unknown>).duration_sec as number) / 60) > 0 ? `${Math.floor(((slot as unknown as Record<string, unknown>).duration_sec as number) / 60)}min` : `${(slot as unknown as Record<string, unknown>).duration_sec as number}s`}</span>
                   )}
-                  {(slot as Record<string, unknown>).distance_m != null && (
-                    <span>{(slot as Record<string, unknown>).distance_m as number}m</span>
+                  {(slot as unknown as Record<string, unknown>).distance_m != null && (
+                    <span>{(slot as unknown as Record<string, unknown>).distance_m as number}m</span>
                   )}
-                  {(slot as Record<string, unknown>).intensity != null && (
-                    <span>@ {String((slot as Record<string, unknown>).intensity)}</span>
+                  {(slot as unknown as Record<string, unknown>).intensity != null && (
+                    <span>@ {String((slot as unknown as Record<string, unknown>).intensity)}</span>
                   )}
-                  {(slot as Record<string, unknown>).intensity_pct_1rm != null && (
-                    <span>{Math.round(((slot as Record<string, unknown>).intensity_pct_1rm as number) * 100)}% 1RM</span>
+                  {(slot as unknown as Record<string, unknown>).intensity_pct_1rm != null && (
+                    <span>{Math.round(((slot as unknown as Record<string, unknown>).intensity_pct_1rm as number) * 100)}% 1RM</span>
                   )}
-                  {(slot as Record<string, unknown>).rest_sec != null && (
-                    <span>rest {(slot as Record<string, unknown>).rest_sec as number}s</span>
+                  {(slot as unknown as Record<string, unknown>).rest_sec != null && (
+                    <span>rest {(slot as unknown as Record<string, unknown>).rest_sec as number}s</span>
                   )}
                 </div>
                 {slot.notes && (

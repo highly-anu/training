@@ -13,7 +13,6 @@ const CATEGORIES = ['barbell', 'kettlebell', 'bodyweight', 'aerobic', 'carries',
 const EFFORTS = ['low', 'medium', 'high', 'max']
 const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
 const EQUIPMENT_OPTIONS: EquipmentId[] = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'ruck_pack', 'open_space', 'rings', 'sandbag', 'bike', 'rower', 'ghd', 'box', 'resistance_band', 'medicine_ball']
-const INJURY_FLAGS: InjuryFlagId[] = ['knee_meniscus_post_op', 'shoulder_impingement', 'shoulder_instability', 'lumbar_disc', 'hip_flexor_strain', 'ankle_sprain', 'tennis_elbow', 'golfers_elbow', 'neck_strain', 'achilles_tendinopathy', 'patellar_tendinopathy']
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')

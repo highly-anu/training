@@ -7,7 +7,7 @@ import injuryFlagsData from '@/data/static/injury_flags.json'
 export function useEquipmentProfiles() {
   return useQuery({
     queryKey: queryKeys.constraints.equipmentProfiles,
-    queryFn: () => Promise.resolve(equipmentProfilesData as EquipmentProfile[]),
+    queryFn: () => Promise.resolve(equipmentProfilesData as unknown as EquipmentProfile[]),
     staleTime: Infinity,
   })
 }

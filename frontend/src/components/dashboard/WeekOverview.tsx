@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
-import { GripVertical, Check, Dumbbell } from 'lucide-react'
+import { GripVertical, Check } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -46,8 +46,8 @@ interface SessionCardProps {
 
 function SessionCard({
   session,
-  weekNumber,
-  day,
+  weekNumber: _weekNumber,
+  day: _day,
   isComplete,
   isDragging,
   dragHandleListeners,

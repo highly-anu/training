@@ -638,7 +638,7 @@ export function computeDevelopmentTrends(
   weekInsights: WeekInsightSummary[],
   allInsights: SessionInsight[],
   allWorkouts: ImportedWorkout[],
-  weekDataMap: Map<number, WeekData>,
+  _weekDataMap: Map<number, WeekData>,
 ): DevelopmentTrend[] {
   const trends: DevelopmentTrend[] = []
 

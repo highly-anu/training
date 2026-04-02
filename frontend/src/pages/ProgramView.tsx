@@ -33,9 +33,8 @@ export function ProgramView() {
   const weekRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const {
-    customInjuryFlags, injuryFlags: profileFlags,
+    customInjuryFlags,
     addCustomInjuryFlag, removeCustomInjuryFlag,
-    toggleInjuryFlag,
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
