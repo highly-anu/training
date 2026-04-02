@@ -349,7 +349,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
           const isSelected = selectedDay === day
           const isComplete =
             sessions.length > 0 &&
-            sessionLogs[`${weekData?.week_number}-${day}`]?.[0] === true
+            sessions.every((_, idx) => sessionLogs[`${weekData?.week_number}-${day}`]?.[idx] === true)
 
           return (
             <DroppableDay

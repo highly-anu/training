@@ -20,6 +20,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import loader
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
+from src.progression import calculate_load
+from src.selector import populate_session
 from src.validator import validate
 from src.auth import require_auth
 from flask import g
@@ -542,6 +544,112 @@ def _generate_program_inner(body):
     return jsonify(result)
 
 
+@app.post('/api/sessions/generate')
+@require_auth
+def generate_session():
+    """Generate a single replacement session for a given modality/phase/constraints.
+
+    Accepts an optional archetype_id to force a specific archetype (Browse tab);
+    without it the selector chooses the best-fit archetype (Generate tab).
+    """
+    import traceback as _tb
+    body = request.get_json(silent=True) or {}
+    try:
+        return _generate_session_inner(body)
+    except Exception as e:
+        msg = _tb.format_exc()
+        with open(os.path.join(tempfile.gettempdir(), 'api_errors.txt'), 'a') as _f:
+            import json as _json
+            _f.write(f'session-generate body: {_json.dumps(body)}\n{msg}\n---\n')
+        raise
+
+
+def _generate_session_inner(body):
+    goal_id  = body.get('goal_id')
+    modality = body.get('modality')
+    phase    = body.get('phase')
+    week_in_phase = body.get('week_in_phase', 1)
+    is_deload = bool(body.get('is_deload', False))
+
+    if not goal_id:
+        return jsonify({'detail': 'goal_id is required'}), 400
+    if not modality:
+        return jsonify({'detail': 'modality is required'}), 400
+    if not phase:
+        return jsonify({'detail': 'phase is required'}), 400
+
+    constraints = dict(body.get('constraints', {}))
+    constraints.setdefault('session_time_minutes', 75)
+    constraints.setdefault('training_level', 'intermediate')
+    constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
+                                          'pull_up_bar', 'ruck_pack', 'open_space'])
+    constraints.setdefault('injury_flags', [])
+    constraints.setdefault('fatigue_state', 'normal')
+
+    try:
+        goal = loader.load_goal(goal_id)
+    except FileNotFoundError as e:
+        return jsonify({'detail': str(e)}), 404
+
+    data = loader.load_all_data()
+
+    # Merge custom injury flags
+    extra_injury_flags: dict = {}
+    for flag in body.get('custom_injury_flags', []):
+        flag_id = flag.get('id')
+        if flag_id:
+            extra_injury_flags[flag_id] = flag
+            if flag_id not in constraints['injury_flags']:
+                constraints['injury_flags'].append(flag_id)
+    merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
+
+    # Resolve forced archetype if archetype_id provided (Browse tab)
+    archetype_id = body.get('archetype_id')
+    forced_arch: dict | None = None
+    if archetype_id:
+        forced_arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
+        if forced_arch is None:
+            return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
+        # Use the archetype's own modality — the request modality is the session being replaced
+        modality = forced_arch.get('modality', modality)
+
+    session_stub = {'modality': modality, 'is_deload': is_deload}
+    populated = populate_session(
+        session_stub, goal, constraints,
+        data['exercises'], data['archetypes'],
+        merged_injury_flags, phase, week_in_phase,
+        forced_archetype=forced_arch,
+    )
+
+    if populated.get('archetype') is None:
+        return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
+
+    # Apply progression loads
+    prog_model = data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+    for ea in populated.get('exercises', []):
+        if ea.get('exercise') is None:
+            continue
+        ea['load'] = calculate_load(
+            ea['exercise'],
+            ea['slot'],
+            prog_model,
+            week_in_phase,
+            phase,
+            constraints.get('training_level', 'intermediate'),
+            is_deload,
+            session_time_minutes=constraints.get('session_time_minutes', 75),
+        )
+
+    arch = populated.get('archetype', {})
+    return jsonify({
+        'modality':  modality,
+        'archetype': arch,
+        'is_deload': is_deload,
+        'duration_min': arch.get('duration_estimate_minutes') if arch else None,
+        'exercises': [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])],
+    })
+
+
 @app.get('/api/oauth/strava/status')
 @require_auth
 def strava_status():
@@ -1016,9 +1124,8 @@ def get_profile():
                     row = cur.fetchone()
                     conn.commit()
         return jsonify(_profile_to_frontend(dict(row)) if row else {})
-    except RuntimeError as e:
-        # DATABASE_URL not set — return empty profile for local dev
-        app.logger.warning(str(e))
+    except Exception as e:
+        app.logger.warning('get_profile error: %s', e)
         return jsonify({})
 
 
@@ -1056,8 +1163,8 @@ def update_profile():
                 ))
                 conn.commit()
         return jsonify({'saved': True})
-    except RuntimeError as e:
-        app.logger.warning(str(e))
+    except Exception as e:
+        app.logger.warning('update_profile error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
 
 
@@ -1080,8 +1187,8 @@ def get_user_program():
             'sourceGoalIds':     row.get('source_goal_ids') or [],
             'sourceGoalWeights': row.get('source_goal_weights') or {},
         })
-    except RuntimeError as e:
-        app.logger.warning(str(e))
+    except Exception as e:
+        app.logger.warning('get_user_program error: %s', e)
         return jsonify(None)
 
 
@@ -1117,8 +1224,8 @@ def save_user_program():
                 ))
                 conn.commit()
         return jsonify({'saved': True})
-    except RuntimeError as e:
-        app.logger.warning(str(e))
+    except Exception as e:
+        app.logger.warning('save_user_program error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
 
 

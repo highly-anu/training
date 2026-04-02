@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Wand2, CheckCircle2, Circle } from 'lucide-react'
+import { ChevronLeft, Wand2, CheckCircle2, Circle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SessionHeader } from '@/components/session/SessionHeader'
+import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
@@ -38,6 +40,7 @@ export function SessionDetail() {
 
   const { sessionLogs, setSessionLog } = useProfileStore()
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
+  const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   const weekNumber = parseInt(week ?? '1', 10)
   const weekIdx = program.weeks.findIndex((w) => w.week_number === weekNumber)
@@ -45,11 +48,12 @@ export function SessionDetail() {
   const sessions = weekData?.schedule[day ?? ''] ?? []
 
   const sessionKey = `${weekNumber}-${day ?? ''}`
-  const isComplete = sessionLogs[sessionKey]?.[0] === true
-  function toggleComplete() {
-    const next = !isComplete
-    setSessionLog(sessionKey, [next])
-    if (next) {
+  function toggleComplete(si: number) {
+    const current = sessionLogs[sessionKey] ?? []
+    const next = [...current]
+    next[si] = !next[si]
+    setSessionLog(sessionKey, next)
+    if (next[si]) {
       upsertSessionPerformance({
         sessionKey,
         exercises: {},
@@ -96,49 +100,76 @@ export function SessionDetail() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {sessions.map((session, sessionIdx) => (
-          <div key={sessionIdx} className="space-y-4">
-            {sessionIdx > 0 && <Separator />}
+        {sessions.map((session, sessionIdx) => {
+          const isComplete = sessionLogs[sessionKey]?.[sessionIdx] === true
+          return (
+            <div key={sessionIdx} className="space-y-4">
+              {sessionIdx > 0 && <Separator />}
 
-            <SessionHeader
-              session={session}
-              day={day ?? ''}
-              weekNumber={weekNumber}
-              weekInPhase={weekData.week_in_phase}
-              phase={weekData.phase}
-            />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <SessionHeader
+                    session={session}
+                    day={day ?? ''}
+                    weekNumber={weekNumber}
+                    weekInPhase={weekData.week_in_phase}
+                    phase={weekData.phase}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 mt-1"
+                  onClick={() => setReplaceTarget({ idx: sessionIdx })}
+                >
+                  <RefreshCw className="size-3.5 mr-1.5" />
+                  Replace
+                </Button>
+              </div>
 
-            <div className="space-y-2">
-              {session.exercises.map((assignment, i) => (
-                <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={`${weekNumber}-${day ?? ''}`} />
-              ))}
+              <div className="space-y-2">
+                {session.exercises.map((assignment, i) => (
+                  <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={sessionKey} />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => toggleComplete(sessionIdx)}
+                className={`w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors ${
+                  isComplete
+                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                }`}
+              >
+                {isComplete
+                  ? <><CheckCircle2 className="size-4" /> Completed — tap to undo</>
+                  : <><Circle className="size-4" /> Mark Session Complete</>
+                }
+              </button>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {/* Workout summary (HR data if imported workout is matched) */}
         <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIdx >= 0 ? weekIdx : undefined} />
 
         {/* Session notes + fatigue rating */}
         <SessionNotes sessionKey={sessionKey} />
-
-        <Separator />
-
-        <button
-          type="button"
-          onClick={toggleComplete}
-          className={`w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors ${
-            isComplete
-              ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
-          }`}
-        >
-          {isComplete
-            ? <><CheckCircle2 className="size-4" /> Completed — tap to undo</>
-            : <><Circle className="size-4" /> Mark Session Complete</>
-          }
-        </button>
       </div>
+
+      {weekData && replaceTarget && (
+        <ReplaceSessionSheet
+          open={true}
+          onOpenChange={(open) => { if (!open) setReplaceTarget(null) }}
+          session={sessions[replaceTarget.idx]}
+          weekIndex={weekIdx >= 0 ? weekIdx : 0}
+          weekData={weekData}
+          day={day ?? ''}
+          sessionIndex={replaceTarget.idx}
+          program={program}
+        />
+      )}
     </motion.div>
   )
 }

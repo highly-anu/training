@@ -7,7 +7,7 @@ export function useArchetypes() {
   return useQuery({
     queryKey: queryKeys.archetypes.all,
     queryFn: () => apiClient.get<Archetype[]>('/archetypes') as unknown as Promise<Archetype[]>,
-    staleTime: Infinity,
+    staleTime: 60_000, // archetypes can be created at runtime via Dev Lab
   })
 }
 

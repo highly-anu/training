@@ -10,13 +10,14 @@ interface SessionCardProps {
   session: Session
   weekNumber: number
   day: string
+  sessionIndex: number
   className?: string
 }
 
-export function SessionCard({ session, weekNumber, day, className }: SessionCardProps) {
+export function SessionCard({ session, weekNumber, day, sessionIndex, className }: SessionCardProps) {
   const navigate = useNavigate()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const isComplete = sessionLogs[`${weekNumber}-${day}`]?.[0] === true
+  const isComplete = sessionLogs[`${weekNumber}-${day}`]?.[sessionIndex] === true
 
   return (
     <motion.button
