@@ -145,13 +145,14 @@ def upsert_session_log(user_id: str, log: dict) -> None:
             with conn.cursor() as cur:
                 cur.execute('''
                     INSERT INTO session_logs
-                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at)
-                    VALUES (%s, %s, %s::jsonb, %s, %s, %s)
+                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source)
+                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
                         exercises      = EXCLUDED.exercises,
                         notes          = EXCLUDED.notes,
                         fatigue_rating = EXCLUDED.fatigue_rating,
-                        completed_at   = EXCLUDED.completed_at
+                        completed_at   = EXCLUDED.completed_at,
+                        source         = EXCLUDED.source
                 ''', (
                     log['sessionKey'],
                     user_id,
@@ -159,6 +160,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     log.get('notes', ''),
                     log.get('fatigueRating'),
                     log.get('completedAt') or None,
+                    log.get('source', 'web'),
                 ))
             conn.commit()
     except RuntimeError:

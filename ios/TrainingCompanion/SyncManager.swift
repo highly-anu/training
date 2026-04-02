@@ -16,9 +16,12 @@ final class SyncManager: ObservableObject {
     }()
 
     private var api: APIClient?
+    private var watchSync: WatchSessionManager?
 
     func configure(auth: AuthManager) {
-        api = APIClient(auth: auth)
+        let client = APIClient(auth: auth)
+        api = client
+        watchSync = WatchSessionManager(api: client)
     }
 
     func cancel() { cancelled = true }
@@ -72,6 +75,7 @@ final class SyncManager: ObservableObject {
             if !cancelled {
                 lastSyncDate = today
                 UserDefaults.standard.set(today, forKey: "lastSyncDate")
+                await watchSync?.syncProgram()
             }
         } catch {
             lastError = error.localizedDescription

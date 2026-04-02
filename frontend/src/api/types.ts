@@ -251,6 +251,8 @@ export interface ExerciseAssignment {
   load: ExerciseLoad
   meta?: boolean
   slot_role?: string
+  slot_type?: string
+  rest_sec?: number
   load_note?: string
   notes?: string
 }
