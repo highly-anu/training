@@ -150,8 +150,15 @@ export function ProgramView() {
       <div className="border-b bg-card/50 px-6">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
           <TabsList className="h-10 bg-transparent gap-0 border-0 p-0">
-            <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Overview</TabsTrigger>
-            <TabsTrigger value="calendar" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Calendar</TabsTrigger>
+            {(['overview', 'calendar'] as const).map(tab => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent capitalize"
+              >
+                {tab}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
       </div>

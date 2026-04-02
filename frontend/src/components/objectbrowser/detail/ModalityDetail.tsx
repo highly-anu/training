@@ -1,23 +1,36 @@
+import { Network } from 'lucide-react'
 import { CrossRefBadge } from '../CrossRefBadge'
 import type { Modality, Archetype, GoalProfile } from '@/api/types'
-import type { NavigateToFn } from '../types'
+import type { NavigateToFn, OpenInOntologyFn } from '../types'
 
 interface ModalityDetailProps {
   modality: Modality
   archetypes: Archetype[]
   goals: GoalProfile[]
   navigateTo: NavigateToFn
+  onOpenInOntology?: OpenInOntologyFn
 }
 
-export function ModalityDetail({ modality: m, archetypes, goals, navigateTo }: ModalityDetailProps) {
+export function ModalityDetail({ modality: m, archetypes, goals, navigateTo, onOpenInOntology }: ModalityDetailProps) {
   const implementedBy = archetypes.filter(a => a.modality === m.id)
   const weightedBy = goals.filter(g => (g.priorities[m.id] ?? 0) > 0)
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-base font-semibold">{m.name}</h2>
-        <p className="text-xs text-muted-foreground font-mono mt-0.5">{m.id}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">{m.name}</h2>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">{m.id}</p>
+        </div>
+        {onOpenInOntology && (
+          <button
+            onClick={() => onOpenInOntology(`modality::${m.id}`)}
+            className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Network className="size-3" />
+            Ontology
+          </button>
+        )}
       </div>
 
       {m.description && (

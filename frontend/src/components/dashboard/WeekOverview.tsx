@@ -125,7 +125,6 @@ function SessionCard({
         )}
       </div>
 
-      {/* Complete toggle */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onToggleComplete() }}

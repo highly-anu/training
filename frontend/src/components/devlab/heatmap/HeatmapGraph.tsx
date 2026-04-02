@@ -126,15 +126,30 @@ export function HeatmapGraph({
     return map
   }, [data.nodes])
 
+  // Connected set for locked node only (drives layout reorganization, not hover)
+  const lockedConnectedSet = useMemo(() => {
+    if (!lockedNode) return null
+    return getConnectedNodeIds(lockedNode, data.edges)
+  }, [lockedNode, data.edges])
+
   // Calculate positions for all nodes — fit every layer within the container width
   const { positions, svgWidth, svgHeight } = useMemo(() => {
     const availableWidth = Math.max(containerWidth - 2 * SVG_PAD, 200)
     const pos: Record<string, NodePosition> = {}
 
     for (const layer of LAYER_ORDER) {
-      const nodes = nodesByLayer[layer]
+      let nodes = nodesByLayer[layer]
       const count = nodes.length
       if (count === 0) continue
+
+      // When a node is locked, pull its connected nodes to the center of this row
+      if (lockedConnectedSet) {
+        const connected = nodes.filter(n => lockedConnectedSet.has(n.id))
+        const unconnected = nodes.filter(n => !lockedConnectedSet.has(n.id))
+        const leftSplit = Math.floor(unconnected.length / 2)
+        nodes = [...unconnected.slice(0, leftSplit), ...connected, ...unconnected.slice(leftSplit)]
+      }
+
       // Shrink nodes as needed so all fit in one row; cap at MAX_NODE_WIDTH
       const nodeWidth = Math.min(
         MAX_NODE_WIDTH,
@@ -172,7 +187,7 @@ export function HeatmapGraph({
 
     const svgW = containerWidth > 0 ? containerWidth : availableWidth + 2 * SVG_PAD
     return { positions: pos, svgWidth: svgW, svgHeight: height }
-  }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth])
+  }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth, lockedConnectedSet])
 
   // Determine which nodes/edges are highlighted
   const activeNode = lockedNode ?? highlightedNode
@@ -227,9 +242,22 @@ export function HeatmapGraph({
             fillOpacity={0.5}
             dominantBaseline="central"
           >
-            {layer === 'exercise_group' ? 'exercises' : layer}
+            {layer === 'exercise_group' ? 'movements' : layer}
           </text>
         ))}
+        {expandedGroup && expandedExercises.length > 0 && (
+          <text
+            x={12}
+            y={EXPANDED_EXERCISES_Y + NODE_HEIGHT / 2}
+            fontSize={9}
+            fontFamily="ui-monospace, monospace"
+            fill="#64748b"
+            fillOpacity={0.5}
+            dominantBaseline="central"
+          >
+            exercises
+          </text>
+        )}
 
         {/* Edges (render behind nodes) */}
         {data.edges.map(edge => {
@@ -255,8 +283,10 @@ export function HeatmapGraph({
           const groupPos = positions[expandedGroup]
           const exPos = positions[`exercise::${ex.id}`]
           if (!groupPos || !exPos) return null
-          const modId = expandedGroup.replace('exercise_group::exgroup_', '') as ModalityId
-          const color = MODALITY_COLORS[modId]?.hex ?? '#94a3b8'
+          const groupNode = data.nodes.find(n => n.id === expandedGroup)
+          const color = groupNode?.modalityHint && groupNode.modalityHint in MODALITY_COLORS
+            ? MODALITY_COLORS[groupNode.modalityHint as ModalityId].hex
+            : '#94a3b8'
           const opacity = ex.heat > 0 ? 0.1 + ex.heat * 0.9 : 0.04
           const midY = (groupPos.y + groupPos.height + exPos.y) / 2
           const x1 = groupPos.x + groupPos.width / 2
@@ -299,8 +329,10 @@ export function HeatmapGraph({
         {expandedExercises.map(ex => {
           const pos = positions[`exercise::${ex.id}`]
           if (!pos) return null
-          const modId = expandedGroup?.replace('exercise_group::exgroup_', '') as ModalityId
-          const color = MODALITY_COLORS[modId]?.hex ?? '#94a3b8'
+          const groupNode = data.nodes.find(n => n.id === expandedGroup)
+          const color = groupNode?.modalityHint && groupNode.modalityHint in MODALITY_COLORS
+            ? MODALITY_COLORS[groupNode.modalityHint as ModalityId].hex
+            : '#94a3b8'
           const baseOpacity = ex.heat > 0 ? 0.15 + ex.heat * 0.85 : 0.08
           const maxChars = Math.floor(pos.width / 6)
           const label = ex.name.length > maxChars ? ex.name.slice(0, maxChars - 1) + '…' : ex.name

@@ -31,12 +31,13 @@ export interface ExerciseInGroup {
   name: string
   heat: number
   rawCount: number
+  movement_patterns: string[]
 }
 
 export interface HeatmapGraphData {
   nodes: HeatNode[]
   edges: HeatEdge[]
-  /** Individual exercises within each modality group */
+  /** Individual exercises within each slot-pattern group */
   exercisesByGroup: Record<string, ExerciseInGroup[]>
   maxHeat: number
   totalExerciseUsages: number
@@ -51,6 +52,68 @@ function nodeId(layer: LayerKind, id: string) {
 
 function edgeId(sourceLayer: LayerKind, sourceId: string, targetLayer: LayerKind, targetId: string) {
   return `${sourceLayer}::${sourceId}--${targetLayer}::${targetId}`
+}
+
+// ─── Pattern matching — mirrors selector.py _PATTERN_ALIASES ─────────────────
+//
+// Each archetype slot has an exercise_filter.movement_pattern that determines
+// which exercises can fill it. This table is the exact same alias map as
+// selector.py so the heatmap reflects what the engine actually does.
+
+const PATTERN_ALIASES: Record<string, { mode: 'or' | 'and' | 'category'; patterns: string[] }> = {
+  squat:           { mode: 'or',      patterns: ['squat'] },
+  hinge:           { mode: 'or',      patterns: ['hip_hinge'] },
+  hip_hinge:       { mode: 'or',      patterns: ['hip_hinge'] },
+  carry:           { mode: 'or',      patterns: ['loaded_carry'] },
+  loaded_carry:    { mode: 'or',      patterns: ['loaded_carry'] },
+  rotation:        { mode: 'or',      patterns: ['rotation'] },
+  locomotion:      { mode: 'or',      patterns: ['locomotion'] },
+  ballistic:       { mode: 'or',      patterns: ['ballistic'] },
+  olympic:         { mode: 'or',      patterns: ['olympic_lift'] },
+  olympic_lift:    { mode: 'or',      patterns: ['olympic_lift'] },
+  isometric:       { mode: 'or',      patterns: ['isometric'] },
+  horizontal_push: { mode: 'or',      patterns: ['horizontal_push'] },
+  vertical_push:   { mode: 'or',      patterns: ['vertical_push'] },
+  horizontal_pull: { mode: 'or',      patterns: ['horizontal_pull'] },
+  vertical_pull:   { mode: 'or',      patterns: ['vertical_pull'] },
+  press:           { mode: 'or',      patterns: ['horizontal_push', 'vertical_push'] },
+  push:            { mode: 'or',      patterns: ['horizontal_push', 'vertical_push'] },
+  pull:            { mode: 'or',      patterns: ['horizontal_pull', 'vertical_pull'] },
+  aerobic:         { mode: 'or',      patterns: ['aerobic_monostructural', 'locomotion'] },
+  swing:           { mode: 'and',     patterns: ['hip_hinge', 'ballistic'] },
+  clean:           { mode: 'and',     patterns: ['hip_hinge', 'olympic_lift'] },
+  jerk:            { mode: 'and',     patterns: ['vertical_push', 'ballistic'] },
+  snatch:          { mode: 'and',     patterns: ['hip_hinge', 'ballistic', 'olympic_lift'] },
+  tgu:             { mode: 'and',     patterns: ['isometric', 'vertical_push'] },
+  ruck:            { mode: 'and',     patterns: ['locomotion', 'loaded_carry'] },
+  skill:           { mode: 'category', patterns: ['skill'] },
+  farmer_carry:    { mode: 'or',      patterns: ['farmer_carry'] },
+  rack_carry:      { mode: 'or',      patterns: ['rack_carry'] },
+  step_up:         { mode: 'or',      patterns: ['step_up'] },
+}
+
+function exerciseMatchesPattern(
+  exMovementPatterns: string[],
+  exCategory: string,
+  slotPattern: string,
+): boolean {
+  const alias = PATTERN_ALIASES[slotPattern]
+  if (!alias) return exMovementPatterns.includes(slotPattern)
+  const { mode, patterns } = alias
+  if (mode === 'or')       return patterns.some(p => exMovementPatterns.includes(p))
+  if (mode === 'and')      return patterns.every(p => exMovementPatterns.includes(p))
+  if (mode === 'category') return patterns.includes(exCategory)
+  return false
+}
+
+// Turn a pattern key (possibly "cat:skill") into a display label
+function patternLabel(patternKey: string): string {
+  return patternKey.replace('cat:', '').replace(/_/g, ' ')
+}
+
+// Stable group ID from a pattern key
+function groupId(patternKey: string): string {
+  return `slotpat_${patternKey.replace(':', '_')}`
 }
 
 // ─── Build static graph from ontology ────────────────────────────────────────
@@ -149,53 +212,117 @@ function buildStaticGraph(ontology: OntologyData) {
     }
   }
 
-  // Layer 4: Exercise groups (one per modality)
-  // Build a map of modality → exercises for the group expansion
-  const exercisesByGroup: Record<string, ExerciseInGroup[]> = {}
-  const exerciseModality: Map<string, ModalityId[]> = new Map()
+  // Layer 4: Exercise groups — one per unique slot movement_pattern (or category fallback).
+  //
+  // This replaces the old "one group per modality" scheme. Now each node represents
+  // the actual exercise pool that a slot filter can draw from — matching what
+  // selector.py does when it resolves exercise_filter.movement_pattern through
+  // _PATTERN_ALIASES. Each archetype only connects to the slot patterns its slots
+  // actually declare, not every exercise in its modality.
 
-  for (const ex of ontology.exercises) {
-    const mods = (Array.isArray(ex.modality) ? ex.modality : [ex.modality]).filter(Boolean) as ModalityId[]
-    exerciseModality.set(ex.id, mods)
-    for (const mod of mods) {
-      const groupId = `exgroup_${mod}`
-      if (!exercisesByGroup[groupId]) exercisesByGroup[groupId] = []
-      exercisesByGroup[groupId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0 })
+  // Collect every unique slot pattern declared across all archetypes
+  const slotPatternKeys = new Map<string, string>()   // patternKey → display label
+  const patternToModalities = new Map<string, Set<ModalityId>>()  // for color hinting
+
+  for (const arch of ontology.archetypes) {
+    for (const slot of arch.slots ?? []) {
+      if (slot.skip_exercise) continue
+      const ef = slot.exercise_filter
+      if (!ef) continue
+      const mp = ef.movement_pattern
+      const cat = ef.category
+      const key = mp ?? (cat ? `cat:${cat}` : null)
+      if (!key) continue
+      if (!slotPatternKeys.has(key)) {
+        slotPatternKeys.set(key, patternLabel(key))
+      }
+      if (!patternToModalities.has(key)) patternToModalities.set(key, new Set())
+      if (arch.modality) patternToModalities.get(key)!.add(arch.modality as ModalityId)
     }
   }
 
-  // Create group nodes + edges from archetypes to groups
-  const modalityIds = new Set(ontology.modalities.map(m => m.id))
-  for (const modId of modalityIds) {
-    const groupId = `exgroup_${modId}`
-    const count = exercisesByGroup[groupId]?.length ?? 0
-    nodes.set(nodeId('exercise_group', groupId), {
-      id: nodeId('exercise_group', groupId),
-      label: `${count} exercises`,
+  // Create exercise_group nodes
+  const exercisesByGroup: Record<string, ExerciseInGroup[]> = {}
+  for (const [patternKey, label] of slotPatternKeys) {
+    const gId = groupId(patternKey)
+    // Use the most common modality hint for coloring
+    const mods = patternToModalities.get(patternKey)
+    const modHint = mods && mods.size === 1 ? [...mods][0] : undefined
+    nodes.set(nodeId('exercise_group', gId), {
+      id: nodeId('exercise_group', gId),
+      label,
       layer: 'exercise_group',
-      modalityHint: modId,
+      modalityHint: modHint,
       heat: 0,
       rawCount: 0,
     })
-    // Edge from each archetype of this modality to the group
-    for (const arch of ontology.archetypes) {
-      if (arch.modality === modId) {
-        const eid = edgeId('archetype', arch.id, 'exercise_group', groupId)
-        edges.set(eid, {
-          id: eid,
-          source: nodeId('archetype', arch.id),
-          target: nodeId('exercise_group', groupId),
-          sourceLayer: 'archetype',
-          targetLayer: 'exercise_group',
-          modalityHint: modId,
-          heat: 0,
-          rawCount: 0,
-        })
-      }
+    exercisesByGroup[gId] = []
+  }
+
+  // Create archetype → exercise_group edges (one per unique slot pattern per archetype)
+  for (const arch of ontology.archetypes) {
+    const seenPatterns = new Set<string>()
+    for (const slot of arch.slots ?? []) {
+      if (slot.skip_exercise) continue
+      const ef = slot.exercise_filter
+      if (!ef) continue
+      const mp = ef.movement_pattern
+      const cat = ef.category
+      const key = mp ?? (cat ? `cat:${cat}` : null)
+      if (!key || seenPatterns.has(key) || !slotPatternKeys.has(key)) continue
+      seenPatterns.add(key)
+
+      const gId = groupId(key)
+      const eid = edgeId('archetype', arch.id, 'exercise_group', gId)
+      edges.set(eid, {
+        id: eid,
+        source: nodeId('archetype', arch.id),
+        target: nodeId('exercise_group', gId),
+        sourceLayer: 'archetype',
+        targetLayer: 'exercise_group',
+        modalityHint: arch.modality as ModalityId | undefined,
+        heat: 0,
+        rawCount: 0,
+      })
     }
   }
 
-  return { nodes, edges, exercisesByGroup, exerciseModality }
+  // Map each exercise to the groups whose slot pattern it satisfies.
+  // This is the same filter logic as selector.py _matches_slot_filter.
+  const exerciseToGroups = new Map<string, string[]>()
+
+  for (const ex of ontology.exercises) {
+    const exPatterns = (ex.movement_patterns ?? []) as string[]
+    const exCategory = (ex.category ?? '') as string
+    const groups: string[] = []
+
+    for (const [patternKey] of slotPatternKeys) {
+      const gId = groupId(patternKey)
+      const isCategory = patternKey.startsWith('cat:')
+      const matches = isCategory
+        ? exCategory === patternKey.replace('cat:', '')
+        : exerciseMatchesPattern(exPatterns, exCategory, patternKey)
+
+      if (matches) {
+        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns })
+        groups.push(gId)
+      }
+    }
+
+    exerciseToGroups.set(ex.id, groups)
+  }
+
+  // Suffix group labels with exercise count
+  for (const [patternKey] of slotPatternKeys) {
+    const gId = groupId(patternKey)
+    const node = nodes.get(nodeId('exercise_group', gId))
+    if (node) {
+      const count = exercisesByGroup[gId]?.length ?? 0
+      node.label = `${patternLabel(patternKey)} (${count})`
+    }
+  }
+
+  return { nodes, edges, exercisesByGroup, exerciseToGroups }
 }
 
 // ─── Apply heat from program ─────────────────────────────────────────────────
@@ -204,10 +331,10 @@ function applyHeat(
   nodes: Map<string, HeatNode>,
   edges: Map<string, HeatEdge>,
   exercisesByGroup: Record<string, ExerciseInGroup[]>,
-  exerciseModality: Map<string, ModalityId[]>,
+  exerciseToGroups: Map<string, string[]>,
   program: TracedProgram,
   weekRange: [number, number],
-  frameworkLookup: Map<string, string | undefined>, // framework_id -> source_philosophy
+  frameworkLookup: Map<string, string | undefined>,
 ) {
   let totalUsages = 0
   const usedExercises = new Set<string>()
@@ -222,6 +349,7 @@ function applyHeat(
       for (const session of sessions) {
         const modality = session.modality
         const archetypeId = session.archetype?.id
+        const archetypeSlots = session.archetype?.slots ?? []
 
         for (const assignment of session.exercises ?? []) {
           if (assignment.meta || !assignment.exercise) continue
@@ -229,65 +357,67 @@ function applyHeat(
           totalUsages++
           usedExercises.add(exId)
 
-          // Heat the exercise group
-          const exMods = exerciseModality.get(exId) ?? [modality]
-          for (const mod of exMods) {
-            const groupId = `exgroup_${mod}`
-            const group = exercisesByGroup[groupId]
+          // Find the slot that produced this assignment so we can heat the
+          // correct pattern group — the same logic selector.py uses.
+          const slotRole = assignment.slot_role
+          const slot = slotRole
+            ? archetypeSlots.find(s => s.role === slotRole)
+            : undefined
+          const ef = slot?.exercise_filter
+          const mp = ef?.movement_pattern
+          const cat = ef?.category
+          const patternKey = mp ?? (cat ? `cat:${cat}` : null)
+          const targetGroupId = patternKey ? groupId(patternKey) : null
+
+          // Heat the exercise_group node and individual exercise
+          const groupsToHeat = targetGroupId
+            ? [targetGroupId]
+            : (exerciseToGroups.get(exId) ?? [])  // fallback if slot info missing
+
+          for (const gId of groupsToHeat) {
+            const gNode = nodes.get(nodeId('exercise_group', gId))
+            if (gNode) gNode.rawCount++
+            const group = exercisesByGroup[gId]
             if (group) {
               const item = group.find(e => e.id === exId)
               if (item) item.rawCount++
             }
-            // Group node heat
-            const gNodeId = nodeId('exercise_group', groupId)
-            const gNode = nodes.get(gNodeId)
-            if (gNode) gNode.rawCount++
           }
 
-          // Heat the archetype
-          if (archetypeId) {
-            const aNodeId = nodeId('archetype', archetypeId)
-            const aNode = nodes.get(aNodeId)
-            if (aNode) aNode.rawCount++
-
-            // Edge: archetype → exercise_group
-            const groupId = `exgroup_${modality}`
-            const aeEdgeId = edgeId('archetype', archetypeId, 'exercise_group', groupId)
+          // Heat archetype → exercise_group edge (specific slot pattern)
+          if (archetypeId && targetGroupId) {
+            const aeEdgeId = edgeId('archetype', archetypeId, 'exercise_group', targetGroupId)
             const aeEdge = edges.get(aeEdgeId)
             if (aeEdge) aeEdge.rawCount++
           }
 
-          // Heat the modality
-          const mNodeId = nodeId('modality', modality)
-          const mNode = nodes.get(mNodeId)
+          // Heat the archetype node
+          if (archetypeId) {
+            const aNode = nodes.get(nodeId('archetype', archetypeId))
+            if (aNode) aNode.rawCount++
+          }
+
+          // Heat the modality node and framework→modality edge
+          const mNode = nodes.get(nodeId('modality', modality))
           if (mNode) mNode.rawCount++
 
-          // Edge: modality → archetype
           if (archetypeId) {
             const maEdgeId = edgeId('modality', modality, 'archetype', archetypeId)
             const maEdge = edges.get(maEdgeId)
             if (maEdge) maEdge.rawCount++
           }
 
-          // Heat the framework
           if (frameworkId) {
-            const fNodeId = nodeId('framework', frameworkId)
-            const fNode = nodes.get(fNodeId)
+            const fNode = nodes.get(nodeId('framework', frameworkId))
             if (fNode) fNode.rawCount++
-
-            // Edge: framework → modality
             const fmEdgeId = edgeId('framework', frameworkId, 'modality', modality)
             const fmEdge = edges.get(fmEdgeId)
             if (fmEdge) fmEdge.rawCount++
           }
 
-          // Heat the philosophy
           if (philosophyId) {
-            const pNodeId = nodeId('philosophy', philosophyId)
-            const pNode = nodes.get(pNodeId)
+            const pNode = nodes.get(nodeId('philosophy', philosophyId))
             if (pNode) pNode.rawCount++
-
-            // Edge: philosophy → framework
             if (frameworkId) {
               const pfEdgeId = edgeId('philosophy', philosophyId, 'framework', frameworkId)
               const pfEdge = edges.get(pfEdgeId)
@@ -299,7 +429,7 @@ function applyHeat(
     }
   }
 
-  // Normalize heat values per layer
+  // Normalize heat per layer
   const layerMaxes: Record<string, number> = {}
   for (const node of nodes.values()) {
     const key = node.layer
@@ -318,7 +448,6 @@ function applyHeat(
     edge.heat = edgeMax > 0 ? edge.rawCount / edgeMax : 0
   }
 
-  // Normalize exercise heat within groups
   for (const group of Object.values(exercisesByGroup)) {
     const max = Math.max(...group.map(e => e.rawCount), 1)
     for (const ex of group) {
@@ -343,9 +472,8 @@ export function useHeatmapData(
   return useMemo(() => {
     if (!ontology) return undefined
 
-    const { nodes, edges, exercisesByGroup, exerciseModality } = buildStaticGraph(ontology)
+    const { nodes, edges, exercisesByGroup, exerciseToGroups } = buildStaticGraph(ontology)
 
-    // Build framework → philosophy lookup
     const frameworkLookup = new Map<string, string | undefined>()
     for (const fw of ontology.frameworks) {
       frameworkLookup.set(fw.id, fw.source_philosophy)
@@ -358,7 +486,10 @@ export function useHeatmapData(
     if (program) {
       const totalWeeks = program.weeks.length
       const range: [number, number] = weekRange ?? [1, totalWeeks]
-      const result = applyHeat(nodes, edges, exercisesByGroup, exerciseModality, program, range, frameworkLookup)
+      const result = applyHeat(
+        nodes, edges, exercisesByGroup, exerciseToGroups,
+        program, range, frameworkLookup,
+      )
       maxHeat = result.maxHeat
       totalExerciseUsages = result.totalExerciseUsages
       uniqueExercisesUsed = result.uniqueExercisesUsed

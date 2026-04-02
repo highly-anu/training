@@ -204,6 +204,11 @@ export interface ArchetypeSlot {
   intensity?: string
   rest_sec?: number
   notes?: string
+  skip_exercise?: boolean
+  exercise_filter?: {
+    movement_pattern?: string
+    category?: string
+  }
 }
 
 export interface Archetype {

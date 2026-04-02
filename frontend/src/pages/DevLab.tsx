@@ -181,6 +181,14 @@ export function DevLab() {
   const canGenerate = !!goalId && !generateMutation.isPending
 
   const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap'>('pipeline')
+  const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
+  const [ontologyFromBrowser, setOntologyFromBrowser] = useState(false)
+
+  function openInOntology(nodeId: string) {
+    setOntologyNodeId(nodeId)
+    setOntologyFromBrowser(true)
+    setDevTab('heatmap')
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -220,14 +228,14 @@ export function DevLab() {
                 : 'border-border text-muted-foreground hover:bg-muted'
             )}
           >
-            Heatmap
+            Ontology
           </button>
         </div>
       </div>
 
       {devTab === 'browser' && (
         <div className="flex-1 min-h-0">
-          <ObjectBrowser />
+          <ObjectBrowser onOpenInOntology={openInOntology} />
         </div>
       )}
 
@@ -243,6 +251,8 @@ export function DevLab() {
               training_phase: phase,
               numWeeks,
             } : undefined}
+            initialLockedNode={ontologyNodeId}
+            onBack={ontologyFromBrowser ? () => { setDevTab('browser'); setOntologyFromBrowser(false) } : undefined}
           />
         </div>
       )}

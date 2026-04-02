@@ -1,12 +1,15 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Loader2, ChevronLeft } from 'lucide-react'
 import { HeatmapGraph } from './HeatmapGraph'
 import { HeatmapControls } from './HeatmapControls'
-import { HeatmapLegend } from './HeatmapLegend'
 import { useHeatmapData } from './useHeatmapData'
+import type { HeatNode, HeatmapGraphData } from './useHeatmapData'
 import { useOntology } from '@/api/ontology'
 import { useGoals } from '@/api/goals'
 import { useGenerateWithTrace } from '@/api/programs'
-import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase } from '@/api/types'
+import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId } from '@/api/types'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
 import {
   Select,
   SelectContent,
@@ -15,11 +18,224 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+
+// ─── Node info panel ──────────────────────────────────────────────────────────
+
+function nodeColor(node: HeatNode): string {
+  if (node.modalityHint && (node.modalityHint as string) in MODALITY_COLORS) {
+    return MODALITY_COLORS[node.modalityHint as ModalityId].hex
+  }
+  if (node.layer === 'philosophy') return '#a78bfa'
+  if (node.layer === 'framework') return '#60a5fa'
+  return '#94a3b8'
+}
+
+function NodeInfoPanel({
+  node,
+  graphData,
+  onClose,
+}: {
+  node: HeatNode
+  graphData: HeatmapGraphData
+  onClose: () => void
+}) {
+  const color = nodeColor(node)
+  const heatPct = Math.round(node.heat * 100)
+  const layerLabel = node.layer === 'exercise_group' ? 'movement pattern' : node.layer.replace(/_/g, ' ')
+
+  // Display name: strip the " (N)" count suffix added to exercise_group labels
+  const displayName = node.layer === 'exercise_group'
+    ? node.label.replace(/\s*\(\d+\)$/, '').trim()
+    : node.label
+
+  // Direct parents and children in the graph
+  const parentNodes = graphData.edges
+    .filter(e => e.target === node.id)
+    .map(e => graphData.nodes.find(n => n.id === e.source))
+    .filter(Boolean) as HeatNode[]
+
+  const childNodes = graphData.edges
+    .filter(e => e.source === node.id)
+    .map(e => graphData.nodes.find(n => n.id === e.target))
+    .filter(Boolean) as HeatNode[]
+
+  // Exercises for exercise_group nodes — group key is the part after 'exercise_group::'
+  const groupKey = node.id.replace('exercise_group::', '')
+  const exercises = node.layer === 'exercise_group'
+    ? [...(graphData.exercisesByGroup[groupKey] ?? [])].sort((a, b) => b.rawCount - a.rawCount)
+    : []
+  // Modality-only: exercise_groups reachable through child archetypes (deduplicated, heat-sorted).
+  // Archetypes and movements use the standard "Leads to" section instead.
+  const movementNodes: HeatNode[] = node.layer === 'modality'
+    ? [...new Map(
+        childNodes
+          .filter(c => c.layer === 'archetype')
+          .flatMap(arch =>
+            graphData.edges
+              .filter(e => e.source === arch.id)
+              .map(e => graphData.nodes.find(n => n.id === e.target))
+              .filter((n): n is HeatNode => !!n && n.layer === 'exercise_group')
+          )
+          .map(n => [n.id, n])
+      ).values()]
+      .sort((a, b) => b.heat - a.heat)
+    : []
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 6 }}
+      transition={{ duration: 0.2 }}
+      className="rounded-lg border border-border bg-card p-4 space-y-3"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span
+            className="inline-block text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded mb-1.5"
+            style={{ backgroundColor: `${color}20`, color }}
+          >
+            {layerLabel}
+          </span>
+          <p className="text-sm font-semibold capitalize">{displayName}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+
+      {/* Heat bar */}
+      <div className="space-y-1">
+        {node.rawCount > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">{node.rawCount} usages</span>
+            <span className="text-[11px] font-mono" style={{ color }}>{heatPct}% heat</span>
+          </div>
+        )}
+        <div className="h-1 rounded-full bg-muted overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: color }}
+            initial={{ width: 0 }}
+            animate={{ width: `${heatPct}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
+      {movementNodes.length > 0 && (
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Movements</p>
+          <div className="flex flex-wrap gap-1">
+            {movementNodes.map(m => {
+              const mColor = nodeColor(m)
+              const mName = m.label.replace(/\s*\(\d+\)$/, '').trim()
+              const mHeat = Math.round(m.heat * 100)
+              return (
+                <span
+                  key={m.id}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border"
+                  style={m.heat > 0
+                    ? { borderColor: `${mColor}40`, color: mColor, backgroundColor: `${mColor}10` }
+                    : { borderColor: 'hsl(var(--border))', color: '#64748b' }
+                  }
+                >
+                  {mName}
+                  {mHeat > 0 && <span className="opacity-60">{mHeat}%</span>}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {(parentNodes.length > 0 || childNodes.length > 0) && (
+        <div className="grid grid-cols-2 gap-3">
+          {parentNodes.length > 0 && (
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Via</p>
+              <div className="space-y-1">
+                {parentNodes.slice(0, 4).map(p => (
+                  <div key={p.id} className="flex items-center gap-1.5">
+                    <div className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: nodeColor(p) }} />
+                    <span className="text-[11px] text-foreground truncate">{p.label}</span>
+                  </div>
+                ))}
+                {parentNodes.length > 4 && (
+                  <span className="text-[10px] text-muted-foreground">+{parentNodes.length - 4} more</span>
+                )}
+              </div>
+            </div>
+          )}
+          {childNodes.length > 0 && (
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Leads to</p>
+              <div className="space-y-1">
+                {childNodes.slice(0, 4).map(c => (
+                  <div key={c.id} className="flex items-center gap-1.5">
+                    <div className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: nodeColor(c) }} />
+                    <span className="text-[11px] text-foreground truncate">{c.label}</span>
+                  </div>
+                ))}
+                {childNodes.length > 4 && (
+                  <span className="text-[10px] text-muted-foreground">+{childNodes.length - 4} more</span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Exercise list for exercise_group */}
+      {exercises.length > 0 && (
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+            Exercises · {exercises.length}
+          </p>
+          <div className="space-y-2">
+            {exercises.slice(0, 8).map(ex => (
+              <div key={ex.id} className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-foreground flex-1 truncate min-w-0">{ex.name}</span>
+                  <div className="w-14 h-1 rounded-full bg-muted overflow-hidden shrink-0">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${Math.round(ex.heat * 100)}%`, backgroundColor: color }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground w-4 text-right shrink-0">
+                    {ex.rawCount > 0 ? ex.rawCount : ''}
+                  </span>
+                </div>
+                {ex.movement_patterns.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pl-0.5">
+                    {ex.movement_patterns.map(mp => (
+                      <span key={mp} className="text-[9px] font-mono text-muted-foreground/60">
+                        {mp.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {exercises.length > 8 && (
+              <p className="text-[10px] text-muted-foreground">+{exercises.length - 8} more exercises</p>
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ─── Panel ────────────────────────────────────────────────────────────────────
 
 interface HeatmapPanelProps {
   program: TracedProgram | null
-  /** Constraints from the DevLab form, used when generating comparison program */
   constraints?: {
     equipment: EquipmentId[]
     days_per_week: number
@@ -28,55 +244,46 @@ interface HeatmapPanelProps {
     training_phase: TrainingPhase
     numWeeks: number
   }
+  initialLockedNode?: string | null
+  onBack?: () => void
 }
 
-export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
+export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }: HeatmapPanelProps) {
   const { data: ontology, isLoading: ontologyLoading } = useOntology()
   const { data: goals = [] } = useGoals()
   const generateMutation = useGenerateWithTrace()
 
-  // State
   const [weekRange, setWeekRange] = useState<[number, number]>([1, program?.weeks.length ?? 1])
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null)
-  const [lockedNode, setLockedNode] = useState<string | null>(null)
+  const [lockedNode, setLockedNode] = useState<string | null>(initialLockedNode ?? null)
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
-  // Comparison mode
+  useEffect(() => {
+    if (initialLockedNode) setLockedNode(initialLockedNode)
+  }, [initialLockedNode])
+
   const [compareMode, setCompareMode] = useState(false)
   const [compareGoalId, setCompareGoalId] = useState<string>('')
   const [compareProgram, setCompareProgram] = useState<TracedProgram | null>(null)
   const [compareWeekRange, setCompareWeekRange] = useState<[number, number]>([1, 1])
 
-  // Build graph data
   const graphData = useHeatmapData(ontology, program, weekRange)
   const compareGraphData = useHeatmapData(ontology, compareProgram, compareWeekRange)
 
-  const totalExercises = ontology?.exercises.length ?? 0
+  const handleWeekRangeChange = useCallback((range: [number, number]) => setWeekRange(range), [])
+  const handleCompareWeekRangeChange = useCallback((range: [number, number]) => setCompareWeekRange(range), [])
 
-  const handleWeekRangeChange = useCallback((range: [number, number]) => {
-    setWeekRange(range)
-  }, [])
-
-  const handleCompareWeekRangeChange = useCallback((range: [number, number]) => {
-    setCompareWeekRange(range)
-  }, [])
-
-  // Node interaction
   const handleHoverNode = useCallback((id: string | null) => {
     if (!lockedNode) setHighlightedNode(id)
   }, [lockedNode])
 
   const handleClickNode = useCallback((id: string) => {
-    // If clicking an exercise group, toggle expansion
     if (id.startsWith('exercise_group::')) {
       setExpandedGroup(prev => prev === id ? null : id)
-      return
     }
-    // Toggle lock
     setLockedNode(prev => prev === id ? null : id)
   }, [])
 
-  // Generate comparison program
   async function handleGenerateComparison() {
     if (!compareGoalId || !constraints) return
     try {
@@ -97,10 +304,9 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
       })
       setCompareProgram(data)
       setCompareWeekRange([1, data.weeks.length])
-    } catch { /* mutation error handled by TanStack */ }
+    } catch { /* handled by TanStack mutation */ }
   }
 
-  // Loading / empty states
   if (ontologyLoading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
@@ -112,9 +318,19 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
 
   if (!graphData) return null
 
+  const lockedNodeData = lockedNode ? graphData.nodes.find(n => n.id === lockedNode) ?? null : null
+
   return (
     <div className="space-y-3">
-      {/* Controls — only available when a program is loaded */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="size-3" />
+          Object Browser
+        </button>
+      )}
       {program && (
         <HeatmapControls
           program={program}
@@ -125,7 +341,6 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
         />
       )}
 
-      {/* Graph area */}
       <div className={compareMode && program ? 'grid grid-cols-2 gap-3' : ''}>
         <div>
           {compareMode && program && (
@@ -140,7 +355,6 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
             onHoverNode={handleHoverNode}
             onClickNode={handleClickNode}
             expandedGroup={expandedGroup}
-
           />
         </div>
 
@@ -165,7 +379,6 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
                   onHoverNode={handleHoverNode}
                   onClickNode={handleClickNode}
                   expandedGroup={expandedGroup}
-      
                 />
               </>
             ) : (
@@ -205,27 +418,17 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
         )}
       </div>
 
-      {/* Legend */}
-      <HeatmapLegend data={graphData} totalExercisesInOntology={totalExercises} />
-
-      {/* Locked node info */}
-      {lockedNode && (
-        <div className="px-2 py-1.5 text-xs bg-muted/50 rounded border border-border">
-          <span className="text-muted-foreground">Selected: </span>
-          <span className="font-mono">
-            {graphData.nodes.find(n => n.id === lockedNode)?.label ?? lockedNode}
-          </span>
-          <span className="text-muted-foreground ml-2">
-            ({graphData.nodes.find(n => n.id === lockedNode)?.rawCount ?? 0} usages)
-          </span>
-          <button
-            className="ml-2 text-muted-foreground hover:text-foreground"
-            onClick={() => setLockedNode(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {/* Selected node info panel */}
+      <AnimatePresence mode="wait">
+        {lockedNodeData && (
+          <NodeInfoPanel
+            key={lockedNode}
+            node={lockedNodeData}
+            graphData={graphData}
+            onClose={() => setLockedNode(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
