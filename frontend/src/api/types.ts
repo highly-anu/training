@@ -274,6 +274,7 @@ export interface WeekData {
   phase: TrainingPhase
   is_deload: boolean
   schedule: Record<string, Session[]>
+  framework?: string
 }
 
 export interface ValidationMessage {
@@ -485,6 +486,16 @@ export interface ExerciseFilters {
   category?: string
   effort?: EffortLevel[]
   equipment?: EquipmentId[]
+}
+
+// ─── Ontology (heatmap visualization) ─────────────────────────────────────────
+
+export interface OntologyData {
+  philosophies: Philosophy[]
+  frameworks: Framework[]
+  modalities: Modality[]
+  archetypes: Archetype[]
+  exercises: Exercise[]
 }
 
 // ─── Bio / Performance Data ────────────────────────────────────────────────────
