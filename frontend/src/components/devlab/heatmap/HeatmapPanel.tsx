@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Loader2, GitCompare } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 interface HeatmapPanelProps {
   program: TracedProgram | null
@@ -110,32 +110,25 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
     )
   }
 
-  if (!program) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground text-sm gap-2">
-        <GitCompare className="h-8 w-8 opacity-30" />
-        <p>Generate a program to see the heatmap</p>
-      </div>
-    )
-  }
-
   if (!graphData) return null
 
   return (
     <div className="space-y-3">
-      {/* Controls */}
-      <HeatmapControls
-        program={program}
-        weekRange={weekRange}
-        onWeekRangeChange={handleWeekRangeChange}
-        compareMode={compareMode}
-        onCompareModeToggle={() => setCompareMode(!compareMode)}
-      />
+      {/* Controls — only available when a program is loaded */}
+      {program && (
+        <HeatmapControls
+          program={program}
+          weekRange={weekRange}
+          onWeekRangeChange={handleWeekRangeChange}
+          compareMode={compareMode}
+          onCompareModeToggle={() => setCompareMode(!compareMode)}
+        />
+      )}
 
       {/* Graph area */}
-      <div className={compareMode ? 'grid grid-cols-2 gap-3' : ''}>
+      <div className={compareMode && program ? 'grid grid-cols-2 gap-3' : ''}>
         <div>
-          {compareMode && (
+          {compareMode && program && (
             <div className="text-xs font-mono text-muted-foreground mb-1 px-1">
               {program.goal?.name ?? 'Program A'}
             </div>
@@ -147,6 +140,7 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
             onHoverNode={handleHoverNode}
             onClickNode={handleClickNode}
             expandedGroup={expandedGroup}
+
           />
         </div>
 
@@ -171,6 +165,7 @@ export function HeatmapPanel({ program, constraints }: HeatmapPanelProps) {
                   onHoverNode={handleHoverNode}
                   onClickNode={handleClickNode}
                   expandedGroup={expandedGroup}
+      
                 />
               </>
             ) : (

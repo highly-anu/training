@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { HeatmapNode } from './HeatmapNode'
 import { HeatmapEdge } from './HeatmapEdge'
 import type { HeatmapGraphData, LayerKind, ExerciseInGroup } from './useHeatmapData'
@@ -18,10 +18,9 @@ const LAYER_Y: Record<LayerKind, number> = {
 
 const EXPANDED_EXERCISES_Y = 750
 const NODE_HEIGHT = 28
-const NODE_PAD = 12
-const MIN_NODE_WIDTH = 90
+const NODE_PAD = 8
 const MAX_NODE_WIDTH = 160
-const SVG_PAD = 40
+const SVG_PAD = 32
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +98,18 @@ export function HeatmapGraph({
 }: HeatmapGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    setContainerWidth(el.clientWidth)
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // Group nodes by layer
   const nodesByLayer = useMemo(() => {
@@ -115,23 +126,27 @@ export function HeatmapGraph({
     return map
   }, [data.nodes])
 
-  // Calculate positions for all nodes
+  // Calculate positions for all nodes — fit every layer within the container width
   const { positions, svgWidth, svgHeight } = useMemo(() => {
+    const availableWidth = Math.max(containerWidth - 2 * SVG_PAD, 200)
     const pos: Record<string, NodePosition> = {}
-    let maxRight = 0
 
     for (const layer of LAYER_ORDER) {
       const nodes = nodesByLayer[layer]
       const count = nodes.length
-      const nodeWidth = Math.min(MAX_NODE_WIDTH, Math.max(MIN_NODE_WIDTH, 900 / Math.max(count, 1)))
+      if (count === 0) continue
+      // Shrink nodes as needed so all fit in one row; cap at MAX_NODE_WIDTH
+      const nodeWidth = Math.min(
+        MAX_NODE_WIDTH,
+        (availableWidth - (count - 1) * NODE_PAD) / count
+      )
       const totalWidth = count * nodeWidth + (count - 1) * NODE_PAD
-      const startX = SVG_PAD + Math.max(0, (1200 - totalWidth) / 2)
+      const startX = SVG_PAD + (availableWidth - totalWidth) / 2
       const y = LAYER_Y[layer]
 
       for (let i = 0; i < nodes.length; i++) {
         const x = startX + i * (nodeWidth + NODE_PAD)
         pos[nodes[i].id] = { x, y, width: nodeWidth, height: NODE_HEIGHT }
-        maxRight = Math.max(maxRight, x + nodeWidth)
       }
     }
 
@@ -141,20 +156,23 @@ export function HeatmapGraph({
       const groupKey = expandedGroup.replace('exercise_group::', '')
       const exercises = data.exercisesByGroup[groupKey]
       if (exercises) {
-        const exWidth = 100
-        const totalExWidth = exercises.length * exWidth + (exercises.length - 1) * 8
-        const startX = SVG_PAD + Math.max(0, (1200 - totalExWidth) / 2)
+        const exWidth = Math.min(
+          100,
+          (availableWidth - (exercises.length - 1) * 6) / exercises.length
+        )
+        const totalExWidth = exercises.length * exWidth + (exercises.length - 1) * 6
+        const startX = SVG_PAD + (availableWidth - totalExWidth) / 2
         for (let i = 0; i < exercises.length; i++) {
-          const x = startX + i * (exWidth + 8)
+          const x = startX + i * (exWidth + 6)
           pos[`exercise::${exercises[i].id}`] = { x, y: EXPANDED_EXERCISES_Y, width: exWidth, height: NODE_HEIGHT }
-          maxRight = Math.max(maxRight, x + exWidth)
         }
         height = EXPANDED_EXERCISES_Y + NODE_HEIGHT + SVG_PAD
       }
     }
 
-    return { positions: pos, svgWidth: Math.max(maxRight + SVG_PAD, 1280), svgHeight: height }
-  }, [nodesByLayer, expandedGroup, data.exercisesByGroup])
+    const svgW = containerWidth > 0 ? containerWidth : availableWidth + 2 * SVG_PAD
+    return { positions: pos, svgWidth: svgW, svgHeight: height }
+  }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth])
 
   // Determine which nodes/edges are highlighted
   const activeNode = lockedNode ?? highlightedNode
@@ -178,14 +196,14 @@ export function HeatmapGraph({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-auto bg-background rounded-lg border border-border"
-      style={{ maxHeight: '80vh' }}
+      className="relative w-full overflow-x-hidden bg-background rounded-lg border border-border"
+      style={{ maxHeight: '80vh', overflowY: 'auto' }}
     >
       <svg
         width={svgWidth}
         height={svgHeight}
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        className="block"
+        className="block w-full"
       >
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -215,6 +233,7 @@ export function HeatmapGraph({
 
         {/* Edges (render behind nodes) */}
         {data.edges.map(edge => {
+          const h = getHighlight(edge.id)
           const sourcePos = positions[edge.source]
           const targetPos = positions[edge.target]
           if (!sourcePos || !targetPos) return null
@@ -226,7 +245,7 @@ export function HeatmapGraph({
               y1={sourcePos.y + sourcePos.height}
               x2={targetPos.x + targetPos.width / 2}
               y2={targetPos.y}
-              highlighted={getHighlight(edge.id)}
+              highlighted={h}
             />
           )
         })}
@@ -257,6 +276,7 @@ export function HeatmapGraph({
 
         {/* Nodes */}
         {data.nodes.map(node => {
+          const h = getHighlight(node.id)
           const pos = positions[node.id]
           if (!pos) return null
           return (
@@ -267,7 +287,7 @@ export function HeatmapGraph({
               y={pos.y}
               width={pos.width}
               height={pos.height}
-              highlighted={getHighlight(node.id)}
+              highlighted={h}
               onClick={onClickNode}
               onHover={onHoverNode}
               isExpanded={node.id === expandedGroup}
