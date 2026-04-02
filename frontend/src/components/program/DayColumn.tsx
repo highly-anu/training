@@ -22,7 +22,7 @@ export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps
   const dayIndex = DAYS.indexOf(day)
   const isWeekend = dayIndex >= 5
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const isComplete = sessions.length > 0 && sessionLogs[`${weekNumber}-${day}`]?.[0] === true
+  const isComplete = sessions.length > 0 && sessions.every((_, i) => sessionLogs[`${weekNumber}-${day}`]?.[i] === true)
 
   return (
     <motion.div
@@ -52,7 +52,7 @@ export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps
       <div className="space-y-2">
         {sessions.length > 0 ? (
           sessions.map((session, i) => (
-            <SessionCard key={i} session={session} weekNumber={weekNumber} day={day} />
+            <SessionCard key={i} session={session} weekNumber={weekNumber} day={day} sessionIndex={i} />
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-border/50 p-3 text-center">

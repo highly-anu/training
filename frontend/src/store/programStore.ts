@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GeneratedProgram } from '@/api/types'
+import type { GeneratedProgram, Session } from '@/api/types'
 import { fetchUserProgram, saveUserProgram } from '@/api/userdata'
 
 interface ProgramStore {
@@ -22,6 +22,8 @@ interface ProgramStore {
   setSourceGoals: (ids: string[], weights: Record<string, number>) => void
   /** Move a session from one day to another within the same week. Pure client-side override. */
   moveSession: (weekIndex: number, fromDay: string, toDay: string, sessionIndex: number) => void
+  /** Replace a single session at the given position with a new one. */
+  replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
   /** Load program from server (called on login). */
   loadFromServer: () => Promise<void>
 }
@@ -90,6 +92,30 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         eventDate:          s.eventDate,
         sourceGoalIds:      s.sourceGoalIds,
         sourceGoalWeights:  s.sourceGoalWeights,
+      })
+    }
+  },
+
+  replaceSession: (weekIndex, day, sessionIndex, newSession) => {
+    set((state) => {
+      if (!state.currentProgram) return {}
+      const weeks = state.currentProgram.weeks.map((week, i) => {
+        if (i !== weekIndex) return week
+        const sessions = [...(week.schedule[day] ?? [])]
+        if (sessionIndex < 0 || sessionIndex >= sessions.length) return week
+        sessions[sessionIndex] = newSession
+        return { ...week, schedule: { ...week.schedule, [day]: sessions } }
+      })
+      return { currentProgram: { ...state.currentProgram, weeks } }
+    })
+    const s = get()
+    if (s.currentProgram) {
+      saveUserProgram({
+        currentProgram:    s.currentProgram,
+        programStartDate:  s.programStartDate,
+        eventDate:         s.eventDate,
+        sourceGoalIds:     s.sourceGoalIds,
+        sourceGoalWeights: s.sourceGoalWeights,
       })
     }
   },

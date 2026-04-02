@@ -4,7 +4,7 @@ import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { useUiStore } from '@/store/uiStore'
-import type { AthleteConstraints, CustomInjuryFlag, GeneratedProgram, ModalityId, TracedProgram } from './types'
+import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram } from './types'
 
 function getMondayOf(date: Date): string {
   const d = new Date(date)
@@ -100,6 +100,39 @@ export function useRegenerateFromWeek() {
 
 export function useCurrentProgram(): GeneratedProgram | undefined {
   return useProgramStore((s) => s.currentProgram) ?? undefined
+}
+
+export interface GenerateSessionParams {
+  goalId: string
+  modality: ModalityId
+  phase: TrainingPhase
+  weekInPhase: number
+  isDeload: boolean
+  constraints: {
+    session_time_minutes: number
+    equipment: string[]
+    injury_flags: string[]
+    training_level: TrainingLevel
+    fatigue_state: FatigueState
+  }
+  customInjuryFlags?: CustomInjuryFlag[]
+  archetypeId?: string
+}
+
+export function useGenerateSession() {
+  return useMutation({
+    mutationFn: (p: GenerateSessionParams) =>
+      apiClient.post('/sessions/generate', {
+        goal_id: p.goalId,
+        modality: p.modality,
+        phase: p.phase,
+        week_in_phase: p.weekInPhase,
+        is_deload: p.isDeload,
+        constraints: p.constraints,
+        custom_injury_flags: p.customInjuryFlags ?? [],
+        ...(p.archetypeId ? { archetype_id: p.archetypeId } : {}),
+      }) as unknown as Promise<Session>,
+  })
 }
 
 // Dev-only: generates with full trace, does NOT update the program store

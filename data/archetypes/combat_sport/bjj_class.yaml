@@ -1,0 +1,91 @@
+id: bjj_class
+name: "BJJ Class (Drilling + Sparring)"
+modality: combat_sport
+category: combat_sport
+duration_estimate_minutes: 75
+required_equipment:
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - maintenance
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+sources:
+  - "BJJ (Gracie, Gym Jones, Ido Portal)"
+  - "Kelly Starrett"
+notes: >
+  Standard BJJ class structure: warm-up, instructor-led technique and drilling,
+  positional sparring, and free rolling. Content is coach-directed so slots are
+  structural/descriptive — the exercise prescription is the mat itself.
+  Recovery cost is high when rolling rounds are included (equivalent to a hard
+  mixed modal session). Drilling-only classes carry moderate recovery cost.
+  On taper weeks, rolling is reduced or eliminated per the deload scaling below.
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: light
+    skip_exercise: true
+    notes: >
+      Grappling-specific movement prep: shrimping (forward and reverse), technical
+      stand-ups, granby rolls, hip circles, bridge and hip escape series. Wrist
+      circles and neck rotation (omit neck rotation if cervical injury flag is active).
+      ~10 min. Sets the neurological pattern for mat movement — not optional.
+
+  - role: technique_drilling
+    slot_type: skill_practice
+    duration_sec: 1500
+    intensity: light
+    skip_exercise: true
+    notes: >
+      Instructor-led technique and partner drilling. Low physical intensity, high
+      cognitive focus. New positions, submissions, escapes, or transitions as
+      directed by the coach. ~25 min. This is where skill accumulates — treat it
+      with the same focus as a heavy strength set.
+
+  - role: positional_sparring
+    slot_type: time_domain
+    duration_sec: 900
+    intensity: moderate
+    skip_exercise: true
+    notes: >
+      Constrained live sparring from a set position (guard, side control, back,
+      mount). Both athletes reset to the same position after each finish or escape.
+      Bridges the gap between drilling and free rolling. ~15 min.
+
+  - role: free_rolling
+    slot_type: time_domain
+    duration_sec: 1500
+    intensity: high
+    skip_exercise: true
+    notes: >
+      Live rounds at full pace. Primary conditioning stimulus and the main driver
+      of recovery cost. Typically 5–6 min rounds with 1 min rest. Isometric
+      endurance, explosive hip extension, grip endurance, and aerobic capacity
+      under positional pressure. ~25 min.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.6
+    notes: >
+      Drop free_rolling entirely on deload weeks. Keep warm-up and technique
+      drilling only. Positional sparring optional at low intensity (flow rolling,
+      no resistance). Total session ~35-40 min. Mat time is maintained for skill
+      continuity without the high recovery cost of live rounds.
+  time_limited:
+    drop_slots:
+      - positional_sparring
+    notes: >
+      60-min class: reduce free_rolling to 20 min (1500s → 1200s). The warm-up
+      and technique block are non-negotiable — do not shorten them.
+      90-min class: extend free_rolling to 2100s (~35 min) to fill the extra time.
+  equipment_limited:
+    substitutions: []
+    notes: "No equipment required beyond an open mat surface. No substitutions needed."

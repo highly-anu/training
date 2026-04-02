@@ -39,7 +39,7 @@ export function Dashboard() {
     return DAYS.every((day) => {
       const sessions = currentWeek.schedule[day] ?? []
       if (sessions.length === 0) return true
-      return sessionLogs[`${currentWeek.week_number}-${day}`]?.[0] === true
+      return sessions.every((_, i) => sessionLogs[`${currentWeek.week_number}-${day}`]?.[i] === true)
     })
   }, [currentWeek, sessionLogs])
 

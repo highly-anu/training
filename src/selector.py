@@ -487,11 +487,15 @@ def populate_session(
     recent_arch_ids: list | None = None,
     recent_ex_ids: list | None = None,
     collect_trace: bool = False,
+    forced_archetype: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
     When collect_trace=True the result dict includes a 'session_trace' key with
     archetype selection and per-slot exercise selection trace data.
+
+    When forced_archetype is provided, archetype selection is skipped and the
+    given archetype dict is used directly (used by the single-session replace endpoint).
     """
     modality = session['modality']
     is_deload = session.get('is_deload', False)
@@ -501,7 +505,10 @@ def populate_session(
     unlocked = _get_unlocked(training_level, exercises) - excl_ids
 
     # Select archetype
-    if collect_trace:
+    if forced_archetype is not None:
+        arch = forced_archetype
+        arch_trace: dict = {}
+    elif collect_trace:
         arch_result = select_archetype(
             modality, constraints, phase, is_deload,
             goal, archetypes, recent_arch_ids,

@@ -20,5 +20,7 @@ def get_conn():
         raise RuntimeError('DATABASE_URL environment variable not set — Supabase Postgres not configured')
     import psycopg2
     import psycopg2.extras
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    # Supabase pooler requires SSL; add sslmode=require if not already specified
+    dsn = DATABASE_URL if 'sslmode=' in DATABASE_URL else DATABASE_URL + ('&' if '?' in DATABASE_URL else '?') + 'sslmode=require'
+    conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
