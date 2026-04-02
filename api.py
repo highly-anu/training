@@ -361,6 +361,66 @@ def get_archetypes():
     return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))
 
 
+@app.get('/api/ontology')
+def get_ontology():
+    """Lightweight static graph of the full ontology for heatmap visualization."""
+    # Philosophies
+    philosophies = []
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'philosophies', '*.yaml'))):
+        p = _load_yaml(path)
+        philosophies.append({'id': p['id'], 'name': p.get('name', p['id'])})
+
+    # Frameworks (with source_philosophy + modality links)
+    frameworks = []
+    fw_dir = os.path.join(_DATA_DIR, 'frameworks')
+    for path in sorted(glob.glob(os.path.join(fw_dir, '*.yaml'))):
+        fw = _load_yaml(path)
+        frameworks.append({
+            'id': fw['id'],
+            'name': fw.get('name', fw['id']),
+            'source_philosophy': fw.get('source_philosophy'),
+            'sessions_per_week_keys': list(fw.get('sessions_per_week', {}).keys()),
+        })
+
+    # Modalities
+    modalities = []
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
+        m = _load_yaml(path)
+        modalities.append({'id': m['id'], 'name': m.get('name', m['id'])})
+
+    # Archetypes
+    archetypes = []
+    for arch in loader.load_all_archetypes():
+        archetypes.append({
+            'id': arch['id'],
+            'name': arch.get('name', arch['id']),
+            'modality': arch.get('modality'),
+        })
+    archetypes.sort(key=lambda a: a['id'])
+
+    # Exercises
+    exercises = []
+    all_ex = loader.load_all_exercises()
+    for ex in sorted(all_ex.values(), key=lambda e: e['id']):
+        mod = ex.get('modality', [])
+        if isinstance(mod, str):
+            mod = [mod]
+        exercises.append({
+            'id': ex['id'],
+            'name': ex.get('name', ex['id']),
+            'category': ex.get('category'),
+            'modality': mod,
+        })
+
+    return jsonify({
+        'philosophies': philosophies,
+        'frameworks': frameworks,
+        'modalities': modalities,
+        'archetypes': archetypes,
+        'exercises': exercises,
+    })
+
+
 @app.post('/api/exercises')
 def create_exercise():
     body = request.get_json(silent=True) or {}

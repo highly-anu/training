@@ -20,6 +20,7 @@ import { ValidationPanel } from '@/components/devlab/ValidationPanel'
 import { SchedulerPanel } from '@/components/devlab/SchedulerPanel'
 import { SessionsPanel } from '@/components/devlab/SessionsPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
+import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import type { EquipmentId, TrainingLevel, TrainingPhase, TracedProgram, WeekData } from '@/api/types'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
@@ -179,7 +180,7 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!goalId && !generateMutation.isPending
 
-  const [devTab, setDevTab] = useState<'pipeline' | 'browser'>('pipeline')
+  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap'>('pipeline')
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -210,12 +211,39 @@ export function DevLab() {
           >
             Object Browser
           </button>
+          <button
+            onClick={() => setDevTab('heatmap')}
+            className={cn(
+              'px-3 py-1 rounded text-xs border transition-colors',
+              devTab === 'heatmap'
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted'
+            )}
+          >
+            Heatmap
+          </button>
         </div>
       </div>
 
       {devTab === 'browser' && (
         <div className="flex-1 min-h-0">
           <ObjectBrowser />
+        </div>
+      )}
+
+      {devTab === 'heatmap' && (
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <HeatmapPanel
+            program={result}
+            constraints={result ? {
+              equipment,
+              days_per_week: days,
+              session_time_minutes: sessionTime,
+              training_level: level,
+              training_phase: phase,
+              numWeeks,
+            } : undefined}
+          />
         </div>
       )}
 
