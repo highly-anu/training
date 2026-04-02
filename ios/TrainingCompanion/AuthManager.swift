@@ -1,0 +1,103 @@
+import Foundation
+import Combine
+
+/// Thin wrapper around Supabase Swift SDK auth.
+/// Uses the same project credentials as the web app — no separate account needed.
+@MainActor
+final class AuthManager: ObservableObject {
+    @Published var isSignedIn = false
+    @Published var accessToken: String? = nil
+
+    // Loaded from ios/TrainingCompanion/Config.plist
+    static let supabaseURL = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String ?? ""
+    static let supabaseAnonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
+
+    private let sessionKey = "supabase_session"
+
+    init() {
+        // Restore persisted session; refresh if expired
+        if let data = UserDefaults.standard.data(forKey: sessionKey),
+           let session = try? JSONDecoder().decode(StoredSession.self, from: data) {
+            if session.expiresAt > Date() {
+                self.accessToken = session.accessToken
+                self.isSignedIn = true
+            } else if let refreshToken = session.refreshToken {
+                // Token expired — attempt silent refresh on first use
+                Task { await self.refreshSession(refreshToken: refreshToken) }
+            }
+        }
+    }
+
+    func signIn(email: String, password: String) async throws {
+        let result = try await passwordGrant(email: email, password: password)
+        persistSession(result)
+    }
+
+    func signOut() {
+        accessToken = nil
+        isSignedIn = false
+        UserDefaults.standard.removeObject(forKey: sessionKey)
+    }
+
+    // MARK: - Private
+
+    private func passwordGrant(email: String, password: String) async throws -> AuthResponse {
+        var request = URLRequest(url: URL(string: "\(AuthManager.supabaseURL)/auth/v1/token?grant_type=password")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(AuthManager.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.httpBody = try JSONEncoder().encode(["email": email, "password": password])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw AuthError.invalidCredentials
+        }
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
+    }
+
+    private func refreshSession(refreshToken: String) async {
+        guard let url = URL(string: "\(AuthManager.supabaseURL)/auth/v1/token?grant_type=refresh_token") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(AuthManager.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.httpBody = try? JSONEncoder().encode(["refresh_token": refreshToken])
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let result = try? JSONDecoder().decode(AuthResponse.self, from: data) else {
+            signOut()
+            return
+        }
+        persistSession(result)
+    }
+
+    private func persistSession(_ result: AuthResponse) {
+        self.accessToken = result.access_token
+        self.isSignedIn = true
+
+        let session = StoredSession(
+            accessToken: result.access_token,
+            refreshToken: result.refresh_token,
+            expiresAt: Date().addingTimeInterval(TimeInterval(result.expires_in))
+        )
+        UserDefaults.standard.set(try? JSONEncoder().encode(session), forKey: sessionKey)
+    }
+}
+
+enum AuthError: LocalizedError {
+    case invalidCredentials
+    var errorDescription: String? { "Invalid email or password." }
+}
+
+private struct AuthResponse: Decodable {
+    let access_token: String
+    let refresh_token: String?
+    let expires_in: Int
+}
+
+private struct StoredSession: Codable {
+    let accessToken: String
+    let refreshToken: String?
+    let expiresAt: Date
+}

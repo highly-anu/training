@@ -92,13 +92,35 @@ CREATE POLICY "users access own session logs"
 
 
 CREATE TABLE IF NOT EXISTS daily_bio (
-  date       DATE NOT NULL,
-  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  resting_hr INTEGER,
-  hrv        REAL,
-  notes      TEXT,
+  date                   DATE NOT NULL,
+  user_id                UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  resting_hr             INTEGER,
+  hrv                    REAL,
+  notes                  TEXT,
+  sleep_duration_min     INTEGER,
+  deep_sleep_min         INTEGER,
+  rem_sleep_min          INTEGER,
+  light_sleep_min        INTEGER,
+  awake_min              INTEGER,
+  sleep_start            TIMESTAMPTZ,
+  sleep_end              TIMESTAMPTZ,
+  spo2_avg               REAL,
+  respiratory_rate_avg   REAL,
+  source                 TEXT NOT NULL DEFAULT 'manual',
   PRIMARY KEY (date, user_id)
 );
+
+-- Migration for existing deployments (safe to run on a table that already exists):
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS sleep_duration_min INTEGER;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS deep_sleep_min INTEGER;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS rem_sleep_min INTEGER;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS light_sleep_min INTEGER;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS awake_min INTEGER;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS sleep_start TIMESTAMPTZ;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS sleep_end TIMESTAMPTZ;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS spo2_avg REAL;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS respiratory_rate_avg REAL;
+-- ALTER TABLE daily_bio ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual';
 
 ALTER TABLE daily_bio ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users access own bio logs"

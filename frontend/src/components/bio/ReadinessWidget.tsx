@@ -11,6 +11,8 @@ const FLAG_LABELS: Record<ReadinessFlag, string> = {
   elevated_rhr_3d: 'Elevated resting HR (3+ days)',
   suppressed_hrv_3d: 'Suppressed HRV (3+ days)',
   high_accumulated_fatigue: 'High accumulated fatigue',
+  insufficient_sleep: 'Less than 5h sleep last night',
+  poor_sleep_3d: 'Poor sleep 3+ nights in a row',
   insufficient_data: 'Limited data — add daily check-ins',
 }
 

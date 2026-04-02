@@ -197,22 +197,63 @@ def upsert_daily_bio(user_id: str, entry: dict) -> None:
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute('''
-                    INSERT INTO daily_bio (date, user_id, resting_hr, hrv, notes)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO daily_bio (
+                        date, user_id, resting_hr, hrv, notes,
+                        sleep_duration_min, deep_sleep_min, rem_sleep_min,
+                        light_sleep_min, awake_min, sleep_start, sleep_end,
+                        spo2_avg, respiratory_rate_avg, source
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (date, user_id) DO UPDATE SET
-                        resting_hr = EXCLUDED.resting_hr,
-                        hrv        = EXCLUDED.hrv,
-                        notes      = EXCLUDED.notes
+                        resting_hr           = EXCLUDED.resting_hr,
+                        hrv                  = EXCLUDED.hrv,
+                        notes                = COALESCE(EXCLUDED.notes, daily_bio.notes),
+                        sleep_duration_min   = EXCLUDED.sleep_duration_min,
+                        deep_sleep_min       = EXCLUDED.deep_sleep_min,
+                        rem_sleep_min        = EXCLUDED.rem_sleep_min,
+                        light_sleep_min      = EXCLUDED.light_sleep_min,
+                        awake_min            = EXCLUDED.awake_min,
+                        sleep_start          = EXCLUDED.sleep_start,
+                        sleep_end            = EXCLUDED.sleep_end,
+                        spo2_avg             = EXCLUDED.spo2_avg,
+                        respiratory_rate_avg = EXCLUDED.respiratory_rate_avg,
+                        source               = EXCLUDED.source
                 ''', (
                     entry['date'],
                     user_id,
                     entry.get('restingHR'),
                     entry.get('hrv'),
                     entry.get('notes'),
+                    entry.get('sleepDurationMin'),
+                    entry.get('deepSleepMin'),
+                    entry.get('remSleepMin'),
+                    entry.get('lightSleepMin'),
+                    entry.get('awakeMins'),
+                    entry.get('sleepStart') or None,
+                    entry.get('sleepEnd') or None,
+                    entry.get('spo2Avg'),
+                    entry.get('respiratoryRateAvg'),
+                    entry.get('source', 'manual'),
                 ))
             conn.commit()
     except RuntimeError:
         pass
+
+
+def get_synced_dates(user_id: str) -> list[str]:
+    """Return dates that already have apple_watch-sourced bio data."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT date FROM daily_bio WHERE user_id = %s AND source = 'apple_watch'",
+                    (user_id,),
+                )
+                rows = cur.fetchall()
+        return [str(row['date']) for row in rows]
+    except RuntimeError:
+        return []
 
 
 def get_daily_bio(user_id: str) -> dict:
@@ -231,6 +272,25 @@ def get_daily_bio(user_id: str) -> dict:
                 entry['hrv'] = row['hrv']
             if row['notes']:
                 entry['notes'] = row['notes']
+            if row.get('sleep_duration_min') is not None:
+                entry['sleepDurationMin'] = row['sleep_duration_min']
+            if row.get('deep_sleep_min') is not None:
+                entry['deepSleepMin'] = row['deep_sleep_min']
+            if row.get('rem_sleep_min') is not None:
+                entry['remSleepMin'] = row['rem_sleep_min']
+            if row.get('light_sleep_min') is not None:
+                entry['lightSleepMin'] = row['light_sleep_min']
+            if row.get('awake_min') is not None:
+                entry['awakeMins'] = row['awake_min']
+            if row.get('sleep_start') is not None:
+                entry['sleepStart'] = str(row['sleep_start'])
+            if row.get('sleep_end') is not None:
+                entry['sleepEnd'] = str(row['sleep_end'])
+            if row.get('spo2_avg') is not None:
+                entry['spo2Avg'] = row['spo2_avg']
+            if row.get('respiratory_rate_avg') is not None:
+                entry['respiratoryRateAvg'] = row['respiratory_rate_avg']
+            entry['source'] = row.get('source') or 'manual'
             result[str(row['date'])] = entry
         return result
     except RuntimeError:

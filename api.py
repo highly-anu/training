@@ -1275,6 +1275,12 @@ def health_upsert_session(session_key: str):
     return jsonify({'saved': session_key})
 
 
+@app.get('/api/health/bio/synced-dates')
+@require_auth
+def health_synced_dates():
+    return jsonify(_health.get_synced_dates(g.user_id))
+
+
 @app.put('/api/health/bio/<date>')
 @require_auth
 def health_upsert_bio(date: str):

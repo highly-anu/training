@@ -562,6 +562,17 @@ export interface DailyBioLog {
   restingHR?: number
   hrv?: number // RMSSD ms
   notes?: string
+  // Sleep data (populated automatically via Apple Watch sync)
+  sleepDurationMin?: number
+  deepSleepMin?: number
+  remSleepMin?: number
+  lightSleepMin?: number
+  awakeMins?: number
+  sleepStart?: string  // ISO timestamp
+  sleepEnd?: string    // ISO timestamp
+  spo2Avg?: number     // %
+  respiratoryRateAvg?: number // breaths/min
+  source?: 'manual' | 'apple_watch'
 }
 
 export interface WorkoutMatch {
