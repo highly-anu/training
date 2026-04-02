@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
-import { GripVertical, Check } from 'lucide-react'
+import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { formatLoad } from '@/lib/formatLoad'
 import { useProfileStore } from '@/store/profileStore'
+import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import type { Session, WeekData } from '@/api/types'
 
@@ -42,6 +43,7 @@ interface SessionCardProps {
   dragHandleListeners?: Record<string, unknown>
   dragHandleRef?: (el: HTMLElement | null) => void
   onClick: () => void
+  onToggleComplete: () => void
 }
 
 function SessionCard({
@@ -53,6 +55,7 @@ function SessionCard({
   dragHandleListeners,
   dragHandleRef,
   onClick,
+  onToggleComplete,
 }: SessionCardProps) {
   const colors = MODALITY_COLORS[session.modality]
   const exercises = mainExercises(session)
@@ -122,6 +125,21 @@ function SessionCard({
         )}
       </div>
 
+      {/* Complete toggle */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onToggleComplete() }}
+        className={cn(
+          'absolute bottom-1.5 right-1.5 p-0.5 rounded-full transition-all',
+          isComplete
+            ? 'text-emerald-500'
+            : 'opacity-0 group-hover/card:opacity-40 hover:!opacity-100 text-muted-foreground hover:text-emerald-500'
+        )}
+        title={isComplete ? 'Mark incomplete' : 'Mark complete'}
+      >
+        {isComplete ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
+      </button>
+
       {/* Drag handle */}
       {dragHandleListeners && (
         <div
@@ -151,6 +169,7 @@ interface DraggableSessionProps {
   day: string
   isComplete: boolean
   onCardClick: () => void
+  onToggleComplete: () => void
 }
 
 function DraggableSession({
@@ -160,6 +179,7 @@ function DraggableSession({
   day,
   isComplete,
   onCardClick,
+  onToggleComplete,
 }: DraggableSessionProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: dragId,
@@ -184,6 +204,7 @@ function DraggableSession({
         isDragging={false}
         dragHandleListeners={listeners as Record<string, unknown>}
         onClick={onCardClick}
+        onToggleComplete={onToggleComplete}
       />
     </div>
   )
@@ -255,8 +276,9 @@ function DroppableDay({
         {hasSessions ? (
           children
         ) : (
-          <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground/40 select-none">
-            rest
+          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 select-none">
+            <BatteryCharging className="size-[30px] text-muted-foreground/40" />
+            <span className="text-[10px] text-muted-foreground/40">rest</span>
           </div>
         )}
       </div>
@@ -303,6 +325,8 @@ interface WeekOverviewProps {
 export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: WeekOverviewProps) {
   const programStartDate = useProgramStore(s => s.programStartDate)
   const sessionLogs = useProfileStore(s => s.sessionLogs)
+  const setSessionLog = useProfileStore(s => s.setSessionLog)
+  const upsertSessionPerformance = useBioStore(s => s.upsertSessionPerformance)
   const moveSession = useProgramStore(s => s.moveSession)
 
   // Which program week index contains today? Only that week shows the "today" chip.
@@ -345,11 +369,13 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
       <div className="grid grid-cols-7 gap-1.5">
         {DAYS.map((day, i) => {
           const sessions = weekData?.schedule[day] ?? []
+          const dayKey = `${weekData?.week_number}-${day}`
+          const dayLogs = sessionLogs[dayKey]
           const isToday = isCurrentCalendarWeek && day === todayDayName
           const isSelected = selectedDay === day
-          const isComplete =
+          const isDayComplete =
             sessions.length > 0 &&
-            sessions.every((_, idx) => sessionLogs[`${weekData?.week_number}-${day}`]?.[idx] === true)
+            sessions.every((_, idx) => dayLogs?.[idx] === true)
 
           return (
             <DroppableDay
@@ -358,23 +384,40 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
               dayAbb={DAY_ABB[i]}
               isToday={isToday}
               isSelected={isSelected}
-              isComplete={isComplete}
+              isComplete={isDayComplete}
               hasSessions={sessions.length > 0}
               onHeaderClick={() => {
                 if (sessions.length > 0) onDaySelect?.(isSelected ? null : day)
               }}
             >
-              {sessions.map((session, si) => (
-                <DraggableSession
-                  key={si}
-                  dragId={`${day}|${si}`}
-                  session={session}
-                  weekNumber={weekData?.week_number ?? 1}
-                  day={day}
-                  isComplete={isComplete}
-                  onCardClick={() => onDaySelect?.(isSelected ? null : day)}
-                />
-              ))}
+              {sessions.map((session, si) => {
+                const sessionIsComplete = dayLogs?.[si] === true
+                return (
+                  <DraggableSession
+                    key={si}
+                    dragId={`${day}|${si}`}
+                    session={session}
+                    weekNumber={weekData?.week_number ?? 1}
+                    day={day}
+                    isComplete={sessionIsComplete}
+                    onCardClick={() => onDaySelect?.(isSelected ? null : day)}
+                    onToggleComplete={() => {
+                      const current = sessionLogs[dayKey] ?? []
+                      const next = [...current]
+                      next[si] = !next[si]
+                      setSessionLog(dayKey, next)
+                      if (next[si]) {
+                        upsertSessionPerformance({
+                          sessionKey: dayKey,
+                          exercises: {},
+                          notes: '',
+                          completedAt: new Date().toISOString(),
+                        })
+                      }
+                    }}
+                  />
+                )
+              })}
             </DroppableDay>
           )
         })}

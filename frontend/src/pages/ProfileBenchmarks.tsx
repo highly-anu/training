@@ -178,7 +178,7 @@ export function ProfileBenchmarks() {
             ) : (
               <>
                 <div>
-                  <h2 className="text-sm font-semibold mb-1">Strength Standards</h2>
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Strength Standards</h2>
                   <p className="text-xs text-muted-foreground mb-4">
                     Enter your current PR to see your level — saved to your profile
                   </p>
@@ -192,7 +192,7 @@ export function ProfileBenchmarks() {
                 <Separator />
 
                 <div>
-                  <h2 className="text-sm font-semibold mb-1">Conditioning Standards</h2>
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Conditioning Standards</h2>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {benchmarks.filter((b) => b.category === 'conditioning').map((bench) => (
                       <BenchCard key={bench.id} bench={bench} />
@@ -219,7 +219,7 @@ export function ProfileBenchmarks() {
                     <>
                       <Separator />
                       <div>
-                        <h2 className="text-sm font-semibold mb-1">Cell Standards</h2>
+                        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Cell Standards</h2>
                         <p className="text-xs text-muted-foreground mb-5">
                           Five-tier benchmark system (The Cell Fitness). Levels I–IV shown.
                         </p>

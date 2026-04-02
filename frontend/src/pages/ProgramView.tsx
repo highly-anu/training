@@ -145,11 +145,13 @@ export function ProgramView() {
         </div>
 
         <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
+      </div>
 
+      <div className="border-b bg-card/50 px-6">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="h-7 bg-muted/50">
-            <TabsTrigger value="overview" className="h-5 px-3 text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="calendar" className="h-5 px-3 text-xs">Calendar</TabsTrigger>
+          <TabsList className="h-10 bg-transparent gap-0 border-0 p-0">
+            <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Overview</TabsTrigger>
+            <TabsTrigger value="calendar" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Calendar</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

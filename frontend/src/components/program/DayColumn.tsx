@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { Check, BatteryCharging } from 'lucide-react'
 import { SessionCard } from './SessionCard'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
@@ -55,7 +55,8 @@ export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps
             <SessionCard key={i} session={session} weekNumber={weekNumber} day={day} sessionIndex={i} />
           ))
         ) : (
-          <div className="rounded-lg border border-dashed border-border/50 p-3 text-center">
+          <div className="rounded-lg border border-dashed border-border/50 p-3 flex flex-col items-center justify-center gap-1.5">
+            <BatteryCharging className="size-[30px] text-muted-foreground/50" />
             <span className="text-[10px] text-muted-foreground">Rest</span>
           </div>
         )}
