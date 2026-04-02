@@ -1,0 +1,34 @@
+# Personal health data — must not be in image
+data/apple_health_export/
+data/*.db
+*.db
+
+# Frontend — not needed in backend image
+frontend/
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.local
+
+# Dev/editor
+.claude/
+.wrangler/
+docs/
+*.md
+.idea/
+.vscode/
+
+# Logs / temp
+data/api_errors.txt
