@@ -9,8 +9,15 @@ struct ContentView: View {
             SyncView(sync: sync)
                 .onAppear {
                     sync.configure(auth: auth)
-                    // Auto-sync on launch
-                    Task { await sync.syncAll() }
+                    Task {
+                        do {
+                            try await HealthKitManager.shared.requestPermissions()
+                        } catch {
+                            sync.lastError = "HealthKit: \(error.localizedDescription)"
+                            return
+                        }
+                        await sync.syncAll()
+                    }
                     scheduleNextSync()
                 }
         } else {

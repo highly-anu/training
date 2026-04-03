@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import WatchConnectivity
 
 // MARK: - Default rest seconds by modality (fallback when slot rest_sec is nil)
@@ -220,7 +221,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
     private func parseZoneRange(_ zoneTarget: String?) -> (Int?, Int?) {
         guard let s = zoneTarget else { return (nil, nil) }
         // Match first digit (lower bound)
-        let digits = s.matches(of: /Zone\s*(\d)/i)
+        let digits = s.matches(of: /(?i)Zone\s*(\d)/)
         guard let first = digits.first else { return (nil, nil) }
         let lower = Int(String(first.output.1))
         // Look for a second digit after a dash/en-dash for upper bound
@@ -229,6 +230,12 @@ final class WatchSessionManager: NSObject, ObservableObject {
             return (lower, upper ?? lower)
         }
         return (lower, lower)
+    }
+
+    private func weekdayName(for date: Date) -> String {
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let index = Calendar.current.component(.weekday, from: date) - 1
+        return names[index]
     }
 
     private func buildProfilePayload() -> [String: Any] {

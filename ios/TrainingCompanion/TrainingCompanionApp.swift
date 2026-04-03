@@ -14,7 +14,7 @@ struct TrainingCompanionApp: App {
 
     init() {
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "com.training.sync",
+            forTaskWithIdentifier: "haerdsoft.sync",
             using: nil
         ) { [self] task in
             guard let task = task as? BGAppRefreshTask else { return }
@@ -36,7 +36,7 @@ private func handleBackgroundSync(_ task: BGAppRefreshTask, auth: AuthManager) {
 }
 
 func scheduleNextSync() {
-    let request = BGAppRefreshTaskRequest(identifier: "com.training.sync")
+    let request = BGAppRefreshTaskRequest(identifier: "haerdsoft.sync")
     // Earliest next fire: 6 hours from now (system may delay further)
     request.earliestBeginDate = Date(timeIntervalSinceNow: 6 * 60 * 60)
     try? BGTaskScheduler.shared.submit(request)

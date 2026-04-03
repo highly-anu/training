@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @MainActor
 final class SyncManager: ObservableObject {
@@ -35,11 +36,10 @@ final class SyncManager: ObservableObject {
         do {
             let syncedDates = Set(try await api.getSyncedDates())
 
-            // Sync from last sync date (or 30 days ago) up to yesterday
+            // Always look back 30 days; use syncedDates from server for deduplication
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
-            let earliest = lastSyncDate.map { calendar.startOfDay(for: $0) }
-                ?? calendar.date(byAdding: .day, value: -30, to: today)!
+            let earliest = calendar.date(byAdding: .day, value: -30, to: today)!
 
             var cursor = earliest
             while cursor < today && !cancelled {

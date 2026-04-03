@@ -28,7 +28,9 @@ from flask import g
 
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
-CORS(app, resources={r"/api/*": {"origins": os.environ.get('FRONTEND_URL', '*')}})
+_frontend_url = os.environ.get('FRONTEND_URL', '*')
+_allowed_origins = [_frontend_url, 'http://localhost:5173', 'http://localhost:4173'] if _frontend_url != '*' else '*'
+CORS(app, resources={r"/api/*": {"origins": _allowed_origins}})
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Training Companion</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>API_BASE_URL</key>
+	<string>https://training-api.fly.dev/api</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>haerdsoft.sync</string>
+	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>TrainingCompanion reads your sleep, heart rate, and HRV data to sync with your training dashboard.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>TrainingCompanion does not write health data.</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvcGhjdGRlamN0cWVrcGx3bnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzE1OTEsImV4cCI6MjA5MDUwNzU5MX0.uzZA-4uqIq_ljoCM29OXGrHo3_SFkBI8_2pcO8ktPHM</string>
+	<key>SUPABASE_URL</key>
+	<string>https://bophctdejctqekplwnvp.supabase.co</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+</dict>
+</plist>
