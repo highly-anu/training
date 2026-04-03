@@ -203,6 +203,84 @@ Deep link: `userInfo["destination"] = "today"` → `TrainingCompanionApp` handle
 
 ---
 
+## BioLog Page
+
+Dedicated full-screen page pushed from Profile tab. Replaces the existing `SyncView` — all sync controls and health data visibility move here.
+
+**`ios/TrainingCompanion/Views/Profile/BioLogView.swift`**
+
+Sections:
+- **Last night** — sleep stages (Deep / REM / Light / Awake as colored pills), total duration, SpO2, respiratory rate
+- **30-day trends** — HR + HRV line chart (Swift Charts)
+- **Sync** — "Last synced {time}" + "Sync Now" button → `SyncManager.syncAll()`
+- **14-day log** — table: date, sleep hrs, resting HR, HRV
+
+Pull-to-refresh: `.refreshable { await sync.syncAll() }` on the scroll view.
+
+Data: `SyncManager.lastSyncDate`, `HealthKitManager.shared`, cached bio data from `UserDefaults`.
+
+---
+
+## Auth / ContentView Transition
+
+`ContentView.swift` currently: `isSignedIn ? SyncView : SignInView`.
+
+Change to: `isSignedIn ? MainTabView : SignInView`. `SignInView` is unchanged. `SyncView` is retired — its sync status and "Sync Now" live in BioLogView.
+
+`MainTabView.onAppear` calls `sync.configure(auth:)` then `Task { await sync.syncAll() }` — identical to what `SyncView.onAppear` does today. No new auth logic.
+
+---
+
+## ProgramStore Architecture
+
+`WatchSessionManager` is the single fetch owner for `GET /api/user/program`. `ProgramStore` is a view-model layer that reads from `WatchSessionManager`'s `@Published` properties and `UserDefaults` cache — no duplicate network call.
+
+```
+SyncManager.syncAll()
+  └─ WatchSessionManager.syncProgram()   ← fetches, caches, sends to watch
+       └─ ProgramStore observes           ← computes todaySessions, currentWeekIndex
+```
+
+`ProgramStore` responsibilities: compute `currentWeekIndex`, `todaySessions`, `weekSessions(for:)`. No fetching.
+
+When user generates a new program: `POST /api/programs/generate` succeeds → call `WatchSessionManager.syncProgram()` directly → re-fetches, re-caches, re-sends to watch → `ProgramStore` updates automatically.
+
+---
+
+## Pull-to-Refresh & Background Refresh
+
+- **TodayView, ProgramCalendarView:** `.refreshable { await watchSessionManager.syncProgram() }` — bypasses the 4-hour debounce for explicit pulls
+- **BioLogView:** `.refreshable { await sync.syncAll() }`
+- **Background:** `MainTabView` observes `scenePhase == .active`; if last sync >4 hours ago → silent `sync.syncAll()`. Same anchor logic `WatchSessionManager` already uses.
+
+---
+
+## Offline & Error Handling
+
+**Cached data available:**
+- Network failure → use cache silently
+- "Last updated {time}" shown in the TodayView watch sync strip (repurposed as a general staleness indicator)
+
+**No cache + network failure:**
+- Empty state with error message + retry button (not a separate error screen)
+
+**Generation failure:**
+- `POST /api/programs/generate` fails → inline error in ProgramBuilderView step 3
+- Sheet stays open; error message + retry button; button re-enabled
+- Generation takes 3–10s: show `ProgressView` spinner in "Generate" button while in-flight; haptic `.success` on dismiss
+
+**Exercises cache:**
+- `GET /api/exercises` cached to `UserDefaults` on first load; never re-fetched unless user explicitly pulls to refresh in Library tab
+
+---
+
+## Deferred to Phase 2
+
+- **WorkoutImport** — web has it; not in scope for initial build
+- **Philosophies** — reference content; skipped on mobile
+
+---
+
 ## New Files
 
 | File | Purpose |
@@ -221,6 +299,7 @@ Deep link: `userInfo["destination"] = "today"` → `TrainingCompanionApp` handle
 | `ios/TrainingCompanion/Views/Library/ExerciseDetailView.swift` | Exercise detail sheet |
 | `ios/TrainingCompanion/Views/Profile/ProfileView.swift` | Profile root |
 | `ios/TrainingCompanion/Views/Profile/BenchmarksView.swift` | Performance log entries |
+| `ios/TrainingCompanion/Views/Profile/BioLogView.swift` | Health metrics, sync status, 30-day trends |
 
 ---
 
@@ -231,7 +310,9 @@ Deep link: `userInfo["destination"] = "today"` → `TrainingCompanionApp` handle
 | `ios/TrainingCompanion/APIClient.swift` | `fetchProgram()`, `saveWorkoutLog()` (added in watch plan Phase 2) |
 | `ios/TrainingCompanion/AuthManager.swift` | Auth state, sign out |
 | `ios/TrainingCompanion/WatchModels.swift` | `WatchSession`, `WatchExercise`, `WatchSetLog`, `resolvedSlotType` |
-| `ios/TrainingCompanion/WatchSessionManager.swift` | `syncProgram()` — `ProgramStore` calls this; don't duplicate the fetch logic |
+| `ios/TrainingCompanion/WatchSessionManager.swift` | Single fetch owner for program; `ProgramStore` observes its `@Published` properties, doesn't fetch independently |
+| `ios/TrainingCompanion/SyncManager.swift` | `syncAll()` already chains to `syncProgram()`; wire `MainTabView.onAppear` the same way `SyncView.onAppear` did |
+| `ios/TrainingCompanion/ContentView.swift` | Change `SyncView` → `MainTabView` in the `isSignedIn` branch; `SignInView` unchanged |
 | `ios/TrainingCompanionWatch/ModalityStyle.swift` | Move to a shared location or duplicate into `ios/TrainingCompanion/ModalityStyle.swift` — update hex values to match design-system.md §3.1 |
 
 ---
@@ -255,16 +336,18 @@ No new backend endpoints required.
 ## Build Order
 
 0. **`Color+Hex.swift`** — add to both targets; update `ModalityStyle.swift` hex values
-1. **`ProgramStore.swift`** — fetch + cache program; compute today's sessions and current week
+1. **`ContentView.swift`** — swap `SyncView` → `MainTabView`; move `sync.configure` + `syncAll` call to `MainTabView.onAppear`
+2. **`ProgramStore.swift`** — view-model layer over `WatchSessionManager`; compute today's sessions and current week
 2. **`MainTabView.swift`** — 4-tab shell; wire `ProgramStore` as `.environmentObject`
 3. **Today tab** — `TodayView` with all three states (empty, rest, sessions); `SessionCard` with modality styling
 4. **`SessionDetailView`** — exercise list with load descriptions and coaching cues; no logging yet
 5. **`PhoneSessionLogger`** + **`PhoneSlotViews`** — inline logging wired into `SessionDetailView`
 6. **Program tab** — `ProgramCalendarView` week strip + `ProgramBuilderView` sheet
 7. **Library tab** — `ExerciseCatalogView` with search + filter
-8. **Profile tab** — `ProfileView` all sections
-9. **`NotificationManager`** — schedule on program fetch; permission prompt after generation; deep link
-10. **Watch sync strip** — watch status in `TodayView`; tap-to-sync
+8. **Profile tab** — `ProfileView` all sections including BioLog row
+9. **`BioLogView`** — last night summary, 30-day charts, sync controls (retire `SyncView`)
+10. **`NotificationManager`** — schedule on program fetch; permission prompt after generation; deep link
+11. **Watch sync strip** — watch status in `TodayView`; tap-to-sync; doubles as staleness indicator
 
 ---
 
