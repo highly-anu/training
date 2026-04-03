@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { User, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
@@ -99,6 +99,7 @@ export function ProfileBenchmarks() {
     addCustomInjuryFlag, removeCustomInjuryFlag,
   } = useProfileStore()
   const { data: benchmarks = [], isLoading: benchmarksLoading } = useBenchmarks()
+  const [activeTab, setActiveTab] = useState<'setup' | 'benchmarks'>('setup')
 
   return (
     <motion.div
@@ -108,21 +109,30 @@ export function ProfileBenchmarks() {
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      <div className="border-b bg-card/50 px-6 py-4">
-        <h1 className="text-xl font-bold tracking-tight">Profile</h1>
-        <p className="text-sm text-muted-foreground">Equipment, injuries, and performance standards</p>
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <User className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Profile</h1>
+        <div className="ml-4 flex gap-1">
+          {(['setup', 'benchmarks'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                'px-3 py-1 rounded text-xs border transition-colors capitalize',
+                activeTab === tab
+                  ? 'bg-primary/15 border-primary/40 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="setup" className="h-full">
-          <div className="border-b px-6">
-            <TabsList className="h-10 bg-transparent gap-0 border-0 p-0">
-              <TabsTrigger value="setup" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Setup</TabsTrigger>
-              <TabsTrigger value="benchmarks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">Benchmarks</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="setup" className="p-6 space-y-8">
+        {activeTab === 'setup' && (
+          <div className="p-6 space-y-8">
             {/* Training level */}
             <section className="space-y-2 max-w-xs">
               <Label className="text-sm font-semibold">Training Level</Label>
@@ -170,9 +180,11 @@ export function ProfileBenchmarks() {
                 }}
               />
             </section>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="benchmarks" className="p-6 space-y-6">
+        {activeTab === 'benchmarks' && (
+          <div className="p-6 space-y-6">
             {benchmarksLoading ? (
               <LoadingCard />
             ) : (
@@ -243,8 +255,8 @@ export function ProfileBenchmarks() {
                 })()}
               </>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
     </motion.div>
   )

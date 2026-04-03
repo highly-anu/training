@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Dumbbell } from 'lucide-react'
 import { useExercises } from '@/api/exercises'
 import { useDebounce } from '@/hooks/useDebounce'
 import { ExerciseSearch } from '@/components/exercises/ExerciseSearch'
@@ -48,12 +49,16 @@ export function ExerciseCatalog() {
       className="flex h-full flex-col"
     >
       {/* Header */}
-      <div className="border-b bg-card/50 px-6 py-4 space-y-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Exercises</h1>
-          <p className="text-sm text-muted-foreground">
-            {exercises ? `${exercises.length} exercises` : 'Browse the full exercise library'}
-          </p>
+      <div className="border-b px-6 py-4 space-y-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <Dumbbell className="size-5 text-primary" />
+          <h1 className="text-lg font-semibold">Exercises</h1>
+          {exercises && (
+            <>
+              <span className="text-muted-foreground/50 text-xs select-none">·</span>
+              <span className="text-xs text-muted-foreground">{exercises.length} exercises</span>
+            </>
+          )}
         </div>
         <ExerciseSearch value={search} onChange={setSearch} />
         <ExerciseFilters category={category} onCategoryChange={setCategory} />

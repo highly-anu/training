@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2, ChevronRight } from 'lucide-react'
+import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2, ChevronRight, ArrowDownToLine } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -161,14 +161,14 @@ export function WorkoutImport() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-      className="h-full overflow-y-auto p-6 space-y-6 max-w-2xl"
+      className="flex h-full flex-col overflow-hidden"
     >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Import Workouts</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Upload a Garmin/Suunto/WorkOutDoors .fit file or Apple Health export (.xml) to sync workout data with your training sessions.
-        </p>
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <ArrowDownToLine className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Import Workouts</h1>
       </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
 
       {/* Strava OAuth connect — hidden until Strava sync is ready */}
       {/* <StravaConnect /> */}
@@ -362,6 +362,7 @@ export function WorkoutImport() {
         match={activePending}
         onClose={() => setActivePending(null)}
       />
+      </div>
     </motion.div>
   )
 }

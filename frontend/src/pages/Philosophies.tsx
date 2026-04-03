@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { BookOpen } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
@@ -58,11 +59,9 @@ export function Philosophies() {
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      <div className="border-b bg-card/50 px-6 py-4">
-        <h1 className="text-xl font-bold tracking-tight">Philosophies & Influences</h1>
-        <p className="text-sm text-muted-foreground">
-          The source methodologies that shape how programs are generated
-        </p>
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <BookOpen className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Philosophies</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">

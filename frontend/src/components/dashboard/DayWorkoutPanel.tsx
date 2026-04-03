@@ -35,7 +35,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
     setSessionLog(sessionKey, next)
     if (next[si]) {
       upsertSessionPerformance({
-        sessionKey,
+        sessionKey: `${sessionKey}-${si}`,
         exercises: {},
         notes: '',
         completedAt: new Date().toISOString(),

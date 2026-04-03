@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { Wand2, ShieldAlert } from 'lucide-react'
+import { CalendarDays, Wand2, ShieldAlert } from 'lucide-react'
 import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { WeekSelector } from '@/components/program/WeekSelector'
@@ -17,7 +17,6 @@ import { Separator } from '@/components/ui/separator'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
 
@@ -111,13 +110,29 @@ export function ProgramView() {
       className="flex h-full flex-col"
     >
       {/* Header */}
-      <div className="border-b bg-card/50 px-6 py-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">{program.goal.name}</h1>
-            <p className="text-sm text-muted-foreground">{totalWeeks}-week program</p>
+      <div className="border-b px-6 py-4 space-y-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <CalendarDays className="size-5 text-primary shrink-0" />
+          <h1 className="text-lg font-semibold">{program.goal.name}</h1>
+          <span className="text-muted-foreground/50 text-xs select-none">·</span>
+          <span className="text-xs text-muted-foreground">{totalWeeks}-week program</span>
+          <div className="ml-4 flex gap-1">
+            {(['overview', 'calendar'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'px-3 py-1 rounded text-xs border transition-colors capitalize',
+                  activeTab === tab
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'border-border text-muted-foreground hover:bg-muted'
+                )}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setInjurySheetOpen(true)}
@@ -145,22 +160,6 @@ export function ProgramView() {
         </div>
 
         <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
-      </div>
-
-      <div className="border-b bg-card/50 px-6">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="h-10 bg-transparent gap-0 border-0 p-0">
-            {(['overview', 'calendar'] as const).map(tab => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent capitalize"
-              >
-                {tab}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
       </div>
 
       {/* Body */}

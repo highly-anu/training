@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Wand2 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { StepIndicator } from '@/components/builder/StepIndicator'
@@ -49,14 +49,13 @@ export function ProgramBuilder() {
       className="flex h-full flex-col"
     >
       {/* Header */}
-      <div className="border-b bg-card/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">{stepInfo.title}</h1>
-            <p className="text-sm text-muted-foreground">{stepInfo.sub}</p>
-          </div>
-          <StepIndicator current={step} />
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <Wand2 className="size-5 text-primary" />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg font-semibold">{stepInfo.title}</h1>
+          <p className="text-xs text-muted-foreground">{stepInfo.sub}</p>
         </div>
+        <StepIndicator current={step} />
       </div>
 
       {/* Step content */}

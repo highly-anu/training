@@ -62,7 +62,7 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
                         json.dumps(hr_samples) if hr_samples else None,
                     ))
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -80,7 +80,7 @@ def delete_workout(user_id: str, workout_id: str) -> None:
                     (workout_id, user_id),
                 )
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -95,7 +95,7 @@ def get_workouts(user_id: str) -> list[dict]:
                 )
                 rows = cur.fetchall()
         return [_row_to_workout(row) for row in rows]
-    except RuntimeError:
+    except Exception:
         return []
 
 
@@ -161,7 +161,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     log.get('completedAt') or None,
                 ))
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -185,7 +185,7 @@ def get_session_logs(user_id: str) -> dict:
                 'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
             }
         return result
-    except RuntimeError:
+    except Exception:
         return {}
 
 
@@ -236,7 +236,7 @@ def upsert_daily_bio(user_id: str, entry: dict) -> None:
                     entry.get('source', 'manual'),
                 ))
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -252,7 +252,7 @@ def get_synced_dates(user_id: str) -> list[str]:
                 )
                 rows = cur.fetchall()
         return [str(row['date']) for row in rows]
-    except RuntimeError:
+    except Exception:
         return []
 
 
@@ -293,7 +293,7 @@ def get_daily_bio(user_id: str) -> dict:
             entry['source'] = row.get('source') or 'manual'
             result[str(row['date'])] = entry
         return result
-    except RuntimeError:
+    except Exception:
         return {}
 
 
@@ -320,7 +320,7 @@ def upsert_match(user_id: str, match: dict) -> None:
                     match['matchedAt'],
                 ))
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -340,7 +340,7 @@ def get_matches(user_id: str) -> list[dict]:
             }
             for row in rows
         ]
-    except RuntimeError:
+    except Exception:
         return []
 
 
@@ -357,7 +357,7 @@ def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_
                     (user_id, benchmark_id, value, logged_at),
                 )
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -371,7 +371,7 @@ def delete_performance_log(user_id: str, benchmark_id: str) -> None:
                     (benchmark_id, user_id),
                 )
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 
@@ -394,5 +394,5 @@ def get_performance_logs(user_id: str) -> dict:
                 result[bid] = []
             result[bid].append({'value': row['value'], 'date': str(row['logged_at'])})
         return result
-    except RuntimeError:
+    except Exception:
         return {}

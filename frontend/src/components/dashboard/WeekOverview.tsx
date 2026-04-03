@@ -407,7 +407,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
                       setSessionLog(dayKey, next)
                       if (next[si]) {
                         upsertSessionPerformance({
-                          sessionKey: dayKey,
+                          sessionKey: `${dayKey}-${si}`,
                           exercises: {},
                           notes: '',
                           completedAt: new Date().toISOString(),

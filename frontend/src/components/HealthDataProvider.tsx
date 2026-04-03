@@ -29,10 +29,20 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
       .then((snapshot) => {
         initBio(snapshot)
         initPerformanceLogs(snapshot.performanceLogs)
-        // Derive completion flags from session performance logs (completedAt set = done)
+        // Derive completion flags from per-session keys ("weekN-Day-si" → sessionLogs["weekN-Day"][si])
         const completionFlags: Record<string, boolean[]> = {}
         for (const [key, log] of Object.entries(snapshot.sessionLogs)) {
-          if (log.completedAt) completionFlags[key] = [true]
+          if (!log.completedAt) continue
+          const match = key.match(/^(.+)-(\d+)$/)
+          if (match) {
+            const dayKey = match[1]
+            const idx = parseInt(match[2], 10)
+            if (!completionFlags[dayKey]) completionFlags[dayKey] = []
+            completionFlags[dayKey][idx] = true
+          } else {
+            // Legacy day-level key — restore at index 0
+            completionFlags[key] = [true]
+          }
         }
         initSessionLogs(completionFlags)
       })

@@ -22,6 +22,7 @@ A complete record of the visual language, interaction patterns, component archit
 14. [Responsive Design](#14-responsive-design)
 15. [Icon System](#15-icon-system)
 16. [Implementation Checklist](#16-implementation-checklist)
+17. [Tab Header Pattern](#17-tab-header-pattern)
 
 ---
 
@@ -1579,3 +1580,203 @@ className={isComplete
   <Button className="mt-4" onClick={action}>Do something</Button>
 </div>
 ```
+
+---
+
+## 17. Tab Header Pattern
+
+The "tab header" is the entire top row of a page — icon, page name, subtitle, sub-tabs, step indicators, and action buttons. Every primary tab must implement this pattern consistently so users develop reliable spatial expectations: identity is always top-left, navigation is always to its right, actions are always far right.
+
+**The canonical model is the Dev Lab header.** All new pages and all refactored pages should match this specification.
+
+### 17.1 Purpose and Scope
+
+This pattern applies to every **primary tab** (top-level page reachable from the sidebar). It does not apply to:
+- Detail views that navigate back to a parent (Session Detail, Workout Detail) — these use the back-nav pattern (§13)
+- The Dashboard — see §17.9 for the Program View Header exception
+
+### 17.2 Container & Spacing
+
+```tsx
+<div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+  {/* content */}
+</div>
+```
+
+| Property | Value | Reason |
+|---|---|---|
+| `flex items-center` | All children vertically centered | Consistent alignment across icon sizes |
+| `gap-2` | 8px between icon and title | Tight identity pairing |
+| `border-b` | Separator from content | Always present on primary headers |
+| `px-6 py-4` | Standard header padding | Matches page content horizontal padding |
+| `shrink-0` | Prevents flex compression | Required in `flex-col` page layouts |
+
+**Always one horizontal row.** Do not stack the header into two rows for primary tabs — if content won't fit, it means there's too much content, not that the layout needs a second row.
+
+### 17.3 Identity Block (Icon + Title)
+
+```tsx
+<Icon className="size-5 text-primary" />
+<h1 className="text-lg font-semibold">{PageName}</h1>
+```
+
+- **Icon:** `size-5 text-primary` — always amber, always Lucide React. Every primary tab gets an icon; no exceptions.
+- **Title:** `text-lg font-semibold` — not `text-xl` or `text-2xl`. The larger scales are for content titles (program names, workout names), not page chrome.
+- **Title is the canonical page name** — not a dynamic value, not a description. "Bio Log", "Exercises", "Profile", "Dev Lab". Short and stable.
+
+### 17.4 Subtitle Rules
+
+Subtitles go on the same row, inline, after a muted dot separator:
+
+```tsx
+<span className="text-muted-foreground/50 text-xs select-none">·</span>
+<span className="text-xs text-muted-foreground">{subtitle}</span>
+```
+
+**When to include a subtitle:**
+- The subtitle must be ≤ 6 words and genuinely informative at a glance (e.g., "Readiness · Sleep · HRV", "198 exercises")
+- Dynamic counts ("198 exercises") are ideal — they carry live information
+- Facet summaries ("Readiness · Sleep · HRV") are ideal — they orient the user to what's inside
+
+**When to omit:**
+- Descriptive sentences ("The source methodologies that shape how programs are generated") → drop entirely or move to an empty state
+- Anything that restates what the icon + title already communicate
+- Long phrases that force the header to wrap
+
+**Default: no subtitle** unless one of the above applies. Most tabs are self-explanatory.
+
+### 17.5 Sub-tab Style
+
+Sub-tabs in the header row use **pill button style** — not Radix `TabsList`. This is a deliberate distinction:
+
+- **Header-level sub-tabs** (views of the same page): pill buttons
+- **Content-level tabs** (tab groups within a section of the page): Radix `TabsList` with the standard `bg-muted` track
+
+```tsx
+<div className="ml-4 flex gap-1">
+  {TABS.map(tab => (
+    <button
+      key={tab.id}
+      onClick={() => setTab(tab.id)}
+      className={cn(
+        'px-3 py-1 rounded text-xs border transition-colors',
+        activeTab === tab.id
+          ? 'bg-primary/15 border-primary/40 text-primary'
+          : 'border-border text-muted-foreground hover:bg-muted'
+      )}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
+```
+
+- `ml-4` creates a visual separation from the identity block (not `gap-2` — the gap between identity and nav should be wider than the internal `gap-2`)
+- Active: `bg-primary/15 border-primary/40 text-primary`
+- Inactive: `border-border text-muted-foreground hover:bg-muted`
+- Size: `px-3 py-1 text-xs` — compact, never taller than the title
+
+### 17.6 Step Indicators (Wizard Flows)
+
+For multi-step flows (Program Builder), replace sub-tabs with a step indicator pushed to the right:
+
+```tsx
+{/* after identity block */}
+<span className="ml-auto text-xs text-muted-foreground">
+  Step {currentStep} of {totalSteps}
+</span>
+```
+
+Or dot indicators for ≤ 5 steps:
+
+```tsx
+<div className="ml-auto flex items-center gap-1.5">
+  {Array.from({ length: totalSteps }, (_, i) => (
+    <div
+      key={i}
+      className={cn(
+        'size-1.5 rounded-full transition-colors',
+        i < currentStep ? 'bg-primary' : 'bg-border'
+      )}
+    />
+  ))}
+</div>
+```
+
+Keep it small and muted — the step indicator orients, it doesn't dominate.
+
+### 17.7 Action Buttons
+
+Action buttons live at the far right, separated from navigation with `ml-auto` (or placed after a `flex-1` spacer if sub-tabs are also present):
+
+```tsx
+<div className="ml-auto flex items-center gap-1">
+  <Button variant="ghost" size="icon" className="size-8">
+    <SomeIcon className="size-4" />
+  </Button>
+</div>
+```
+
+- Always `variant="ghost" size="icon"` at `size-8` (32px) — stays compact in the header row
+- Icon at `size-4` inside
+- Only include actions that are genuinely page-level (not content-level). "Export", "Refresh", "Settings" — not "Add item" (that belongs in the content area).
+
+**Layout when both sub-tabs and actions are present:**
+
+```tsx
+<div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+  <Icon className="size-5 text-primary" />
+  <h1 className="text-lg font-semibold">Page Name</h1>
+  {/* optional inline subtitle */}
+  <span className="text-muted-foreground/50 text-xs">·</span>
+  <span className="text-xs text-muted-foreground">subtitle</span>
+  {/* sub-tabs pushed to center-right */}
+  <div className="ml-4 flex gap-1">{/* pill tabs */}</div>
+  {/* actions at far right */}
+  <div className="ml-auto flex items-center gap-1">{/* icon buttons */}</div>
+</div>
+```
+
+### 17.8 Per-Page Reference
+
+| Page | Icon | Title | Inline subtitle | Sub-tabs | Actions | Notes |
+|---|---|---|---|---|---|---|
+| **Bio Log** | `Activity` | "Bio Log" | "Readiness · Sleep · HRV" | None | None | Condense long current subtitle |
+| **Philosophies** | `BookOpen` | "Philosophies" | None | None | None | Long current subtitle → drop |
+| **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | Wizard variant |
+| **Program View** | `CalendarDays` | Program goal name | "{N}-week program" | Overview · Calendar | Injury flags | Week nav + phase bar go *below* header |
+| **Profile** | `User` | "Profile" | None | Setup · Benchmarks | None | Drop "Benchmarks" from header label |
+| **Exercises** | `Dumbbell` | "Exercises" | "{count} exercises" | None | None | Dynamic count is informative |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology | None | **Reference implementation — do not change** |
+| **Import Workouts** | `ArrowDownToLine` | "Import Workouts" | None | None | None | Long subtitle → drop |
+| **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
+| **Workout Detail** | Back-nav | Workout type | — | — | — | Back-nav pattern, not tab header |
+
+### 17.9 Dashboard Exception: Program View Header
+
+**Dashboard does not use the standard tab header.** This is intentional and correct.
+
+The standard tab header answers: *"What page am I on?"* Dashboard's header answers: *"What week am I looking at, and where am I in the program?"* These are different questions that require different controls.
+
+Reasons Dashboard is exempt:
+
+1. **The meaningful title is the program goal name** ("Alpine Climbing", "SOF Operator") — a dynamic content value, not a page label. Prepending a "Dashboard" label would add noise with no information.
+2. **The sidebar already identifies the page.** The active sidebar item provides location context. A redundant "Dashboard" h1 serves no user need.
+3. **The header area's real job is temporal navigation.** Week selector, phase bar, and program progress are primary wayfinding for a time-structured program — they earn their position in the top row.
+
+**What Dashboard's header should contain:**
+
+```
+┌─ border-b px-6 py-3 ──────────────────────────────────────────────────────┐
+│ [Program goal name — h1 text-xl]        [← Week N →]   [Phase badge]      │
+│ [Phase bar / timeline]                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- Program name as `h1 text-xl font-semibold` — the program is the content
+- Week navigation controls right-aligned
+- Phase bar below (or integrated into) the header row
+- **No page-identity icon or "Dashboard" label**
+- If no program is loaded: show an empty state within the content area, not in the header
+
+This pattern — where the header communicates *instance context* rather than *page identity* — is called the **Program View Header**. It applies anywhere the entire page is dedicated to viewing one specific program instance. If the app gains additional instance-view pages in the future (e.g., a full-screen program export view), they should follow this same variant.

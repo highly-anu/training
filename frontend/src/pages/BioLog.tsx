@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { format, parseISO } from 'date-fns'
-import { Watch } from 'lucide-react'
+import { Activity, Watch } from 'lucide-react'
 import { DailyCheckin } from '@/components/bio/DailyCheckin'
 import { HRTrendChart } from '@/components/bio/HRTrendChart'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
@@ -41,14 +41,16 @@ export function BioLog() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-      className="h-full overflow-y-auto p-6 space-y-6 max-w-2xl"
+      className="flex h-full flex-col overflow-hidden"
     >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Bio Log</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Daily readiness tracking — resting HR, HRV, and sleep.
-        </p>
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <Activity className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Bio Log</h1>
+        <span className="text-muted-foreground/50 text-xs select-none">·</span>
+        <span className="text-xs text-muted-foreground">Readiness · Sleep · HRV</span>
       </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <DailyCheckin />
@@ -206,6 +208,7 @@ export function BioLog() {
           </div>
         </div>
       )}
+      </div>
     </motion.div>
   )
 }
