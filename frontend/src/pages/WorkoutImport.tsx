@@ -166,12 +166,12 @@ export function WorkoutImport() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Import Workouts</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Upload a Garmin/Suunto/WorkOutDoors .fit file, Apple Health export (.xml), or Strava activities export (.json) to sync workout data with your training sessions.
+          Upload a Garmin/Suunto/WorkOutDoors .fit file or Apple Health export (.xml) to sync workout data with your training sessions.
         </p>
       </div>
 
-      {/* Strava OAuth connect */}
-      <StravaConnect />
+      {/* Strava OAuth connect — hidden until Strava sync is ready */}
+      {/* <StravaConnect /> */}
 
       {/* Program start date input */}
       {program && (
@@ -188,7 +188,7 @@ export function WorkoutImport() {
         <div className="text-center">
           <p className="text-sm font-medium">Drop your export file here</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            .fit (Garmin/Suunto/WorkOutDoors), Apple Health .xml, or Strava .json
+            .fit (Garmin/Suunto/WorkOutDoors) or Apple Health .xml
           </p>
         </div>
         <label className="cursor-pointer">
