@@ -221,13 +221,13 @@ export function Philosophies() {
               )}
 
               {/* System connections */}
-              {(selected.system_connections.frameworks.length > 0 || selected.system_connections.goals.length > 0) && (
+              {((selected.system_connections?.frameworks?.length ?? 0) > 0 || (selected.system_connections?.goals?.length ?? 0) > 0) && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-wide mb-3">Shows Up As</h3>
                     <div className="space-y-2">
-                      {selected.system_connections.frameworks.length > 0 && (
+                      {(selected.system_connections?.frameworks?.length ?? 0) > 0 && (
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1.5">Frameworks</p>
                           <div className="flex flex-wrap gap-1">
@@ -239,7 +239,7 @@ export function Philosophies() {
                           </div>
                         </div>
                       )}
-                      {selected.system_connections.goals.length > 0 && (
+                      {(selected.system_connections?.goals?.length ?? 0) > 0 && (
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1.5">Goal Profiles</p>
                           <div className="flex flex-wrap gap-1">

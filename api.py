@@ -240,15 +240,18 @@ def _clean_exercise_assignment(ea: dict) -> dict:
     load = dict(ea.get('load') or {})
     # Surface load_note at the assignment level so the frontend can render it per-exercise
     load_note = load.pop('load_note', None)
+    slot = ea.get('slot') or {}
     return {
         'exercise':    ea.get('exercise'),
         'load':        load,
         'slot_role':   ea.get('slot_role'),
+        'slot_type':   slot.get('slot_type'),
+        'rest_sec':    slot.get('rest_sec'),
         'meta':        bool(ea.get('meta')),
         'injury_skip': bool(ea.get('injury_skip')),
         'error':       ea.get('error'),
         'load_note':   load_note,
-        'notes':       (ea.get('slot') or {}).get('notes'),
+        'notes':       slot.get('notes'),
     }
 
 
