@@ -209,6 +209,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
 
   const sourceLabel =
     matched.source === 'apple_health' ? 'Apple Health'
+    : matched.source === 'apple_watch_live' ? 'Apple Watch Live'
     : matched.source === 'fit_file' ? '.fit file'
     : matched.source === 'strava' ? 'Strava'
     : matched.source

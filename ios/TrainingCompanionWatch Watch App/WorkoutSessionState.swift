@@ -28,11 +28,21 @@ final class WorkoutSessionState: ObservableObject {
     @Published var hrOutOfZoneSeconds: Int = 0
     @Published var isHRAlertActive: Bool = false
 
+    // Movement metrics (populated for outdoor/distance sessions)
+    @Published var distanceMeters: Double = 0
+    @Published var currentCadence: Double = 0
+    @Published var currentSpeedMps: Double = 0
+    @Published var floorsAscended: Double = 0
+
     // Session data
     @Published var completedExerciseIds: Set<String> = []
     @Published var setLogs: [String: [WatchSetLog]] = [:]
     @Published var elapsedSeconds: Int = 0
     @Published var calories: Int = 0
+
+    /// Set when transitioning into `.active` phase — marks the start of the next set
+    /// so it can be stamped onto WatchSetLog.startOffset.
+    private(set) var currentSetStartOffset: Int? = nil
 
     private(set) var avgHRSamples: [Int] = []
     private var hrOutOfZoneCounter = 0
@@ -51,6 +61,7 @@ final class WorkoutSessionState: ObservableObject {
 
     func startSession() {
         reset()
+        currentSetStartOffset = 0
         phase = .active(exerciseIndex: 0, setIndex: 0)
         WKInterfaceDevice.current().play(.start)
     }
@@ -75,6 +86,8 @@ final class WorkoutSessionState: ObservableObject {
         completedExerciseIds = []; setLogs = [:]
         elapsedSeconds = 0; calories = 0
         hrOutOfZoneCounter = 0; hrAlertCooldown = 0
+        distanceMeters = 0; currentCadence = 0; currentSpeedMps = 0; floorsAscended = 0
+        currentSetStartOffset = nil
     }
 
     // MARK: - Sets / reps
@@ -83,11 +96,13 @@ final class WorkoutSessionState: ObservableObject {
         var logs = setLogs[exerciseId] ?? []
         logs.append(log)
         setLogs[exerciseId] = logs
+        currentSetStartOffset = nil
         WKInterfaceDevice.current().play(.success)
     }
 
     func startRest(exerciseIndex: Int, completedSet: Int, seconds: Int) {
         guard seconds > 0 else {
+            currentSetStartOffset = elapsedSeconds
             phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
             return
         }
@@ -104,6 +119,7 @@ final class WorkoutSessionState: ObservableObject {
         default: break
         }
         if remaining <= 1 {
+            currentSetStartOffset = elapsedSeconds
             phase = .active(exerciseIndex: ei, setIndex: cs + 1)
             WKInterfaceDevice.current().play(.start)
         } else {
@@ -112,6 +128,7 @@ final class WorkoutSessionState: ObservableObject {
     }
 
     func skipRest(exerciseIndex: Int, completedSet: Int) {
+        currentSetStartOffset = elapsedSeconds
         phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
         WKInterfaceDevice.current().play(.start)
     }
@@ -139,6 +156,7 @@ final class WorkoutSessionState: ObservableObject {
 
     func completeTimedWork(exerciseIndex: Int, exerciseId: String) {
         markExerciseComplete(id: exerciseId)
+        currentSetStartOffset = elapsedSeconds
         phase = .active(exerciseIndex: exerciseIndex + 1, setIndex: 0)
         WKInterfaceDevice.current().play(.success)
     }
@@ -188,6 +206,7 @@ final class WorkoutSessionState: ObservableObject {
         let next = round + 1
         if next > totalRounds {
             markExerciseComplete(id: exerciseId)
+            currentSetStartOffset = elapsedSeconds
             phase = .active(exerciseIndex: ei + 1, setIndex: 0)
             WKInterfaceDevice.current().play(.success)
         } else {
@@ -210,6 +229,7 @@ final class WorkoutSessionState: ObservableObject {
         if remaining == 31 { WKInterfaceDevice.current().play(.notification) }
         if remaining <= 1 {
             markExerciseComplete(id: exerciseId)
+            currentSetStartOffset = elapsedSeconds
             phase = .active(exerciseIndex: ei + 1, setIndex: 0)
             WKInterfaceDevice.current().play(.success)
         } else {
@@ -247,5 +267,9 @@ final class WorkoutSessionState: ObservableObject {
     }
 
     func updateCalories(_ cal: Int) { calories = cal }
+    func updateDistance(_ meters: Double) { distanceMeters = meters }
+    func updateCadence(_ spm: Double) { currentCadence = spm }
+    func updateSpeed(_ mps: Double) { currentSpeedMps = mps }
+    func updateFloors(_ floors: Double) { floorsAscended = floors }
     func tickElapsed() { elapsedSeconds += 1 }
 }

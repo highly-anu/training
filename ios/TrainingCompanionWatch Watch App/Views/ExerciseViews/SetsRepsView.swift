@@ -38,7 +38,8 @@ struct SetsRepsView: View {
                 SetLoggerSheetView(
                     exercise: exercise,
                     setIndex: si,
-                    exerciseIndex: exerciseIndex
+                    exerciseIndex: exerciseIndex,
+                    startOffset: sessionState.currentSetStartOffset ?? sessionState.elapsedSeconds
                 ) { log in
                     sessionState.completeSet(log, for: exercise.exerciseId)
                     let nextSet = si + 1

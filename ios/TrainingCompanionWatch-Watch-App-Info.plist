@@ -8,5 +8,7 @@
 	<array>
 		<string>workout-processing</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location is used during outdoor workouts to record your GPS route.</string>
 </dict>
 </plist>

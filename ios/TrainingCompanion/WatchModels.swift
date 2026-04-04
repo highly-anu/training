@@ -185,6 +185,30 @@ struct WatchExercise: Codable {
 
 // MARK: - Post-workout summary (Watch → iPhone → API)
 
+/// Compact HR sample — uses integer second offsets from startedAt to save ~20 bytes/sample
+/// versus full ISO timestamps. Expanded back to ISO on the iPhone before sending to the API.
+struct HRSamplePoint: Codable {
+    let t: Int   // seconds from session startedAt
+    let b: Int   // bpm
+}
+
+/// Compact GPS point with optional altitude and HR at that moment.
+struct GPSTrackPoint: Codable {
+    let lat: Double
+    let lng: Double
+    let alt: Double?
+    let t: Int      // seconds from session startedAt
+    let b: Int?     // bpm at this point (nil if no HR sample close in time)
+}
+
+/// Per-exercise time window with HR summary, used to correlate bio data to specific exercises.
+struct ExerciseTimelineEntry: Codable {
+    let exerciseId: String
+    let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
+    let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
+    let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
+}
+
 struct WatchWorkoutSummary: Codable {
     let sessionId: String
     let date: String                // "YYYY-MM-DD"
@@ -196,6 +220,14 @@ struct WatchWorkoutSummary: Codable {
     let setLogs: [String: [WatchSetLog]]    // exerciseId → sets
     let exercisesCompleted: Int
     let source: String              // always "apple_watch_live"
+    // Rich bio / movement data (nil for indoor/strength sessions without GPS)
+    let hrSamples: [HRSamplePoint]?
+    let gpsTrack: [GPSTrackPoint]?
+    let distanceMeters: Double?
+    let elevationGainMeters: Double?
+    let cadenceAvg: Double?
+    let paceSecsPerKm: Double?
+    let exerciseTimeline: [ExerciseTimelineEntry]?
 }
 
 struct WatchSetLog: Codable {
@@ -205,6 +237,8 @@ struct WatchSetLog: Codable {
     let rpe: Int?
     let completed: Bool
     let durationSeconds: Int?
+    let startOffset: Int?   // seconds from session startedAt when this set began
+    let endOffset: Int?     // seconds from session startedAt when this set was logged
 }
 
 // MARK: - Slot-type resolution

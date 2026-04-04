@@ -34,7 +34,21 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         guard let data = try? JSONEncoder().encode(summary),
               var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         dict["type"] = "workout_complete"
-        WCSession.default.transferUserInfo(dict)
+
+        // transferUserInfo has a ~65 KB limit. Re-serialise to check size.
+        let payloadData = (try? JSONSerialization.data(withJSONObject: dict)) ?? data
+        if payloadData.count <= 50_000 {
+            WCSession.default.transferUserInfo(dict)
+        } else {
+            // Large payload (long workout with many GPS/HR points) — use file transfer
+            let tmpURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("workout_\(summary.sessionId).json")
+            try? payloadData.write(to: tmpURL)
+            WCSession.default.transferFile(
+                tmpURL,
+                metadata: ["type": "workout_complete_file", "sessionId": summary.sessionId]
+            )
+        }
     }
 
     func markSessionComplete(_ sessionId: String) {

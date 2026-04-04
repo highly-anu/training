@@ -1,5 +1,7 @@
-import Foundation
 import Combine
+import CoreLocation
+import Foundation
+import HealthKit
 import WatchConnectivity
 
 // MARK: - Default rest seconds by modality (fallback when slot rest_sec is nil)
@@ -271,36 +273,165 @@ extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         let type = userInfo["type"] as? String ?? "(no type)"
         AppLogger.shared.logFromBackground("WCSession: received userInfo type=\(type)")
-
         guard type == "workout_complete" else { return }
-
         guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
               let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
             AppLogger.shared.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
             return
         }
+        Task { await handleWorkoutComplete(summary) }
+    }
 
-        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(summary.sessionId) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted)")
+    /// Large workout payloads arrive via transferFile when > 50 KB.
+    nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        guard file.metadata?["type"] as? String == "workout_complete_file" else { return }
+        guard let data = try? Data(contentsOf: file.fileURL),
+              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+            AppLogger.shared.logFromBackground("WCSession: failed to decode large workout file")
+            return
+        }
+        Task { await handleWorkoutComplete(summary) }
+    }
 
-        Task { @MainActor in
-            let sessionKey = summary.sessionId
-            var log: [String: Any] = [
-                "sessionKey":    sessionKey,
-                "completedAt":   summary.endedAt,
-                "source":        summary.source,
-                "exercises":     encodedJSON(summary.setLogs.mapValues { ["sets": $0] }),
-                "notes":         "",
+    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
+        let sessionKey = summary.sessionId
+        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted)")
+
+        // 1. Save session log (exercises, set data, HR aggregates)
+        var log: [String: Any] = [
+            "sessionKey":    sessionKey,
+            "completedAt":   summary.endedAt,
+            "source":        summary.source,
+            "exercises":     encodedJSON(summary.setLogs.mapValues { ["sets": $0] }),
+            "notes":         "",
+        ]
+        if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
+        if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
+        if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
+
+        AppLogger.shared.log("API: saving workout log for \(sessionKey)…")
+        do {
+            try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            AppLogger.shared.log("API: saved workout log for \(sessionKey) ✓")
+        } catch {
+            AppLogger.shared.log("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
+        }
+
+        // 2. Build and save ImportedWorkout (enables HRTimeline + GPSMap on the frontend)
+        let iso = ISO8601DateFormatter()
+        guard let startDate = iso.date(from: summary.startedAt) else { return }
+
+        let workoutId = "watch_live_\(sessionKey)_\(summary.startedAt)"
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? UUID().uuidString
+
+        let hrSamples = summary.hrSamples?.map { point -> [String: Any] in
+            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
+            return ["timestamp": ts, "bpm": point.b]
+        }
+        let gpsTrack = summary.gpsTrack?.map { point -> [String: Any] in
+            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
+            var p: [String: Any] = ["lat": point.lat, "lng": point.lng, "timestamp": ts]
+            if let alt = point.alt { p["altitude"] = alt }
+            if let bpm = point.b  { p["bpm"] = bpm }
+            return p
+        }
+
+        var workout: [String: Any] = [
+            "id":              workoutId,
+            "source":          summary.source,
+            "date":            summary.date,
+            "startTime":       summary.startedAt,
+            "endTime":         summary.endedAt,
+            "durationMinutes": summary.durationMinutes,
+            "activityType":    summary.source,
+            "rawData":         [:] as [String: Any],
+            "heartRate":       [
+                "avg": summary.avgHR as Any,
+                "max": summary.peakHR as Any,
+                "samples": hrSamples as Any,
+            ] as [String: Any],
+        ]
+        if let gps = gpsTrack { workout["gpsTrack"] = gps }
+        if let dist = summary.distanceMeters { workout["distance"] = ["value": dist / 1000.0, "unit": "km"] }
+        if let gain = summary.elevationGainMeters { workout["elevation"] = ["gain": Int(gain), "loss": 0] }
+        if let cal = log["calories"] { workout["calories"] = cal }
+
+        do {
+            try await api.saveWatchWorkouts([workout])
+            AppLogger.shared.log("API: saved watch workout \(workoutId) ✓")
+        } catch {
+            AppLogger.shared.log("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
+            return
+        }
+
+        // 3. Link workout to session via workout_matches
+        let now = iso.string(from: Date())
+        let matchPayload: [String: Any] = [
+            "importedWorkoutId": workoutId,
+            "sessionKey":        sessionKey,
+            "matchConfidence":   "auto",
+            "matchedAt":         now,
+        ]
+        do {
+            try await api.saveWorkoutMatch(matchPayload)
+            AppLogger.shared.log("API: saved workout match \(workoutId) → \(sessionKey) ✓")
+        } catch {
+            AppLogger.shared.log("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
+        }
+
+        // 4. Async GPS enrichment: try to fetch the full HKWorkoutRoute after a short delay
+        //    (HealthKit sync from Watch → iPhone takes ~5–30 s)
+        Task {
+            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 s
+            await enrichWorkoutWithHKRoute(
+                workoutId: workoutId,
+                startDate: startDate,
+                existingGPSCount: gpsTrack?.count ?? 0
+            )
+        }
+    }
+
+    private func enrichWorkoutWithHKRoute(workoutId: String, startDate: Date, existingGPSCount: Int) async {
+        guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else {
+            // Retry once at 60 s
+            try? await Task.sleep(nanoseconds: 50_000_000_000)
+            guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else { return }
+            await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+            return
+        }
+        await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+    }
+
+    private func uploadRoute(from hkWorkout: HKWorkout, workoutId: String, existingGPSCount: Int, startDate: Date) async {
+        let locations = await HealthKitManager.shared.fetchWorkoutRoute(for: hkWorkout)
+        guard locations.count > existingGPSCount else { return }
+        let iso = ISO8601DateFormatter()
+        let gpsTrack: [[String: Any]] = locations.map { loc in
+            var p: [String: Any] = [
+                "lat": loc.coordinate.latitude,
+                "lng": loc.coordinate.longitude,
+                "timestamp": iso.string(from: loc.timestamp),
             ]
-            if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
-            if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
-
-            AppLogger.shared.log("API: saving workout log for \(sessionKey)…")
-            do {
-                try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
-                AppLogger.shared.log("API: saved workout log for \(sessionKey) ✓")
-            } catch {
-                AppLogger.shared.log("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
-            }
+            if loc.altitude > 0 { p["altitude"] = loc.altitude }
+            return p
+        }
+        let enriched: [String: Any] = [
+            "id":              workoutId,
+            "source":          "apple_watch_live",
+            "date":            iso.string(from: startDate).prefix(10).description,
+            "startTime":       iso.string(from: hkWorkout.startDate),
+            "endTime":         iso.string(from: hkWorkout.endDate),
+            "durationMinutes": Int(hkWorkout.duration / 60),
+            "activityType":    "apple_watch_live",
+            "gpsTrack":        gpsTrack,
+            "rawData":         [:] as [String: Any],
+            "heartRate":       [:] as [String: Any],
+        ]
+        do {
+            try await api.saveWatchWorkouts([enriched])
+            AppLogger.shared.log("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
+        } catch {
+            AppLogger.shared.log("API: GPS enrichment FAILED — \(error.localizedDescription)")
         }
     }
 

@@ -11,6 +11,7 @@ struct StaticHoldView: View {
     @State private var countdownRemaining: Int? = nil
     @State private var actualHoldSeconds = 0
     @State private var isHolding = false
+    @State private var holdStartOffset: Int = 0
 
     private let targetHoldSec: Int
     private let totalSets: Int
@@ -99,6 +100,7 @@ struct StaticHoldView: View {
             }
         } else {
             Button("Hold") {
+                holdStartOffset = sessionState.elapsedSeconds
                 isHolding = true
                 actualHoldSeconds = 0
                 countdownRemaining = targetHoldSec
@@ -116,7 +118,9 @@ struct StaticHoldView: View {
             weightKg: nil,
             rpe: nil,
             completed: held,
-            durationSeconds: actualHoldSeconds
+            durationSeconds: actualHoldSeconds,
+            startOffset: holdStartOffset,
+            endOffset: sessionState.elapsedSeconds
         )
         sessionState.completeSet(log, for: exercise.exerciseId)
         currentSetIndex += 1

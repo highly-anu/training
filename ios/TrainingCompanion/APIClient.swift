@@ -60,12 +60,34 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    func saveWatchWorkouts(_ workouts: [[String: Any]]) async throws {
+        guard let body = try? JSONSerialization.data(withJSONObject: ["workouts": workouts]) else { return }
+        _ = try await postRaw("/health/workouts", body: body)
+    }
+
+    func saveWorkoutMatch(_ match: [String: Any]) async throws {
+        guard let body = try? JSONSerialization.data(withJSONObject: match) else { return }
+        _ = try await postRaw("/health/matches", body: body)
+    }
+
     // MARK: - Private
 
     private func get(_ path: String) async throws -> Data {
         let url = URL(string: APIClient.baseURL + path)!
         var request = URLRequest(url: url)
         try addAuth(to: &request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validateStatus(response)
+        return data
+    }
+
+    private func postRaw(_ path: String, body: Data) async throws -> Data {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try addAuth(to: &request)
+        request.httpBody = body
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
         return data

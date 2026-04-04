@@ -140,21 +140,24 @@ def _row_to_workout(row) -> dict:
 
 def upsert_session_log(user_id: str, log: dict) -> None:
     from src.db import get_conn
+    timeline = log.get('exerciseTimeline')
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute('''
                     INSERT INTO session_logs
-                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source, avg_hr, peak_hr)
-                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
+                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source,
+                     avg_hr, peak_hr, exercise_timeline)
+                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
-                        exercises      = EXCLUDED.exercises,
-                        notes          = EXCLUDED.notes,
-                        fatigue_rating = EXCLUDED.fatigue_rating,
-                        completed_at   = EXCLUDED.completed_at,
-                        source         = EXCLUDED.source,
-                        avg_hr         = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
-                        peak_hr        = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr)
+                        exercises         = EXCLUDED.exercises,
+                        notes             = EXCLUDED.notes,
+                        fatigue_rating    = EXCLUDED.fatigue_rating,
+                        completed_at      = EXCLUDED.completed_at,
+                        source            = EXCLUDED.source,
+                        avg_hr            = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
+                        peak_hr           = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr),
+                        exercise_timeline = COALESCE(EXCLUDED.exercise_timeline, session_logs.exercise_timeline)
                 ''', (
                     log['sessionKey'],
                     user_id,
@@ -165,6 +168,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     log.get('source', 'web'),
                     log.get('avgHR'),
                     log.get('peakHR'),
+                    json.dumps(timeline) if timeline else None,
                 ))
             conn.commit()
     except RuntimeError:
@@ -183,6 +187,10 @@ def get_session_logs(user_id: str) -> dict:
             exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
                 json.loads(row['exercises'] or '{}')
             )
+            tl_raw = row.get('exercise_timeline')
+            timeline = tl_raw if isinstance(tl_raw, list) else (
+                json.loads(tl_raw) if tl_raw else None
+            )
             entry = {
                 'sessionKey':    row['session_key'],
                 'exercises':     exercises,
@@ -195,6 +203,8 @@ def get_session_logs(user_id: str) -> dict:
                 entry['avgHR'] = row['avg_hr']
             if row.get('peak_hr') is not None:
                 entry['peakHR'] = row['peak_hr']
+            if timeline is not None:
+                entry['exerciseTimeline'] = timeline
             result[row['session_key']] = entry
         return result
     except RuntimeError:

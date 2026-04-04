@@ -4,9 +4,11 @@ struct SetLoggerSheetView: View {
     let exercise: WatchExercise
     let setIndex: Int
     let exerciseIndex: Int
+    let startOffset: Int    // seconds from session start when this set began
     let onDone: (WatchSetLog) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var sessionState: WorkoutSessionState
 
     @State private var repsDouble: Double
     @State private var weightKg: Double
@@ -17,10 +19,12 @@ struct SetLoggerSheetView: View {
     private var rpe: Int { Int(rpeDouble) }
 
     init(exercise: WatchExercise, setIndex: Int, exerciseIndex: Int,
+         startOffset: Int,
          onDone: @escaping (WatchSetLog) -> Void) {
         self.exercise = exercise
         self.setIndex = setIndex
         self.exerciseIndex = exerciseIndex
+        self.startOffset = startOffset
         self.onDone = onDone
         _repsDouble = State(initialValue: Double(exercise.reps.flatMap(Int.init) ?? 5))
         _weightKg   = State(initialValue: exercise.weightKg ?? 0)
@@ -84,7 +88,9 @@ struct SetLoggerSheetView: View {
                     weightKg: weightKg > 0 ? weightKg : nil,
                     rpe: rpe,
                     completed: true,
-                    durationSeconds: nil
+                    durationSeconds: nil,
+                    startOffset: startOffset,
+                    endOffset: sessionState.elapsedSeconds
                 )
                 onDone(log)
                 dismiss()
