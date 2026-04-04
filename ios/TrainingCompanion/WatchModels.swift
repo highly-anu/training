@@ -10,13 +10,6 @@ struct ServerProgram: Decodable {
     let programStartDate: String?   // "YYYY-MM-DD"
     let eventDate: String?
     let sourceGoalIds: [String]
-
-    enum CodingKeys: String, CodingKey {
-        case currentProgram    = "current_program"
-        case programStartDate  = "program_start_date"
-        case eventDate         = "event_date"
-        case sourceGoalIds     = "source_goal_ids"
-    }
 }
 
 struct GeneratedProgram: Decodable {
@@ -212,4 +205,24 @@ struct WatchSetLog: Codable {
     let rpe: Int?
     let completed: Bool
     let durationSeconds: Int?
+}
+
+// MARK: - Slot-type resolution
+
+extension WatchExercise {
+    /// Canonical screen-selection key. Passes through known slot_type values;
+    /// falls back to field-based inference for custom archetypes that omit slot_type.
+    var resolvedSlotType: String {
+        let known = ["sets_reps", "time_domain", "skill_practice", "emom",
+                     "amrap", "amrap_movement", "for_time", "distance", "static_hold"]
+        if known.contains(slotType) { return slotType }
+        // Field-based inference — order matters
+        if distanceKm    != nil { return "distance" }
+        if holdSeconds   != nil { return "static_hold" }
+        if emomFormat    != nil { return "emom" }
+        if durationMinutes != nil { return "time_domain" }
+        if timeMinutes != nil && targetRounds != nil { return "amrap" }
+        if targetRounds  != nil { return "for_time" }
+        return "sets_reps"
+    }
 }

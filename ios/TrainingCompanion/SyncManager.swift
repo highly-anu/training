@@ -73,8 +73,9 @@ final class SyncManager: ObservableObject {
             }
 
             if !cancelled {
-                lastSyncDate = today
-                UserDefaults.standard.set(today, forKey: "lastSyncDate")
+                let now = Date()
+                lastSyncDate = now
+                UserDefaults.standard.set(now, forKey: "lastSyncDate")
                 await watchSync?.syncProgram()
             }
         } catch {

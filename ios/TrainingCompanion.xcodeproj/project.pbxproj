@@ -6,8 +6,37 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E09E7C7D2F80E37500CEE326 /* TrainingCompanionWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E09E7C7B2F80E37500CEE326 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E025C87E2F803C7A00041E62 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E09E7C722F80E37400CEE326;
+			remoteInfo = "TrainingCompanionWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E09E7C7E2F80E37500CEE326 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				E09E7C7D2F80E37500CEE326 /* TrainingCompanionWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		E025C8862F803C7A00041E62 /* TrainingCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainingCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TrainingCompanionWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -18,6 +47,13 @@
 			);
 			target = E025C8852F803C7A00041E62 /* TrainingCompanion */;
 		};
+		E09E7CB82F80F06500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanionWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WatchModels.swift,
+			);
+			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -25,14 +61,27 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				E09E7C352F80454500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanion" target */,
+				E09E7CB82F80F06500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanionWatch Watch App" target */,
 			);
 			path = TrainingCompanion;
+			sourceTree = "<group>";
+		};
+		E09E7C742F80E37400CEE326 /* TrainingCompanionWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "TrainingCompanionWatch Watch App";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E025C8832F803C7A00041E62 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E09E7C702F80E37400CEE326 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				E025C8882F803C7A00041E62 /* TrainingCompanion */,
+				E09E7C742F80E37400CEE326 /* TrainingCompanionWatch Watch App */,
 				E025C8872F803C7A00041E62 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				E025C8862F803C7A00041E62 /* TrainingCompanion.app */,
+				E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,10 +119,12 @@
 				E025C8822F803C7A00041E62 /* Sources */,
 				E025C8832F803C7A00041E62 /* Frameworks */,
 				E025C8842F803C7A00041E62 /* Resources */,
+				E09E7C7E2F80E37500CEE326 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E09E7C7C2F80E37500CEE326 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E025C8882F803C7A00041E62 /* TrainingCompanion */,
@@ -81,6 +134,28 @@
 			);
 			productName = TrainingCompanion;
 			productReference = E025C8862F803C7A00041E62 /* TrainingCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E09E7C812F80E37500CEE326 /* Build configuration list for PBXNativeTarget "TrainingCompanionWatch Watch App" */;
+			buildPhases = (
+				E09E7C6F2F80E37400CEE326 /* Sources */,
+				E09E7C702F80E37400CEE326 /* Frameworks */,
+				E09E7C712F80E37400CEE326 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E09E7C742F80E37400CEE326 /* TrainingCompanionWatch Watch App */,
+			);
+			name = "TrainingCompanionWatch Watch App";
+			packageProductDependencies = (
+			);
+			productName = "TrainingCompanionWatch Watch App";
+			productReference = E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -94,6 +169,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					E025C8852F803C7A00041E62 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					E09E7C722F80E37400CEE326 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -113,12 +191,20 @@
 			projectRoot = "";
 			targets = (
 				E025C8852F803C7A00041E62 /* TrainingCompanion */,
+				E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		E025C8842F803C7A00041E62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E09E7C712F80E37400CEE326 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +221,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E09E7C6F2F80E37400CEE326 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E09E7C7C2F80E37500CEE326 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;
+			targetProxy = E09E7C7B2F80E37500CEE326 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E025C88F2F803C7B00041E62 /* Debug */ = {
@@ -332,6 +433,81 @@
 			};
 			name = Release;
 		};
+		E09E7C7F2F80E37500CEE326 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "TrainingCompanionWatch Watch App/TrainingCompanionWatch Watch App.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC8NZU8U3U;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TrainingCompanionWatch-Watch-App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = TrainingCompanionWatch;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used for readiness score and workout data tracking in the app.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used for readiness score and workout data tracking in the app.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = haerdsoft.TrainingCompanion;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		E09E7C802F80E37500CEE326 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "TrainingCompanionWatch Watch App/TrainingCompanionWatch Watch App.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC8NZU8U3U;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TrainingCompanionWatch-Watch-App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = TrainingCompanionWatch;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used for readiness score and workout data tracking in the app.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used for readiness score and workout data tracking in the app.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = haerdsoft.TrainingCompanion;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -349,6 +525,15 @@
 			buildConfigurations = (
 				E025C8922F803C7B00041E62 /* Debug */,
 				E025C8932F803C7B00041E62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E09E7C812F80E37500CEE326 /* Build configuration list for PBXNativeTarget "TrainingCompanionWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E09E7C7F2F80E37500CEE326 /* Debug */,
+				E09E7C802F80E37500CEE326 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

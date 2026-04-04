@@ -133,7 +133,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
     private func encodeExercise(_ ea: ProgramExerciseAssignment, modality: String) -> WatchExercise {
         let ex = ea.exercise!
         let load = ea.load
-        let slotType = ea.slotType ?? "sets_reps"
+        let slotType = inferSlotType(from: ea.load, explicit: ea.slotType)
 
         let cue = ea.notes ?? ex.notes
 
@@ -169,9 +169,21 @@ final class WatchSessionManager: NSObject, ObservableObject {
         )
     }
 
+    /// Infers slot type from load fields when the explicit slot_type is nil (legacy stored programs).
+    private func inferSlotType(from load: ProgramLoad, explicit: String?) -> String {
+        if let e = explicit, !e.isEmpty { return e }
+        if load.distanceKm    != nil { return "distance" }
+        if load.holdSeconds   != nil { return "static_hold" }
+        if load.format        != nil { return "emom" }
+        if load.durationMinutes != nil { return "time_domain" }
+        if load.timeMinutes != nil && load.targetRounds != nil { return "amrap" }
+        if load.targetRounds  != nil { return "for_time" }
+        return "sets_reps"
+    }
+
     private func formatLoad(_ ea: ProgramExerciseAssignment) -> String {
         let load = ea.load
-        switch ea.slotType ?? "sets_reps" {
+        switch inferSlotType(from: ea.load, explicit: ea.slotType) {
         case "sets_reps":
             let sets = load.sets.map { "\($0)" } ?? "?"
             let reps = load.reps?.displayString ?? "?"
@@ -220,16 +232,11 @@ final class WatchSessionManager: NSObject, ObservableObject {
     /// Returns (nil, nil) if not parseable.
     private func parseZoneRange(_ zoneTarget: String?) -> (Int?, Int?) {
         guard let s = zoneTarget else { return (nil, nil) }
-        // Match first digit (lower bound)
-        let digits = s.matches(of: /(?i)Zone\s*(\d)/)
-        guard let first = digits.first else { return (nil, nil) }
-        let lower = Int(String(first.output.1))
-        // Look for a second digit after a dash/en-dash for upper bound
-        if digits.count >= 2 {
-            let upper = Int(String(digits[1].output.1))
-            return (lower, upper ?? lower)
-        }
-        return (lower, lower)
+        let pattern = /[Zz]one\s*(\d)(?:\s*[-–]\s*(\d))?/
+        guard let m = try? pattern.firstMatch(in: s),
+              let lower = Int(m.output.1) else { return (nil, nil) }
+        let upper = m.output.2.flatMap { Int($0) } ?? lower
+        return (lower, upper)
     }
 
     private func weekdayName(for date: Date) -> String {
@@ -302,10 +309,3 @@ extension WatchSessionManager: WCSessionDelegate {
     }
 }
 
-// MARK: - Regex helper (Swift 5.7+)
-
-private extension String {
-    func matches(of regex: some RegexComponent) -> [Regex<(Substring, Substring)>.Match] {
-        (try? self.matches(of: regex as! Regex<(Substring, Substring)>)) ?? []
-    }
-}
