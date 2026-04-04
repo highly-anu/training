@@ -269,12 +269,20 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
 extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        guard let type = userInfo["type"] as? String, type == "workout_complete" else { return }
+        let type = userInfo["type"] as? String ?? "(no type)"
+        AppLogger.shared.logFromBackground("WCSession: received userInfo type=\(type)")
+
+        guard type == "workout_complete" else { return }
+
         guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
-              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else { return }
+              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+            AppLogger.shared.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
+            return
+        }
+
+        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(summary.sessionId) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted)")
 
         Task { @MainActor in
-            // Build the session log payload the API expects
             let sessionKey = summary.sessionId
             var log: [String: Any] = [
                 "sessionKey":    sessionKey,
@@ -286,7 +294,13 @@ extension WatchSessionManager: WCSessionDelegate {
             if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
             if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
 
-            try? await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            AppLogger.shared.log("API: saving workout log for \(sessionKey)…")
+            do {
+                try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+                AppLogger.shared.log("API: saved workout log for \(sessionKey) ✓")
+            } catch {
+                AppLogger.shared.log("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
+            }
         }
     }
 
