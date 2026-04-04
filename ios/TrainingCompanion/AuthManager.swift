@@ -28,6 +28,16 @@ final class AuthManager: ObservableObject {
         }
     }
 
+    /// Silently refreshes the token if it expires within 60 seconds.
+    /// Safe to call before every API request.
+    func refreshIfNeeded() async {
+        guard let data = UserDefaults.standard.data(forKey: sessionKey),
+              let session = try? JSONDecoder().decode(StoredSession.self, from: data),
+              session.expiresAt.timeIntervalSinceNow < 60,
+              let refreshToken = session.refreshToken else { return }
+        await refreshSession(refreshToken: refreshToken)
+    }
+
     func signIn(email: String, password: String) async throws {
         let result = try await passwordGrant(email: email, password: password)
         persistSession(result)

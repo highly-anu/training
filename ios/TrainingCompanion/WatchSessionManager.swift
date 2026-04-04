@@ -295,7 +295,8 @@ extension WatchSessionManager: WCSessionDelegate {
 
     private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
         let sessionKey = summary.sessionId
-        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted)")
+        let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
+        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
 
         // 1. Save session log (exercises, set data, HR aggregates)
         var log: [String: Any] = [

@@ -82,10 +82,10 @@ struct ActiveWorkoutView: View {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     WKInterfaceDevice.current().play(.notification)
 
-                    // Auto-advance to next exercise if one exists
+                    // Auto-advance to next exercise, or complete session if last
                     let nextIndex = ei + 1
+                    try? await Task.sleep(nanoseconds: 800_000_000)
                     if nextIndex < session.exercises.count {
-                        try? await Task.sleep(nanoseconds: 800_000_000)
                         if session.exercises[nextIndex].durationMinutes != nil {
                             // Next is also timed — start its timer immediately
                             sessionState.autoAdvanceToNextTimedWork(
@@ -99,6 +99,14 @@ struct ActiveWorkoutView: View {
                                 exerciseId: session.exercises[ei].exerciseId
                             )
                         }
+                    } else {
+                        // Last exercise — complete it and end the session automatically
+                        sessionState.completeTimedWork(
+                            exerciseIndex: ei,
+                            exerciseId: session.exercises[ei].exerciseId
+                        )
+                        sessionState.completeSession()
+                        await workoutManager.endWorkout()
                     }
                 }
             }

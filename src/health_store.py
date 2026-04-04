@@ -144,16 +144,30 @@ def upsert_session_log(user_id: str, log: dict) -> None:
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
+                exercises_raw = log.get('exercises', {})
+                if isinstance(exercises_raw, str):
+                    try:
+                        exercises_raw = json.loads(exercises_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        exercises_raw = {}
                 cur.execute('''
                     INSERT INTO session_logs
                     (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source,
                      avg_hr, peak_hr, exercise_timeline)
                     VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
-                        exercises         = EXCLUDED.exercises,
-                        notes             = EXCLUDED.notes,
-                        fatigue_rating    = EXCLUDED.fatigue_rating,
-                        completed_at      = EXCLUDED.completed_at,
+                        exercises         = CASE
+                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
+                            THEN EXCLUDED.exercises
+                            ELSE session_logs.exercises
+                        END,
+                        notes             = CASE
+                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
+                            THEN EXCLUDED.notes
+                            ELSE session_logs.notes
+                        END,
+                        fatigue_rating    = COALESCE(EXCLUDED.fatigue_rating, session_logs.fatigue_rating),
+                        completed_at      = GREATEST(EXCLUDED.completed_at, session_logs.completed_at),
                         source            = EXCLUDED.source,
                         avg_hr            = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
                         peak_hr           = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr),
@@ -161,7 +175,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                 ''', (
                     log['sessionKey'],
                     user_id,
-                    json.dumps(log.get('exercises', {})),
+                    json.dumps(exercises_raw),
                     log.get('notes', ''),
                     log.get('fatigueRating'),
                     log.get('completedAt') or None,

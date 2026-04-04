@@ -35,6 +35,14 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
               var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         dict["type"] = "workout_complete"
 
+        // Cancel any previously queued transfers for the same session so re-runs
+        // during testing don't result in stale data being delivered after the new one.
+        for pending in WCSession.default.outstandingUserInfoTransfers
+        where pending.userInfo["type"] as? String == "workout_complete"
+           && pending.userInfo["sessionId"] as? String == summary.sessionId {
+            pending.cancel()
+        }
+
         // transferUserInfo has a ~65 KB limit. Re-serialise to check size.
         let payloadData = (try? JSONSerialization.data(withJSONObject: dict)) ?? data
         if payloadData.count <= 50_000 {

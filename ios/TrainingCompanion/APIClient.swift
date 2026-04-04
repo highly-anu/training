@@ -75,7 +75,7 @@ final class APIClient {
     private func get(_ path: String) async throws -> Data {
         let url = URL(string: APIClient.baseURL + path)!
         var request = URLRequest(url: url)
-        try addAuth(to: &request)
+        try await addAuth(to: &request)
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
         return data
@@ -86,7 +86,7 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        try addAuth(to: &request)
+        try await addAuth(to: &request)
         request.httpBody = body
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
@@ -98,7 +98,7 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        try addAuth(to: &request)
+        try await addAuth(to: &request)
         request.httpBody = body
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
@@ -110,14 +110,15 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        try addAuth(to: &request)
+        try await addAuth(to: &request)
         request.httpBody = try JSONEncoder().encode(body)
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
         return data
     }
 
-    private func addAuth(to request: inout URLRequest) throws {
+    private func addAuth(to request: inout URLRequest) async throws {
+        await auth.refreshIfNeeded()
         guard let token = auth.accessToken else { throw APIError.unauthenticated }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     }
