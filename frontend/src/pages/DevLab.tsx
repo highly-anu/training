@@ -21,6 +21,7 @@ import { SchedulerPanel } from '@/components/devlab/SchedulerPanel'
 import { SessionsPanel } from '@/components/devlab/SessionsPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
+import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
 import type { EquipmentId, TrainingLevel, TrainingPhase, TracedProgram, WeekData } from '@/api/types'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
@@ -180,7 +181,7 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!goalId && !generateMutation.isPending
 
-  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap'>('pipeline')
+  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap' | 'interactions'>('pipeline')
   const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
   const [ontologyFromBrowser, setOntologyFromBrowser] = useState(false)
 
@@ -230,6 +231,17 @@ export function DevLab() {
           >
             Ontology
           </button>
+          <button
+            onClick={() => setDevTab('interactions')}
+            className={cn(
+              'px-3 py-1 rounded text-xs border transition-colors',
+              devTab === 'interactions'
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted'
+            )}
+          >
+            Model Interactions
+          </button>
         </div>
       </div>
 
@@ -254,6 +266,12 @@ export function DevLab() {
             initialLockedNode={ontologyNodeId}
             onBack={ontologyFromBrowser ? () => { setDevTab('browser'); setOntologyFromBrowser(false) } : undefined}
           />
+        </div>
+      )}
+
+      {devTab === 'interactions' && (
+        <div className="flex-1 overflow-y-auto">
+          <ModelInteractionPanel result={result} />
         </div>
       )}
 
