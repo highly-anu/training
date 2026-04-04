@@ -2,7 +2,8 @@ import { motion } from 'framer-motion'
 import { PerformanceLogger } from './PerformanceLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
-import type { ExerciseAssignment } from '@/api/types'
+import { useBioStore } from '@/store/bioStore'
+import type { ExerciseAssignment, SetPerformance } from '@/api/types'
 
 interface ExerciseRowProps {
   assignment: ExerciseAssignment
@@ -11,6 +12,8 @@ interface ExerciseRowProps {
 }
 
 export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps) {
+  const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
+
   if (assignment.meta) {
     return <MetaSlot assignment={assignment} />
   }
@@ -28,6 +31,8 @@ export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps)
 
   const loadStr = formatLoad(assignment.load)
   const hasSets = typeof assignment.load.sets === 'number' && assignment.load.sets > 0
+  const perfLog = getPerformanceLog(sessionKey) ?? getPerformanceLog(`${sessionKey}-0`)
+  const logged = perfLog?.exercises[assignment.exercise.id]
 
   return (
     <motion.div
@@ -70,7 +75,28 @@ export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps)
             {assignment.exercise.notes}
           </p>
         )}
+        {logged && logged.sets.length > 0 && (
+          <div className="mt-2 border-t border-border/40 pt-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Logged</p>
+            <div className="flex flex-col gap-0.5">
+              {logged.sets.map((s: SetPerformance, i: number) => (
+                <p key={i} className="text-[11px] text-muted-foreground font-mono">
+                  {formatSetLine(s, i)}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   )
+}
+
+function formatSetLine(s: SetPerformance, i: number): string {
+  const parts: string[] = [`Set ${i + 1}:`]
+  if (s.repsActual != null) parts.push(`${s.repsActual} reps`)
+  if (s.weightKg != null) parts.push(`@ ${s.weightKg} kg`)
+  if (s.durationSeconds != null) parts.push(`${s.durationSeconds}s`)
+  if (s.rpe != null) parts.push(`RPE ${s.rpe}`)
+  return parts.join(' ')
 }

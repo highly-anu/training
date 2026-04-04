@@ -2,10 +2,8 @@ import SwiftUI
 
 struct SessionProgressView: View {
     let session: WatchSession
-    var onStop: (() -> Void)? = nil
 
     @EnvironmentObject var sessionState: WorkoutSessionState
-    @State private var showStopConfirm = false
 
     var body: some View {
         ScrollView {
@@ -30,19 +28,6 @@ struct SessionProgressView: View {
                     .padding(.vertical, 2)
                 }
 
-                if onStop != nil {
-                    Button(role: .destructive) {
-                        showStopConfirm = true
-                    } label: {
-                        Label("Stop Session", systemImage: "xmark.circle")
-                            .font(.caption)
-                    }
-                    .padding(.top, 8)
-                    .confirmationDialog("Stop session?", isPresented: $showStopConfirm) {
-                        Button("Stop", role: .destructive) { onStop?() }
-                        Button("Cancel", role: .cancel) {}
-                    }
-                }
             }
             .padding(.horizontal)
         }

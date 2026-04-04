@@ -34,8 +34,6 @@ final class WatchSessionManager: NSObject, ObservableObject {
     }()
 
     // UserDefaults keys
-    private let lastSyncedDateKey = "watchProgramSyncDate"
-    private let lastSyncedTimeKey = "watchProgramSyncTime"
 
     init(api: APIClient) {
         self.api = api
@@ -48,17 +46,9 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
     // MARK: - Program sync
 
-    /// Call after auth + bio sync. Fetches program, computes today's sessions, sends to Watch.
-    /// Skips if already sent today within the last 4 hours.
+    /// Fetches today's program from the API and sends sessions to the Watch.
     func syncProgram() async {
         let todayStr = dayFormatter.string(from: Date())
-        if let lastDate = UserDefaults.standard.string(forKey: lastSyncedDateKey),
-           let lastTime = UserDefaults.standard.object(forKey: lastSyncedTimeKey) as? Date,
-           lastDate == todayStr,
-           Date().timeIntervalSince(lastTime) < 4 * 3600 {
-            return
-        }
-
         do {
             guard let server = try await api.fetchProgram() else {
                 sendNoProgramMessage()
@@ -100,8 +90,6 @@ final class WatchSessionManager: NSObject, ObservableObject {
             ]
 
             WCSession.default.transferUserInfo(payload)
-            UserDefaults.standard.set(todayStr, forKey: lastSyncedDateKey)
-            UserDefaults.standard.set(Date(), forKey: lastSyncedTimeKey)
         } catch {
             // Silent failure — Watch will use cached sessions
         }
@@ -292,13 +280,32 @@ extension WatchSessionManager: WCSessionDelegate {
                 "sessionKey":    sessionKey,
                 "completedAt":   summary.endedAt,
                 "source":        summary.source,
-                "exercises":     encodedJSON(summary.setLogs),
+                "exercises":     encodedJSON(summary.setLogs.mapValues { ["sets": $0] }),
                 "notes":         "",
             ]
             if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
             if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
 
             try? await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+        }
+    }
+
+    nonisolated func session(_ session: WCSession,
+                             didReceiveMessage message: [String: Any]) {
+        guard let type = message["type"] as? String, type == "request_sync" else { return }
+        Task { await syncProgram() }
+    }
+
+    nonisolated func session(_ session: WCSession,
+                             didReceiveMessage message: [String: Any],
+                             replyHandler: @escaping ([String: Any]) -> Void) {
+        guard let type = message["type"] as? String, type == "request_sync" else {
+            replyHandler([:])
+            return
+        }
+        Task {
+            await syncProgram()
+            replyHandler(["status": "ok"])
         }
     }
 

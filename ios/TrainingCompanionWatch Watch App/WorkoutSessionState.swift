@@ -19,6 +19,9 @@ final class WorkoutSessionState: ObservableObject {
 
     @Published var phase: Phase = .idle
 
+    // Timer control
+    @Published var isTimerPaused: Bool = false
+
     // HR
     @Published var currentHR: Int = 0
     @Published var peakHR: Int = 0
@@ -60,8 +63,12 @@ final class WorkoutSessionState: ObservableObject {
         }
     }
 
+    func pauseTimer()  { isTimerPaused = true;  WKInterfaceDevice.current().play(.stop) }
+    func resumeTimer() { isTimerPaused = false; WKInterfaceDevice.current().play(.start) }
+
     func reset() {
         phase = .idle
+        isTimerPaused = false
         currentHR = 0; peakHR = 0
         avgHRSamples = []
         hrOutOfZoneSeconds = 0; isHRAlertActive = false
@@ -134,6 +141,15 @@ final class WorkoutSessionState: ObservableObject {
         markExerciseComplete(id: exerciseId)
         phase = .active(exerciseIndex: exerciseIndex + 1, setIndex: 0)
         WKInterfaceDevice.current().play(.success)
+    }
+
+    /// Called by the master ticker when the next exercise is also timed — skips the
+    /// intermediate .active state so the next timer starts immediately.
+    func autoAdvanceToNextTimedWork(currentExerciseId: String, nextIndex: Int) {
+        markExerciseComplete(id: currentExerciseId)
+        isTimerPaused = false
+        phase = .timedWork(exerciseIndex: nextIndex, secondsElapsed: 0)
+        WKInterfaceDevice.current().play(.start)
     }
 
     // MARK: - EMOM

@@ -31,14 +31,6 @@ struct CurrentExerciseView: View {
                         }
                     }
 
-                    // Coaching cue
-                    if let cue = exercise.coachingCue, !cue.isEmpty {
-                        Text(cue)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .italic()
-                    }
-
                     // HR alert banner
                     if sessionState.isHRAlertActive {
                         Label("Check HR zone", systemImage: "heart.circle.fill")

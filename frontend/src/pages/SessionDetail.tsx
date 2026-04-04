@@ -39,6 +39,7 @@ export function SessionDetail() {
   }
 
   const { sessionLogs, setSessionLog } = useProfileStore()
+  const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
@@ -102,6 +103,8 @@ export function SessionDetail() {
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {sessions.map((session, sessionIdx) => {
           const isComplete = sessionLogs[sessionKey]?.[sessionIdx] === true
+            || !!getPerformanceLog(sessionKey)?.completedAt
+            || !!getPerformanceLog(`${sessionKey}-${sessionIdx}`)?.completedAt
           return (
             <div key={sessionIdx} className="space-y-4">
               {sessionIdx > 0 && <Separator />}

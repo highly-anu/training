@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 
 struct ActiveWorkoutView: View {
     let session: WatchSession
@@ -10,6 +11,8 @@ struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isStarted = false
     @State private var workoutStartDate = Date()
+    @State private var showStopConfirm = false
+    @State private var lastHapticExerciseIndex = -1
 
     var body: some View {
         Group {
@@ -37,6 +40,40 @@ struct ActiveWorkoutView: View {
         }
         .navigationTitle(session.archetypeName)
         .navigationBarBackButtonHidden(isStarted)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                timerStatusIndicator
+            }
+        }
+        .task(id: isStarted) {
+            guard isStarted else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard case let .timedWork(ei, elapsed) = sessionState.phase else { continue }
+                guard !sessionState.isTimerPaused else { continue }
+                sessionState.tickTimedWork()
+                guard ei < session.exercises.count,
+                      let durationMin = session.exercises[ei].durationMinutes else { continue }
+                let target = durationMin * 60
+                if elapsed + 1 == target && lastHapticExerciseIndex != ei {
+                    lastHapticExerciseIndex = ei
+                    WKInterfaceDevice.current().play(.notification)
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    WKInterfaceDevice.current().play(.notification)
+
+                    // Auto-advance if the next exercise also has an explicit timed duration
+                    let nextIndex = ei + 1
+                    if nextIndex < session.exercises.count,
+                       session.exercises[nextIndex].durationMinutes != nil {
+                        try? await Task.sleep(nanoseconds: 800_000_000)
+                        sessionState.autoAdvanceToNextTimedWork(
+                            currentExerciseId: session.exercises[ei].exerciseId,
+                            nextIndex: nextIndex
+                        )
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Pre-workout
@@ -61,6 +98,13 @@ struct ActiveWorkoutView: View {
                         if let note = ex.loadNote {
                             Text(note).font(.caption2).foregroundStyle(.orange)
                         }
+                        if let cue = ex.coachingCue, !cue.isEmpty {
+                            Text(cue)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .italic()
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     .padding(.vertical, 2)
                 }
@@ -84,11 +128,8 @@ struct ActiveWorkoutView: View {
         TabView {
             currentExercisePage
             timerTabView
-            SessionProgressView(session: session, onStop: {
-                sessionState.reset()
-                Task { await workoutManager.endWorkout() }
-                dismiss()
-            })
+            SessionProgressView(session: session)
+            commandsTabView
             LiveMetricsView()
         }
         .tabViewStyle(.page)
@@ -101,7 +142,7 @@ struct ActiveWorkoutView: View {
         if case let .timedWork(ei, elapsed) = sessionState.phase,
            ei < session.exercises.count {
             let exercise = session.exercises[ei]
-            let target = (exercise.durationMinutes ?? 20) * 60
+            let target = (exercise.durationMinutes ?? 0) * 60
             let overTime = elapsed >= target
             let fraction = target > 0 ? min(1.0, Double(elapsed) / Double(target)) : 0
 
@@ -153,6 +194,62 @@ struct ActiveWorkoutView: View {
     private func timerString(_ seconds: Int) -> String {
         String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
+
+    // MARK: - Timer status indicator (navigation bar, visible from all tabs)
+
+    @ViewBuilder
+    private var timerStatusIndicator: some View {
+        if case let .timedWork(_, elapsed) = sessionState.phase {
+            HStack(spacing: 3) {
+                Image(systemName: sessionState.isTimerPaused ? "pause.fill" : "timer")
+                    .font(.system(size: 9))
+                Text(timerString(elapsed))
+                    .font(.system(size: 11).monospacedDigit())
+            }
+            .foregroundStyle(sessionState.isTimerPaused ? Color.orange : Color.green)
+        }
+    }
+
+    // MARK: - Commands tab
+
+    @ViewBuilder
+    private var commandsTabView: some View {
+        VStack(spacing: 14) {
+            if case .timedWork = sessionState.phase {
+                Button {
+                    if sessionState.isTimerPaused { sessionState.resumeTimer() }
+                    else { sessionState.pauseTimer() }
+                } label: {
+                    Label(sessionState.isTimerPaused ? "Resume" : "Pause",
+                          systemImage: sessionState.isTimerPaused ? "play.fill" : "pause.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(sessionState.isTimerPaused ? .green : .orange)
+            }
+
+            Button(role: .destructive) {
+                showStopConfirm = true
+            } label: {
+                Label("End Session", systemImage: "xmark.circle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red.opacity(0.8))
+        }
+        .padding()
+        .navigationTitle("Commands")
+        .confirmationDialog("End session?", isPresented: $showStopConfirm) {
+            Button("End", role: .destructive) {
+                sessionState.reset()
+                Task { await workoutManager.endWorkout() }
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    // MARK: - Exercise page
 
     @ViewBuilder
     private var currentExercisePage: some View {
