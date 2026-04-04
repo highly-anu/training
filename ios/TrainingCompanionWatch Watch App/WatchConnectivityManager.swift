@@ -32,7 +32,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     func sendWorkoutSummary(_ summary: WatchWorkoutSummary) {
         guard let data = try? JSONEncoder().encode(summary),
-              let dict  = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        dict["type"] = "workout_complete"
         WCSession.default.transferUserInfo(dict)
     }
 
