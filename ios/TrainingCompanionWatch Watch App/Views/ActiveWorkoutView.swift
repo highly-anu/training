@@ -153,6 +153,8 @@ struct ActiveWorkoutView: View {
             let target = (exercise.durationMinutes ?? 0) * 60
             let overTime = elapsed >= target
             let fraction = target > 0 ? min(1.0, Double(elapsed) / Double(target)) : 0
+            let nextIndex = ei + 1
+            let isLast = nextIndex >= session.exercises.count
 
             VStack(spacing: 12) {
                 Spacer()
@@ -176,10 +178,19 @@ struct ActiveWorkoutView: View {
                 }
                 .frame(maxWidth: .infinity)
                 Spacer()
-                let isLast = ei + 1 >= session.exercises.count
                 Button(isLast ? "Done" : "Next") {
-                    sessionState.completeTimedWork(exerciseIndex: ei,
-                                                   exerciseId: exercise.exerciseId)
+                    if isLast {
+                        sessionState.completeTimedWork(exerciseIndex: ei,
+                                                       exerciseId: exercise.exerciseId)
+                    } else if session.exercises[nextIndex].durationMinutes != nil {
+                        sessionState.autoAdvanceToNextTimedWork(
+                            currentExerciseId: exercise.exerciseId,
+                            nextIndex: nextIndex
+                        )
+                    } else {
+                        sessionState.completeTimedWork(exerciseIndex: ei,
+                                                       exerciseId: exercise.exerciseId)
+                    }
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)

@@ -6,7 +6,10 @@ struct TimeDomainView: View {
 
     @EnvironmentObject var sessionState: WorkoutSessionState
 
-    @State private var isActive = false
+    private var isActive: Bool {
+        if case let .timedWork(ei, _) = sessionState.phase { return ei == exerciseIndex }
+        return false
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -17,16 +20,10 @@ struct TimeDomainView: View {
                     .padding(.top, 4)
             } else {
                 Button("Start Timer") {
-                    isActive = true
                     sessionState.startTimedWork(exerciseIndex: exerciseIndex)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
-            }
-        }
-        .onAppear {
-            if case .timedWork(let ei, _) = sessionState.phase, ei == exerciseIndex {
-                isActive = true
             }
         }
     }
