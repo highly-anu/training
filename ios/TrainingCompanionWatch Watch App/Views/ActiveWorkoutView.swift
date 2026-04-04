@@ -61,15 +61,23 @@ struct ActiveWorkoutView: View {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     WKInterfaceDevice.current().play(.notification)
 
-                    // Auto-advance if the next exercise also has an explicit timed duration
+                    // Auto-advance to next exercise if one exists
                     let nextIndex = ei + 1
-                    if nextIndex < session.exercises.count,
-                       session.exercises[nextIndex].durationMinutes != nil {
+                    if nextIndex < session.exercises.count {
                         try? await Task.sleep(nanoseconds: 800_000_000)
-                        sessionState.autoAdvanceToNextTimedWork(
-                            currentExerciseId: session.exercises[ei].exerciseId,
-                            nextIndex: nextIndex
-                        )
+                        if session.exercises[nextIndex].durationMinutes != nil {
+                            // Next is also timed — start its timer immediately
+                            sessionState.autoAdvanceToNextTimedWork(
+                                currentExerciseId: session.exercises[ei].exerciseId,
+                                nextIndex: nextIndex
+                            )
+                        } else {
+                            // Next is not timed — advance to active phase
+                            sessionState.completeTimedWork(
+                                exerciseIndex: ei,
+                                exerciseId: session.exercises[ei].exerciseId
+                            )
+                        }
                     }
                 }
             }
@@ -168,7 +176,8 @@ struct ActiveWorkoutView: View {
                 }
                 .frame(maxWidth: .infinity)
                 Spacer()
-                Button("Done") {
+                let isLast = ei + 1 >= session.exercises.count
+                Button(isLast ? "Done" : "Next") {
                     sessionState.completeTimedWork(exerciseIndex: ei,
                                                    exerciseId: exercise.exerciseId)
                 }
