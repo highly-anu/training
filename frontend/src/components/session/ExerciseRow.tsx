@@ -9,9 +9,10 @@ interface ExerciseRowProps {
   assignment: ExerciseAssignment
   index: number
   sessionKey: string
+  sessionIdx?: number
 }
 
-export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps) {
+export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: ExerciseRowProps) {
   const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
 
   if (assignment.meta) {
@@ -31,7 +32,8 @@ export function ExerciseRow({ assignment, index, sessionKey }: ExerciseRowProps)
 
   const loadStr = formatLoad(assignment.load)
   const hasSets = typeof assignment.load.sets === 'number' && assignment.load.sets > 0
-  const perfLog = getPerformanceLog(sessionKey) ?? getPerformanceLog(`${sessionKey}-0`)
+  const watchKey = sessionIdx != null ? `${sessionKey}-${sessionIdx}` : `${sessionKey}-0`
+  const perfLog = getPerformanceLog(watchKey) ?? getPerformanceLog(sessionKey)
   const logged = perfLog?.exercises[assignment.exercise.id]
 
   return (

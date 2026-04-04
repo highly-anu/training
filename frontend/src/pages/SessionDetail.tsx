@@ -132,7 +132,7 @@ export function SessionDetail() {
 
               <div className="space-y-2">
                 {session.exercises.map((assignment, i) => (
-                  <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={sessionKey} />
+                  <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={sessionKey} sessionIdx={sessionIdx} />
                 ))}
               </div>
 

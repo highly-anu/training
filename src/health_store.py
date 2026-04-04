@@ -145,14 +145,16 @@ def upsert_session_log(user_id: str, log: dict) -> None:
             with conn.cursor() as cur:
                 cur.execute('''
                     INSERT INTO session_logs
-                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source)
-                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s)
+                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source, avg_hr, peak_hr)
+                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
                         exercises      = EXCLUDED.exercises,
                         notes          = EXCLUDED.notes,
                         fatigue_rating = EXCLUDED.fatigue_rating,
                         completed_at   = EXCLUDED.completed_at,
-                        source         = EXCLUDED.source
+                        source         = EXCLUDED.source,
+                        avg_hr         = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
+                        peak_hr        = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr)
                 ''', (
                     log['sessionKey'],
                     user_id,
@@ -161,6 +163,8 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     log.get('fatigueRating'),
                     log.get('completedAt') or None,
                     log.get('source', 'web'),
+                    log.get('avgHR'),
+                    log.get('peakHR'),
                 ))
             conn.commit()
     except RuntimeError:
@@ -179,13 +183,19 @@ def get_session_logs(user_id: str) -> dict:
             exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
                 json.loads(row['exercises'] or '{}')
             )
-            result[row['session_key']] = {
+            entry = {
                 'sessionKey':    row['session_key'],
                 'exercises':     exercises,
                 'notes':         row['notes'] or '',
                 'fatigueRating': row['fatigue_rating'],
                 'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
+                'source':        row.get('source') or 'web',
             }
+            if row.get('avg_hr') is not None:
+                entry['avgHR'] = row['avg_hr']
+            if row.get('peak_hr') is not None:
+                entry['peakHR'] = row['peak_hr']
+            result[row['session_key']] = entry
         return result
     except RuntimeError:
         return {}

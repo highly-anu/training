@@ -123,9 +123,24 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
   }, [importedWorkouts, workoutMatches])
 
   if (!matched) {
+    const hasWatchData = perfLog?.source === 'apple_watch_live' && (perfLog?.avgHR || perfLog?.peakHR)
     return (
       <>
         <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 space-y-3">
+          {hasWatchData && (
+            <div className="flex flex-wrap gap-4 pb-2 border-b border-border/40">
+              <div className="flex items-center gap-1.5">
+                <Heart className="size-3.5 text-red-400" />
+                {perfLog.avgHR != null && (
+                  <span className="text-sm font-semibold">{Math.round(perfLog.avgHR)}</span>
+                )}
+                {perfLog.peakHR != null && (
+                  <span className="text-xs text-muted-foreground">/ {Math.round(perfLog.peakHR)} bpm</span>
+                )}
+              </div>
+              <span className="text-[10px] text-muted-foreground self-center">Apple Watch · no HR timeline (no import)</span>
+            </div>
+          )}
           {suggestion ? (
             <>
               <div className="flex items-center justify-between">
