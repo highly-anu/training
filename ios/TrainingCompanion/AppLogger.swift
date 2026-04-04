@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 /// Simple in-process log ring-buffer. Thread-safe via @MainActor.
