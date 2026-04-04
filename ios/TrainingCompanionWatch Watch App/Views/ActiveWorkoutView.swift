@@ -23,6 +23,24 @@ struct ActiveWorkoutView: View {
                     session: session,
                     startedAt: workoutStartDate,
                     onSave: {
+                        let endedAt = Date()
+                        let dayFmt: DateFormatter = {
+                            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
+                        }()
+                        let iso = ISO8601DateFormatter()
+                        let summary = WatchWorkoutSummary(
+                            sessionId:           session.sessionId,
+                            date:                dayFmt.string(from: endedAt),
+                            startedAt:           iso.string(from: workoutStartDate),
+                            endedAt:             iso.string(from: endedAt),
+                            durationMinutes:     max(1, Int(endedAt.timeIntervalSince(workoutStartDate) / 60)),
+                            avgHR:               sessionState.avgHR > 0 ? sessionState.avgHR : nil,
+                            peakHR:              sessionState.peakHR > 0 ? sessionState.peakHR : nil,
+                            setLogs:             sessionState.setLogs,
+                            exercisesCompleted:  sessionState.completedExerciseIds.count,
+                            source:              "apple_watch_live"
+                        )
+                        connectivity.sendWorkoutSummary(summary)
                         connectivity.markSessionComplete(session.sessionId)
                         sessionState.reset()
                         dismiss()
