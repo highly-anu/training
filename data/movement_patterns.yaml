@@ -1,0 +1,42 @@
+# Movement pattern aliases
+# Each alias maps archetype slot shorthand to exercise schema IDs.
+# mode: 'or'       — exercise needs ANY of the patterns
+#        'and'      — exercise needs ALL of the patterns (compound movement)
+#        'category' — match by exercise category instead of movement_patterns
+
+aliases:
+  # Direct mappings (single pattern)
+  squat:           {mode: or,       patterns: [squat]}
+  hinge:           {mode: or,       patterns: [hip_hinge]}
+  hip_hinge:       {mode: or,       patterns: [hip_hinge]}
+  carry:           {mode: or,       patterns: [loaded_carry]}
+  loaded_carry:    {mode: or,       patterns: [loaded_carry]}
+  rotation:        {mode: or,       patterns: [rotation]}
+  locomotion:      {mode: or,       patterns: [locomotion]}
+  ballistic:       {mode: or,       patterns: [ballistic]}
+  olympic:         {mode: or,       patterns: [olympic_lift]}
+  olympic_lift:    {mode: or,       patterns: [olympic_lift]}
+  isometric:       {mode: or,       patterns: [isometric]}
+  horizontal_push: {mode: or,       patterns: [horizontal_push]}
+  vertical_push:   {mode: or,       patterns: [vertical_push]}
+  horizontal_pull: {mode: or,       patterns: [horizontal_pull]}
+  vertical_pull:   {mode: or,       patterns: [vertical_pull]}
+  # Collective aliases (OR — any of these patterns matches)
+  press:           {mode: or,       patterns: [horizontal_push, vertical_push]}
+  push:            {mode: or,       patterns: [horizontal_push, vertical_push]}
+  pull:            {mode: or,       patterns: [horizontal_pull, vertical_pull]}
+  aerobic:         {mode: or,       patterns: [aerobic_monostructural, locomotion]}
+  # Compound KB/Olympic aliases (AND — exercise must have all patterns)
+  swing:           {mode: and,      patterns: [hip_hinge, ballistic]}
+  clean:           {mode: and,      patterns: [hip_hinge, olympic_lift]}
+  jerk:            {mode: and,      patterns: [vertical_push, ballistic]}
+  snatch:          {mode: and,      patterns: [hip_hinge, ballistic, olympic_lift]}
+  tgu:             {mode: and,      patterns: [isometric, vertical_push]}
+  # Skill alias — match by category instead of movement pattern
+  skill:           {mode: category, patterns: [skill]}
+  # Carry-type aliases — distinguishes farmer / rack / overhead / ruck sub-types
+  farmer_carry:    {mode: or,       patterns: [farmer_carry]}
+  rack_carry:      {mode: or,       patterns: [rack_carry]}
+  step_up:         {mode: or,       patterns: [step_up]}
+  # Ruck: locomotion-based loaded carry (excludes static farmer/rack carries)
+  ruck:            {mode: and,      patterns: [locomotion, loaded_carry]}

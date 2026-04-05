@@ -57,8 +57,14 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 def _linear_load(exercise: dict, slot: dict, week: int,
                  level: str, is_deload: bool) -> dict:
     ex_id = exercise.get('id', '')
-    start = _STARTING_LOADS.get(ex_id, {}).get(level)
-    increment = _LINEAR_INCREMENTS.get(ex_id, _LINEAR_INCREMENTS['_default'])
+    start = (
+        exercise.get('starting_load_kg', {}).get(level)
+        or _STARTING_LOADS.get(ex_id, {}).get(level)
+    )
+    increment = (
+        exercise.get('weekly_increment_kg')
+        or _LINEAR_INCREMENTS.get(ex_id, _LINEAR_INCREMENTS['_default'])
+    )
     sessions_pw = _SESSIONS_PER_WEEK.get(ex_id, _SESSIONS_PER_WEEK['_default'])
 
     sets = slot.get('sets', 3)

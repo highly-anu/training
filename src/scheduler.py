@@ -337,9 +337,11 @@ def _spread_pick(candidates: List[int], n: int) -> List[int]:
     return [candidates[round(i * (len(candidates) - 1) / (n - 1))] for i in range(n)]
 
 
-def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int) -> List[int]:
+def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int,
+                    framework: dict | None = None) -> List[int]:
     """Return the day-of-week pattern for this framework/volume/phase/week combo."""
-    options = _CADENCE_OPTIONS.get(framework_id, {}).get(days)
+    yaml_options = (framework or {}).get('cadence_options', {})
+    options = yaml_options.get(days) or _CADENCE_OPTIONS.get(framework_id, {}).get(days)
     if not options:
         return _DEFAULT_SPREAD.get(days, list(range(1, days + 1)))
     if phase in _SPREAD_PHASES:
@@ -352,14 +354,15 @@ def _build_day_pool(days_per_week: int,
                     forced_rest: List[int],
                     framework_id: str = '',
                     phase: str = 'base',
-                    week_in_phase: int = 1) -> List[int]:
+                    week_in_phase: int = 1,
+                    framework: dict | None = None) -> List[int]:
     """Compute the ordered list of days that will receive sessions.
 
     Uses framework-specific cadence patterns with week-to-week rotation.
     forced_workout days are always included; forced_rest days are always excluded.
     """
     effective = max(days_per_week, len(forced_workout))
-    desired = set(_select_cadence(framework_id, effective, phase, week_in_phase))
+    desired = set(_select_cadence(framework_id, effective, phase, week_in_phase, framework))
 
     # Enforce user pins
     desired = (desired | set(forced_workout)) - set(forced_rest)
@@ -521,6 +524,7 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         framework_id=framework.get('id', ''),
         phase=phase,
         week_in_phase=week_number,
+        framework=framework,
     )
 
     allocation = allocate_sessions(priorities, len(pool), framework)

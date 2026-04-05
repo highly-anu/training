@@ -19,14 +19,14 @@ def _data_path(*parts) -> str:
 
 
 def load_goal(goal_id: str) -> dict:
-    path = _data_path('goals', f'{goal_id}.yaml')
-    if not os.path.exists(path):
-        available = [os.path.splitext(os.path.basename(p))[0]
-                     for p in glob.glob(_data_path('goals', '*.yaml'))]
-        raise FileNotFoundError(
-            f"Goal '{goal_id}' not found. Available: {', '.join(sorted(available))}"
-        )
-    return _load_yaml(path)
+    for path in glob.glob(_data_path('goals', '**', '*.yaml'), recursive=True):
+        if os.path.splitext(os.path.basename(path))[0] == goal_id:
+            return _load_yaml(path)
+    available = [os.path.splitext(os.path.basename(p))[0]
+                 for p in glob.glob(_data_path('goals', '**', '*.yaml'), recursive=True)]
+    raise FileNotFoundError(
+        f"Goal '{goal_id}' not found. Available: {', '.join(sorted(available))}"
+    )
 
 
 def load_framework(framework_id: str) -> dict:

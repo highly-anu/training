@@ -1,50 +1,21 @@
 """Select archetypes and exercises for each session."""
 from __future__ import annotations
+import os as _os
+import yaml as _yaml
 from typing import Optional
 
 # ---------------------------------------------------------------------------
-# Movement pattern aliases
+# Movement pattern aliases — loaded from data/movement_patterns.yaml
 # Archetype slots use shorthand; exercises use schema IDs.
 # Each entry is (mode, patterns):
-#   'or'  — exercise needs ANY of the patterns (collective alias)
-#   'and' — exercise needs ALL of the patterns (compound movement)
+#   'or'       — exercise needs ANY of the patterns (collective alias)
+#   'and'      — exercise needs ALL of the patterns (compound movement)
+#   'category' — match by exercise category instead of movement_patterns
 # ---------------------------------------------------------------------------
+_mp_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'movement_patterns.yaml')
 _PATTERN_ALIASES: dict[str, tuple] = {
-    # Direct mappings (single pattern)
-    'squat':            ('or',  ['squat']),
-    'hinge':            ('or',  ['hip_hinge']),
-    'hip_hinge':        ('or',  ['hip_hinge']),
-    'carry':            ('or',  ['loaded_carry']),
-    'loaded_carry':     ('or',  ['loaded_carry']),
-    'rotation':         ('or',  ['rotation']),
-    'locomotion':       ('or',  ['locomotion']),
-    'ballistic':        ('or',  ['ballistic']),
-    'olympic':          ('or',  ['olympic_lift']),
-    'olympic_lift':     ('or',  ['olympic_lift']),
-    'isometric':        ('or',  ['isometric']),
-    'horizontal_push':  ('or',  ['horizontal_push']),
-    'vertical_push':    ('or',  ['vertical_push']),
-    'horizontal_pull':  ('or',  ['horizontal_pull']),
-    'vertical_pull':    ('or',  ['vertical_pull']),
-    # Collective aliases (OR — any of these patterns matches)
-    'press':            ('or',  ['horizontal_push', 'vertical_push']),
-    'push':             ('or',  ['horizontal_push', 'vertical_push']),
-    'pull':             ('or',  ['horizontal_pull', 'vertical_pull']),
-    'aerobic':          ('or',  ['aerobic_monostructural', 'locomotion']),
-    # Compound KB/Olympic aliases (AND — exercise must have all patterns)
-    'swing':            ('and', ['hip_hinge', 'ballistic']),
-    'clean':            ('and', ['hip_hinge', 'olympic_lift']),
-    'jerk':             ('and', ['vertical_push', 'ballistic']),
-    'snatch':           ('and', ['hip_hinge', 'ballistic', 'olympic_lift']),
-    'tgu':              ('and', ['isometric', 'vertical_push']),
-    # Skill alias — match by category instead of movement pattern
-    'skill':            ('category', ['skill']),
-    # Carry-type aliases — distinguishes farmer / rack / overhead / ruck sub-types
-    'farmer_carry':     ('or',  ['farmer_carry']),
-    'rack_carry':       ('or',  ['rack_carry']),
-    'step_up':          ('or',  ['step_up']),
-    # Ruck: locomotion-based loaded carry (excludes static farmer/rack carries)
-    'ruck':             ('and', ['locomotion', 'loaded_carry']),
+    k: (v['mode'], v['patterns'])
+    for k, v in _yaml.safe_load(open(_mp_path))['aliases'].items()
 }
 
 # ---------------------------------------------------------------------------
