@@ -82,16 +82,23 @@ final class WatchSessionManager: NSObject, ObservableObject {
             }
 
             let profile = buildProfilePayload()
-            let payload: [String: Any] = [
-                "type":        "today_sessions",
-                "date":        todayStr,
-                "weekNumber":  week.weekNumber,
-                "dayName":     dayName,
-                "sessions":    encodedJSON(watchSessions),
-                "profile":     profile,
+            let weeklyOverview = buildWeeklyOverview(week: week)
+            let readiness = buildReadinessPayload()
+
+            var payload: [String: Any] = [
+                "type":          "today_sessions",
+                "date":          todayStr,
+                "weekNumber":    week.weekNumber,
+                "dayName":       dayName,
+                "sessions":      encodedJSON(watchSessions),
+                "profile":       profile,
+                "weeklyOverview": encodedJSON(weeklyOverview),
             ]
+            if let readiness { payload["readiness"] = encodedJSON(readiness) }
 
             WCSession.default.transferUserInfo(payload)
+            UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
+            AppLogger.shared.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
         } catch {
             // Silent failure — Watch will use cached sessions
         }
@@ -251,6 +258,37 @@ final class WatchSessionManager: NSObject, ObservableObject {
         return p
     }
 
+    private func buildWeeklyOverview(week: ProgramWeek) -> [WeeklyOverviewDay] {
+        let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+        return dayOrder.map { day in
+            let sessions = week.schedule[day] ?? []
+            return WeeklyOverviewDay(
+                dayName: day,
+                sessionCount: sessions.count,
+                modalityIds: sessions.map { $0.modality }
+            )
+        }
+    }
+
+    private func buildReadinessPayload() -> ReadinessInfo? {
+        // Use last known HRV stored in UserDefaults (written by HealthKitManager sync)
+        guard let hrv = UserDefaults.standard.object(forKey: "lastHRV") as? Double else { return nil }
+        let restingHR = UserDefaults.standard.object(forKey: "lastRestingHR") as? Double
+        let signal: String
+        let score: Double
+        switch hrv {
+        case let h where h >= 50: signal = "green"; score = min(1.0, h / 70.0)
+        case let h where h >= 35: signal = "yellow"; score = h / 70.0
+        default:                  signal = "red";    score = max(0.1, hrv / 70.0)
+        }
+        return ReadinessInfo(
+            score: score,
+            signal: signal,
+            restingHR: restingHR.map { Int($0) },
+            hrv: Int(hrv)
+        )
+    }
+
     private func sendNoProgramMessage() {
         guard WCSession.default.isReachable else { return }
         WCSession.default.transferUserInfo(["type": "no_program"])
@@ -273,6 +311,14 @@ extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         let type = userInfo["type"] as? String ?? "(no type)"
         AppLogger.shared.logFromBackground("WCSession: received userInfo type=\(type)")
+
+        if type == "session_marked_complete" {
+            guard let sessionId = userInfo["sessionId"] as? String,
+                  let markedAt = userInfo["markedAt"] as? String else { return }
+            Task { await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt) }
+            return
+        }
+
         guard type == "workout_complete" else { return }
         guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
               let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
@@ -294,6 +340,12 @@ extension WatchSessionManager: WCSessionDelegate {
     }
 
     private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
+        // Track upload for SyncStatusView
+        let now = Date()
+        UserDefaults.standard.set(now, forKey: "lastWatchUploadDate")
+        let count = UserDefaults.standard.integer(forKey: "watchUploadCount") + 1
+        UserDefaults.standard.set(count, forKey: "watchUploadCount")
+
         let sessionKey = summary.sessionId
         let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
         AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
@@ -366,12 +418,12 @@ extension WatchSessionManager: WCSessionDelegate {
         }
 
         // 3. Link workout to session via workout_matches
-        let now = iso.string(from: Date())
+        let nowString = iso.string(from: Date())
         let matchPayload: [String: Any] = [
             "importedWorkoutId": workoutId,
             "sessionKey":        sessionKey,
             "matchConfidence":   "auto",
-            "matchedAt":         now,
+            "matchedAt":         nowString,
         ]
         do {
             try await api.saveWorkoutMatch(matchPayload)
@@ -389,6 +441,16 @@ extension WatchSessionManager: WCSessionDelegate {
                 startDate: startDate,
                 existingGPSCount: gpsTrack?.count ?? 0
             )
+        }
+    }
+
+    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async {
+        AppLogger.shared.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
+        do {
+            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt)
+            AppLogger.shared.logFromBackground("API: marked session complete \(sessionId) ✓")
+        } catch {
+            AppLogger.shared.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
         }
     }
 
@@ -455,7 +517,10 @@ extension WatchSessionManager: WCSessionDelegate {
         }
     }
 
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated else { return }
+        Task { await syncProgram() }
+    }
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
         WCSession.default.activate()

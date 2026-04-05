@@ -7,6 +7,11 @@ final class SyncManager: ObservableObject {
     @Published var lastSyncDate: Date? = UserDefaults.standard.object(forKey: "lastSyncDate") as? Date
     @Published var lastError: String? = nil
 
+    // Per-category tracking (persisted in UserDefaults)
+    @Published var lastBioSyncDate: Date? = UserDefaults.standard.object(forKey: "lastBioSyncDate") as? Date
+    @Published var lastBioPushedCount: Int = UserDefaults.standard.integer(forKey: "lastBioPushedCount")
+    @Published var lastProgramSyncDate: Date? = UserDefaults.standard.object(forKey: "lastProgramSyncDate") as? Date
+
     private var cancelled = false
     private let hk = HealthKitManager.shared
     private let iso = ISO8601DateFormatter()
@@ -53,6 +58,10 @@ final class SyncManager: ObservableObject {
                     let sleep = await hk.fetchSleepData(for: cursor)
                     let bio = await hk.fetchDailyBiometrics(for: cursor)
 
+                    // Cache latest biometrics for Watch readiness payload
+                    if let hrv = bio.hrv { UserDefaults.standard.set(hrv, forKey: "lastHRV") }
+                    if let hr = bio.restingHR { UserDefaults.standard.set(hr, forKey: "lastRestingHR") }
+
                     if sleep.totalMin > 0 || bio.restingHR != nil || bio.hrv != nil
                         || bio.spo2Avg != nil || bio.respiratoryRateAvg != nil {
                         let payload = DailyBioPayload(
@@ -82,7 +91,13 @@ final class SyncManager: ObservableObject {
                 let now = Date()
                 lastSyncDate = now
                 UserDefaults.standard.set(now, forKey: "lastSyncDate")
+                lastBioSyncDate = now
+                lastBioPushedCount = pushed
+                UserDefaults.standard.set(now, forKey: "lastBioSyncDate")
+                UserDefaults.standard.set(pushed, forKey: "lastBioPushedCount")
                 await watchSync?.syncProgram()
+                lastProgramSyncDate = Date()
+                UserDefaults.standard.set(lastProgramSyncDate!, forKey: "lastProgramSyncDate")
                 logger.log("syncAll: complete")
             }
         } catch {

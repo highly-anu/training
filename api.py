@@ -1344,6 +1344,18 @@ def health_delete_workout(workout_id: str):
     return jsonify({'deleted': workout_id})
 
 
+@app.get('/api/health/sessions/recent')
+@require_auth
+def health_recent_sessions():
+    return jsonify(_health.get_recent_session_logs(g.user_id))
+
+
+@app.get('/api/health/bio/recent')
+@require_auth
+def health_recent_bio():
+    return jsonify(_health.get_recent_bio_logs(g.user_id))
+
+
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):

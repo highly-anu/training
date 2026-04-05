@@ -18,14 +18,16 @@ struct GeneratedProgram: Decodable {
 
 struct ProgramWeek: Decodable {
     let weekNumber: Int
+    let weekInPhase: Int?
     let isDeload: Bool
     let phase: String
     // Keys are day names: "Monday" … "Sunday"
     let schedule: [String: [ProgramSession]]
 
     enum CodingKeys: String, CodingKey {
-        case weekNumber = "week_number"
-        case isDeload   = "is_deload"
+        case weekNumber  = "week_number"
+        case weekInPhase = "week_in_phase"
+        case isDeload    = "is_deload"
         case phase
         case schedule
     }
@@ -239,6 +241,23 @@ struct WatchSetLog: Codable {
     let durationSeconds: Int?
     let startOffset: Int?   // seconds from session startedAt when this set began
     let endOffset: Int?     // seconds from session startedAt when this set was logged
+}
+
+// MARK: - Watch sync extras (iPhone → Watch, appended to today_sessions payload)
+
+/// Compact per-day overview for the "This Week" section on the Watch.
+struct WeeklyOverviewDay: Codable {
+    let dayName: String        // "Monday" … "Sunday"
+    let sessionCount: Int
+    let modalityIds: [String]  // in order (empty = rest day)
+}
+
+/// Derived readiness signal sent from iPhone (based on HRV + resting HR vs. 30-day baseline).
+struct ReadinessInfo: Codable {
+    let score: Double           // 0.0 – 1.0
+    let signal: String          // "green" | "yellow" | "red"
+    let restingHR: Int?
+    let hrv: Int?               // ms, rounded
 }
 
 // MARK: - Slot-type resolution

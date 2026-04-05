@@ -30,6 +30,8 @@
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvcGhjdGRlamN0cWVrcGx3bnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzE1OTEsImV4cCI6MjA5MDUwNzU5MX0.uzZA-4uqIq_ljoCM29OXGrHo3_SFkBI8_2pcO8ktPHM</string>
 	<key>SUPABASE_URL</key>
 	<string>https://bophctdejctqekplwnvp.supabase.co</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

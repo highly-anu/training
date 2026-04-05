@@ -189,6 +189,34 @@ def upsert_session_log(user_id: str, log: dict) -> None:
         pass
 
 
+def get_recent_session_logs(user_id: str) -> list[dict]:
+    """Return all session logs as a list with snake_case keys (matches iOS SessionLogEntry model)."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT session_key, completed_at, source, notes, fatigue_rating, avg_hr, peak_hr '
+                    'FROM session_logs WHERE user_id = %s ORDER BY completed_at DESC NULLS LAST',
+                    (user_id,),
+                )
+                rows = cur.fetchall()
+        return [
+            {
+                'session_key':    row['session_key'],
+                'completed_at':   str(row['completed_at']) if row['completed_at'] else None,
+                'source':         row.get('source') or 'web',
+                'notes':          row.get('notes') or '',
+                'fatigue_rating': row.get('fatigue_rating'),
+                'avg_hr':         row.get('avg_hr'),
+                'peak_hr':        row.get('peak_hr'),
+            }
+            for row in rows
+        ]
+    except RuntimeError:
+        return []
+
+
 def get_session_logs(user_id: str) -> dict:
     from src.db import get_conn
     try:
@@ -288,6 +316,39 @@ def get_synced_dates(user_id: str) -> list[str]:
                 )
                 rows = cur.fetchall()
         return [str(row['date']) for row in rows]
+    except RuntimeError:
+        return []
+
+
+def get_recent_bio_logs(user_id: str, days: int = 90) -> list[dict]:
+    """Return recent bio logs as a list with snake_case keys (matches iOS DailyBioLog model)."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT * FROM daily_bio WHERE user_id = %s '
+                    'AND date >= CURRENT_DATE - INTERVAL %s '
+                    'ORDER BY date DESC',
+                    (user_id, f'{days} days'),
+                )
+                rows = cur.fetchall()
+        result = []
+        for row in rows:
+            entry: dict = {'date': str(row['date'])}
+            for col in ('resting_hr', 'hrv', 'notes', 'sleep_duration_min', 'deep_sleep_min',
+                        'rem_sleep_min', 'light_sleep_min', 'spo2_avg',
+                        'respiratory_rate_avg', 'source'):
+                if row.get(col) is not None:
+                    entry[col] = row[col]
+            # DB column is awake_min; iOS model CodingKey is awake_mins
+            if row.get('awake_min') is not None:
+                entry['awake_mins'] = row['awake_min']
+            for col in ('sleep_start', 'sleep_end'):
+                if row.get(col) is not None:
+                    entry[col] = str(row[col])
+            result.append(entry)
+        return result
     except RuntimeError:
         return []
 
