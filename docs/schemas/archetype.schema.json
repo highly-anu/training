@@ -26,9 +26,14 @@
       ],
       "description": "Primary modality this archetype develops."
     },
+    "training_levels": {
+      "type": "array",
+      "description": "Training levels for which this archetype is appropriate.",
+      "items": { "type": "string", "enum": ["novice", "intermediate", "advanced", "elite"] }
+    },
     "category": {
       "type": "string",
-      "enum": ["strength", "conditioning", "movement_skill", "gpp_durability", "kettlebell", "recovery", "rehab"],
+      "enum": ["strength", "conditioning", "movement_skill", "gpp_durability", "kettlebell", "recovery", "rehab", "combat_sport"],
       "description": "Broad session category used for scheduling and tagging."
     },
     "duration_estimate_minutes": {
@@ -51,7 +56,7 @@
           },
           "slot_type": {
             "type": "string",
-            "enum": ["sets_reps", "time_domain", "distance", "amrap", "emom", "for_time", "skill_practice", "static_hold"],
+            "enum": ["sets_reps", "time_domain", "distance", "amrap", "amrap_movement", "emom", "for_time", "rounds_for_time", "skill_practice", "static_hold"],
             "description": "The format that determines how volume is measured."
           },
           "sets":           { "type": "integer", "minimum": 1 },
@@ -60,7 +65,7 @@
           "distance_m":     { "type": "integer", "minimum": 1, "description": "For distance slots." },
           "intensity":      {
             "type": "string",
-            "enum": ["max", "heavy", "progressing", "moderate", "light", "bodyweight", "zone1", "zone2", "zone3", "zone4", "zone5"],
+            "enum": ["max", "max_effort", "heavy", "submaximal", "progressing", "moderate", "medium", "light", "low", "high", "bodyweight", "zone1", "zone2", "zone3", "zone4", "zone4_5", "zone5"],
             "description": "Intensity target for this slot."
           },
           "intensity_pct_1rm": {
@@ -77,10 +82,16 @@
               "category":    { "type": "string" },
               "movement_pattern": { "type": "string" },
               "bilateral":   { "type": "boolean" },
-              "equipment_required": { "type": "array", "items": { "type": "string" } }
+              "equipment_required": { "type": "array", "items": { "type": "string" } },
+              "exclude_movement_pattern": { "type": "string" }
             },
             "additionalProperties": false
           },
+          "hold_seconds":      { "type": "integer", "minimum": 1 },
+          "duration_minutes":  { "type": "integer", "minimum": 1, "description": "Alternative to duration_sec." },
+          "rounds":            { "type": "integer", "minimum": 1 },
+          "reps_per_round":    { "type": "integer", "minimum": 1 },
+          "skip_exercise":     { "type": "boolean", "description": "If true, selector skips exercise lookup for this slot." },
           "notes": { "type": "string" }
         }
       }
@@ -95,6 +106,7 @@
           "properties": {
             "volume_multiplier": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
             "intensity_pct":     { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+            "drop_slots":        { "type": "array", "items": { "type": "string" } },
             "notes":             { "type": "string" }
           },
           "additionalProperties": false
@@ -104,7 +116,9 @@
           "description": "How to abbreviate if session_time_minutes is shorter than duration_estimate_minutes.",
           "properties": {
             "drop_slots": { "type": "array", "items": { "type": "string" }, "description": "Role names to drop first." },
-            "notes":      { "type": "string" }
+            "notes":      { "type": "string" },
+            "volume_multiplier": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+            "intensity_pct":     { "type": "number", "minimum": 0.1, "maximum": 1.0 }
           },
           "additionalProperties": false
         },
@@ -123,7 +137,8 @@
                 },
                 "additionalProperties": false
               }
-            }
+            },
+            "notes": { "type": "string" }
           },
           "additionalProperties": false
         }
@@ -150,7 +165,7 @@
       "description": "Training phases in which this archetype is appropriate. If empty, applicable in all phases.",
       "items": {
         "type": "string",
-        "enum": ["active", "base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op"]
+        "enum": ["active", "base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op", "recovery"]
       },
       "default": []
     },

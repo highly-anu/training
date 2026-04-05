@@ -5,7 +5,7 @@
   "description": "An atomic training element. Carries all metadata needed for filtering (equipment, injury), prerequisite checking (requires/unlocks), and progression chaining.",
   "type": "object",
   "required": ["id", "name", "category", "modality", "equipment", "effort"],
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "id": {
       "type": "string",
@@ -18,7 +18,7 @@
     },
     "category": {
       "type": "string",
-      "enum": ["barbell", "kettlebell", "bodyweight", "aerobic", "loaded_carry", "sandbag", "mobility", "skill", "rehab"],
+      "enum": ["barbell", "kettlebell", "bodyweight", "aerobic", "loaded_carry", "carries", "sandbag", "mobility", "skill", "rehab", "gym_jones"],
       "description": "Which exercise library file this lives in."
     },
     "modality": {
@@ -45,7 +45,7 @@
           "pull_up_bar", "rings", "parallettes", "rower", "bike",
           "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
           "medicine_ball", "resistance_band", "rope", "box",
-          "ghd", "jump_rope", "open_space", "none"
+          "ghd", "jump_rope", "open_space", "pool", "none"
         ]
       }
     },
@@ -68,7 +68,8 @@
           "hip_hinge", "squat", "horizontal_push", "horizontal_pull",
           "vertical_push", "vertical_pull", "loaded_carry", "rotation",
           "hip_flexion", "knee_extension", "locomotion", "ballistic",
-          "olympic_lift", "isometric", "aerobic_monostructural"
+          "olympic_lift", "isometric", "aerobic_monostructural",
+          "farmer_carry", "rack_carry", "step_up"
         ]
       },
       "default": []
@@ -106,9 +107,13 @@
         "complexity": {
           "type": "string",
           "description": "Exercise ID to progress to when this movement is mastered. e.g. 'kb_swing_single_arm'"
+        },
+        "intensity": {
+          "type": "string",
+          "description": "How intensity progresses. e.g. 'increase_depth', 'add_load'"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "scaling_down": {
       "type": "array",
@@ -125,7 +130,7 @@
         "duration_sec":{ "type": "integer" },
         "distance_m":  { "type": "integer" }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "sources": {
       "type": "array",

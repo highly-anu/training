@@ -63,7 +63,7 @@
         "properties": {
           "phase": {
             "type": "string",
-            "enum": ["base", "build", "peak", "taper", "deload", "maintenance", "rehab"],
+            "enum": ["base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op"],
             "description": "Phase type. Maps to training phase in constraint schema."
           },
           "weeks": {
@@ -135,6 +135,22 @@
       },
       "additionalProperties": false
     },
-    "notes": { "type": "string" }
+    "notes": { "type": "string" },
+    "expectations": {
+      "type": "object",
+      "description": "Timeline and session structure expectations for this goal profile.",
+      "properties": {
+        "min_weeks":             { "type": "integer", "minimum": 1 },
+        "ideal_weeks":           { "type": "integer", "minimum": 1 },
+        "min_days_per_week":     { "type": "integer", "minimum": 1, "maximum": 7 },
+        "ideal_days_per_week":   { "type": "integer", "minimum": 1, "maximum": 7 },
+        "min_session_minutes":   { "type": "integer", "minimum": 1 },
+        "ideal_session_minutes": { "type": "integer", "minimum": 1 },
+        "supports_split_days":          { "type": "boolean" },
+        "ideal_long_session_minutes":   { "type": "integer", "minimum": 1 },
+        "notes":                        { "type": "string" }
+      },
+      "additionalProperties": false
+    }
   }
 }
