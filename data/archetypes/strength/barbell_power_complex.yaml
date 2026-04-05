@@ -1,0 +1,111 @@
+id: barbell_power_complex
+name: "Barbell Power Complex (Olympic Lift Derivatives)"
+modality: power
+category: strength
+duration_estimate_minutes: 55
+required_equipment:
+  - barbell
+  - plates
+applicable_phases:
+  - build
+  - peak
+  - maintenance
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+  - "Starting Strength — power clean as supplemental lift"
+  - "Horsemen GPP"
+notes: >
+  Barbell power development session built around Olympic lift derivatives: power
+  clean, hang power clean, push press, and pull. These movements develop rate
+  of force development and neuromuscular power in a way that carries over to
+  athletic performance and GPP. Gym Jones uses power cleans as an integral
+  part of strength training — not for competition but for the athletic quality
+  they develop. Load is submaximal; bar speed is the quality metric.
+  Technique prerequisite: athletes must be competent at the hip hinge pattern
+  before performing power cleans. At novice level, default to KB ballistic session
+  instead. Intermediate+ athletes are cleared for barbell power work.
+  Rest fully between power sets (3-4 min) — power drops immediately when
+  fatigue accumulates. Do not rush warm-up sets.
+
+slots:
+  - role: movement_prep
+    slot_type: time_domain
+    duration_sec: 300
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      5-min targeted prep: thoracic rotation, ankle dorsiflexion, and hip hinge
+      with dowel. Power clean requires full thoracic extension and rack position
+      (front squat depth). Check wrist mobility for rack position.
+
+  - role: primary_power_pull
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    intensity: heavy
+    intensity_pct_1rm: 0.75
+    rest_sec: 180
+    exercise_filter:
+      movement_pattern: power_pull
+      category: barbell
+    notes: >
+      5 × 3 power clean or hang power clean at 70-80% of power clean max.
+      Bar speed is the priority metric — if bar speed slows, stop the set.
+      Selector upgrades novice athletes (hang power clean) to power clean as
+      they accumulate sessions. Reset to the floor each rep; do not touch-and-go
+      — this is a power session, not conditioning.
+
+  - role: overhead_press_power
+    slot_type: sets_reps
+    sets: 4
+    reps: 5
+    intensity: heavy
+    intensity_pct_1rm: 0.80
+    rest_sec: 150
+    exercise_filter:
+      movement_pattern: press
+      category: barbell
+    notes: >
+      Push press 4 × 5 at working weight. Push press (leg drive) is preferred
+      over strict press for a power session — the leg drive trains rate of force
+      development through the kinetic chain. Load: the bar should move explosively.
+      If you cannot use leg drive to initiate bar movement, reduce load.
+
+  - role: posterior_chain_accessory
+    slot_type: sets_reps
+    sets: 3
+    reps: 8
+    intensity: moderate
+    intensity_pct_1rm: 0.65
+    rest_sec: 90
+    exercise_filter:
+      movement_pattern: hinge
+      category: barbell
+    notes: >
+      Romanian deadlift or conventional deadlift 3 × 8 at moderate load. Posterior
+      chain reinforcement — not the primary focus of this session, so load is
+      sub-maximal. Controlled eccentric (3 sec down).
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: >
+      Reduce power clean to 3 × 2. Drop push press to 3 × 4 at 75%. Drop posterior
+      chain accessory. Maintain bar speed as primary metric even at deload loads.
+  time_limited:
+    drop_slots:
+      - posterior_chain_accessory
+    notes: "Drop the accessory work. Primary + overhead press are the stimulus."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: barbell
+        substitute_approach: >
+          Replace with KB ballistic session (swings, cleans, snatches). KB ballistics
+          train the same hip-drive power quality without a barbell. Use the heaviest
+          available bell for swing/clean work.

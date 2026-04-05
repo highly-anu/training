@@ -1,0 +1,124 @@
+id: bodyweight_strength_session
+name: "Bodyweight Strength (Relative Strength / Calisthenics)"
+modality: relative_strength
+category: strength
+duration_estimate_minutes: 50
+required_equipment:
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+  - deload
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Ido Portal"
+  - "Pavel Tsatsouline — Naked Warrior"
+  - "Gym Jones"
+  - "Marcus Filly — Functional Bodybuilding"
+notes: >
+  Relative strength session using bodyweight and minimal equipment. Relative
+  strength (force output relative to bodyweight) is the foundational quality for
+  all athletic movement — it precedes barbell strength in the Ido Portal hierarchy
+  and is emphasized by Pavel (Naked Warrior: one-arm push-up + pistol squat as
+  the two bodyweight standards). Gym Jones uses weighted pull-ups and dips as
+  primary strength indicators. Marcus Filly treats muscle-up as a relative strength
+  milestone. Session structure: compound pulling → compound pushing → single-leg
+  → core anti-rotation. Progress via added load (weight vest, dip belt) or
+  complexity (add rings, close-grip, pause reps).
+  This archetype is equipment-flexible: pull-up bar is the minimum; rings and
+  parallettes expand the exercise pool significantly.
+
+slots:
+  - role: primary_pull
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    intensity: heavy
+    rest_sec: 180
+    exercise_filter:
+      movement_pattern: vertical_pull
+      category: bodyweight
+    notes: >
+      5 × 5 pull-ups (bodyweight or weighted). For advanced athletes: weighted pull-ups
+      or ring pull-ups. Pavel: "If you can do 5 reps at a given load, add weight."
+      Rest fully — this is a strength set. Gym Jones standard: 5 pull-ups with 50%
+      bodyweight added for elite athletes. Selector upgrades from standard to weighted
+      or ring variant based on unlock chain.
+
+  - role: primary_push
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    intensity: heavy
+    rest_sec: 150
+    exercise_filter:
+      movement_pattern: horizontal_push
+      category: bodyweight
+    notes: >
+      Push variation: dips (bodyweight or weighted) primary. Ring dips for advanced.
+      Parallel bar dips are the standard; rings add instability demand on pec minor
+      and serratus. Full ROM: shoulders below elbows at bottom, full lockout at top.
+      Pavel: "Dips are the squat of the upper body." 4 × 6 at working load; add
+      weight once 3 consecutive sessions at bodyweight are complete.
+
+  - role: single_leg_strength
+    slot_type: sets_reps
+    sets: 3
+    reps: 8
+    intensity: moderate
+    rest_sec: 90
+    exercise_filter:
+      movement_pattern: squat
+      category: bodyweight
+    notes: >
+      Single-leg lower body: pistol squat progression or Bulgarian split squat.
+      Pavel's Naked Warrior has the pistol squat as one of two foundational
+      bodyweight standards. Novice: assisted pistol (hold door frame) → box pistol
+      → free pistol. Intermediate+: add load via weight vest or holding a KB.
+      8 reps per side per set.
+
+  - role: core_anti_rotation
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: moderate
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: isometric
+      category: bodyweight
+    notes: >
+      Anti-rotation and anti-extension core work: dead bug, hollow body hold, L-sit.
+      Marcus Filly: "Core stability is the foundation of force transfer." Ido Portal:
+      core work should reflect athletic demands, not just cosmetics. Dead bug 3 × 10
+      (5 per side) or hollow body hold 3 × 30 sec for novice; L-sit on parallettes
+      or rings for intermediate/advanced.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: >
+      Reduce to 3 × 3 pull-ups at bodyweight. 3 × 4 dips at bodyweight. Drop
+      single-leg and core work. Use deload sessions to address form issues and
+      body position quality.
+  time_limited:
+    drop_slots:
+      - core_anti_rotation
+    notes: "Drop core work. Pull + push are the primary stimulus."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: pull_up_bar
+        substitute_approach: >
+          Replace pull-ups with inverted rows (under a table or using a bar in a squat
+          rack). Replace dips with push-up variations (archer push-up for difficulty).
+          Pistol squat progression requires no equipment.
+      - missing_equipment: parallettes
+        substitute_approach: >
+          Standard dips on chair backs or a sturdy bench. L-sit on the floor with
+          hands on books or fists. Most exercises are adaptable.

@@ -351,7 +351,7 @@
         }
       ]
     },
-    "notes": "Injury is a first-class training phase in this system. Marcus Filly RPE autoregulation is mandatory throughout — no percentage-based loading during rehab phases. Kelly Starrett movement quality principles govern what movements are cleared at each phase. Uphill Athlete aerobic maintenance principles apply to non-injured systems (keep the engine running while the chassis heals). All clinical decisions (clearances, restrictions, progression gates) must be confirmed with treating clinician; this system provides structure but does not replace medical guidance. Injury flags in the constraint layer (e.g. right_knee_meniscus_post_op, shoulder_impingement) should be set and will filter the exercise library accordingly.\n",
+    "notes": "Injury is a first-class training phase in this system. Marcus Filly RPE autoregulation is mandatory throughout — no percentage-based loading during rehab phases. Kelly Starrett movement quality principles govern what movements are cleared at each phase. Uphill Athlete aerobic maintenance principles apply to non-injured systems (keep the engine running while the chassis heals). All clinical decisions (clearances, restrictions, progression gates) must be confirmed with treating clinician; this system provides structure but does not replace medical guidance. Injury flags in the constraint layer (e.g. knee_meniscus_post_op, shoulder_impingement) should be set and will filter the exercise library accordingly.\n",
     "expectations": {
       "min_weeks": 20,
       "ideal_weeks": 24,

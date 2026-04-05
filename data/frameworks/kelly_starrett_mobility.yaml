@@ -1,0 +1,57 @@
+id: kelly_starrett_mobility
+name: Supple Leopard (Kelly Starrett Mobility System)
+source_philosophy: kelly_starrett
+
+goals_served:
+  - injury_rehab
+  - mobility
+  - durability
+
+sessions_per_week:
+  mobility: 5
+  rehab: 2
+
+intensity_distribution:
+  zone1_2_pct: 0.80
+  zone3_pct: 0.10
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.05
+
+progression_model: complexity
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 3
+  days_per_week_max: 7
+  goal_priority_min:
+    mobility: 0.3
+
+deload_protocol:
+  frequency_weeks: 8
+  volume_reduction_pct: 0.30
+  intensity_change: maintain
+
+sources:
+  - "Becoming a Supple Leopard (Starrett & Cordoza, 2013)"
+  - "Ready to Run (Starrett, 2014)"
+
+notes: >
+  Not a standalone strength program — a mobility and movement quality layer
+  applied on top of any other methodology. Primary tools: banded joint
+  distraction, soft tissue work, contract-relax mobilizations, and positional
+  assessments. Ten physical archetypes (hip extension, internal rotation,
+  ankle, thoracic spine, etc.) each have a testing standard and prescribed
+  mobilization sequence.
+  Session structure: movement screen or targeted assessment → tissue prep
+  (2 min minimum per target region, lacrosse ball / foam roller) → banded
+  joint distraction work → active range restoration under light load →
+  breathing and bracing practice.
+  Progression model is complexity — advancing from passive range to active
+  range under load. Breathing and bracing sequence is a prerequisite for
+  any loaded movement. Tissue prep is prescribed before and after sessions.
+  Compatible with any strength or conditioning program; designed to run
+  alongside rather than replace it.

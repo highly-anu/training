@@ -10,6 +10,7 @@ goals_served:
 
 sessions_per_week:
   max_strength: 3
+  relative_strength: 1
   mobility: 1
 
 intensity_distribution:
