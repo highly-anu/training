@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ModelTypeNav } from './ModelTypeNav'
 import { ObjectList } from './ObjectList'
 import { DetailPanel } from './DetailPanel'
 import { AddExerciseDialog } from './AddExerciseDialog'
 import { AddArchetypeDialog } from './AddArchetypeDialog'
+import { EditArchetypeDialog } from './EditArchetypeDialog'
+import { EditFrameworkDialog } from './EditFrameworkDialog'
 import { useAllData } from './useAllData'
 import type { ModelType, OpenInOntologyFn } from './types'
+import type { Archetype, Framework } from '@/api/types'
 
 export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInOntologyFn }) {
   const [selectedType, setSelectedType] = useState<ModelType>('exercises')
@@ -15,6 +18,8 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddExercise, setShowAddExercise] = useState(false)
   const [showAddArchetype, setShowAddArchetype] = useState(false)
+  const [editingArchetype, setEditingArchetype] = useState<Archetype | null>(null)
+  const [editingFramework, setEditingFramework] = useState<Framework | null>(null)
 
   const allData = useAllData()
 
@@ -65,7 +70,7 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
       <div className="w-[220px] shrink-0 flex flex-col">
         <ModelTypeNav selected={selectedType} onSelect={handleTypeSelect} counts={counts} />
 
-        {/* Add buttons */}
+        {/* Add / Edit buttons */}
         <div className="border-r border-t p-2 space-y-1 bg-muted/10">
           {selectedType === 'exercises' && (
             <Button size="sm" className="w-full h-7 text-xs" onClick={() => setShowAddExercise(true)}>
@@ -77,6 +82,22 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
               <Plus className="size-3 mr-1" /> Add Archetype
             </Button>
           )}
+          {selectedType === 'archetypes' && selectedId && (() => {
+            const arch = allData.archetypes.find(a => a.id === selectedId)
+            return arch ? (
+              <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => setEditingArchetype(arch as unknown as Archetype)}>
+                <Pencil className="size-3 mr-1" /> Edit Archetype
+              </Button>
+            ) : null
+          })()}
+          {selectedType === 'frameworks' && selectedId && (() => {
+            const fw = allData.frameworks.find(f => f.id === selectedId)
+            return fw ? (
+              <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => setEditingFramework(fw as unknown as Framework)}>
+                <Pencil className="size-3 mr-1" /> Edit Framework
+              </Button>
+            ) : null
+          })()}
         </div>
       </div>
 
@@ -113,6 +134,20 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
       {/* Dialogs */}
       <AddExerciseDialog open={showAddExercise} onClose={() => setShowAddExercise(false)} />
       <AddArchetypeDialog open={showAddArchetype} onClose={() => setShowAddArchetype(false)} />
+      {editingArchetype && (
+        <EditArchetypeDialog
+          archetype={editingArchetype}
+          open={!!editingArchetype}
+          onClose={() => setEditingArchetype(null)}
+        />
+      )}
+      {editingFramework && (
+        <EditFrameworkDialog
+          framework={editingFramework}
+          open={!!editingFramework}
+          onClose={() => setEditingFramework(null)}
+        />
+      )}
     </div>
   )
 }
