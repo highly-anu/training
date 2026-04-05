@@ -35,6 +35,14 @@ deload_protocol:
   volume_reduction_pct: 0.30
   intensity_change: maintain
 
+# Mobility sessions tolerate clustering — daily practice is encouraged
+cadence_options:
+  3: [[1, 3, 5], [2, 4, 7], [1, 4, 7]]
+  4: [[1, 2, 5, 6], [2, 4, 6, 7], [1, 3, 5, 7]]
+  5: [[1, 2, 3, 5, 7], [1, 2, 4, 6, 7]]
+  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+  7: [[1, 2, 3, 4, 5, 6, 7]]
+
 sources:
   - "Becoming a Supple Leopard (Starrett & Cordoza, 2013)"
   - "Ready to Run (Starrett, 2014)"

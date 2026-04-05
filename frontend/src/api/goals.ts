@@ -1,14 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { GoalProfile } from './types'
-import goalsData from '@/data/static/goals.json'
-
-const _goals = goalsData as unknown as GoalProfile[]
 
 export function useGoals() {
   return useQuery({
     queryKey: queryKeys.goals.all,
-    queryFn: () => Promise.resolve(_goals),
+    queryFn: () => apiClient.get<GoalProfile[]>('/goals') as unknown as Promise<GoalProfile[]>,
     staleTime: Infinity,
   })
 }
@@ -16,12 +14,19 @@ export function useGoals() {
 export function useGoal(id: string | null) {
   return useQuery({
     queryKey: queryKeys.goals.detail(id ?? ''),
-    queryFn: () => {
-      const goal = _goals.find((g) => g.id === id)
-      if (!goal) throw new Error(`Goal not found: ${id}`)
-      return Promise.resolve(goal)
-    },
+    queryFn: () => apiClient.get<GoalProfile>(`/goals/${id}`) as unknown as Promise<GoalProfile>,
     enabled: !!id,
     staleTime: Infinity,
+  })
+}
+
+export function useCreateGoal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (goal: Partial<GoalProfile>) =>
+      apiClient.post('/goals', goal) as unknown as Promise<GoalProfile>,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.goals.all })
+    },
   })
 }

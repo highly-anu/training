@@ -48,3 +48,14 @@ export function useCreateExercise() {
     },
   })
 }
+
+export function useUpdateExercise() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...exercise }: Partial<Exercise> & { id: string }) =>
+      apiClient.put(`/exercises/${id}`, exercise) as unknown as Promise<Exercise>,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.exercises.all })
+    },
+  })
+}

@@ -45,7 +45,7 @@ def _load_yaml(path: str) -> dict:
 
 def _all_goals() -> list[dict]:
     goals = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'goals', '*.yaml'))):
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'goals', '**', '*.yaml'), recursive=True)):
         goals.append(_load_yaml(path))
     return goals
 
@@ -320,6 +320,35 @@ def get_goal(goal_id: str):
         return jsonify({'detail': str(e)}), 404
 
 
+_VALID_PHASES = {'base', 'build', 'peak', 'taper', 'deload', 'maintenance', 'rehab', 'post_op'}
+
+
+@app.post('/api/goals')
+def create_goal():
+    body = request.get_json(silent=True) or {}
+    if not body.get('id') or not body.get('name'):
+        return jsonify({'detail': 'id and name are required'}), 400
+    priorities = body.get('priorities') or {}
+    if not priorities:
+        return jsonify({'detail': 'priorities is required'}), 400
+    total = sum(priorities.values())
+    if not (0.95 <= total <= 1.05):
+        return jsonify({'detail': f'priorities must sum to ~1.0 (got {total:.2f})'}), 400
+    phase_sequence = body.get('phase_sequence') or []
+    for entry in phase_sequence:
+        if entry.get('phase') not in _VALID_PHASES:
+            return jsonify({'detail': f"unknown phase: {entry.get('phase')!r}"}), 400
+    existing_ids = {g['id'] for g in _all_goals()}
+    if body['id'] in existing_ids:
+        return jsonify({'detail': f"Goal id '{body['id']}' already exists"}), 409
+    custom_dir = os.path.join(_DATA_DIR, 'goals', 'custom')
+    os.makedirs(custom_dir, exist_ok=True)
+    path = os.path.join(custom_dir, f"{body['id']}.yaml")
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(body), 201
+
+
 @app.get('/api/exercises')
 def get_exercises():
     return jsonify(_all_exercises())
@@ -328,6 +357,22 @@ def get_exercises():
 @app.get('/api/modalities')
 def get_modalities():
     return jsonify(_all_modalities())
+
+
+@app.post('/api/modalities')
+def create_modality():
+    body = request.get_json(silent=True) or {}
+    if not body.get('id') or not body.get('name'):
+        return jsonify({'detail': 'id and name are required'}), 400
+    if body.get('recovery_cost') not in ('high', 'medium', 'low'):
+        return jsonify({'detail': 'recovery_cost must be high, medium, or low'}), 400
+    existing_ids = {m['id'] for m in _all_modalities()}
+    if body['id'] in existing_ids:
+        return jsonify({'detail': f"Modality id '{body['id']}' already exists"}), 409
+    path = os.path.join(_DATA_DIR, 'modalities', f"{body['id']}.yaml")
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(body), 201
 
 
 @app.get('/api/constraints/equipment-profiles')
@@ -454,6 +499,28 @@ def create_exercise():
     with open(custom_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(body), 201
+
+
+def _find_exercise_file_and_index(ex_id: str):
+    """Return (path, index, data) for an exercise by id, or (None, None, None)."""
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'exercises', '*.yaml'))):
+        data = _load_yaml(path) or {}
+        for i, ex in enumerate(data.get('exercises', [])):
+            if ex.get('id') == ex_id:
+                return path, i, data
+    return None, None, None
+
+
+@app.put('/api/exercises/<ex_id>')
+def update_exercise(ex_id: str):
+    body = request.get_json(silent=True) or {}
+    path, idx, data = _find_exercise_file_and_index(ex_id)
+    if path is None:
+        return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
+    data['exercises'][idx].update({k: v for k, v in body.items() if k != 'id'})
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data['exercises'][idx]), 200
 
 
 def _find_archetype_file(arch_id: str) -> str | None:

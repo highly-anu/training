@@ -35,6 +35,13 @@ deload_protocol:
   volume_reduction_pct: 0.50
   intensity_change: reduce_slightly
 
+# Spread sessions for joint recovery — never stack consecutive high-demand days
+cadence_options:
+  3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]]
+  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
+  5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7]]
+  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+
 sources:
   - "ATG (Athletic Truth Group) — Ben Patrick"
   - "Knees Over Toes Guy — Zero program, ATG program"
