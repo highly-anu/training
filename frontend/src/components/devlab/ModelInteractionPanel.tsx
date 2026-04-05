@@ -329,7 +329,7 @@ export function ModelInteractionPanel({ result }: Props) {
 
   // Extract live values from trace if available
   const traceWeek0 = result?.generation_trace?.weeks?.[0]
-  const liveFramework = traceWeek0?.scheduler_trace?.framework_id as string | undefined
+  const liveFramework = traceWeek0?.scheduler?.framework_selection?.selected_id as string | undefined
   const liveArchetypes = traceWeek0
     ? Object.values(traceWeek0.sessions ?? {})
         .flat()

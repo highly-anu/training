@@ -58,9 +58,9 @@ export function EditArchetypeDialog({ archetype, open, onClose }: Props) {
   const [phases, setPhases] = useState<TrainingPhase[]>((archetype.applicable_phases as TrainingPhase[]) ?? [])
   const [levels, setLevels] = useState<TrainingLevel[]>((archetype.training_levels as TrainingLevel[]) ?? [])
   const [slots, setSlots] = useState<SlotDraft[]>(
-    ((archetype.slots as Record<string, unknown>[]) ?? []).map(toSlotDraft)
+    ((archetype.slots as unknown as Record<string, unknown>[]) ?? []).map(toSlotDraft)
   )
-  const [notes, setNotes] = useState((archetype.notes as string) ?? '')
+  const [notes, setNotes] = useState(archetype.notes ?? '')
 
   function toggleEquipment(e: EquipmentId) {
     setEquipment(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e])

@@ -5,7 +5,7 @@ import type { GoalProfile, TrainingPhase } from '@/api/types'
 export interface PhaseSegment {
   phase: TrainingPhase
   weeks: number
-  focus: string
+  focus?: string
   startWeek: number
   endWeek: number
 }
