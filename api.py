@@ -456,6 +456,47 @@ def create_exercise():
     return jsonify(body), 201
 
 
+def _find_archetype_file(arch_id: str) -> str | None:
+    """Return the YAML file path for an archetype by id, or None."""
+    for path in glob.glob(os.path.join(_DATA_DIR, 'archetypes', '**', '*.yaml'), recursive=True):
+        try:
+            data = _load_yaml(path)
+            if data.get('id') == arch_id:
+                return path
+        except Exception:
+            continue
+    return None
+
+
+@app.put('/api/archetypes/<arch_id>')
+def update_archetype(arch_id: str):
+    body = request.get_json(silent=True) or {}
+    path = _find_archetype_file(arch_id)
+    if not path:
+        return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
+    data = _load_yaml(path)
+    data.update({k: v for k, v in body.items() if v is not None})
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data), 200
+
+
+@app.put('/api/frameworks/<fw_id>')
+def update_framework(fw_id: str):
+    body = request.get_json(silent=True) or {}
+    path = os.path.join(_DATA_DIR, 'frameworks', f'{fw_id}.yaml')
+    if not os.path.exists(path):
+        return jsonify({'detail': f"Framework '{fw_id}' not found"}), 404
+    data = _load_yaml(path)
+    allowed = {'name', 'source_philosophy', 'sessions_per_week', 'notes'}
+    for k, v in body.items():
+        if k in allowed and v is not None:
+            data[k] = v
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data), 200
+
+
 @app.post('/api/archetypes')
 def create_archetype():
     body = request.get_json(silent=True) or {}
