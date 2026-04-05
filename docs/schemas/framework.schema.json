@@ -22,16 +22,8 @@
     },
     "goals_served": {
       "type": "array",
-      "description": "Modality IDs this framework is designed to develop.",
-      "items": {
-        "type": "string",
-        "enum": [
-          "max_strength", "strength_endurance", "relative_strength",
-          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
-          "power", "mobility", "movement_skill", "durability",
-          "combat_sport", "rehab"
-        ]
-      }
+      "description": "Goal profile IDs or modality IDs this framework is designed to support.",
+      "items": { "type": "string" }
     },
     "sessions_per_week": {
       "type": "object",
@@ -131,6 +123,14 @@
       "items": { "type": "string" },
       "default": []
     },
-    "notes": { "type": "string" }
+    "notes": { "type": "string" },
+    "cadence_options": {
+      "type": "object",
+      "description": "Day-of-week patterns per training frequency. Keys are integers (days/week); values are lists of day-number lists (1=Mon, 7=Sun). Multiple options rotate week-to-week.",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 } }
+      }
+    }
   }
 }
