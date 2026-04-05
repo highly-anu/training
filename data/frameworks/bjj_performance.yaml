@@ -1,0 +1,54 @@
+id: bjj_performance
+name: BJJ Performance (Combat Sport S&C)
+source_philosophy: bjj
+
+goals_served:
+  - bjj_competitor
+  - strength_endurance
+  - combat_sport
+
+sessions_per_week:
+  combat_sport: 3
+  strength_endurance: 2
+  anaerobic_intervals: 1
+  mobility: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.25
+  zone3_pct: 0.25
+  zone4_5_pct: 0.30
+  max_effort_pct: 0.20
+
+progression_model: rpe_autoregulation
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 4
+  days_per_week_max: 7
+  goal_priority_min:
+    combat_sport: 0.3
+
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.40
+  intensity_change: reduce_slightly
+
+sources:
+  - "BJJ (Gracie, Gym Jones, Ido Portal)"
+  - "Kelly Starrett — mobility and joint health for grapplers"
+
+notes: >
+  Designed around the physical demands of competitive BJJ: isometric strength
+  endurance (maintaining frames under sustained pressure), hip explosiveness
+  (sweeps, escapes, takedowns), grip endurance (6-minute rounds of sustained
+  pulling), and robust joint health in shoulders, knees, and neck.
+  Structure: mat time (BJJ class) is the non-negotiable anchor — S&C sessions
+  support mat performance and do not compete with it for recovery. Hard rolling
+  days are followed by drilling or lower-intensity S&C. Intensity model is
+  hard_easy_alternation. Grappling mobility sessions are mandatory to protect
+  vulnerable joints. RPE autoregulation governs S&C load based on accumulated
+  mat fatigue.

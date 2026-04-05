@@ -10,6 +10,7 @@ goals_served:
 
 sessions_per_week:
   max_strength: 2
+  power: 1
   mixed_modal_conditioning: 2
   durability: 1
   aerobic_base: 1

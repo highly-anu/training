@@ -1,0 +1,52 @@
+id: atg_joint_health
+name: ATG Joint Health (Knees Over Toes / Ben Patrick)
+source_philosophy: atg
+
+goals_served:
+  - injury_rehab
+  - durability
+  - mobility
+
+sessions_per_week:
+  rehab: 3
+  mobility: 2
+  durability: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.70
+  zone3_pct: 0.20
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.05
+
+progression_model: rpe_autoregulation
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+  days_per_week_min: 3
+  days_per_week_max: 6
+  goal_priority_min:
+    rehab: 0.2
+
+deload_protocol:
+  frequency_weeks: 6
+  volume_reduction_pct: 0.50
+  intensity_change: reduce_slightly
+
+sources:
+  - "ATG (Athletic Truth Group) — Ben Patrick"
+  - "Knees Over Toes Guy — Zero program, ATG program"
+
+notes: >
+  Built around Ben Patrick's ATG methodology: progressive range of motion precedes
+  progressive load. The reverse sled is the entry-level movement — zero eccentric
+  load, rebuilds knee tolerance from scratch. Session structure: reverse sled or
+  tibialis work → full-range lower body movements (split squats, step-ups progressing
+  to ATG split squat) → Nordic-type posterior chain work → upper body accessory.
+  Pain-free range of motion is always the primary criterion for progression.
+  Compatible with concurrent strength training — mandatory lower-body prep work
+  is performed regardless of other modalities in the program.
+  Rehab sessions and mobility sessions are the primary training output; durability
+  sessions use loaded carries and sled work for joint conditioning without impact.

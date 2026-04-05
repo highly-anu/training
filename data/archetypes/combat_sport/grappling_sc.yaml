@@ -1,0 +1,114 @@
+id: grappling_sc
+name: "Grappling S&C (Combat Sport Strength & Conditioning)"
+modality: combat_sport
+category: combat_sport
+duration_estimate_minutes: 60
+required_equipment:
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Gym Jones"
+  - "Kelly Starrett"
+  - "BJJ (Gracie, Gym Jones)"
+notes: >
+  Strength and conditioning session designed specifically to support grappling
+  performance. Targets the physical demands of BJJ, wrestling, and submission
+  grappling: isometric strength endurance (maintaining frames under pressure),
+  hip explosiveness (sweeps, escapes, bridging), pulling strength (grip endurance
+  for 6-min rounds), and core anti-rotation (preventing pass). Kelly Starrett:
+  grappler must own full hip extension and shoulder mobility before loading.
+  Gym Jones principle: the supporting S&C session should not compete with mat
+  work for recovery — this session is medium intensity, not max effort.
+  Session is scheduled on non-rolling days to allow full recovery for sparring.
+
+slots:
+  - role: grip_pulling_strength
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    intensity: heavy
+    rest_sec: 180
+    exercise_filter:
+      movement_pattern: vertical_pull
+      category: bodyweight
+    notes: >
+      Pull-up variants targeting grip and pulling strength — both critical for
+      BJJ. Towel pull-ups or fat-grip if available for grip specificity. Standard
+      pull-up progression: standard → close-grip → weighted → L-sit pull-up.
+      5 × 5 at working load with full dead hang at bottom (extend shoulder girdle,
+      engage lat before pulling). Gym Jones: weighted pull-ups are a core metric
+      for combat athletes.
+
+  - role: hip_explosiveness
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    intensity: heavy
+    rest_sec: 120
+    exercise_filter:
+      movement_pattern: hinge
+    notes: >
+      Hip hinge explosive work: KB swing, Romanian deadlift, or trap bar deadlift.
+      Hip explosiveness is the source of bridging power (getting off the bottom),
+      guard sweeps, and takedown hip drive. Load is moderate-heavy; bar speed is
+      the quality metric. KB swing 4 × 15 is a viable conditioning-strength hybrid
+      for this slot.
+
+  - role: isometric_endurance
+    slot_type: static_hold
+    sets: 4
+    duration_sec: 45
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: isometric
+    notes: >
+      Isometric strength endurance: dead hang, wall sit, plank, or bridge hold.
+      Grapplers must sustain isometric force for extended periods under opponent
+      pressure. Dead hang targets grip endurance (45 sec goal for intermediate).
+      Bridge hold targets hip extensor endurance for escape power. Rotate which
+      isometric is used across sessions to prevent adaptation.
+
+  - role: core_anti_rotation
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: moderate
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: isometric
+      category: bodyweight
+    notes: >
+      Anti-rotation and anti-extension core: Pallof press (banded), dead bug,
+      or hollow body hold. Grappling core demands are rotational resistance —
+      preventing opponent from rotating and passing your guard requires anti-rotation
+      strength, not just crunch strength. 3 × 10 Pallof press per side, or 3 × 30
+      sec hollow body hold.
+
+scaling:
+  deload:
+    volume_multiplier: 0.5
+    intensity_pct: 0.85
+    notes: >
+      Reduce to pull-ups 3 × 3 + hip hinge 3 × 5. Drop isometric endurance and
+      core work. This session must not accumulate fatigue that bleeds into mat
+      performance — deload aggressively when in competition prep.
+  time_limited:
+    drop_slots:
+      - core_anti_rotation
+    notes: "Pull + hip hinge + one isometric hold is the minimum viable session."
+  equipment_limited:
+    substitutions:
+      - missing_equipment: pull_up_bar
+        substitute_approach: >
+          Replace pull-ups with inverted rows or face pulls with a band. Band
+          face pulls train external rotation and horizontal pulling — both
+          critical for shoulder health in grapplers.
