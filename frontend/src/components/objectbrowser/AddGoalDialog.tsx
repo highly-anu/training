@@ -100,7 +100,7 @@ export function AddGoalDialog({ open, onClose }: Props) {
     }
     const phaseSequence = phases
       .filter(r => r.phase && r.weeks)
-      .map(r => ({ phase: r.phase, weeks: Number(r.weeks), ...(r.focus ? { focus: r.focus } : {}) }))
+      .map(r => ({ phase: r.phase as TrainingPhase, weeks: Number(r.weeks), ...(r.focus ? { focus: r.focus } : {}) }))
 
     const payload = {
       id,

@@ -44,12 +44,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
 
     // Resolve the persisted session immediately (no async flash)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase!.auth.getSession().then(({ data: { session } }) => {
       set({ session, user: session?.user ?? null, isLoading: false })
     })
 
     // Keep in sync with Supabase auth events (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange((_event, session) => {
       set({ session, user: session?.user ?? null, isLoading: false })
     })
 

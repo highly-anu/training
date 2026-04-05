@@ -7,13 +7,12 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useUpdateExercise } from '@/api/exercises'
-import type { Exercise, ModalityId, EquipmentId } from '@/api/types'
+import type { Exercise, ModalityId, EquipmentId, EffortLevel } from '@/api/types'
 
 const CATEGORIES = ['barbell', 'kettlebell', 'bodyweight', 'aerobic', 'carries', 'sandbag', 'mobility', 'skill', 'rehab', 'gym_jones']
 const EFFORTS = ['low', 'medium', 'high', 'max']
 const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
 const EQUIPMENT_OPTIONS: EquipmentId[] = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'ruck_pack', 'open_space', 'rings', 'sandbag', 'bike', 'rower', 'ghd', 'box', 'resistance_band', 'medicine_ball']
-const LEVELS = ['novice', 'intermediate', 'advanced', 'elite'] as const
 
 interface Props {
   exercise: Exercise
@@ -35,12 +34,12 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
   const [reps, setReps] = useState(String(exercise.typical_volume?.reps ?? ''))
   const [notes, setNotes] = useState(exercise.notes ?? '')
   // starting_load_kg per level
-  const initLoads = exercise.starting_load_kg as Record<string, number | undefined> | undefined
+  const initLoads = exercise.starting_load_kg
   const [loadNovice, setLoadNovice] = useState(String(initLoads?.novice ?? ''))
   const [loadIntermediate, setLoadIntermediate] = useState(String(initLoads?.intermediate ?? ''))
   const [loadAdvanced, setLoadAdvanced] = useState(String(initLoads?.advanced ?? ''))
   const [loadElite, setLoadElite] = useState(String(initLoads?.elite ?? ''))
-  const [weeklyIncrement, setWeeklyIncrement] = useState(String((exercise as Record<string, unknown>).weekly_increment_kg ?? ''))
+  const [weeklyIncrement, setWeeklyIncrement] = useState(String(exercise.weekly_increment_kg ?? ''))
 
   // Sync state when exercise prop changes (e.g. dialog re-opened for different exercise)
   useEffect(() => {
@@ -54,12 +53,12 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
     setSets(String(exercise.typical_volume?.sets ?? ''))
     setReps(String(exercise.typical_volume?.reps ?? ''))
     setNotes(exercise.notes ?? '')
-    const loads = exercise.starting_load_kg as Record<string, number | undefined> | undefined
+    const loads = exercise.starting_load_kg
     setLoadNovice(String(loads?.novice ?? ''))
     setLoadIntermediate(String(loads?.intermediate ?? ''))
     setLoadAdvanced(String(loads?.advanced ?? ''))
     setLoadElite(String(loads?.elite ?? ''))
-    setWeeklyIncrement(String((exercise as Record<string, unknown>).weekly_increment_kg ?? ''))
+    setWeeklyIncrement(String(exercise.weekly_increment_kg ?? ''))
     updateMutation.reset()
   }, [exercise.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -141,7 +140,7 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
             </div>
             <div>
               <Label className="text-xs mb-1 block">Effort</Label>
-              <Select value={effort} onValueChange={setEffort}>
+              <Select value={effort} onValueChange={v => setEffort(v as EffortLevel)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select…" /></SelectTrigger>
                 <SelectContent>
                   {EFFORTS.map(e => <SelectItem key={e} value={e} className="text-xs">{e}</SelectItem>)}

@@ -391,7 +391,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                     </SelectTrigger>
                     <SelectContent>
                       {goals
-                        .filter(g => g.id !== program.goal?.id)
+                        .filter(g => g.id !== program?.goal?.id)
                         .map(g => (
                           <SelectItem key={g.id} value={g.id} className="text-xs">
                             {g.name}

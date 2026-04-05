@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useCreateModality, useModalities } from '@/api/modalities'
-import type { ModalityId } from '@/api/types'
+import type { Modality } from '@/api/types'
 
 const RECOVERY_COSTS = ['low', 'medium', 'high'] as const
 const SESSION_POSITIONS = ['standalone', 'first', 'last', 'any'] as const
@@ -69,7 +69,7 @@ export function AddModalityDialog({ open, onClose }: Props) {
       compatible_in_session_with: [],
     }
     try {
-      await createMutation.mutateAsync(payload)
+      await createMutation.mutateAsync(payload as Partial<Modality>)
       reset()
       onClose()
     } catch (_) {

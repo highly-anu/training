@@ -36,12 +36,12 @@ export function EditFrameworkDialog({ framework, open, onClose }: Props) {
 
   const [name, setName] = useState(framework.name ?? '')
   const [sourcePhilosophy, setSourcePhilosophy] = useState(
-    (framework as Record<string, unknown>).source_philosophy as string ?? ''
+    (framework as unknown as Record<string, unknown>).source_philosophy as string ?? ''
   )
   const [sessionRows, setSessionRows] = useState<SessionRow[]>(
-    sessionsToRows((framework as Record<string, unknown>).sessions_per_week as Record<string, number> | undefined)
+    sessionsToRows((framework as unknown as Record<string, unknown>).sessions_per_week as Record<string, number> | undefined)
   )
-  const [notes, setNotes] = useState((framework as Record<string, unknown>).notes as string ?? '')
+  const [notes, setNotes] = useState((framework as unknown as Record<string, unknown>).notes as string ?? '')
 
   function updateRow(i: number, field: keyof SessionRow, value: unknown) {
     setSessionRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))

@@ -84,7 +84,7 @@ export type GoalPriorities = Partial<Record<ModalityId, number>>
 export interface PhaseEntry {
   phase: TrainingPhase
   weeks: number
-  focus: string
+  focus?: string
   priority_override?: GoalPriorities
 }
 
@@ -190,6 +190,8 @@ export interface Exercise {
   progressions: ExerciseProgressions
   scaling_down?: string[]
   typical_volume?: { sets?: number; reps?: number; duration_sec?: number; distance_m?: number }
+  starting_load_kg?: Record<string, number>
+  weekly_increment_kg?: number
   sources: string[]
   notes?: string
 }
@@ -222,6 +224,7 @@ export interface Archetype {
   training_levels: TrainingLevel[]
   slots: ArchetypeSlot[]
   sources: string[]
+  notes?: string
 }
 
 // ─── Exercise Load (per session assignment) ───────────────────────────────────
