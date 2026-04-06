@@ -21,6 +21,15 @@ final class AppState: ObservableObject {
 
     @Published var sessionLogs: [String: SessionLogEntry] = [:]
 
+    // MARK: - FIT File Import
+
+    @Published var pendingFITURL: URL? = nil
+
+    // MARK: - Imported Workouts
+
+    @Published var importedWorkouts: [ImportedWorkout] = []
+    @Published var isLoadingWorkouts = false
+
     // MARK: - Bio Logs (last 30 days)
 
     @Published var recentBioLogs: [DailyBioLog] = []
@@ -50,10 +59,54 @@ final class AppState: ObservableObject {
     // MARK: - Initial Load
 
     func loadAll() async {
-        async let _ = loadProgram()
-        async let _ = loadProfile()
-        async let _ = loadRecentBioLogs()
-        async let _ = loadRecentSessionLogs()
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.loadProgram() }
+            group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadRecentBioLogs() }
+            group.addTask { await self.loadRecentSessionLogs() }
+            group.addTask { await self.loadWorkouts() }
+        }
+    }
+
+    /// Called on first appear — loads everything the Today tab needs without fetching workouts,
+    /// so there is no concurrent loadWorkouts() race with the post-sync loadAll().
+    func loadAllExceptWorkouts() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.loadProgram() }
+            group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadRecentBioLogs() }
+            group.addTask { await self.loadRecentSessionLogs() }
+        }
+    }
+
+    func loadWorkouts() async {
+        guard let api else { return }
+        isLoadingWorkouts = true
+        defer { isLoadingWorkouts = false }
+        do {
+            importedWorkouts = try await api.fetchWorkouts()
+        } catch {
+            print("⚠️ loadWorkouts failed: \(error)")
+        }
+    }
+
+    func deleteWorkout(id: String) async throws {
+        guard let api else { throw APIError.unauthenticated }
+        try await api.deleteWorkout(id: id)
+        importedWorkouts.removeAll { $0.id == id }
+        // Clear matched_workout_id from any local session log entry
+        for (key, log) in sessionLogs where log.matchedWorkoutId == id {
+            sessionLogs[key] = SessionLogEntry(
+                sessionKey: log.sessionKey,
+                completedAt: log.completedAt,
+                source: log.source,
+                notes: log.notes,
+                fatigueRating: log.fatigueRating,
+                avgHR: log.avgHR,
+                peakHR: log.peakHR,
+                matchedWorkoutId: nil
+            )
+        }
     }
 
     // MARK: - Program
@@ -117,7 +170,8 @@ final class AppState: ObservableObject {
             notes: nil,
             fatigueRating: nil,
             avgHR: nil,
-            peakHR: nil
+            peakHR: nil,
+            matchedWorkoutId: nil
         )
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
     }
@@ -240,4 +294,98 @@ final class AppState: ObservableObject {
 
     /// All weeks for the full program calendar.
     var allWeeks: [ProgramWeek] { serverProgram?.currentProgram?.weeks ?? [] }
+
+    // MARK: - FIT Import
+
+    /// Returns sessions scheduled on a given YYYY-MM-DD date, using the same
+    /// array-index approach as `week(for:)` so weekNumber offset doesn't matter.
+    func sessionsForDate(_ dateStr: String) -> [(session: ProgramSession, key: String)] {
+        guard let program = serverProgram?.currentProgram,
+              let startDateStr = serverProgram?.programStartDate else { return [] }
+        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
+        guard let targetDate = df.date(from: dateStr),
+              let startDate = df.date(from: startDateStr) else { return [] }
+        let cal = Calendar.current
+        let target = cal.startOfDay(for: targetDate)
+        let programStart = cal.startOfDay(for: startDate)
+        let days = cal.dateComponents([.day], from: programStart, to: target).day ?? 0
+        guard days >= 0 else { return [] }
+        let weekIdx = days / 7
+        guard weekIdx < program.weeks.count else { return [] }
+        let week = program.weeks[weekIdx]
+        let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        let weekdayIdx = cal.component(.weekday, from: target) - 1  // 0=Sunday
+        let dayName = dayNames[weekdayIdx]
+        guard let sessions = week.schedule[dayName] else { return [] }
+        return sessions.enumerated().map { i, session in
+            (session: session, key: makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i))
+        }
+    }
+
+    /// All sessions across the entire program as (session, key, dateLabel) for manual matching.
+    func allSessionPairs() -> [(session: ProgramSession, key: String, dateLabel: String)] {
+        guard let weeks = serverProgram?.currentProgram?.weeks,
+              let startDateStr = serverProgram?.programStartDate else { return [] }
+        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
+        guard let startDate = df.date(from: startDateStr) else { return [] }
+        let cal = Calendar.current
+        let programStart = cal.startOfDay(for: startDate)
+        let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
+        var results: [(session: ProgramSession, key: String, dateLabel: String)] = []
+        for (wIdx, week) in weeks.enumerated() {
+            let weekStart = cal.date(byAdding: .day, value: wIdx * 7, to: programStart)!
+            let weekStartWeekday = cal.component(.weekday, from: weekStart) - 1
+            for dayName in ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"] {
+                guard let sessions = week.schedule[dayName],
+                      let targetIdx = dayNames.firstIndex(of: dayName) else { continue }
+                var offset = targetIdx - weekStartWeekday
+                if offset < 0 { offset += 7 }
+                let sessionDate = cal.date(byAdding: .day, value: offset, to: weekStart)!
+                let label = out.string(from: sessionDate)
+                for (i, session) in sessions.enumerated() {
+                    let key = makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i)
+                    results.append((session: session, key: key, dateLabel: label))
+                }
+            }
+        }
+        return results
+    }
+
+    /// Parse a .fit file on-device and save the workout directly to Supabase.
+    /// No server round-trip required.
+    func parseFITFile(url: URL) async throws -> ImportedWorkout {
+        guard let api else { throw APIError.unauthenticated }
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        let data = try Data(contentsOf: url)
+        let (session, records) = try FITFileParser.parse(data: data)
+        let workout = FITFileParser.toImportedWorkout(session: session, records: records)
+        try await api.saveWorkoutDirect(workout)
+        // Add/update in local list (prepend if new, replace if existing)
+        if let idx = importedWorkouts.firstIndex(where: { $0.id == workout.id }) {
+            importedWorkouts[idx] = workout
+        } else {
+            importedWorkouts.insert(workout, at: 0)
+        }
+        return workout
+    }
+
+    /// Save match + mark session complete directly to Supabase.
+    func matchAndComplete(workout: ImportedWorkout, sessionKey: String) async throws {
+        guard let api else { throw APIError.unauthenticated }
+        try await api.saveMatchDirect(workout: workout, sessionKey: sessionKey)
+        let completedAt = workout.startTime ?? ISO8601DateFormatter().string(from: Date())
+        // Optimistic local update
+        sessionLogs[sessionKey] = SessionLogEntry(
+            sessionKey: sessionKey,
+            completedAt: completedAt,
+            source: "fit_file",
+            notes: nil,
+            fatigueRating: nil,
+            avgHR: workout.heartRate?.avg,
+            peakHR: workout.heartRate?.max,
+            matchedWorkoutId: workout.id
+        )
+    }
 }

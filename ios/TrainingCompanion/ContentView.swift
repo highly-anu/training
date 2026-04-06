@@ -13,9 +13,9 @@ struct ContentView: View {
                 .onAppear {
                     sync.configure(auth: auth)
                     appState.configure(auth: auth)
-                    // Load program data immediately so Today tab is ready on first render.
-                    Task { await appState.loadAll() }
-                    // HealthKit + Watch sync run in parallel; reload afterwards to pick up any new data.
+                    // Load everything except workouts immediately (Today tab needs program/profile/logs).
+                    Task { await appState.loadAllExceptWorkouts() }
+                    // HealthKit + Watch sync, then reload everything including workouts once.
                     Task {
                         do {
                             try await HealthKitManager.shared.requestPermissions()
@@ -26,6 +26,17 @@ struct ContentView: View {
                         await appState.loadAll()
                     }
                     scheduleNextSync()
+                }
+                .onOpenURL { url in
+                    guard url.pathExtension.lowercased() == "fit" else { return }
+                    appState.pendingFITURL = url
+                }
+                .sheet(isPresented: Binding(
+                    get: { appState.pendingFITURL != nil },
+                    set: { if !$0 { appState.pendingFITURL = nil } }
+                )) {
+                    FITImportSheet()
+                        .environmentObject(appState)
                 }
         } else {
             SignInView()

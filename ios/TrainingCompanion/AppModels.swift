@@ -118,6 +118,7 @@ struct SessionLogEntry: Codable, Identifiable {
     let fatigueRating: Int?
     let avgHR: Int?
     let peakHR: Int?
+    let matchedWorkoutId: String?
 
     enum CodingKeys: String, CodingKey {
         case sessionKey = "session_key"
@@ -126,7 +127,65 @@ struct SessionLogEntry: Codable, Identifiable {
         case fatigueRating = "fatigue_rating"
         case avgHR = "avg_hr"
         case peakHR = "peak_hr"
+        case matchedWorkoutId = "matched_workout_id"
     }
+}
+
+/// MARK: - Imported Workout (.fit / Apple Health)
+
+struct ImportedWorkout: Codable, Identifiable {
+    let id: String
+    let source: String
+    let date: String             // YYYY-MM-DD
+    let startTime: String?
+    let durationMinutes: Double?
+    let activityType: String
+    let inferredModalityId: String?
+    let heartRate: WorkoutHRData?
+    let calories: Double?
+    let distance: WorkoutDistance?
+    let gpsTrack: [GPSPoint]?
+    let elevation: WorkoutElevation?
+
+    enum CodingKeys: String, CodingKey {
+        case id, source, date, calories, distance, elevation
+        case startTime = "startTime"
+        case durationMinutes = "durationMinutes"
+        case activityType = "activityType"
+        case inferredModalityId = "inferredModalityId"
+        case heartRate = "heartRate"
+        case gpsTrack = "gpsTrack"
+    }
+}
+
+struct WorkoutHRData: Codable {
+    let avg: Int?
+    let max: Int?
+    let samples: [HRSample]
+}
+
+struct HRSample: Codable {
+    let timestamp: String
+    let bpm: Int
+}
+
+struct GPSPoint: Codable {
+    let lat: Double
+    let lng: Double
+    let altitude: Double?
+    let timestamp: String
+    let bpm: Int?
+    let speed: Double?   // m/s
+}
+
+struct WorkoutDistance: Codable {
+    let value: Double
+    let unit: String
+}
+
+struct WorkoutElevation: Codable {
+    let gain: Double?
+    let loss: Double?
 }
 
 // MARK: - Daily Bio Log

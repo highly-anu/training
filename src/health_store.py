@@ -84,6 +84,21 @@ def delete_workout(user_id: str, workout_id: str) -> None:
         pass
 
 
+def get_workout(user_id: str, workout_id: str) -> dict | None:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT * FROM workouts WHERE id = %s AND user_id = %s',
+                    (workout_id, user_id),
+                )
+                row = cur.fetchone()
+        return _row_to_workout(row) if row else None
+    except RuntimeError:
+        return None
+
+
 def get_workouts(user_id: str) -> list[dict]:
     from src.db import get_conn
     try:
@@ -196,20 +211,27 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    'SELECT session_key, completed_at, source, notes, fatigue_rating, avg_hr, peak_hr '
-                    'FROM session_logs WHERE user_id = %s ORDER BY completed_at DESC NULLS LAST',
+                    '''SELECT sl.session_key, sl.completed_at, sl.source, sl.notes,
+                              sl.fatigue_rating, sl.avg_hr, sl.peak_hr,
+                              wm.imported_workout_id AS matched_workout_id
+                       FROM session_logs sl
+                       LEFT JOIN workout_matches wm
+                           ON wm.session_key = sl.session_key AND wm.user_id = sl.user_id
+                       WHERE sl.user_id = %s
+                       ORDER BY sl.completed_at DESC NULLS LAST''',
                     (user_id,),
                 )
                 rows = cur.fetchall()
         return [
             {
-                'session_key':    row['session_key'],
-                'completed_at':   str(row['completed_at']) if row['completed_at'] else None,
-                'source':         row.get('source') or 'web',
-                'notes':          row.get('notes') or '',
-                'fatigue_rating': row.get('fatigue_rating'),
-                'avg_hr':         row.get('avg_hr'),
-                'peak_hr':        row.get('peak_hr'),
+                'session_key':        row['session_key'],
+                'completed_at':       str(row['completed_at']) if row['completed_at'] else None,
+                'source':             row.get('source') or 'web',
+                'notes':              row.get('notes') or '',
+                'fatigue_rating':     row.get('fatigue_rating'),
+                'avg_hr':             row.get('avg_hr'),
+                'peak_hr':            row.get('peak_hr'),
+                'matched_workout_id': row.get('matched_workout_id'),
             }
             for row in rows
         ]
@@ -398,9 +420,19 @@ def get_daily_bio(user_id: str) -> dict:
 
 def upsert_match(user_id: str, match: dict) -> None:
     from src.db import get_conn
+    from datetime import datetime as _dt
+    workout_id = match['importedWorkoutId']
+    session_key = match['sessionKey']
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
+                # Ensure the workout row exists so FK constraints are satisfied.
+                # If the parse-time upsert failed silently, this creates a minimal stub.
+                cur.execute('''
+                    INSERT INTO workouts (id, user_id, source, date, activity_type)
+                    VALUES (%s, %s, 'fit_file', CURRENT_DATE, 'unknown')
+                    ON CONFLICT (id, user_id) DO NOTHING
+                ''', (workout_id, user_id))
                 cur.execute('''
                     INSERT INTO workout_matches
                     (imported_workout_id, user_id, session_key, match_confidence, matched_at)
@@ -410,14 +442,14 @@ def upsert_match(user_id: str, match: dict) -> None:
                         match_confidence = EXCLUDED.match_confidence,
                         matched_at       = EXCLUDED.matched_at
                 ''', (
-                    match['importedWorkoutId'],
+                    workout_id,
                     user_id,
-                    match['sessionKey'],
-                    match['matchConfidence'],
-                    match['matchedAt'],
+                    session_key,
+                    match.get('matchConfidence', 1.0),
+                    match.get('matchedAt') or _dt.utcnow().isoformat(),
                 ))
             conn.commit()
-    except RuntimeError:
+    except Exception:
         pass
 
 

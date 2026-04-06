@@ -844,6 +844,7 @@ def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> lis
 
 
 @app.post('/api/workouts/parse')
+@require_auth
 def parse_workout_file():
     """Server-side workout file parser for large exports (> 50 MB).
     Accepts multipart/form-data with field 'workout_file'.
@@ -1078,7 +1079,8 @@ def parse_workout_file():
 
             # Build GPS track (only points with coordinates)
             gps_track = [
-                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'], 'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'],
+                 'timestamp': r['timestamp'], 'bpm': r['bpm'], 'speed': r['speed']}
                 for r in records if r['lat'] is not None and r['lng'] is not None
             ]
 
@@ -1162,11 +1164,22 @@ def parse_workout_file():
                     'rawData':   {'sport': sport, 'sub_sport': sub_sport},
                 })
 
+            if results:
+                _health.upsert_workouts(g.user_id, results)
             return jsonify(results)
         except Exception as e:
             return jsonify({'detail': f'FIT parse error: {e}'}), 422
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
+
+
+@app.get('/api/health/workouts/<workout_id>')
+@require_auth
+def health_get_workout(workout_id: str):
+    workout = _health.get_workout(g.user_id, workout_id)
+    if workout is None:
+        return jsonify({'detail': 'Not found'}), 404
+    return jsonify(workout)
 
 
 # ---------------------------------------------------------------------------

@@ -1,19 +1,19 @@
 import SwiftUI
-import HealthKit
+import UniformTypeIdentifiers
 
 struct LogView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var selectedSegment = 0
-    @State private var selectedSession: SessionWithKey? = nil
+    @State private var selectedSegment = 0   // 0 = Workouts, 1 = Bio
     @State private var showBioEntry = false
     @State private var showImportPicker = false
+    @State private var selectedWorkout: ImportedWorkout? = nil
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Picker("", selection: $selectedSegment) {
-                    Text("Sessions").tag(0)
+                    Text("Workouts").tag(0)
                     Text("Bio").tag(1)
                 }
                 .pickerStyle(.segmented)
@@ -23,126 +23,208 @@ struct LogView: View {
 
                 Divider()
 
-                if selectedSegment == 0 {
-                    sessionsTab
-                } else {
-                    bioTab
-                }
+                if selectedSegment == 0 { workoutsTab } else { bioTab }
             }
             .navigationTitle("Log")
             .appTabStyle()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if selectedSegment == 0 {
-                        Button {
-                            showImportPicker = true
-                        } label: {
-                            Label("Import", systemImage: "square.and.arrow.down")
+                    if selectedSegment == 1 {
+                        Button { showBioEntry = true } label: {
+                            Label("Add Entry", systemImage: "plus")
                         }
                     } else {
-                        Button {
-                            showBioEntry = true
-                        } label: {
-                            Label("Add Entry", systemImage: "plus")
+                        Button { showImportPicker = true } label: {
+                            Label("Import .fit", systemImage: "square.and.arrow.down")
                         }
                     }
                 }
             }
-            .sheet(item: $selectedSession) { item in
-                SessionLogDetailView(sessionWithKey: item)
+            .sheet(item: $selectedWorkout) { workout in
+                WorkoutDetailSheet(workout: workout)
                     .environmentObject(appState)
             }
             .sheet(isPresented: $showBioEntry) {
                 BioCheckInView()
                     .environmentObject(appState)
             }
+            .fileImporter(
+                isPresented: $showImportPicker,
+                allowedContentTypes: [UTType(filenameExtension: "fit") ?? .data]
+            ) { result in
+                if let url = try? result.get() {
+                    appState.pendingFITURL = url
+                }
+            }
             .refreshable {
                 AppHaptics.light()
-                async let delay: () = Task.sleep(nanoseconds: 600_000_000)
-                await appState.loadRecentSessionLogs()
-                await appState.loadRecentBioLogs()
-                _ = try? await delay
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { await appState.loadWorkouts() }
+                    group.addTask { await appState.loadRecentBioLogs() }
+                    group.addTask { try? await Task.sleep(nanoseconds: 600_000_000) }
+                }
                 AppHaptics.success()
             }
         }
     }
 
-    // MARK: - Sessions Tab
+    // MARK: - Workouts Tab
 
-    private var sessionsTab: some View {
-        let pairs = recentSessionPairs
-        return Group {
-            if pairs.isEmpty && !appState.isLoadingProgram {
+    private var workoutsTab: some View {
+        Group {
+            if appState.isLoadingWorkouts && appState.importedWorkouts.isEmpty {
+                VStack { Spacer(); ProgressView().scaleEffect(1.2); Spacer() }
+            } else if appState.importedWorkouts.isEmpty {
                 emptyState(
-                    icon: "checkmark.circle",
-                    title: "No Recent Sessions",
-                    subtitle: "Sessions you complete will appear here."
+                    icon: "figure.run.circle",
+                    title: "No Workouts",
+                    subtitle: "Import a .fit file or complete a Watch session."
                 )
             } else {
                 List {
-                    ForEach(pairs, id: \.key) { pair in
-                        sessionRow(pair)
+                    ForEach(appState.importedWorkouts) { workout in
+                        workoutRow(workout)
                             .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedSession = SessionWithKey(
-                                    session: pair.session,
-                                    key: pair.key,
-                                    dateLabel: sessionDayLabel(pair.key)
-                                )
-                            }
+                            .onTapGesture { selectedWorkout = workout }
+                    }
+                    .onDelete { indexSet in
+                        for idx in indexSet {
+                            let w = appState.importedWorkouts[idx]
+                            Task { try? await appState.deleteWorkout(id: w.id) }
+                        }
                     }
                 }
                 .listStyle(.insetGrouped)
+                .refreshable {
+                    AppHaptics.light()
+                    await appState.loadWorkouts()
+                    AppHaptics.success()
+                }
             }
         }
     }
 
-    // MARK: - Session Row
-
-    private func sessionRow(_ pair: SessionPair) -> some View {
-        let done = appState.isSessionComplete(pair.key)
-        let log = appState.sessionLogs[pair.key]
-
+    private func workoutRow(_ workout: ImportedWorkout) -> some View {
+        let isLinked = appState.sessionLogs.values.contains { $0.matchedWorkoutId == workout.id }
+        let modality = workout.inferredModalityId ?? linkedProgramSession(for: workout)?.modality
+        let iconName  = modality.map { ModalityStyle.icon(for: $0) } ?? workoutRowIcon(workout.activityType)
+        let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? (isLinked ? .green : Color.blue)
+        let title = workoutDisplayName(workout)
         return HStack(spacing: 12) {
-            Image(systemName: done ? "checkmark.circle.fill" : ModalityStyle.icon(for: pair.session.modality))
-                .foregroundStyle(done ? .green : ModalityStyle.color(for: pair.session.modality))
+            Image(systemName: iconName)
+                .foregroundStyle(iconColor)
                 .font(.title3)
                 .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(pair.session.archetype?.name ?? ModalityStyle.label(for: pair.session.modality))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
                     .font(.body)
-                    .foregroundStyle(done ? .secondary : .primary)
 
                 HStack(spacing: 8) {
-                    Text(sessionDayLabel(pair.key))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    if let hr = log?.avgHR {
-                        Label("\(hr) bpm", systemImage: "heart.fill")
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                    Text(workoutDateLabel(workout.date))
+                        .font(.caption).foregroundStyle(.secondary)
+                    if let dur = workout.durationMinutes {
+                        Text("\(Int(dur)) min")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+
+                let hasDist = workout.distance != nil
+                let hasHR   = workout.heartRate?.avg != nil
+                if hasDist && hasHR {
+                    HStack(spacing: 12) {
+                        logStatPill(icon: "arrow.forward",
+                                    value: String(format: "%.1f", workout.distance!.value),
+                                    unit: workout.distance!.unit,
+                                    color: .secondary)
+                        logStatPill(icon: "heart.fill",
+                                    value: "\(workout.heartRate!.avg!)",
+                                    unit: "bpm",
+                                    color: .red)
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        if let dist = workout.distance {
+                            Label(String(format: "%.1f %@", dist.value, dist.unit),
+                                  systemImage: "arrow.forward")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        if let avg = workout.heartRate?.avg {
+                            Label("\(avg) bpm", systemImage: "heart.fill")
+                                .font(.caption).foregroundStyle(.red)
+                        }
                     }
                 }
             }
 
             Spacer()
 
-            if let fatigue = log?.fatigueRating {
-                Text("\(fatigue)/10")
-                    .font(.caption2)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(fatigueColor(fatigue).opacity(0.15))
-                    .foregroundStyle(fatigueColor(fatigue))
-                    .clipShape(Capsule())
+            if isLinked {
+                Image(systemName: "link")
+                    .font(.caption).foregroundStyle(.green)
             }
 
             Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(.caption).foregroundStyle(.tertiary)
         }
         .padding(.vertical, 4)
+    }
+
+    private func logStatPill(icon: String, value: String, unit: String, color: Color) -> some View {
+        VStack(spacing: 1) {
+            Image(systemName: icon).font(.caption2).foregroundStyle(color)
+            Text(value).font(.caption).fontWeight(.medium)
+            Text(unit).font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    private func workoutDisplayName(_ workout: ImportedWorkout) -> String {
+        let raw = workout.activityType
+        // If activityType was set to an archetype name (not a generic watch source string), use it.
+        let genericSources = ["apple_watch_live", "watch"]
+        if !genericSources.contains(raw) && !raw.hasPrefix("watch_") {
+            return raw.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+        // Fall back to the linked program session's archetype/modality name.
+        if let session = linkedProgramSession(for: workout) {
+            return session.archetype?.name ?? ModalityStyle.label(for: session.modality)
+        }
+        return raw.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    /// Finds the ProgramSession matched to this workout, if any.
+    private func linkedProgramSession(for workout: ImportedWorkout) -> ProgramSession? {
+        guard let sessionKey = appState.sessionLogs.values
+            .first(where: { $0.matchedWorkoutId == workout.id })?.sessionKey else { return nil }
+        let parts = sessionKey.split(separator: "-")
+        guard parts.count == 3,
+              let weekNum = Int(parts[0]),
+              let idx = Int(parts[2]) else { return nil }
+        let dayName = String(parts[1])
+        guard let week = appState.serverProgram?.currentProgram?.weeks
+            .first(where: { $0.weekNumber == weekNum }),
+              let sessions = week.schedule[dayName],
+              idx < sessions.count else { return nil }
+        return sessions[idx]
+    }
+
+    private func workoutRowIcon(_ activityType: String) -> String {
+        let t = activityType.lowercased()
+        if t.contains("run")   { return "figure.run" }
+        if t.contains("cycl")  { return "figure.outdoor.cycle" }
+        if t.contains("swim")  { return "figure.pool.swim" }
+        if t.contains("hik")   { return "figure.hiking" }
+        if t.contains("walk")  { return "figure.walk" }
+        if t.contains("row")   { return "figure.rowing" }
+        if t.contains("watch") { return "applewatch.watchface" }
+        return "figure.mixed.cardio"
+    }
+
+    private func workoutDateLabel(_ dateStr: String) -> String {
+        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
+        guard let date = df.date(from: dateStr) else { return dateStr }
+        let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
+        return out.string(from: date)
     }
 
     // MARK: - Bio Tab
@@ -261,86 +343,9 @@ struct LogView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func fatigueColor(_ rating: Int) -> Color {
-        switch rating {
-        case 1...3: return .green
-        case 4...6: return .yellow
-        default:    return .red
-        }
-    }
-
-    private func sessionDayLabel(_ key: String) -> String {
-        // Key format: "weekNumber-DayName-index" e.g. "5-Monday-0"
-        let parts = key.split(separator: "-")
-        guard parts.count >= 2, let weekNumber = Int(parts[0]) else { return key }
-        let dayName = String(parts[1])
-
-        let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-        if let startStr = appState.serverProgram?.programStartDate {
-            let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
-            if let startDate = df.date(from: startStr),
-               let targetIdx = dayNames.firstIndex(of: dayName) {
-                let cal = Calendar.current
-                let weekStart = cal.date(byAdding: .day, value: (weekNumber - 1) * 7,
-                                         to: cal.startOfDay(for: startDate))!
-                let weekStartWeekday = cal.component(.weekday, from: weekStart)
-                var offset = (targetIdx + 1) - weekStartWeekday
-                if offset < 0 { offset += 7 }
-                if let sessionDate = cal.date(byAdding: .day, value: offset, to: weekStart) {
-                    let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
-                    return out.string(from: sessionDate)
-                }
-            }
-        }
-        return dayName
-    }
-
-    // Build session pairs from the full program history, sorted most recent → oldest
-    private var recentSessionPairs: [SessionPair] {
-        guard let weeks = appState.serverProgram?.currentProgram?.weeks,
-              let currentIdx = appState.currentWeekIndex else { return [] }
-        var pairs: [SessionPair] = []
-        let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-        for wIdx in 0...currentIdx {
-            let week = weeks[wIdx]
-            for day in dayOrder {
-                guard let sessions = week.schedule[day] else { continue }
-                for (i, s) in sessions.enumerated() {
-                    let key = appState.makeSessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
-                    pairs.append(SessionPair(session: s, key: key, weekNumber: week.weekNumber, dayName: day))
-                }
-            }
-        }
-        return pairs.sorted { a, b in
-            sessionDate(weekNumber: a.weekNumber, dayName: a.dayName) >
-            sessionDate(weekNumber: b.weekNumber, dayName: b.dayName)
-        }
-    }
-
-    private func sessionDate(weekNumber: Int, dayName: String) -> Date {
-        guard let startStr = appState.serverProgram?.programStartDate else { return .distantPast }
-        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
-        guard let startDate = df.date(from: startStr) else { return .distantPast }
-        let cal = Calendar.current
-        let dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-        guard let targetIdx = dayNames.firstIndex(of: dayName) else { return .distantPast }
-        let weekStart = cal.date(byAdding: .day, value: (weekNumber - 1) * 7,
-                                 to: cal.startOfDay(for: startDate))!
-        let weekStartWeekday = cal.component(.weekday, from: weekStart)
-        var offset = (targetIdx + 1) - weekStartWeekday
-        if offset < 0 { offset += 7 }
-        return cal.date(byAdding: .day, value: offset, to: weekStart) ?? .distantPast
-    }
 }
 
 // MARK: - Supporting Types
-
-private struct SessionPair {
-    let session: ProgramSession
-    let key: String
-    let weekNumber: Int
-    let dayName: String
-}
 
 struct SessionWithKey: Identifiable {
     let id = UUID()
@@ -357,74 +362,38 @@ struct SessionLogDetailView: View {
 
     let sessionWithKey: SessionWithKey
 
+    @State private var matchedWorkout: ImportedWorkout? = nil
+    @State private var chartTab: Int = 0   // 0=HR, 1=Elevation, 2=Pace
+
     private var log: SessionLogEntry? { appState.sessionLogs[sessionWithKey.key] }
     private var session: ProgramSession { sessionWithKey.session }
+
+    // Derived convenience
+    private var gps: [GPSPoint] { matchedWorkout?.gpsTrack ?? [] }
+    private var hrSamples: [HRSample] { matchedWorkout?.heartRate?.samples ?? [] }
+    private var hasElevation: Bool { gps.contains { $0.altitude != nil } }
+    private var hasPace: Bool { gps.contains { ($0.speed ?? 0) > 0.3 } }
+
+    // Available tabs (only those with data)
+    private var availableTabs: [(label: String, icon: String, tag: Int)] {
+        var tabs: [(String, String, Int)] = []
+        if !hrSamples.isEmpty       { tabs.append(("HR",        "heart.fill",       0)) }
+        if hasElevation             { tabs.append(("Elevation", "mountain.2.fill",  1)) }
+        if hasPace                  { tabs.append(("Pace",      "figure.run",       2)) }
+        return tabs
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                // Header
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        let color = ModalityStyle.color(for: session.modality)
-                        Label(ModalityStyle.label(for: session.modality),
-                              systemImage: ModalityStyle.icon(for: session.modality))
-                            .font(.caption).foregroundStyle(color)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(color.opacity(0.12)).clipShape(Capsule())
-                        Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
-                            .font(.headline)
-                        if !sessionWithKey.dateLabel.isEmpty {
-                            Text(sessionWithKey.dateLabel)
-                                .font(.subheadline).foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-
+                headerSection
                 if let log {
-                    // Completion
-                    Section("Completion") {
-                        if let completedAt = log.completedAt, !completedAt.isEmpty {
-                            LabeledContent("Completed", value: formattedDate(completedAt))
-                        }
-                        if let source = log.source, !source.isEmpty {
-                            LabeledContent("Source", value: source
-                                .replacingOccurrences(of: "_", with: " ").capitalized)
-                        }
-                    }
-
-                    // Heart rate
-                    if log.avgHR != nil || log.peakHR != nil {
-                        Section("Heart Rate") {
-                            if let avg = log.avgHR {
-                                LabeledContent("Average") {
-                                    Label("\(avg) bpm", systemImage: "heart.fill")
-                                        .foregroundStyle(.red)
-                                }
-                            }
-                            if let peak = log.peakHR {
-                                LabeledContent("Peak") {
-                                    Label("\(peak) bpm", systemImage: "heart.fill")
-                                        .foregroundStyle(.orange)
-                                }
-                            }
-                        }
-                    }
-
-                    // Effort
-                    if let fatigue = log.fatigueRating {
-                        Section("Effort") {
-                            LabeledContent("Fatigue Rating", value: "\(fatigue) / 10")
-                        }
-                    }
-
-                    // Notes
-                    if let notes = log.notes, !notes.isEmpty {
-                        Section("Notes") {
-                            Text(notes).font(.body)
-                        }
-                    }
+                    heroStatsSection(log: log)
+                    if !gps.isEmpty          { routeSection }
+                    if !availableTabs.isEmpty { timeseriesSection }
+                    metricsSection(log: log)
+                    if let fatigue = log.fatigueRating { effortSection(fatigue: fatigue) }
+                    if let notes = log.notes, !notes.isEmpty { notesSection(notes: notes) }
                 } else {
                     Section {
                         Label("Not yet completed", systemImage: "circle")
@@ -432,6 +401,7 @@ struct SessionLogDetailView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Session Log")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -439,7 +409,230 @@ struct SessionLogDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .task {
+                if let workoutId = log?.matchedWorkoutId {
+                    matchedWorkout = try? await appState.api?.fetchWorkout(id: workoutId)
+                }
+            }
         }
+    }
+
+    // MARK: - Sections
+
+    private var headerSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                let color = ModalityStyle.color(for: session.modality)
+                Label(ModalityStyle.label(for: session.modality),
+                      systemImage: ModalityStyle.icon(for: session.modality))
+                    .font(.caption).foregroundStyle(color)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(color.opacity(0.12)).clipShape(Capsule())
+                Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
+                    .font(.headline)
+                if !sessionWithKey.dateLabel.isEmpty {
+                    Text(sessionWithKey.dateLabel)
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    private func heroStatsSection(log: SessionLogEntry) -> some View {
+        let w = matchedWorkout
+        let dur   = w?.durationMinutes
+        let dist  = w?.distance
+        let cal   = w?.calories
+        let pace  = avgPaceString(dist: dist, durMin: dur)
+        let avgHR = w?.heartRate?.avg ?? log.avgHR
+
+        return Section {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                if let d = dur  { heroChip(value: "\(Int(d))", unit: "min", icon: "clock") }
+                if let d = dist { heroChip(value: String(format: "%.2f", d.value), unit: d.unit, icon: "arrow.forward") }
+                if let p = pace { heroChip(value: p, unit: "/km", icon: "figure.run") }
+                if let c = cal  { heroChip(value: "\(Int(c))", unit: "kcal", icon: "flame") }
+                if let h = avgHR, dur == nil && dist == nil { heroChip(value: "\(h)", unit: "bpm", icon: "heart.fill") }
+            }
+            .padding(.vertical, 4)
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        }
+    }
+
+    private var routeSection: some View {
+        Section("Route") {
+            WorkoutRouteMapView(points: gps)
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+        }
+    }
+
+    private var timeseriesSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 0) {
+                // Tab picker (only when >1 chart available)
+                if availableTabs.count > 1 {
+                    Picker("Chart", selection: $chartTab) {
+                        ForEach(availableTabs, id: \.tag) { tab in
+                            Label(tab.label, systemImage: tab.icon).tag(tab.tag)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.bottom, 10)
+                    .onChange(of: chartTab) { _ in AppHaptics.selection() }
+                }
+
+                // Chart content
+                Group {
+                    switch chartTab {
+                    case 0:
+                        if !hrSamples.isEmpty {
+                            HRTimelineView(samples: hrSamples,
+                                           avgHR: matchedWorkout?.heartRate?.avg,
+                                           maxHR: matchedWorkout?.heartRate?.max)
+                        }
+                    case 1:
+                        if hasElevation {
+                            ElevationProfileView(points: gps, gainM: matchedWorkout?.elevation?.gain)
+                        }
+                    case 2:
+                        if hasPace {
+                            PaceTimelineView(points: gps, distanceKm: matchedWorkout?.distance?.value)
+                        }
+                    default:
+                        EmptyView()
+                    }
+                }
+                .frame(height: 160)
+                .animation(.easeInOut(duration: 0.2), value: chartTab)
+            }
+            .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
+        } header: {
+            Text(availableTabs.count == 1 ? availableTabs[0].label : "Activity Data")
+        }
+    }
+
+    private func metricsSection(log: SessionLogEntry) -> some View {
+        let w = matchedWorkout
+        let avgHR  = w?.heartRate?.avg ?? log.avgHR
+        let maxHR  = w?.heartRate?.max ?? log.peakHR
+        let dist   = w?.distance
+        let elev   = w?.elevation
+        let cal    = w?.calories
+        let pace   = avgPaceString(dist: dist, durMin: w?.durationMinutes)
+        let bestP  = bestPaceString(gps: gps)
+        let source = log.source
+
+        let hasHR       = avgHR != nil || maxHR != nil
+        let hasActivity = dist != nil || elev != nil || cal != nil || pace != nil
+
+        return Group {
+            if hasHR {
+                Section("Heart Rate") {
+                    if let avg = avgHR {
+                        LabeledContent("Average") {
+                            Label("\(avg) bpm", systemImage: "heart.fill").foregroundStyle(.red)
+                        }
+                    }
+                    if let peak = maxHR {
+                        LabeledContent("Peak") {
+                            Label("\(peak) bpm", systemImage: "heart.fill").foregroundStyle(.orange)
+                        }
+                    }
+                }
+            }
+            if hasActivity {
+                Section("Activity") {
+                    if let d = dist {
+                        LabeledContent("Distance", value: String(format: "%.2f %@", d.value, d.unit))
+                    }
+                    if let p = pace {
+                        LabeledContent("Avg Pace", value: "\(p) /km")
+                    }
+                    if let b = bestP {
+                        LabeledContent("Best Pace", value: "\(b) /km")
+                    }
+                    if let gain = elev?.gain, gain > 0 {
+                        LabeledContent("Elevation Gain", value: "\(Int(gain)) m")
+                    }
+                    if let loss = elev?.loss, loss > 0 {
+                        LabeledContent("Elevation Loss", value: "\(Int(loss)) m")
+                    }
+                    if let c = cal {
+                        LabeledContent("Calories", value: "\(Int(c)) kcal")
+                    }
+                }
+            }
+            if let src = source, !src.isEmpty {
+                Section("Source") {
+                    Text(src.replacingOccurrences(of: "_", with: " ").capitalized)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func effortSection(fatigue: Int) -> some View {
+        Section("Effort") {
+            LabeledContent("Fatigue Rating", value: "\(fatigue) / 10")
+        }
+    }
+
+    private func notesSection(notes: String) -> some View {
+        Section("Notes") {
+            Text(notes).font(.body)
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func heroChip(value: String, unit: String, icon: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.title3).fontWeight(.semibold)
+                Text(unit)
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(10)
+        .background(.quaternary.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func avgPaceString(dist: WorkoutDistance?, durMin: Double?) -> String? {
+        guard let km = dist?.value, km > 0, let min = durMin, min > 0 else { return nil }
+        let secPerKm = (min * 60.0) / km
+        return formatPace(secPerKm)
+    }
+
+    private func bestPaceString(gps: [GPSPoint]) -> String? {
+        // Sliding 60-second window average to find fastest sustained km pace
+        let speeds = gps.compactMap { $0.speed }.filter { $0 > 0.5 }
+        guard speeds.count >= 10 else { return nil }
+        // Best rolling 30-point average speed → best pace
+        let window = min(30, speeds.count / 3)
+        guard window > 0 else { return nil }
+        var best = 0.0
+        for i in 0...(speeds.count - window) {
+            let avg = speeds[i..<(i + window)].reduce(0, +) / Double(window)
+            if avg > best { best = avg }
+        }
+        guard best > 0.5 else { return nil }
+        return formatPace(1000.0 / best)
+    }
+
+    private func formatPace(_ secPerKm: Double) -> String {
+        let m = Int(secPerKm) / 60
+        let s = Int(secPerKm) % 60
+        return String(format: "%d:%02d", m, s)
     }
 
     private func formattedDate(_ iso: String) -> String {

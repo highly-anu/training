@@ -35,7 +35,8 @@ final class WatchSessionManager: NSObject, ObservableObject {
         return f
     }()
 
-    // UserDefaults keys
+    // Cached from the most recent syncProgram() call, keyed by sessionId.
+    private var sessionCache: [String: (modality: String, name: String)] = [:]
 
     init(api: APIClient) {
         self.api = api
@@ -80,6 +81,11 @@ final class WatchSessionManager: NSObject, ObservableObject {
             let watchSessions = sessions.enumerated().map { (i, s) in
                 encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality)
             }
+
+            // Cache session metadata so handleWorkoutComplete can label uploads correctly.
+            sessionCache = Dictionary(uniqueKeysWithValues: watchSessions.map {
+                ($0.sessionId, (modality: $0.modalityId, name: $0.archetypeName))
+            })
 
             let profile = buildProfilePayload()
             let weeklyOverview = buildWeeklyOverview(week: week)
@@ -347,6 +353,7 @@ extension WatchSessionManager: WCSessionDelegate {
         UserDefaults.standard.set(count, forKey: "watchUploadCount")
 
         let sessionKey = summary.sessionId
+        let cachedSession = sessionCache[sessionKey]
         let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
         AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
 
@@ -396,7 +403,7 @@ extension WatchSessionManager: WCSessionDelegate {
             "startTime":       summary.startedAt,
             "endTime":         summary.endedAt,
             "durationMinutes": summary.durationMinutes,
-            "activityType":    summary.source,
+            "activityType":    cachedSession?.name ?? summary.source,
             "rawData":         [:] as [String: Any],
             "heartRate":       [
                 "avg": summary.avgHR as Any,
@@ -404,29 +411,31 @@ extension WatchSessionManager: WCSessionDelegate {
                 "samples": hrSamples as Any,
             ] as [String: Any],
         ]
+        if let modality = cachedSession?.modality { workout["inferredModalityId"] = modality }
         if let gps = gpsTrack { workout["gpsTrack"] = gps }
         if let dist = summary.distanceMeters { workout["distance"] = ["value": dist / 1000.0, "unit": "km"] }
         if let gain = summary.elevationGainMeters { workout["elevation"] = ["gain": Int(gain), "loss": 0] }
         if let cal = log["calories"] { workout["calories"] = cal }
 
         do {
-            try await api.saveWatchWorkouts([workout])
+            try await api.saveWatchWorkoutDirect(workout)
             AppLogger.shared.log("API: saved watch workout \(workoutId) ✓")
         } catch {
             AppLogger.shared.log("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
             return
         }
 
-        // 3. Link workout to session via workout_matches
-        let nowString = iso.string(from: Date())
-        let matchPayload: [String: Any] = [
-            "importedWorkoutId": workoutId,
-            "sessionKey":        sessionKey,
-            "matchConfidence":   "auto",
-            "matchedAt":         nowString,
-        ]
+        // 3. Link workout to session + upsert session log directly to Supabase
+        let exercises = summary.setLogs.mapValues { ["sets": $0] } as [String: Any]
         do {
-            try await api.saveWorkoutMatch(matchPayload)
+            try await api.saveWatchMatchDirect(
+                workoutId: workoutId,
+                sessionKey: sessionKey,
+                startTime: summary.startedAt,
+                avgHR: summary.avgHR,
+                peakHR: summary.peakHR,
+                exercises: exercises
+            )
             AppLogger.shared.log("API: saved workout match \(workoutId) → \(sessionKey) ✓")
         } catch {
             AppLogger.shared.log("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
@@ -491,7 +500,7 @@ extension WatchSessionManager: WCSessionDelegate {
             "heartRate":       [:] as [String: Any],
         ]
         do {
-            try await api.saveWatchWorkouts([enriched])
+            try await api.saveWatchWorkoutDirect(enriched)
             AppLogger.shared.log("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
         } catch {
             AppLogger.shared.log("API: GPS enrichment FAILED — \(error.localizedDescription)")
