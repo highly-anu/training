@@ -179,6 +179,20 @@ final class AppState: ObservableObject {
         return weeks[idx]
     }
 
+    /// Returns the program week that contains `date`, or nil if out of range.
+    func week(for date: Date) -> ProgramWeek? {
+        guard let program = serverProgram?.currentProgram,
+              let startDateStr = serverProgram?.programStartDate,
+              let startDate = dayFormatter.date(from: startDateStr) else { return nil }
+        let calendar = Calendar.current
+        let target = calendar.startOfDay(for: date)
+        let start = calendar.startOfDay(for: startDate)
+        let days = calendar.dateComponents([.day], from: start, to: target).day ?? 0
+        guard days >= 0 else { return nil }
+        let idx = days / 7
+        return idx < program.weeks.count ? program.weeks[idx] : nil
+    }
+
     var todayDayName: String {
         let names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
         return names[Calendar.current.component(.weekday, from: Date()) - 1]

@@ -3,12 +3,21 @@ import SwiftUI
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var selectedWeekIndex: Int = 0
+    @State private var weekIndex: Int = 0
+
+    // Swipe state
+    @State private var dragOffset: CGFloat = 0
+    @State private var lockedAdjacentIndex: Int? = nil
+
     @State private var showBuilder = false
-    @State private var showInjurySheet = false
+    @State private var showSettings = false
     @State private var selectedDay: DaySelection? = nil
 
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+    private var cardWidth: CGFloat { UIScreen.main.bounds.width - 32 }
+    private var peekIndex: Int { lockedAdjacentIndex ?? weekIndex + (dragOffset <= 0 ? 1 : -1) }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -22,31 +31,21 @@ struct ProgramView: View {
                 }
             }
             .navigationTitle("Program")
-            .navigationBarTitleDisplayMode(.inline)
+            .appTabStyle()
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showInjurySheet = true
-                    } label: {
-                        Label("Injuries", systemImage: "cross.case")
-                    }
-                    .disabled(appState.allWeeks.isEmpty)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showBuilder = true
-                    } label: {
-                        Label("New Program", systemImage: appState.allWeeks.isEmpty ? "plus.circle.fill" : "plus")
+                    if appState.allWeeks.isEmpty {
+                        Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
+                    } else {
+                        Button { AppHaptics.light(); showSettings = true } label: { Image(systemName: "gearshape") }
                     }
                 }
             }
             .sheet(isPresented: $showBuilder) {
-                ProgramBuilderFlow()
-                    .environmentObject(appState)
+                ProgramBuilderFlow().environmentObject(appState)
             }
-            .sheet(isPresented: $showInjurySheet) {
-                InjuryManagementSheet()
-                    .environmentObject(appState)
+            .sheet(isPresented: $showSettings) {
+                ProgramSettingsSheet().environmentObject(appState)
             }
             .sheet(item: $selectedDay) { sel in
                 DaySessionsSheet(week: appState.allWeeks[sel.weekIndex], dayName: sel.dayName)
@@ -54,7 +53,7 @@ struct ProgramView: View {
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
-                selectedWeekIndex = appState.currentWeekIndex ?? 0
+                weekIndex = appState.currentWeekIndex ?? 0
             }
         }
     }
@@ -62,143 +61,230 @@ struct ProgramView: View {
     // MARK: - Program Content
 
     private var programContent: some View {
-        VStack(spacing: 0) {
-            // Phase bar
-            if !appState.allWeeks.isEmpty {
-                phaseBar
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                phaseProgressBar
                     .padding(.horizontal)
-                    .padding(.vertical, 8)
-                Divider()
+                    .padding(.top, 4)
+                    .padding(.bottom, 16)
+
+                Divider().padding(.bottom, 12)
+
+                swipeableSection
+                    .padding(.horizontal)
+
+                Spacer(minLength: 40)
             }
-
-            // Week navigation header
-            weekNavigationHeader
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-
-            Divider()
-
-            // Day rows
-            if selectedWeekIndex < appState.allWeeks.count {
-                weekDayList(week: appState.allWeeks[selectedWeekIndex], weekIndex: selectedWeekIndex)
-            }
+            .padding(.top, 4)
+        }
+        .refreshable {
+            AppHaptics.light()
+            weekIndex = appState.currentWeekIndex ?? 0
+            async let delay: () = Task.sleep(nanoseconds: 600_000_000)
+            await appState.loadProgram()
+            _ = try? await delay
+            AppHaptics.success()
         }
     }
 
-    // MARK: - Phase Bar
+    // MARK: - Phase Progress Bar
 
-    private var phaseBar: some View {
-        let phases = phaseSegments(from: appState.allWeeks)
+    private var phaseProgressBar: some View {
+        let weeks = appState.allWeeks
+        let total = weeks.count
         let currentIdx = appState.currentWeekIndex ?? -1
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(Array(phases.enumerated()), id: \.offset) { _, segment in
-                    let isCurrent = segment.weekIndices.contains(currentIdx)
-                    let color = phaseColor(segment.phase)
-                    let first = segment.weekIndices.first.map { $0 + 1 } ?? 1
-                    let last  = segment.weekIndices.last.map  { $0 + 1 } ?? first
-                    let weekLabel = first == last ? "Wk \(first)" : "Wk \(first)–\(last)"
+        let segments = phaseSegments(from: weeks)
 
-                    VStack(spacing: 3) {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(color)
-                                .frame(width: 8, height: 8)
-                            Text(segment.phase.capitalized)
-                                .font(.caption)
-                                .fontWeight(isCurrent ? .semibold : .regular)
-                            Text(weekLabel)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+        return VStack(alignment: .leading, spacing: 5) {
+            // Coloured bar
+            GeometryReader { geo in
+                let barWidth = geo.size.width
+                HStack(spacing: 0) {
+                    ForEach(segments, id: \.phase) { seg in
+                        let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
+                        let segWidth = barWidth * segFrac
+                        let isCurrent = seg.weekIndices.contains(currentIdx)
+                        let isPast = (seg.weekIndices.last ?? -1) < currentIdx
+                        let color = phaseColor(seg.phase)
+
+                        ZStack(alignment: .leading) {
+                            if isPast {
+                                Rectangle().fill(color.opacity(0.45))
+                            } else if isCurrent, let firstIdx = seg.weekIndices.first {
+                                let progress = CGFloat(currentIdx - firstIdx + 1)
+                                    / CGFloat(seg.weekIndices.count)
+                                let doneWidth = segWidth * progress
+                                // Dim fill for whole segment
+                                Rectangle().fill(color.opacity(0.18))
+                                // Bright fill for completed portion
+                                Rectangle().fill(color.opacity(0.65))
+                                    .frame(width: doneWidth)
+                                // Bright vertical marker at current week
+                                Rectangle().fill(color)
+                                    .frame(width: 3)
+                                    .offset(x: max(0, doneWidth - 1.5))
+                            } else {
+                                Rectangle().fill(color.opacity(0.15))
+                            }
                         }
-                        if isCurrent {
-                            Capsule()
-                                .fill(color)
-                                .frame(height: 2)
-                        }
+                        .frame(width: segWidth, height: 10)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(isCurrent ? color.opacity(0.12) : Color(.secondarySystemFill))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(isCurrent ? color.opacity(0.5) : Color.clear, lineWidth: 1)
-                    )
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                // Subtle track behind
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color(.systemFill))
+                )
+            }
+            .frame(height: 10)
+
+            // Phase labels
+            GeometryReader { geo in
+                HStack(spacing: 0) {
+                    ForEach(segments, id: \.phase) { seg in
+                        let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
+                        let isCurrent = seg.weekIndices.contains(currentIdx)
+                        let color = phaseColor(seg.phase)
+                        Text(seg.phase.capitalized)
+                            .font(.caption2)
+                            .fontWeight(isCurrent ? .semibold : .regular)
+                            .foregroundStyle(isCurrent ? color : .secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                            .frame(width: geo.size.width * segFrac, alignment: .center)
+                    }
                 }
             }
-            .padding(.horizontal, 1)
-            .padding(.vertical, 2)
+            .frame(height: 14)
         }
     }
 
-    // MARK: - Week Navigation Header
+    // MARK: - Swipeable Section
 
-    private var weekNavigationHeader: some View {
-        let weeks = appState.allWeeks
-        let week = weeks.isEmpty ? nil : weeks[min(selectedWeekIndex, weeks.count - 1)]
+    private var swipeableSection: some View {
+        let gap: CGFloat = 14
+        let exitDistance = cardWidth + gap
+        let showPeek = dragOffset != 0
+        let peekSign: CGFloat = peekIndex > weekIndex ? 1 : -1
 
-        return HStack {
-            Button {
-                if selectedWeekIndex > 0 { selectedWeekIndex -= 1 }
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.headline)
+        return ZStack(alignment: .topLeading) {
+            if showPeek {
+                weekCard(weekIdx: peekIndex)
+                    .offset(x: dragOffset + peekSign * exitDistance)
+                    .allowsHitTesting(false)
             }
-            .disabled(selectedWeekIndex == 0)
+            weekCard(weekIdx: weekIndex)
+                .offset(x: dragOffset)
+        }
+        .clipped()
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { value in
+                    let h = value.translation.width
+                    guard abs(h) > abs(value.translation.height) else { return }
+                    if lockedAdjacentIndex == nil {
+                        lockedAdjacentIndex = weekIndex + (h < 0 ? 1 : -1)
+                    }
+                    dragOffset = h
+                }
+                .onEnded { value in
+                    let h = value.translation.width
+                    guard abs(h) > abs(value.translation.height),
+                          abs(value.predictedEndTranslation.width) > AppMetrics.swipeThreshold
+                          || abs(value.velocity.width) > AppMetrics.swipeVelocityThreshold else {
+                        cancelSwipe(); return
+                    }
+                    let goNext = h < 0
+                    let next = weekIndex + (goNext ? 1 : -1)
+                    guard next >= 0 && next < appState.allWeeks.count else {
+                        cancelSwipe(); return
+                    }
+                    commitSwipe(goNext: goNext, exitDistance: exitDistance)
+                }
+        )
+    }
 
-            Spacer()
+    private func cancelSwipe() {
+        lockedAdjacentIndex = nil
+        withAnimation(AppAnimation.springStandard) { dragOffset = 0 }
+    }
 
-            VStack(spacing: 2) {
-                if let week {
-                    Text("Week \(week.weekNumber)")
-                        .font(.headline)
+    private func commitSwipe(goNext: Bool, exitDistance: CGFloat) {
+        AppHaptics.soft()
+        withAnimation(AppAnimation.springSnappy) {
+            dragOffset = goNext ? -exitDistance : exitDistance
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            weekIndex += goNext ? 1 : -1
+            dragOffset = 0
+            lockedAdjacentIndex = nil
+        }
+    }
+
+    // MARK: - Week Card
+
+    @ViewBuilder
+    private func weekCard(weekIdx: Int) -> some View {
+        let weeks = appState.allWeeks
+        if weekIdx >= 0 && weekIdx < weeks.count {
+            let week = weeks[weekIdx]
+            let isCurrent = weekIdx == (appState.currentWeekIndex ?? -1)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline) {
+                    HStack(spacing: 8) {
+                        Text("Week \(week.weekNumber)").font(.headline)
+                        if isCurrent {
+                            Text("Current")
+                                .font(.caption2).fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Color.blue.gradient)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    Spacer()
                     HStack(spacing: 6) {
                         Text(week.phase.capitalized)
                         if week.isDeload { Text("· Deload").foregroundStyle(.orange) }
-                        if selectedWeekIndex == (appState.currentWeekIndex ?? -1) {
-                            Text("· Current").foregroundStyle(.blue)
-                        }
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
-            }
+                .padding(.bottom, 10)
 
-            Spacer()
-
-            Button {
-                if selectedWeekIndex < appState.allWeeks.count - 1 { selectedWeekIndex += 1 }
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.headline)
+                VStack(spacing: 0) {
+                    ForEach(dayOrder.indices, id: \.self) { i in
+                        dayRow(day: dayOrder[i], week: week, weekIdx: weekIdx)
+                        if i < dayOrder.count - 1 {
+                            Divider().padding(.leading, 48)
+                        }
+                    }
+                }
+                .background(.background.secondary)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .disabled(selectedWeekIndex >= appState.allWeeks.count - 1)
+        } else {
+            Text(weekIdx < 0 ? "Before program start" : "End of program")
+                .font(.caption).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, minHeight: 80)
+                .background(.background.secondary)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
-    // MARK: - Day List
-
-    private func weekDayList(week: ProgramWeek, weekIndex: Int) -> some View {
-        List {
-            ForEach(dayOrder, id: \.self) { day in
-                let sessions = week.schedule[day] ?? []
-                dayRow(day: day, sessions: sessions, week: week, weekIndex: weekIndex)
-            }
-        }
-        .listStyle(.insetGrouped)
-    }
-
-    private func dayRow(day: String, sessions: [ProgramSession], week: ProgramWeek, weekIndex: Int) -> some View {
-        let isToday = day == appState.todayDayName && weekIndex == (appState.currentWeekIndex ?? -1)
+    private func dayRow(day: String, week: ProgramWeek, weekIdx: Int) -> some View {
+        let sessions = week.schedule[day] ?? []
+        let isToday = day == appState.todayDayName && weekIdx == (appState.currentWeekIndex ?? -1)
 
         return Button {
-            if !sessions.isEmpty {
-                selectedDay = DaySelection(weekIndex: weekIndex, dayName: day)
-            }
+            guard !sessions.isEmpty else { return }
+            AppHaptics.light()
+            selectedDay = DaySelection(weekIndex: weekIdx, dayName: day)
         } label: {
             HStack(spacing: 12) {
-                // Day name
                 Text(day.prefix(3))
                     .font(.subheadline)
                     .fontWeight(isToday ? .bold : .regular)
@@ -207,54 +293,52 @@ struct ProgramView: View {
 
                 if sessions.isEmpty {
                     HStack(spacing: 5) {
-                        Image(systemName: "battery.100.bolt")
-                            .foregroundStyle(.green)
-                        Text("Rest")
-                            .foregroundStyle(.secondary)
+                        Image(systemName: "battery.100.bolt").foregroundStyle(.green)
+                        Text("Rest").foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
                 } else {
-                    // Modality chips
-                    HStack(spacing: 6) {
-                        ForEach(Array(sessions.enumerated()), id: \.offset) { _, session in
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(sessions.indices, id: \.self) { i in
+                            let session = sessions[i]
                             let key = appState.makeSessionKey(
-                                weekNumber: week.weekNumber, dayName: day, index: 0
-                            )
+                                weekNumber: week.weekNumber, dayName: day, index: i)
                             let done = appState.isSessionComplete(key)
-                            HStack(spacing: 4) {
-                                if done {
-                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                                } else {
-                                    Image(systemName: ModalityStyle.icon(for: session.modality))
-                                        .foregroundStyle(ModalityStyle.color(for: session.modality))
-                                }
-                                Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
+                            HStack(spacing: 6) {
+                                Image(systemName: done ? "checkmark.circle.fill"
+                                                       : ModalityStyle.icon(for: session.modality))
+                                    .foregroundStyle(done ? .green
+                                                          : ModalityStyle.color(for: session.modality))
+                                    .font(.caption)
+                                Text(session.archetype?.name
+                                     ?? ModalityStyle.label(for: session.modality))
+                                    .font(.subheadline)
                                     .foregroundStyle(done ? .secondary : .primary)
                             }
-                            .font(.subheadline)
                         }
                     }
                 }
 
                 Spacer()
-
                 if !sessions.isEmpty {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(isToday ? Color.blue.opacity(0.06) : Color.clear)
         }
         .buttonStyle(.plain)
-        .listRowBackground(isToday ? Color.blue.opacity(0.06) : Color.clear)
     }
 
     // MARK: - Empty States
 
     private var loadingView: some View {
-        VStack(spacing: 16) { ProgressView(); Text("Loading program…").foregroundStyle(.secondary) }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 16) {
+            ProgressView()
+            Text("Loading program…").foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var noProgramView: some View {
@@ -262,8 +346,7 @@ struct ProgramView: View {
             Image(systemName: "calendar.badge.plus")
                 .font(.system(size: 64))
                 .foregroundStyle(.blue.gradient)
-            Text("No Program")
-                .font(.title2).fontWeight(.medium)
+            Text("No Program").font(.title2).fontWeight(.medium)
             Text("Create a training program to get started.")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -293,7 +376,7 @@ struct ProgramView: View {
         var segments: [PhaseSegment] = []
         var current: PhaseSegment? = nil
         for (i, week) in weeks.enumerated() {
-            let phase = week.isDeload ? "deload" : week.phase
+            let phase = week.phase   // isDeload stays within the parent phase, matching web app
             if phase == current?.phase {
                 current = PhaseSegment(phase: phase, weekIndices: (current?.weekIndices ?? []) + [i])
             } else {
@@ -314,15 +397,16 @@ private struct DaySessionsSheet: View {
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-
     @State private var selectedSession: SessionWithKey? = nil
 
     var body: some View {
         NavigationStack {
             List {
                 let sessions = week.schedule[dayName] ?? []
-                ForEach(Array(sessions.enumerated()), id: \.offset) { i, session in
-                    let key = appState.makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i)
+                ForEach(sessions.indices, id: \.self) { i in
+                    let session = sessions[i]
+                    let key = appState.makeSessionKey(
+                        weekNumber: week.weekNumber, dayName: dayName, index: i)
                     Button {
                         selectedSession = SessionWithKey(session: session, key: key)
                     } label: {
@@ -355,12 +439,9 @@ private struct DaySessionsSheet: View {
                     .foregroundStyle(done ? .secondary : .primary)
                 HStack(spacing: 8) {
                     Text(ModalityStyle.label(for: session.modality))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondary)
                     if let mins = session.archetype?.durationEstimateMinutes {
-                        Text("· \(mins) min")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Text("· \(mins) min").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -368,80 +449,6 @@ private struct DaySessionsSheet: View {
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
         .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Injury Management Sheet
-
-private struct InjuryManagementSheet: View {
-    @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
-    @State private var showAddCustom = false
-    @State private var newCustom = ""
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section("Active Injuries") {
-                    ForEach(appState.injuryFlagDefs) { flag in
-                        Toggle(isOn: Binding(
-                            get: { appState.profile.injuryFlags.contains(flag.id) },
-                            set: { on in
-                                if on { appState.profile.injuryFlags.append(flag.id) }
-                                else { appState.profile.injuryFlags.removeAll { $0 == flag.id } }
-                            }
-                        )) {
-                            VStack(alignment: .leading) {
-                                Text(flag.name)
-                                if let desc = flag.description {
-                                    Text(desc).font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    ForEach(appState.profile.customInjuryFlags) { custom in
-                        HStack {
-                            Text(custom.description)
-                            Spacer()
-                            Image(systemName: "checkmark").foregroundStyle(.orange)
-                        }
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                appState.profile.customInjuryFlags.removeAll { $0.id == custom.id }
-                            } label: { Label("Remove", systemImage: "trash") }
-                        }
-                    }
-                    Button { showAddCustom = true } label: {
-                        Label("Add Custom Injury", systemImage: "plus")
-                    }
-                }
-
-                Section {
-                    Button("Save & Close") {
-                        Task {
-                            await appState.saveProfile()
-                            dismiss()
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .foregroundStyle(.blue)
-                }
-            }
-            .navigationTitle("Manage Injuries")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
-            }
-            .alert("Add Injury", isPresented: $showAddCustom) {
-                TextField("Describe the injury", text: $newCustom)
-                Button("Add") {
-                    let flag = CustomInjuryFlag(id: UUID().uuidString, description: newCustom)
-                    appState.profile.customInjuryFlags.append(flag)
-                    newCustom = ""
-                }
-                Button("Cancel", role: .cancel) { newCustom = "" }
-            }
-        }
     }
 }
 

@@ -7,7 +7,6 @@ struct TodayView: View {
     @State private var selectedSession: (session: ProgramSession, key: String)? = nil
     @State private var dayOffset: Int = 0          // 0 = today, ±n = days from today
     @State private var dragOffset: CGFloat = 0
-    @State private var isAnimating: Bool = false
     @State private var lockedAdjacentOffset: Int? = nil  // the peek card's day, locked at drag start
     @ScaledMetric(relativeTo: .body) private var sessionsListHeight: CGFloat = 256
 
@@ -24,15 +23,15 @@ struct TodayView: View {
         lockedAdjacentOffset ?? dayOffset + (dragOffset <= 0 ? 1 : -1)
     }
 
-    private var showPeek: Bool { dragOffset != 0 || isAnimating }
+    private var showPeek: Bool { dragOffset != 0 }
 
     private func dateFor(_ offset: Int) -> Date {
         Calendar.current.date(byAdding: .day, value: offset, to: Date()) ?? Date()
     }
 
     private func sessionsFor(_ offset: Int) -> [(session: ProgramSession, sessionKey: String)] {
-        guard let week = appState.currentWeek else { return [] }
         let date = dateFor(offset)
+        guard let week = appState.week(for: date) else { return [] }
         let dayName = weekdayNames[Calendar.current.component(.weekday, from: date) - 1]
         return (week.schedule[dayName] ?? []).enumerated().map { (i, s) in
             (session: s, sessionKey: appState.makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i))
@@ -42,7 +41,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if appState.isLoadingProgram {
+                if appState.isLoadingProgram && appState.serverProgram == nil {
                     loadingView
                 } else if appState.serverProgram?.currentProgram == nil {
                     noProgramView
@@ -52,6 +51,7 @@ struct TodayView: View {
             }
             .navigationTitle("Dashboard")
             .navigationBarTitleDisplayMode(.large)
+            .appTabStyle()
             .sheet(item: Binding(
                 get: { selectedSession.map { SessionSheetItem(session: $0.session, key: $0.key) } },
                 set: { if $0 == nil { selectedSession = nil } }
@@ -60,9 +60,13 @@ struct TodayView: View {
                     .environmentObject(appState)
             }
             .refreshable {
-                dayOffset = 0
+                AppHaptics.light()
+                async let delay: () = Task.sleep(nanoseconds: 600_000_000)
                 await sync.syncAll()
                 await appState.loadAll()
+                _ = try? await delay
+                dayOffset = 0
+                AppHaptics.success()
             }
             .task {
                 if appState.serverProgram == nil {
@@ -148,37 +152,34 @@ struct TodayView: View {
             }
             .clipped()
             .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 20)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 10)
                     .onChanged { value in
-                        guard !isAnimating else { return }
                         let h = value.translation.width
                         guard abs(h) > abs(value.translation.height) else { return }
                         if lockedAdjacentOffset == nil {
                             lockedAdjacentOffset = dayOffset + (h < 0 ? 1 : -1)
                         }
-                        dragOffset = h * 0.78
+                        dragOffset = h
                     }
                     .onEnded { value in
                         let h = value.translation.width
-                        guard !isAnimating else { return }
-                        guard abs(h) > abs(value.translation.height), abs(h) > 50 else {
+                        guard abs(h) > abs(value.translation.height),
+                              abs(value.predictedEndTranslation.width) > AppMetrics.swipeThreshold
+                              || abs(value.velocity.width) > AppMetrics.swipeVelocityThreshold else {
                             lockedAdjacentOffset = nil
-                            withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
-                                dragOffset = 0
-                            }
+                            withAnimation(AppAnimation.springStandard) { dragOffset = 0 }
                             return
                         }
-                        isAnimating = true
                         let goNext = h < 0
-                        withAnimation(.easeInOut(duration: 0.32)) {
+                        AppHaptics.soft()
+                        withAnimation(AppAnimation.springSnappy) {
                             dragOffset = goNext ? -exitDistance : exitDistance
                         }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                             dayOffset += goNext ? 1 : -1
                             dragOffset = 0
                             lockedAdjacentOffset = nil
-                            isAnimating = false
                         }
                     }
             )
@@ -221,10 +222,11 @@ struct TodayView: View {
                     if sessions.isEmpty {
                         restDayCardView(dayOff: dayOff)
                     } else {
-                        ForEach(Array(sessions.enumerated()), id: \.offset) { _, pair in
+                        ForEach(sessions, id: \.sessionKey) { pair in
                             sessionCard(pair.session, key: pair.sessionKey)
                                 .onTapGesture {
                                     guard interactive else { return }
+                                    AppHaptics.light()
                                     selectedSession = (session: pair.session, key: pair.sessionKey)
                                 }
                         }

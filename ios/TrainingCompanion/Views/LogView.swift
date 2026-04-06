@@ -19,6 +19,7 @@ struct LogView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
+                .onChange(of: selectedSegment) { _ in AppHaptics.selection() }
 
                 Divider()
 
@@ -29,6 +30,7 @@ struct LogView: View {
                 }
             }
             .navigationTitle("Log")
+            .appTabStyle()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if selectedSegment == 0 {
@@ -55,8 +57,12 @@ struct LogView: View {
                     .environmentObject(appState)
             }
             .refreshable {
+                AppHaptics.light()
+                async let delay: () = Task.sleep(nanoseconds: 600_000_000)
                 await appState.loadRecentSessionLogs()
                 await appState.loadRecentBioLogs()
+                _ = try? await delay
+                AppHaptics.success()
             }
         }
     }

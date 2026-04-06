@@ -382,3 +382,246 @@ extension AppState {
         try await api.generateProgram(request)
     }
 }
+
+// MARK: - Program Settings Sheet (edit & regenerate an existing program)
+
+@MainActor
+private final class SettingsState: ObservableObject {
+    @Published var selectedGoalId: String
+    @Published var numWeeks: Int
+    @Published var startDate: Date
+    @Published var eventDate: Date?
+    @Published var constraints: GenerateConstraints
+
+    @Published var isGenerating = false
+    @Published var generationError: String? = nil
+    @Published var didSucceed = false
+
+    init(program: ServerProgram, weeks: [ProgramWeek], profile: UserProfile) {
+        let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
+        selectedGoalId = program.sourceGoalIds.first ?? ""
+        numWeeks = weeks.count
+        startDate = program.programStartDate.flatMap { dayFmt.date(from: $0) } ?? Date()
+        eventDate = program.eventDate.flatMap { dayFmt.date(from: $0) }
+
+        var c = GenerateConstraints()
+        c.trainingLevel = profile.trainingLevel
+        c.equipment = profile.equipment
+        c.injuryFlags = profile.injuryFlags
+        c.daysPerWeek = max(
+            weeks.first.map { w in
+                ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+                    .filter { !(w.schedule[$0] ?? []).isEmpty }.count
+            } ?? 4, 2)
+        c.sessionTimeMinutes = 60
+        c.phase = weeks.first?.phase
+        constraints = c
+    }
+}
+
+struct ProgramSettingsSheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
+
+    @StateObject private var settings: SettingsState = {
+        // Placeholder — real init happens in .task below via onAppear trick.
+        SettingsState(program: ServerProgram(currentProgram: nil, programStartDate: nil,
+                                             eventDate: nil, sourceGoalIds: []),
+                      weeks: [], profile: .default)
+    }()
+    @State private var isInitialized = false
+    @State private var showConfirm = false
+
+    private let weekOptions = [4, 6, 8, 10, 12, 16, 20, 24]
+    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let phases = ["base", "build", "peak", "taper"]
+
+    var body: some View {
+        NavigationStack {
+            if !isInitialized {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Form {
+                    goalSection
+                    scheduleSection
+                    constraintsSection
+                    generateSection
+                    if let err = settings.generationError {
+                        Section {
+                            Label(err, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.orange).font(.footnote)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Program Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
+        }
+        .task {
+            await appState.loadGoalsIfNeeded()
+            await appState.loadInjuryFlagsIfNeeded()
+            if let prog = appState.serverProgram {
+                let fresh = SettingsState(program: prog,
+                                          weeks: appState.allWeeks,
+                                          profile: appState.profile)
+                settings.selectedGoalId = fresh.selectedGoalId
+                settings.numWeeks = fresh.numWeeks
+                settings.startDate = fresh.startDate
+                settings.eventDate = fresh.eventDate
+                settings.constraints = fresh.constraints
+            }
+            isInitialized = true
+        }
+        .onChange(of: settings.didSucceed) { _, succeeded in
+            if succeeded { dismiss() }
+        }
+    }
+
+    // MARK: - Sections
+
+    private var goalSection: some View {
+        Section("Goal") {
+            if appState.goals.isEmpty {
+                ProgressView()
+            } else {
+                Picker("Goal", selection: $settings.selectedGoalId) {
+                    ForEach(appState.goals) { goal in
+                        Text(goal.name).tag(goal.id)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
+    }
+
+    private var scheduleSection: some View {
+        Section("Schedule") {
+            Picker("Duration", selection: $settings.numWeeks) {
+                ForEach(weekOptions, id: \.self) { Text("\($0) weeks").tag($0) }
+            }
+            DatePicker("Start Date", selection: $settings.startDate,
+                       displayedComponents: .date)
+            Toggle("Has Target Event", isOn: Binding(
+                get: { settings.eventDate != nil },
+                set: { if $0 { settings.eventDate = Date().addingTimeInterval(60*60*24*84) }
+                      else { settings.eventDate = nil } }
+            ))
+            if settings.eventDate != nil {
+                DatePicker("Event Date",
+                           selection: Binding(get: { settings.eventDate ?? Date() },
+                                              set: { settings.eventDate = $0 }),
+                           displayedComponents: .date)
+            }
+            Stepper("Days per Week: \(settings.constraints.daysPerWeek)",
+                    value: $settings.constraints.daysPerWeek, in: 2...7)
+            Stepper("Session Duration: \(settings.constraints.sessionTimeMinutes) min",
+                    value: $settings.constraints.sessionTimeMinutes, in: 20...180, step: 10)
+        }
+    }
+
+    private var constraintsSection: some View {
+        Group {
+            Section("Training Level") {
+                Picker("Level", selection: $settings.constraints.trainingLevel) {
+                    ForEach(trainingLevels, id: \.self) { Text($0.capitalized).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Starting Phase") {
+                Picker("Phase", selection: Binding(
+                    get: { settings.constraints.phase ?? "base" },
+                    set: { settings.constraints.phase = $0 }
+                )) {
+                    ForEach(phases, id: \.self) { Text($0.capitalized).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Equipment") {
+                ForEach(EquipmentItem.all) { item in
+                    Toggle(item.label, isOn: Binding(
+                        get: { settings.constraints.equipment.contains(item.id) },
+                        set: { on in
+                            if on { settings.constraints.equipment.append(item.id) }
+                            else { settings.constraints.equipment.removeAll { $0 == item.id } }
+                        }
+                    ))
+                }
+            }
+
+            Section("Active Injuries") {
+                ForEach(appState.injuryFlagDefs) { flag in
+                    Toggle(flag.name, isOn: Binding(
+                        get: { settings.constraints.injuryFlags.contains(flag.id) },
+                        set: { on in
+                            if on { settings.constraints.injuryFlags.append(flag.id) }
+                            else { settings.constraints.injuryFlags.removeAll { $0 == flag.id } }
+                        }
+                    ))
+                }
+            }
+        }
+    }
+
+    private var generateSection: some View {
+        Section {
+            Button {
+                showConfirm = true
+            } label: {
+                HStack {
+                    Spacer()
+                    if settings.isGenerating {
+                        ProgressView()
+                    } else {
+                        Label("Regenerate Program", systemImage: "sparkles")
+                            .fontWeight(.semibold)
+                    }
+                    Spacer()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(settings.isGenerating || settings.selectedGoalId.isEmpty)
+        } footer: {
+            Text("This replaces your current program. Completed sessions are preserved.")
+                .font(.caption)
+        }
+        .confirmationDialog("Regenerate Program?",
+                             isPresented: $showConfirm,
+                             titleVisibility: .visible) {
+            Button("Regenerate", role: .destructive) {
+                Task { await regenerate() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your current program and all logged session progress will be permanently deleted and replaced with the new settings.")
+        }
+    }
+
+    // MARK: - Generation
+
+    private func regenerate() async {
+        settings.isGenerating = true
+        settings.generationError = nil
+        let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
+        let request = GenerateProgramRequest(
+            goalId: settings.selectedGoalId,
+            constraints: settings.constraints,
+            numWeeks: settings.numWeeks,
+            startDate: dayFmt.string(from: settings.startDate),
+            eventDate: settings.eventDate.map { dayFmt.string(from: $0) }
+        )
+        do {
+            try await appState.generateProgramViaAPI(request)
+            await appState.loadProgram()
+            settings.didSucceed = true
+        } catch {
+            settings.generationError = "Regeneration failed. Please try again."
+        }
+        settings.isGenerating = false
+    }
+}

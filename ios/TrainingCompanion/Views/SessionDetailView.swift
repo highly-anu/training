@@ -169,6 +169,7 @@ struct SessionDetailView: View {
                     appState.undoSessionComplete(sessionKey: sessionKey)
                 } else {
                     await appState.markSessionComplete(sessionKey: sessionKey)
+                    AppHaptics.success()
                 }
                 isSaving = false
             }
