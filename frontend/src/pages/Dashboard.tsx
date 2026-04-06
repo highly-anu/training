@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wand2, ChevronRight, Flag } from 'lucide-react'
@@ -28,6 +28,15 @@ export function Dashboard() {
   const { selectedWeekIndex: weekIndex, setSelectedWeekIndex } = useUiStore()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const eventDate = useProgramStore((s) => s.eventDate)
+  const programStartDate = useProgramStore((s) => s.programStartDate)
+
+  // Auto-select the week containing today when the program or start date changes
+  useEffect(() => {
+    if (!programStartDate || !program) return
+    const dayOffset = differenceInCalendarDays(new Date(), parseISO(programStartDate))
+    const todayWeekIndex = Math.max(0, Math.min(Math.floor(dayOffset / 7), program.weeks.length - 1))
+    setSelectedWeekIndex(todayWeekIndex)
+  }, [programStartDate, program?.weeks.length])
 
   const daysToEvent = eventDate ? differenceInCalendarDays(parseISO(eventDate), new Date()) : null
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
