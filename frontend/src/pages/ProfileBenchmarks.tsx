@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, X } from 'lucide-react'
+import { User, X, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { EquipmentPicker } from '@/components/builder/EquipmentPicker'
 import { InjuryPicker } from '@/components/builder/InjuryPicker'
 import { LevelBar } from '@/components/benchmarks/LevelBar'
 import { useProfileStore } from '@/store/profileStore'
+import { useAuthStore } from '@/store/authStore'
 import { useBenchmarks } from '@/api/benchmarks'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import type { CustomInjuryFlag, EquipmentId, InjuryFlagId, TrainingLevel } from '@/api/types'
@@ -93,13 +96,16 @@ function BenchCard({ bench }: { bench: { id: string; name: string; unit: string;
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export function ProfileBenchmarks() {
+  const navigate = useNavigate()
   const {
     trainingLevel, equipment, injuryFlags, customInjuryFlags,
     setTrainingLevel, setEquipment, toggleInjuryFlag,
     addCustomInjuryFlag, removeCustomInjuryFlag,
   } = useProfileStore()
+  const { user, savedAccounts, signOutCurrent, switchToAccount } = useAuthStore()
   const { data: benchmarks = [], isLoading: benchmarksLoading } = useBenchmarks()
   const [activeTab, setActiveTab] = useState<'setup' | 'benchmarks'>('setup')
+  const [switching, setSwitching] = useState(false)
 
   return (
     <motion.div
@@ -133,6 +139,57 @@ export function ProfileBenchmarks() {
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'setup' && (
           <div className="p-6 space-y-8">
+            {/* Account */}
+            {user && (
+              <section className="space-y-2">
+                <Label className="text-sm font-semibold">Account</Label>
+                <div className="flex items-center gap-2 max-w-sm">
+                  {savedAccounts.length > 1 ? (
+                    <Select
+                      value={user.email ?? ''}
+                      onValueChange={async (val) => {
+                        if (val === '__add__') { navigate('/login'); return }
+                        if (val === user.email) return
+                        setSwitching(true)
+                        try { await switchToAccount(val) } finally { setSwitching(false) }
+                      }}
+                      disabled={switching}
+                    >
+                      <SelectTrigger className="flex-1 text-sm font-mono">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {savedAccounts.map((a) => (
+                          <SelectItem key={a.email} value={a.email} className="text-sm font-mono">
+                            {a.email}
+                          </SelectItem>
+                        ))}
+                        <SelectSeparator />
+                        <SelectItem value="__add__" className="text-sm text-muted-foreground">
+                          Add another account →
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="flex-1 text-sm font-mono text-muted-foreground truncate px-3 py-2 rounded-md border border-transparent bg-muted/40">
+                      {user.email}
+                    </span>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={signOutCurrent}
+                    className="text-muted-foreground hover:text-destructive shrink-0"
+                  >
+                    <LogOut className="size-4 mr-1.5" />
+                    Log out
+                  </Button>
+                </div>
+              </section>
+            )}
+
+            <Separator />
+
             {/* Training level */}
             <section className="space-y-2 max-w-xs">
               <Label className="text-sm font-semibold">Training Level</Label>
