@@ -211,6 +211,7 @@ def generate(
                     injury_flags_data, phase, week_in_phase,
                     recent_arch_ids, recent_ex_ids,
                     collect_trace=include_trace,
+                    exercises_by_package=data.get('exercises_by_package'),
                 )
 
                 session_trace: dict | None = None

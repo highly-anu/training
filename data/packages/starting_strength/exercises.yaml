@@ -1,0 +1,580 @@
+exercises:
+- id: back_squat
+  name: Back Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - hip_hinge
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - front_squat
+  - box_squat
+  - overhead_squat
+  - barbell_complex
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  - lumbar_disc
+  progressions:
+    load: add_2.5_5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: front_squat
+  scaling_down:
+  - box_squat
+  - goblet_squat
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Foundational lower-body strength movement. Horsemen standard: 2×BW squat.
+    Starting Strength uses 3×5 linear progression as primary novice driver.
+
+    '
+  starting_load_kg:
+    novice: 40
+    intermediate: 70
+    advanced: 100
+    elite: 130
+  weekly_increment_kg: 2.5
+- id: front_squat
+  name: Front Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - back_squat
+  - bracing_mechanics
+  unlocks:
+  - overhead_squat
+  - squat_clean
+  - hang_squat_clean
+  - thruster
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - wrist_injury
+  - shoulder_impingement
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: overhead_squat
+  scaling_down:
+  - back_squat
+  - box_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  - Starting Strength
+  notes: 'Featured prominently in Gym Jones Operator programs (10×2 @ 1-min rest)
+    and Horsemen strength cycles. Horsemen standard: 1.5×BW front squat. Requires
+    wrist mobility and upright torso.
+
+    '
+  starting_load_kg:
+    novice: 30
+    intermediate: 55
+    advanced: 80
+    elite: 110
+  weekly_increment_kg: 2.5
+- id: box_squat
+  name: Box Squat
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  - box
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  - hip_hinge
+  requires:
+  - back_squat
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - back_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Starting Strength
+  notes: 'Posterior-chain emphasis squat variant. Pausing on box removes stretch reflex
+    and increases demand on hip extensors. Useful for athletes with poor squat depth
+    mechanics or as powerlifting variation.
+
+    '
+- id: deadlift
+  name: Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - romanian_deadlift
+  - sumo_deadlift
+  - deficit_deadlift
+  - power_clean
+  - barbell_row
+  - pendlay_row
+  - good_morning
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_session_novice
+    volume: progress_1x5_to_3x3
+    complexity: sumo_deadlift
+  scaling_down:
+  - kb_deadlift
+  - romanian_deadlift
+  typical_volume:
+    sets: 1
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Horsemen standard: 2.5×BW deadlift. Starting Strength programs 1×5 as
+    novice primary. Gym Jones tests 1RM and builds training percentages from it (80%
+    common). King of posterior-chain loading; prerequisite for all Olympic lifting
+    derivatives.
+
+    '
+  starting_load_kg:
+    novice: 50
+    intermediate: 90
+    advanced: 130
+    elite: 170
+  weekly_increment_kg: 5.0
+- id: romanian_deadlift
+  name: Romanian Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - deadlift
+  unlocks:
+  - good_morning
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - Starting Strength
+  - Gym Jones
+  notes: 'Gym Jones programs SLDL (stiff-leg DL / RDL) at 95–135# for 3×10 in Accumulation
+    sessions. Emphasizes hamstring length and posterior-chain resilience. Hip hingeing
+    with a neutral spine under load; bar remains close to legs.
+
+    '
+  starting_load_kg:
+    novice: 40
+    intermediate: 75
+    advanced: 110
+    elite: 140
+  weekly_increment_kg: 2.5
+- id: sumo_deadlift
+  name: Sumo Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - deadlift
+  unlocks:
+  - deficit_deadlift
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - knee_meniscus_post_op
+  progressions:
+    load: add_5kg_per_session
+    volume: progress_1x5_to_3x3
+  scaling_down:
+  - deadlift
+  typical_volume:
+    sets: 3
+    reps: 3
+  sources:
+  - Starting Strength
+  notes: 'Wide-stance deadlift variant shifting more demand to hip abductors and quads.
+    Shorter range of motion than conventional; suits athletes with longer torsos or
+    limited hip mobility.
+
+    '
+  starting_load_kg:
+    novice: 50
+    intermediate: 90
+    advanced: 130
+    elite: 170
+- id: bench_press
+  name: Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - close_grip_bench
+  - floor_press
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - tennis_elbow
+  progressions:
+    load: add_2.5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: close_grip_bench
+  scaling_down:
+  - floor_press
+  - push_press
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  notes: 'Horsemen standard: 1.5×BW bench press. Starting Strength uses 3×5 linear
+    progression as novice primary horizontal pressing movement.
+
+    '
+  starting_load_kg:
+    novice: 35
+    intermediate: 60
+    advanced: 90
+    elite: 120
+  weekly_increment_kg: 2.5
+- id: close_grip_bench
+  name: Close-Grip Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires:
+  - bench_press
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - bench_press
+  - floor_press
+  typical_volume:
+    sets: 3
+    reps: 6
+  sources:
+  - Starting Strength
+  notes: 'Grip inside shoulder width, elbows tucked. Shifts demand toward triceps
+    and medial deltoid. Used as tricep-dominant pressing accessory. Grip narrower
+    than shoulder-width but not so narrow as to cause wrist deviation.
+
+    '
+- id: strict_press
+  name: Strict Press (Overhead)
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - push_press
+  - push_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - neck_strain
+  - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: push_press
+  scaling_down:
+  - kb_press_single
+  - kb_press_double
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  notes: 'Horsemen standard: 1×BW military press. Starting Strength uses 3×5 linear
+    progression. No leg drive permitted; pure upper-body pressing strength. Foundational
+    prerequisite for all jerk and push-press variants.
+
+    '
+  starting_load_kg:
+    novice: 25
+    intermediate: 40
+    advanced: 60
+    elite: 80
+  weekly_increment_kg: 1.25
+- id: barbell_row
+  name: Barbell Row (Bent Over)
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires:
+  - deadlift
+  - bracing_mechanics
+  unlocks:
+  - pendlay_row
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x5_to_5x5
+    complexity: pendlay_row
+  scaling_down:
+  - kb_row_single
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Featured in the Gym Jones / Horsemen Six-Way Barbell Complex (6 reps). Starting
+    Strength uses as the primary horizontal pull for novice programming. Hip-hinged
+    torso roughly parallel to floor; bar pulled into lower chest.
+
+    '
+- id: pendlay_row
+  name: Pendlay Row
+  category: barbell
+  modality:
+  - max_strength
+  - power
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  - ballistic
+  requires:
+  - barbell_row
+  - deadlift
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - barbell_row
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Starting Strength
+  notes: 'Bar returns to floor each rep (dead-stop). Torso parallel to floor, explosive
+    pull. Removes momentum from barbell row and demands greater power per rep. Named
+    for Glenn Pendlay.
+
+    '
+- id: power_clean
+  name: Power Clean
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - hip_hinge
+  - deadlift
+  unlocks:
+  - hang_power_clean
+  - squat_clean
+  - hang_squat_clean
+  - barbell_complex
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: squat_clean
+  scaling_down:
+  - hang_power_clean
+  - deadlift
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Starting Strength programs 1×5 power clean as the primary upper-back and
+    power movement on alternate days. Gym Jones references clean triplets (EMOM 10
+    min). Horsemen Olympic Day programs cleans in wave patterns at 80–90%.
+
+    '
+  starting_load_kg:
+    novice: 30
+    intermediate: 50
+    advanced: 75
+    elite: 100
+  weekly_increment_kg: 2.5
+- id: good_morning
+  name: Good Morning
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - deadlift
+  - romanian_deadlift
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - neck_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - romanian_deadlift
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Starting Strength
+  notes: 'Bar on upper traps, hinge forward until torso is roughly parallel to floor,
+    return to standing. Develops hamstring and spinal erector strength in a lengthened
+    position. Starting Strength programs as posterior-chain accessory. Moderate loads
+    for high reps; not a max-effort movement.
+
+    '

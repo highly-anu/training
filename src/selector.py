@@ -12,7 +12,7 @@ from typing import Optional
 #   'and'      — exercise needs ALL of the patterns (compound movement)
 #   'category' — match by exercise category instead of movement_patterns
 # ---------------------------------------------------------------------------
-_mp_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'movement_patterns.yaml')
+_mp_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'commons', 'movement_patterns.yaml')
 _PATTERN_ALIASES: dict[str, tuple] = {
     k: (v['mode'], v['patterns'])
     for k, v in _yaml.safe_load(open(_mp_path))['aliases'].items()
@@ -459,6 +459,7 @@ def populate_session(
     recent_ex_ids: list | None = None,
     collect_trace: bool = False,
     forced_archetype: dict | None = None,
+    exercises_by_package: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -504,6 +505,18 @@ def populate_session(
                 'slots': [],
             }
         return result
+
+    # Overlay package-specific exercise definitions (prescription fields, etc.)
+    arch_package = arch.get('_package')
+    if arch_package and exercises_by_package and arch_package in exercises_by_package:
+        pkg_exs = exercises_by_package[arch_package]
+        exercises = {
+            **exercises,
+            **{
+                ex_id: {**exercises[ex_id], **pkg_ex} if ex_id in exercises else pkg_ex
+                for ex_id, pkg_ex in pkg_exs.items()
+            },
+        }
 
     # Populate slots
     used_ex_ids = list(recent_ex_ids or [])

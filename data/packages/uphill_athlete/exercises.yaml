@@ -1,0 +1,142 @@
+exercises:
+- id: run_easy
+  name: Easy Run (Zone 1–2)
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires: []
+  unlocks:
+  - run_tempo
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    duration_sec: 4500
+  sources:
+  - Uphill Athlete
+  - CrossFit Endurance
+  notes: 'Conversational pace; heart rate at or below aerobic threshold (AeT), typically
+    <135 bpm or Maffetone (180 − age). Uphill Athlete: 80% of all aerobic volume
+    at this intensity. Gym Jones recovery days: 60–120 min at conversational pace.
+    Primary aerobic base builder. Nasal breathing is a useful intensity governor.
+
+    '
+- id: run_tempo
+  name: Tempo Run (Zone 3–4)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires:
+  - run_easy
+  unlocks:
+  - run_interval
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_distance
+  scaling_down:
+  - run_easy
+  typical_volume:
+    duration_sec: 2400
+    distance_m: 5000
+  sources:
+  - Uphill Athlete
+  - CrossFit Endurance
+  notes: 'Comfortably hard; can speak in short sentences. Near or at lactate threshold
+    2 (LT2) pace. CrossFit Endurance: threshold intervals 3–5 × 8 min at Zone 4.
+    Uphill Athlete base-to-build phase transition increases this zone''s proportion
+    from 10% to 20% of weekly volume.
+
+    '
+- id: bike_easy
+  name: Easy Bike (Zone 1–2)
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - bike
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks:
+  - bike_interval
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    duration_sec: 3600
+  sources:
+  - Uphill Athlete
+  - CrossFit Endurance
+  notes: 'Stationary or outdoor. Preferred aerobic rehabilitation modality when running
+    is contraindicated (knee post-op, lower leg injuries). Uphill Athlete uses bike
+    for aerobic base when impact work is unavailable. Minimal joint load; high aerobic
+    adaptation per unit time.
+
+    '
+- id: ruck
+  name: Ruck (Loaded Walk / Run)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - durability
+  equipment:
+  - ruck_pack
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_pack_weight
+    volume: increase_distance
+  scaling_down:
+  - run_easy
+  typical_volume:
+    duration_sec: 5400
+    distance_m: 10000
+  sources:
+  - Horsemen
+  - Uphill Athlete
+  - Gym Jones
+  notes: 'Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation, 30kg
+    pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
+    recovery endurance hike: 90–120 min with 20–30# pack. Progressions: distance
+    first, then load, then speed. Simple, durable training modality requiring minimal
+    equipment.
+
+    '
