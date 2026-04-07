@@ -10,7 +10,7 @@ goals_served:
 sessions_per_week:
   aerobic_base: 4
   anaerobic_intervals: 1
-  max_strength: 1
+  strength_endurance: 1
 
 intensity_distribution:
   zone1_2_pct: 0.80

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, CalendarDays, Wand2, Flag, RotateCcw } from 'lucide-react'
-import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
+import { differenceInCalendarDays, differenceInWeeks, parseISO, format, addDays } from 'date-fns'
 import {
   Sheet,
   SheetContent,
@@ -9,10 +9,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
+import { useRegenerateFromWeek } from '@/api/programs'
 import type { GeneratedProgram } from '@/api/types'
 
 interface ProgramSettingsSheetProps {
@@ -22,6 +30,7 @@ interface ProgramSettingsSheetProps {
 export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false)
 
   const eventDate = useProgramStore((s) => s.eventDate)
   const programStartDate = useProgramStore((s) => s.programStartDate)
@@ -32,6 +41,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
   const setProgramStartDate = useProgramStore((s) => s.setProgramStartDate)
   const loadFromProgram = useBuilderStore((s) => s.loadFromProgram)
   const reset = useBuilderStore((s) => s.reset)
+  const regenerate = useRegenerateFromWeek()
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -45,7 +55,30 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     ? differenceInWeeks(parseISO(eventDate), new Date())
     : null
 
-  function handleRebuild() {
+  // Which week index does "tomorrow" fall in, based on the program start date?
+  const tomorrowWeekIdx = useMemo(() => {
+    if (!programStartDate) return 0
+    const tomorrow = addDays(new Date(), 1)
+    const days = differenceInCalendarDays(tomorrow, parseISO(programStartDate))
+    return Math.max(0, Math.floor(days / 7))
+  }, [programStartDate])
+
+  const weeksRemainingFromTomorrow = program.weeks.length - tomorrowWeekIdx
+  const canRegenerateFromTomorrow = weeksRemainingFromTomorrow > 0
+
+  function handleRebuildFromTomorrow() {
+    regenerate.mutate({
+      goalId: program.goal.id,
+      goalIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
+      goalWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
+      constraints: program.constraints,
+      numWeeks: weeksRemainingFromTomorrow,
+    })
+    setRebuildDialogOpen(false)
+    setOpen(false)
+  }
+
+  function handleRebuildFull() {
     loadFromProgram({
       goalIds: sourceGoalIds,
       goalWeights: sourceGoalWeights,
@@ -53,6 +86,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       numWeeks: program.weeks.length,
       eventDate,
     })
+    setRebuildDialogOpen(false)
     setOpen(false)
     navigate('/builder')
   }
@@ -175,7 +209,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
                 <Button
                   variant="outline"
                   className="w-full gap-2"
-                  onClick={handleRebuild}
+                  onClick={() => setRebuildDialogOpen(true)}
                 >
                   <Wand2 className="size-3.5" />
                   Rebuild Program
@@ -200,5 +234,55 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
         </div>
       </SheetContent>
     </Sheet>
+
+    <Dialog open={rebuildDialogOpen} onOpenChange={setRebuildDialogOpen}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Rebuild Program</DialogTitle>
+          <DialogDescription>
+            Choose how much of your program to replace. Sessions and data you've already logged are never affected.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 pt-1">
+          {/* Default / recommended option */}
+          <button
+            type="button"
+            disabled={!canRegenerateFromTomorrow || regenerate.isPending}
+            onClick={handleRebuildFromTomorrow}
+            className="w-full rounded-lg border-2 border-primary bg-primary/5 px-4 py-3 text-left transition-colors hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <p className="text-sm font-semibold text-primary">
+              {regenerate.isPending ? 'Generating…' : 'From tomorrow onwards'}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {canRegenerateFromTomorrow
+                ? `Keeps your completed sessions. Regenerates the remaining ${weeksRemainingFromTomorrow} week${weeksRemainingFromTomorrow !== 1 ? 's' : ''} using your current goal and constraints.`
+                : 'No weeks remaining to regenerate — your program is complete.'}
+            </p>
+          </button>
+
+          {/* Full rebuild option */}
+          <button
+            type="button"
+            onClick={handleRebuildFull}
+            className="w-full rounded-lg border border-border px-4 py-3 text-left transition-colors hover:bg-muted"
+          >
+            <p className="text-sm font-semibold">Rebuild entire program</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Opens the builder so you can change goals or constraints. Replaces all weeks from the start.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRebuildDialogOpen(false)}
+            className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

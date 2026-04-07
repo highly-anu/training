@@ -37,8 +37,9 @@ phase_sequence:
       maintenance (1×/week). Ruck and loaded carry training for expedition goals.
       Increase total weekly vertical gain.
     priority_override:
-      aerobic_base: 0.55
-      durability: 0.25
+      aerobic_base: 0.50
+      durability: 0.20
+      anaerobic_intervals: 0.10
       strength_endurance: 0.10
       mobility: 0.10
   - phase: peak
