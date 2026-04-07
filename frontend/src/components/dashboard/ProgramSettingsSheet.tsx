@@ -98,6 +98,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
@@ -284,5 +285,6 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
