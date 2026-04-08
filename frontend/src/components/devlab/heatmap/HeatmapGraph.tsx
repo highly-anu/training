@@ -150,11 +150,11 @@ export function HeatmapGraph({
         nodes = [...unconnected.slice(0, leftSplit), ...connected, ...unconnected.slice(leftSplit)]
       }
 
-      // Shrink nodes as needed so all fit in one row; cap at MAX_NODE_WIDTH
-      const nodeWidth = Math.min(
+      // Shrink nodes as needed so all fit in one row; cap at MAX_NODE_WIDTH; floor at 1 to avoid negative SVG rect
+      const nodeWidth = Math.max(1, Math.min(
         MAX_NODE_WIDTH,
         (availableWidth - (count - 1) * NODE_PAD) / count
-      )
+      ))
       const totalWidth = count * nodeWidth + (count - 1) * NODE_PAD
       const startX = SVG_PAD + (availableWidth - totalWidth) / 2
       const y = LAYER_Y[layer]

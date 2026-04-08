@@ -203,7 +203,10 @@ export interface ArchetypeSlot {
   slot_type: string
   sets?: number
   reps?: number | string
+  duration_sec?: number
+  distance_m?: number
   intensity?: string
+  intensity_pct_1rm?: number
   rest_sec?: number
   notes?: string
   skip_exercise?: boolean
@@ -225,6 +228,11 @@ export interface Archetype {
   slots: ArchetypeSlot[]
   sources: string[]
   notes?: string
+  scaling?: {
+    deload?: string
+    time_limited?: string
+    equipment_limited?: string
+  }
 }
 
 // ─── Exercise Load (per session assignment) ───────────────────────────────────
