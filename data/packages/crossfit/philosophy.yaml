@@ -22,8 +22,8 @@ bias:
   - anaerobic_intervals
   - strength_endurance
 avoid_with:
-  - starting_strength
-  - uphill_athlete
+  - max_strength
+  - aerobic_base
 required_equipment:
   - barbell
   - rack

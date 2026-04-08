@@ -24,8 +24,8 @@ bias:
   - mixed_modal_conditioning
   - durability
 avoid_with:
-  - starting_strength
-  - uphill_athlete
+  - max_strength
+  - aerobic_base
 required_equipment:
   - barbell
   - plates

@@ -18,8 +18,8 @@ bias:
   - movement_skill
   - mobility
 avoid_with:
-  - starting_strength
-  - crossfit
+  - max_strength
+  - mixed_modal_conditioning
 required_equipment:
   - open_space
   - jump_rope

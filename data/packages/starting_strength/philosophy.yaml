@@ -14,9 +14,9 @@ scope:
 bias:
   - max_strength
 avoid_with:
-  - crossfit
-  - uphill_athlete
-  - horsemen_gpp
+  - aerobic_base
+  - mixed_modal_conditioning
+  - strength_endurance
 required_equipment:
   - barbell
   - rack
