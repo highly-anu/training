@@ -1,0 +1,41 @@
+id: ido_portal
+name: "Ido Portal / Movement Culture"
+core_principles:
+  - movement_quality_precedes_loading_and_complexity
+  - joint_preparation_is_non_negotiable_before_loading
+  - skill_acquisition_isolation_to_integration_to_spontaneous_expression
+  - daily_practice_habits_matter_more_than_session_intensity
+  - complexity_and_novelty_are_forms_of_progression
+  - prerequisite_hierarchy_must_be_respected
+  - time_based_practice_over_rep_based_intensity
+  - improvisation_is_the_highest_expression_of_skill
+scope:
+  - mobility
+  - movement_skill
+  - relative_strength
+  - durability
+bias:
+  - movement_skill
+  - mobility
+avoid_with:
+  - max_strength
+  - mixed_modal_conditioning
+required_equipment:
+  - open_space
+  - jump_rope
+intensity_model: skill_based
+progression_philosophy: complexity_based
+sources:
+  - "data/portal/Ido Portal Floreio Routines.pdf"
+  - "plan.md section 1 (Ido Portal)"
+notes: >
+  Prerequisite hierarchy is strictly enforced: low bridge before high bridge,
+  basic handstand before handstand walk, simple movement before sequences,
+  sequences before improvisation (role work). Warm-up protocol is standardized
+  across all sessions: 5-min jump rope, wrists routine, squat clinic, shoulder
+  ROM and stabilization, 5-min joint mobility, scapula mobilization cool-down.
+  Rep schemes: light 6–10, standard 10–14, high-volume 14–30; time holds 10–30s;
+  continuous movement (role work) 2–5 min. Three locomotion levels (beginner /
+  intermediate / advanced) define session difficulty. Floreio and locomotion
+  patterns form the core archetypes. No barbell or heavy loading is prescribed —
+  open space and bodyweight are the primary tools.

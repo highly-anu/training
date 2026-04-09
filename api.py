@@ -63,32 +63,27 @@ def _all_goals() -> list[dict]:
 
 
 def _all_exercises() -> list[dict]:
+    global_index, _ = loader.load_all_exercises()
     result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'exercises', '*.yaml'))):
-        data = _load_yaml(path)
-        for ex in data.get('exercises', []):
-            # Ensure sources is always a list
-            if isinstance(ex.get('sources'), str):
-                ex['sources'] = [ex['sources']]
-            result.append(ex)
-    return result
+    for ex in global_index.values():
+        ex = dict(ex)
+        # Ensure sources is always a list
+        if isinstance(ex.get('sources'), str):
+            ex['sources'] = [ex['sources']]
+        result.append(ex)
+    return sorted(result, key=lambda e: e.get('id', ''))
 
 
 def _all_modalities() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
-        result.append(_load_yaml(path))
-    return result
+    return sorted(loader.load_all_modalities().values(), key=lambda m: m.get('id', ''))
 
 
 def _equipment_profiles() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'equipment_profiles.yaml'))
-    return raw.get('equipment_profiles', [])
+    return loader.load_equipment_profiles()
 
 
 def _injury_flags() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'injury_flags.yaml'))
-    return raw.get('injury_flags', [])
+    return list(loader.load_injury_flags().values())
 
 
 _BENCHMARK_CATEGORY_MAP = {
@@ -381,7 +376,7 @@ def create_modality():
     existing_ids = {m['id'] for m in _all_modalities()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Modality id '{body['id']}' already exists"}), 409
-    path = os.path.join(_DATA_DIR, 'modalities', f"{body['id']}.yaml")
+    path = os.path.join(_DATA_DIR, 'commons', 'modalities', f"{body['id']}.yaml")
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(body), 201
@@ -404,11 +399,8 @@ def get_benchmarks():
 
 @app.get('/api/frameworks')
 def get_frameworks():
-    result = []
-    fw_dir = os.path.join(_DATA_DIR, 'frameworks')
-    for path in sorted(glob.glob(os.path.join(fw_dir, '*.yaml'))):
-        result.append(_load_yaml(path))
-    return jsonify(result)
+    fw_dict = loader.load_all_frameworks()
+    return jsonify(sorted(fw_dict.values(), key=lambda fw: fw.get('id', '')))
 
 
 @app.get('/api/philosophies')
@@ -426,15 +418,12 @@ def get_ontology():
     """Lightweight static graph of the full ontology for heatmap visualization."""
     # Philosophies
     philosophies = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'philosophies', '*.yaml'))):
-        p = _load_yaml(path)
+    for p in loader.load_philosophies():
         philosophies.append({'id': p['id'], 'name': p.get('name', p['id'])})
 
     # Frameworks (with source_philosophy + modality links)
     frameworks = []
-    fw_dir = os.path.join(_DATA_DIR, 'frameworks')
-    for path in sorted(glob.glob(os.path.join(fw_dir, '*.yaml'))):
-        fw = _load_yaml(path)
+    for fw in sorted(loader.load_all_frameworks().values(), key=lambda f: f.get('id', '')):
         frameworks.append({
             'id': fw['id'],
             'name': fw.get('name', fw['id']),
@@ -444,8 +433,7 @@ def get_ontology():
 
     # Modalities
     modalities = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
-        m = _load_yaml(path)
+    for m in sorted(loader.load_all_modalities().values(), key=lambda m: m.get('id', '')):
         modalities.append({'id': m['id'], 'name': m.get('name', m['id'])})
 
     # Archetypes — include slot exercise_filter so the heatmap can reflect actual selection logic
@@ -472,8 +460,8 @@ def get_ontology():
 
     # Exercises — include movement_patterns for slot-filter matching in heatmap
     exercises = []
-    all_ex = loader.load_all_exercises()
-    for ex in sorted(all_ex.values(), key=lambda e: e['id']):
+    all_ex_index, _ = loader.load_all_exercises()
+    for ex in sorted(all_ex_index.values(), key=lambda e: e['id']):
         mod = ex.get('modality', [])
         if isinstance(mod, str):
             mod = [mod]
@@ -502,7 +490,9 @@ def create_exercise():
     existing_ids = {ex['id'] for ex in _all_exercises()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
-    custom_path = os.path.join(_DATA_DIR, 'exercises', 'custom.yaml')
+    custom_pkg_dir = os.path.join(_DATA_DIR, 'packages', 'custom')
+    os.makedirs(custom_pkg_dir, exist_ok=True)
+    custom_path = os.path.join(custom_pkg_dir, 'exercises.yaml')
     if os.path.exists(custom_path):
         data = _load_yaml(custom_path) or {'exercises': []}
     else:
@@ -515,7 +505,7 @@ def create_exercise():
 
 def _find_exercise_file_and_index(ex_id: str):
     """Return (path, index, data) for an exercise by id, or (None, None, None)."""
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'exercises', '*.yaml'))):
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'exercises.yaml'))):
         data = _load_yaml(path) or {}
         for i, ex in enumerate(data.get('exercises', [])):
             if ex.get('id') == ex_id:
@@ -537,7 +527,10 @@ def update_exercise(ex_id: str):
 
 def _find_archetype_file(arch_id: str) -> str | None:
     """Return the YAML file path for an archetype by id, or None."""
-    for path in glob.glob(os.path.join(_DATA_DIR, 'archetypes', '**', '*.yaml'), recursive=True):
+    for path in glob.glob(
+        os.path.join(_DATA_DIR, 'packages', '*', 'archetypes', '**', '*.yaml'),
+        recursive=True,
+    ):
         try:
             data = _load_yaml(path)
             if data.get('id') == arch_id:
@@ -563,11 +556,13 @@ def update_archetype(arch_id: str):
 @app.put('/api/frameworks/<fw_id>')
 def update_framework(fw_id: str):
     body = request.get_json(silent=True) or {}
-    path = os.path.join(_DATA_DIR, 'frameworks', f'{fw_id}.yaml')
-    if not os.path.exists(path):
+    matches = glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'frameworks', f'{fw_id}.yaml'))
+    if not matches:
         return jsonify({'detail': f"Framework '{fw_id}' not found"}), 404
+    path = matches[0]
     data = _load_yaml(path)
-    allowed = {'name', 'source_philosophy', 'sessions_per_week', 'notes'}
+    allowed = {'name', 'source_philosophy', 'sessions_per_week', 'cadence_options',
+               'deload_protocol', 'applicable_when', 'notes'}
     for k, v in body.items():
         if k in allowed and v is not None:
             data[k] = v
@@ -587,7 +582,7 @@ def create_archetype():
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
     if arch_id in existing_ids:
         return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
-    custom_dir = os.path.join(_DATA_DIR, 'archetypes', 'custom')
+    custom_dir = os.path.join(_DATA_DIR, 'packages', 'custom', 'archetypes')
     os.makedirs(custom_dir, exist_ok=True)
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -815,6 +810,7 @@ def _generate_session_inner(body):
         data['exercises'], data['archetypes'],
         merged_injury_flags, phase, week_in_phase,
         forced_archetype=forced_arch,
+        exercises_by_package=data.get('exercises_by_package'),
     )
 
     if populated.get('archetype') is None:

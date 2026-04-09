@@ -1,0 +1,93 @@
+id: polarized_80_20
+name: Polarized 80/20 Training (Uphill Athlete)
+source_philosophy: uphill_athlete
+
+goals_served:
+  - aerobic_base
+  - anaerobic_intervals
+  - durability
+
+sessions_per_week:
+  aerobic_base: 4
+  anaerobic_intervals: 1
+  strength_endurance: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.80
+  zone3_pct: 0.00
+  zone4_5_pct: 0.20
+  max_effort_pct: 0.00
+
+progression_model: intensity_split_shift
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 4
+  days_per_week_max: 7
+  goal_priority_min:
+    aerobic_base: 0.4
+
+incompatible_with:
+  - framework_id: linear_progression
+    reason: >
+      High aerobic training volume competes for systemic recovery with barbell
+      linear progression. Zone 2 volume accumulation is incompatible with the
+      full-body session-to-session stress-recovery-adaptation cycle that linear
+      progression depends on.
+    interference_level: manageable
+    mitigation: >
+      Cap conditioning at 2 sessions/week, Zone 1-2 only. Place aerobic sessions
+      on off-days from strength. Do not run full polarized volume concurrently with
+      linear progression — treat strength as the priority and aerobic work as
+      supplementary maintenance.
+  - framework_id: emom_amrap
+    reason: >
+      EMOM/AMRAP work typically falls in Zone 3-4 (the "moderate intensity danger
+      zone"), which accumulates fatigue without the aerobic base development benefit
+      of Zone 1-2 or the top-end stimulus of Zone 4-5 intervals.
+    interference_level: manageable
+    mitigation: >
+      Limit EMOM/AMRAP to the 20% high-intensity allocation. Do not add EMOM work
+      on top of the 20% interval quota. Replace interval sessions with EMOM format
+      if preferred, but total high-intensity volume stays capped.
+  - framework_id: rpe_autoregulation
+    reason: >
+      RPE autoregulation and polarized 80/20 address different aspects of training
+      and serve complementary roles. Low interference when RPE governs strength
+      sessions only.
+    interference_level: low
+    mitigation: >
+      Use RPE to govern load on the supplementary strength session. Keep aerobic
+      sessions governed by HR zones, not RPE.
+
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.60
+  intensity_change: maintain
+
+# Large recovery gaps between hard sessions — Uphill Athlete pattern
+cadence_options:
+  3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]]
+  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
+  5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7], [1, 2, 3, 5, 7]]
+  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+
+sources:
+  - "Training for the New Alpinism, Steve House & Scott Johnston"
+  - "The Uphill Athlete, Johnston, House & Jornet"
+  - "80/20 Running, Matt Fitzgerald"
+
+notes: >
+  The Uphill Athlete polarized model requires establishing an Aerobic Threshold (AeT)
+  via the nose-breathe test or MAF method (180-age), then keeping 80% of training
+  volume at or below AeT heart rate. The 20% high-intensity allocation is reserved
+  for Zone 4-5 interval sessions (threshold intervals, hill sprints). Zone 3 work
+  ("moderate intensity danger zone") is actively avoided as it accumulates fatigue
+  without providing a clear adaptive stimulus. Progression follows intensity_split_shift:
+  base phase holds strict 80/20 with increasing volume; build phase shifts toward
+  70/30 as the event date approaches. Supplementary strength (1 session/week) uses
+  simple compound movements to prevent strength loss without generating excess fatigue.

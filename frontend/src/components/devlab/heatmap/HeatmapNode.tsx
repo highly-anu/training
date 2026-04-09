@@ -13,6 +13,7 @@ interface HeatmapNodeProps {
   onClick: (nodeId: string) => void
   onHover: (nodeId: string | null) => void
   isExpanded?: boolean
+  isSelected?: boolean
 }
 
 function getNodeColor(node: HeatNode): string {
@@ -26,7 +27,7 @@ function getNodeColor(node: HeatNode): string {
   }
 }
 
-export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isExpanded }: HeatmapNodeProps) {
+export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isExpanded, isSelected }: HeatmapNodeProps) {
   const color = getNodeColor(node)
   const baseOpacity = node.heat > 0 ? 0.15 + node.heat * 0.85 : 0.08
   const dimmed = highlighted === false
@@ -71,6 +72,19 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
           filter="url(#glow)"
         />
       )}
+      {isSelected && (
+        <rect
+          x={-2}
+          y={-2}
+          width={width + 4}
+          height={height + 4}
+          rx={6}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeOpacity={0.7}
+        />
+      )}
       <rect
         x={0}
         y={0}
@@ -80,8 +94,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
         fill={color}
         fillOpacity={fillOpacity}
         stroke={color}
-        strokeWidth={bright ? 1.5 : 0.5}
-        strokeOpacity={strokeOpacity}
+        strokeWidth={isSelected ? 2 : bright ? 1.5 : 0.5}
+        strokeOpacity={isSelected ? 1 : strokeOpacity}
       />
       <text
         x={width / 2}

@@ -52,8 +52,16 @@
     },
     "avoid_with": {
       "type": "array",
-      "description": "Philosophy IDs or general patterns this source conflicts with. Used to trigger warnings when combining sources.",
-      "items": { "type": "string" },
+      "description": "Modality IDs this philosophy conflicts with. Expresses which training qualities should not be combined with this methodology at high volume. Use modality IDs (e.g. 'max_strength', 'aerobic_base') — not philosophy names.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "max_strength", "strength_endurance", "relative_strength",
+          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
+          "power", "mobility", "movement_skill", "durability",
+          "combat_sport", "rehab"
+        ]
+      },
       "default": []
     },
     "required_equipment": {

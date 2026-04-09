@@ -1,0 +1,82 @@
+id: high_frequency_skill
+name: High-Frequency Skill Practice (Ido Portal)
+source_philosophy: ido_portal
+
+goals_served:
+  - movement_skill
+  - mobility
+  - relative_strength
+
+sessions_per_week:
+  movement_skill: 5
+  mobility: 3
+
+intensity_distribution:
+  zone1_2_pct: 0.70
+  zone3_pct: 0.10
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.15
+
+progression_model: complexity
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 3
+  days_per_week_max: 7
+  goal_priority_min:
+    movement_skill: 0.2
+
+incompatible_with:
+  - framework_id: concurrent_training
+    reason: >
+      Daily skill practice requires neurological freshness and attentional bandwidth.
+      Full concurrent training volume leaves insufficient recovery for daily movement
+      quality sessions — fatigue degrades motor learning and undermines the purpose
+      of high-frequency skill practice.
+    interference_level: manageable
+    mitigation: >
+      Embed 10-15 min of movement practice as pre-session warm-up within existing
+      concurrent training sessions rather than scheduling standalone daily sessions.
+      Reserve full skill sessions for lower-volume training phases.
+  - framework_id: emom_amrap
+    reason: >
+      High-output conditioning sessions generate muscular fatigue that directly
+      impairs the motor control precision required for skill acquisition. Scheduling
+      skill sessions after EMOM/AMRAP work produces poor-quality movement practice.
+    interference_level: manageable
+    mitigation: >
+      Always schedule skill practice before conditioning, or on separate days.
+      Treat conditioning as the quality to reduce if skill acquisition is the
+      primary goal.
+
+# Clusters of consecutive days for daily practice
+cadence_options:
+  2: [[1, 5]]
+  3: [[1, 4, 7]]
+  4: [[1, 2, 3, 5], [2, 3, 4, 6], [1, 2, 4, 5]]
+  5: [[1, 2, 3, 4, 6], [1, 2, 3, 5, 7], [2, 3, 4, 5, 7]]
+  6: [[1, 2, 3, 4, 5, 7], [2, 3, 4, 5, 6, 7]]
+
+sources:
+  - "Ido Portal Method — Movement Culture"
+  - "Motor Learning and Control, Schmidt & Lee"
+  - "Pavel Tsatsouline — Greasing the Groove (GTG) methodology"
+
+notes: >
+  The core insight is that skill acquisition follows the law of practice: frequency
+  beats duration. Short, daily exposures to a movement pattern produce faster
+  neural adaptation than infrequent long sessions. Ido Portal's framework organizes
+  skill work into three stages: isolation (controlled environment, single pattern),
+  integration (combining patterns, adding load or complexity), and spontaneous
+  expression (reactive, improvised, environment-driven). Joint preparation is
+  mandatory before loading — tissue prep is not warm-up, it is prerequisite.
+  Complexity progression means advancing to harder movement variants (e.g. cartwheel
+  → aerial → side flip, or support hold → tuck planche → straddle planche) only
+  when the current level is "owned" — fluent under fatigue, in varied environments,
+  without cueing. Daily practice targets (time-based, not rep-based) are preferred:
+  e.g. "10 min of locomotion practice daily." Overlaps with GTG (Pavel): practice
+  a lift or skill at 50-60% effort multiple times per day, never to failure.

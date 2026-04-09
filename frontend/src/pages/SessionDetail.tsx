@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
+import type { ComplementaryExercise } from '@/api/types'
 
 export function SessionDetail() {
   const { week, day } = useParams<{ week: string; day: string }>()
@@ -132,6 +133,29 @@ export function SessionDetail() {
                   <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={sessionKey} />
                 ))}
               </div>
+
+              {session.complementary_work && session.complementary_work.length > 0 && (
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Cool-down / Recovery
+                  </h4>
+                  <div className="space-y-2">
+                    {session.complementary_work.map((cw: ComplementaryExercise, i: number) => (
+                      <div key={i} className="flex items-start justify-between gap-3 rounded-md bg-background/60 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium leading-snug">{cw.exercise.name}</p>
+                          {cw.prescription.note && (
+                            <p className="text-xs text-muted-foreground mt-0.5 italic">{cw.prescription.note}</p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums mt-0.5">
+                          {cw.prescription.sets}×{cw.prescription.duration_sec}s
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <button
                 type="button"

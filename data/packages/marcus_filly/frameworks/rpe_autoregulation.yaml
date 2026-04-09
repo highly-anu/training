@@ -1,0 +1,72 @@
+id: rpe_autoregulation
+name: RPE Autoregulation (Functional Bodybuilding)
+source_philosophy: marcus_filly
+
+goals_served:
+  - max_strength
+  - strength_endurance
+  - relative_strength
+  - durability
+
+sessions_per_week:
+  max_strength: 3
+  relative_strength: 1
+  mobility: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.05
+  zone3_pct: 0.10
+  zone4_5_pct: 0.35
+  max_effort_pct: 0.50
+
+progression_model: rpe_autoregulation
+
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 3
+  days_per_week_max: 6
+  goal_priority_min:
+    max_strength: 0.2
+
+incompatible_with:
+  - framework_id: polarized_80_20
+    reason: >
+      RPE autoregulation governs strength load; polarized 80/20 governs aerobic
+      intensity distribution. These address different training qualities and
+      can be applied simultaneously with low conflict — RPE on strength days,
+      HR zones on aerobic days.
+    interference_level: low
+    mitigation: >
+      Use RPE to govern load on strength sessions. Govern aerobic sessions strictly
+      by HR zone, not RPE. Do not apply RPE-based load reduction to aerobic base
+      sessions — the feel-based approach does not map to aerobic zone work.
+
+# Flexible hard/easy alternation — RPE governs load, not fixed days
+cadence_options:
+  3: [[1, 3, 5], [2, 4, 6], [1, 4, 7]]
+  4: [[1, 2, 4, 6], [1, 3, 5, 7], [2, 3, 5, 7]]
+  5: [[1, 2, 4, 5, 7], [1, 2, 3, 6, 7], [1, 3, 4, 6, 7]]
+
+sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  - "Mike Tuchscherer — Reactive Training Systems (RTS)"
+  - "The RTS Manual, Mike Tuchscherer"
+  - "Renaissance Periodization, Mike Israetel et al."
+
+notes: >
+  RPE (Rate of Perceived Exertion) autoregulation replaces fixed percentage-based
+  loading with daily readiness-adjusted load selection. An RPE 8 means 2 reps left
+  in the tank at the end of a set; RPE 9 means 1 rep left; RPE 10 is true max effort.
+  The key advantage: when an athlete is under-recovered (poor sleep, accumulated
+  fatigue, high life stress), the load self-adjusts downward rather than forcing
+  a prescribed percentage that may be a true max that day. Marcus Filly applies
+  RPE within a sustainable training philosophy — aesthetics and function are
+  compatible, joint health requires dedicated maintenance, controlled eccentrics
+  and isometrics build tissue resilience. Deload triggers: when multiple sessions
+  in a row come in at RPE 9-10 at weights that previously felt like RPE 7-8, a
+  deload is indicated rather than waiting for the scheduled week. Controlled
+  eccentrics (3-5 sec negatives) and isometric holds are first-class tools in this
+  framework, not accessories.

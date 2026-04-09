@@ -1,0 +1,54 @@
+id: horsemen_gpp
+name: "Horsemen GPP / SOF-Style Training"
+core_principles:
+  - durability_over_peak_performance
+  - elite_fitness_across_broad_base_no_single_domain_specialization
+  - repeatable_output_under_fatigue
+  - simple_equipment_sandbag_barbell_kb_bodyweight_rower
+  - function_under_extreme_environment_and_operational_load
+  - strength_standards_are_prerequisites_not_goals
+  - job_specific_conditioning_drives_programming_in_later_phases
+  - block_structure_shifts_from_strength_to_power_endurance_to_job_specific
+scope:
+  - max_strength
+  - strength_endurance
+  - aerobic_base
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  - power
+  - durability
+  - relative_strength
+bias:
+  - durability
+  - strength_endurance
+  - mixed_modal_conditioning
+avoid_with:
+  - max_strength
+  - aerobic_base
+required_equipment:
+  - barbell
+  - plates
+  - kettlebell
+  - sandbag
+  - pull_up_bar
+  - rower
+  - box
+  - medicine_ball
+  - sled
+  - tire
+  - rope
+intensity_model: block_periodization
+progression_philosophy: volume_based
+sources:
+  - "data/horsemen/horsemen.pdf (Horsemen Training Program 2008)"
+notes: >
+  4-month macro: Month 1 strength-dominant (4×strength/14 days), Month 2
+  power-endurance dominant, Month 3 job-specific dominant, Month 4 maintenance.
+  Draws explicitly from Gym Jones (Twight), Mountain Athlete (Shaul), CrossFit
+  (Glassman), and Dan John. Strength standards are prerequisites for the program,
+  not training goals: deadlift 2.5× BW, front squat 1.5× BW, bench 1.5× BW,
+  military press 1× BW. PT test standards: 15+ pull-ups, 200+ SSST reps (KB snatch
+  10min @ 53#), 3-mile run under 20:00. Sandbag get-ups, barbell complexes, and
+  SMMF (Slow Massive Movement) challenges are signature formats. Recovery sessions
+  are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black,
+  Russian Aggression, SMMF) are distinct from generic archetypes.

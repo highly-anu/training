@@ -63,30 +63,37 @@ When adding a new methodology (e.g. Theragun recovery, triathlon prep, mountaine
 
 ## 3. File Placement
 
+Each training methodology lives in its own **self-contained package** under `data/packages/`:
+
 ```
 data/
-  philosophies/          ← one file per philosophy:  {id}.yaml
-  frameworks/            ← one file per framework:   {id}.yaml
-  modalities/            ← one file per modality:    {id}.yaml  (rarely edited)
-  archetypes/
-    strength/            ← barbell/free weight strength sessions
-    conditioning/        ← aerobic, intervals, AMRAPs, circuits
-    kettlebell/          ← KB-specific sessions
-    gpp_durability/      ← carries, sandbag, rucking
-    movement_skill/      ← mobility, joint prep, skill practice, recovery tools
-  exercises/             ← one file per category:    {category}.yaml
-                         ← each file contains a top-level list:  exercises: [...]
-  goals/                 ← one file per goal:        {id}.yaml
-  goals/custom/          ← user-created goals (same format, auto-discovered)
+  packages/
+    {your_package_name}/         ← one directory per methodology
+      philosophy.yaml            ← the package's philosophy (exactly one)
+      frameworks/
+        {id}.yaml                ← one file per framework (usually one)
+      archetypes/
+        strength/                ← barbell/free weight strength sessions
+        conditioning/            ← aerobic, intervals, AMRAPs, circuits
+        kettlebell/              ← KB-specific sessions
+        gpp_durability/          ← carries, sandbag, rucking
+        movement_skill/          ← mobility, joint prep, skill practice, recovery tools
+      exercises.yaml             ← all exercises for this package (top-level list: exercises: [...])
+  modalities/                    ← shared, rarely edited — do not add new ones
+  goals/                         ← one file per goal:  {id}.yaml
+  goals/custom/                  ← user-created goals (same format, auto-discovered)
 ```
 
-**Which archetype category?**
-- Recovery tools (Theragun, foam rolling, lacrosse ball) → `movement_skill/`
-- Mobility circuits → `movement_skill/`
-- Skill drills → `movement_skill/`
-- Anything barbell-based → `strength/`
-- Cardio formats → `conditioning/`
+**Archetypes are package-scoped.** A "Long Zone 2 Run" in the Uphill Athlete package and a "Long Zone 2 Run" in the CrossFit Endurance package are separate files with separate IDs. Do not share archetypes across packages — each package defines the protocols that belong to its methodology.
+
+**Which archetype category subdirectory?**
+- Recovery tools, foam rolling, soft tissue → `movement_skill/`
+- Mobility circuits, joint prep → `movement_skill/`
+- Skill drills, deliberate practice → `movement_skill/`
+- Barbell strength → `strength/`
+- Aerobic, intervals, AMRAPs, circuits → `conditioning/`
 - Carries, rucking, sandbag → `gpp_durability/`
+- Kettlebell-primary sessions → `kettlebell/`
 
 ---
 
@@ -146,8 +153,9 @@ rounds_for_time
 
 ### Intensity Values (for archetype slot `intensity` field)
 ```
-light    moderate    heavy    max    submaximal
-zone1    zone2       zone3    zone4   zone4_5
+low      light    moderate    medium    heavy    submaximal    high
+max      max_effort           bodyweight
+zone1    zone2    zone3       zone4     zone4_5  zone5
 progressing
 ```
 
@@ -222,16 +230,23 @@ scope:                              # required — which modalities this philoso
 bias:                               # optional — which modalities are emphasized
   - mobility
 
-avoid_with: []                      # optional — philosophy IDs to avoid combining with
+avoid_with:                         # optional — modality IDs that conflict with this methodology
+  - max_strength                    # use modality IDs, NOT philosophy names
+  - mixed_modal_conditioning        # (e.g. aerobic_base, max_strength, mixed_modal_conditioning)
 
 required_equipment:                 # optional — equipment required for this philosophy
   - resistance_band
 
-intensity_model: skill_based        # required — one of: block_periodization,
-                                    #   skill_based, daily_autoregulation
+intensity_model: skill_based        # required — one of:
+                                    #   linear_progression, polarized_80_20,
+                                    #   block_periodization, autoregulation_rpe,
+                                    #   constant_variation, skill_based,
+                                    #   hard_easy_alternation, operator_readiness
 
-progression_philosophy: range_based # required — one of: volume_based, range_based,
-                                    #   load_based, skill_progression
+progression_philosophy: range_based # required — one of:
+                                    #   load_based, volume_based, complexity_based,
+                                    #   time_based, density_based, feel_based,
+                                    #   rpm_based, range_based
 
 sources:                            # required — citations
   - "Book title (Author, Year)"
@@ -242,15 +257,20 @@ notes: >                            # optional but recommended
 ```
 
 **Decision guide for `intensity_model`:**
+- `linear_progression` — load increases session-by-session on a fixed schedule (e.g. Starting Strength)
+- `polarized_80_20` — 80% easy / 20% hard, strict zone discipline (e.g. Uphill Athlete)
 - `block_periodization` — training organized into distinct phases with different focuses (strength block → conditioning block)
+- `autoregulation_rpe` — intensity set session-to-session based on readiness (RPE-driven)
+- `constant_variation` — no fixed structure; varied stimuli across sessions (e.g. CrossFit)
 - `skill_based` — intensity increases as skill complexity increases (not external load)
-- `daily_autoregulation` — intensity set day-to-day based on readiness (RPE-driven)
+- `hard_easy_alternation` — high-intensity sessions followed by deliberate easy days
+- `operator_readiness` — intensity based on readiness state / daily condition assessment
 
 ---
 
 ## 6. Schema: Framework
 
-**File:** `data/frameworks/{id}.yaml`
+**File:** `data/packages/{name}/frameworks/{id}.yaml`
 
 A framework is a weekly training structure. It answers: "Given this methodology's priorities, how do I allocate sessions across a week and manage intensity?"
 
@@ -328,7 +348,7 @@ notes: >                            # recommended
 
 ## 7. Schema: Archetype
 
-**File:** `data/archetypes/{category}/{id}.yaml`
+**File:** `data/packages/{name}/archetypes/{category}/{id}.yaml`
 
 An archetype is a reusable workout template. It defines what a session looks like: sections (slots), duration, equipment, and which movement patterns to draw exercises from.
 
@@ -405,9 +425,9 @@ scaling:                            # optional — how to adapt the session
 
 ## 8. Schema: Exercise
 
-**File:** `data/exercises/{category}.yaml`
+**File:** `data/packages/{name}/exercises.yaml`
 
-Exercises live inside category files. The file contains a top-level `exercises:` key with a list.
+All exercises for a package live in a single file. The file contains a top-level `exercises:` key with a list. Exercises from all packages are merged into a global pool at load time — IDs must be unique across all packages.
 
 ```yaml
 exercises:
@@ -437,7 +457,7 @@ exercises:
       Execution cues, context, when to use.
 ```
 
-**For new exercise files:** name the file after the category: `data/exercises/theragun.yaml`, `data/exercises/triathlon.yaml`, etc.
+**For new exercises:** add them to your package's `exercises.yaml`. All exercises across packages are merged into a global pool at load time, so IDs must be unique across all packages.
 
 **Contraindicated injury flags** (use these IDs in `contraindicated_with`):
 ```
@@ -514,18 +534,19 @@ These constraints must hold. The validator checks types and enums; you must veri
 
 | Entity | Field | Must reference |
 |---|---|---|
-| Framework | `source_philosophy` | existing ID in `data/philosophies/` |
+| Framework | `source_philosophy` | `id` of a philosophy in any `data/packages/*/philosophy.yaml` |
 | Framework | `goals_served` items | valid modality IDs |
 | Framework | `sessions_per_week` keys | same IDs as `goals_served` |
-| Framework | `incompatible_with[].framework_id` | existing ID in `data/frameworks/` |
+| Framework | `incompatible_with[].framework_id` | `id` of any framework in `data/packages/*/frameworks/*.yaml` |
 | Framework | `applicable_when.goal_priority_min` keys | valid modality IDs |
 | Archetype | `modality` | valid modality ID |
-| Archetype | `category` | valid archetype directory name |
+| Archetype | `category` | valid archetype category subdirectory name |
+| Philosophy | `avoid_with` items | valid modality IDs (not philosophy names) |
 | Exercise | `modality` items | valid modality IDs |
-| Exercise | `requires` / `unlocks` | existing exercise IDs |
+| Exercise | `requires` / `unlocks` | existing exercise IDs (anywhere across all packages) |
 | Exercise | `contraindicated_with` | valid injury flag IDs |
-| Goal | `primary_sources` items | existing IDs in `data/philosophies/` |
-| Goal | `framework_selection.default_framework` | existing ID in `data/frameworks/` |
+| Goal | `primary_sources` items | `id` of a philosophy in any `data/packages/*/philosophy.yaml` |
+| Goal | `framework_selection.default_framework` | `id` of any framework in `data/packages/*/frameworks/*.yaml` |
 | Goal | `priorities` keys | valid modality IDs |
 
 ---
@@ -542,9 +563,11 @@ These constraints must hold. The validator checks types and enums; you must veri
 
 **sessions_per_week keys don't match goals_served** — These must be identical lists.
 
-**Adding exercises to the wrong file** — Each exercise category has its own file. A Theragun exercise goes in `data/exercises/theragun.yaml` (create if needed), not in `data/exercises/mobility.yaml`.
+**Adding exercises to the wrong package** — Exercises belong in the package they were developed for. A Theragun exercise belongs in `data/packages/theragun_recovery/exercises.yaml`, not in another package's file. Exercise IDs must be globally unique across all packages.
 
 **Archetype in the wrong category directory** — Recovery and soft-tissue archetypes go in `movement_skill/`. Don't put them in `conditioning/`.
+
+**`avoid_with` using philosophy names** — `avoid_with` must contain modality IDs (e.g. `max_strength`, `aerobic_base`), not philosophy names (e.g. `starting_strength`, `crossfit`). Philosophies don't reference each other — they express incompatibility through the modalities they conflict with.
 
 ---
 
@@ -553,7 +576,7 @@ These constraints must hold. The validator checks types and enums; you must veri
 This shows the minimal file set for adding a soft-tissue/recovery methodology like Theragun.
 
 ### Step 1: Philosophy file
-`data/philosophies/theragun_recovery.yaml`
+`data/packages/theragun_recovery/philosophy.yaml`
 ```yaml
 id: theragun_recovery
 name: "Hyperice / Theragun Percussive Therapy"
@@ -583,7 +606,7 @@ notes: >
 ```
 
 ### Step 2: Framework file
-`data/frameworks/theragun_recovery.yaml`
+`data/packages/theragun_recovery/frameworks/theragun_recovery.yaml`
 ```yaml
 id: theragun_recovery
 name: "Theragun Percussive Therapy Integration"
@@ -619,7 +642,7 @@ notes: >
 ```
 
 ### Step 3: Archetypes (one per protocol type)
-Three files in `data/archetypes/movement_skill/`:
+Three files in `data/packages/theragun_recovery/archetypes/movement_skill/`:
 - `theragun_preactivation.yaml` — 5 min pre-workout
 - `theragun_post_session.yaml` — 10–15 min post-workout
 - `theragun_recovery_day.yaml` — 20–30 min full recovery day
@@ -627,7 +650,7 @@ Three files in `data/archetypes/movement_skill/`:
 Each uses `modality: mobility`, `category: movement_skill`, `slot_type: skill_practice`.
 
 ### Step 4: Exercises
-`data/exercises/theragun.yaml` — one exercise per major muscle group / body region:
+`data/packages/theragun_recovery/exercises.yaml` — one exercise per major muscle group / body region under the top-level `exercises:` key:
 - `theragun_quads` — quadriceps, 30–60 sec
 - `theragun_hamstrings` — hamstrings + glutes
 - `theragun_upper_back` — traps + thoracic spine
