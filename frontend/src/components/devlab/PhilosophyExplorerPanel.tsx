@@ -5,7 +5,6 @@ import { useFrameworks } from '@/api/frameworks'
 import { useArchetypes } from '@/api/archetypes'
 import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
-import { HeatmapPanel } from './heatmap/HeatmapPanel'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -986,9 +985,22 @@ function PhilosophyHeader({ phil }: { phil: Philosophy }) {
           </div>
         )}
         {phil.avoid_with.length > 0 && (
-          <div className="space-y-0.5">
-            <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Avoid with</span>
-            <span className="font-mono text-orange-400/70">{phil.avoid_with.map(a => a.replace(/_/g, ' ')).join(', ')}</span>
+          <div className="space-y-1">
+            <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Avoid combining with</span>
+            <div className="flex flex-wrap gap-1">
+              {phil.avoid_with.map(id => {
+                const c = MODALITY_COLORS[id as ModalityId]
+                return (
+                  <span key={id} className="text-[10px] px-1.5 py-0.5 rounded border font-mono"
+                    style={c
+                      ? { borderColor: `${c.hex}40`, color: c.hex, backgroundColor: `${c.hex}15` }
+                      : { borderColor: 'hsl(var(--border))', color: '#f97316' }
+                    }>
+                    {c?.label ?? id.replace(/_/g, ' ')}
+                  </span>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -1141,9 +1153,8 @@ export function PhilosophyExplorerPanel() {
           <p className="text-xs opacity-60">frameworks → modalities → archetypes → slots → exercises</p>
         </div>
       ) : (
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* ── Left: detail tree ── */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6 min-w-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="h-full overflow-y-auto px-4 py-4 space-y-6">
             {phil && <PhilosophyHeader phil={phil} />}
 
             {frameworks.length === 0 ? (
@@ -1192,21 +1203,6 @@ export function PhilosophyExplorerPanel() {
                 )}
               </>
             )}
-          </div>
-
-          {/* ── Right: ontology graph ── */}
-          <div className="w-[420px] shrink-0 border-l border-border overflow-y-auto" style={{ maxWidth: '42%' }}>
-            <div className="px-3 py-2 border-b bg-muted/10">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
-                Ontology Graph
-              </p>
-            </div>
-            <div className="px-3 py-3">
-              <HeatmapPanel
-                program={null}
-                initialLockedNode={selectedId ? `philosophy::${selectedId}` : null}
-              />
-            </div>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, ChevronLeft } from 'lucide-react'
 import { HeatmapGraph } from './HeatmapGraph'
+import type { HeatmapSortMode } from './HeatmapGraph'
 import { HeatmapControls } from './HeatmapControls'
 import { useHeatmapData } from './useHeatmapData'
 import type { HeatNode, HeatmapGraphData } from './useHeatmapData'
@@ -34,10 +35,12 @@ function NodeInfoPanel({
   node,
   graphData,
   onClose,
+  isLocked,
 }: {
   node: HeatNode
   graphData: HeatmapGraphData
   onClose: () => void
+  isLocked: boolean
 }) {
   const color = nodeColor(node)
   const heatPct = Math.round(node.heat * 100)
@@ -100,12 +103,14 @@ function NodeInfoPanel({
           </span>
           <p className="text-sm font-semibold capitalize">{displayName}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X className="size-4" />
-        </button>
+        {isLocked && (
+          <button
+            onClick={onClose}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
       {/* Heat bar */}
@@ -255,13 +260,27 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
 
   const [weekRange, setWeekRange] = useState<[number, number]>([1, program?.weeks.length ?? 1])
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null)
-  const [lockedNode, setLockedNode] = useState<string | null>(initialLockedNode ?? null)
+  const [selectedNode, setSelectedNode] = useState<string | null>(initialLockedNode ?? null) // 1st click
+  const [lockedNode, setLockedNode] = useState<string | null>(null)                          // 2nd click
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   useEffect(() => {
-    if (initialLockedNode) setLockedNode(initialLockedNode)
+    if (initialLockedNode) setSelectedNode(initialLockedNode)
   }, [initialLockedNode])
 
+  // Esc resets selection
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedNode(null)
+        setLockedNode(null)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const [sortMode, setSortMode] = useState<HeatmapSortMode>('alpha')
   const [compareMode, setCompareMode] = useState(false)
   const [compareGoalId, setCompareGoalId] = useState<string>('')
   const [compareProgram, setCompareProgram] = useState<TracedProgram | null>(null)
@@ -274,15 +293,26 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   const handleCompareWeekRangeChange = useCallback((range: [number, number]) => setCompareWeekRange(range), [])
 
   const handleHoverNode = useCallback((id: string | null) => {
-    if (!lockedNode) setHighlightedNode(id)
-  }, [lockedNode])
+    setHighlightedNode(id)
+  }, [])
 
   const handleClickNode = useCallback((id: string) => {
     if (id.startsWith('exercise_group::')) {
       setExpandedGroup(prev => prev === id ? null : id)
     }
-    setLockedNode(prev => prev === id ? null : id)
-  }, [])
+    if (lockedNode === id) {
+      // 3rd click — reset
+      setSelectedNode(null)
+      setLockedNode(null)
+    } else if (selectedNode === id) {
+      // 2nd click — reorganize
+      setLockedNode(id)
+    } else {
+      // 1st click (or new node) — select only, no reorganize
+      setSelectedNode(id)
+      setLockedNode(null)
+    }
+  }, [selectedNode, lockedNode])
 
   async function handleGenerateComparison() {
     if (!compareGoalId || !constraints) return
@@ -318,7 +348,10 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
 
   if (!graphData) return null
 
-  const lockedNodeData = lockedNode ? graphData.nodes.find(n => n.id === lockedNode) ?? null : null
+  const lockedNodeData  = lockedNode   ? graphData.nodes.find(n => n.id === lockedNode)   ?? null : null
+  const selectedNodeData = selectedNode ? graphData.nodes.find(n => n.id === selectedNode) ?? null : null
+  const hoveredNodeData  = highlightedNode ? graphData.nodes.find(n => n.id === highlightedNode) ?? null : null
+  const infoNode = hoveredNodeData ?? selectedNodeData ?? lockedNodeData
 
   return (
     <div className="space-y-3">
@@ -341,6 +374,31 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
         />
       )}
 
+      {/* Sort control */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Sort</span>
+        <button
+          onClick={() => setSortMode('alpha')}
+          className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
+            sortMode === 'alpha'
+              ? 'border-primary/50 bg-primary/10 text-primary'
+              : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/40'
+          }`}
+        >
+          A→Z
+        </button>
+        <button
+          onClick={() => setSortMode(sortMode === 'heat-desc' ? 'heat-asc' : 'heat-desc')}
+          className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
+            sortMode !== 'alpha'
+              ? 'border-primary/50 bg-primary/10 text-primary'
+              : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/40'
+          }`}
+        >
+          {sortMode === 'heat-asc' ? 'Cold→Hot' : 'Hot→Cold'}
+        </button>
+      </div>
+
       <div className={compareMode && program ? 'grid grid-cols-2 gap-3' : ''}>
         <div>
           {compareMode && program && (
@@ -352,9 +410,11 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
             data={graphData}
             highlightedNode={highlightedNode}
             lockedNode={lockedNode}
+            selectedNode={selectedNode}
             onHoverNode={handleHoverNode}
             onClickNode={handleClickNode}
             expandedGroup={expandedGroup}
+            sortMode={sortMode}
           />
         </div>
 
@@ -376,9 +436,11 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                   data={compareGraphData}
                   highlightedNode={highlightedNode}
                   lockedNode={lockedNode}
+                  selectedNode={selectedNode}
                   onHoverNode={handleHoverNode}
                   onClickNode={handleClickNode}
                   expandedGroup={expandedGroup}
+                  sortMode={sortMode}
                 />
               </>
             ) : (
@@ -418,14 +480,16 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
         )}
       </div>
 
-      {/* Selected node info panel */}
-      <AnimatePresence mode="wait">
-        {lockedNodeData && (
+      {/* Node info panel — shows on hover; frozen on 1st click; X appears on 2nd click (reorganized).
+          Key is the click-state (not the hovered node) so hover just updates content without remounting. */}
+      <AnimatePresence>
+        {infoNode && (
           <NodeInfoPanel
-            key={lockedNode}
-            node={lockedNodeData}
+            key={lockedNode ?? selectedNode ?? '__hover__'}
+            node={infoNode}
             graphData={graphData}
-            onClose={() => setLockedNode(null)}
+            onClose={() => { setSelectedNode(null); setLockedNode(null) }}
+            isLocked={!!lockedNodeData && infoNode.id === lockedNodeData.id}
           />
         )}
       </AnimatePresence>

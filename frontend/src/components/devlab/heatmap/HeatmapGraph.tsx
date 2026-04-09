@@ -31,13 +31,17 @@ interface NodePosition {
   height: number
 }
 
+export type HeatmapSortMode = 'alpha' | 'heat-desc' | 'heat-asc'
+
 interface HeatmapGraphProps {
   data: HeatmapGraphData
   highlightedNode: string | null
   lockedNode: string | null
+  selectedNode: string | null
   onHoverNode: (id: string | null) => void
   onClickNode: (id: string) => void
   expandedGroup: string | null
+  sortMode?: HeatmapSortMode
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -92,9 +96,11 @@ export function HeatmapGraph({
   data,
   highlightedNode,
   lockedNode,
+  selectedNode,
   onHoverNode,
   onClickNode,
   expandedGroup,
+  sortMode = 'alpha',
 }: HeatmapGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null)
@@ -119,12 +125,17 @@ export function HeatmapGraph({
     for (const node of data.nodes) {
       map[node.layer].push(node)
     }
-    // Sort each layer: hot nodes toward center for visual appeal
     for (const layer of LAYER_ORDER) {
-      map[layer].sort((a, b) => a.label.localeCompare(b.label))
+      if (sortMode === 'heat-desc') {
+        map[layer].sort((a, b) => b.heat - a.heat || a.label.localeCompare(b.label))
+      } else if (sortMode === 'heat-asc') {
+        map[layer].sort((a, b) => a.heat - b.heat || a.label.localeCompare(b.label))
+      } else {
+        map[layer].sort((a, b) => a.label.localeCompare(b.label))
+      }
     }
     return map
-  }, [data.nodes])
+  }, [data.nodes, sortMode])
 
   // Connected set for locked node only (drives layout reorganization, not hover)
   const lockedConnectedSet = useMemo(() => {
@@ -190,7 +201,8 @@ export function HeatmapGraph({
   }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth, lockedConnectedSet])
 
   // Determine which nodes/edges are highlighted
-  const activeNode = lockedNode ?? highlightedNode
+  // lockedNode (2nd click) reorganizes layout; selectedNode (1st click) + hover drive dimming
+  const activeNode = lockedNode ?? selectedNode ?? highlightedNode
   const connectedSet = useMemo(() => {
     if (!activeNode) return null
     return getConnectedNodeIds(activeNode, data.edges)
@@ -219,6 +231,7 @@ export function HeatmapGraph({
         height={svgHeight}
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         className="block w-full"
+        onMouseLeave={() => onHoverNode(null)}
       >
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -321,6 +334,7 @@ export function HeatmapGraph({
               onClick={onClickNode}
               onHover={onHoverNode}
               isExpanded={node.id === expandedGroup}
+              isSelected={node.id === selectedNode || node.id === lockedNode}
             />
           )
         })}
