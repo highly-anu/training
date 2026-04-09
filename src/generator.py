@@ -9,6 +9,58 @@ from .validator import validate
 from .output import format_program
 
 
+# Movement patterns → recovery/mobility patterns that address them
+_COMPLEMENTARY_PATTERNS: dict[str, list[str]] = {
+    'squat':            ['hip_flexion', 'knee_extension'],
+    'hip_hinge':        ['hip_flexion', 'hip_hinge'],
+    'horizontal_push':  ['horizontal_pull', 'rotation'],
+    'vertical_push':    ['horizontal_pull', 'rotation'],
+    'horizontal_pull':  ['horizontal_push', 'rotation'],
+    'vertical_pull':    ['vertical_push', 'rotation'],
+    'loaded_carry':     ['rotation', 'hip_flexion'],
+    'locomotion':       ['hip_flexion', 'knee_extension'],
+    'ballistic':        ['hip_flexion', 'knee_extension'],
+    'olympic_lift':     ['hip_flexion', 'rotation'],
+    'isometric':        ['rotation', 'hip_flexion'],
+}
+
+
+def _select_complementary(
+    session_exercises: list,
+    all_exercises: dict,
+    n: int = 3,
+) -> list[dict]:
+    """Select n mobility/rehab exercises that address patterns stressed in this session."""
+    # Collect movement patterns used in this session
+    used_patterns: set[str] = set()
+    for ea in session_exercises:
+        ex = ea.get('exercise') or {}
+        used_patterns.update(ex.get('movement_patterns', []))
+
+    if not used_patterns:
+        return []
+
+    # Map to recovery-relevant patterns
+    recovery_targets: set[str] = set()
+    for p in used_patterns:
+        recovery_targets.update(_COMPLEMENTARY_PATTERNS.get(p, []))
+
+    if not recovery_targets:
+        return []
+
+    # Score mobility/rehab exercises by overlap with recovery targets
+    candidates: list[tuple[int, dict]] = []
+    for ex in all_exercises.values():
+        if ex.get('category') not in ('mobility', 'rehab'):
+            continue
+        overlap = len(set(ex.get('movement_patterns', [])) & recovery_targets)
+        if overlap > 0:
+            candidates.append((overlap, ex))
+
+    candidates.sort(key=lambda x: -x[0])
+    return [ex for _, ex in candidates[:n]]
+
+
 def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: str) -> bool:
     """Return True if at least one archetype exists for this modality/phase/equipment."""
     available = set(constraints.get('equipment', []))
@@ -261,6 +313,21 @@ def generate(
                     recent_arch_ids.append(populated['archetype']['id'])
                     if len(recent_arch_ids) > 14:
                         recent_arch_ids.pop(0)
+
+                # Complementary recovery work — mobility/rehab exercises targeting stressed patterns
+                comp = _select_complementary(populated.get('exercises', []), exercises)
+                if comp:
+                    populated['complementary_work'] = [
+                        {
+                            'exercise': ex,
+                            'prescription': {
+                                'sets': 2,
+                                'duration_sec': 60,
+                                'note': 'Hold or flow through full range — quality over speed',
+                            },
+                        }
+                        for ex in comp
+                    ]
 
                 populated_sessions.append(populated)
                 if include_trace and session_trace is not None:

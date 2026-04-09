@@ -242,6 +242,8 @@ export interface ExerciseLoad {
   reps?: number | string
   weight_kg?: number
   target_rpe?: number
+  rir?: number          // reps in reserve
+  suggested_weight_kg?: number
   duration_minutes?: number
   zone_target?: string
   distance_km?: number
@@ -268,10 +270,20 @@ export interface ExerciseAssignment {
   notes?: string
 }
 
+export interface ComplementaryExercise {
+  exercise: Exercise
+  prescription: {
+    sets: number
+    duration_sec: number
+    note: string
+  }
+}
+
 export interface Session {
   modality: ModalityId
   archetype: Archetype
   exercises: ExerciseAssignment[]
+  complementary_work?: ComplementaryExercise[]
   duration_min?: number
 }
 
