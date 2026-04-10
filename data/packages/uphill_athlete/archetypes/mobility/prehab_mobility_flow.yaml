@@ -1,0 +1,33 @@
+id: prehab_mobility_flow
+name: "Pre-hab & Mobility Flow"
+modality: mobility
+category: recovery
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 30
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - deload
+  - recovery
+slots:
+  - role: main_practice
+    slot_type: skill_practice
+    duration_minutes: 30
+    intensity: low
+    exercise_filter:
+      category: mobility
+sources:
+  - "Training for the Uphill Athlete, Ch. 9 — Recovery & Injury Prevention"
+notes: |
+  Daily-dose mobility focused on the chronic problem areas of mountain
+  athletes: hip flexors (from sitting and step-ups), thoracic spine (from
+  pack carrying), ankles (downhill loading), and posterior chain.
+  Couch stretch, hip flexor mobilization, T-spine extension over a foam
+  roller, ankle dorsiflexion drills, single-leg RDL, eccentric step-downs.
+  Treated as training, not optional.

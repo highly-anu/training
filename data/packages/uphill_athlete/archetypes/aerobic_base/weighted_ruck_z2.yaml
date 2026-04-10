@@ -1,0 +1,40 @@
+id: weighted_ruck_z2
+name: "Weighted Ruck Z2"
+modality: aerobic_base
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 120
+applicable_phases:
+  - base
+  - build
+  - peak
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: mobility
+  - role: main_aerobic
+    slot_type: time_domain
+    duration_minutes: 100
+    intensity: zone2
+    exercise_filter:
+      category: loaded_carry
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: mobility
+sources:
+  - "Training for the Uphill Athlete, Ch. 7"
+notes: |
+  Aerobic volume with mountain-specific load. Pack weight starts at ~10%
+  bodyweight in early Base and progresses toward objective pack weight
+  through Specific. Terrain should include sustained climbs. Strict Z2 —
+  if pack weight pushes HR into Z3, reduce load or slow down. Builds the
+  postural-and-aerobic capacity to carry weight all day.

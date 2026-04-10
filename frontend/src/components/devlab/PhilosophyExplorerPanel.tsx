@@ -1096,8 +1096,11 @@ export function PhilosophyExplorerPanel() {
   }, [frameworks])
 
   const philosophyArchetypes = useMemo(
-    () => archetypesList.filter(a => philosophyModalityIds.includes(a.modality as ModalityId)),
-    [archetypesList, philosophyModalityIds],
+    () => archetypesList.filter(a =>
+      philosophyModalityIds.includes(a.modality as ModalityId) &&
+      a._package === selectedId,
+    ),
+    [archetypesList, philosophyModalityIds, selectedId],
   )
 
   if (loadingPhil) {

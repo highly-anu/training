@@ -18,13 +18,8 @@
     },
     "modality": {
       "type": "string",
-      "enum": [
-        "max_strength", "strength_endurance", "relative_strength",
-        "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
-        "power", "mobility", "movement_skill", "durability",
-        "combat_sport", "rehab"
-      ],
-      "description": "Primary modality this archetype develops."
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Primary modality this archetype develops. Use an existing modality ID or define a new one in your package's philosophy scope."
     },
     "training_levels": {
       "type": "array",

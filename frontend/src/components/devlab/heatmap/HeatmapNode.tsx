@@ -13,7 +13,8 @@ interface HeatmapNodeProps {
   onClick: (nodeId: string) => void
   onHover: (nodeId: string | null) => void
   isExpanded?: boolean
-  isSelected?: boolean
+  isSelected?: boolean  // 1st click
+  isLocked?: boolean    // 2nd click — drives layout centering
 }
 
 function getNodeColor(node: HeatNode): string {
@@ -27,7 +28,7 @@ function getNodeColor(node: HeatNode): string {
   }
 }
 
-export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isExpanded, isSelected }: HeatmapNodeProps) {
+export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isExpanded, isSelected, isLocked }: HeatmapNodeProps) {
   const color = getNodeColor(node)
   const baseOpacity = node.heat > 0 ? 0.15 + node.heat * 0.85 : 0.08
   const dimmed = highlighted === false
@@ -72,7 +73,7 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
           filter="url(#glow)"
         />
       )}
-      {isSelected && (
+      {(isSelected || isLocked) && (
         <rect
           x={-2}
           y={-2}
@@ -81,8 +82,9 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
           rx={6}
           fill="none"
           stroke={color}
-          strokeWidth={1.5}
-          strokeOpacity={0.7}
+          strokeWidth={isLocked ? 2 : 1.5}
+          strokeOpacity={isLocked ? 1 : 0.6}
+          strokeDasharray={isLocked ? undefined : '3 2'}
         />
       )}
       <rect
@@ -94,8 +96,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
         fill={color}
         fillOpacity={fillOpacity}
         stroke={color}
-        strokeWidth={isSelected ? 2 : bright ? 1.5 : 0.5}
-        strokeOpacity={isSelected ? 1 : strokeOpacity}
+        strokeWidth={(isSelected || isLocked) ? 2 : bright ? 1.5 : 0.5}
+        strokeOpacity={(isSelected || isLocked) ? 1 : strokeOpacity}
       />
       <text
         x={width / 2}

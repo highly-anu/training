@@ -19,6 +19,7 @@ import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { ValidationPanel } from '@/components/devlab/ValidationPanel'
 import { SchedulerPanel } from '@/components/devlab/SchedulerPanel'
 import { SessionsPanel } from '@/components/devlab/SessionsPanel'
+import { PipelineFlowPanel } from '@/components/devlab/PipelineFlowPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
@@ -39,6 +40,30 @@ const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
   { id: 'rings', label: 'Rings' },
   { id: 'sandbag', label: 'Sandbag' },
 ]
+
+// ─── StepMeta annotation banner ──────────────────────────────────────────────
+
+function StepMeta({ reads, outputs, description }: { reads: string[], outputs: string[], description: string }) {
+  return (
+    <div className="mb-4 rounded-lg border border-border/40 bg-muted/20 p-3 space-y-2">
+      <p className="text-xs text-muted-foreground">{description}</p>
+      <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+        <div className="flex items-start gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 shrink-0 mt-0.5">reads</span>
+          <div className="flex flex-wrap gap-1">
+            {reads.map(r => <span key={r} className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono text-muted-foreground">{r}</span>)}
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 shrink-0 mt-0.5">outputs</span>
+          <div className="flex flex-wrap gap-1">
+            {outputs.map(o => <span key={o} className="px-1.5 py-0.5 rounded bg-primary/10 text-[10px] font-mono text-primary/70">{o}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Inputs Panel ─────────────────────────────────────────────────────────────
 
@@ -82,6 +107,16 @@ function InputsPanel({ program }: { program: TracedProgram }) {
               {goal.phase_sequence.map((p, i) => (
                 <Badge key={i} variant="outline" className="text-[10px]">
                   {p.phase} · {p.weeks}w
+                </Badge>
+              ))}
+            </div>
+          )}
+          {goal.primary_sources && goal.primary_sources.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              <span className="text-xs text-muted-foreground self-center">Sources:</span>
+              {goal.primary_sources.map(s => (
+                <Badge key={s} variant="outline" className="text-[10px] border-violet-500/40 bg-violet-500/10 text-violet-400">
+                  {s}
                 </Badge>
               ))}
             </div>
@@ -264,7 +299,7 @@ export function DevLab() {
       )}
 
       {devTab === 'heatmap' && (
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: 'stable' }}>
           <HeatmapPanel
             program={result}
             constraints={result ? {
@@ -465,16 +500,31 @@ export function DevLab() {
 
               {/* ① Inputs */}
               <TabsContent value="inputs">
+                <StepMeta
+                  reads={['goal profile YAML', 'athlete constraints']}
+                  outputs={['priority weights', 'phase sequence', 'primary sources', 'constraint envelope']}
+                  description="Defines what to optimize for (goal priority weights) and what the athlete can do (constraints). Both feed every downstream stage."
+                />
                 <InputsPanel program={result} />
               </TabsContent>
 
               {/* ② Validation */}
               <TabsContent value="validation">
+                <StepMeta
+                  reads={['goal priorities', 'archetypes', 'modalities', 'equipment', 'injury flags']}
+                  outputs={['feasibility flag', 'equipment warnings', 'time-cap checks', 'injury conflicts']}
+                  description="Pre-flight check before building any sessions. Fails fast on impossible constraints so the generator never runs on infeasible inputs."
+                />
                 <ValidationPanel validation={result.validation} />
               </TabsContent>
 
               {/* ③ Schedule */}
               <TabsContent value="schedule">
+                <StepMeta
+                  reads={['phase priority weights', 'framework.sessions_per_week', 'modality.recovery_cost', 'modality.incompatible_in_session_with']}
+                  outputs={['session counts per modality', 'day-of-week assignment', 'deload flag']}
+                  description="Converts priority weights into session counts via the framework template, then places sessions on days using modality recovery rules and cadence patterns."
+                />
                 {trace ? (
                   <SchedulerPanel weeks={trace.weeks} />
                 ) : (
@@ -484,8 +534,17 @@ export function DevLab() {
 
               {/* ④ Sessions */}
               <TabsContent value="sessions">
+                <StepMeta
+                  reads={['assigned modality', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
+                  outputs={['selected archetype', 'exercises per slot', 'load prescriptions']}
+                  description="For each scheduled session: selects the best-scoring archetype, fills its exercise slots (filtered by movement pattern, equipment, injury), then calculates load via the progression model."
+                />
                 {trace ? (
-                  <SessionsPanel weeks={trace.weeks} />
+                  <>
+                    <PipelineFlowPanel program={result} weeks={trace.weeks} />
+                    <hr className="border-border/30 my-4" />
+                    <SessionsPanel weeks={trace.weeks} />
+                  </>
                 ) : (
                   <p className="text-sm text-muted-foreground">No session trace in response.</p>
                 )}
@@ -493,6 +552,11 @@ export function DevLab() {
 
               {/* ⑤ Output */}
               <TabsContent value="output">
+                <StepMeta
+                  reads={['populated sessions', 'week/phase metadata', 'complementary recovery work']}
+                  outputs={['weekly calendar', 'volume summary']}
+                  description="Final program — all ontology decisions resolved into a weekly training calendar."
+                />
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-1">
                     {result.weeks.map((w, i) => (

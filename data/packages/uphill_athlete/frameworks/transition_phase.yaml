@@ -1,0 +1,38 @@
+id: uphill_transition_phase
+name: "Transition Phase (Uphill Athlete)"
+source_philosophy: uphill_athlete
+goals_served:
+  - aerobic_base
+  - max_strength
+  - mobility
+sessions_per_week:
+  aerobic_base: 3
+  max_strength: 2
+  mobility: 2
+intensity_distribution:
+  zone1_2_pct: 0.90
+  zone3_pct: 0.10
+  zone4_5_pct: 0.0
+  max_effort_pct: 0.0
+progression_model: volume_block
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 4
+  days_per_week_max: 6
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.6
+  intensity_change: maintain
+sources:
+  - "Training for the New Alpinism, Ch. 7 — Transition Period"
+notes: |
+  4–8 weeks. Purpose: rebuild from off-season, reintroduce structured load
+  without intensity, raise general work capacity, restore movement quality.
+  Aerobic sessions stay strictly Z1–Z2 (nose-breathing). Strength is general
+  (squat, deadlift, pull-up, push-up) and progressed linearly within the
+  block. No anaerobic work. Mobility is daily-ish; two formal sessions
+  scheduled. Total weekly volume target 8–12 hours for serious athletes.
