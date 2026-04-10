@@ -23,16 +23,8 @@
     },
     "modality": {
       "type": "array",
-      "description": "Which modalities this exercise develops. An exercise can develop more than one.",
-      "items": {
-        "type": "string",
-        "enum": [
-          "max_strength", "strength_endurance", "relative_strength",
-          "aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning",
-          "power", "mobility", "movement_skill", "durability",
-          "combat_sport", "rehab"
-        ]
-      },
+      "description": "Which modalities this exercise develops. Use existing modality IDs or introduce new ones defined in your package's philosophy scope.",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
       "minItems": 1
     },
     "equipment": {
@@ -61,17 +53,8 @@
     },
     "movement_patterns": {
       "type": "array",
-      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering.",
-      "items": {
-        "type": "string",
-        "enum": [
-          "hip_hinge", "squat", "horizontal_push", "horizontal_pull",
-          "vertical_push", "vertical_pull", "loaded_carry", "rotation",
-          "hip_flexion", "knee_extension", "locomotion", "ballistic",
-          "olympic_lift", "isometric", "aerobic_monostructural",
-          "farmer_carry", "rack_carry", "step_up"
-        ]
-      },
+      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering. Use existing patterns or define new ones appropriate to your package's discipline (e.g. 'pedaling', 'contact_strength', 'spinal_flexion').",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
       "default": []
     },
     "requires": {
