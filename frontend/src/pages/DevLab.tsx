@@ -299,7 +299,7 @@ export function DevLab() {
       )}
 
       {devTab === 'heatmap' && (
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: 'stable' }}>
           <HeatmapPanel
             program={result}
             constraints={result ? {

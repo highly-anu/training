@@ -1,0 +1,38 @@
+id: uphill_fartlek_progression
+name: "Uphill Aerobic Progression / Fartlek"
+modality: aerobic_base
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 75
+applicable_phases:
+  - base
+  - build
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 15
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+  - role: main_aerobic
+    slot_type: time_domain
+    duration_minutes: 50
+    intensity: progressing
+    exercise_filter:
+      category: aerobic
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+sources:
+  - "Training for the Uphill Athlete, Ch. 6"
+notes: |
+  Mid-Base spice. Progressive aerobic effort on rolling or uphill terrain:
+  start Z1, build to top of Z2 by the final third. Keeps the session
+  aerobic but trains pace discipline and the ability to lift effort
+  without spiking into Z3. Not an interval session.

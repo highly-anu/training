@@ -1,142 +1,229 @@
 exercises:
-- id: run_easy
-  name: Easy Run (Zone 1–2)
-  category: aerobic
-  modality:
-  - aerobic_base
-  equipment:
-  - open_space
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  - locomotion
-  requires: []
-  unlocks:
-  - run_tempo
-  contraindicated_with:
-  - ankle_sprain
-  - achilles_tendinopathy
-  - patellar_tendinopathy
-  - knee_meniscus_post_op
-  progressions:
-    volume: increase_distance
-  scaling_down: []
-  typical_volume:
-    duration_sec: 4500
-  sources:
-  - Uphill Athlete
-  - CrossFit Endurance
-  notes: 'Conversational pace; heart rate at or below aerobic threshold (AeT), typically
-    <135 bpm or Maffetone (180 − age). Uphill Athlete: 80% of all aerobic volume
-    at this intensity. Gym Jones recovery days: 60–120 min at conversational pace.
-    Primary aerobic base builder. Nasal breathing is a useful intensity governor.
+  - id: zone2_hike
+    name: "Zone 2 Hike"
+    category: aerobic
+    modality:
+      - aerobic_base
+      - durability
+    equipment:
+      - open_space
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - locomotion
+      - aerobic_monostructural
+    typical_volume:
+      duration_sec: 7200
+    notes: "Sustained uphill hiking at HR below AeT. Nose-breathing pace."
 
-    '
-- id: run_tempo
-  name: Tempo Run (Zone 3–4)
-  category: aerobic
-  modality:
-  - aerobic_base
-  - anaerobic_intervals
-  equipment:
-  - open_space
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  - locomotion
-  requires:
-  - run_easy
-  unlocks:
-  - run_interval
-  contraindicated_with:
-  - ankle_sprain
-  - achilles_tendinopathy
-  - patellar_tendinopathy
-  - knee_meniscus_post_op
-  progressions:
-    volume: increase_distance
-  scaling_down:
-  - run_easy
-  typical_volume:
-    duration_sec: 2400
-    distance_m: 5000
-  sources:
-  - Uphill Athlete
-  - CrossFit Endurance
-  notes: 'Comfortably hard; can speak in short sentences. Near or at lactate threshold
-    2 (LT2) pace. CrossFit Endurance: threshold intervals 3–5 × 8 min at Zone 4.
-    Uphill Athlete base-to-build phase transition increases this zone''s proportion
-    from 10% to 20% of weekly volume.
+  - id: recovery_jog_easy
+    name: "Easy Recovery Jog"
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - open_space
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - locomotion
+      - aerobic_monostructural
+    typical_volume:
+      duration_sec: 2400
+    notes: "Strict Z1, well below AeT. Walking permitted."
 
-    '
-- id: bike_easy
-  name: Easy Bike (Zone 1–2)
-  category: aerobic
-  modality:
-  - aerobic_base
-  equipment:
-  - bike
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  requires: []
-  unlocks:
-  - bike_interval
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    duration_sec: 3600
-  sources:
-  - Uphill Athlete
-  - CrossFit Endurance
-  notes: 'Stationary or outdoor. Preferred aerobic rehabilitation modality when running
-    is contraindicated (knee post-op, lower leg injuries). Uphill Athlete uses bike
-    for aerobic base when impact work is unavailable. Minimal joint load; high aerobic
-    adaptation per unit time.
+  - id: weighted_ruck_walk
+    name: "Weighted Ruck Walk"
+    category: loaded_carry
+    modality:
+      - aerobic_base
+      - strength_endurance
+      - durability
+    equipment:
+      - ruck_pack
+      - open_space
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - loaded_carry
+      - locomotion
+    typical_volume:
+      duration_sec: 6000
+    notes: "Pack 10–30% bodyweight depending on phase. Uphill terrain preferred."
 
-    '
-- id: ruck
-  name: Ruck (Loaded Walk / Run)
-  category: aerobic
-  modality:
-  - aerobic_base
-  - durability
-  equipment:
-  - ruck_pack
-  - open_space
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  - locomotion
-  - loaded_carry
-  requires: []
-  unlocks: []
-  contraindicated_with:
-  - ankle_sprain
-  - achilles_tendinopathy
-  - lumbar_disc_pathology
-  progressions:
-    load: increase_pack_weight
-    volume: increase_distance
-  scaling_down:
-  - run_easy
-  typical_volume:
-    duration_sec: 5400
-    distance_m: 10000
-  sources:
-  - Horsemen
-  - Uphill Athlete
-  - Gym Jones
-  notes: 'Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation, 30kg
-    pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
-    recovery endurance hike: 90–120 min with 20–30# pack. Progressions: distance
-    first, then load, then speed. Simple, durable training modality requiring minimal
-    equipment.
+  - id: uphill_run
+    name: "Uphill Run"
+    category: aerobic
+    modality:
+      - aerobic_base
+      - anaerobic_intervals
+    equipment:
+      - open_space
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - locomotion
+      - aerobic_monostructural
+    typical_volume:
+      duration_sec: 1800
+    notes: "Used for Z2 progressions and AnT intervals on grade."
 
-    '
+  - id: hill_repeat
+    name: "Steep Hill Repeat"
+    category: aerobic
+    modality:
+      - anaerobic_intervals
+    equipment:
+      - open_space
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - locomotion
+      - aerobic_monostructural
+    typical_volume:
+      duration_sec: 180
+    notes: "2–4 min hard uphill rep, walk down recovery."
+
+  - id: weighted_box_step_up
+    name: "Weighted Box Step-Up"
+    category: loaded_carry
+    modality:
+      - strength_endurance
+    equipment:
+      - ruck_pack
+      - box
+    effort: high
+    bilateral: false
+    movement_patterns:
+      - step_up
+      - knee_extension
+      - hip_flexion
+    typical_volume:
+      duration_sec: 1800
+    notes: "16–20 in box. Pack 20–35% bodyweight. Continuous, alternating legs. The signature ME workout."
+
+  - id: uphill_weighted_carry_ex
+    name: "Uphill Weighted Carry"
+    category: loaded_carry
+    modality:
+      - strength_endurance
+      - durability
+    equipment:
+      - ruck_pack
+      - open_space
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - loaded_carry
+      - locomotion
+    typical_volume:
+      duration_sec: 5400
+    notes: "Outdoor analog of step-ups. Sustained steep grade, objective pack weight."
+
+  - id: weighted_pull_up
+    name: "Weighted Pull-Up"
+    category: bodyweight
+    modality:
+      - max_strength
+      - relative_strength
+    equipment:
+      - pull_up_bar
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - vertical_pull
+    typical_volume:
+      reps: 5
+    notes: "Upper body pulling strength for ice tools, scrambling."
+
+  - id: plank
+    name: "Front Plank"
+    category: bodyweight
+    modality:
+      - max_strength
+    equipment:
+      - none
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - isometric
+    typical_volume:
+      duration_sec: 60
+    notes: "Anti-extension core."
+
+  - id: single_leg_rdl
+    name: "Single-Leg RDL"
+    category: bodyweight
+    modality:
+      - durability
+      - mobility
+    equipment:
+      - none
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+    typical_volume:
+      reps: 10
+    notes: "Posterior chain, balance, hip stability — pre-hab staple."
+
+  - id: eccentric_step_down
+    name: "Eccentric Step-Down"
+    category: bodyweight
+    modality:
+      - durability
+      - rehab
+    equipment:
+      - box
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - knee_extension
+      - step_up
+    typical_volume:
+      reps: 10
+    notes: "Slow eccentric (3–5 sec) off a box. Knee/quad durability for descents."
+
+  - id: hip_flexor_mobilization
+    name: "Half-Kneeling Hip Flexor Mobilization"
+    category: mobility
+    modality:
+      - mobility
+    equipment:
+      - none
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - isometric
+    typical_volume:
+      duration_sec: 90
+
+  - id: thoracic_extension
+    name: "Thoracic Extension over Foam Roller"
+    category: mobility
+    modality:
+      - mobility
+    equipment:
+      - none
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - isometric
+    typical_volume:
+      duration_sec: 120
+    notes: "Counters pack-induced kyphosis."
+
+  - id: ankle_dorsiflexion_drill
+    name: "Ankle Dorsiflexion Drill"
+    category: mobility
+    modality:
+      - mobility
+    equipment:
+      - none
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - isometric
+    typical_volume:
+      duration_sec: 60
+    notes: "Critical for steep uphill and downhill loading."

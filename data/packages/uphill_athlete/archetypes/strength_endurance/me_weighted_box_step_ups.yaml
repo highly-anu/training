@@ -1,0 +1,43 @@
+id: me_weighted_box_step_ups
+name: "Weighted Box Step-Ups (ME)"
+modality: strength_endurance
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 75
+applicable_phases:
+  - base
+  - build
+  - peak
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 15
+    intensity: low
+    exercise_filter:
+      category: mobility
+  - role: main_me
+    slot_type: time_domain
+    duration_minutes: 50
+    intensity: high
+    exercise_filter:
+      category: loaded_carry
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: mobility
+sources:
+  - "Training for the New Alpinism, Ch. 8 — Muscular Endurance"
+  - "Training for the Uphill Athlete, Ch. 7"
+notes: |
+  THE signature Uphill Athlete session. Weighted ruck step-ups on a
+  16–20" box. Start: 20% bodyweight × 30 min continuous. Progress weekly
+  by 5 min and/or 5% bodyweight, target endpoint 30–35% bodyweight
+  × 60 min continuous (advanced). Pace is steady, not fast — the legs
+  should be deeply fatigued at the end, lungs only mildly stressed.
+  HR usually mid-Z2 to low-Z3. The point is local muscular fatigue,
+  not aerobic stress. Once a week in Base, twice in Specific.

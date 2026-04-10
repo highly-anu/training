@@ -1,0 +1,38 @@
+id: uphill_taper_phase
+name: "Taper Phase (Uphill Athlete)"
+source_philosophy: uphill_athlete
+goals_served:
+  - aerobic_base
+  - anaerobic_intervals
+  - strength_endurance
+sessions_per_week:
+  aerobic_base: 3
+  anaerobic_intervals: 1
+  strength_endurance: 1
+  mobility: 3
+intensity_distribution:
+  zone1_2_pct: 0.80
+  zone3_pct: 0.15
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.0
+progression_model: intensity_split_shift
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 4
+  days_per_week_max: 6
+deload_protocol:
+  frequency_weeks: 1
+  volume_reduction_pct: 0.5
+  intensity_change: maintain
+sources:
+  - "Training for the New Alpinism, Ch. 7 — Taper"
+  - "Training for the Uphill Athlete, Ch. 7 — Tapering for Big Objectives"
+notes: |
+  1–3 weeks immediately before the objective. Volume drops 40–60% from
+  Specific peak; intensity (the short, sharp pieces) is preserved to keep
+  neuromuscular sharpness. No new stimuli. No long days within 7–10 days
+  of the objective. Sleep, nutrition, and mobility are prioritized over
+  training. The taper IS the deload — no separate deload week.

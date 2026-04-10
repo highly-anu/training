@@ -1,0 +1,30 @@
+id: recovery_jog
+name: "Z1 Recovery Aerobic"
+modality: aerobic_base
+category: recovery
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 40
+applicable_phases:
+  - base
+  - build
+  - peak
+  - taper
+  - deload
+slots:
+  - role: main_aerobic
+    slot_type: time_domain
+    duration_minutes: 40
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+sources:
+  - "Training for the Uphill Athlete, Ch. 6"
+notes: |
+  Easier than easy. Strict Z1, well below AeT. Used the day after a hard
+  ME or interval session to flush, maintain aerobic frequency, and add
+  weekly volume without adding stress. If HR creeps above Z1, slow down
+  or walk. 30–60 min.

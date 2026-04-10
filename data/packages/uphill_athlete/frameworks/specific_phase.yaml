@@ -1,0 +1,47 @@
+id: uphill_specific_phase
+name: "Specific Phase (Uphill Athlete)"
+source_philosophy: uphill_athlete
+goals_served:
+  - aerobic_base
+  - anaerobic_intervals
+  - strength_endurance
+  - max_strength
+  - durability
+sessions_per_week:
+  aerobic_base: 3
+  anaerobic_intervals: 1
+  strength_endurance: 2
+  max_strength: 1
+  durability: 1
+  mobility: 2
+intensity_distribution:
+  zone1_2_pct: 0.80
+  zone3_pct: 0.15
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.0
+progression_model: intensity_split_shift
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 5
+  days_per_week_max: 7
+deload_protocol:
+  frequency_weeks: 3
+  volume_reduction_pct: 0.5
+  intensity_change: reduce_slightly
+sources:
+  - "Training for the New Alpinism, Ch. 7 — Specific Period"
+  - "Training for the Uphill Athlete, Ch. 7 — Sport-Specific Training"
+notes: |
+  8–12 weeks before the objective. Training becomes highly specific to the
+  goal: vertical gain, pack weight, terrain, and duration of the long day
+  approach the demands of the objective. ME (muscular endurance) is the
+  central quality — uphill weighted carries and weighted box step-ups
+  performed to deep local fatigue. AnT intervals replace some general
+  aerobic time. Max strength drops to one maintenance session. Long days
+  are back-to-back on weekends to simulate the objective. Volume is at or
+  near peak (14–22 hours/week typical). Progression is by shifting the
+  intensity distribution and increasing specificity (load, vertical), not
+  by adding hours.

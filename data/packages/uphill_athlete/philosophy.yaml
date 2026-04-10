@@ -1,36 +1,51 @@
 id: uphill_athlete
-name: "Uphill Athlete / Steve House & Scott Johnston"
+name: "Uphill Athlete — Steve House & Scott Johnston"
 core_principles:
-  - aerobic_base_is_foundation_of_mountain_performance
-  - polarized_intensity_80pct_easy_20pct_hard
-  - strength_is_supplementary_not_dominant
-  - sport_specific_load_matters_more_than_gym_prs
-  - periodization_orients_toward_objective_date
-  - aerobic_threshold_self_test_governs_zone_boundaries
-  - volume_before_intensity_in_base_phase
+  - aerobic_base_is_foundation
+  - continuity_over_intensity
+  - polarized_intensity_distribution
+  - sport_specificity_funnel
+  - individualization_via_aet_ant_testing
+  - durability_before_performance
+  - recovery_is_training
+  - long_term_athlete_development
+  - general_to_specific_progression
+  - modulate_by_fatigue
+  - aerobic_deficiency_must_be_fixed_first
+  - muscular_endurance_is_the_mountain_specific_quality
 scope:
   - aerobic_base
   - anaerobic_intervals
   - max_strength
+  - strength_endurance
   - durability
+  - mobility
 bias:
   - aerobic_base
   - durability
+  - strength_endurance
 avoid_with:
-  - max_strength
   - mixed_modal_conditioning
 required_equipment:
   - ruck_pack
+  - box
+  - barbell
+  - kettlebell
+  - pull_up_bar
+  - open_space
 intensity_model: polarized_80_20
 progression_philosophy: volume_based
 sources:
-  - "Training for the New Alpinism (House & Johnston, 2014)"
-  - "Uphill Athlete website — training methodology articles"
-notes: >
-  Designed for alpinism, ski mountaineering, and mountain endurance events.
-  Zone boundaries set by individual aerobic threshold (AeT) test, not generic
-  HR formulas. Strength work (max strength, core) is prescribed in small doses
-  to support movement efficiency on terrain. Periodization is goal-date-anchored:
-  base → build → peak → taper. Intensity split shifts progressively from 90/10
-  in base toward 80/20 in build. Ruck pack is required for specificity; open
-  terrain is the primary training environment.
+  - "Training for the New Alpinism — House & Johnston (2014)"
+  - "Training for the Uphill Athlete — House, Johnston & Jornet (2019)"
+  - "uphillathlete.com training articles and podcasts"
+notes: |
+  Mountain endurance methodology built on a large aerobic base, polarized
+  intensity distribution, sport-specific muscular endurance, and durability.
+  AeT (aerobic threshold, nose-breathing test) and AnT (anaerobic threshold,
+  ~1hr time-trial HR) testing individualize zones. The AeT–AnT gap is the
+  primary diagnostic: a gap >10% of max HR indicates aerobic deficiency
+  syndrome (ADS) and the athlete must spend months only in Z1–Z2 until AeT
+  rises. Athletes progress Transition → Base → Specific → Taper. Volume,
+  not intensity, is the primary progression lever. Recovery (sleep,
+  nutrition, easy days) is treated as part of training, not separate from it.

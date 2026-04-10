@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, ChevronLeft } from 'lucide-react'
-import { HeatmapGraph } from './HeatmapGraph'
+import { HeatmapGraph, getConnectedNodeIds, prunePhilosophyScope } from './HeatmapGraph'
 import type { HeatmapSortMode } from './HeatmapGraph'
 import { HeatmapControls } from './HeatmapControls'
 import { useHeatmapData } from './useHeatmapData'
@@ -41,11 +41,13 @@ function NodeInfoPanel({
   graphData,
   onClose,
   isLocked,
+  scopedNodeIds,
 }: {
   node: HeatNode
   graphData: HeatmapGraphData
   onClose: () => void
   isLocked: boolean
+  scopedNodeIds: Set<string> | null
 }) {
   const color = nodeColor(node)
   const heatPct = Math.round(node.heat * 100)
@@ -56,14 +58,16 @@ function NodeInfoPanel({
     ? node.label.replace(/\s*\(\d+\)$/, '').trim()
     : node.label
 
-  // Direct parents and children in the graph
+  // Direct parents and children — scoped to the active selection/lock if present
+  const inScope = (id: string) => !scopedNodeIds || scopedNodeIds.has(id)
+
   const parentNodes = graphData.edges
-    .filter(e => e.target === node.id)
+    .filter(e => e.target === node.id && inScope(e.source))
     .map(e => graphData.nodes.find(n => n.id === e.source))
     .filter(Boolean) as HeatNode[]
 
   const childNodes = graphData.edges
-    .filter(e => e.source === node.id)
+    .filter(e => e.source === node.id && inScope(e.target))
     .map(e => graphData.nodes.find(n => n.id === e.target))
     .filter(Boolean) as HeatNode[]
 
@@ -72,15 +76,14 @@ function NodeInfoPanel({
   const exercises = node.layer === 'exercise_group'
     ? [...(graphData.exercisesByGroup[groupKey] ?? [])].sort((a, b) => b.rawCount - a.rawCount)
     : []
-  // Modality-only: exercise_groups reachable through child archetypes (deduplicated, heat-sorted).
-  // Archetypes and movements use the standard "Leads to" section instead.
+  // Modality-only: exercise_groups reachable through scoped child archetypes
   const movementNodes: HeatNode[] = node.layer === 'modality'
     ? [...new Map(
         childNodes
           .filter(c => c.layer === 'archetype')
           .flatMap(arch =>
             graphData.edges
-              .filter(e => e.source === arch.id)
+              .filter(e => e.source === arch.id && inScope(e.target))
               .map(e => graphData.nodes.find(n => n.id === e.target))
               .filter((n): n is HeatNode => !!n && n.layer === 'exercise_group')
           )
@@ -266,6 +269,9 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   const [weekRange, setWeekRange] = useState<[number, number]>([1, program?.weeks.length ?? 1])
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null)
   const [selectionByLayer, setSelectionByLayer] = useState<Map<LayerKey, string>>(new Map())
+  const [lockedNodeId, setLockedNodeId] = useState<string | null>(null) // 2nd click — drives layout centering
+  const lockedNodeRef = useRef<string | null>(null)
+  lockedNodeRef.current = lockedNodeId
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   // Seed initial locked node into the correct layer slot
@@ -282,19 +288,22 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   )
   const lowestSelectedId = selectedNodes.at(-1) ?? null
 
-  // ESC removes the deepest (lowest-layer) active selection, stepping back one layer at a time
+  // ESC: if a node is locked, first Esc just unlocks (keeps selected). Next Esc removes deepest layer.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectionByLayer(prev => {
-          if (prev.size === 0) return prev
-          const deepest = [...LAYER_ORDER_KEYS].reverse().find(l => prev.has(l))
-          if (!deepest) return prev
-          const next = new Map(prev)
-          next.delete(deepest)
-          return next
-        })
+      if (e.key !== 'Escape') return
+      if (lockedNodeRef.current !== null) {
+        setLockedNodeId(null)
+        return
       }
+      setSelectionByLayer(prev => {
+        if (prev.size === 0) return prev
+        const deepest = [...LAYER_ORDER_KEYS].reverse().find(l => prev.has(l))
+        if (!deepest) return prev
+        const next = new Map(prev)
+        next.delete(deepest)
+        return next
+      })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -319,27 +328,43 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   const handleClickNode = useCallback((id: string) => {
     if (id.startsWith('exercise_group::')) {
       setExpandedGroup(prev => prev === id ? null : id)
-      // exercise_group selection is just expand/collapse — don't add to selectionByLayer
       return
     }
     const layer = LAYER_ORDER_KEYS.find(l => id.startsWith(`${l}::`)) ?? null
     if (!layer) return
+
     setSelectionByLayer(prev => {
-      const next = new Map(prev)
-      if (next.get(layer) === id) {
-        next.delete(layer)  // deselect
-      } else {
-        next.set(layer, id)  // select/replace at this layer
+      const alreadySelected = prev.get(layer) === id
+      if (alreadySelected && lockedNodeRef.current === id) {
+        // 3rd click on locked node: deselect + unlock
+        setLockedNodeId(null)
+        const next = new Map(prev)
+        next.delete(layer)
+        return next
       }
+      if (alreadySelected) {
+        // 2nd click on selected node: promote to locked (layout reorganizes)
+        setLockedNodeId(id)
+        return prev  // selection unchanged
+      }
+      // 1st click (or new node at same layer): select, clear lock if layer changes
+      if (lockedNodeRef.current !== null) {
+        const lockedLayer = LAYER_ORDER_KEYS.find(l => lockedNodeRef.current!.startsWith(`${l}::`))
+        if (lockedLayer !== layer) setLockedNodeId(null)
+      }
+      const next = new Map(prev)
+      next.set(layer, id)
       return next
     })
   }, [])
 
-  // Remove the deepest active selection
+  // Remove the deepest active selection (and unlock if the cleared node was locked)
   const clearLowest = useCallback(() => {
     setSelectionByLayer(prev => {
       const deepest = [...LAYER_ORDER_KEYS].reverse().find(l => prev.has(l))
       if (!deepest) return prev
+      const removedId = prev.get(deepest)
+      if (removedId && lockedNodeRef.current === removedId) setLockedNodeId(null)
       const next = new Map(prev)
       next.delete(deepest)
       return next
@@ -377,6 +402,27 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
       </div>
     )
   }
+
+  // Scoped connected set — mirrors HeatmapGraph's connectedSet logic.
+  // Used to filter NodeInfoPanel's parent/child/movement lists to only in-scope nodes.
+  const scopedNodeIds = useMemo(() => {
+    if (!graphData || selectedNodes.length === 0) return null
+    let result: Set<string> | null = null
+    for (const nodeId of selectedNodes) {
+      const raw = getConnectedNodeIds(nodeId, graphData.edges)
+      if (nodeId.startsWith('philosophy::')) {
+        prunePhilosophyScope(raw, nodeId.slice('philosophy::'.length), graphData.nodes, graphData.edges)
+      }
+      if (result === null) {
+        result = raw
+      } else {
+        for (const id of [...result]) {
+          if (!raw.has(id)) result.delete(id)
+        }
+      }
+    }
+    return result
+  }, [selectedNodes, graphData])
 
   if (!graphData) return null
 
@@ -474,6 +520,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
             data={graphData}
             highlightedNode={highlightedNode}
             selectedNodes={selectedNodes}
+            lockedNode={lockedNodeId}
             onHoverNode={handleHoverNode}
             onClickNode={handleClickNode}
             expandedGroup={expandedGroup}
@@ -499,6 +546,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                   data={compareGraphData}
                   highlightedNode={highlightedNode}
                   selectedNodes={selectedNodes}
+                  lockedNode={lockedNodeId}
                   onHoverNode={handleHoverNode}
                   onClickNode={handleClickNode}
                   expandedGroup={expandedGroup}
@@ -551,7 +599,8 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
             node={infoNode}
             graphData={graphData}
             onClose={clearLowest}
-            isLocked={selectedNodes.length > 0}
+            isLocked={lockedNodeId !== null}
+            scopedNodeIds={scopedNodeIds}
           />
         )}
       </AnimatePresence>

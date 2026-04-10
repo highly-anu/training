@@ -219,6 +219,7 @@ export interface ArchetypeSlot {
 export interface Archetype {
   id: string
   name: string
+  _package?: string
   modality: ModalityId
   category: string
   duration_estimate_minutes: number

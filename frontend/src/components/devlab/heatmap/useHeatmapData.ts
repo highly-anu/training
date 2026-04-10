@@ -11,6 +11,8 @@ export interface HeatNode {
   layer: LayerKind
   /** Modality this node is associated with (for coloring) */
   modalityHint?: ModalityId
+  /** Package this node belongs to (set on archetype nodes) */
+  _package?: string
   heat: number        // 0–1 normalized
   rawCount: number    // absolute usage count
 }
@@ -194,6 +196,7 @@ function buildStaticGraph(ontology: OntologyData) {
       label: arch.name,
       layer: 'archetype',
       modalityHint: modHint,
+      _package: arch._package,
       heat: 0,
       rawCount: 0,
     })

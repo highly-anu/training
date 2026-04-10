@@ -1,0 +1,40 @@
+id: uphill_weighted_carry_session
+name: "Uphill Weighted Carry"
+modality: strength_endurance
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 150
+applicable_phases:
+  - build
+  - peak
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 15
+    intensity: low
+    exercise_filter:
+      category: mobility
+  - role: main_me
+    slot_type: time_domain
+    duration_minutes: 120
+    intensity: high
+    exercise_filter:
+      category: loaded_carry
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 15
+    intensity: low
+    exercise_filter:
+      category: mobility
+sources:
+  - "Training for the Uphill Athlete, Ch. 7"
+notes: |
+  Outdoor analog of the box step-up: weighted pack on a steep, sustained
+  uphill. Pack weight matches the objective. Effort is Z2–Z3 lungs, but
+  the legs do most of the suffering. 1500–3000 ft of vertical typical.
+  Replaces or supplements box step-ups in Specific phase when terrain
+  is available. Walk down or take a lift to spare quads from eccentric
+  blowout if doing back-to-back days.

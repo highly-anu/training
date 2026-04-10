@@ -1,0 +1,44 @@
+id: uphill_base_phase
+name: "Base Phase (Uphill Athlete)"
+source_philosophy: uphill_athlete
+goals_served:
+  - aerobic_base
+  - max_strength
+  - strength_endurance
+  - durability
+  - mobility
+sessions_per_week:
+  aerobic_base: 4
+  max_strength: 2
+  strength_endurance: 1
+  durability: 1
+  mobility: 2
+intensity_distribution:
+  zone1_2_pct: 0.90
+  zone3_pct: 0.10
+  zone4_5_pct: 0.0
+  max_effort_pct: 0.0
+progression_model: volume_block
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 5
+  days_per_week_max: 7
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.6
+  intensity_change: maintain
+sources:
+  - "Training for the New Alpinism, Ch. 7 — Base Period"
+  - "Training for the Uphill Athlete, Ch. 6 — Building the Aerobic Base"
+notes: |
+  8–16 weeks (longer for less developed athletes). The defining phase. Goal
+  is to maximize aerobic capacity and capillarization through high volumes
+  of low-intensity work. Volume ramps ~10%/week for 3 weeks, then deload.
+  Long aerobic day grows progressively (start at current long day +25%, build
+  to mountain-objective duration). Muscular endurance is introduced once
+  AeT is solid: weighted step-ups become the signature session. Strength
+  shifts from general to mountain-specific. Total weekly volume 12–20
+  hours typical for serious mountain athletes; elites may exceed.
