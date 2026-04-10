@@ -36,8 +36,7 @@ export type HeatmapSortMode = 'alpha' | 'heat-desc' | 'heat-asc'
 interface HeatmapGraphProps {
   data: HeatmapGraphData
   highlightedNode: string | null
-  lockedNode: string | null
-  selectedNode: string | null
+  selectedNodes: string[]  // all currently selected node IDs, ordered top-layer (philosophy) first
   onHoverNode: (id: string | null) => void
   onClickNode: (id: string) => void
   expandedGroup: string | null
@@ -90,13 +89,42 @@ function getConnectedNodeIds(
   return connected
 }
 
+/** When locked on a philosophy node, prune cross-package archetypes and every
+ *  edge/node that hangs exclusively off them (both incoming and outgoing). */
+function prunePhilosophyScope(
+  raw: Set<string>,
+  pkg: string,
+  nodes: HeatmapGraphData['nodes'],
+  edges: HeatmapGraphData['edges'],
+) {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]))
+
+  // 1. Remove cross-package archetype nodes + their incident edges (both directions)
+  for (const id of [...raw]) {
+    if (!id.startsWith('archetype::')) continue
+    const node = nodeMap.get(id)
+    if (node?._package && node._package !== pkg) {
+      raw.delete(id)
+      for (const edge of edges) {
+        if (edge.source === id || edge.target === id) raw.delete(edge.id)
+      }
+    }
+  }
+
+  // 2. Remove exercise_group nodes that no longer have any highlighted incoming edge
+  for (const id of [...raw]) {
+    if (!id.startsWith('exercise_group::')) continue
+    const hasIncoming = edges.some(e => e.target === id && raw.has(e.id))
+    if (!hasIncoming) raw.delete(id)
+  }
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function HeatmapGraph({
   data,
   highlightedNode,
-  lockedNode,
-  selectedNode,
+  selectedNodes,
   onHoverNode,
   onClickNode,
   expandedGroup,
@@ -117,7 +145,23 @@ export function HeatmapGraph({
     return () => ro.disconnect()
   }, [])
 
-  // Group nodes by layer
+  // The lowest (most specific) selected node drives layout reorganization and sort
+  const lowestSelected = selectedNodes.at(-1) ?? null
+
+  // Connected set for lowest selected node only (drives layout reorganization, not hover)
+  // Computed first so nodesByLayer can use it for connection-count sorting.
+  const lockedConnectedSet = useMemo(() => {
+    if (!lowestSelected) return null
+    const raw = getConnectedNodeIds(lowestSelected, data.edges)
+    if (lowestSelected.startsWith('philosophy::')) {
+      prunePhilosophyScope(raw, lowestSelected.slice('philosophy::'.length), data.nodes, data.edges)
+    }
+    return raw
+  }, [lowestSelected, data.edges, data.nodes])
+
+  // Group nodes by layer, sorted per sortMode.
+  // When heat is zero (no program), sort by incoming-edge count from the layer above.
+  // With a locked selection, only count edges inside the connected subgraph.
   const nodesByLayer = useMemo(() => {
     const map: Record<LayerKind, typeof data.nodes> = {
       philosophy: [], framework: [], modality: [], archetype: [], exercise_group: [],
@@ -125,23 +169,33 @@ export function HeatmapGraph({
     for (const node of data.nodes) {
       map[node.layer].push(node)
     }
-    for (const layer of LAYER_ORDER) {
-      if (sortMode === 'heat-desc') {
-        map[layer].sort((a, b) => b.heat - a.heat || a.label.localeCompare(b.label))
-      } else if (sortMode === 'heat-asc') {
-        map[layer].sort((a, b) => a.heat - b.heat || a.label.localeCompare(b.label))
-      } else {
+
+    if (sortMode !== 'alpha') {
+      // Count incoming edges (from above) per node, scoped to the locked subgraph if active
+      const incomingCount = new Map<string, number>()
+      for (const edge of data.edges) {
+        if (lockedConnectedSet && !lockedConnectedSet.has(edge.id)) continue
+        incomingCount.set(edge.target, (incomingCount.get(edge.target) ?? 0) + 1)
+      }
+      // Sort key: heat when available (normalised 0–1), otherwise raw incoming-edge count
+      const key = (n: (typeof data.nodes)[0]) =>
+        n.heat > 0 ? n.heat : (incomingCount.get(n.id) ?? 0)
+
+      for (const layer of LAYER_ORDER) {
+        if (sortMode === 'heat-desc') {
+          map[layer].sort((a, b) => key(b) - key(a) || a.label.localeCompare(b.label))
+        } else {
+          map[layer].sort((a, b) => key(a) - key(b) || a.label.localeCompare(b.label))
+        }
+      }
+    } else {
+      for (const layer of LAYER_ORDER) {
         map[layer].sort((a, b) => a.label.localeCompare(b.label))
       }
     }
-    return map
-  }, [data.nodes, sortMode])
 
-  // Connected set for locked node only (drives layout reorganization, not hover)
-  const lockedConnectedSet = useMemo(() => {
-    if (!lockedNode) return null
-    return getConnectedNodeIds(lockedNode, data.edges)
-  }, [lockedNode, data.edges])
+    return map
+  }, [data.nodes, data.edges, sortMode, lockedConnectedSet])
 
   // Calculate positions for all nodes — fit every layer within the container width
   const { positions, svgWidth, svgHeight } = useMemo(() => {
@@ -200,18 +254,37 @@ export function HeatmapGraph({
     return { positions: pos, svgWidth: svgW, svgHeight: height }
   }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth, lockedConnectedSet])
 
-  // Determine which nodes/edges are highlighted
-  // lockedNode (2nd click) reorganizes layout; selectedNode (1st click) + hover drive dimming
-  const activeNode = lockedNode ?? selectedNode ?? highlightedNode
+  // Intersection of all selected nodes' connected sets; fall back to hover when nothing selected
   const connectedSet = useMemo(() => {
-    if (!activeNode) return null
-    return getConnectedNodeIds(activeNode, data.edges)
-  }, [activeNode, data.edges])
+    if (selectedNodes.length > 0) {
+      let result: Set<string> | null = null
+      for (const nodeId of selectedNodes) {
+        const raw = getConnectedNodeIds(nodeId, data.edges)
+        if (nodeId.startsWith('philosophy::')) {
+          prunePhilosophyScope(raw, nodeId.slice('philosophy::'.length), data.nodes, data.edges)
+        }
+        if (result === null) {
+          result = raw
+        } else {
+          for (const id of [...result]) {
+            if (!raw.has(id)) result.delete(id)
+          }
+        }
+      }
+      return result
+    }
+    // No selection — fall back to hover
+    if (!highlightedNode) return null
+    return getConnectedNodeIds(highlightedNode, data.edges)
+  }, [selectedNodes, highlightedNode, data.edges, data.nodes])
 
   const getHighlight = useCallback((id: string): boolean | null => {
     if (!connectedSet) return null
     return connectedSet.has(id)
   }, [connectedSet])
+
+  // Build a set for O(1) isSelected checks
+  const selectedSet = useMemo(() => new Set(selectedNodes), [selectedNodes])
 
   // Get expanded exercises for rendering
   const expandedExercises = useMemo<ExerciseInGroup[]>(() => {
@@ -275,6 +348,8 @@ export function HeatmapGraph({
         {/* Edges (render behind nodes) */}
         {data.edges.map(edge => {
           const h = getHighlight(edge.id)
+          // Don't draw lines to nodes hidden by the active selection filter
+          if (h === false && connectedSet !== null) return null
           const sourcePos = positions[edge.source]
           const targetPos = positions[edge.target]
           if (!sourcePos || !targetPos) return null
@@ -334,7 +409,7 @@ export function HeatmapGraph({
               onClick={onClickNode}
               onHover={onHoverNode}
               isExpanded={node.id === expandedGroup}
-              isSelected={node.id === selectedNode || node.id === lockedNode}
+              isSelected={selectedSet.has(node.id)}
             />
           )
         })}
