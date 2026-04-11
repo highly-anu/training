@@ -1,29 +1,31 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Compass, Zap } from 'lucide-react'
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts'
+import { BookOpen, Compass, Dumbbell, Search, X, Zap } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { PrereqChain } from '@/components/exercises/PrereqChain'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useModalities } from '@/api/modalities'
 import { useArchetypes } from '@/api/archetypes'
+import { useExercises } from '@/api/exercises'
+import { useDebounce } from '@/hooks/useDebounce'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { PhilosophyExplorerPanel } from '@/components/devlab/PhilosophyExplorerPanel'
-import type { Philosophy, Modality, Archetype, ModalityId } from '@/api/types'
+import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
+import type { Philosophy, Modality, Archetype, ModalityId, Exercise } from '@/api/types'
 
-// ─── Archetype category colours ───────────────────────────────────────────────
+// ─── Intensity zone definitions (HR % thresholds) ────────────────────────────
 
-const CATEGORY_META: Record<string, { label: string; hex: string }> = {
-  strength:       { label: 'Strength',       hex: '#ef4444' },
-  conditioning:   { label: 'Conditioning',   hex: '#0ea5e9' },
-  kettlebell:     { label: 'Kettlebell',     hex: '#f97316' },
-  gpp_durability: { label: 'GPP / Durability', hex: '#10b981' },
-  movement_skill: { label: 'Movement / Skill', hex: '#14b8a6' },
-}
-
-const ALL_CATEGORIES = Object.keys(CATEGORY_META)
+const HR_ZONES = [
+  { id: 'z1', label: 'Z1', min: 55, max: 65 },
+  { id: 'z2', label: 'Z2', min: 65, max: 75 },
+  { id: 'z3', label: 'Z3', min: 75, max: 85 },
+  { id: 'z4', label: 'Z4', min: 85, max: 92 },
+  { id: 'z5', label: 'Z5', min: 92, max: 100 },
+]
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -58,7 +60,7 @@ function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
 
 // ─── Topic Selector ───────────────────────────────────────────────────────────
 
-type Topic = 'philosophies' | 'modalities'
+type Topic = 'philosophies' | 'modalities' | 'exercises'
 
 interface TopicTab {
   id: Topic
@@ -69,6 +71,7 @@ interface TopicTab {
 const TOPICS: TopicTab[] = [
   { id: 'philosophies', label: 'Philosophies', Icon: BookOpen },
   { id: 'modalities',   label: 'Modalities',   Icon: Zap },
+  { id: 'exercises',    label: 'Exercises',     Icon: Dumbbell },
 ]
 
 function TopicSelector({
@@ -337,190 +340,156 @@ function ModalityOverview({
   )
 }
 
-// ─── Modality radar chart — archetype category profile ────────────────────────
+// ─── Modality signature — intensity strip + volume / session range bars ────────
 
-type ModalityChartMode = 'chart' | 'vs-all' | 'used' | 'all'
+function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetypes: Archetype[] }) {
+  const hex = MODALITY_COLORS[mod.id]?.hex ?? '#6366f1'
 
-function CategoryAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
-  if (x === undefined || y === undefined || !payload) return null
-  const meta = Object.values(CATEGORY_META).find(m => m.label === payload.value)
-  const color = meta?.hex ?? '#64748b'
-  const words = payload.value.split(' / ').join('\n').split(' ')
-  // wrap to two lines at ~12 chars
-  const lines: string[] = []
-  let cur = ''
-  for (const w of words) {
-    if (cur.length + w.length > 12 && cur) { lines.push(cur.trim()); cur = '' }
-    cur += w + ' '
-  }
-  if (cur.trim()) lines.push(cur.trim())
-  return (
-    <g>
-      {lines.map((line, i) => (
-        <text key={i} x={x} y={y + i * 11 - (lines.length - 1) * 5.5}
-          textAnchor="middle" dominantBaseline="central"
-          fontSize={9} fontFamily="ui-monospace, monospace" fill={color}>
-          {line}
-        </text>
-      ))}
-    </g>
-  )
-}
+  // Which HR zones are active for this modality
+  const activeZones = useMemo(() => {
+    const zones = mod.intensity_zones ?? []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasHrData = zones.some((z: any) => z.hr_pct_min != null)
+    const active = new Set<string>()
+    if (hasHrData) {
+      for (const z of zones) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const zz = z as any
+        if (zz.hr_pct_min == null) continue
+        for (const def of HR_ZONES) {
+          if (zz.hr_pct_min < def.max && zz.hr_pct_max > def.min) active.add(def.id)
+        }
+      }
+    } else {
+      // Infer from recovery cost when no HR data available
+      if (mod.recovery_cost === 'low')    { active.add('z1'); active.add('z2') }
+      else if (mod.recovery_cost === 'medium') { active.add('z2'); active.add('z3') }
+      else                                { active.add('z4'); active.add('z5') }
+    }
+    return active
+  }, [mod])
 
-function ModalityRadarChart({ mod, allArchetypes }: { mod: Modality; allArchetypes: Archetype[] }) {
-  const [viewMode, setViewMode] = useState<ModalityChartMode>('chart')
-  const primaryColor = MODALITY_COLORS[mod.id]?.hex ?? '#6366f1'
+  const recoveryLevel = { low: 1, medium: 2, high: 3 }[mod.recovery_cost] ?? 1
+  const recoveryColor = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' }[mod.recovery_cost]
 
-  const { chartData, vsAllData, usedData, allData } = useMemo(() => {
-    // Counts for this modality
-    const modArchetypes = allArchetypes.filter(a => a.modality === mod.id)
-    const counts: Record<string, number> = {}
-    for (const a of modArchetypes) counts[a.category] = (counts[a.category] ?? 0) + 1
-    const maxCount = Math.max(...Object.values(counts), 1)
+  const VOL_MAX = 600
+  const volMinPct = (mod.min_weekly_minutes / VOL_MAX) * 100
+  const volRangePct = ((mod.max_weekly_minutes - mod.min_weekly_minutes) / VOL_MAX) * 100
 
-    // Global counts across all archetypes
-    const globalCounts: Record<string, number> = {}
-    for (const a of allArchetypes) globalCounts[a.category] = (globalCounts[a.category] ?? 0) + 1
-    const globalMax = Math.max(...Object.values(globalCounts), 1)
+  const SESS_MAX = 180
+  const session = mod.typical_session_minutes
+  const sessMinPct = session ? (session.min / SESS_MAX) * 100 : 0
+  const sessRangePct = session ? Math.min(((session.max - session.min) / SESS_MAX) * 100, 100 - sessMinPct) : 0
 
-    const usedCategories = ALL_CATEGORIES.filter(c => (counts[c] ?? 0) > 0)
-
-    const usedData = usedCategories
-      .map(c => ({ cat: c, label: CATEGORY_META[c]?.label ?? c, hex: CATEGORY_META[c]?.hex ?? '#94a3b8', pct: Math.round(((counts[c] ?? 0) / maxCount) * 100) }))
-      .sort((a, b) => b.pct - a.pct)
-
-    const allData = ALL_CATEGORIES
-      .map(c => ({ cat: c, label: CATEGORY_META[c]?.label ?? c, hex: CATEGORY_META[c]?.hex ?? '#94a3b8', pct: Math.round(((counts[c] ?? 0) / maxCount) * 100) }))
-      .sort((a, b) => b.pct - a.pct)
-
-    const chartData = usedData.map(({ label, pct }) => ({ subject: label, value: +(pct / 100).toFixed(2) }))
-
-    const vsAllData = ALL_CATEGORIES.map(c => ({
-      subject: CATEGORY_META[c]?.label ?? c,
-      selected: +((counts[c] ?? 0) / maxCount).toFixed(2),
-      all: +((globalCounts[c] ?? 0) / globalMax).toFixed(2),
-    }))
-
-    return { chartData, vsAllData, usedData, allData }
-  }, [mod.id, allArchetypes])
-
-  if (chartData.length === 0) return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Archetype Profile</p>
-      <p className="text-[10px] text-muted-foreground/40">No archetypes linked to this modality</p>
-    </div>
-  )
-
-  const MODES: { key: ModalityChartMode; label: string }[] = [
-    { key: 'chart',  label: 'chart'  },
-    { key: 'vs-all', label: 'vs·all' },
-    { key: 'used',   label: 'used'   },
-    { key: 'all',    label: 'all'    },
-  ]
-  const barList = viewMode === 'all' ? allData : usedData
+  const archetypeCount = allArchetypes.filter(a => a.modality === mod.id).length
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Header + toggle */}
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Archetype Profile</p>
-        <div className="flex rounded-md overflow-hidden border border-border/40 shrink-0">
-          {MODES.map(({ key, label }) => (
-            <button key={key} onClick={() => setViewMode(key)}
-              className={[
-                'px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider transition-colors',
-                viewMode === key
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/20',
-              ].join(' ')}
-            >{label}</button>
-          ))}
+    <div className="flex flex-col gap-4">
+
+      {/* Header: label + recovery meter */}
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Profile</p>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-mono text-muted-foreground/35 uppercase tracking-wider">recovery</span>
+          <div className="flex gap-0.5">
+            {[1, 2, 3].map(n => (
+              <div key={n} className="size-2.5 rounded-full transition-all"
+                style={{
+                  backgroundColor: n <= recoveryLevel ? recoveryColor : 'transparent',
+                  border: `1px solid ${n <= recoveryLevel ? recoveryColor : '#334155'}`,
+                  opacity: n <= recoveryLevel ? (n === recoveryLevel ? 1 : 0.6) : 0.25,
+                }} />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Radar — this modality only */}
-      {viewMode === 'chart' && (
-        <div style={{ width: '100%', height: 240 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={chartData} margin={{ top: 24, right: 48, bottom: 24, left: 48 }}>
-              <PolarGrid stroke={primaryColor} strokeOpacity={0.18} />
-              <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
-              <PolarAngleAxis dataKey="subject" tick={(props) => <CategoryAxisTick {...props} />} />
-              <Radar dataKey="value" stroke={primaryColor} fill={primaryColor} fillOpacity={0.22} strokeWidth={2} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Radar — vs all modalities combined */}
-      {viewMode === 'vs-all' && (
-        <>
-          <div style={{ width: '100%', height: 240 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={vsAllData} margin={{ top: 24, right: 48, bottom: 24, left: 48 }}>
-                <PolarGrid stroke={primaryColor} strokeOpacity={0.15} />
-                <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
-                <PolarAngleAxis dataKey="subject" tick={(props) => <CategoryAxisTick {...props} />} />
-                <Radar dataKey="all" stroke="#64748b" fill="#64748b" fillOpacity={0.08} strokeWidth={1} strokeDasharray="3 2" />
-                <Radar dataKey="selected" stroke={primaryColor} fill={primaryColor} fillOpacity={0.22} strokeWidth={2} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex gap-4 justify-end">
-            <div className="flex items-center gap-1.5">
-              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke={primaryColor} strokeWidth={2} /></svg>
-              <span className="text-[9px] font-mono text-muted-foreground/70">{mod.name.split(' ')[0]}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke="#64748b" strokeWidth={1} strokeDasharray="3 2" /></svg>
-              <span className="text-[9px] font-mono text-muted-foreground/70">all</span>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Bar list */}
-      {(viewMode === 'used' || viewMode === 'all') && (
-        <div className="space-y-2">
-          {barList.map(item => (
-            <div key={item.cat} className="flex items-center gap-2">
-              <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: item.hex, opacity: item.pct > 0 ? 1 : 0.25 }} />
-              <span className={cn('text-[10px] flex-1 leading-tight', item.pct > 0 ? 'text-muted-foreground' : 'text-muted-foreground/30')}>
-                {item.label}
-              </span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <div className="w-12 h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.hex }} />
-                </div>
-                <span className="text-[10px] font-mono w-7 text-right tabular-nums"
-                  style={{ color: item.pct > 0 ? item.hex : undefined, opacity: item.pct > 0 ? 1 : 0.3 }}>
-                  {item.pct}%
+      {/* Intensity zone strip */}
+      <div className="space-y-1.5">
+        <p className="text-[9px] uppercase tracking-wider text-muted-foreground/35 font-medium">Intensity</p>
+        <div className="flex gap-0.5">
+          {HR_ZONES.map(def => {
+            const active = activeZones.has(def.id)
+            return (
+              <div key={def.id} className="flex-1 flex items-center justify-center rounded py-1.5 transition-all"
+                style={{
+                  backgroundColor: active ? `${hex}cc` : 'transparent',
+                  border: `1px solid ${active ? hex : '#1e293b'}`,
+                }}>
+                <span className="text-[9px] font-mono font-medium"
+                  style={{ color: active ? '#fff' : '#334155' }}>
+                  {def.label}
                 </span>
               </div>
-            </div>
-          ))}
+            )
+          })}
+        </div>
+        <div className="flex justify-between px-0.5">
+          <span className="text-[8px] font-mono text-muted-foreground/25">low</span>
+          <span className="text-[8px] font-mono text-muted-foreground/25">high</span>
+        </div>
+      </div>
+
+      {/* Weekly volume range */}
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between">
+          <p className="text-[9px] uppercase tracking-wider text-muted-foreground/35 font-medium">Volume / week</p>
+          <span className="text-[9px] font-mono tabular-nums text-muted-foreground/50">
+            {mod.min_weekly_minutes}–{mod.max_weekly_minutes} min
+          </span>
+        </div>
+        <div className="relative h-2 rounded-full bg-muted/20 overflow-hidden">
+          <div className="absolute h-full rounded-full"
+            style={{ left: `${volMinPct}%`, width: `${Math.max(volRangePct, 4)}%`, backgroundColor: hex, opacity: 0.65 }} />
+        </div>
+        <div className="flex justify-between px-0.5">
+          <span className="text-[8px] font-mono text-muted-foreground/25">0</span>
+          <span className="text-[8px] font-mono text-muted-foreground/25">600 min/wk</span>
+        </div>
+      </div>
+
+      {/* Session duration range */}
+      {session && (
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/35 font-medium">Session</p>
+            <span className="text-[9px] font-mono tabular-nums text-muted-foreground/50">
+              {session.min}–{session.max} min
+            </span>
+          </div>
+          <div className="relative h-2 rounded-full bg-muted/20 overflow-hidden">
+            <div className="absolute h-full rounded-full"
+              style={{ left: `${sessMinPct}%`, width: `${Math.max(sessRangePct, 4)}%`, backgroundColor: hex, opacity: 0.65 }} />
+          </div>
+          <div className="flex justify-between px-0.5">
+            <span className="text-[8px] font-mono text-muted-foreground/25">0</span>
+            <span className="text-[8px] font-mono text-muted-foreground/25">180 min</span>
+          </div>
         </div>
       )}
 
-      {/* Legend for chart views */}
-      {(viewMode === 'chart' || viewMode === 'vs-all') && usedData.length > 0 && (
-        <div className="space-y-2">
-          {usedData.map(item => (
-            <div key={item.cat} className="flex items-center gap-2">
-              <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: item.hex }} />
-              <span className="text-[10px] text-muted-foreground flex-1 leading-tight">{item.label}</span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <div className="w-12 h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.hex }} />
-                </div>
-                <span className="text-[10px] font-mono w-7 text-right tabular-nums" style={{ color: item.hex }}>
-                  {item.pct}%
-                </span>
-              </div>
-            </div>
+      {/* Footer: session position + archetype count */}
+      <div className="flex items-center justify-between pt-0.5">
+        <div className="flex gap-1">
+          {(['first', 'standalone', 'any'] as const).map(pos => (
+            <span key={pos}
+              className="px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors"
+              style={{
+                backgroundColor: mod.session_position === pos ? `${hex}20` : 'transparent',
+                color: mod.session_position === pos ? hex : '#334155',
+                border: `1px solid ${mod.session_position === pos ? `${hex}50` : '#1e293b'}`,
+              }}>
+              {pos}
+            </span>
           ))}
         </div>
-      )}
+        {archetypeCount > 0 && (
+          <span className="text-[9px] font-mono text-muted-foreground/35">
+            {archetypeCount} archetype{archetypeCount !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
     </div>
   )
 }
@@ -580,9 +549,9 @@ function ModalityDetail({
               </div>
             </div>
 
-            {/* Right: archetype radar */}
+            {/* Right: modality signature */}
             <div className="shrink-0 pl-5 border-l" style={{ borderColor: `${hex}20`, width: '36%', minWidth: 240 }}>
-              <ModalityRadarChart mod={mod} allArchetypes={allArchetypes} />
+              <ModalitySignature mod={mod} allArchetypes={allArchetypes} />
             </div>
           </div>
         </div>
@@ -693,6 +662,229 @@ function ModalityDetail({
   )
 }
 
+// ─── Exercise components ──────────────────────────────────────────────────────
+
+const EX_CATEGORY_COLORS: Record<string, string> = {
+  barbell:     '#ef4444',
+  kettlebell:  '#f97316',
+  bodyweight:  '#10b981',
+  aerobic:     '#0ea5e9',
+  loaded_carry:'#f59e0b',
+  sandbag:     '#ca8a04',
+  mobility:    '#14b8a6',
+  skill:       '#8b5cf6',
+  rehab:       '#84cc16',
+  gym_jones:   '#ec4899',
+}
+
+const EX_EFFORT_COLORS: Record<string, string> = {
+  low: '#10b981', medium: '#f59e0b', high: '#f97316', max: '#ef4444',
+}
+
+const EX_CATEGORIES = [
+  { id: '', label: 'All' },
+  { id: 'barbell', label: 'Barbell' },
+  { id: 'kettlebell', label: 'KB' },
+  { id: 'bodyweight', label: 'BW' },
+  { id: 'aerobic', label: 'Aerobic' },
+  { id: 'loaded_carry', label: 'Carries' },
+  { id: 'sandbag', label: 'Sandbag' },
+  { id: 'mobility', label: 'Mobility' },
+  { id: 'skill', label: 'Skill' },
+  { id: 'rehab', label: 'Rehab' },
+]
+
+function ExerciseRow({
+  exercise,
+  isSelected,
+  onSelect,
+}: {
+  exercise: Exercise
+  isSelected: boolean
+  onSelect: (e: Exercise | null) => void
+}) {
+  const accent = EX_CATEGORY_COLORS[exercise.category] ?? '#6366f1'
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(isSelected ? null : exercise)}
+      className={cn(
+        'w-full text-left rounded-lg border bg-card transition-colors px-3 py-2',
+        !isSelected && 'hover:border-primary/40',
+      )}
+      style={isSelected
+        ? { borderColor: accent, borderWidth: 2, backgroundColor: `${accent}10` }
+        : { borderLeftColor: accent, borderLeftWidth: 3 }
+      }
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <p className="text-xs font-medium leading-snug flex-1 truncate">{exercise.name}</p>
+        <div className="size-1.5 rounded-full shrink-0"
+          style={{ backgroundColor: EX_EFFORT_COLORS[exercise.effort] ?? '#94a3b8' }}
+          title={exercise.effort} />
+      </div>
+      <p className="text-[10px] mt-0.5" style={{ color: accent, opacity: 0.85 }}>
+        {exercise.category.replace(/_/g, ' ')}
+      </p>
+    </button>
+  )
+}
+
+function ExerciseOverview({ exercises }: { exercises: Exercise[] }) {
+  const byCat = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const e of exercises) counts[e.category] = (counts[e.category] ?? 0) + 1
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])
+  }, [exercises])
+  const max = byCat[0]?.[1] ?? 1
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-8 py-10 max-w-lg space-y-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-1">Total</p>
+          <p className="text-3xl font-bold tabular-nums">{exercises.length}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">exercises in catalog</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">By category</p>
+          {byCat.map(([cat, count]) => {
+            const color = EX_CATEGORY_COLORS[cat] ?? '#6366f1'
+            return (
+              <div key={cat} className="flex items-center gap-3">
+                <div className="w-20 shrink-0">
+                  <p className="text-[10px] text-muted-foreground capitalize">{cat.replace(/_/g, ' ')}</p>
+                </div>
+                <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${(count / max) * 100}%`, backgroundColor: color, opacity: 0.7 }} />
+                </div>
+                <span className="text-[10px] font-mono tabular-nums text-muted-foreground/60 w-6 text-right">{count}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ExercisePanel({
+  exercise,
+  allExercises,
+  onNavigate,
+}: {
+  exercise: Exercise
+  allExercises: Exercise[]
+  onNavigate: (id: string) => void
+}) {
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-6 py-5 space-y-5">
+
+        {/* Header */}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-1">Exercise</p>
+          <h2 className="text-base font-semibold"
+            style={{ color: EX_CATEGORY_COLORS[exercise.category] ?? undefined }}>
+            {exercise.name}
+          </h2>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {exercise.modality.map((m) => <ModalityBadge key={m} modality={m} />)}
+          </div>
+        </div>
+
+        {/* Meta grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: 'Category', value: exercise.category.replace(/_/g, ' ') },
+            { label: 'Effort',   value: exercise.effort },
+            { label: 'Bilateral', value: exercise.bilateral ? 'Yes' : 'No' },
+            ...(exercise.typical_volume
+              ? [{ label: 'Typical', value: `${exercise.typical_volume.sets}×${exercise.typical_volume.reps}` }]
+              : []),
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-md border border-border/30 bg-card/30 px-2.5 py-2">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-0.5">{label}</p>
+              <p className="text-[11px] font-medium capitalize">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Movement patterns */}
+        {exercise.movement_patterns.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Patterns</p>
+            <div className="flex flex-wrap gap-1">
+              {exercise.movement_patterns.map((p) => (
+                <span key={p} className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
+                  {p.replace(/_/g, ' ')}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Progressions */}
+        {Object.keys(exercise.progressions).length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Progressions</p>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              {exercise.progressions.load && <p><span className="text-foreground font-medium">Load:</span> {exercise.progressions.load}</p>}
+              {exercise.progressions.volume && <p><span className="text-foreground font-medium">Volume:</span> {exercise.progressions.volume}</p>}
+              {exercise.progressions.complexity && <p><span className="text-foreground font-medium">Complexity:</span> {exercise.progressions.complexity}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Scale down */}
+        {exercise.scaling_down && exercise.scaling_down.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Scale Down To</p>
+            <div className="flex flex-wrap gap-1">
+              {exercise.scaling_down.map((s) => (
+                <span key={s} className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                  {s.replace(/_/g, ' ')}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notes */}
+        {exercise.notes && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Coaching Notes</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{exercise.notes}</p>
+          </div>
+        )}
+
+        {/* Prereq chain */}
+        <div className="space-y-2 border-t border-border/30 pt-4">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Progression Chain</p>
+          <PrereqChain
+            exercise={exercise}
+            allExercises={allExercises}
+            onSelect={(id) => onNavigate(id)}
+          />
+        </div>
+
+        {/* Sources */}
+        {exercise.sources.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Sources</p>
+            <div className="flex flex-wrap gap-1">
+              {exercise.sources.map((s) => (
+                <span key={s} className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">{s}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
@@ -715,20 +907,44 @@ function StatCell({ label, value }: { label: string; value: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+type ExploreSection = 'explorer' | 'ontology'
+
+const EXPLORE_SECTIONS: { key: ExploreSection; label: string }[] = [
+  { key: 'explorer', label: 'Explorer' },
+  { key: 'ontology', label: 'Ontology' },
+]
+
 export function Explore() {
+  const [section, setSection] = useState<ExploreSection>('explorer')
   const [topic, setTopic] = useState<Topic>('philosophies')
   const [selectedPhil, setSelectedPhil] = useState<Philosophy | null>(null)
   const [selectedMod, setSelectedMod] = useState<Modality | null>(null)
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+  const [exSearch, setExSearch] = useState('')
+  const [exCategory, setExCategory] = useState('')
+  const debouncedSearch = useDebounce(exSearch, 250)
 
   const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
   const { data: frameworks = [] } = useFrameworks()
   const { data: modalities = [], isLoading: modLoading, error: modError } = useModalities()
   const { data: allArchetypes = [] } = useArchetypes()
+  const { data: allExercises = [] } = useExercises()
+  const { data: filteredExercises = [] } = useExercises(
+    debouncedSearch || exCategory
+      ? { search: debouncedSearch || undefined, category: exCategory || undefined }
+      : undefined
+  )
 
   function handleTopicChange(t: Topic) {
     setTopic(t)
     setSelectedPhil(null)
     setSelectedMod(null)
+    setSelectedExercise(null)
+  }
+
+  function handleNavigateExercise(id: string) {
+    const ex = allExercises.find((e) => e.id === id)
+    if (ex) setSelectedExercise(ex)
   }
 
   const isLoading = topic === 'philosophies' ? philLoading : modLoading
@@ -743,42 +959,116 @@ export function Explore() {
       className="flex h-full flex-col"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+      <div className="flex items-center gap-3 border-b px-6 py-4 shrink-0">
         <Compass className="size-5 text-primary" />
         <h1 className="text-lg font-semibold">Explore</h1>
+        <div className="ml-2 flex gap-1">
+          {EXPLORE_SECTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setSection(key)}
+              className={cn(
+                'px-3 py-1 rounded text-xs border transition-colors',
+                section === key
+                  ? 'bg-primary/15 border-primary/40 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Body */}
-      {isLoading ? (
-        <div className="flex-1 p-6"><LoadingCard /></div>
-      ) : error ? (
-        <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
-      ) : (
+      {/* ── Explorer ── */}
+      {section === 'explorer' && (
+        topic !== 'exercises' && (isLoading
+          ? <div className="flex-1 p-6"><LoadingCard /></div>
+          : error
+          ? <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
+          : null)
+      )}
+
+      {section === 'explorer' && (topic === 'exercises' || (!isLoading && !error)) && (
         <div className="flex flex-1 min-h-0">
           {/* Left column */}
           <div className="shrink-0 flex flex-col border-r" style={{ width: 272 }}>
             <TopicSelector active={topic} onChange={handleTopicChange} />
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-              {topic === 'philosophies'
-                ? philosophies.map((phil) => (
-                    <PhilCard
-                      key={phil.id}
-                      phil={phil}
-                      isSelected={selectedPhil?.id === phil.id}
-                      onSelect={setSelectedPhil}
+            {topic !== 'exercises' && (
+              <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+                {topic === 'philosophies'
+                  ? philosophies.map((phil) => (
+                      <PhilCard
+                        key={phil.id}
+                        phil={phil}
+                        isSelected={selectedPhil?.id === phil.id}
+                        onSelect={setSelectedPhil}
+                      />
+                    ))
+                  : modalities.map((mod) => (
+                      <ModalityCard
+                        key={mod.id}
+                        mod={mod}
+                        isSelected={selectedMod?.id === mod.id}
+                        onSelect={setSelectedMod}
+                      />
+                    ))
+                }
+              </div>
+            )}
+
+            {topic === 'exercises' && (
+              <div className="flex flex-col flex-1 min-h-0">
+                {/* Search */}
+                <div className="px-3 pt-2 pb-1">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
+                    <input
+                      placeholder="Search…"
+                      value={exSearch}
+                      onChange={(e) => setExSearch(e.target.value)}
+                      className="w-full rounded-md border border-border bg-background pl-7 pr-7 h-8 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
                     />
-                  ))
-                : modalities.map((mod) => (
-                    <ModalityCard
-                      key={mod.id}
-                      mod={mod}
-                      isSelected={selectedMod?.id === mod.id}
-                      onSelect={setSelectedMod}
+                    {exSearch && (
+                      <button onClick={() => setExSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        <X className="size-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {/* Category pills */}
+                <div className="px-3 pb-2 flex flex-wrap gap-1">
+                  {EX_CATEGORIES.map(({ id, label }) => (
+                    <button key={id} onClick={() => setExCategory(id)}
+                      className={cn(
+                        'px-2 py-0.5 rounded text-[10px] border transition-colors',
+                        exCategory === id
+                          ? 'bg-primary/15 border-primary/40 text-primary'
+                          : 'border-border/50 text-muted-foreground hover:bg-muted/50'
+                      )}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {/* Count */}
+                <div className="px-3 pb-1">
+                  <span className="text-[10px] text-muted-foreground/50 font-mono">{filteredExercises.length} exercises</span>
+                </div>
+                {/* List */}
+                <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
+                  {filteredExercises.map((ex) => (
+                    <ExerciseRow
+                      key={ex.id}
+                      exercise={ex}
+                      isSelected={selectedExercise?.id === ex.id}
+                      onSelect={setSelectedExercise}
                     />
-                  ))
-              }
-            </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right column */}
@@ -787,11 +1077,22 @@ export function Explore() {
               ? selectedPhil
                 ? <PhilosophyExplorerPanel controlledId={selectedPhil.id} />
                 : <PhilosophyOverview philosophies={philosophies} frameworks={frameworks} />
-              : selectedMod
+              : topic === 'modalities'
+              ? selectedMod
                 ? <ModalityDetail mod={selectedMod} philosophies={philosophies} allArchetypes={allArchetypes} />
                 : <ModalityOverview modalities={modalities} onSelect={setSelectedMod} />
+              : selectedExercise
+                ? <ExercisePanel exercise={selectedExercise} allExercises={allExercises} onNavigate={handleNavigateExercise} />
+                : <ExerciseOverview exercises={allExercises} />
             }
           </div>
+        </div>
+      )}
+
+      {/* ── Ontology ── */}
+      {section === 'ontology' && (
+        <div className="flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: 'stable' }}>
+          <HeatmapPanel program={null} />
         </div>
       )}
     </motion.div>
