@@ -1,80 +1,45 @@
 id: kb_pentathlon
-name: Kettlebell Pentathlon Training (Wildman)
+name: "Kettlebell Pentathlon Training (Wildman)"
 source_philosophy: wildman_kettlebell
 
 goals_served:
   - strength_endurance
   - power
   - aerobic_base
-  - mixed_modal_conditioning
 
 sessions_per_week:
   strength_endurance: 2
+  power: 1
+  movement_skill: 1
   aerobic_base: 1
 
 intensity_distribution:
-  zone1_2_pct: 0.15
-  zone3_pct: 0.30
-  zone4_5_pct: 0.40
-  max_effort_pct: 0.15
+  zone1_2_pct: 0.5
+  zone3_pct: 0.3
+  zone4_5_pct: 0.2
+  max_effort_pct: 0.0
 
 progression_model: pentathlon_rpm
 
 applicable_when:
   training_level:
-    - novice
     - intermediate
     - advanced
     - elite
-  days_per_week_min: 2
-  days_per_week_max: 4
-  goal_priority_min:
-    strength_endurance: 0.25
+  days_per_week_min: 3
+  days_per_week_max: 5
 
-incompatible_with:
-  - framework_id: linear_progression
-    reason: >
-      KB pentathlon training generates significant grip, posterior chain, and
-      cardiovascular fatigue. Running pentathlon sessions concurrently with
-      linear barbell progression competes for recovery and impairs bar speed
-      and neural drive on heavy barbell days.
-    interference_level: manageable
-    mitigation: >
-      Schedule pentathlon sessions on non-barbell days. Reduce pentathlon session
-      frequency to 1/week during active linear progression phases. Prioritize
-      barbell recovery over pentathlon volume.
-  - framework_id: high_frequency_skill
-    reason: >
-      Pentathlon training requires fresh neuromuscular state for technique quality
-      at sustained RPM. Daily skill practice adds neurological load that reduces
-      the quality of ballistic KB work.
-    interference_level: low
-    mitigation: >
-      Limit daily skill sessions to short movement prep (10 min) before pentathlon
-      training days. Avoid heavy locomotion or arm-intensive skill work the day
-      before a pentathlon session.
-
-# Pentathlon requires fresh neuromuscular state — always 1+ rest day between sessions
-cadence_options:
-  2: [[1, 4], [2, 5], [1, 5]]
-  3: [[1, 4, 6], [2, 5, 7], [1, 3, 6]]
-  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.6
+  intensity_change: reduce_slightly
 
 sources:
-  - "Mark Wildman — Kettlebell Fundamentals and Pentathlon methodology"
-  - "IKFF (International Kettlebell and Fitness Federation) competition standards"
-  - "Pavel Tsatsouline — Enter the Kettlebell, Kettlebell Simple & Sinister"
-
+  - Wildman
+  - Pavel
 notes: >
-  The KB Pentathlon is a 5-event competition format: Cleans (120 reps target / 20 RPM),
-  Long Cycle Press (60 reps / 10 RPM), Jerks (120 reps / 20 RPM), Half Snatch
-  (108 reps / 18 RPM), Push Press (120 reps / 20 RPM). Each event is 6 minutes with
-  5 minutes rest between. Points scale with bell weight: 8kg=1pt, 12kg=1.5pt,
-  16kg=2pt, 20kg=2.5pt, 24kg=3pt, 28kg=3.5pt per rep. Progression via pentathlon_rpm:
-  establish baseline RPM at current bell weight, train to hit target RPM consistently,
-  then step up bell weight. Breathing mechanics govern the intensity ceiling — Wildman
-  principle: breathing pattern determines whether a ballistic set stays aerobic or
-  goes anaerobic. Progression sequence: two-hand swing → single-arm swing → clean →
-  clean & press → TGU → squat → snatch → double KB. The framework also serves as a
-  conditioning benchmark: SSST (Secret Service Snatch Test) standard is 200+ reps
-  in 10 min at 53# (Horsemen "Team Guy Standard"), 250 = excellent, 275 = record.
+  Sport-specific preparation for the 5-event kettlebell pentathlon: jerk, snatch,
+  half-snatch, push press, and long cycle clean & jerk. Sessions build toward
+  6-minute timed sets at competition RPM targets. Volume and RPM increase weekly;
+  deload weeks use reduced RPM and shorter set duration. Not appropriate for novices
+  — requires proficiency in all five movements before entering this framework.
