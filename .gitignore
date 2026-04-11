@@ -43,3 +43,7 @@ data/apple_health_export/
 data/*.db
 *.db
 .wrangler/
+data/*.fit
+data/*.zip
+data/api_errors.txt
+data/create_fit.py
