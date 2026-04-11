@@ -564,7 +564,6 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                   lockedNode={lockedNodeId}
                   onHoverNode={handleHoverNode}
                   onClickNode={handleClickNode}
-                  expandedGroup={expandedGroup}
                   sortMode={sortMode}
                 />
               </>

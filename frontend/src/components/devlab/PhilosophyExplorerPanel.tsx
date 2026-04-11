@@ -1053,7 +1053,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
               <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
               <PolarAngleAxis
                 dataKey="subject"
-                tick={(props) => <RadarAxisTick {...props} colorMap={colorMap} />}
+                tick={(props) => <RadarAxisTick {...(props as Parameters<typeof RadarAxisTick>[0])} colorMap={colorMap} />}
               />
               <Radar
                 dataKey="value"
@@ -1077,7 +1077,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
                 <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
                 <PolarAngleAxis
                   dataKey="subject"
-                  tick={(props) => <RadarAxisTick {...props} colorMap={colorMap} />}
+                  tick={(props) => <RadarAxisTick {...(props as Parameters<typeof RadarAxisTick>[0])} colorMap={colorMap} />}
                 />
                 {/* All philosophies — background reference */}
                 <Radar
