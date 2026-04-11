@@ -471,6 +471,7 @@ def get_ontology():
             'category': ex.get('category'),
             'modality': mod,
             'movement_patterns': ex.get('movement_patterns', []),
+            '_package': ex.get('_package'),
         })
 
     return jsonify({

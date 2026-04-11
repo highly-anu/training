@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ChevronDown, ChevronRight, BookOpen, Loader2, Link2 } from 'lucide-react'
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useArchetypes } from '@/api/archetypes'
@@ -467,8 +468,8 @@ function SlotRow({ slot, allExercises }: { slot: ArchetypeSlot; allExercises: Ex
 
 // ─── ArchetypeCard ────────────────────────────────────────────────────────────
 
-function ArchetypeCard({ archetype, allExercises }: { archetype: Archetype; allExercises: Exercise[] }) {
-  const [open, setOpen] = useState(false)
+function ArchetypeCard({ archetype, allExercises, isOpen, onToggle }: { archetype: Archetype; allExercises: Exercise[]; isOpen: boolean; onToggle: () => void }) {
+  const open = isOpen
 
   const levelInitials = (archetype.training_levels ?? []).map(l => ({
     label: LEVEL_LABELS[l] ?? l[0].toUpperCase(),
@@ -479,7 +480,7 @@ function ArchetypeCard({ archetype, allExercises }: { archetype: Archetype; allE
     <div className="rounded border border-border/40 bg-muted/5 overflow-hidden">
       {/* Header */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
       >
         {open
@@ -617,12 +618,16 @@ function ModalitySection({
   modalityId,
   modality,
   sessionsPerWeek,
+  isOpen,
+  onToggle,
 }: {
   modalityId: ModalityId
   modality: Modality | undefined
   sessionsPerWeek: number
+  isOpen: boolean
+  onToggle: () => void
 }) {
-  const [open, setOpen] = useState(true)
+  const open = isOpen
   const color = MODALITY_COLORS[modalityId]
 
   const recoveryCostColor: Record<string, string> = {
@@ -633,7 +638,7 @@ function ModalitySection({
     <div className="rounded-lg border overflow-hidden" style={{ borderColor: `${color?.hex ?? '#94a3b8'}30` }}>
       {/* Header */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-muted/10"
         style={{ backgroundColor: `${color?.hex ?? '#94a3b8'}08` }}
       >
@@ -789,10 +794,14 @@ function ModalitySection({
 
 function FrameworkSection({
   framework,
+  isOpen,
+  onToggle,
 }: {
   framework: Framework
+  isOpen: boolean
+  onToggle: () => void
 }) {
-  const [open, setOpen] = useState(true)
+  const open = isOpen
   const modalities = Object.entries(framework.sessions_per_week ?? {}) as [ModalityId, number][]
   const intensityEntries = Object.entries(framework.intensity_distribution ?? {})
 
@@ -800,7 +809,7 @@ function FrameworkSection({
     <div className="rounded-lg border border-border bg-card">
       {/* Framework header */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={onToggle}
         className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/10 transition-colors"
       >
         {open
@@ -889,159 +898,259 @@ function FrameworkSection({
   )
 }
 
-// ─── PhilosophyHeader ─────────────────────────────────────────────────────────
+// ─── Radar chart — modality profile ──────────────────────────────────────────
+// Scores are derived from sessions_per_week across all linked frameworks so the
+// chart updates automatically when framework data changes. Falls back to equal
+// weight per bias[] entry when no framework data is available.
 
-function PhilosophyHeader({ phil }: { phil: Philosophy }) {
-  const [notesOpen, setNotesOpen] = useState(true)
+// Custom tick that wraps long modality labels onto two lines and colours each by modality
+function RadarAxisTick({ x, y, payload, colorMap }: {
+  x?: number; y?: number
+  payload?: { value: string }
+  colorMap?: Record<string, string>
+}) {
+  if (x === undefined || y === undefined || !payload) return null
+  const label = payload.value
+  const color = colorMap?.[label] ?? '#64748b'
+  const words = label.split(' ')
+  // Split into at most two lines at the midpoint
+  const mid = Math.ceil(words.length / 2)
+  const lines = words.length > 2
+    ? [words.slice(0, mid).join(' '), words.slice(mid).join(' ')]
+    : [label]
+  const lineH = 12
 
   return (
-    <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <h2 className="text-base font-semibold text-violet-300 leading-tight">{phil.name}</h2>
-        <div className="flex gap-1.5 flex-wrap shrink-0">
-          {phil.intensity_model && (
-            <Badge variant="outline" className="text-[10px] font-mono border-violet-500/30 text-violet-400">
-              {phil.intensity_model.replace(/_/g, ' ')}
-            </Badge>
-          )}
-          {phil.progression_philosophy && (
-            <Badge variant="outline" className="text-[10px] font-mono border-violet-500/20 text-violet-500/70">
-              {phil.progression_philosophy.replace(/_/g, ' ')}
-            </Badge>
-          )}
+    <g>
+      {lines.map((line, i) => (
+        <text
+          key={i}
+          x={x}
+          y={y + (i - (lines.length - 1) / 2) * lineH}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={9}
+          fontFamily="ui-monospace, monospace"
+          fill={color}
+          opacity={0.85}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  )
+}
+
+type ModalityViewMode = 'chart' | 'vs-all' | 'used' | 'all'
+
+function BiasRadarChart({ phil, frameworks, allFrameworks }: {
+  phil: Philosophy
+  frameworks: Framework[]
+  allFrameworks: Framework[]
+}) {
+  const [viewMode, setViewMode] = useState<ModalityViewMode>('chart')
+
+  const { chartData, vsAllData, usedData, allData, primaryColor, colorMap } = useMemo(() => {
+    // Scores for the selected philosophy
+    const scores: Record<string, number> = {}
+    for (const fw of frameworks) {
+      for (const [mod, count] of Object.entries(fw.sessions_per_week ?? {})) {
+        scores[mod] = (scores[mod] ?? 0) + (count as number)
+      }
+    }
+    if (Object.keys(scores).length === 0) {
+      for (const b of phil.bias) scores[b] = 1
+    }
+    const maxScore = Math.max(...Object.values(scores), 1)
+    const sorted = Object.entries(scores).sort(([, a], [, b]) => b - a)
+
+    // Global aggregate across ALL frameworks (all philosophies)
+    const globalScores: Record<string, number> = {}
+    for (const fw of allFrameworks) {
+      for (const [mod, count] of Object.entries(fw.sessions_per_week ?? {})) {
+        globalScores[mod] = (globalScores[mod] ?? 0) + (count as number)
+      }
+    }
+    const globalMax = Math.max(...Object.values(globalScores), 1)
+
+    const colorMap: Record<string, string> = {}
+    const usedData = sorted.map(([modId, score]) => {
+      const label = MODALITY_COLORS[modId as ModalityId]?.label ?? modId.replace(/_/g, ' ')
+      const color = MODALITY_COLORS[modId as ModalityId]?.hex ?? '#94a3b8'
+      colorMap[label] = color
+      return { modId, label, color, pct: Math.round((score / maxScore) * 100) }
+    })
+    const chartData = usedData.map(({ label, pct }) => ({
+      subject: label,
+      value: +(pct / 100).toFixed(2),
+    }))
+
+    // vs-all chart: all 12 modalities as axes, selected vs. global aggregate
+    const vsAllData = (Object.keys(MODALITY_COLORS) as ModalityId[]).map(modId => {
+      const label = MODALITY_COLORS[modId].label
+      const color = MODALITY_COLORS[modId].hex
+      colorMap[label] = color
+      return {
+        subject: label,
+        selected: +((scores[modId] ?? 0) / maxScore).toFixed(2),
+        all: +((globalScores[modId] ?? 0) / globalMax).toFixed(2),
+      }
+    })
+
+    const allData = (Object.keys(MODALITY_COLORS) as ModalityId[]).map(modId => {
+      const label = MODALITY_COLORS[modId].label
+      const color = MODALITY_COLORS[modId].hex
+      colorMap[label] = color
+      const score = scores[modId] ?? 0
+      return { modId, label, color, pct: Math.round((score / maxScore) * 100) }
+    }).sort((a, b) => b.pct - a.pct || a.label.localeCompare(b.label))
+
+    const primaryColor = MODALITY_COLORS[phil.bias[0] as ModalityId]?.hex ?? '#a78bfa'
+    return { chartData, vsAllData, usedData, allData, primaryColor, colorMap }
+  }, [phil, frameworks, allFrameworks])
+
+  if (chartData.length === 0) return null
+
+  const barList = viewMode === 'all' ? allData : usedData
+  const MODES: { key: ModalityViewMode; label: string }[] = [
+    { key: 'chart', label: 'chart' },
+    { key: 'vs-all', label: 'vs·all' },
+    { key: 'used', label: 'used' },
+    { key: 'all', label: 'all' },
+  ]
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Header + toggle */}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+          Modality Profile
+        </p>
+        <div className="flex rounded-md overflow-hidden border border-border/40 shrink-0">
+          {MODES.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setViewMode(key)}
+              className={[
+                'px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider transition-colors',
+                viewMode === key
+                  ? 'bg-violet-500/20 text-violet-300'
+                  : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/20',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {phil.notes && (
-        <div>
-          <button
-            onClick={() => setNotesOpen(o => !o)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground mb-1 transition-colors"
-          >
-            {notesOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-            Notes
-          </button>
-          {notesOpen && (
-            <p className="text-[11px] text-muted-foreground/80 leading-relaxed">{phil.notes}</p>
-          )}
+      {/* Chart view — selected philosophy only */}
+      {viewMode === 'chart' && (
+        <div style={{ width: '100%', height: 260 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={chartData} margin={{ top: 28, right: 52, bottom: 28, left: 52 }}>
+              <PolarGrid stroke={primaryColor} strokeOpacity={0.18} />
+              <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+              <PolarAngleAxis
+                dataKey="subject"
+                tick={(props) => <RadarAxisTick {...props} colorMap={colorMap} />}
+              />
+              <Radar
+                dataKey="value"
+                stroke={primaryColor}
+                fill={primaryColor}
+                fillOpacity={0.22}
+                strokeWidth={2}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
         </div>
       )}
 
-      {phil.core_principles.length > 0 && (
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-1.5">
-            Core Principles
-          </p>
-          <ul className="space-y-0.5">
-            {phil.core_principles.map((p, i) => (
-              <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground/80">
-                <span className="text-violet-500/60 mt-0.5 shrink-0">·</span>
-                {p.replace(/_/g, ' ')}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* vs-all view — selected philosophy overlaid on all-philosophies aggregate */}
+      {viewMode === 'vs-all' && (
+        <>
+          <div style={{ width: '100%', height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={vsAllData} margin={{ top: 28, right: 52, bottom: 28, left: 52 }}>
+                <PolarGrid stroke={primaryColor} strokeOpacity={0.15} />
+                <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={(props) => <RadarAxisTick {...props} colorMap={colorMap} />}
+                />
+                {/* All philosophies — background reference */}
+                <Radar
+                  dataKey="all"
+                  stroke="#64748b"
+                  fill="#64748b"
+                  fillOpacity={0.08}
+                  strokeWidth={1}
+                  strokeDasharray="3 2"
+                />
+                {/* Selected philosophy — foreground */}
+                <Radar
+                  dataKey="selected"
+                  stroke={primaryColor}
+                  fill={primaryColor}
+                  fillOpacity={0.22}
+                  strokeWidth={2}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Mini legend */}
+          <div className="flex gap-4 justify-end">
+            <div className="flex items-center gap-1.5">
+              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke={primaryColor} strokeWidth={2} /></svg>
+              <span className="text-[9px] font-mono text-muted-foreground/70">{phil.name.split(' ')[0]}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke="#64748b" strokeWidth={1} strokeDasharray="3 2" /></svg>
+              <span className="text-[9px] font-mono text-muted-foreground/70">all</span>
+            </div>
+          </div>
+        </>
       )}
 
-      <div className="flex flex-wrap gap-3">
-        {phil.scope.length > 0 && (
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Scope</p>
-            <div className="flex flex-wrap gap-1">
-              {phil.scope.map(s => (
-                <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground font-mono">
-                  {s.replace(/_/g, ' ')}
+      {/* Bar list — used or all modalities */}
+      {(viewMode === 'used' || viewMode === 'all') && (
+        <div className="space-y-2">
+          {barList.map(item => (
+            <div key={item.modId} className="flex items-center gap-2">
+              <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: item.color, opacity: item.pct > 0 ? 1 : 0.25 }} />
+              <span className={['text-[10px] flex-1 leading-tight', item.pct > 0 ? 'text-muted-foreground' : 'text-muted-foreground/30'].join(' ')}>
+                {item.label}
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-12 h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color }} />
+                </div>
+                <span className="text-[10px] font-mono w-7 text-right tabular-nums" style={{ color: item.pct > 0 ? item.color : undefined, opacity: item.pct > 0 ? 1 : 0.3 }}>
+                  {item.pct}%
                 </span>
-              ))}
-            </div>
-          </div>
-        )}
-        {phil.bias.length > 0 && (
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Bias</p>
-            <div className="flex flex-wrap gap-1">
-              {phil.bias.map(b => {
-                const c = MODALITY_COLORS[b as ModalityId]
-                return (
-                  <span key={b} className="text-[10px] px-1.5 py-0.5 rounded border font-mono"
-                    style={c
-                      ? { borderColor: `${c.hex}40`, color: c.hex, backgroundColor: `${c.hex}15` }
-                      : { borderColor: 'hsl(var(--border))' }
-                    }>
-                    {c?.label ?? b.replace(/_/g, ' ')}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground">
-        {phil.required_equipment.length > 0 && (
-          <div className="space-y-0.5">
-            <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Requires</span>
-            <span className="font-mono">{phil.required_equipment.map(e => e.replace(/_/g, ' ')).join(', ')}</span>
-          </div>
-        )}
-        {phil.avoid_with.length > 0 && (
-          <div className="space-y-1">
-            <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Avoid combining with</span>
-            <div className="flex flex-wrap gap-1">
-              {phil.avoid_with.map(id => {
-                const c = MODALITY_COLORS[id as ModalityId]
-                return (
-                  <span key={id} className="text-[10px] px-1.5 py-0.5 rounded border font-mono"
-                    style={c
-                      ? { borderColor: `${c.hex}40`, color: c.hex, backgroundColor: `${c.hex}15` }
-                      : { borderColor: 'hsl(var(--border))', color: '#f97316' }
-                    }>
-                    {c?.label ?? id.replace(/_/g, ' ')}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {(phil.system_connections.frameworks.length > 0 || phil.system_connections.goals.length > 0) && (
-        <div className="flex flex-wrap gap-4 pt-2 border-t border-violet-500/20">
-          {phil.system_connections.frameworks.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
-                <Link2 className="size-3" /> Frameworks
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {phil.system_connections.frameworks.map(fw => (
-                  <span key={fw} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    {fw.replace(/_/g, ' ')}
-                  </span>
-                ))}
               </div>
             </div>
-          )}
-          {phil.system_connections.goals.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
-                <Link2 className="size-3" /> Goals
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {phil.system_connections.goals.map(g => (
-                  <span key={g} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    {g.replace(/_/g, ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       )}
 
-      {phil.sources.length > 0 && (
-        <div className="pt-1 border-t border-violet-500/10 space-y-0.5">
-          {phil.sources.map((s, i) => (
-            <p key={i} className="text-[10px] text-muted-foreground/50 italic">{s}</p>
+      {/* Legend for chart views */}
+      {(viewMode === 'chart' || viewMode === 'vs-all') && (
+        <div className="space-y-2">
+          {usedData.map(item => (
+            <div key={item.modId} className="flex items-center gap-2">
+              <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-[10px] text-muted-foreground flex-1 leading-tight">{item.label}</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-12 h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color }} />
+                </div>
+                <span className="text-[10px] font-mono w-7 text-right tabular-nums" style={{ color: item.color }}>
+                  {item.pct}%
+                </span>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -1049,16 +1158,208 @@ function PhilosophyHeader({ phil }: { phil: Philosophy }) {
   )
 }
 
+// ─── PhilosophyHeader ─────────────────────────────────────────────────────────
+
+function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosophy; frameworks: Framework[]; allFrameworks: Framework[] }) {
+  const [notesOpen, setNotesOpen] = useState(true)
+
+  return (
+    <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-4">
+      <div className="flex gap-0 items-start">
+
+        {/* ── Left: all content ── */}
+        <div className="flex-1 min-w-0 pr-5 space-y-3">
+          {/* Name + model badges */}
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <h2 className="text-base font-semibold text-violet-300 leading-tight">{phil.name}</h2>
+            <div className="flex gap-1.5 flex-wrap shrink-0">
+              {phil.intensity_model && (
+                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/30 text-violet-400">
+                  {phil.intensity_model.replace(/_/g, ' ')}
+                </Badge>
+              )}
+              {phil.progression_philosophy && (
+                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/20 text-violet-500/70">
+                  {phil.progression_philosophy.replace(/_/g, ' ')}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          {phil.notes && (
+            <div>
+              <button
+                onClick={() => setNotesOpen(o => !o)}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground mb-1 transition-colors"
+              >
+                {notesOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                Notes
+              </button>
+              {notesOpen && (
+                <p className="text-[11px] text-muted-foreground/80 leading-relaxed">{phil.notes}</p>
+              )}
+            </div>
+          )}
+
+          {/* Core Principles */}
+          {phil.core_principles.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-1.5">
+                Core Principles
+              </p>
+              <ul className="space-y-0.5">
+                {phil.core_principles.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground/80">
+                    <span className="text-violet-500/60 mt-0.5 shrink-0">·</span>
+                    {p.replace(/_/g, ' ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Scope + Bias */}
+          <div className="flex flex-wrap gap-3">
+            {phil.scope.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Scope</p>
+                <div className="flex flex-wrap gap-1">
+                  {phil.scope.map(s => (
+                    <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground font-mono">
+                      {s.replace(/_/g, ' ')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {phil.bias.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Bias</p>
+                <div className="flex flex-wrap gap-1">
+                  {phil.bias.map(b => {
+                    const c = MODALITY_COLORS[b as ModalityId]
+                    return (
+                      <span key={b} className="text-[10px] px-1.5 py-0.5 rounded border font-mono"
+                        style={c
+                          ? { borderColor: `${c.hex}40`, color: c.hex, backgroundColor: `${c.hex}15` }
+                          : { borderColor: 'hsl(var(--border))' }
+                        }>
+                        {c?.label ?? b.replace(/_/g, ' ')}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Equipment + Avoid */}
+          <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground">
+            {phil.required_equipment.length > 0 && (
+              <div className="space-y-0.5">
+                <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Requires</span>
+                <span className="font-mono">{phil.required_equipment.map(e => e.replace(/_/g, ' ')).join(', ')}</span>
+              </div>
+            )}
+            {phil.avoid_with.length > 0 && (
+              <div className="space-y-1">
+                <span className="uppercase tracking-wider text-muted-foreground/50 font-medium block">Avoid combining with</span>
+                <div className="flex flex-wrap gap-1">
+                  {phil.avoid_with.map(id => {
+                    const c = MODALITY_COLORS[id as ModalityId]
+                    return (
+                      <span key={id} className="text-[10px] px-1.5 py-0.5 rounded border font-mono"
+                        style={c
+                          ? { borderColor: `${c.hex}40`, color: c.hex, backgroundColor: `${c.hex}15` }
+                          : { borderColor: 'hsl(var(--border))', color: '#f97316' }
+                        }>
+                        {c?.label ?? id.replace(/_/g, ' ')}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* System connections */}
+          {(phil.system_connections.frameworks.length > 0 || phil.system_connections.goals.length > 0) && (
+            <div className="flex flex-wrap gap-4 pt-2 border-t border-violet-500/20">
+              {phil.system_connections.frameworks.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+                    <Link2 className="size-3" /> Frameworks
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {phil.system_connections.frameworks.map(fw => (
+                      <span key={fw} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {fw.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {phil.system_connections.goals.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+                    <Link2 className="size-3" /> Goals
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {phil.system_connections.goals.map(g => (
+                      <span key={g} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {g.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sources */}
+          {phil.sources.length > 0 && (
+            <div className="pt-1 border-t border-violet-500/10 space-y-0.5">
+              {phil.sources.map((s, i) => (
+                <p key={i} className="text-[10px] text-muted-foreground/50 italic">{s}</p>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Right: modality profile radar (~35%) ── */}
+        <div className="shrink-0 pl-5 border-l border-violet-500/20" style={{ width: '36%', minWidth: 260 }}>
+          <BiasRadarChart phil={phil} frameworks={frameworks} allFrameworks={allFrameworks} />
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
-export function PhilosophyExplorerPanel() {
+export function PhilosophyExplorerPanel({ controlledId }: { controlledId?: string } = {}) {
   const { data: philosophies = [], isLoading: loadingPhil } = usePhilosophies()
   const { data: frameworksList = [] } = useFrameworks()
   const { data: archetypesList = [] } = useArchetypes()
   const { data: exercises = [] } = useExercises()
   const { data: modalitiesList = [] } = useModalities()
 
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [internalId, setInternalId] = useState<string>('')
+  const selectedId = controlledId !== undefined ? controlledId : internalId
+  const setSelectedId = (id: string) => { if (controlledId === undefined) setInternalId(id) }
+
+  // Per-section open state (all start collapsed; reset when selected philosophy changes)
+  const [fwOpen, setFwOpen] = useState<Set<string>>(new Set())
+  const [modOpen, setModOpen] = useState<Set<string>>(new Set())
+  const [archOpen, setArchOpen] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    setFwOpen(new Set())
+    setModOpen(new Set())
+    setArchOpen(new Set())
+  }, [selectedId])
 
   const modalitiesMap = useMemo(
     () => Object.fromEntries(modalitiesList.map(m => [m.id, m])) as Record<ModalityId, Modality>,
@@ -1103,6 +1404,13 @@ export function PhilosophyExplorerPanel() {
     [archetypesList, philosophyModalityIds, selectedId],
   )
 
+  // Only show exercises belonging to this package in slot matching.
+  // Cross-package exercises are valid for generation but misleading in the explorer.
+  const philosophyExercises = useMemo(
+    () => selectedId ? exercises.filter(ex => ex._package === selectedId) : exercises,
+    [exercises, selectedId],
+  )
+
   if (loadingPhil) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground text-sm gap-2">
@@ -1114,8 +1422,8 @@ export function PhilosophyExplorerPanel() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* ── Selector bar ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/10 shrink-0">
+      {/* ── Selector bar — hidden when parent controls the selection ── */}
+      {controlledId === undefined && <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/10 shrink-0">
         <BookOpen className="size-4 text-violet-400 shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Philosophy</span>
         <Select value={selectedId} onValueChange={setSelectedId}>
@@ -1147,7 +1455,7 @@ export function PhilosophyExplorerPanel() {
             {philosophyArchetypes.length} archetypes
           </span>
         )}
-      </div>
+      </div>}
 
       {!selectedId ? (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
@@ -1158,7 +1466,7 @@ export function PhilosophyExplorerPanel() {
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="h-full overflow-y-auto px-4 py-4 space-y-6">
-            {phil && <PhilosophyHeader phil={phil} />}
+            {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} />}
 
             {frameworks.length === 0 ? (
               <div className="rounded-lg border border-border/40 p-4 text-center text-sm text-muted-foreground">
@@ -1167,43 +1475,100 @@ export function PhilosophyExplorerPanel() {
             ) : (
               <>
                 {/* Frameworks */}
-                <div className="space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-1">
-                    Frameworks ({frameworks.length})
-                  </p>
-                  {frameworks.map(fw => (
-                    <FrameworkSection key={fw.id} framework={fw} />
-                  ))}
-                </div>
+                {(() => {
+                  const allExpanded = frameworks.every(fw => fwOpen.has(fw.id))
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+                          Frameworks ({frameworks.length})
+                        </p>
+                        <button
+                          onClick={() => allExpanded
+                            ? setFwOpen(new Set())
+                            : setFwOpen(new Set(frameworks.map(fw => fw.id)))
+                          }
+                          className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        >
+                          {allExpanded ? 'collapse all' : 'expand all'}
+                        </button>
+                      </div>
+                      {frameworks.map(fw => (
+                        <FrameworkSection
+                          key={fw.id}
+                          framework={fw}
+                          isOpen={fwOpen.has(fw.id)}
+                          onToggle={() => setFwOpen(s => { const n = new Set(s); n.has(fw.id) ? n.delete(fw.id) : n.add(fw.id); return n })}
+                        />
+                      ))}
+                    </div>
+                  )
+                })()}
 
                 {/* Modalities */}
-                {philosophyModalityIds.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-1">
-                      Modalities ({philosophyModalityIds.length})
-                    </p>
-                    {philosophyModalityIds.map(modId => (
-                      <ModalitySection
-                        key={modId}
-                        modalityId={modId}
-                        modality={modalitiesMap[modId]}
-                        sessionsPerWeek={modalitySessionsMap[modId] ?? 0}
-                      />
-                    ))}
-                  </div>
-                )}
+                {philosophyModalityIds.length > 0 && (() => {
+                  const allExpanded = philosophyModalityIds.every(id => modOpen.has(id))
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+                          Modalities ({philosophyModalityIds.length})
+                        </p>
+                        <button
+                          onClick={() => allExpanded
+                            ? setModOpen(new Set())
+                            : setModOpen(new Set(philosophyModalityIds))
+                          }
+                          className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        >
+                          {allExpanded ? 'collapse all' : 'expand all'}
+                        </button>
+                      </div>
+                      {philosophyModalityIds.map(modId => (
+                        <ModalitySection
+                          key={modId}
+                          modalityId={modId}
+                          modality={modalitiesMap[modId]}
+                          sessionsPerWeek={modalitySessionsMap[modId] ?? 0}
+                          isOpen={modOpen.has(modId)}
+                          onToggle={() => setModOpen(s => { const n = new Set(s); n.has(modId) ? n.delete(modId) : n.add(modId); return n })}
+                        />
+                      ))}
+                    </div>
+                  )
+                })()}
 
                 {/* Archetypes */}
-                {philosophyArchetypes.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-1">
-                      Archetypes ({philosophyArchetypes.length})
-                    </p>
-                    {philosophyArchetypes.map(arch => (
-                      <ArchetypeCard key={arch.id} archetype={arch} allExercises={exercises} />
-                    ))}
-                  </div>
-                )}
+                {philosophyArchetypes.length > 0 && (() => {
+                  const allExpanded = philosophyArchetypes.every(a => archOpen.has(a.id))
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
+                          Archetypes ({philosophyArchetypes.length})
+                        </p>
+                        <button
+                          onClick={() => allExpanded
+                            ? setArchOpen(new Set())
+                            : setArchOpen(new Set(philosophyArchetypes.map(a => a.id)))
+                          }
+                          className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                        >
+                          {allExpanded ? 'collapse all' : 'expand all'}
+                        </button>
+                      </div>
+                      {philosophyArchetypes.map(arch => (
+                        <ArchetypeCard
+                          key={arch.id}
+                          archetype={arch}
+                          allExercises={philosophyExercises}
+                          isOpen={archOpen.has(arch.id)}
+                          onToggle={() => setArchOpen(s => { const n = new Set(s); n.has(arch.id) ? n.delete(arch.id) : n.add(arch.id); return n })}
+                        />
+                      ))}
+                    </div>
+                  )
+                })()}
               </>
             )}
           </div>
