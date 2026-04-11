@@ -22,6 +22,10 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# Xcode user state
+*.xcuserstate
+xcuserdata/
+
 # Editor / OS
 .DS_Store
 Thumbs.db
@@ -39,3 +43,7 @@ data/apple_health_export/
 data/*.db
 *.db
 .wrangler/
+data/*.fit
+data/*.zip
+data/api_errors.txt
+data/create_fit.py

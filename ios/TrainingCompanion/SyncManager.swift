@@ -1,10 +1,16 @@
 import Foundation
+import Combine
 
 @MainActor
 final class SyncManager: ObservableObject {
     @Published var isSyncing = false
     @Published var lastSyncDate: Date? = UserDefaults.standard.object(forKey: "lastSyncDate") as? Date
     @Published var lastError: String? = nil
+
+    // Per-category tracking (persisted in UserDefaults)
+    @Published var lastBioSyncDate: Date? = UserDefaults.standard.object(forKey: "lastBioSyncDate") as? Date
+    @Published var lastBioPushedCount: Int = UserDefaults.standard.integer(forKey: "lastBioPushedCount")
+    @Published var lastProgramSyncDate: Date? = UserDefaults.standard.object(forKey: "lastProgramSyncDate") as? Date
 
     private var cancelled = false
     private let hk = HealthKitManager.shared
@@ -18,6 +24,8 @@ final class SyncManager: ObservableObject {
     private var api: APIClient?
     private var watchSync: WatchSessionManager?
 
+    private let logger = AppLogger.shared
+
     func configure(auth: AuthManager) {
         let client = APIClient(auth: auth)
         api = client
@@ -27,20 +35,21 @@ final class SyncManager: ObservableObject {
     func cancel() { cancelled = true }
 
     func syncAll() async {
-        guard let api else { return }
+        guard let api else { logger.log("syncAll: no API client — configure() not called"); return }
         cancelled = false
         isSyncing = true
         lastError = nil
+        logger.log("syncAll: started")
 
         do {
             let syncedDates = Set(try await api.getSyncedDates())
+            logger.log("syncAll: server has \(syncedDates.count) synced bio dates")
 
-            // Sync from last sync date (or 30 days ago) up to yesterday
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
-            let earliest = lastSyncDate.map { calendar.startOfDay(for: $0) }
-                ?? calendar.date(byAdding: .day, value: -30, to: today)!
+            let earliest = calendar.date(byAdding: .day, value: -30, to: today)!
 
+            var pushed = 0
             var cursor = earliest
             while cursor < today && !cancelled {
                 let dateStr = dayFormatter.string(from: cursor)
@@ -49,7 +58,10 @@ final class SyncManager: ObservableObject {
                     let sleep = await hk.fetchSleepData(for: cursor)
                     let bio = await hk.fetchDailyBiometrics(for: cursor)
 
-                    // Only push if we actually have data for this day
+                    // Cache latest biometrics for Watch readiness payload
+                    if let hrv = bio.hrv { UserDefaults.standard.set(hrv, forKey: "lastHRV") }
+                    if let hr = bio.restingHR { UserDefaults.standard.set(hr, forKey: "lastRestingHR") }
+
                     if sleep.totalMin > 0 || bio.restingHR != nil || bio.hrv != nil
                         || bio.spo2Avg != nil || bio.respiratoryRateAvg != nil {
                         let payload = DailyBioPayload(
@@ -66,6 +78,8 @@ final class SyncManager: ObservableObject {
                             respiratoryRateAvg: bio.respiratoryRateAvg
                         )
                         try await api.pushBio(date: dateStr, payload: payload)
+                        pushed += 1
+                        logger.log("bio: pushed \(dateStr)")
                     }
                 }
 
@@ -73,12 +87,22 @@ final class SyncManager: ObservableObject {
             }
 
             if !cancelled {
-                lastSyncDate = today
-                UserDefaults.standard.set(today, forKey: "lastSyncDate")
+                logger.log("syncAll: bio done (\(pushed) dates pushed), syncing watch program…")
+                let now = Date()
+                lastSyncDate = now
+                UserDefaults.standard.set(now, forKey: "lastSyncDate")
+                lastBioSyncDate = now
+                lastBioPushedCount = pushed
+                UserDefaults.standard.set(now, forKey: "lastBioSyncDate")
+                UserDefaults.standard.set(pushed, forKey: "lastBioPushedCount")
                 await watchSync?.syncProgram()
+                lastProgramSyncDate = Date()
+                UserDefaults.standard.set(lastProgramSyncDate!, forKey: "lastProgramSyncDate")
+                logger.log("syncAll: complete")
             }
         } catch {
             lastError = error.localizedDescription
+            logger.log("syncAll: ERROR — \(error.localizedDescription)")
         }
 
         isSyncing = false

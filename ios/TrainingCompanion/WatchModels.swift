@@ -10,13 +10,6 @@ struct ServerProgram: Decodable {
     let programStartDate: String?   // "YYYY-MM-DD"
     let eventDate: String?
     let sourceGoalIds: [String]
-
-    enum CodingKeys: String, CodingKey {
-        case currentProgram    = "current_program"
-        case programStartDate  = "program_start_date"
-        case eventDate         = "event_date"
-        case sourceGoalIds     = "source_goal_ids"
-    }
 }
 
 struct GeneratedProgram: Decodable {
@@ -25,14 +18,16 @@ struct GeneratedProgram: Decodable {
 
 struct ProgramWeek: Decodable {
     let weekNumber: Int
+    let weekInPhase: Int?
     let isDeload: Bool
     let phase: String
     // Keys are day names: "Monday" … "Sunday"
     let schedule: [String: [ProgramSession]]
 
     enum CodingKeys: String, CodingKey {
-        case weekNumber = "week_number"
-        case isDeload   = "is_deload"
+        case weekNumber  = "week_number"
+        case weekInPhase = "week_in_phase"
+        case isDeload    = "is_deload"
         case phase
         case schedule
     }
@@ -192,6 +187,30 @@ struct WatchExercise: Codable {
 
 // MARK: - Post-workout summary (Watch → iPhone → API)
 
+/// Compact HR sample — uses integer second offsets from startedAt to save ~20 bytes/sample
+/// versus full ISO timestamps. Expanded back to ISO on the iPhone before sending to the API.
+struct HRSamplePoint: Codable {
+    let t: Int   // seconds from session startedAt
+    let b: Int   // bpm
+}
+
+/// Compact GPS point with optional altitude and HR at that moment.
+struct GPSTrackPoint: Codable {
+    let lat: Double
+    let lng: Double
+    let alt: Double?
+    let t: Int      // seconds from session startedAt
+    let b: Int?     // bpm at this point (nil if no HR sample close in time)
+}
+
+/// Per-exercise time window with HR summary, used to correlate bio data to specific exercises.
+struct ExerciseTimelineEntry: Codable {
+    let exerciseId: String
+    let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
+    let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
+    let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
+}
+
 struct WatchWorkoutSummary: Codable {
     let sessionId: String
     let date: String                // "YYYY-MM-DD"
@@ -203,6 +222,14 @@ struct WatchWorkoutSummary: Codable {
     let setLogs: [String: [WatchSetLog]]    // exerciseId → sets
     let exercisesCompleted: Int
     let source: String              // always "apple_watch_live"
+    // Rich bio / movement data (nil for indoor/strength sessions without GPS)
+    let hrSamples: [HRSamplePoint]?
+    let gpsTrack: [GPSTrackPoint]?
+    let distanceMeters: Double?
+    let elevationGainMeters: Double?
+    let cadenceAvg: Double?
+    let paceSecsPerKm: Double?
+    let exerciseTimeline: [ExerciseTimelineEntry]?
 }
 
 struct WatchSetLog: Codable {
@@ -212,4 +239,43 @@ struct WatchSetLog: Codable {
     let rpe: Int?
     let completed: Bool
     let durationSeconds: Int?
+    let startOffset: Int?   // seconds from session startedAt when this set began
+    let endOffset: Int?     // seconds from session startedAt when this set was logged
+}
+
+// MARK: - Watch sync extras (iPhone → Watch, appended to today_sessions payload)
+
+/// Compact per-day overview for the "This Week" section on the Watch.
+struct WeeklyOverviewDay: Codable {
+    let dayName: String        // "Monday" … "Sunday"
+    let sessionCount: Int
+    let modalityIds: [String]  // in order (empty = rest day)
+}
+
+/// Derived readiness signal sent from iPhone (based on HRV + resting HR vs. 30-day baseline).
+struct ReadinessInfo: Codable {
+    let score: Double           // 0.0 – 1.0
+    let signal: String          // "green" | "yellow" | "red"
+    let restingHR: Int?
+    let hrv: Int?               // ms, rounded
+}
+
+// MARK: - Slot-type resolution
+
+extension WatchExercise {
+    /// Canonical screen-selection key. Passes through known slot_type values;
+    /// falls back to field-based inference for custom archetypes that omit slot_type.
+    var resolvedSlotType: String {
+        let known = ["sets_reps", "time_domain", "skill_practice", "emom",
+                     "amrap", "amrap_movement", "for_time", "distance", "static_hold"]
+        if known.contains(slotType) { return slotType }
+        // Field-based inference — order matters
+        if distanceKm    != nil { return "distance" }
+        if holdSeconds   != nil { return "static_hold" }
+        if emomFormat    != nil { return "emom" }
+        if durationMinutes != nil { return "time_domain" }
+        if timeMinutes != nil && targetRounds != nil { return "amrap" }
+        if targetRounds  != nil { return "for_time" }
+        return "sets_reps"
+    }
 }

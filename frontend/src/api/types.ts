@@ -558,12 +558,21 @@ export interface SetPerformance {
   rpe?: RPE
   completed: boolean
   durationSeconds?: number
+  startOffset?: number  // seconds from session start when this set began
+  endOffset?: number    // seconds from session start when this set was logged
 }
 
 export interface ExercisePerformance {
   sets: SetPerformance[]
   rpe?: RPE
   notes?: string
+}
+
+export interface ExerciseTimelineEntry {
+  exerciseId: string
+  startOffset: number   // seconds from session start
+  endOffset: number
+  avgHRDuring?: number  // mean bpm during this exercise window
 }
 
 export interface SessionPerformanceLog {
@@ -573,6 +582,10 @@ export interface SessionPerformanceLog {
   notes: string
   fatigueRating?: FatigueRating
   completedAt: string
+  source?: string
+  avgHR?: number
+  peakHR?: number
+  exerciseTimeline?: ExerciseTimelineEntry[]
 }
 
 export interface DailyBioLog {

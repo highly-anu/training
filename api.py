@@ -28,7 +28,9 @@ from flask import g
 
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
-CORS(app, resources={r"/api/*": {"origins": os.environ.get('FRONTEND_URL', '*')}})
+_frontend_url = os.environ.get('FRONTEND_URL', '*')
+_allowed_origins = [_frontend_url, 'http://localhost:5173', 'http://localhost:4173'] if _frontend_url != '*' else '*'
+CORS(app, resources={r"/api/*": {"origins": _allowed_origins}})
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -842,6 +844,7 @@ def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> lis
 
 
 @app.post('/api/workouts/parse')
+@require_auth
 def parse_workout_file():
     """Server-side workout file parser for large exports (> 50 MB).
     Accepts multipart/form-data with field 'workout_file'.
@@ -1076,7 +1079,8 @@ def parse_workout_file():
 
             # Build GPS track (only points with coordinates)
             gps_track = [
-                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'], 'timestamp': r['timestamp'], 'bpm': r['bpm']}
+                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'],
+                 'timestamp': r['timestamp'], 'bpm': r['bpm'], 'speed': r['speed']}
                 for r in records if r['lat'] is not None and r['lng'] is not None
             ]
 
@@ -1160,11 +1164,22 @@ def parse_workout_file():
                     'rawData':   {'sport': sport, 'sub_sport': sub_sport},
                 })
 
+            if results:
+                _health.upsert_workouts(g.user_id, results)
             return jsonify(results)
         except Exception as e:
             return jsonify({'detail': f'FIT parse error: {e}'}), 422
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
+
+
+@app.get('/api/health/workouts/<workout_id>')
+@require_auth
+def health_get_workout(workout_id: str):
+    workout = _health.get_workout(g.user_id, workout_id)
+    if workout is None:
+        return jsonify({'detail': 'Not found'}), 404
+    return jsonify(workout)
 
 
 # ---------------------------------------------------------------------------
@@ -1340,6 +1355,18 @@ def health_upsert_workouts():
 def health_delete_workout(workout_id: str):
     _health.delete_workout(g.user_id, workout_id)
     return jsonify({'deleted': workout_id})
+
+
+@app.get('/api/health/sessions/recent')
+@require_auth
+def health_recent_sessions():
+    return jsonify(_health.get_recent_session_logs(g.user_id))
+
+
+@app.get('/api/health/bio/recent')
+@require_auth
+def health_recent_bio():
+    return jsonify(_health.get_recent_bio_logs(g.user_id))
 
 
 @app.put('/api/health/sessions/<path:session_key>')

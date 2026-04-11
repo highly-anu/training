@@ -3,15 +3,40 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @StateObject private var sync = SyncManager()
+    @StateObject private var appState = AppState()
 
     var body: some View {
         if auth.isSignedIn {
-            SyncView(sync: sync)
+            MainTabView()
+                .environmentObject(sync)
+                .environmentObject(appState)
                 .onAppear {
                     sync.configure(auth: auth)
-                    // Auto-sync on launch
-                    Task { await sync.syncAll() }
+                    appState.configure(auth: auth)
+                    // Load everything except workouts immediately (Today tab needs program/profile/logs).
+                    Task { await appState.loadAllExceptWorkouts() }
+                    // HealthKit + Watch sync, then reload everything including workouts once.
+                    Task {
+                        do {
+                            try await HealthKitManager.shared.requestPermissions()
+                        } catch {
+                            sync.lastError = "HealthKit: \(error.localizedDescription)"
+                        }
+                        await sync.syncAll()
+                        await appState.loadAll()
+                    }
                     scheduleNextSync()
+                }
+                .onOpenURL { url in
+                    guard url.pathExtension.lowercased() == "fit" else { return }
+                    appState.pendingFITURL = url
+                }
+                .sheet(isPresented: Binding(
+                    get: { appState.pendingFITURL != nil },
+                    set: { if !$0 { appState.pendingFITURL = nil } }
+                )) {
+                    FITImportSheet()
+                        .environmentObject(appState)
                 }
         } else {
             SignInView()
@@ -19,83 +44,32 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Sync screen
+// MARK: - Main Tab View
 
-struct SyncView: View {
-    @EnvironmentObject var auth: AuthManager
-    @ObservedObject var sync: SyncManager
-
-    private let dayFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .short
-        return f
-    }()
+struct MainTabView: View {
+    @EnvironmentObject var sync: SyncManager
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 28) {
-                Spacer()
+        TabView {
+            TodayView()
+                .tabItem { Label("Dashboard", systemImage: "house") }
 
-                Image(systemName: "heart.text.square")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.red.gradient)
+            ProgramView()
+                .tabItem { Label("Program", systemImage: "calendar") }
 
-                VStack(spacing: 6) {
-                    Text("Training Companion")
-                        .font(.title2.bold())
-                    Text("Syncs Apple Watch health data\nto your training dashboard.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+            LogView()
+                .tabItem { Label("Log", systemImage: "checkmark.circle") }
+
+            ProfileView()
+                .tabItem { Label("Profile", systemImage: "person") }
+
+            SyncStatusView()
+                .tabItem {
+                    Label(
+                        sync.isSyncing ? "Syncing…" : "Sync",
+                        systemImage: sync.isSyncing ? "arrow.clockwise.circle.fill" : "arrow.triangle.2.circlepath"
+                    )
                 }
-
-                // Status
-                VStack(spacing: 8) {
-                    if sync.isSyncing {
-                        HStack(spacing: 8) {
-                            ProgressView().scaleEffect(0.8)
-                            Text("Syncing…")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else if let err = sync.lastError {
-                        Label(err, systemImage: "exclamationmark.triangle")
-                            .font(.footnote)
-                            .foregroundStyle(.orange)
-                    } else if let last = sync.lastSyncDate {
-                        Label("Last synced \(dayFmt.string(from: last))", systemImage: "checkmark.circle")
-                            .font(.footnote)
-                            .foregroundStyle(.green)
-                    } else {
-                        Text("Not yet synced")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .frame(height: 24)
-
-                Button {
-                    Task { await sync.syncAll() }
-                } label: {
-                    Label("Sync Now", systemImage: "arrow.clockwise")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(sync.isSyncing)
-                .padding(.horizontal)
-
-                Spacer()
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Sign Out", role: .destructive) {
-                        auth.signOut()
-                    }
-                    .font(.footnote)
-                }
-            }
         }
     }
 }
@@ -108,6 +82,7 @@ struct SignInView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var error: String? = nil
+    @State private var showEnableBiometrics = false
 
     var body: some View {
         NavigationStack {
@@ -122,6 +97,34 @@ struct SignInView: View {
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+
+                // Face ID button — shown when credentials are already stored
+                if auth.hasBiometricCredentials && auth.canUseBiometrics {
+                    Button {
+                        isLoading = true
+                        error = nil
+                        Task {
+                            do {
+                                try await auth.biometricSignIn()
+                            } catch let laError as LAError where laError.code == .userCancel {
+                                // User cancelled — no error shown, fall back to form
+                            } catch {
+                                self.error = error.localizedDescription
+                            }
+                            isLoading = false
+                        }
+                    } label: {
+                        Label("Sign in with Face ID", systemImage: "faceid")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isLoading)
+                    .padding(.horizontal)
+
+                    Text("or enter your credentials below")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
                 VStack(spacing: 12) {
                     TextField("Email", text: $email)
@@ -154,6 +157,10 @@ struct SignInView: View {
                     Task {
                         do {
                             try await auth.signIn(email: email, password: password)
+                            // Offer Face ID setup after first successful password login
+                            if auth.canUseBiometrics && !auth.hasBiometricCredentials {
+                                showEnableBiometrics = true
+                            }
                         } catch {
                             self.error = error.localizedDescription
                         }
@@ -169,12 +176,30 @@ struct SignInView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(auth.hasBiometricCredentials ? .secondary : .blue)
                 .disabled(email.isEmpty || password.isEmpty || isLoading)
                 .padding(.horizontal)
 
                 Spacer()
             }
             .navigationTitle("Training Companion")
+            .alert("Use Face ID?", isPresented: $showEnableBiometrics) {
+                Button("Enable Face ID") { auth.enableBiometricLogin(email: email, password: password) }
+                Button("Not now", role: .cancel) {}
+            } message: {
+                Text("Sign in faster next time without entering your password.")
+            }
+        }
+        .onAppear {
+            // Auto-trigger Face ID on app open if credentials are stored
+            if auth.hasBiometricCredentials && auth.canUseBiometrics {
+                Task {
+                    try? await auth.biometricSignIn()
+                }
+            }
         }
     }
 }
+
+// Needed to check LAError in SignInView
+import LocalAuthentication

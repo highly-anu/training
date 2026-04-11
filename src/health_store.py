@@ -84,6 +84,21 @@ def delete_workout(user_id: str, workout_id: str) -> None:
         pass
 
 
+def get_workout(user_id: str, workout_id: str) -> dict | None:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT * FROM workouts WHERE id = %s AND user_id = %s',
+                    (workout_id, user_id),
+                )
+                row = cur.fetchone()
+        return _row_to_workout(row) if row else None
+    except RuntimeError:
+        return None
+
+
 def get_workouts(user_id: str) -> list[dict]:
     from src.db import get_conn
     try:
@@ -140,29 +155,88 @@ def _row_to_workout(row) -> dict:
 
 def upsert_session_log(user_id: str, log: dict) -> None:
     from src.db import get_conn
+    timeline = log.get('exerciseTimeline')
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
+                exercises_raw = log.get('exercises', {})
+                if isinstance(exercises_raw, str):
+                    try:
+                        exercises_raw = json.loads(exercises_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        exercises_raw = {}
                 cur.execute('''
                     INSERT INTO session_logs
-                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at)
-                    VALUES (%s, %s, %s::jsonb, %s, %s, %s)
+                    (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source,
+                     avg_hr, peak_hr, exercise_timeline)
+                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
-                        exercises      = EXCLUDED.exercises,
-                        notes          = EXCLUDED.notes,
-                        fatigue_rating = EXCLUDED.fatigue_rating,
-                        completed_at   = EXCLUDED.completed_at
+                        exercises         = CASE
+                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
+                            THEN EXCLUDED.exercises
+                            ELSE session_logs.exercises
+                        END,
+                        notes             = CASE
+                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
+                            THEN EXCLUDED.notes
+                            ELSE session_logs.notes
+                        END,
+                        fatigue_rating    = COALESCE(EXCLUDED.fatigue_rating, session_logs.fatigue_rating),
+                        completed_at      = GREATEST(EXCLUDED.completed_at, session_logs.completed_at),
+                        source            = EXCLUDED.source,
+                        avg_hr            = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
+                        peak_hr           = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr),
+                        exercise_timeline = COALESCE(EXCLUDED.exercise_timeline, session_logs.exercise_timeline)
                 ''', (
                     log['sessionKey'],
                     user_id,
-                    json.dumps(log.get('exercises', {})),
+                    json.dumps(exercises_raw),
                     log.get('notes', ''),
                     log.get('fatigueRating'),
                     log.get('completedAt') or None,
+                    log.get('source', 'web'),
+                    log.get('avgHR'),
+                    log.get('peakHR'),
+                    json.dumps(timeline) if timeline else None,
                 ))
             conn.commit()
     except Exception:
         pass
+
+
+def get_recent_session_logs(user_id: str) -> list[dict]:
+    """Return all session logs as a list with snake_case keys (matches iOS SessionLogEntry model)."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    '''SELECT sl.session_key, sl.completed_at, sl.source, sl.notes,
+                              sl.fatigue_rating, sl.avg_hr, sl.peak_hr,
+                              wm.imported_workout_id AS matched_workout_id
+                       FROM session_logs sl
+                       LEFT JOIN workout_matches wm
+                           ON wm.session_key = sl.session_key AND wm.user_id = sl.user_id
+                       WHERE sl.user_id = %s
+                       ORDER BY sl.completed_at DESC NULLS LAST''',
+                    (user_id,),
+                )
+                rows = cur.fetchall()
+        return [
+            {
+                'session_key':        row['session_key'],
+                'completed_at':       str(row['completed_at']) if row['completed_at'] else None,
+                'source':             row.get('source') or 'web',
+                'notes':              row.get('notes') or '',
+                'fatigue_rating':     row.get('fatigue_rating'),
+                'avg_hr':             row.get('avg_hr'),
+                'peak_hr':            row.get('peak_hr'),
+                'matched_workout_id': row.get('matched_workout_id'),
+            }
+            for row in rows
+        ]
+    except RuntimeError:
+        return []
 
 
 def get_session_logs(user_id: str) -> dict:
@@ -177,13 +251,25 @@ def get_session_logs(user_id: str) -> dict:
             exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
                 json.loads(row['exercises'] or '{}')
             )
-            result[row['session_key']] = {
+            tl_raw = row.get('exercise_timeline')
+            timeline = tl_raw if isinstance(tl_raw, list) else (
+                json.loads(tl_raw) if tl_raw else None
+            )
+            entry = {
                 'sessionKey':    row['session_key'],
                 'exercises':     exercises,
                 'notes':         row['notes'] or '',
                 'fatigueRating': row['fatigue_rating'],
                 'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
+                'source':        row.get('source') or 'web',
             }
+            if row.get('avg_hr') is not None:
+                entry['avgHR'] = row['avg_hr']
+            if row.get('peak_hr') is not None:
+                entry['peakHR'] = row['peak_hr']
+            if timeline is not None:
+                entry['exerciseTimeline'] = timeline
+            result[row['session_key']] = entry
         return result
     except Exception:
         return {}
@@ -256,6 +342,39 @@ def get_synced_dates(user_id: str) -> list[str]:
         return []
 
 
+def get_recent_bio_logs(user_id: str, days: int = 90) -> list[dict]:
+    """Return recent bio logs as a list with snake_case keys (matches iOS DailyBioLog model)."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'SELECT * FROM daily_bio WHERE user_id = %s '
+                    'AND date >= CURRENT_DATE - %s::interval '
+                    'ORDER BY date DESC',
+                    (user_id, f'{days} days'),
+                )
+                rows = cur.fetchall()
+        result = []
+        for row in rows:
+            entry: dict = {'date': str(row['date'])}
+            for col in ('resting_hr', 'hrv', 'notes', 'sleep_duration_min', 'deep_sleep_min',
+                        'rem_sleep_min', 'light_sleep_min', 'spo2_avg',
+                        'respiratory_rate_avg', 'source'):
+                if row.get(col) is not None:
+                    entry[col] = row[col]
+            # DB column is awake_min; iOS model CodingKey is awake_mins
+            if row.get('awake_min') is not None:
+                entry['awake_mins'] = row['awake_min']
+            for col in ('sleep_start', 'sleep_end'):
+                if row.get(col) is not None:
+                    entry[col] = str(row[col])
+            result.append(entry)
+        return result
+    except Exception:
+        return []
+
+
 def get_daily_bio(user_id: str) -> dict:
     from src.db import get_conn
     try:
@@ -301,9 +420,19 @@ def get_daily_bio(user_id: str) -> dict:
 
 def upsert_match(user_id: str, match: dict) -> None:
     from src.db import get_conn
+    from datetime import datetime as _dt
+    workout_id = match['importedWorkoutId']
+    session_key = match['sessionKey']
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
+                # Ensure the workout row exists so FK constraints are satisfied.
+                # If the parse-time upsert failed silently, this creates a minimal stub.
+                cur.execute('''
+                    INSERT INTO workouts (id, user_id, source, date, activity_type)
+                    VALUES (%s, %s, 'fit_file', CURRENT_DATE, 'unknown')
+                    ON CONFLICT (id, user_id) DO NOTHING
+                ''', (workout_id, user_id))
                 cur.execute('''
                     INSERT INTO workout_matches
                     (imported_workout_id, user_id, session_key, match_confidence, matched_at)
@@ -313,11 +442,11 @@ def upsert_match(user_id: str, match: dict) -> None:
                         match_confidence = EXCLUDED.match_confidence,
                         matched_at       = EXCLUDED.matched_at
                 ''', (
-                    match['importedWorkoutId'],
+                    workout_id,
                     user_id,
-                    match['sessionKey'],
-                    match['matchConfidence'],
-                    match['matchedAt'],
+                    session_key,
+                    match.get('matchConfidence', 1.0),
+                    match.get('matchedAt') or _dt.utcnow().isoformat(),
                 ))
             conn.commit()
     except Exception:

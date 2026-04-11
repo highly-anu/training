@@ -240,3 +240,174 @@ After "Save Workout" on S6:
 - **EMOM format parsing**: Regex `(\d+)\s*[×x]\s*(\d+)\s*/\s*(\d+)` extracts rounds/work_sec/rest_sec from `load.format`. Fallback: 60s work / 0s rest if format absent.
 - **Program expired**: week index ≥ `weeks.count` → "Program complete — generate a new one on the web app."
 - **watchOS target version**: watchOS 9 (Series 4+ compatible). Use `ObservableObject` + `@Published`; do not use `@Observable` macro (requires watchOS 10).
+
+---
+
+## Phase 6 — Visual Polish & Coverage Fixes
+
+### 6-A: Missing Slot Type — `amrap_movement`
+
+**Problem:** `data/archetypes/conditioning/mixed_modal_amrap.yaml` uses `slot_type: amrap_movement` for individual movements within an AMRAP (pull-ups, push-ups, etc.). `CurrentExerciseView` has no case for it — silently routes to `SetsRepsView` via `default:`, which shows set dots + rest timer. That's wrong for an athlete self-pacing inside an ongoing AMRAP.
+
+**Fix:** Add `case "amrap_movement"` to the switch in `CurrentExerciseView.swift` → new `AMRAPMovementView`:
+
+- Exercise name + rep target ("10 Pull-ups")
+- Tap-counter (`+` button) for rep/round tracking within the AMRAP
+- **No rest timer** — athlete self-manages pace
+- Parent AMRAP countdown visible via swipe to S3-C (LiveMetricsView)
+
+Files:
+- `ios/TrainingCompanionWatch/Views/CurrentExerciseView.swift` — add case
+- `ios/TrainingCompanionWatch/Views/ExerciseViews/AMRAPMovementView.swift` — new file
+
+Updated slot_type → view table (add row):
+
+| `slot_type` | View | Key behavior |
+|---|---|---|
+| `amrap_movement` | `AMRAPMovementView` | Rep counter, no rest timer, self-paced within parent AMRAP |
+
+---
+
+### 6-B: Modality Coloring
+
+**Problem:** Session cards (S1, S2) and exercise view headers are entirely neutral. On a small watch face, color is the fastest signal.
+
+**New file:** `ios/TrainingCompanionWatch/ModalityStyle.swift`
+
+```swift
+struct ModalityStyle {
+    static func color(for modalityId: String) -> Color { ... }
+    static func icon(for modalityId: String) -> String { ... }
+}
+```
+
+Color map:
+
+| Modality ID | Color |
+|---|---|
+| `max_strength`, `relative_strength`, `combat_sport` | `.red` |
+| `strength_endurance` | `.orange` |
+| `power` | `.yellow` |
+| `aerobic_base` | `.green` |
+| `anaerobic_intervals` | `.mint` |
+| `mixed_modal_conditioning` | `.cyan` |
+| `kettlebell` | `.indigo` |
+| `movement_skill` | `.purple` |
+| `mobility` | `.teal` |
+| `durability` | `.brown` |
+
+Where to apply:
+- `SessionListView` — session card left-border accent or modality pill background
+- `SessionOverviewView` — header bar foregroundStyle tint
+- `CurrentExerciseView` — thin colored bar at top of S3-A exercise card
+
+---
+
+### 6-C: Icon System
+
+**Problem:** Every session card and exercise row uses `figure.strengthtraining.traditional`. No visual differentiation across modalities or slot types.
+
+Modality → SF Symbol map (add to `ModalityStyle.swift`):
+
+| Modality | SF Symbol |
+|---|---|
+| `max_strength`, `relative_strength` | `figure.strengthtraining.traditional` |
+| `aerobic_base` | `figure.run` |
+| `anaerobic_intervals` | `heart.circle` |
+| `kettlebell` | `dumbbell` |
+| `movement_skill` | `figure.flexibility` |
+| `mobility` | `figure.cooldown` |
+| `durability` | `backpack` |
+| `mixed_modal_conditioning` | `bolt.heart` |
+| `power` | `bolt.fill` |
+| `combat_sport` | `figure.boxing` |
+
+Slot-type → SF Symbol map (used in S3-B `SessionProgressView` beside exercise name):
+
+| Slot Type | SF Symbol |
+|---|---|
+| `sets_reps` | `dumbbell.fill` |
+| `time_domain` | `clock.fill` |
+| `emom` | `timer` |
+| `amrap` | `arrow.clockwise` |
+| `for_time` | `flag.checkered` |
+| `distance` | `map.fill` |
+| `static_hold` | `pause.circle.fill` |
+| `skill_practice` | `sparkles` |
+| `amrap_movement` | `repeat` |
+
+Files to update:
+- `SessionListView.swift` — session card icon (modality icon)
+- `SessionOverviewView.swift` — exercise list slot-type icons
+- `SessionProgressView.swift` — per-exercise slot-type icon in S3-B progress list
+
+---
+
+### 6-D: `resolvedSlotType` — Generalized Screen Inference
+
+**Problem:** `slot_type` is an archetype-slot concept. For user-created archetypes that omit it, or future freeform sessions, the current `default: SetsRepsView` fallback is blind.
+
+**Fix:** Add a computed property `resolvedSlotType` to `WatchExercise` in `WatchModels.swift`. `CurrentExerciseView` switches on this instead of `slotType` directly.
+
+```swift
+// ios/TrainingCompanion/WatchModels.swift
+extension WatchExercise {
+    var resolvedSlotType: String {
+        let known = ["sets_reps","time_domain","skill_practice","emom",
+                     "amrap","amrap_movement","for_time","distance","static_hold"]
+        if known.contains(slotType) { return slotType }
+        // Field-based inference — order matters
+        if distanceKm != nil                              { return "distance" }
+        if holdSeconds != nil                             { return "static_hold" }
+        if emomFormat != nil                              { return "emom" }
+        if durationMinutes != nil                         { return "time_domain" }
+        if timeMinutes != nil && targetRounds != nil      { return "amrap" }
+        if targetRounds != nil                            { return "for_time" }
+        return "sets_reps"
+    }
+}
+```
+
+**Why this generalizes:**
+- `slot_type` is just a shorthand label — the populated load fields are the ground truth
+- Custom archetypes (`POST /api/archetypes`) that set `slot_type` explicitly → pass through unchanged
+- Custom archetypes that omit `slot_type` → inference picks the right screen from load fields
+- User-created exercises assigned to standard slots → inherit slot's `slot_type` → no change needed
+- Future freeform sessions → inference handles them without any new code
+
+**File:** `ios/TrainingCompanion/WatchModels.swift` (new extension)
+**File:** `ios/TrainingCompanionWatch/Views/CurrentExerciseView.swift` — switch on `ex.resolvedSlotType`
+
+---
+
+### Known Remaining Gaps (no screen yet)
+
+These interaction patterns exist in the training data but have no dedicated watch view:
+
+| Pattern | Current fallback | Notes |
+|---|---|---|
+| **Breathing ladder** (1-20-1 reps per rung) | `for_time` (stopwatch) | No rung-by-rung progression; athlete self-tracks |
+| **Barbell/KB complex** (multiple movements, no put-down) | `for_time` or `amrap` | No exercise-sequence chaining within one slot |
+| **Pyramid sets** (5-4-3-2-1 ascending/descending reps) | `sets_reps` (fixed reps) | Load description shows full pyramid as text only |
+| **Superset / paired sets** (A1/A2 alternating) | Two sequential `sets_reps` slots | No explicit pairing UI; athlete follows order in S3-B |
+
+These are not blockers — the fallback views are functional. A dedicated `LadderView` or `ComplexView` would be Phase 7+ work.
+
+---
+
+### Phase 6 Build Order
+
+1. Add `resolvedSlotType` to `WatchModels.swift`; update `CurrentExerciseView.swift` to use it
+2. Create `ModalityStyle.swift` with color + icon maps; add to watchOS target
+3. Add `amrap_movement` case to `CurrentExerciseView.swift`; create `AMRAPMovementView.swift`
+4. Update `SessionListView` — modality color accent + icon
+5. Update `SessionOverviewView` — header tint + exercise slot-type icons
+6. Update `SessionProgressView` — slot-type icons per row
+7. Update `CurrentExerciseView` — thin modality color bar above exercise card
+
+### Verification
+
+- All modality IDs from `data/modalities/*.yaml` have a `ModalityStyle` entry (no silent `.secondary` fallback)
+- `amrap_movement` case routes to `AMRAPMovementView`, not `SetsRepsView`
+- S1 session list shows visually distinct colors for a mixed-modality week (run `general_gpp` goal to get a variety)
+- Create a custom archetype via `POST /api/archetypes` without a `slot_type` field; verify watch shows a sensible screen based on load fields

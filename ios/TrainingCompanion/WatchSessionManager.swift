@@ -1,4 +1,7 @@
+import Combine
+import CoreLocation
 import Foundation
+import HealthKit
 import WatchConnectivity
 
 // MARK: - Default rest seconds by modality (fallback when slot rest_sec is nil)
@@ -32,9 +35,8 @@ final class WatchSessionManager: NSObject, ObservableObject {
         return f
     }()
 
-    // UserDefaults keys
-    private let lastSyncedDateKey = "watchProgramSyncDate"
-    private let lastSyncedTimeKey = "watchProgramSyncTime"
+    // Cached from the most recent syncProgram() call, keyed by sessionId.
+    private var sessionCache: [String: (modality: String, name: String)] = [:]
 
     init(api: APIClient) {
         self.api = api
@@ -47,17 +49,9 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
     // MARK: - Program sync
 
-    /// Call after auth + bio sync. Fetches program, computes today's sessions, sends to Watch.
-    /// Skips if already sent today within the last 4 hours.
+    /// Fetches today's program from the API and sends sessions to the Watch.
     func syncProgram() async {
         let todayStr = dayFormatter.string(from: Date())
-        if let lastDate = UserDefaults.standard.string(forKey: lastSyncedDateKey),
-           let lastTime = UserDefaults.standard.object(forKey: lastSyncedTimeKey) as? Date,
-           lastDate == todayStr,
-           Date().timeIntervalSince(lastTime) < 4 * 3600 {
-            return
-        }
-
         do {
             guard let server = try await api.fetchProgram() else {
                 sendNoProgramMessage()
@@ -88,19 +82,29 @@ final class WatchSessionManager: NSObject, ObservableObject {
                 encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality)
             }
 
+            // Cache session metadata so handleWorkoutComplete can label uploads correctly.
+            sessionCache = Dictionary(uniqueKeysWithValues: watchSessions.map {
+                ($0.sessionId, (modality: $0.modalityId, name: $0.archetypeName))
+            })
+
             let profile = buildProfilePayload()
-            let payload: [String: Any] = [
-                "type":        "today_sessions",
-                "date":        todayStr,
-                "weekNumber":  week.weekNumber,
-                "dayName":     dayName,
-                "sessions":    encodedJSON(watchSessions),
-                "profile":     profile,
+            let weeklyOverview = buildWeeklyOverview(week: week)
+            let readiness = buildReadinessPayload()
+
+            var payload: [String: Any] = [
+                "type":          "today_sessions",
+                "date":          todayStr,
+                "weekNumber":    week.weekNumber,
+                "dayName":       dayName,
+                "sessions":      encodedJSON(watchSessions),
+                "profile":       profile,
+                "weeklyOverview": encodedJSON(weeklyOverview),
             ]
+            if let readiness { payload["readiness"] = encodedJSON(readiness) }
 
             WCSession.default.transferUserInfo(payload)
-            UserDefaults.standard.set(todayStr, forKey: lastSyncedDateKey)
-            UserDefaults.standard.set(Date(), forKey: lastSyncedTimeKey)
+            UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
+            AppLogger.shared.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
         } catch {
             // Silent failure — Watch will use cached sessions
         }
@@ -132,7 +136,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
     private func encodeExercise(_ ea: ProgramExerciseAssignment, modality: String) -> WatchExercise {
         let ex = ea.exercise!
         let load = ea.load
-        let slotType = ea.slotType ?? "sets_reps"
+        let slotType = inferSlotType(from: ea.load, explicit: ea.slotType)
 
         let cue = ea.notes ?? ex.notes
 
@@ -168,9 +172,21 @@ final class WatchSessionManager: NSObject, ObservableObject {
         )
     }
 
+    /// Infers slot type from load fields when the explicit slot_type is nil (legacy stored programs).
+    private func inferSlotType(from load: ProgramLoad, explicit: String?) -> String {
+        if let e = explicit, !e.isEmpty { return e }
+        if load.distanceKm    != nil { return "distance" }
+        if load.holdSeconds   != nil { return "static_hold" }
+        if load.format        != nil { return "emom" }
+        if load.durationMinutes != nil { return "time_domain" }
+        if load.timeMinutes != nil && load.targetRounds != nil { return "amrap" }
+        if load.targetRounds  != nil { return "for_time" }
+        return "sets_reps"
+    }
+
     private func formatLoad(_ ea: ProgramExerciseAssignment) -> String {
         let load = ea.load
-        switch ea.slotType ?? "sets_reps" {
+        switch inferSlotType(from: ea.load, explicit: ea.slotType) {
         case "sets_reps":
             let sets = load.sets.map { "\($0)" } ?? "?"
             let reps = load.reps?.displayString ?? "?"
@@ -219,16 +235,17 @@ final class WatchSessionManager: NSObject, ObservableObject {
     /// Returns (nil, nil) if not parseable.
     private func parseZoneRange(_ zoneTarget: String?) -> (Int?, Int?) {
         guard let s = zoneTarget else { return (nil, nil) }
-        // Match first digit (lower bound)
-        let digits = s.matches(of: /Zone\s*(\d)/i)
-        guard let first = digits.first else { return (nil, nil) }
-        let lower = Int(String(first.output.1))
-        // Look for a second digit after a dash/en-dash for upper bound
-        if digits.count >= 2 {
-            let upper = Int(String(digits[1].output.1))
-            return (lower, upper ?? lower)
-        }
-        return (lower, lower)
+        let pattern = /[Zz]one\s*(\d)(?:\s*[-–]\s*(\d))?/
+        guard let m = try? pattern.firstMatch(in: s),
+              let lower = Int(m.output.1) else { return (nil, nil) }
+        let upper = m.output.2.flatMap { Int($0) } ?? lower
+        return (lower, upper)
+    }
+
+    private func weekdayName(for date: Date) -> String {
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let index = Calendar.current.component(.weekday, from: date) - 1
+        return names[index]
     }
 
     private func buildProfilePayload() -> [String: Any] {
@@ -247,6 +264,37 @@ final class WatchSessionManager: NSObject, ObservableObject {
         return p
     }
 
+    private func buildWeeklyOverview(week: ProgramWeek) -> [WeeklyOverviewDay] {
+        let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+        return dayOrder.map { day in
+            let sessions = week.schedule[day] ?? []
+            return WeeklyOverviewDay(
+                dayName: day,
+                sessionCount: sessions.count,
+                modalityIds: sessions.map { $0.modality }
+            )
+        }
+    }
+
+    private func buildReadinessPayload() -> ReadinessInfo? {
+        // Use last known HRV stored in UserDefaults (written by HealthKitManager sync)
+        guard let hrv = UserDefaults.standard.object(forKey: "lastHRV") as? Double else { return nil }
+        let restingHR = UserDefaults.standard.object(forKey: "lastRestingHR") as? Double
+        let signal: String
+        let score: Double
+        switch hrv {
+        case let h where h >= 50: signal = "green"; score = min(1.0, h / 70.0)
+        case let h where h >= 35: signal = "yellow"; score = h / 70.0
+        default:                  signal = "red";    score = max(0.1, hrv / 70.0)
+        }
+        return ReadinessInfo(
+            score: score,
+            signal: signal,
+            restingHR: restingHR.map { Int($0) },
+            hrv: Int(hrv)
+        )
+    }
+
     private func sendNoProgramMessage() {
         guard WCSession.default.isReachable else { return }
         WCSession.default.transferUserInfo(["type": "no_program"])
@@ -261,44 +309,267 @@ final class WatchSessionManager: NSObject, ObservableObject {
               let obj  = try? JSONSerialization.jsonObject(with: data) else { return [] }
         return obj
     }
+
+    // MARK: - Local buffer (survives upload failures)
+
+    /// Writes raw summary JSON to Documents/watch_buffer/<id>.json before attempting upload.
+    /// Deleted on success. Lets us inspect or retry failed uploads without data loss.
+    nonisolated static func bufferSummary(_ data: Data, id: String) {
+        guard let dir = bufferDir else { return }
+        let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        let url = dir.appendingPathComponent("\(safe).json")
+        try? data.write(to: url, options: .atomic)
+    }
+
+    nonisolated static func clearBuffer(id: String) {
+        guard let dir = bufferDir else { return }
+        let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        try? FileManager.default.removeItem(at: dir.appendingPathComponent("\(safe).json"))
+    }
+
+    private nonisolated static var bufferDir: URL? {
+        guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        let dir = docs.appendingPathComponent("watch_buffer")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
 }
 
 // MARK: - WCSessionDelegate (receive workout summaries from Watch)
 
 extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        guard let type = userInfo["type"] as? String, type == "workout_complete" else { return }
+        let type = userInfo["type"] as? String ?? "(no type)"
+        AppLogger.shared.logFromBackground("WCSession: received userInfo type=\(type)")
+
+        if type == "session_marked_complete" {
+            guard let sessionId = userInfo["sessionId"] as? String,
+                  let markedAt = userInfo["markedAt"] as? String else { return }
+            Task { await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt) }
+            return
+        }
+
+        guard type == "workout_complete" else { return }
         guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
-              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else { return }
+              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+            AppLogger.shared.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
+            return
+        }
+        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
+        Task { await handleWorkoutComplete(summary) }
+    }
 
-        Task { @MainActor in
-            // Build the session log payload the API expects
-            let sessionKey = summary.sessionId
-            var log: [String: Any] = [
-                "sessionKey":    sessionKey,
-                "completedAt":   summary.endedAt,
-                "source":        summary.source,
-                "exercises":     encodedJSON(summary.setLogs),
-                "notes":         "",
-            ]
-            if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
-            if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
+    /// Large workout payloads arrive via transferFile when > 50 KB.
+    nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        guard file.metadata?["type"] as? String == "workout_complete_file" else { return }
+        guard let data = try? Data(contentsOf: file.fileURL),
+              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+            AppLogger.shared.logFromBackground("WCSession: failed to decode large workout file")
+            return
+        }
+        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
+        Task { await handleWorkoutComplete(summary) }
+    }
 
-            try? await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
+        // Track upload for SyncStatusView
+        let now = Date()
+        UserDefaults.standard.set(now, forKey: "lastWatchUploadDate")
+        let count = UserDefaults.standard.integer(forKey: "watchUploadCount") + 1
+        UserDefaults.standard.set(count, forKey: "watchUploadCount")
+
+        let sessionKey = summary.sessionId
+        let cachedSession = sessionCache[sessionKey]
+        let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
+        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
+
+        // 1. Save session log (exercises, set data, HR aggregates)
+        var log: [String: Any] = [
+            "sessionKey":    sessionKey,
+            "completedAt":   summary.endedAt,
+            "source":        summary.source,
+            "exercises":     encodedJSON(summary.setLogs.mapValues { ["sets": $0] }),
+            "notes":         "",
+        ]
+        if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
+        if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
+        if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
+
+        AppLogger.shared.logFromBackground("API: saving workout log for \(sessionKey)…")
+        do {
+            try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            AppLogger.shared.logFromBackground("API: saved workout log for \(sessionKey) ✓")
+        } catch {
+            AppLogger.shared.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
+        }
+
+        // 2. Build and save ImportedWorkout (enables HRTimeline + GPSMap on the frontend)
+        let iso = ISO8601DateFormatter()
+        // Try default format first; fall back to fractional-seconds variant (Watch may include milliseconds).
+        let isoFractional: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f
+        }()
+        guard let startDate = iso.date(from: summary.startedAt) ?? isoFractional.date(from: summary.startedAt) else {
+            AppLogger.shared.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
+            return
+        }
+
+        let workoutId = "watch_live_\(sessionKey)_\(summary.startedAt)"
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? UUID().uuidString
+
+        let hrSamples = summary.hrSamples?.map { point -> [String: Any] in
+            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
+            return ["timestamp": ts, "bpm": point.b]
+        }
+        let gpsTrack = summary.gpsTrack?.map { point -> [String: Any] in
+            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
+            var p: [String: Any] = ["lat": point.lat, "lng": point.lng, "timestamp": ts]
+            if let alt = point.alt { p["altitude"] = alt }
+            if let bpm = point.b  { p["bpm"] = bpm }
+            return p
+        }
+
+        var workout: [String: Any] = [
+            "id":              workoutId,
+            "source":          summary.source,
+            "date":            summary.date,
+            "startTime":       summary.startedAt,
+            "endTime":         summary.endedAt,
+            "durationMinutes": summary.durationMinutes,
+            "activityType":    cachedSession?.name ?? summary.source,
+            "rawData":         [:] as [String: Any],
+            "heartRate":       [
+                "avg": summary.avgHR as Any,
+                "max": summary.peakHR as Any,
+                "samples": hrSamples as Any,
+            ] as [String: Any],
+        ]
+        if let modality = cachedSession?.modality { workout["inferredModalityId"] = modality }
+        if let gps = gpsTrack { workout["gpsTrack"] = gps }
+        if let dist = summary.distanceMeters { workout["distance"] = ["value": dist / 1000.0, "unit": "km"] }
+        if let gain = summary.elevationGainMeters { workout["elevation"] = ["gain": Int(gain), "loss": 0] }
+        if let cal = log["calories"] { workout["calories"] = cal }
+
+        do {
+            try await api.saveWatchWorkoutDirect(workout)
+            AppLogger.shared.logFromBackground("API: saved watch workout \(workoutId) ✓")
+            // Safe to discard the local buffer now that Supabase has the row.
+            WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
+        } catch {
+            AppLogger.shared.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
+            return
+        }
+
+        // 3. Link workout to session + upsert session log directly to Supabase
+        let exercises = summary.setLogs.mapValues { ["sets": $0] } as [String: Any]
+        do {
+            try await api.saveWatchMatchDirect(
+                workoutId: workoutId,
+                sessionKey: sessionKey,
+                startTime: summary.startedAt,
+                avgHR: summary.avgHR,
+                peakHR: summary.peakHR,
+                exercises: exercises
+            )
+            AppLogger.shared.logFromBackground("API: saved workout match \(workoutId) → \(sessionKey) ✓")
+        } catch {
+            AppLogger.shared.logFromBackground("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
+        }
+
+        // 4. Async GPS enrichment: try to fetch the full HKWorkoutRoute after a short delay
+        //    (HealthKit sync from Watch → iPhone takes ~5–30 s)
+        Task {
+            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 s
+            await enrichWorkoutWithHKRoute(
+                workoutId: workoutId,
+                startDate: startDate,
+                existingGPSCount: gpsTrack?.count ?? 0
+            )
         }
     }
 
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async {
+        AppLogger.shared.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
+        do {
+            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt)
+            AppLogger.shared.logFromBackground("API: marked session complete \(sessionId) ✓")
+        } catch {
+            AppLogger.shared.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
+        }
+    }
+
+    private func enrichWorkoutWithHKRoute(workoutId: String, startDate: Date, existingGPSCount: Int) async {
+        guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else {
+            // Retry once at 60 s
+            try? await Task.sleep(nanoseconds: 50_000_000_000)
+            guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else { return }
+            await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+            return
+        }
+        await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+    }
+
+    private func uploadRoute(from hkWorkout: HKWorkout, workoutId: String, existingGPSCount: Int, startDate: Date) async {
+        let locations = await HealthKitManager.shared.fetchWorkoutRoute(for: hkWorkout)
+        guard locations.count > existingGPSCount else { return }
+        let iso = ISO8601DateFormatter()
+        let gpsTrack: [[String: Any]] = locations.map { loc in
+            var p: [String: Any] = [
+                "lat": loc.coordinate.latitude,
+                "lng": loc.coordinate.longitude,
+                "timestamp": iso.string(from: loc.timestamp),
+            ]
+            if loc.altitude > 0 { p["altitude"] = loc.altitude }
+            return p
+        }
+        let enriched: [String: Any] = [
+            "id":              workoutId,
+            "source":          "apple_watch_live",
+            "date":            iso.string(from: startDate).prefix(10).description,
+            "startTime":       iso.string(from: hkWorkout.startDate),
+            "endTime":         iso.string(from: hkWorkout.endDate),
+            "durationMinutes": Int(hkWorkout.duration / 60),
+            "activityType":    "apple_watch_live",
+            "gpsTrack":        gpsTrack,
+            "rawData":         [:] as [String: Any],
+            "heartRate":       [:] as [String: Any],
+        ]
+        do {
+            try await api.saveWatchWorkoutDirect(enriched)
+            AppLogger.shared.logFromBackground("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
+        } catch {
+            AppLogger.shared.logFromBackground("API: GPS enrichment FAILED — \(error.localizedDescription)")
+        }
+    }
+
+    nonisolated func session(_ session: WCSession,
+                             didReceiveMessage message: [String: Any]) {
+        guard let type = message["type"] as? String, type == "request_sync" else { return }
+        Task { await syncProgram() }
+    }
+
+    nonisolated func session(_ session: WCSession,
+                             didReceiveMessage message: [String: Any],
+                             replyHandler: @escaping ([String: Any]) -> Void) {
+        guard let type = message["type"] as? String, type == "request_sync" else {
+            replyHandler([:])
+            return
+        }
+        Task {
+            await syncProgram()
+            replyHandler(["status": "ok"])
+        }
+    }
+
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated else { return }
+        Task { await syncProgram() }
+    }
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
         WCSession.default.activate()
     }
 }
 
-// MARK: - Regex helper (Swift 5.7+)
-
-private extension String {
-    func matches(of regex: some RegexComponent) -> [Regex<(Substring, Substring)>.Match] {
-        (try? self.matches(of: regex as! Regex<(Substring, Substring)>)) ?? []
-    }
-}

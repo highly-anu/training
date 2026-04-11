@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import HealthKit
 
@@ -28,6 +29,10 @@ final class HealthKitManager {
         HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
         HKObjectType.quantityType(forIdentifier: .oxygenSaturation)!,
         HKObjectType.quantityType(forIdentifier: .respiratoryRate)!,
+        HKObjectType.quantityType(forIdentifier: .vo2Max)!,
+        HKObjectType.quantityType(forIdentifier: .stepCount)!,
+        HKSeriesType.workoutRoute(),
+        HKObjectType.workoutType(),
     ]
 
     func requestPermissions() async throws {
@@ -127,6 +132,90 @@ final class HealthKitManager {
             ) { _, samples, _ in
                 let value = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: unit)
                 continuation.resume(returning: value)
+            }
+            store.execute(query)
+        }
+    }
+
+    // MARK: - VO2max
+
+    func fetchVO2max() async -> Double? {
+        let type = HKObjectType.quantityType(forIdentifier: .vo2Max)!
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]
+            ) { _, samples, _ in
+                let value = (samples?.first as? HKQuantitySample)?
+                    .quantity.doubleValue(for: HKUnit(from: "ml/kg/min"))
+                continuation.resume(returning: value)
+            }
+            store.execute(query)
+        }
+    }
+
+    // MARK: - Step count
+
+    func fetchStepCount(for date: Date) async -> Double? {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: date)
+        let end = calendar.date(byAdding: .day, value: 1, to: start)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let type = HKObjectType.quantityType(forIdentifier: .stepCount)!
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(
+                quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum
+            ) { _, statistics, _ in
+                let value = statistics?.sumQuantity()?.doubleValue(for: .count())
+                continuation.resume(returning: value)
+            }
+            store.execute(query)
+        }
+    }
+
+    // MARK: - Workout route (GPS)
+
+    /// Fetches the GPS route for a completed HKWorkout. Returns an empty array for indoor
+    /// sessions or when the route has not yet synced from the Watch.
+    func fetchWorkoutRoute(for workout: HKWorkout) async -> [CLLocation] {
+        let routePredicate = HKQuery.predicateForObjects(from: workout)
+        let routes: [HKWorkoutRoute] = await withCheckedContinuation { continuation in
+            let query = HKAnchoredObjectQuery(
+                type: HKSeriesType.workoutRoute(),
+                predicate: routePredicate,
+                anchor: nil,
+                limit: HKObjectQueryNoLimit
+            ) { _, samples, _, _, _ in
+                continuation.resume(returning: (samples as? [HKWorkoutRoute]) ?? [])
+            }
+            store.execute(query)
+        }
+        guard let route = routes.first else { return [] }
+
+        var locations: [CLLocation] = []
+        return await withCheckedContinuation { continuation in
+            let query = HKWorkoutRouteQuery(route: route) { _, routeLocations, done, _ in
+                if let routeLocations { locations.append(contentsOf: routeLocations) }
+                if done { continuation.resume(returning: locations) }
+            }
+            store.execute(query)
+        }
+    }
+
+    /// Finds the HKWorkout closest to the given start time (within ±60 seconds).
+    func findHKWorkout(near startDate: Date) async -> HKWorkout? {
+        let window = 60.0
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startDate.addingTimeInterval(-window),
+            end: startDate.addingTimeInterval(window)
+        )
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: HKObjectType.workoutType(),
+                predicate: predicate, limit: 1, sortDescriptors: [sort]
+            ) { _, samples, _ in
+                continuation.resume(returning: samples?.first as? HKWorkout)
             }
             store.execute(query)
         }
