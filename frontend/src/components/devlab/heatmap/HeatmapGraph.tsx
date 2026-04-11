@@ -16,7 +16,6 @@ const LAYER_Y: Record<LayerKind, number> = {
   exercise_group: 630,
 }
 
-const EXPANDED_EXERCISES_Y = 750
 const NODE_HEIGHT = 28
 const NODE_PAD = 8
 const MAX_NODE_WIDTH = 160
@@ -52,7 +51,6 @@ interface HeatmapGraphProps {
   lockedNode: string | null // 2nd-click node: drives layout centering (subset of selectedNodes)
   onHoverNode: (id: string | null) => void
   onClickNode: (id: string) => void
-  expandedGroup: string | null
   sortMode?: HeatmapSortMode
 }
 
@@ -141,7 +139,6 @@ export function HeatmapGraph({
   lockedNode,
   onHoverNode,
   onClickNode,
-  expandedGroup,
   sortMode = 'alpha',
 }: HeatmapGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -158,6 +155,12 @@ export function HeatmapGraph({
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Package derived from the selected philosophy node (if any) — used to scope exercises
+  const activePackage = useMemo(() => {
+    const philNode = selectedNodes.find(n => n.startsWith('philosophy::'))
+    return philNode ? philNode.slice('philosophy::'.length) : null
+  }, [selectedNodes])
 
   // Connected set for the locked node only (drives layout centering + connection-count sort).
   // Computed first so nodesByLayer can use it.
@@ -241,10 +244,18 @@ export function HeatmapGraph({
         if (!id.startsWith('exercise_group::')) continue
         const key = id.replace('exercise_group::', '')
         for (const ex of (data.exercisesByGroup[key] ?? [])) {
+          if (activePackage && ex._package && ex._package !== activePackage) continue
           exItems.push({ ...ex, groupId: id })
         }
       }
       exItems.sort((a, b) => b.heat - a.heat || a.name.localeCompare(b.name))
+      // Deduplicate by exercise ID — an exercise may match multiple groups
+      const seenExIds = new Set<string>()
+      exItems = exItems.filter(item => {
+        if (seenExIds.has(item.id)) return false
+        seenExIds.add(item.id)
+        return true
+      })
 
       if (exItems.length > 0) {
         const baseY = LAYER_Y.exercise_group + NODE_HEIGHT + LOCKED_EX_Y_OFFSET
@@ -285,26 +296,12 @@ export function HeatmapGraph({
         }
       }
 
-      // Position expanded exercise nodes if a group is expanded
-      if (expandedGroup && data.exercisesByGroup[expandedGroup.replace('exercise_group::', '')]) {
-        const groupKey = expandedGroup.replace('exercise_group::', '')
-        const exercises = data.exercisesByGroup[groupKey]
-        if (exercises) {
-          const exWidth = Math.min(100, (availableWidth - (exercises.length - 1) * 6) / exercises.length)
-          const totalExWidth = exercises.length * exWidth + (exercises.length - 1) * 6
-          const startX = SVG_PAD + (availableWidth - totalExWidth) / 2
-          for (let i = 0; i < exercises.length; i++) {
-            pos[`exercise::${exercises[i].id}`] = { x: startX + i * (exWidth + 6), y: EXPANDED_EXERCISES_Y, width: exWidth, height: NODE_HEIGHT }
-          }
-          height = EXPANDED_EXERCISES_Y + NODE_HEIGHT + SVG_PAD
-        }
-      }
     }
 
     const minSvgW = containerWidth > 0 ? containerWidth : availableWidth + 2 * SVG_PAD
     const svgW = Math.max(minSvgW, maxUsedX + SVG_PAD)
     return { positions: pos, svgWidth: svgW, svgHeight: height, lockedExItems: exItems }
-  }, [nodesByLayer, expandedGroup, data.exercisesByGroup, containerWidth, lockedConnectedSet])
+  }, [nodesByLayer, data.exercisesByGroup, containerWidth, lockedConnectedSet])
 
   // Intersection of all selected nodes' connected sets; fall back to hover when nothing selected
   const connectedSet = useMemo(() => {
@@ -337,13 +334,6 @@ export function HeatmapGraph({
 
   // Build a set for O(1) isSelected checks
   const selectedSet = useMemo(() => new Set(selectedNodes), [selectedNodes])
-
-  // Get expanded exercises for rendering
-  const expandedExercises = useMemo<ExerciseInGroup[]>(() => {
-    if (!expandedGroup) return []
-    const groupKey = expandedGroup.replace('exercise_group::', '')
-    return data.exercisesByGroup[groupKey] ?? []
-  }, [expandedGroup, data.exercisesByGroup])
 
   return (
     <div
@@ -383,19 +373,6 @@ export function HeatmapGraph({
             {layer === 'exercise_group' ? 'movements' : layer}
           </text>
         ))}
-        {!lockedNode && expandedGroup && expandedExercises.length > 0 && (
-          <text
-            x={12}
-            y={EXPANDED_EXERCISES_Y + NODE_HEIGHT / 2}
-            fontSize={9}
-            fontFamily="ui-monospace, monospace"
-            fill="#64748b"
-            fillOpacity={0.5}
-            dominantBaseline="central"
-          >
-            exercises
-          </text>
-        )}
         {lockedNode && lockedExItems.length > 0 && (
           <text
             x={12}
@@ -427,32 +404,6 @@ export function HeatmapGraph({
               x2={targetPos.x + targetPos.width / 2}
               y2={targetPos.y}
               highlighted={h}
-            />
-          )
-        })}
-
-        {/* Edges from group to expanded exercises (normal mode only) */}
-        {!lockedNode && expandedGroup && expandedExercises.map(ex => {
-          const groupPos = positions[expandedGroup]
-          const exPos = positions[`exercise::${ex.id}`]
-          if (!groupPos || !exPos) return null
-          const groupNode = data.nodes.find(n => n.id === expandedGroup)
-          const color = groupNode?.modalityHint && groupNode.modalityHint in MODALITY_COLORS
-            ? MODALITY_COLORS[groupNode.modalityHint as ModalityId].hex
-            : '#94a3b8'
-          const opacity = ex.heat > 0 ? 0.1 + ex.heat * 0.9 : 0.04
-          const midY = (groupPos.y + groupPos.height + exPos.y) / 2
-          const x1 = groupPos.x + groupPos.width / 2
-          const x2 = exPos.x + exPos.width / 2
-          return (
-            <motion.path
-              key={`exedge::${ex.id}`}
-              d={`M ${x1} ${groupPos.y + groupPos.height} Q ${x1} ${midY}, ${(x1 + x2) / 2} ${midY} T ${x2} ${exPos.y}`}
-              fill="none"
-              stroke={color}
-              initial={false}
-              animate={{ strokeOpacity: opacity, strokeWidth: 0.5 + ex.heat * 2 }}
-              transition={{ duration: 0.2 }}
             />
           )
         })}
@@ -499,39 +450,9 @@ export function HeatmapGraph({
               highlighted={h}
               onClick={onClickNode}
               onHover={onHoverNode}
-              isExpanded={node.id === expandedGroup}
               isSelected={selectedSet.has(node.id)}
               isLocked={node.id === lockedNode}
             />
-          )
-        })}
-
-        {/* Expanded exercise nodes (normal mode only) */}
-        {!lockedNode && expandedExercises.map(ex => {
-          const pos = positions[`exercise::${ex.id}`]
-          if (!pos) return null
-          const groupNode = data.nodes.find(n => n.id === expandedGroup)
-          const color = groupNode?.modalityHint && groupNode.modalityHint in MODALITY_COLORS
-            ? MODALITY_COLORS[groupNode.modalityHint as ModalityId].hex
-            : '#94a3b8'
-          const baseOpacity = ex.heat > 0 ? 0.15 + ex.heat * 0.85 : 0.08
-          const maxChars = Math.floor(pos.width / 6)
-          const label = ex.name.length > maxChars ? ex.name.slice(0, maxChars - 1) + '…' : ex.name
-          return (
-            <g
-              key={`exnode::${ex.id}`}
-              onMouseEnter={(e) => setTooltip({ x: e.clientX, y: e.clientY, text: `${ex.name}${ex.rawCount > 0 ? ` (×${ex.rawCount})` : ''}` })}
-              onMouseLeave={() => setTooltip(null)}
-            >
-              <rect x={pos.x} y={pos.y} width={pos.width} height={pos.height} rx={3}
-                fill={color} fillOpacity={baseOpacity} stroke={color} strokeWidth={0.5}
-                strokeOpacity={Math.max(0.1, baseOpacity)} />
-              <text x={pos.x + pos.width / 2} y={pos.y + pos.height / 2}
-                textAnchor="middle" dominantBaseline="central" fontSize={8}
-                fontFamily="ui-monospace, monospace" fill={color} fillOpacity={Math.max(0.35, baseOpacity)}>
-                {label}
-              </text>
-            </g>
           )
         })}
 

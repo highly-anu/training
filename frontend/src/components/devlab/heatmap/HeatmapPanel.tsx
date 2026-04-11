@@ -42,12 +42,14 @@ function NodeInfoPanel({
   onClose,
   isLocked,
   scopedNodeIds,
+  activePackage,
 }: {
   node: HeatNode
   graphData: HeatmapGraphData
   onClose: () => void
   isLocked: boolean
   scopedNodeIds: Set<string> | null
+  activePackage: string | null
 }) {
   const color = nodeColor(node)
   const heatPct = Math.round(node.heat * 100)
@@ -71,10 +73,12 @@ function NodeInfoPanel({
     .map(e => graphData.nodes.find(n => n.id === e.target))
     .filter(Boolean) as HeatNode[]
 
-  // Exercises for exercise_group nodes — group key is the part after 'exercise_group::'
+  // Exercises for exercise_group nodes — scoped to active package when set
   const groupKey = node.id.replace('exercise_group::', '')
   const exercises = node.layer === 'exercise_group'
-    ? [...(graphData.exercisesByGroup[groupKey] ?? [])].sort((a, b) => b.rawCount - a.rawCount)
+    ? [...(graphData.exercisesByGroup[groupKey] ?? [])]
+        .filter(ex => !activePackage || !ex._package || ex._package === activePackage)
+        .sort((a, b) => b.rawCount - a.rawCount)
     : []
   // Modality-only: exercise_groups reachable through scoped child archetypes
   const movementNodes: HeatNode[] = node.layer === 'modality'
@@ -188,12 +192,24 @@ function NodeInfoPanel({
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Leads to</p>
               <div className="space-y-1">
-                {childNodes.slice(0, 4).map(c => (
-                  <div key={c.id} className="flex items-center gap-1.5">
-                    <div className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: nodeColor(c) }} />
-                    <span className="text-[11px] text-foreground truncate">{c.label}</span>
-                  </div>
-                ))}
+                {childNodes.slice(0, 4).map(c => {
+                  const baseName = c.label.replace(/\s*\(\d+\)$/, '').trim()
+                  let countLabel = ''
+                  if (c.layer === 'exercise_group') {
+                    const gKey = c.id.replace('exercise_group::', '')
+                    const allEx = graphData.exercisesByGroup[gKey] ?? []
+                    const scopedEx = activePackage
+                      ? allEx.filter(ex => !ex._package || ex._package === activePackage)
+                      : allEx
+                    countLabel = ` (${scopedEx.length})`
+                  }
+                  return (
+                    <div key={c.id} className="flex items-center gap-1.5">
+                      <div className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: nodeColor(c) }} />
+                      <span className="text-[11px] text-foreground truncate">{baseName}{countLabel}</span>
+                    </div>
+                  )
+                })}
                 {childNodes.length > 4 && (
                   <span className="text-[10px] text-muted-foreground">+{childNodes.length - 4} more</span>
                 )}
@@ -272,7 +288,6 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null) // 2nd click — drives layout centering
   const lockedNodeRef = useRef<string | null>(null)
   lockedNodeRef.current = lockedNodeId
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   // Seed initial locked node into the correct layer slot
   useEffect(() => {
@@ -326,10 +341,6 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   }, [])
 
   const handleClickNode = useCallback((id: string) => {
-    if (id.startsWith('exercise_group::')) {
-      setExpandedGroup(prev => prev === id ? null : id)
-      return
-    }
     const layer = LAYER_ORDER_KEYS.find(l => id.startsWith(`${l}::`)) ?? null
     if (!layer) return
 
@@ -394,15 +405,6 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
     } catch { /* handled by TanStack mutation */ }
   }
 
-  if (ontologyLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-        Loading ontology...
-      </div>
-    )
-  }
-
   // Scoped connected set — mirrors HeatmapGraph's connectedSet logic.
   // Used to filter NodeInfoPanel's parent/child/movement lists to only in-scope nodes.
   const scopedNodeIds = useMemo(() => {
@@ -423,6 +425,20 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
     }
     return result
   }, [selectedNodes, graphData])
+
+  const activePackage = useMemo(() => {
+    const philNode = selectedNodes.find(n => n.startsWith('philosophy::'))
+    return philNode ? philNode.slice('philosophy::'.length) : null
+  }, [selectedNodes])
+
+  if (ontologyLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        Loading ontology...
+      </div>
+    )
+  }
 
   if (!graphData) return null
 
@@ -523,7 +539,6 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
             lockedNode={lockedNodeId}
             onHoverNode={handleHoverNode}
             onClickNode={handleClickNode}
-            expandedGroup={expandedGroup}
             sortMode={sortMode}
           />
         </div>
@@ -601,6 +616,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
             onClose={clearLowest}
             isLocked={lockedNodeId !== null}
             scopedNodeIds={scopedNodeIds}
+            activePackage={activePackage}
           />
         )}
       </AnimatePresence>

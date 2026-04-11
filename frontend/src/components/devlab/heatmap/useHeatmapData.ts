@@ -34,6 +34,7 @@ export interface ExerciseInGroup {
   heat: number
   rawCount: number
   movement_patterns: string[]
+  _package?: string
 }
 
 export interface HeatmapGraphData {
@@ -307,7 +308,7 @@ function buildStaticGraph(ontology: OntologyData) {
         : exerciseMatchesPattern(exPatterns, exCategory, patternKey)
 
       if (matches) {
-        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns })
+        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns, _package: (ex as any)._package })
         groups.push(gId)
       }
     }

@@ -194,6 +194,7 @@ export interface Exercise {
   weekly_increment_kg?: number
   sources: string[]
   notes?: string
+  _package?: string
 }
 
 // ─── Archetypes ───────────────────────────────────────────────────────────────

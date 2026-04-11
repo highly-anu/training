@@ -23,7 +23,6 @@ import { PipelineFlowPanel } from '@/components/devlab/PipelineFlowPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
-import { PhilosophyExplorerPanel } from '@/components/devlab/PhilosophyExplorerPanel'
 import type { EquipmentId, TrainingLevel, TrainingPhase, TracedProgram, WeekData } from '@/api/types'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
@@ -217,7 +216,7 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!goalId && !generateMutation.isPending
 
-  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap' | 'interactions' | 'philosophy'>('pipeline')
+  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap' | 'interactions'>('pipeline')
   const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
   const [ontologyFromBrowser, setOntologyFromBrowser] = useState(false)
 
@@ -278,17 +277,6 @@ export function DevLab() {
           >
             Model Interactions
           </button>
-          <button
-            onClick={() => setDevTab('philosophy')}
-            className={cn(
-              'px-3 py-1 rounded text-xs border transition-colors',
-              devTab === 'philosophy'
-                ? 'bg-violet-500/15 border-violet-500/40 text-violet-400'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            Philosophy Explorer
-          </button>
         </div>
       </div>
 
@@ -322,11 +310,6 @@ export function DevLab() {
         </div>
       )}
 
-      {devTab === 'philosophy' && (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <PhilosophyExplorerPanel />
-        </div>
-      )}
 
       {devTab === 'pipeline' && <div className="flex-1 overflow-y-auto">
         {/* ── Program Selector ── */}
