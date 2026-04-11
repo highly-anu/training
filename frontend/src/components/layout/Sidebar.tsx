@@ -5,7 +5,6 @@ import {
   Calendar,
   User,
   Activity,
-  BookOpen,
   Compass,
   Upload,
   HeartPulse,
