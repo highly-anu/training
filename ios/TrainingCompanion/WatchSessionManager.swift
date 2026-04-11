@@ -309,6 +309,30 @@ final class WatchSessionManager: NSObject, ObservableObject {
               let obj  = try? JSONSerialization.jsonObject(with: data) else { return [] }
         return obj
     }
+
+    // MARK: - Local buffer (survives upload failures)
+
+    /// Writes raw summary JSON to Documents/watch_buffer/<id>.json before attempting upload.
+    /// Deleted on success. Lets us inspect or retry failed uploads without data loss.
+    nonisolated static func bufferSummary(_ data: Data, id: String) {
+        guard let dir = bufferDir else { return }
+        let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        let url = dir.appendingPathComponent("\(safe).json")
+        try? data.write(to: url, options: .atomic)
+    }
+
+    nonisolated static func clearBuffer(id: String) {
+        guard let dir = bufferDir else { return }
+        let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        try? FileManager.default.removeItem(at: dir.appendingPathComponent("\(safe).json"))
+    }
+
+    private nonisolated static var bufferDir: URL? {
+        guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        let dir = docs.appendingPathComponent("watch_buffer")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
 }
 
 // MARK: - WCSessionDelegate (receive workout summaries from Watch)
@@ -331,6 +355,7 @@ extension WatchSessionManager: WCSessionDelegate {
             AppLogger.shared.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
             return
         }
+        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
         Task { await handleWorkoutComplete(summary) }
     }
 
@@ -342,6 +367,7 @@ extension WatchSessionManager: WCSessionDelegate {
             AppLogger.shared.logFromBackground("WCSession: failed to decode large workout file")
             return
         }
+        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
         Task { await handleWorkoutComplete(summary) }
     }
 
@@ -369,17 +395,26 @@ extension WatchSessionManager: WCSessionDelegate {
         if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
         if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
 
-        AppLogger.shared.log("API: saving workout log for \(sessionKey)…")
+        AppLogger.shared.logFromBackground("API: saving workout log for \(sessionKey)…")
         do {
             try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
-            AppLogger.shared.log("API: saved workout log for \(sessionKey) ✓")
+            AppLogger.shared.logFromBackground("API: saved workout log for \(sessionKey) ✓")
         } catch {
-            AppLogger.shared.log("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
+            AppLogger.shared.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
         }
 
         // 2. Build and save ImportedWorkout (enables HRTimeline + GPSMap on the frontend)
         let iso = ISO8601DateFormatter()
-        guard let startDate = iso.date(from: summary.startedAt) else { return }
+        // Try default format first; fall back to fractional-seconds variant (Watch may include milliseconds).
+        let isoFractional: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f
+        }()
+        guard let startDate = iso.date(from: summary.startedAt) ?? isoFractional.date(from: summary.startedAt) else {
+            AppLogger.shared.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
+            return
+        }
 
         let workoutId = "watch_live_\(sessionKey)_\(summary.startedAt)"
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? UUID().uuidString
@@ -419,9 +454,11 @@ extension WatchSessionManager: WCSessionDelegate {
 
         do {
             try await api.saveWatchWorkoutDirect(workout)
-            AppLogger.shared.log("API: saved watch workout \(workoutId) ✓")
+            AppLogger.shared.logFromBackground("API: saved watch workout \(workoutId) ✓")
+            // Safe to discard the local buffer now that Supabase has the row.
+            WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
         } catch {
-            AppLogger.shared.log("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
+            AppLogger.shared.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
             return
         }
 
@@ -436,9 +473,9 @@ extension WatchSessionManager: WCSessionDelegate {
                 peakHR: summary.peakHR,
                 exercises: exercises
             )
-            AppLogger.shared.log("API: saved workout match \(workoutId) → \(sessionKey) ✓")
+            AppLogger.shared.logFromBackground("API: saved workout match \(workoutId) → \(sessionKey) ✓")
         } catch {
-            AppLogger.shared.log("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
+            AppLogger.shared.logFromBackground("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
         }
 
         // 4. Async GPS enrichment: try to fetch the full HKWorkoutRoute after a short delay
@@ -501,9 +538,9 @@ extension WatchSessionManager: WCSessionDelegate {
         ]
         do {
             try await api.saveWatchWorkoutDirect(enriched)
-            AppLogger.shared.log("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
+            AppLogger.shared.logFromBackground("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
         } catch {
-            AppLogger.shared.log("API: GPS enrichment FAILED — \(error.localizedDescription)")
+            AppLogger.shared.logFromBackground("API: GPS enrichment FAILED — \(error.localizedDescription)")
         }
     }
 

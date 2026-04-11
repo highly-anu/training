@@ -21,8 +21,6 @@ struct LogView: View {
                 .padding(.vertical, 8)
                 .onChange(of: selectedSegment) { _ in AppHaptics.selection() }
 
-                Divider()
-
                 if selectedSegment == 0 { workoutsTab } else { bioTab }
             }
             .navigationTitle("Log")
@@ -55,15 +53,6 @@ struct LogView: View {
                 if let url = try? result.get() {
                     appState.pendingFITURL = url
                 }
-            }
-            .refreshable {
-                AppHaptics.light()
-                await withTaskGroup(of: Void.self) { group in
-                    group.addTask { await appState.loadWorkouts() }
-                    group.addTask { await appState.loadRecentBioLogs() }
-                    group.addTask { try? await Task.sleep(nanoseconds: 600_000_000) }
-                }
-                AppHaptics.success()
             }
         }
     }
@@ -230,26 +219,32 @@ struct LogView: View {
     // MARK: - Bio Tab
 
     private var bioTab: some View {
-        Group {
+        List {
             if appState.recentBioLogs.isEmpty {
-                emptyState(
-                    icon: "waveform.path.ecg",
-                    title: "No Bio Data",
-                    subtitle: "Sync from your Apple Watch or add a manual entry."
-                )
+                Section {
+                    emptyState(
+                        icon: "waveform.path.ecg",
+                        title: "No Bio Data",
+                        subtitle: "Sync from your Apple Watch or add a manual entry."
+                    )
+                    .listRowBackground(Color.clear)
+                }
             } else {
-                List {
-                    Section {
-                        readinessSummaryRow
-                    }
-                    Section("Last 14 Days") {
-                        ForEach(appState.recentBioLogs.prefix(14)) { log in
-                            bioRow(log)
-                        }
+                Section {
+                    readinessSummaryRow
+                }
+                Section("Last 14 Days") {
+                    ForEach(appState.recentBioLogs.prefix(14)) { log in
+                        bioRow(log)
                     }
                 }
-                .listStyle(.insetGrouped)
             }
+        }
+        .listStyle(.insetGrouped)
+        .refreshable {
+            AppHaptics.light()
+            await appState.loadRecentBioLogs()
+            AppHaptics.success()
         }
     }
 

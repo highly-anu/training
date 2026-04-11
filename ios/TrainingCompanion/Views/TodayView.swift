@@ -59,15 +59,6 @@ struct TodayView: View {
                 SessionDetailView(session: item.session, sessionKey: item.key)
                     .environmentObject(appState)
             }
-            .refreshable {
-                AppHaptics.light()
-                async let delay: () = Task.sleep(nanoseconds: 600_000_000)
-                await sync.syncAll()
-                await appState.loadAll()
-                _ = try? await delay
-                dayOffset = 0
-                AppHaptics.success()
-            }
             .task {
                 if appState.serverProgram == nil {
                     await appState.loadAll()
@@ -88,6 +79,15 @@ struct TodayView: View {
                 Spacer(minLength: 40)
             }
             .padding()
+        }
+        .refreshable {
+            AppHaptics.light()
+            async let delay: () = Task.sleep(nanoseconds: 600_000_000)
+            await sync.syncAll()
+            await appState.loadAll()
+            _ = try? await delay
+            dayOffset = 0
+            AppHaptics.success()
         }
     }
 
@@ -208,8 +208,15 @@ struct TodayView: View {
                         lockedAdjacentOffset = nil
                     } label: {
                         HStack(spacing: 3) {
-                            Image(systemName: "chevron.left").font(.caption2)
+                            if dayOff < 0 {
+                                // Viewing a future day — today is to the left
+                                Image(systemName: "chevron.left").font(.caption2)
+                            }
                             Text("Today").font(.caption)
+                            if dayOff > 0 {
+                                // Viewing a past day — today is to the right
+                                Image(systemName: "chevron.right").font(.caption2)
+                            }
                         }
                         .foregroundStyle(.blue)
                     }

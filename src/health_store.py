@@ -350,7 +350,7 @@ def get_recent_bio_logs(user_id: str, days: int = 90) -> list[dict]:
             with conn.cursor() as cur:
                 cur.execute(
                     'SELECT * FROM daily_bio WHERE user_id = %s '
-                    'AND date >= CURRENT_DATE - INTERVAL %s '
+                    'AND date >= CURRENT_DATE - %s::interval '
                     'ORDER BY date DESC',
                     (user_id, f'{days} days'),
                 )
@@ -371,7 +371,7 @@ def get_recent_bio_logs(user_id: str, days: int = 90) -> list[dict]:
                     entry[col] = str(row[col])
             result.append(entry)
         return result
-    except RuntimeError:
+    except Exception:
         return []
 
 

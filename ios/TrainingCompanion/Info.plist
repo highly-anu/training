@@ -22,6 +22,8 @@
 	<array>
 		<string>haerdsoft.sync</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in to Training Companion without entering your password.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>TrainingCompanion reads your sleep, heart rate, and HRV data to sync with your training dashboard.</string>
 	<key>NSHealthUpdateUsageDescription</key>

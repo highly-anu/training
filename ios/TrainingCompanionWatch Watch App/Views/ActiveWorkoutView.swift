@@ -289,7 +289,33 @@ struct ActiveWorkoutView: View {
         .padding()
         .navigationTitle("Commands")
         .confirmationDialog("End session?", isPresented: $showStopConfirm) {
-            Button("End", role: .destructive) {
+            Button("Save & End") {
+                // Build summary before resetting state — reset clears HR samples and set logs
+                let summary = workoutManager.buildSummary(startedAt: workoutStartDate)
+                    ?? WatchWorkoutSummary(
+                        sessionId: session.sessionId,
+                        date: {
+                            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                            return f.string(from: workoutStartDate)
+                        }(),
+                        startedAt: ISO8601DateFormatter().string(from: workoutStartDate),
+                        endedAt:   ISO8601DateFormatter().string(from: Date()),
+                        durationMinutes: max(1, Int(Date().timeIntervalSince(workoutStartDate) / 60)),
+                        avgHR:              sessionState.avgHR > 0 ? sessionState.avgHR : nil,
+                        peakHR:             sessionState.peakHR > 0 ? sessionState.peakHR : nil,
+                        setLogs:            sessionState.setLogs,
+                        exercisesCompleted: sessionState.completedExerciseIds.count,
+                        source: "apple_watch_live",
+                        hrSamples: nil, gpsTrack: nil, distanceMeters: nil,
+                        elevationGainMeters: nil, cadenceAvg: nil,
+                        paceSecsPerKm: nil, exerciseTimeline: nil
+                    )
+                connectivity.sendWorkoutSummary(summary)
+                sessionState.reset()
+                Task { await workoutManager.endWorkout() }
+                dismiss()
+            }
+            Button("Discard", role: .destructive) {
                 sessionState.reset()
                 Task { await workoutManager.endWorkout() }
                 dismiss()

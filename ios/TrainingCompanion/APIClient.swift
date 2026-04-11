@@ -163,7 +163,15 @@ final class APIClient {
 
     func fetchRecentBioLogs() async throws -> [DailyBioLog] {
         let data = try await get("/health/bio/recent")
-        return (try? JSONDecoder().decode([DailyBioLog].self, from: data)) ?? []
+        do {
+            let logs = try JSONDecoder().decode([DailyBioLog].self, from: data)
+            AppLogger.shared.logFromBackground("bio: fetched \(logs.count) recent logs")
+            return logs
+        } catch {
+            let raw = String(data: data, encoding: .utf8) ?? "(nil)"
+            AppLogger.shared.logFromBackground("bio: decode FAILED — \(error) | raw: \(raw.prefix(200))")
+            return []
+        }
     }
 
     // MARK: - Program Generation
@@ -296,7 +304,8 @@ final class APIClient {
         if let m = w["inferredModalityId"] as? String { row["inferred_modality_id"] = m }
         if let s = w["startTime"]       as? String { row["start_time"]       = s }
         if let e = w["endTime"]         as? String { row["end_time"]         = e }
-        if let d = w["durationMinutes"] as? Double { row["duration_minutes"] = Int(d.rounded()) }
+        if let d = w["durationMinutes"] as? Int        { row["duration_minutes"] = d }
+        else if let d = w["durationMinutes"] as? Double { row["duration_minutes"] = Int(d.rounded()) }
         if let c = w["calories"]        as? Double { row["calories"]         = Int(c) }
         if let c = w["calories"]        as? Int    { row["calories"]         = c }
         if let hr = w["heartRate"] as? [String: Any] {

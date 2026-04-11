@@ -187,7 +187,11 @@ final class AppState: ObservableObject {
 
     func loadRecentBioLogs() async {
         guard let api else { return }
-        recentBioLogs = (try? await api.fetchRecentBioLogs()) ?? []
+        do {
+            recentBioLogs = try await api.fetchRecentBioLogs()
+        } catch {
+            AppLogger.shared.logFromBackground("bio: HTTP error — \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Catalog (lazy)

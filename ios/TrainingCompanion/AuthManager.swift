@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import LocalAuthentication
 
 /// Thin wrapper around Supabase Swift SDK auth.
 /// Uses the same project credentials as the web app — no separate account needed.
@@ -12,7 +13,56 @@ final class AuthManager: ObservableObject {
     static let supabaseURL = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String ?? ""
     static let supabaseAnonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
 
-    private let sessionKey = "supabase_session"
+    private let sessionKey   = "supabase_session"
+    private let keychainEmail    = "tc_biometric_email"
+    private let keychainPassword = "tc_biometric_password"
+
+    // MARK: - Biometric
+
+    /// Whether valid credentials are stored for Face ID / Touch ID login.
+    var hasBiometricCredentials: Bool {
+        Keychain.read(keychainEmail) != nil
+    }
+
+    /// Whether this device supports biometric authentication.
+    var canUseBiometrics: Bool {
+        let ctx = LAContext()
+        var err: NSError?
+        return ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &err)
+    }
+
+    /// Saves credentials to the Keychain so biometric login can retrieve them later.
+    func enableBiometricLogin(email: String, password: String) {
+        Keychain.save(keychainEmail,    value: email)
+        Keychain.save(keychainPassword, value: password)
+    }
+
+    /// Removes stored credentials (disables biometric login).
+    func disableBiometricLogin() {
+        Keychain.delete(keychainEmail)
+        Keychain.delete(keychainPassword)
+    }
+
+    /// Prompts Face ID / Touch ID, then signs in with the stored credentials on success.
+    /// Throws `BiometricError.noCredentials` if none are stored,
+    /// or the underlying `LAError` if the user cancels / fails.
+    func biometricSignIn() async throws {
+        guard let email    = Keychain.read(keychainEmail),
+              let password = Keychain.read(keychainPassword) else {
+            throw BiometricError.noCredentials
+        }
+        let ctx    = LAContext()
+        let reason = "Sign in to Training Companion"
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            ctx.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
+                               localizedReason: reason) { success, error in
+                if success { cont.resume() }
+                else       { cont.resume(throwing: error ?? BiometricError.failed) }
+            }
+        }
+        let result = try await passwordGrant(email: email, password: password)
+        persistSession(result)
+    }
 
     init() {
         // Restore persisted session; refresh if expired
@@ -98,6 +148,53 @@ final class AuthManager: ObservableObject {
 enum AuthError: LocalizedError {
     case invalidCredentials
     var errorDescription: String? { "Invalid email or password." }
+}
+
+enum BiometricError: LocalizedError {
+    case noCredentials, failed
+    var errorDescription: String? {
+        switch self {
+        case .noCredentials: return "No saved credentials for biometric login."
+        case .failed:        return "Biometric authentication failed."
+        }
+    }
+}
+
+// MARK: - Keychain helper
+
+private enum Keychain {
+    static func save(_ key: String, value: String) {
+        let data = Data(value.utf8)
+        let query: [CFString: Any] = [
+            kSecClass:            kSecClassGenericPassword,
+            kSecAttrAccount:      key,
+            kSecAttrAccessible:   kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecValueData:        data,
+        ]
+        SecItemDelete(query as CFDictionary)
+        SecItemAdd(query as CFDictionary, nil)
+    }
+
+    static func read(_ key: String) -> String? {
+        let query: [CFString: Any] = [
+            kSecClass:       kSecClassGenericPassword,
+            kSecAttrAccount: key,
+            kSecReturnData:  true,
+            kSecMatchLimit:  kSecMatchLimitOne,
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func delete(_ key: String) {
+        let query: [CFString: Any] = [
+            kSecClass:       kSecClassGenericPassword,
+            kSecAttrAccount: key,
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
 }
 
 private struct AuthResponse: Decodable {

@@ -4,6 +4,7 @@ import WatchConnectivity
 struct SyncStatusView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var sync: SyncManager
+    @EnvironmentObject var appState: AppState
     @ObservedObject private var logger = AppLogger.shared
 
     @State private var showDebugLog = false
@@ -59,7 +60,7 @@ struct SyncStatusView: View {
                 Label("Watch", systemImage: "applewatch")
                 Spacer()
                 if watchPaired {
-                    Label(watchReachable ? "Reachable" : "Paired", systemImage: watchReachable ? "checkmark.circle.fill" : "clock.fill")
+                    Label(watchReachable ? "Reachable" : "Paired", systemImage: "clock.fill")
                         .foregroundStyle(watchReachable ? .green : .secondary)
                         .font(.footnote)
                 } else {
@@ -70,7 +71,11 @@ struct SyncStatusView: View {
             }
 
             Button {
-                Task { await sync.syncAll() }
+                Task {
+                    await sync.syncAll()
+                    await appState.loadRecentBioLogs()
+                    await appState.loadWorkouts()
+                }
             } label: {
                 Label("Sync Now", systemImage: "arrow.clockwise")
                     .frame(maxWidth: .infinity)

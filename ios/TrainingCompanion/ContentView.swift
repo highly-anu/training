@@ -82,6 +82,7 @@ struct SignInView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var error: String? = nil
+    @State private var showEnableBiometrics = false
 
     var body: some View {
         NavigationStack {
@@ -96,6 +97,34 @@ struct SignInView: View {
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+
+                // Face ID button — shown when credentials are already stored
+                if auth.hasBiometricCredentials && auth.canUseBiometrics {
+                    Button {
+                        isLoading = true
+                        error = nil
+                        Task {
+                            do {
+                                try await auth.biometricSignIn()
+                            } catch let laError as LAError where laError.code == .userCancel {
+                                // User cancelled — no error shown, fall back to form
+                            } catch {
+                                self.error = error.localizedDescription
+                            }
+                            isLoading = false
+                        }
+                    } label: {
+                        Label("Sign in with Face ID", systemImage: "faceid")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isLoading)
+                    .padding(.horizontal)
+
+                    Text("or enter your credentials below")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
                 VStack(spacing: 12) {
                     TextField("Email", text: $email)
@@ -128,6 +157,10 @@ struct SignInView: View {
                     Task {
                         do {
                             try await auth.signIn(email: email, password: password)
+                            // Offer Face ID setup after first successful password login
+                            if auth.canUseBiometrics && !auth.hasBiometricCredentials {
+                                showEnableBiometrics = true
+                            }
                         } catch {
                             self.error = error.localizedDescription
                         }
@@ -143,12 +176,30 @@ struct SignInView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(auth.hasBiometricCredentials ? .secondary : .blue)
                 .disabled(email.isEmpty || password.isEmpty || isLoading)
                 .padding(.horizontal)
 
                 Spacer()
             }
             .navigationTitle("Training Companion")
+            .alert("Use Face ID?", isPresented: $showEnableBiometrics) {
+                Button("Enable Face ID") { auth.enableBiometricLogin(email: email, password: password) }
+                Button("Not now", role: .cancel) {}
+            } message: {
+                Text("Sign in faster next time without entering your password.")
+            }
+        }
+        .onAppear {
+            // Auto-trigger Face ID on app open if credentials are stored
+            if auth.hasBiometricCredentials && auth.canUseBiometrics {
+                Task {
+                    try? await auth.biometricSignIn()
+                }
+            }
         }
     }
 }
+
+// Needed to check LAError in SignInView
+import LocalAuthentication
