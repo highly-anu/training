@@ -78,7 +78,7 @@ incompatible_with:
       in each domain.
 
 framework_selection:
-  default_framework: polarized_80_20
+  default_framework: uphill_base_phase
   alternatives:
     - framework_id: concurrent_training
       condition: days_per_week <= 3

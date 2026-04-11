@@ -33,7 +33,7 @@ required_equipment:
   - kettlebell
   - pull_up_bar
   - open_space
-intensity_model: polarized_80_20
+intensity_model: polarized_80_20_uphill
 progression_philosophy: volume_based
 sources:
   - "Training for the New Alpinism — House & Johnston (2014)"

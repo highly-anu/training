@@ -1,0 +1,46 @@
+id: kb_general_practice
+name: "Kettlebell General Practice (Wildman)"
+source_philosophy: wildman_kettlebell
+
+goals_served:
+  - power
+  - movement_skill
+  - strength_endurance
+  - relative_strength
+
+sessions_per_week:
+  power: 2
+  movement_skill: 2
+  strength_endurance: 1
+  max_strength: 1
+
+intensity_distribution:
+  zone1_2_pct: 0.6
+  zone3_pct: 0.3
+  zone4_5_pct: 0.1
+  max_effort_pct: 0.0
+
+progression_model: complexity
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+  days_per_week_min: 3
+  days_per_week_max: 4
+
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.5
+  intensity_change: maintain
+
+sources:
+  - Wildman
+notes: >
+  General kettlebell practice for non-competitors following Wildman's methodology.
+  Progresses through the movement complexity ladder: deadlift → swing → clean →
+  press → push press → snatch → jerk. TGU and windmill are practiced regularly as
+  skill and durability work. RPM targets and timed-set length increase as technique
+  matures; load increases only when RPM targets are consistently met with clean
+  mechanics and nasal breathing.
