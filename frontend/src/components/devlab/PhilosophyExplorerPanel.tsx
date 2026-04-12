@@ -8,6 +8,7 @@ import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
+import { SimilarItems } from '@/components/shared/SimilarItems'
 import { Badge } from '@/components/ui/badge'
 import {
   Select,
@@ -1160,7 +1161,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
 
 // ─── PhilosophyHeader ─────────────────────────────────────────────────────────
 
-function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosophy; frameworks: Framework[]; allFrameworks: Framework[] }) {
+function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSelectPhil }: { phil: Philosophy; frameworks: Framework[]; allFrameworks: Framework[]; philosophies: Philosophy[]; onSelectPhil: (id: string) => void }) {
   const [notesOpen, setNotesOpen] = useState(true)
 
   return (
@@ -1325,6 +1326,18 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosoph
               ))}
             </div>
           )}
+
+          {/* Similar philosophies */}
+          <div className="pt-1 border-t border-violet-500/10">
+            <SimilarItems
+              category="philosophies"
+              id={phil.id}
+              getLabel={(id) => philosophies.find(p => p.id === id)?.name ?? id}
+              onSelect={onSelectPhil}
+              count={4}
+              accentHex={phil.bias[0] ? (MODALITY_COLORS[phil.bias[0] as ModalityId]?.hex ?? '#8b5cf6') : '#8b5cf6'}
+            />
+          </div>
         </div>
 
         {/* ── Right: modality profile radar (~35%) ── */}
@@ -1466,7 +1479,7 @@ export function PhilosophyExplorerPanel({ controlledId }: { controlledId?: strin
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="h-full overflow-y-auto px-4 py-4 space-y-6">
-            {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} />}
+            {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} philosophies={philosophies} onSelectPhil={setSelectedId} />}
 
             {frameworks.length === 0 ? (
               <div className="rounded-lg border border-border/40 p-4 text-center text-sm text-muted-foreground">

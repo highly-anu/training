@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Compass, Dumbbell, Search, X, Zap } from 'lucide-react'
+import { BookOpen, Compass, Dumbbell, Grid2X2, LayoutList, Search, X, Zap } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -15,6 +15,8 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { PhilosophyExplorerPanel } from '@/components/devlab/PhilosophyExplorerPanel'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
+import { SimilarItems } from '@/components/shared/SimilarItems'
+import { useSimilarity } from '@/api/similarity'
 import type { Philosophy, Modality, Archetype, ModalityId, Exercise } from '@/api/types'
 
 // ─── Intensity zone definitions (HR % thresholds) ────────────────────────────
@@ -498,12 +500,16 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
 
 function ModalityDetail({
   mod,
+  modalities,
   philosophies,
   allArchetypes,
+  onSelectMod,
 }: {
   mod: Modality
+  modalities: Modality[]
   philosophies: Philosophy[]
   allArchetypes: Archetype[]
+  onSelectMod: (m: Modality) => void
 }) {
   const color = MODALITY_COLORS[mod.id]
   const hex = color?.hex ?? '#6366f1'
@@ -657,6 +663,18 @@ function ModalityDetail({
             <p className="text-[11px] text-muted-foreground leading-relaxed">{mod.notes}</p>
           </Section>
         )}
+
+        {/* Similar modalities */}
+        <SimilarItems
+          category="modalities"
+          id={mod.id}
+          getLabel={(id) => modalities.find(m => m.id === id)?.name ?? prettify(id)}
+          onSelect={(id) => {
+            const m = modalities.find(m => m.id === id)
+            if (m) onSelectMod(m)
+          }}
+          accentHex={hex}
+        />
       </div>
     </div>
   )
@@ -880,6 +898,15 @@ function ExercisePanel({
           </div>
         )}
 
+        {/* Similar exercises */}
+        <SimilarItems
+          category="exercises"
+          id={exercise.id}
+          getLabel={(id) => allExercises.find(e => e.id === id)?.name ?? id.replace(/_/g, ' ')}
+          onSelect={(id) => onNavigate(id)}
+          accentHex={EX_CATEGORY_COLORS[exercise.category]}
+        />
+
       </div>
     </div>
   )
@@ -905,6 +932,133 @@ function StatCell({ label, value }: { label: string; value: string }) {
   )
 }
 
+// ─── Similarity matrix view ───────────────────────────────────────────────────
+
+interface MatrixItem {
+  id: string
+  label: string
+  hex: string
+}
+
+function SimilarityMatrix({
+  category,
+  items,
+  onSelect,
+}: {
+  category: string
+  items: MatrixItem[]
+  onSelect: (id: string) => void
+}) {
+  const { data: matrix, isLoading } = useSimilarity()
+  const [hovered, setHovered] = useState<{ row: string; col: string } | null>(null)
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+      Loading similarity data…
+    </div>
+  )
+  if (!matrix) return null
+
+  const scores = matrix[category] ?? {}
+
+  // Short names for column headers (first word or first 8 chars)
+  function shortLabel(label: string) {
+    const w = label.split(/\s+/)
+    return w.length > 1 ? w[0] : label.slice(0, 8)
+  }
+
+  return (
+    <div className="h-full overflow-auto p-4">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 font-medium mb-3">
+        Pairwise similarity — {items.length} × {items.length}
+      </p>
+      <div className="inline-block">
+        {/* Header row */}
+        <div className="flex">
+          <div style={{ width: 140, minWidth: 140 }} /> {/* row label spacer */}
+          {items.map((col) => (
+            <div
+              key={col.id}
+              style={{ width: 32, minWidth: 32 }}
+              className="flex items-end justify-center pb-1"
+            >
+              <span
+                className="text-[8px] font-mono text-muted-foreground/50 truncate"
+                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', maxHeight: 60 }}
+                title={col.label}
+              >
+                {shortLabel(col.label)}
+              </span>
+            </div>
+          ))}
+        </div>
+        {/* Data rows */}
+        {items.map((row) => (
+          <div key={row.id} className="flex items-center">
+            {/* Row label */}
+            <button
+              style={{ width: 140, minWidth: 140 }}
+              className="text-[10px] font-medium text-right pr-2 text-muted-foreground/70 hover:text-foreground truncate transition-colors"
+              onClick={() => onSelect(row.id)}
+              title={row.label}
+            >
+              {row.label}
+            </button>
+            {/* Cells */}
+            {items.map((col) => {
+              const isSelf = row.id === col.id
+              const result = isSelf ? null : (scores[row.id]?.[col.id] ?? scores[col.id]?.[row.id])
+              const score = result?.score ?? (isSelf ? 1 : 0)
+              const isHovered = hovered?.row === row.id && hovered?.col === col.id
+              const detail = result?.primary?.detail ?? ''
+
+              return (
+                <div
+                  key={col.id}
+                  style={{ width: 32, minWidth: 32, height: 32 }}
+                  className="relative flex items-center justify-center cursor-pointer"
+                  onMouseEnter={() => !isSelf && setHovered({ row: row.id, col: col.id })}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => !isSelf && onSelect(row.id)}
+                >
+                  <div
+                    className="size-full transition-all"
+                    style={{
+                      backgroundColor: isSelf
+                        ? `${row.hex}60`
+                        : `${row.hex}${Math.round(score * 200).toString(16).padStart(2, '0')}`,
+                      outline: isHovered ? `2px solid ${row.hex}` : undefined,
+                      outlineOffset: -1,
+                    }}
+                  />
+                  {isHovered && !isSelf && (
+                    <div
+                      className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1.5 pointer-events-none
+                                 rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-lg text-left"
+                      style={{ minWidth: 160 }}
+                    >
+                      <p className="text-[10px] font-semibold text-foreground mb-0.5">
+                        {row.label} × {col.label}
+                      </p>
+                      <p className="text-[9px] font-mono text-primary">{Math.round(score * 100)}% similar</p>
+                      {detail && <p className="text-[9px] text-muted-foreground/70 mt-0.5 leading-snug">{detail}</p>}
+                    </div>
+                  )}
+                  {!isSelf && score > 0.6 && (
+                    <span className="absolute inset-0 flex items-center justify-center text-[8px] font-mono text-white/60 pointer-events-none">
+                      {Math.round(score * 100)}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type ExploreSection = 'explorer' | 'ontology'
@@ -917,6 +1071,7 @@ const EXPLORE_SECTIONS: { key: ExploreSection; label: string }[] = [
 export function Explore() {
   const [section, setSection] = useState<ExploreSection>('explorer')
   const [topic, setTopic] = useState<Topic>('philosophies')
+  const [rightMode, setRightMode] = useState<'detail' | 'matrix'>('detail')
   const [selectedPhil, setSelectedPhil] = useState<Philosophy | null>(null)
   const [selectedMod, setSelectedMod] = useState<Modality | null>(null)
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
@@ -937,6 +1092,7 @@ export function Explore() {
 
   function handleTopicChange(t: Topic) {
     setTopic(t)
+    setRightMode('detail')
     setSelectedPhil(null)
     setSelectedMod(null)
     setSelectedExercise(null)
@@ -1072,19 +1228,75 @@ export function Explore() {
           </div>
 
           {/* Right column */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            {topic === 'philosophies'
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            {/* Matrix toggle — only for philosophies + modalities */}
+            {topic !== 'exercises' && (
+              <div className="shrink-0 flex justify-end px-3 pt-2 pb-0">
+                <div className="flex rounded border border-border/40 overflow-hidden">
+                  <button
+                    onClick={() => setRightMode('detail')}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-1 text-[10px] transition-colors',
+                      rightMode === 'detail' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    <LayoutList className="size-3" />
+                    Browse
+                  </button>
+                  <button
+                    onClick={() => setRightMode('matrix')}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-1 text-[10px] transition-colors border-l border-border/40',
+                      rightMode === 'matrix' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    <Grid2X2 className="size-3" />
+                    Matrix
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {rightMode === 'matrix' && topic === 'philosophies' ? (
+                <SimilarityMatrix
+                  category="philosophies"
+                  items={philosophies.map(p => ({
+                    id: p.id,
+                    label: p.name,
+                    hex: MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1',
+                  }))}
+                  onSelect={(id) => {
+                    const p = philosophies.find(x => x.id === id)
+                    if (p) { setSelectedPhil(p); setRightMode('detail') }
+                  }}
+                />
+              ) : rightMode === 'matrix' && topic === 'modalities' ? (
+                <SimilarityMatrix
+                  category="modalities"
+                  items={modalities.map(m => ({
+                    id: m.id,
+                    label: m.name,
+                    hex: MODALITY_COLORS[m.id]?.hex ?? '#6366f1',
+                  }))}
+                  onSelect={(id) => {
+                    const m = modalities.find(x => x.id === id)
+                    if (m) { setSelectedMod(m); setRightMode('detail') }
+                  }}
+                />
+              ) : topic === 'philosophies'
               ? selectedPhil
                 ? <PhilosophyExplorerPanel controlledId={selectedPhil.id} />
                 : <PhilosophyOverview philosophies={philosophies} frameworks={frameworks} />
               : topic === 'modalities'
               ? selectedMod
-                ? <ModalityDetail mod={selectedMod} philosophies={philosophies} allArchetypes={allArchetypes} />
+                ? <ModalityDetail mod={selectedMod} modalities={modalities} philosophies={philosophies} allArchetypes={allArchetypes} onSelectMod={setSelectedMod} />
                 : <ModalityOverview modalities={modalities} onSelect={setSelectedMod} />
               : selectedExercise
                 ? <ExercisePanel exercise={selectedExercise} allExercises={allExercises} onNavigate={handleNavigateExercise} />
                 : <ExerciseOverview exercises={allExercises} />
-            }
+              }
+            </div>
           </div>
         </div>
       )}

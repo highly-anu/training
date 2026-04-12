@@ -31,4 +31,7 @@ export const queryKeys = {
   archetypes: {
     all: ['archetypes'] as const,
   },
+  similarity: {
+    all: ['similarity'] as const,
+  },
 } as const

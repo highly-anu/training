@@ -18,6 +18,7 @@ from flask_cors import CORS
 sys.path.insert(0, os.path.dirname(__file__))
 
 from src import loader
+from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.progression import calculate_load
@@ -80,6 +81,23 @@ def _all_modalities() -> list[dict]:
 
 def _equipment_profiles() -> list[dict]:
     return loader.load_equipment_profiles()
+
+
+# Similarity cache — computed once at first request (lazy, not blocking startup)
+_similarity_cache: dict | None = None
+
+def _get_similarity() -> dict:
+    global _similarity_cache
+    if _similarity_cache is None:
+        philosophies = loader.load_philosophies()
+        frameworks   = loader.load_all_frameworks()
+        modalities   = loader.load_all_modalities()
+        archetypes   = loader.load_all_archetypes()
+        exercises, _ = loader.load_all_exercises()
+        _similarity_cache = compute_all_similarities(
+            philosophies, frameworks, modalities, archetypes, exercises
+        )
+    return _similarity_cache
 
 
 def _injury_flags() -> list[dict]:
@@ -481,6 +499,16 @@ def get_ontology():
         'archetypes': archetypes,
         'exercises': exercises,
     })
+
+
+@app.get('/api/similarity')
+def get_similarity():
+    """Pairwise likeness scores for all ontology categories.
+
+    Returns {category: {id_a: {id_b: {score, primary, secondary}}}}
+    Scores are symmetric and pre-computed on first call.
+    """
+    return jsonify(_get_similarity())
 
 
 @app.post('/api/exercises')
