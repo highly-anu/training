@@ -8,6 +8,7 @@ import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
+import { SimilarItems } from '@/components/shared/SimilarItems'
 import { Badge } from '@/components/ui/badge'
 import {
   Select,
@@ -468,8 +469,8 @@ function SlotRow({ slot, allExercises }: { slot: ArchetypeSlot; allExercises: Ex
 
 // ─── ArchetypeCard ────────────────────────────────────────────────────────────
 
-function ArchetypeCard({ archetype, allExercises, isOpen, onToggle }: { archetype: Archetype; allExercises: Exercise[]; isOpen: boolean; onToggle: () => void }) {
-  const open = isOpen
+export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, onToggle, alwaysOpen }: { archetype: Archetype; allExercises: Exercise[]; allArchetypes: Archetype[]; isOpen: boolean; onToggle: () => void; alwaysOpen?: boolean }) {
+  const open = alwaysOpen || isOpen
 
   const levelInitials = (archetype.training_levels ?? []).map(l => ({
     label: LEVEL_LABELS[l] ?? l[0].toUpperCase(),
@@ -479,39 +480,34 @@ function ArchetypeCard({ archetype, allExercises, isOpen, onToggle }: { archetyp
   return (
     <div className="rounded border border-border/40 bg-muted/5 overflow-hidden">
       {/* Header */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
-      >
-        {open
-          ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
-          : <ChevronRight className="size-3 text-muted-foreground shrink-0" />
-        }
-        <span className="text-[11px] font-medium flex-1 truncate min-w-0">{archetype.name}</span>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-            {archetype.category}
-          </span>
-          <span className="text-[10px] font-mono text-muted-foreground">
-            {archetype.duration_estimate_minutes}min
-          </span>
-          {/* Level initials */}
-          <div className="flex gap-0.5">
-            {levelInitials.map(({ label, color }, i) => (
-              <span
-                key={i}
-                className="text-[9px] font-mono font-semibold"
-                style={{ color }}
-              >
-                {label}
-              </span>
-            ))}
+      {!alwaysOpen && (
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
+        >
+          {open
+            ? <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+            : <ChevronRight className="size-3 text-muted-foreground shrink-0" />
+          }
+          <span className="text-[11px] font-medium flex-1 truncate min-w-0">{archetype.name}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              {archetype.category}
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground">
+              {archetype.duration_estimate_minutes}min
+            </span>
+            <div className="flex gap-0.5">
+              {levelInitials.map(({ label, color }, i) => (
+                <span key={i} className="text-[9px] font-mono font-semibold" style={{ color }}>{label}</span>
+              ))}
+            </div>
+            <span className="text-[10px] text-muted-foreground/50">
+              {(archetype.slots ?? []).length} slots
+            </span>
           </div>
-          <span className="text-[10px] text-muted-foreground/50">
-            {(archetype.slots ?? []).length} slots
-          </span>
-        </div>
-      </button>
+        </button>
+      )}
 
       {/* Expanded body */}
       {open && (
@@ -606,6 +602,16 @@ function ArchetypeCard({ archetype, allExercises, isOpen, onToggle }: { archetyp
               {archetype.notes}
             </p>
           )}
+
+          {/* Similar archetypes */}
+          <div className="pt-2 border-t border-border/20">
+            <SimilarItems
+              category="archetypes"
+              id={archetype.id}
+              getLabel={(id) => allArchetypes.find(a => a.id === id)?.name ?? id}
+              count={4}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -1160,7 +1166,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
 
 // ─── PhilosophyHeader ─────────────────────────────────────────────────────────
 
-function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosophy; frameworks: Framework[]; allFrameworks: Framework[] }) {
+function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSelectPhil }: { phil: Philosophy; frameworks: Framework[]; allFrameworks: Framework[]; philosophies: Philosophy[]; onSelectPhil: (id: string) => void }) {
   const [notesOpen, setNotesOpen] = useState(true)
 
   return (
@@ -1325,6 +1331,18 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosoph
               ))}
             </div>
           )}
+
+          {/* Similar philosophies */}
+          <div className="pt-1 border-t border-violet-500/10">
+            <SimilarItems
+              category="philosophies"
+              id={phil.id}
+              getLabel={(id) => philosophies.find(p => p.id === id)?.name ?? id}
+              onSelect={onSelectPhil}
+              count={4}
+              accentHex={phil.bias[0] ? (MODALITY_COLORS[phil.bias[0] as ModalityId]?.hex ?? '#8b5cf6') : '#8b5cf6'}
+            />
+          </div>
         </div>
 
         {/* ── Right: modality profile radar (~35%) ── */}
@@ -1339,7 +1357,7 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks }: { phil: Philosoph
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
-export function PhilosophyExplorerPanel({ controlledId }: { controlledId?: string } = {}) {
+export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId?: string; onBack?: () => void } = {}) {
   const { data: philosophies = [], isLoading: loadingPhil } = usePhilosophies()
   const { data: frameworksList = [] } = useFrameworks()
   const { data: archetypesList = [] } = useArchetypes()
@@ -1466,7 +1484,16 @@ export function PhilosophyExplorerPanel({ controlledId }: { controlledId?: strin
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="h-full overflow-y-auto px-4 py-4 space-y-6">
-            {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} />}
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+              >
+                <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                All philosophies
+              </button>
+            )}
+            {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} philosophies={philosophies} onSelectPhil={setSelectedId} />}
 
             {frameworks.length === 0 ? (
               <div className="rounded-lg border border-border/40 p-4 text-center text-sm text-muted-foreground">
@@ -1562,6 +1589,7 @@ export function PhilosophyExplorerPanel({ controlledId }: { controlledId?: strin
                           key={arch.id}
                           archetype={arch}
                           allExercises={philosophyExercises}
+                          allArchetypes={archetypesList}
                           isOpen={archOpen.has(arch.id)}
                           onToggle={() => setArchOpen(s => { const n = new Set(s); n.has(arch.id) ? n.delete(arch.id) : n.add(arch.id); return n })}
                         />
