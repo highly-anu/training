@@ -7,6 +7,10 @@ goals_served:
 
 sessions_per_week:
   max_strength: 3
+modality_priority:
+  committed: [max_strength]
+  core: []
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.0
@@ -73,3 +77,12 @@ notes: >
   linear gains stall (3 consecutive sessions without progress on a lift), then
   transition to intermediate programming. Conditioning is minimized or eliminated
   during this phase to preserve recovery capacity.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 3
+  min_session_minutes: 45
+  ideal_session_minutes: 75
+  supports_split_days: false

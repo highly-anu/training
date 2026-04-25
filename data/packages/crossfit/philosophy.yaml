@@ -44,3 +44,19 @@ notes: >
   CFE (CrossFit Endurance) applies the same high-intensity, low-volume philosophy
   to running, rowing, and cycling; it explicitly rejects high-mileage base building.
   Rhabdo risk on first exposure requires mandatory scaling.
+
+primary_framework_id: emom_amrap
+
+framework_groups:
+  - id: default
+    name: "CrossFit Mixed-Modal Program"
+    type: alternatives
+    frameworks:
+      - emom_amrap
+canonical_phase_sequence:
+  - phase: base
+    weeks: 8
+  - phase: build
+    weeks: 6
+  - phase: peak
+    weeks: 4

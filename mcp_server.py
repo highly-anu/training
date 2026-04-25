@@ -212,6 +212,52 @@ intensity_model: skill_based
 progression_philosophy: complexity_based
                          # load_based | volume_based | complexity_based | time_based |
                          # density_based | feel_based | rpm_based | range_based
+
+primary_framework_id: {slug}_framework
+                         # Default framework ID for this philosophy
+
+framework_groups:
+  - id: default
+    name: "{title} Program"
+    type: alternatives
+    frameworks:
+      - {slug}_framework
+                         # For philosophies with one framework or multiple alternatives (pick one style).
+                         # Example alternatives group:
+                         # - id: training_styles
+                         #   name: "Training Approaches"
+                         #   type: alternatives
+                         #   frameworks:
+                         #     - {slug}_concurrent
+                         #     - {slug}_block_periodization
+                         #
+                         # For phased programs (sequential phases), use type: sequential:
+                         # - id: full_program
+                         #   name: "Full {title} Program"
+                         #   type: sequential
+                         #   frameworks:
+                         #     - {slug}_transition_phase
+                         #     - {slug}_base_phase
+                         #     - {slug}_specific_phase
+                         #     - {slug}_taper_phase
+                         #   canonical_phase_sequence:
+                         #     - phase: transition
+                         #       weeks: 4
+                         #       framework_id: {slug}_transition_phase
+                         #       focus: "Recovery and movement prep"
+                         #     - phase: base
+                         #       weeks: 16
+                         #       framework_id: {slug}_base_phase
+                         #       focus: "Foundation building"
+                         #     - phase: specific
+                         #       weeks: 8
+                         #       framework_id: {slug}_specific_phase
+                         #       focus: "Sport-specific adaptation"
+                         #     - phase: taper
+                         #       weeks: 3
+                         #       framework_id: {slug}_taper_phase
+                         #       focus: "Peak and recover for event"
+
 sources: []
 # notes: ""
 """
@@ -250,6 +296,16 @@ deload_protocol:
   frequency_weeks: 4
   volume_reduction_pct: 0.6
   intensity_change: maintain   # maintain | reduce_slightly | reduce_significantly
+
+expectations:
+  min_weeks: 8               # Minimum program duration in weeks for this framework to be effective
+  ideal_weeks: 12            # Ideal/recommended program duration in weeks
+  min_days_per_week: 3       # Minimum training days per week required
+  ideal_days_per_week: 4     # Ideal training days per week for this framework
+  min_session_minutes: 45    # Minimum session duration in minutes
+  ideal_session_minutes: 60  # Ideal session duration in minutes
+  # ideal_long_session_minutes: 90  # Optional: ideal duration for long sessions (e.g., weekend endurance work)
+  supports_split_days: false # Whether this framework supports split sessions (AM/PM training on same day)
 
 sources: []
 # notes: ""

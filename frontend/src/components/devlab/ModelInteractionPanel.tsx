@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { TracedProgram } from '@/api/types'
+import { useOntology } from '@/api/ontology'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -25,29 +26,29 @@ const EDGES: Edge[] = [
     id: 'philosophy-framework',
     source: 'Philosophy',
     target: 'Framework',
-    fn: 'loader.load_philosophies()',
-    file: 'src/loader.py',
-    knowledgeRatio: 5,
-    yamlFromSource: ['sources', 'methodology'],
-    yamlFromTarget: ['sources', 'applicable_when'],
-    bakedLogic: [
-      'Builds reverse index: scans frameworks + goals to find which cite each philosophy',
-      'No scoring or placement logic — pure structural linking',
+    fn: 'api._philosophy_to_goal() + scheduler.select_framework()',
+    file: 'api.py:637–687 + src/scheduler.py:49–131',
+    knowledgeRatio: 40,
+    yamlFromSource: [
+      'framework_groups[] (defines available frameworks)',
+      'framework_groups[].canonical_phase_sequence (for sequential programs)',
+      'framework_groups[].frameworks[] (for alternatives)',
+      'primary_framework_id (default framework)',
+      'bias (fallback priorities)',
     ],
-  },
-  {
-    id: 'goal-framework',
-    source: 'Goal',
-    target: 'Framework',
-    fn: 'scheduler.select_framework()',
-    file: 'src/scheduler.py:49–131',
-    knowledgeRatio: 60,
-    yamlFromSource: ['forced_framework (override field)'],
-    yamlFromTarget: ['applicable_when conditions', 'min/max days_per_week', 'sessions_per_week'],
+    yamlFromTarget: [
+      'applicable_when conditions',
+      'min/max days_per_week',
+      'sessions_per_week',
+      'expectations (min/ideal weeks, days, session minutes, split support)',
+    ],
     bakedLogic: [
-      'Evaluates applicable_when conditions (e.g. "days_per_week <= 3") via hardcoded _eval_condition()',
-      'Fallback chain: forced override → first matching condition → days_per_week compatibility',
-      'Validates min/max day count constraints from framework YAML',
+      'Philosophy mode creates synthetic goal internally via api._philosophy_to_goal() (not exposed to user)',
+      'Sequential group: canonical_phase_sequence → phase timeline with framework_id per phase',
+      'Alternatives group: generic 3-phase sequence (base/build/peak) + user picks which framework',
+      'Framework selection priority: 1) phase-specific framework_id, 2) API forced_framework, 3) primary_framework_id',
+      'Priorities derived from primary_framework.sessions_per_week, or philosophy.bias as fallback',
+      'No standalone goal YAML files — goals deprecated in favor of direct philosophy → framework flow',
     ],
     hardcodedValues: [
       '_CADENCE_OPTIONS dict keyed by framework_id — new framework IDs with no entry get no cadence pattern (blocker for user-created frameworks)',
@@ -55,14 +56,14 @@ const EDGES: Edge[] = [
   },
   {
     id: 'framework-modality',
-    source: 'Framework + Goal',
+    source: 'Framework + Philosophy',
     target: 'Modality Schedule',
     fn: 'scheduler.allocate_sessions() + assign_to_days()',
     file: 'src/scheduler.py:152–423',
     knowledgeRatio: 70,
     yamlFromSource: [
-      'goal.priorities (modality weights)',
-      'goal.phase_sequence[].priority_override',
+      'synthetic_goal.priorities (modality weights, derived from philosophy.bias or framework)',
+      'synthetic_goal.phase_sequence[].priority_override',
       'framework.sessions_per_week',
     ],
     yamlFromTarget: [
@@ -196,20 +197,24 @@ const EXTENSIBILITY: ExtRow[] = [
     autoUsed: 'n/a',
     gaps: [
       'No POST /api/philosophies endpoint',
-      'No effect on program generation — reference/documentation content only',
-      'Fix: one endpoint + loader glob; no engine changes needed',
+      'Schema recently updated: framework_groups system (replaces frameworks_are_phases boolean)',
+      'framework_groups[] supports both alternatives (pick one) and sequential (phased program) types',
+      'No effect on program generation when used standalone — must be paired with frameworks',
+      'Fix: add POST endpoint + validation for framework_groups structure and canonical_phase_sequence integrity',
     ],
   },
   {
     type: 'Framework',
     color: '#8b5cf6',
     create: 'no',
-    edit: 'no',
+    edit: 'partial',
     autoUsed: 'yes',
     gaps: [
-      'No POST /api/frameworks endpoint',
-      '_CADENCE_OPTIONS in scheduler.py is a hardcoded dict keyed by framework_id — new IDs get no cadence pattern',
-      'Fix: move cadence_options into framework YAML; scheduler reads dynamically; add endpoint',
+      'No POST /api/frameworks endpoint — can only edit existing frameworks',
+      'PUT /api/frameworks/<id> ✅ exists for updates',
+      '_CADENCE_OPTIONS in scheduler.py is hardcoded dict — new framework IDs get no cadence',
+      'expectations field is now REQUIRED per schema — must be present in YAML',
+      'Fix: move cadence_options into framework YAML; add POST endpoint',
     ],
   },
   {
@@ -228,11 +233,12 @@ const EXTENSIBILITY: ExtRow[] = [
     type: 'Archetype',
     color: '#f97316',
     create: 'yes',
-    edit: 'no',
+    edit: 'yes',
     autoUsed: 'yes',
     gaps: [
       'POST /api/archetypes ✅ exists; stored in data/archetypes/custom/',
-      'No PUT or DELETE endpoint',
+      'PUT /api/archetypes/<id> ✅ exists for updates',
+      'No DELETE endpoint',
       'sources field affects scoring — custom archetypes without correct sources score lower',
       'slot_type values not validated on create — unknown type falls back silently',
     ],
@@ -241,13 +247,14 @@ const EXTENSIBILITY: ExtRow[] = [
     type: 'Exercise',
     color: '#ef4444',
     create: 'yes',
-    edit: 'no',
+    edit: 'yes',
     autoUsed: 'yes',
     gaps: [
       'POST /api/exercises ✅ exists; stored in data/exercises/custom.yaml',
-      'No PUT or DELETE endpoint',
+      'PUT /api/exercises/<id> ✅ exists for updates',
+      'No DELETE endpoint',
       '_STARTING_LOADS and _LINEAR_INCREMENTS in progression.py have no entry for custom exercises — falls back to generic defaults (20/40/60/80kg)',
-      'Fix: add optional starting_load and weekly_increment_kg fields to exercise YAML schema',
+      'starting_load_kg and weekly_increment_kg fields now supported in schema for custom defaults',
     ],
   },
   {
@@ -255,26 +262,37 @@ const EXTENSIBILITY: ExtRow[] = [
     color: '#f59e0b',
     create: 'no',
     edit: 'no',
-    autoUsed: 'n/a',
+    autoUsed: 'no',
     gaps: [
-      'No POST /api/goals endpoint',
-      'Schema is well-defined: id, name, priorities dict, phase_sequence list',
-      'Fix: endpoint + priorities-sum validation; no engine changes needed',
+      '⚠️ DEPRECATED — Goals removed from system (April 2026)',
+      'Programs now generated directly from philosophies (no goal intermediary)',
+      'Synthetic goals generated internally by api._philosophy_to_goal() for backward compatibility',
+      'All goal YAML files deleted; domain expertise preserved in docs/philosophy-blends.md',
+      'No API endpoints: POST/PUT/DELETE all removed',
     ],
   },
 ]
 
 // ─── Pipeline Node config ─────────────────────────────────────────────────────
 
-const NODES = [
-  { id: 'Philosophy', color: '#94a3b8', count: '5' },
-  { id: 'Goal', color: '#f59e0b', count: '7' },
-  { id: 'Framework', color: '#8b5cf6', count: '8' },
-  { id: 'Modality', color: '#06b6d4', count: '12' },
-  { id: 'Archetype', color: '#f97316', count: '25' },
-  { id: 'Exercise', color: '#ef4444', count: '198' },
-  { id: 'Load', color: '#10b981', count: '—' },
-]
+interface NodeCounts {
+  Philosophy: number
+  Framework: number
+  Modality: number
+  Archetype: number
+  Exercise: number
+}
+
+function getNodes(counts: NodeCounts) {
+  return [
+    { id: 'Philosophy', color: '#94a3b8', count: String(counts.Philosophy) },
+    { id: 'Framework', color: '#8b5cf6', count: String(counts.Framework) },
+    { id: 'Modality', color: '#06b6d4', count: String(counts.Modality) },
+    { id: 'Archetype', color: '#f97316', count: String(counts.Archetype) },
+    { id: 'Exercise', color: '#ef4444', count: String(counts.Exercise) },
+    { id: 'Load', color: '#10b981', count: '—' },
+  ]
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -326,6 +344,26 @@ interface Props {
 export function ModelInteractionPanel({ result }: Props) {
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(EDGES[1]) // default: goal→framework
   const [expandedGapRow, setExpandedGapRow] = useState<string | null>(null)
+
+  // Fetch ontology data for dynamic counts
+  const { data: ontology } = useOntology()
+
+  // Compute dynamic counts with fallback to hardcoded values
+  const dynamicCounts: NodeCounts = ontology ? {
+    Philosophy: ontology.philosophies.length,
+    Framework: ontology.frameworks.length,
+    Modality: ontology.modalities.length,
+    Archetype: ontology.archetypes.length,
+    Exercise: ontology.exercises.length,
+  } : {
+    Philosophy: 11,
+    Framework: 16,
+    Modality: 12,
+    Archetype: 25,
+    Exercise: 198,
+  }
+
+  const NODES = getNodes(dynamicCounts)
 
   // Extract live values from trace if available
   const traceWeek0 = result?.generation_trace?.weeks?.[0]

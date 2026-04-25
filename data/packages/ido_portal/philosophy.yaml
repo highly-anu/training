@@ -39,3 +39,19 @@ notes: >
   intermediate / advanced) define session difficulty. Floreio and locomotion
   patterns form the core archetypes. No barbell or heavy loading is prescribed —
   open space and bodyweight are the primary tools.
+
+primary_framework_id: high_frequency_skill
+
+framework_groups:
+  - id: default
+    name: "Movement Practice Program"
+    type: alternatives
+    frameworks:
+      - high_frequency_skill
+canonical_phase_sequence:
+  - phase: base
+    weeks: 12
+  - phase: build
+    weeks: 8
+  - phase: refine
+    weeks: 4

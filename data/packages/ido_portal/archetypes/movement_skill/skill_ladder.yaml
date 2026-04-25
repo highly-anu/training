@@ -1,74 +1,77 @@
 id: skill_ladder
-name: "Skill Ladder (10–15 min Progressive Blocks)"
+name: Skill Ladder (10–15 min Progressive Blocks)
 modality: movement_skill
 category: movement_skill
 duration_estimate_minutes: 30
 required_equipment:
-  - open_space
+- open_space
 applicable_phases:
-  - base
-  - build
-  - peak
-  - taper
-  - deload
-  - maintenance
+- base
+- build
+- peak
+- taper
+- deload
+- maintenance
+- specific
+- transition
 sources:
-  - "Ido Portal"
-notes: >
-  Progressive skill practice in time-based blocks. Each block isolates a single
-  movement or movement family and builds complexity across the session. The Ido
-  Portal principle: isolation → integration → spontaneous expression. The ladder
-  structure starts with the simplest variation, masters it, then moves to a harder
-  variant within the same session or across sessions. Volume is measured in time and
-  rep quality, never load. Intensity is low; the session develops coordination and
-  pattern acquisition, not fitness. Can be prepended to any training session as
-  neural priming, or run as a standalone short practice. Daily practice habit (even
-  10–15 min) is more valuable than infrequent longer sessions per Ido Portal.
+- Ido Portal
+notes: 'Progressive skill practice in time-based blocks. Each block isolates a single
+  movement or movement family and builds complexity across the session. The Ido Portal
+  principle: isolation → integration → spontaneous expression. The ladder structure
+  starts with the simplest variation, masters it, then moves to a harder variant within
+  the same session or across sessions. Volume is measured in time and rep quality,
+  never load. Intensity is low; the session develops coordination and pattern acquisition,
+  not fitness. Can be prepended to any training session as neural priming, or run
+  as a standalone short practice. Daily practice habit (even 10–15 min) is more valuable
+  than infrequent longer sessions per Ido Portal.
 
+  '
 slots:
-  - role: joint_warm_up
-    slot_type: time_domain
-    duration_sec: 300
-    intensity: light
-    notes: "5-min wrist, shoulder, and hip joint prep. Ido Portal wrist routine + squat clinic + shoulder ROM. Non-negotiable before skill work."
+- role: joint_warm_up
+  slot_type: time_domain
+  duration_sec: 300
+  intensity: light
+  notes: 5-min wrist, shoulder, and hip joint prep. Ido Portal wrist routine + squat
+    clinic + shoulder ROM. Non-negotiable before skill work.
+- role: skill_isolation_block
+  slot_type: skill_practice
+  sets: 3
+  duration_sec: 300
+  intensity: light
+  rest_sec: 60
+  exercise_filter:
+    movement_pattern: skill
+  notes: "3 × 5-min focused practice on one movement or variation. Athlete works within\
+    \ their current complexity ceiling — no grinding, no failure. Example progressions:\n\
+    \  - Handstand: frog stance → wall handstand hold → free balance attempts\n  -\
+    \ Locomotion: duck walk → lizard walk → horse walk\n  - Bridge: low bridge rotation\
+    \ → high bridge hold → bridge walk\nSelector picks the movement based on goal\
+    \ profile and skill prerequisites met.\n"
+- role: skill_integration_block
+  slot_type: skill_practice
+  sets: 2
+  duration_sec: 180
+  intensity: light
+  rest_sec: 45
+  notes: '2 × 3-min integration practice combining two previously isolated movements
+    into a short sequence. Example: frog stance → lizard walk → recover. Only include
+    when isolation-level skill is stable (athlete can perform 3 clean reps).
 
-  - role: skill_isolation_block
-    slot_type: skill_practice
-    sets: 3
-    duration_sec: 300
-    intensity: light
-    rest_sec: 60
-    exercise_filter:
-      movement_pattern: skill
-    notes: >
-      3 × 5-min focused practice on one movement or variation. Athlete works within
-      their current complexity ceiling — no grinding, no failure. Example progressions:
-        - Handstand: frog stance → wall handstand hold → free balance attempts
-        - Locomotion: duck walk → lizard walk → horse walk
-        - Bridge: low bridge rotation → high bridge hold → bridge walk
-      Selector picks the movement based on goal profile and skill prerequisites met.
-
-  - role: skill_integration_block
-    slot_type: skill_practice
-    sets: 2
-    duration_sec: 180
-    intensity: light
-    rest_sec: 45
-    notes: >
-      2 × 3-min integration practice combining two previously isolated movements
-      into a short sequence. Example: frog stance → lizard walk → recover.
-      Only include when isolation-level skill is stable (athlete can perform 3 clean reps).
-
+    '
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Reduce to isolation block only (2 sets × 3 min). Drop integration block. Skill work tolerates deload well; movement quality often improves with rest."
+    notes: Reduce to isolation block only (2 sets × 3 min). Drop integration block.
+      Skill work tolerates deload well; movement quality often improves with rest.
   time_limited:
     drop_slots:
-      - skill_integration_block
-    notes: "Drop the integration block. Even 10 min of isolation work + joint prep meets the minimum effective dose."
+    - skill_integration_block
+    notes: Drop the integration block. Even 10 min of isolation work + joint prep
+      meets the minimum effective dose.
   equipment_limited:
     substitutions:
-      - missing_equipment: open_space
-        substitute_approach: "Most skill movements require only a few square meters. Static skill work (handstand holds, bridge work) can be done in minimal space."
+    - missing_equipment: open_space
+      substitute_approach: Most skill movements require only a few square meters.
+        Static skill work (handstand holds, bridge work) can be done in minimal space.

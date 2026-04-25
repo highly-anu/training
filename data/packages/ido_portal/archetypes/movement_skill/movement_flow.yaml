@@ -1,100 +1,105 @@
 id: movement_flow
-name: "Movement Flow — Continuous Locomotion Sequence"
+name: Movement Flow — Continuous Locomotion Sequence
 modality: movement_skill
 category: movement_skill
 duration_estimate_minutes: 45
 required_equipment:
-  - open_space
+- open_space
 applicable_phases:
-  - base
-  - build
-  - peak
-  - taper
-  - deload
-  - maintenance
+- base
+- build
+- peak
+- taper
+- deload
+- maintenance
+- specific
+- transition
 sources:
-  - "Ido Portal"
-notes: >
-  Ido Portal Floreio/locomotion session. Continuous movement across a range of
-  locomotion patterns for 20–30 minutes, emphasizing transition quality between
-  forms rather than sustained effort in any single one. The session includes a
-  structured warm-up, three-level locomotion circuits (beginner/intermediate/advanced
-  variations per movement), and an optional role-work (free improvisation) finisher.
-  This is low intensity — heart rate stays in Zone 1–2. The adaptation target is
-  coordinative: nervous system patterning, spatial awareness, and fluid multi-plane
-  movement. Rest between circuit rounds: 75–120 seconds depending on level.
-  Three to five circuit rounds. Movement quality precedes load, complexity, or volume
-  at all times per Ido Portal philosophy.
+- Ido Portal
+notes: 'Ido Portal Floreio/locomotion session. Continuous movement across a range
+  of locomotion patterns for 20–30 minutes, emphasizing transition quality between
+  forms rather than sustained effort in any single one. The session includes a structured
+  warm-up, three-level locomotion circuits (beginner/intermediate/advanced variations
+  per movement), and an optional role-work (free improvisation) finisher. This is
+  low intensity — heart rate stays in Zone 1–2. The adaptation target is coordinative:
+  nervous system patterning, spatial awareness, and fluid multi-plane movement. Rest
+  between circuit rounds: 75–120 seconds depending on level. Three to five circuit
+  rounds. Movement quality precedes load, complexity, or volume at all times per Ido
+  Portal philosophy.
 
+  '
 slots:
-  - role: standard_warm_up
-    slot_type: time_domain
-    duration_sec: 600
-    intensity: light
-    notes: >
-      Ido Portal standard warm-up: 5-min jump rope (or 3-min condensed) + wrist routine
-      + squat clinic + shoulder ROM and stabilization (1–2 sets) + 5-min general joint
-      mobility. Scapula mobilization can move to cool-down. Total ~10 min.
+- role: standard_warm_up
+  slot_type: time_domain
+  duration_sec: 600
+  intensity: light
+  notes: 'Ido Portal standard warm-up: 5-min jump rope (or 3-min condensed) + wrist
+    routine + squat clinic + shoulder ROM and stabilization (1–2 sets) + 5-min general
+    joint mobility. Scapula mobilization can move to cool-down. Total ~10 min.
 
-  - role: locomotion_circuit
-    slot_type: time_domain
-    duration_sec: 1500
-    intensity: light
-    exercise_filter:
-      movement_pattern: locomotion
-      category: movement_skill
-    notes: >
-      3–5 circuit rounds through 5–6 locomotion patterns. Each movement performed
-      for prescribed distance (12–30m depending on level):
-        Beginner: duck walk 24m, horse walk 24m, lizard walk 12m, ostrich walk 24m,
-                  bridge walk (static hold 30 sec), handstand swing walk 12m
-        Intermediate: same distances + advanced variants (handstand walk, front bridge walk)
-        Advanced: extended distances (30m), back bridge walk, handstand elbow-to-knee
-      Rest 120 sec between rounds at beginner, 75 sec at advanced.
-      Selector picks level based on prerequisite flags in athlete profile.
+    '
+- role: locomotion_circuit
+  slot_type: time_domain
+  duration_sec: 1500
+  intensity: light
+  exercise_filter:
+    movement_pattern: locomotion
+    category: movement_skill
+  notes: "3–5 circuit rounds through 5–6 locomotion patterns. Each movement performed\
+    \ for prescribed distance (12–30m depending on level):\n  Beginner: duck walk\
+    \ 24m, horse walk 24m, lizard walk 12m, ostrich walk 24m,\n            bridge\
+    \ walk (static hold 30 sec), handstand swing walk 12m\n  Intermediate: same distances\
+    \ + advanced variants (handstand walk, front bridge walk)\n  Advanced: extended\
+    \ distances (30m), back bridge walk, handstand elbow-to-knee\nRest 120 sec between\
+    \ rounds at beginner, 75 sec at advanced. Selector picks level based on prerequisite\
+    \ flags in athlete profile.\n"
+- role: floreio_groundwork
+  slot_type: skill_practice
+  sets: 3
+  duration_sec: 300
+  intensity: light
+  rest_sec: 90
+  notes: 'Three sets of 5-min ground-based Floreio movement: QDR rotational push-ups,
+    au cortado variations, high bridge rotations, gatherings. No rest within the set;
+    90-sec rest between sets. This is the integration phase — previously isolated
+    movements combined into short sequences.
 
-  - role: floreio_groundwork
-    slot_type: skill_practice
-    sets: 3
-    duration_sec: 300
-    intensity: light
-    rest_sec: 90
-    notes: >
-      Three sets of 5-min ground-based Floreio movement: QDR rotational push-ups,
-      au cortado variations, high bridge rotations, gatherings. No rest within the
-      set; 90-sec rest between sets. This is the integration phase — previously
-      isolated movements combined into short sequences.
+    '
+- role: role_work_improvisation
+  slot_type: time_domain
+  duration_sec: 300
+  intensity: light
+  notes: '2–5 min of continuous free-form movement improvisation. Athlete uses any
+    movement from their repertoire without a fixed pattern. Ido Portal: spontaneous
+    expression is the highest level of skill acquisition. Only include when athlete
+    has stable foundation in at least 3 movements. Optional — drop if athlete is not
+    yet at integration level.
 
-  - role: role_work_improvisation
-    slot_type: time_domain
-    duration_sec: 300
-    intensity: light
-    notes: >
-      2–5 min of continuous free-form movement improvisation. Athlete uses any
-      movement from their repertoire without a fixed pattern. Ido Portal: spontaneous
-      expression is the highest level of skill acquisition. Only include when athlete
-      has stable foundation in at least 3 movements. Optional — drop if athlete is
-      not yet at integration level.
-
-  - role: cool_down_mobility
-    slot_type: time_domain
-    duration_sec: 360
-    intensity: light
-    notes: "6-min cool-down: scapula mobilization (3 sets, 60-sec rest), shoulder ROM, passive hip and hamstring stretches."
-
+    '
+- role: cool_down_mobility
+  slot_type: time_domain
+  duration_sec: 360
+  intensity: light
+  notes: '6-min cool-down: scapula mobilization (3 sets, 60-sec rest), shoulder ROM,
+    passive hip and hamstring stretches.'
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Reduce locomotion circuit to 2 rounds. Drop floreio groundwork. Keep warm-up and cool-down. Movement quality improves with recovery."
+    notes: Reduce locomotion circuit to 2 rounds. Drop floreio groundwork. Keep warm-up
+      and cool-down. Movement quality improves with recovery.
   time_limited:
     drop_slots:
-      - role_work_improvisation
-      - cool_down_mobility
-    notes: "Drop improvisation and cool-down first. Minimum viable session: warm-up + 2 locomotion circuit rounds (~20 min)."
+    - role_work_improvisation
+    - cool_down_mobility
+    notes: 'Drop improvisation and cool-down first. Minimum viable session: warm-up
+      + 2 locomotion circuit rounds (~20 min).'
   equipment_limited:
     substitutions:
-      - missing_equipment: open_space
-        substitute_approach: "Locomotion patterns need minimum 12–15m of clear floor. In very tight spaces, substitute static skill holds (bridge, frog stance, QDR) for traveling patterns."
-      - missing_equipment: jump_rope
-        substitute_approach: "Replace jump rope warm-up with 3-min jogging or dynamic movement to raise heart rate."
+    - missing_equipment: open_space
+      substitute_approach: Locomotion patterns need minimum 12–15m of clear floor.
+        In very tight spaces, substitute static skill holds (bridge, frog stance,
+        QDR) for traveling patterns.
+    - missing_equipment: jump_rope
+      substitute_approach: Replace jump rope warm-up with 3-min jogging or dynamic
+        movement to raise heart rate.

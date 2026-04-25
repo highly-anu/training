@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useBuilderStore } from '@/store/builderStore'
-import { useGoals } from '@/api/goals'
+// Goals deprecated
+import { useFrameworks } from '@/api/frameworks'
+import { usePhilosophies } from '@/api/philosophies'
 import { blendExpectations } from '@/lib/feasibility'
 import type { DayConfig } from '@/api/types'
 
@@ -70,12 +72,29 @@ function buildDefaultConfigs(
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function WeeklyScheduler() {
-  const { constraints, updateConstraints, selectedGoalIds, goalWeights } = useBuilderStore()
-  const { data: goals = [] } = useGoals()
+  const {
+    constraints,
+    updateConstraints,
+    selectedGoalIds,
+    goalWeights,
+    sourceMode,
+    selectedFrameworkId,
+    selectedPhilosophyIds,
+  } = useBuilderStore()
+  // Goals deprecated - philosophy-based only
+  const goals: any[] = []
+  const { data: frameworks = [] } = useFrameworks()
+  const { data: philosophies = [] } = usePhilosophies()
 
   const exp = useMemo(
-    () => blendExpectations(goals, selectedGoalIds, goalWeights),
-    [goals, selectedGoalIds, goalWeights],
+    () => blendExpectations(goals, selectedGoalIds, goalWeights, {
+      sourceMode,
+      frameworks,
+      selectedFrameworkId,
+      selectedPhilosophyIds,
+      philosophies,
+    }),
+    [goals, selectedGoalIds, goalWeights, sourceMode, frameworks, selectedFrameworkId, selectedPhilosophyIds, philosophies],
   )
 
   const dayConfigs: Record<number, DayConfig> = useMemo(() => {

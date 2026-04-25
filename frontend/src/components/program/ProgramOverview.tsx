@@ -7,6 +7,8 @@ import {
 } from 'recharts'
 import type { GeneratedProgram, ModalityId, TrainingPhase } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
+import { useBuilderStore } from '@/store/builderStore'
+import { usePhilosophies } from '@/api/philosophies'
 
 // ── Category config ────────────────────────────────────────────────────────────
 
@@ -99,6 +101,18 @@ const PHASE_THEORY: Record<TrainingPhase, PhaseTheory> = {
     keyAdaptations: ['Active recovery', 'Movement quality maintenance', 'Aerobic maintenance'],
     intensityProfile: 'Low intensity only · Z1–Z2 ceiling',
     methodology: 'Horsemen GPP · Active Recovery',
+  },
+  transition: {
+    theory: 'Rebuilds movement quality and general work capacity after a rest period or following an objective. Intensity stays strictly aerobic (Z1–Z2 only — nose-breathing). Strength work is general and progressed linearly. No anaerobic work. Uphill Athlete describes this as "filling the tank" before structured loading begins — the training age of the tissue must catch up to the ambition of the athlete.',
+    keyAdaptations: ['Movement pattern restoration', 'Aerobic re-priming', 'Connective tissue tolerance', 'General work capacity', 'Training habit re-establishment'],
+    intensityProfile: '90–100% low intensity (Z1–Z2) · no anaerobic',
+    methodology: 'Uphill Athlete — Transition Period · Starting Strength linear reload',
+  },
+  specific: {
+    theory: 'Applies accumulated base fitness directly to the demands of the target objective. Muscular endurance (ME) — the mountain-specific quality — peaks here through weighted box step-ups and uphill carries. Interval intensity rises to approach AnT. Long days back-to-back simulate the event. Volume is near peak; progression shifts from "more volume" to "higher specificity." This is the phase that separates mountain athletes from general endurance athletes.',
+    keyAdaptations: ['Muscular endurance (ME)', 'Sport-specific power', 'AnT approach', 'Back-to-back long-day tolerance', 'Load-bearing capacity'],
+    intensityProfile: '80% low intensity · 15% threshold · 5% high intensity',
+    methodology: 'Uphill Athlete — Specific Period · ME box step-ups · AnT intervals',
   },
 }
 
@@ -204,6 +218,10 @@ interface ProgramOverviewProps {
 export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set())
 
+  const sourceMode = useBuilderStore((s) => s.sourceMode)
+  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const { data: philosophies } = usePhilosophies()
+
   const { goal, volume_summary } = program as GeneratedProgram & {
     minimum_prerequisites?: Record<string, number>
   }
@@ -231,7 +249,45 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
     <div className="p-6 space-y-8">
 
       {/* 1. Program rationale */}
-      {goal.notes && (
+      {sourceMode !== null ? (
+        <div>
+          <h2 className="text-sm font-semibold mb-2">About this Program</h2>
+          {sourceMode === 'philosophy' && (() => {
+            const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
+            return phil ? (
+              <>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Built from the <span className="font-medium text-foreground">{phil.name}</span> philosophy.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <Badge variant="secondary" className="text-xs">{phil.id}</Badge>
+                </div>
+              </>
+            ) : null
+          })()}
+          {sourceMode === 'blend' && (() => {
+            const phils = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)) ?? []
+            return (
+              <>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Blended from {phils.length} philosoph{phils.length === 1 ? 'y' : 'ies'}:{' '}
+                  {phils.map((p) => p.name).join(', ')}.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {phils.map((p) => (
+                    <Badge key={p.id} variant="secondary" className="text-xs">{p.id}</Badge>
+                  ))}
+                </div>
+              </>
+            )
+          })()}
+          {sourceMode === 'custom' && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Built from custom modality priorities. Priorities are set directly — no source philosophy.
+            </p>
+          )}
+        </div>
+      ) : goal.notes ? (
         <div>
           <h2 className="text-sm font-semibold mb-2">About this Program</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
@@ -243,7 +299,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* 2. Phase cards — two separate cards per phase */}
       {segments.length > 0 && (

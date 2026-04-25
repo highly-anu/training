@@ -6,9 +6,13 @@ goals_served:
   - max_strength
   - mobility
 sessions_per_week:
-  aerobic_base: 3
+  aerobic_base: 4
   max_strength: 2
-  mobility: 2
+allocation_mode: exclusive
+modality_priority:
+  committed: [aerobic_base, max_strength]
+  core: []
+  supplementary: []
 intensity_distribution:
   zone1_2_pct: 0.90
   zone3_pct: 0.10
@@ -36,3 +40,13 @@ notes: |
   (squat, deadlift, pull-up, push-up) and progressed linearly within the
   block. No anaerobic work. Mobility is daily-ish; two formal sessions
   scheduled. Total weekly volume target 8–12 hours for serious athletes.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 6
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 75
+  ideal_long_session_minutes: 150
+  supports_split_days: false

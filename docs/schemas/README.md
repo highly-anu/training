@@ -118,6 +118,19 @@ Different goals using the same framework (e.g. concurrent training) can have dif
 **Why `slot_type` on archetype slots?**
 The generator needs to know how to represent a slot to the athlete (sets×reps vs. 20-min AMRAP vs. 400m run). Different slot types also have different scaling rules.
 
+**Why `expectations` on framework instead of goal?**
+Different frameworks have different time/volume requirements even when serving the same goal. Starting Strength needs 3×/week 60-min sessions; Uphill Athlete base phase needs 5×/week with varied session durations. The framework defines the actual training structure, so it owns the expectations. Goals can derive composite expectations when blending multiple frameworks.
+
+**Why `framework_groups[]` on philosophy?**
+Some methodologies prescribe sequential periodization phases (Uphill Athlete: transition → base → specific → taper), while others offer alternative frameworks for different goals or styles (Horsemen GPP, Wildman Kettlebell). The `framework_groups` array organizes frameworks by type:
+- `type: sequential` — Frameworks are phases that run in order. UI shows "Full Program (All Phases)" button. Each group has `canonical_phase_sequence` with phase durations and framework assignments.
+- `type: alternatives` — Frameworks are different approaches where the user picks one. UI shows framework picker grid.
+
+This structure allows a single philosophy to define both sequential programs AND alternative approaches (e.g., a base program plus specialized variants) in a single unified model.
+
+**Why `canonical_phase_sequence` inside framework groups?**
+For `type: sequential` groups, the philosophy defines the standard phase progression. Each phase entry specifies weeks, framework_id, and focus description. This allows the generator to construct multi-phase programs with correct framework selection per phase, and lets the UI show expected total duration (sum of all phase weeks). The sequence lives inside the group rather than at philosophy level to support philosophies with multiple sequential programs.
+
 ---
 
 ## Validating data files

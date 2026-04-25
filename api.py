@@ -56,13 +56,6 @@ def _load_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def _all_goals() -> list[dict]:
-    goals = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'goals', '**', '*.yaml'), recursive=True)):
-        goals.append(_load_yaml(path))
-    return goals
-
-
 def _all_exercises() -> list[dict]:
     global_index, _ = loader.load_all_exercises()
     result = []
@@ -325,54 +318,13 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         'weeks':          weeks,
         'volume_summary': volume_summary,
+        'compromises':    raw.get('compromises', []),
     }
 
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-
-@app.get('/api/goals')
-def get_goals():
-    return jsonify(_all_goals())
-
-
-@app.get('/api/goals/<goal_id>')
-def get_goal(goal_id: str):
-    try:
-        return jsonify(loader.load_goal(goal_id))
-    except FileNotFoundError as e:
-        return jsonify({'detail': str(e)}), 404
-
-
-_VALID_PHASES = {'base', 'build', 'peak', 'taper', 'deload', 'maintenance', 'rehab', 'post_op'}
-
-
-@app.post('/api/goals')
-def create_goal():
-    body = request.get_json(silent=True) or {}
-    if not body.get('id') or not body.get('name'):
-        return jsonify({'detail': 'id and name are required'}), 400
-    priorities = body.get('priorities') or {}
-    if not priorities:
-        return jsonify({'detail': 'priorities is required'}), 400
-    total = sum(priorities.values())
-    if not (0.95 <= total <= 1.05):
-        return jsonify({'detail': f'priorities must sum to ~1.0 (got {total:.2f})'}), 400
-    phase_sequence = body.get('phase_sequence') or []
-    for entry in phase_sequence:
-        if entry.get('phase') not in _VALID_PHASES:
-            return jsonify({'detail': f"unknown phase: {entry.get('phase')!r}"}), 400
-    existing_ids = {g['id'] for g in _all_goals()}
-    if body['id'] in existing_ids:
-        return jsonify({'detail': f"Goal id '{body['id']}' already exists"}), 409
-    custom_dir = os.path.join(_DATA_DIR, 'goals', 'custom')
-    os.makedirs(custom_dir, exist_ok=True)
-    path = os.path.join(custom_dir, f"{body['id']}.yaml")
-    with open(path, 'w', encoding='utf-8') as f:
-        yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-    return jsonify(body), 201
-
 
 @app.get('/api/exercises')
 def get_exercises():
@@ -398,6 +350,11 @@ def create_modality():
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(body), 201
+
+
+@app.get('/api/equipment')
+def get_equipment():
+    return jsonify(loader.load_equipment())
 
 
 @app.get('/api/constraints/equipment-profiles')
@@ -634,16 +591,203 @@ def generate_program():
         raise
 
 
-def _generate_program_inner(body):
-    goal_id = body.get('goal_id')
-    goal_ids = body.get('goal_ids', [])
+def _philosophy_to_goal(phil_id: str, all_frameworks: list) -> dict:
+    """Build a synthetic goal dict from a philosophy's framework_groups."""
+    phil = loader.load_philosophy(phil_id)
 
-    if not goal_id and not goal_ids:
-        return jsonify({'detail': 'goal_id or goal_ids is required'}), 400
-    if not goal_ids:
-        goal_ids = [goal_id]
+    # Find sequential group (if any)
+    groups = phil.get('framework_groups', [])
+    sequential_group = next((g for g in groups if g.get('type') == 'sequential'), None)
+
+    # Get phase sequence from sequential group or fall back to old canonical_phase_sequence
+    if sequential_group and sequential_group.get('canonical_phase_sequence'):
+        seq = sequential_group['canonical_phase_sequence']
+        primary_fw_id = phil.get('primary_framework_id') or sequential_group['frameworks'][0]
+    elif phil.get('canonical_phase_sequence'):
+        # Legacy support: old canonical_phase_sequence at philosophy level
+        seq = phil['canonical_phase_sequence']
+        primary_fw_id = phil.get('primary_framework_id')
+        if not primary_fw_id:
+            fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
+            primary_fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
+    else:
+        # No sequential group - create synthetic phases
+        fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
+        fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
+        seq = [
+            {'phase': 'base', 'weeks': 8},
+            {'phase': 'build', 'weeks': 6},
+            {'phase': 'peak', 'weeks': 4},
+        ]
+        primary_fw_id = fw_id
+
+    # Calculate priorities from primary framework
+    primary_fw = next((f for f in all_frameworks if f['id'] == primary_fw_id), None)
+    sessions = (primary_fw or {}).get('sessions_per_week', {})
+    total = sum(sessions.values()) or 1
+    priorities = {mod: count / total for mod, count in sessions.items()}
+
+    # Fallback to bias if no sessions_per_week found
+    if not priorities:
+        bias = phil.get('bias', phil.get('scope', []))
+        n = len(bias) or 1
+        priorities = {mod: 1.0 / n for mod in bias}
+
+    return {
+        'id': f'_phil_{phil_id}',
+        'name': phil.get('name', phil_id),
+        'priorities': priorities,
+        'phase_sequence': [
+            {
+                'phase': e.get('phase', 'base'),
+                'weeks': e.get('weeks', 8),
+                'framework_id': e.get('framework_id'),  # Phase-specific framework override
+                'focus': e.get('focus'),
+            }
+            for e in seq
+        ],
+        'framework_selection': {
+            'default_framework': primary_fw_id,
+            'alternatives': [],
+        },
+        'primary_sources': [phil_id],
+        'minimum_prerequisites': {},
+        'incompatible_with': [],
+        'notes': phil.get('notes', ''),
+    }
+
+
+def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list) -> dict:
+    """Weighted-average a set of philosophy synthetic goals into one."""
+    total_w = sum(phil_weights.get(pid, 1.0 / len(phil_ids)) for pid in phil_ids)
+    blended_priorities: dict = {}
+    primary_phil_id = max(phil_ids, key=lambda pid: phil_weights.get(pid, 1.0 / len(phil_ids)))
+    primary_goal = _philosophy_to_goal(primary_phil_id, all_frameworks)
+
+    for pid in phil_ids:
+        w = phil_weights.get(pid, 1.0 / len(phil_ids)) / total_w
+        g = _philosophy_to_goal(pid, all_frameworks)
+        for mod, val in g['priorities'].items():
+            blended_priorities[mod] = blended_priorities.get(mod, 0.0) + val * w
+
+    # Normalize
+    p_total = sum(blended_priorities.values()) or 1.0
+    blended_priorities = {k: v / p_total for k, v in blended_priorities.items()}
+
+    result = dict(primary_goal)
+    result['id'] = '_phil_blend'
+    result['name'] = ' + '.join(
+        loader.load_philosophy(pid).get('name', pid).split(' /')[0].split(' —')[0].strip()
+        for pid in phil_ids
+    )
+    result['priorities'] = blended_priorities
+    result['primary_sources'] = phil_ids
+    return result
+
+
+def _normalize_schedule_constraints(constraints: dict) -> dict:
+    """
+    Convert weekly_schedule into scheduler-compatible constraints.
+
+    Maps session types to time allocations:
+    - short: 40 minutes
+    - long: 75 minutes
+    - mobility: 20 minutes
+    - rest: 0 minutes
+
+    Extracts:
+    - days_per_week: count of days with non-rest sessions
+    - preferred_days: list of day indices (1=Mon, 7=Sun) with training
+    - forced_rest_days: days marked as all rest
+    - day_configs: per-day {minutes, has_secondary, session_types}
+    - weekday_session_minutes, weekend_session_minutes: computed averages
+    - allow_split_sessions: true if any day has multiple sessions
+    """
+    schedule = constraints.get('weekly_schedule')
+    if not schedule:
+        return constraints  # No schedule provided, use existing constraints
+
+    DAY_INDICES = {
+        'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4,
+        'Friday': 5, 'Saturday': 6, 'Sunday': 7
+    }
+    TIME_MAP = {'short': 40, 'long': 75, 'mobility': 20, 'rest': 0}
+
+    preferred_days = []
+    forced_rest_days = []
+    day_configs = {}
+    weekday_times = []
+    weekend_times = []
+
+    for day_name, day_schedule in schedule.items():
+        day_idx = DAY_INDICES[day_name]
+        sessions = [
+            day_schedule['session1'],
+            day_schedule['session2'],
+            day_schedule['session3'],
+            day_schedule['session4']
+        ]
+
+        non_rest = [s for s in sessions if s != 'rest']
+
+        if non_rest:
+            preferred_days.append(day_idx)
+            total_time = sum(TIME_MAP[s] for s in non_rest)
+
+            # Classify session types by duration for smart matching
+            duration_buckets = {
+                'long': [s for s in non_rest if s == 'long'],       # 75min
+                'short': [s for s in non_rest if s == 'short'],     # 40min
+                'mobility': [s for s in non_rest if s == 'mobility']  # 20min
+            }
+
+            day_configs[day_idx] = {
+                'minutes': total_time,
+                'has_secondary': len(non_rest) > 1,
+                'session_types': non_rest,  # For smart pairing
+                'duration_buckets': duration_buckets,  # For duration matching
+            }
+
+            # Track weekday/weekend averages
+            if day_idx <= 5:
+                weekday_times.append(total_time)
+            else:
+                weekend_times.append(total_time)
+        else:
+            forced_rest_days.append(day_idx)
+
+    # Build normalized constraints
+    normalized = dict(constraints)
+    normalized['days_per_week'] = len(preferred_days)
+    normalized['preferred_days'] = preferred_days
+    normalized['forced_rest_days'] = forced_rest_days
+    normalized['day_configs'] = day_configs
+
+    if weekday_times:
+        normalized['weekday_session_minutes'] = int(sum(weekday_times) / len(weekday_times))
+    if weekend_times:
+        normalized['weekend_session_minutes'] = int(sum(weekend_times) / len(weekend_times))
+
+    # Enable split sessions if any day has multiple sessions
+    normalized['allow_split_sessions'] = any(
+        cfg.get('has_secondary') for cfg in day_configs.values()
+    )
+
+    return normalized
+
+
+def _generate_program_inner(body):
+    philosophy_id = body.get('philosophy_id')
+    philosophy_ids = body.get('philosophy_ids', [])
+    philosophy_weights = body.get('philosophy_weights', {})
+
+    if not philosophy_id and not philosophy_ids:
+        return jsonify({'detail': 'philosophy_id or philosophy_ids is required'}), 400
 
     constraints = body.get('constraints', {})
+
+    # Normalize weekly_schedule into scheduler-compatible constraints (BEFORE defaults)
+    constraints = _normalize_schedule_constraints(constraints)
 
     # Normalise constraints — fill in any missing fields with sensible defaults
     constraints.setdefault('days_per_week', 5)
@@ -661,23 +805,19 @@ def _generate_program_inner(body):
     if framework_id:
         constraints['forced_framework'] = framework_id
 
-    goal_weights_raw = body.get('goal_weights', {})
-    goals_loaded = []
-    for gid in goal_ids:
-        try:
-            w = goal_weights_raw.get(gid, 1.0 / len(goal_ids))
-            goals_loaded.append({'goal': loader.load_goal(gid), 'weight': w})
-        except FileNotFoundError as e:
-            return jsonify({'detail': str(e)}), 404
-
     blend_warnings: list[str] = []
-    if len(goals_loaded) == 1:
-        goal = goals_loaded[0]['goal']
-        goal_dict_for_generate = None
-    else:
-        from src.blender import blend_goals as _blend
-        goal, blend_warnings = _blend(goals_loaded)
-        goal_dict_for_generate = goal
+
+    # ── Philosophy path: build synthetic goal from philosophy data ──────────
+    all_frameworks = list(loader.load_all_frameworks().values())
+    try:
+        if philosophy_id:
+            goal = _philosophy_to_goal(philosophy_id, all_frameworks)
+        else:
+            goal = _blend_philosophy_goals(philosophy_ids, philosophy_weights, all_frameworks)
+    except FileNotFoundError as e:
+        return jsonify({'detail': str(e)}), 404
+    goal_dict_for_generate = goal
+    goal_ids = [goal['id']]
 
     # Priority overrides — normalised and applied on top of the loaded/blended goal
     priority_overrides = body.get('priority_overrides')
@@ -725,7 +865,16 @@ def _generate_program_inner(body):
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
 
-    validation = validate(goal, constraints, data['archetypes'], data['modalities'],
+    # Filter archetypes by primary_sources (philosophy packages)
+    archetypes_filtered = data['archetypes']
+    primary_sources = set(goal.get('primary_sources', []))
+    if primary_sources:
+        archetypes_filtered = [
+            arch for arch in data['archetypes']
+            if arch.get('_package') in primary_sources
+        ]
+
+    validation = validate(goal, constraints, archetypes_filtered, data['modalities'],
                           merged_injury_flags)
 
     for w in blend_warnings:
@@ -769,7 +918,8 @@ def _generate_program_inner(body):
 def generate_session():
     """Generate a single replacement session for a given modality/phase/constraints.
 
-    Accepts an optional archetype_id to force a specific archetype (Browse tab);
+    Accepts optional primary_sources (philosophy IDs) to prefer archetypes from those philosophies.
+    Accepts optional archetype_id to force a specific archetype (Browse tab);
     without it the selector chooses the best-fit archetype (Generate tab).
     """
     import traceback as _tb
@@ -785,14 +935,12 @@ def generate_session():
 
 
 def _generate_session_inner(body):
-    goal_id  = body.get('goal_id')
+    primary_sources = body.get('primary_sources', [])  # Philosophy IDs
     modality = body.get('modality')
     phase    = body.get('phase')
     week_in_phase = body.get('week_in_phase', 1)
     is_deload = bool(body.get('is_deload', False))
 
-    if not goal_id:
-        return jsonify({'detail': 'goal_id is required'}), 400
     if not modality:
         return jsonify({'detail': 'modality is required'}), 400
     if not phase:
@@ -806,10 +954,8 @@ def _generate_session_inner(body):
     constraints.setdefault('injury_flags', [])
     constraints.setdefault('fatigue_state', 'normal')
 
-    try:
-        goal = loader.load_goal(goal_id)
-    except FileNotFoundError as e:
-        return jsonify({'detail': str(e)}), 404
+    # Build minimal goal-like dict for populate_session (only needs primary_sources)
+    goal = {'primary_sources': primary_sources}
 
     data = loader.load_all_data()
 
@@ -822,6 +968,14 @@ def _generate_session_inner(body):
             if flag_id not in constraints['injury_flags']:
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
+
+    # Filter archetypes by primary_sources (philosophy packages)
+    archetypes_filtered = data['archetypes']
+    if primary_sources:
+        archetypes_filtered = [
+            arch for arch in data['archetypes']
+            if arch.get('_package') in primary_sources
+        ]
 
     # Resolve forced archetype if archetype_id provided (Browse tab)
     archetype_id = body.get('archetype_id')
@@ -836,7 +990,7 @@ def _generate_session_inner(body):
     session_stub = {'modality': modality, 'is_deload': is_deload}
     populated = populate_session(
         session_stub, goal, constraints,
-        data['exercises'], data['archetypes'],
+        data['exercises'], archetypes_filtered,
         merged_injury_flags, phase, week_in_phase,
         forced_archetype=forced_arch,
         exercises_by_package=data.get('exercises_by_package'),
@@ -1324,65 +1478,62 @@ def _profile_to_frontend(row: dict) -> dict:
         'customInjuryFlags': row.get('custom_injury_flags') or [],
         'activeGoalId':      row.get('active_goal_id'),
         'dateOfBirth':       str(row['date_of_birth']) if row.get('date_of_birth') else None,
+        'weeklySchedule':    row.get('weekly_schedule'),
     }
 
 
 @app.get('/api/profile')
 @require_auth
 def get_profile():
-    import json as _json
     try:
-        from src.db import get_conn
+        from src.db import get_user_profile
         user_id = g.user_id
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('SELECT * FROM user_profiles WHERE id = %s', (user_id,))
-                row = cur.fetchone()
-                if row is None:
-                    cur.execute(
-                        'INSERT INTO user_profiles (id) VALUES (%s) RETURNING *', (user_id,)
-                    )
-                    row = cur.fetchone()
-                    conn.commit()
-        return jsonify(_profile_to_frontend(dict(row)) if row else {})
+        profile = get_user_profile(user_id)
+        if profile is None:
+            # Return default profile
+            return jsonify({
+                'trainingLevel': 'intermediate',
+                'equipment': [],
+                'injuryFlags': [],
+                'customInjuryFlags': [],
+                'activeGoalId': None,
+                'dateOfBirth': None,
+                'weeklySchedule': None,
+            })
+        return jsonify(profile)
     except Exception as e:
         app.logger.warning('get_profile error: %s', e)
-        return jsonify({})
+        return jsonify({
+            'trainingLevel': 'intermediate',
+            'equipment': [],
+            'injuryFlags': [],
+            'customInjuryFlags': [],
+            'activeGoalId': None,
+            'dateOfBirth': None,
+            'weeklySchedule': None,
+        })
 
 
 @app.put('/api/profile')
 @require_auth
 def update_profile():
-    import json as _json
     try:
-        from src.db import get_conn
+        from src.db import save_user_profile
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('''
-                    INSERT INTO user_profiles
-                        (id, training_level, equipment, injury_flags,
-                         custom_injury_flags, active_goal_id, date_of_birth, updated_at)
-                    VALUES (%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s, %s, NOW())
-                    ON CONFLICT (id) DO UPDATE SET
-                        training_level      = EXCLUDED.training_level,
-                        equipment           = EXCLUDED.equipment,
-                        injury_flags        = EXCLUDED.injury_flags,
-                        custom_injury_flags = EXCLUDED.custom_injury_flags,
-                        active_goal_id      = EXCLUDED.active_goal_id,
-                        date_of_birth       = EXCLUDED.date_of_birth,
-                        updated_at          = NOW()
-                ''', (
-                    user_id,
-                    body.get('trainingLevel', 'intermediate'),
-                    _json.dumps(body.get('equipment', [])),
-                    _json.dumps(body.get('injuryFlags', [])),
-                    _json.dumps(body.get('customInjuryFlags', [])),
-                    body.get('activeGoalId'),
-                    body.get('dateOfBirth'),
-                ))
-                conn.commit()
+
+        # Build profile data dict
+        profile_data = {
+            'trainingLevel': body.get('trainingLevel', 'intermediate'),
+            'equipment': body.get('equipment', []),
+            'injuryFlags': body.get('injuryFlags', []),
+            'customInjuryFlags': body.get('customInjuryFlags', []),
+            'activeGoalId': body.get('activeGoalId'),
+            'dateOfBirth': body.get('dateOfBirth'),
+            'weeklySchedule': body.get('weeklySchedule'),
+        }
+
+        save_user_profile(user_id, profile_data)
         return jsonify({'saved': True})
     except Exception as e:
         app.logger.warning('update_profile error: %s', e)
@@ -1391,23 +1542,12 @@ def update_profile():
 
 @app.get('/api/user/program')
 @require_auth
-def get_user_program():
+def get_user_program_endpoint():
     try:
-        from src.db import get_conn
+        from src.db import get_user_program
         user_id = g.user_id
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('SELECT * FROM user_programs WHERE user_id = %s', (user_id,))
-                row = cur.fetchone()
-        if not row:
-            return jsonify(None)
-        return jsonify({
-            'currentProgram':    row.get('current_program'),
-            'programStartDate':  str(row['program_start_date']) if row.get('program_start_date') else None,
-            'eventDate':         str(row['event_date']) if row.get('event_date') else None,
-            'sourceGoalIds':     row.get('source_goal_ids') or [],
-            'sourceGoalWeights': row.get('source_goal_weights') or {},
-        })
+        program = get_user_program(user_id)
+        return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
         return jsonify(None)
@@ -1415,35 +1555,13 @@ def get_user_program():
 
 @app.put('/api/user/program')
 @require_auth
-def save_user_program():
-    import json as _json
+def save_user_program_endpoint():
     try:
-        from src.db import get_conn
+        from src.db import save_user_program
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('''
-                    INSERT INTO user_programs
-                        (user_id, current_program, program_start_date,
-                         event_date, source_goal_ids, source_goal_weights, updated_at)
-                    VALUES (%s, %s::jsonb, %s, %s, %s::jsonb, %s::jsonb, NOW())
-                    ON CONFLICT (user_id) DO UPDATE SET
-                        current_program     = EXCLUDED.current_program,
-                        program_start_date  = EXCLUDED.program_start_date,
-                        event_date          = EXCLUDED.event_date,
-                        source_goal_ids     = EXCLUDED.source_goal_ids,
-                        source_goal_weights = EXCLUDED.source_goal_weights,
-                        updated_at          = NOW()
-                ''', (
-                    user_id,
-                    _json.dumps(body.get('currentProgram')),
-                    body.get('programStartDate'),
-                    body.get('eventDate'),
-                    _json.dumps(body.get('sourceGoalIds', [])),
-                    _json.dumps(body.get('sourceGoalWeights', {})),
-                ))
-                conn.commit()
+
+        save_user_program(user_id, body)
         return jsonify({'saved': True})
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)

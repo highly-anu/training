@@ -42,3 +42,19 @@ notes: >
   lat activation, landmine press, eccentric push-up on parallettes, face pull
   (thumbs-up, elbows high), elbow-out rows, DB external rotation, band pull-aparts.
   Useful for injury rehab → return to sport transitions.
+
+primary_framework_id: rpe_autoregulation
+
+framework_groups:
+  - id: default
+    name: "Functional Bodybuilding Program"
+    type: alternatives
+    frameworks:
+      - rpe_autoregulation
+canonical_phase_sequence:
+  - phase: base
+    weeks: 8
+  - phase: build
+    weeks: 8
+  - phase: peak
+    weeks: 4

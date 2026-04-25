@@ -10,7 +10,6 @@ import { AddArchetypeDialog } from './AddArchetypeDialog'
 import { EditArchetypeDialog } from './EditArchetypeDialog'
 import { EditFrameworkDialog } from './EditFrameworkDialog'
 import { AddModalityDialog } from './AddModalityDialog'
-import { AddGoalDialog } from './AddGoalDialog'
 import { useAllData } from './useAllData'
 import type { ModelType, OpenInOntologyFn } from './types'
 import type { Archetype, Exercise, Framework } from '@/api/types'
@@ -22,7 +21,6 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
   const [showAddExercise, setShowAddExercise] = useState(false)
   const [showAddArchetype, setShowAddArchetype] = useState(false)
   const [showAddModality, setShowAddModality] = useState(false)
-  const [showAddGoal, setShowAddGoal] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [editingArchetype, setEditingArchetype] = useState<Archetype | null>(null)
   const [editingFramework, setEditingFramework] = useState<Framework | null>(null)
@@ -46,7 +44,6 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
       case 'exercises': return allData.exercises
       case 'archetypes': return allData.archetypes
       case 'modalities': return allData.modalities
-      case 'goals': return allData.goals
       case 'frameworks': return allData.frameworks
       case 'philosophies': return allData.philosophies
       case 'benchmarks': return allData.benchmarks
@@ -60,7 +57,6 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
     exercises: allData.exercises.length,
     archetypes: allData.archetypes.length,
     modalities: allData.modalities.length,
-    goals: allData.goals.length,
     frameworks: allData.frameworks.length,
     philosophies: allData.philosophies.length,
     benchmarks: allData.benchmarks.length,
@@ -99,11 +95,6 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
           {selectedType === 'modalities' && (
             <Button size="sm" className="w-full h-7 text-xs" onClick={() => setShowAddModality(true)}>
               <Plus className="size-3 mr-1" /> Add Modality
-            </Button>
-          )}
-          {selectedType === 'goals' && (
-            <Button size="sm" className="w-full h-7 text-xs" onClick={() => setShowAddGoal(true)}>
-              <Plus className="size-3 mr-1" /> Add Goal
             </Button>
           )}
           {selectedType === 'archetypes' && selectedId && (() => {
@@ -158,7 +149,6 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
       {/* Dialogs */}
       <AddExerciseDialog open={showAddExercise} onClose={() => setShowAddExercise(false)} />
       <AddModalityDialog open={showAddModality} onClose={() => setShowAddModality(false)} />
-      <AddGoalDialog open={showAddGoal} onClose={() => setShowAddGoal(false)} />
       {editingExercise && (
         <EditExerciseDialog
           exercise={editingExercise}

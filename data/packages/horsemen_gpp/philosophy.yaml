@@ -52,3 +52,13 @@ notes: >
   SMMF (Slow Massive Movement) challenges are signature formats. Recovery sessions
   are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black,
   Russian Aggression, SMMF) are distinct from generic archetypes.
+
+primary_framework_id: concurrent_training
+
+framework_groups:
+  - id: alternatives
+    name: "Training Styles"
+    type: alternatives
+    frameworks:
+      - concurrent_training
+      - gpp_circuits

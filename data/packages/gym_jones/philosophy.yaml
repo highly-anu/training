@@ -51,3 +51,12 @@ notes: >
   are the primary targets. Operator context: relative strength + aerobic capacity +
   mental durability. Programs are 1-month blocks, repeatable 2–3× or cycled
   between Operator I / Operator II.
+
+primary_framework_id: block_periodization
+
+framework_groups:
+  - id: default
+    name: "Block Periodization Program"
+    type: alternatives
+    frameworks:
+      - block_periodization

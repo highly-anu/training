@@ -14,6 +14,10 @@ sessions_per_week:
   mixed_modal_conditioning: 2
   durability: 1
   aerobic_base: 1
+modality_priority:
+  committed: [max_strength]
+  core: [mixed_modal_conditioning, power]
+  supplementary: [durability, aerobic_base]
 
 intensity_distribution:
   zone1_2_pct: 0.20
@@ -78,3 +82,13 @@ notes: >
   Hard/easy day alternation is built into the weekly structure. Progression levers:
   reduce rest periods for bodyweight-based work; increase load for barbell/KB work —
   never both simultaneously (Twight rule).
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 16
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  ideal_long_session_minutes: 120
+  supports_split_days: true

@@ -19,7 +19,66 @@ export function blendExpectations(
   goals: GoalProfile[],
   selectedGoalIds: string[],
   goalWeights: Record<string, number>,
+  opts?: {
+    sourceMode?: 'philosophy' | 'blend' | 'custom' | null
+    frameworks?: any[]
+    selectedFrameworkId?: string | null
+    selectedPhilosophyIds?: string[]
+    philosophies?: any[]
+  },
 ): GoalExpectations | null {
+  // For philosophy mode with sequential framework group, aggregate framework expectations
+  if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
+    const phil = opts.philosophies.find((p: any) => p.id === opts.selectedPhilosophyIds?.[0])
+
+    // Find sequential group (new approach)
+    const sequentialGroup = phil?.framework_groups?.find((g: any) => g.type === 'sequential')
+    const phases = sequentialGroup?.canonical_phase_sequence
+      || (phil?.frameworks_are_phases && phil.canonical_phase_sequence)  // Legacy fallback
+
+    if (phases) {
+      const phaseFrameworks = phases
+        .map((phase: any) => opts.frameworks!.find((f: any) => f.id === phase.framework_id))
+        .filter((f: any) => f?.expectations)
+
+      if (phaseFrameworks.length > 0) {
+        const totalWeeks = phases.reduce((s: number, p: any) => s + (p.weeks ?? 0), 0)
+        const weighted = (fn: (e: GoalExpectations) => number): number => {
+          let sum = 0
+          for (let i = 0; i < phaseFrameworks.length; i++) {
+            const fw = phaseFrameworks[i]
+            const phaseWeeks = phases[i]?.weeks ?? 0
+            const weight = phaseWeeks / totalWeeks
+            if (fw.expectations) sum += fn(fw.expectations) * weight
+          }
+          return sum
+        }
+
+        const longDays = phaseFrameworks.filter((f: any) => f.expectations?.ideal_long_session_minutes != null)
+
+        return {
+          min_weeks: totalWeeks,
+          ideal_weeks: totalWeeks,
+          min_days_per_week: Math.round(weighted((e) => e.min_days_per_week)),
+          ideal_days_per_week: Math.round(weighted((e) => e.ideal_days_per_week)),
+          min_session_minutes: Math.round(weighted((e) => e.min_session_minutes)),
+          ideal_session_minutes: Math.round(weighted((e) => e.ideal_session_minutes)),
+          ideal_long_session_minutes: longDays.length
+            ? Math.round(longDays.reduce((s: number, f: any) => s + f.expectations!.ideal_long_session_minutes!, 0) / longDays.length)
+            : undefined,
+          supports_split_days: phaseFrameworks.some((f: any) => f.expectations?.supports_split_days),
+        }
+      }
+    }
+
+    // Single framework override or primary framework
+    if (opts.selectedFrameworkId) {
+      const fw = opts.frameworks.find((f: any) => f.id === opts.selectedFrameworkId)
+      if (fw?.expectations) return fw.expectations
+    }
+  }
+
+  // Fall back to goal-based expectations
   const selected = goals.filter((g) => selectedGoalIds.includes(g.id))
   if (!selected.length) return null
 
@@ -30,7 +89,6 @@ export function blendExpectations(
       return sum + (g.expectations ? fn(g.expectations) * w : 0)
     }, 0)
 
-  // At least one goal must have expectations
   const withExp = selected.filter((g) => g.expectations)
   if (!withExp.length) return null
 

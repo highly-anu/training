@@ -12,6 +12,10 @@ sessions_per_week:
   max_strength: 3
   relative_strength: 1
   mobility: 1
+modality_priority:
+  committed: [max_strength]
+  core: [relative_strength]
+  supplementary: [mobility]
 
 intensity_distribution:
   zone1_2_pct: 0.05
@@ -70,3 +74,12 @@ notes: >
   deload is indicated rather than waiting for the scheduled week. Controlled
   eccentrics (3-5 sec negatives) and isometric holds are first-class tools in this
   framework, not accessories.
+
+expectations:
+  min_weeks: 10
+  ideal_weeks: 14
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 75
+  supports_split_days: false

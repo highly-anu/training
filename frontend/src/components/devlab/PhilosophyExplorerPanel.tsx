@@ -1290,7 +1290,7 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
           </div>
 
           {/* System connections */}
-          {(phil.system_connections.frameworks.length > 0 || phil.system_connections.goals.length > 0) && (
+          {(phil.system_connections.frameworks.length > 0 || phil.system_connections?.goals?.length > 0) && (
             <div className="flex flex-wrap gap-4 pt-2 border-t border-violet-500/20">
               {phil.system_connections.frameworks.length > 0 && (
                 <div className="space-y-1">
@@ -1306,10 +1306,10 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
                   </div>
                 </div>
               )}
-              {phil.system_connections.goals.length > 0 && (
+              {phil.system_connections?.goals && phil.system_connections.goals.length > 0 && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
-                    <Link2 className="size-3" /> Goals
+                    <Link2 className="size-3" /> Goals (deprecated)
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {phil.system_connections.goals.map(g => (

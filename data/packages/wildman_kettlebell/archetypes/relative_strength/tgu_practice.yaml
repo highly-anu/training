@@ -1,0 +1,50 @@
+id: tgu_practice
+name: "Turkish Get-Up Practice (Wildman)"
+modality: relative_strength
+category: kettlebell
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 30
+applicable_phases: [base, build, maintenance, recovery]
+
+slots:
+  - role: warmup
+    slot_type: skill_practice
+    duration_minutes: 5
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: rotation
+
+  - role: main
+    slot_type: skill_practice
+    duration_minutes: 20
+    intensity: moderate
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: rotation
+
+  - role: accessory
+    slot_type: sets_reps
+    duration_minutes: 5
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: hip_hinge
+
+required_equipment:
+  - kettlebell
+sources:
+  - Wildman
+  - Gym Jones
+  - Horsemen
+notes: >
+  TGU-focused session. Halo warmup primes the shoulder before overhead loading.
+  Practice emphasises slow, deliberate movement through each phase — Wildman's
+  instruction: there are no shortcuts in the get-up. Can function as active recovery
+  (light bell, higher reps) or a strength stimulus (heavy bell, 1–2 reps per side).
+  Standard prescription: 5 reps per side; add load only when all positions feel
+  stable and controlled. Windmill added as accessory once TGU is proficient.

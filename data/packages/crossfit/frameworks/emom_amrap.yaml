@@ -11,6 +11,10 @@ goals_served:
 sessions_per_week:
   mixed_modal_conditioning: 3
   strength_endurance: 1
+modality_priority:
+  committed: [mixed_modal_conditioning]
+  core: [strength_endurance]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.05
@@ -80,3 +84,12 @@ notes: >
   squat clean + 3 push press). AMRAP format (CrossFit metcons, Horsemen "PBR":
   AMRAP 20 min) targets mixed-modal work capacity. Can be used as a standalone
   conditioning framework or as conditioning days within a concurrent training block.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: false

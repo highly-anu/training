@@ -1,88 +1,91 @@
 id: 5x5
-name: "5×5 Classic Strength Volume"
+name: 5×5 Classic Strength Volume
 modality: max_strength
 category: strength
 duration_estimate_minutes: 75
 required_equipment:
-  - barbell
-  - rack
-  - plates
+- barbell
+- rack
+- plates
 applicable_phases:
-  - base
-  - build
-  - peak
+- base
+- build
+- peak
+- transition
 sources:
-  - "Starting Strength"
-  - "Gym Jones"
-  - "Horsemen"
-notes: >
-  Five sets of five at approximately 85% 1RM. A proven intermediate strength volume
-  format that accumulates significant total tonnage while staying below true max-effort
-  intensity. Works across the main barbell compound patterns. Rest periods are long
-  enough to ensure quality on every set; this is not a conditioning workout.
+- Starting Strength
+- Gym Jones
+- Horsemen
+notes: 'Five sets of five at approximately 85% 1RM. A proven intermediate strength
+  volume format that accumulates significant total tonnage while staying below true
+  max-effort intensity. Works across the main barbell compound patterns. Rest periods
+  are long enough to ensure quality on every set; this is not a conditioning workout.
 
+  '
 slots:
-  - role: primary_compound
-    slot_type: sets_reps
-    sets: 5
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.85
-    rest_sec: 300
-    exercise_filter:
-      movement_pattern: squat
-      category: barbell
-      bilateral: true
-    notes: "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints."
-
-  - role: secondary_compound
-    slot_type: sets_reps
-    sets: 5
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.85
-    rest_sec: 240
-    exercise_filter:
-      movement_pattern: press
-      category: barbell
-    notes: "Bench press or overhead press. Do not combine two pressing patterns in the same session."
-
-  - role: primary_pull
-    slot_type: sets_reps
-    sets: 5
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.85
-    rest_sec: 300
-    exercise_filter:
-      movement_pattern: hinge
-      category: barbell
-      bilateral: true
-    notes: "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation."
-
-  - role: accessory_pull
-    slot_type: sets_reps
-    sets: 3
-    reps: "8-10"
-    intensity: moderate
-    intensity_pct_1rm: 0.65
-    rest_sec: 90
-    exercise_filter:
-      movement_pattern: pull
-    notes: "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited."
-
+- role: primary_compound
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.85
+  rest_sec: 300
+  exercise_filter:
+    movement_pattern: squat
+    category: barbell
+    bilateral: true
+  notes: Back squat is the default. Front squat or trap bar can substitute for equipment
+    or injury constraints.
+- role: secondary_compound
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.85
+  rest_sec: 240
+  exercise_filter:
+    movement_pattern: press
+    category: barbell
+  notes: Bench press or overhead press. Do not combine two pressing patterns in the
+    same session.
+- role: primary_pull
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.85
+  rest_sec: 300
+  exercise_filter:
+    movement_pattern: hinge
+    category: barbell
+    bilateral: true
+  notes: Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase
+    variation.
+- role: accessory_pull
+  slot_type: sets_reps
+  sets: 3
+  reps: 8-10
+  intensity: moderate
+  intensity_pct_1rm: 0.65
+  rest_sec: 90
+  exercise_filter:
+    movement_pattern: pull
+  notes: Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited.
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Reduce to 3×5 at 90% of current load. Maintain all movement patterns."
+    notes: Reduce to 3×5 at 90% of current load. Maintain all movement patterns.
   time_limited:
     drop_slots:
-      - accessory_pull
-    notes: "Drop accessory work first. If further pressed, reduce primary_pull to 3 sets."
+    - accessory_pull
+    notes: Drop accessory work first. If further pressed, reduce primary_pull to 3
+      sets.
   equipment_limited:
     substitutions:
-      - missing_equipment: rack
-        substitute_approach: "Replace back squat with trap bar deadlift for lower body. Use dumbbell press in place of barbell press."
-      - missing_equipment: barbell
-        substitute_approach: "Kettlebell double front squat and double press can approximate the pattern at lower loads. Use heaviest available KB."
+    - missing_equipment: rack
+      substitute_approach: Replace back squat with trap bar deadlift for lower body.
+        Use dumbbell press in place of barbell press.
+    - missing_equipment: barbell
+      substitute_approach: Kettlebell double front squat and double press can approximate
+        the pattern at lower loads. Use heaviest available KB.

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { useGoals } from '@/api/goals'
+import { usePhilosophies } from '@/api/philosophies'
 import { useGenerateWithTrace } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { ValidationPanel } from '@/components/devlab/ValidationPanel'
@@ -68,20 +68,54 @@ function StepMeta({ reads, outputs, description }: { reads: string[], outputs: s
 
 function InputsPanel({ program }: { program: TracedProgram }) {
   const { goal, constraints } = program
+  const trace = program.generation_trace
 
   const sortedPriorities = Object.entries(goal.priorities)
     .filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a)
 
+  const primarySources = trace?.primary_sources || goal.primary_sources || []
+  const isPhilosophyMode = trace?.philosophy_mode === 'synthetic_goal' || (goal.primary_sources && goal.primary_sources.length > 0)
+
   return (
     <div className="space-y-4 max-w-2xl">
-      {/* Goal */}
+      {/* Philosophy Sources */}
+      {primarySources.length > 0 && (
+        <Card className="border-violet-500/30 bg-violet-500/5">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm">Philosophy Sources</CardTitle>
+              {isPhilosophyMode && (
+                <Badge className="text-[10px] bg-violet-500/20 text-violet-400 border-violet-500/40">
+                  {trace?.philosophy_mode === 'synthetic_goal' ? 'Synthetic Goal' : 'Direct'}
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-1">
+              {primarySources.map(s => (
+                <Badge key={s} variant="outline" className="text-xs border-violet-500/40 bg-violet-500/10 text-violet-400 font-mono">
+                  {s}
+                </Badge>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Exercises and archetypes are filtered to only those from these philosophy packages.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Goal / Priorities */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">{goal.name}</CardTitle>
+          <CardTitle className="text-sm">{isPhilosophyMode ? 'Generated Priorities' : goal.name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">{goal.description}</p>
+          {!isPhilosophyMode && goal.description && (
+            <p className="text-xs text-muted-foreground">{goal.description}</p>
+          )}
           <div className="space-y-1.5">
             {sortedPriorities.map(([mod, prio]) => (
               <div key={mod} className="flex items-center gap-2">
@@ -106,16 +140,6 @@ function InputsPanel({ program }: { program: TracedProgram }) {
               {goal.phase_sequence.map((p, i) => (
                 <Badge key={i} variant="outline" className="text-[10px]">
                   {p.phase} · {p.weeks}w
-                </Badge>
-              ))}
-            </div>
-          )}
-          {goal.primary_sources && goal.primary_sources.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              <span className="text-xs text-muted-foreground self-center">Sources:</span>
-              {goal.primary_sources.map(s => (
-                <Badge key={s} variant="outline" className="text-[10px] border-violet-500/40 bg-violet-500/10 text-violet-400">
-                  {s}
                 </Badge>
               ))}
             </div>
@@ -158,11 +182,11 @@ function InputsPanel({ program }: { program: TracedProgram }) {
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
 export function DevLab() {
-  const { data: goals = [], isLoading: loadingGoals } = useGoals()
+  const { data: philosophies = [], isLoading: loadingPhilosophies } = usePhilosophies()
   const generateMutation = useGenerateWithTrace()
 
   // Form state
-  const [goalId, setGoalId] = useState<string>('')
+  const [philosophyId, setPhilosophyId] = useState<string>('')
   const [level, setLevel] = useState<TrainingLevel>('intermediate')
   const [phase, setPhase] = useState<TrainingPhase>('base')
   const [days, setDays] = useState(4)
@@ -187,10 +211,10 @@ export function DevLab() {
   }
 
   async function handleGenerate() {
-    if (!goalId) return
+    if (!philosophyId) return
     try {
       const data = await generateMutation.mutateAsync({
-        goalId,
+        philosophyId,
         constraints: {
           equipment,
           days_per_week: days,
@@ -214,7 +238,7 @@ export function DevLab() {
   }
 
   const trace = result?.generation_trace
-  const canGenerate = !!goalId && !generateMutation.isPending
+  const canGenerate = !!philosophyId && !generateMutation.isPending
 
   const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap' | 'interactions'>('pipeline')
   const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
@@ -316,17 +340,17 @@ export function DevLab() {
         <div className="border-b bg-muted/20 px-6 py-4 shrink-0">
           <div className="max-w-5xl space-y-3">
             <div className="flex flex-wrap items-end gap-3">
-              {/* Goal */}
+              {/* Philosophy */}
               <div className="min-w-[200px]">
-                <Label className="text-xs mb-1 block">Goal</Label>
-                <Select value={goalId} onValueChange={setGoalId} disabled={loadingGoals}>
+                <Label className="text-xs mb-1 block">Philosophy</Label>
+                <Select value={philosophyId} onValueChange={setPhilosophyId} disabled={loadingPhilosophies}>
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select goal…" />
+                    <SelectValue placeholder="Select philosophy…" />
                   </SelectTrigger>
                   <SelectContent>
-                    {goals.map(g => (
-                      <SelectItem key={g.id} value={g.id} className="text-xs">
-                        {g.name}
+                    {philosophies.map(p => (
+                      <SelectItem key={p.id} value={p.id} className="text-xs">
+                        {p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -469,7 +493,7 @@ export function DevLab() {
           {!result ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Terminal className="size-12 mb-4 opacity-20" />
-              <p className="text-sm">Select a goal and click Generate to see the full pipeline trace</p>
+              <p className="text-sm">Select a philosophy and click Generate to see the full pipeline trace</p>
             </div>
           ) : (
             <Tabs value={activeStep} onValueChange={setActiveStep}>
@@ -484,9 +508,9 @@ export function DevLab() {
               {/* ① Inputs */}
               <TabsContent value="inputs">
                 <StepMeta
-                  reads={['goal profile YAML', 'athlete constraints']}
-                  outputs={['priority weights', 'phase sequence', 'primary sources', 'constraint envelope']}
-                  description="Defines what to optimize for (goal priority weights) and what the athlete can do (constraints). Both feed every downstream stage."
+                  reads={['philosophy selection', 'athlete constraints']}
+                  outputs={['priority weights', 'phase sequence', 'primary_sources (package filter)', 'constraint envelope']}
+                  description="Philosophy selection generates priority weights and primary_sources (package IDs). These define what to optimize for and which exercises/archetypes are allowed. Constraints define what the athlete can do. All feed every downstream stage."
                 />
                 <InputsPanel program={result} />
               </TabsContent>
@@ -518,9 +542,9 @@ export function DevLab() {
               {/* ④ Sessions */}
               <TabsContent value="sessions">
                 <StepMeta
-                  reads={['assigned modality', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
-                  outputs={['selected archetype', 'exercises per slot', 'load prescriptions']}
-                  description="For each scheduled session: selects the best-scoring archetype, fills its exercise slots (filtered by movement pattern, equipment, injury), then calculates load via the progression model."
+                  reads={['assigned modality', 'primary_sources (philosophy packages)', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
+                  outputs={['selected archetype', 'exercises per slot (package-filtered)', 'load prescriptions']}
+                  description="For each scheduled session: selects the best-scoring archetype, fills its exercise slots (filtered by philosophy package, movement pattern, equipment, injury), then calculates load via the progression model. Only exercises from the selected philosophy packages are used."
                 />
                 {trace ? (
                   <>

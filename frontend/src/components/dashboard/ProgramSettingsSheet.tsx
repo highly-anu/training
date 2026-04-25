@@ -68,9 +68,9 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
 
   function handleRebuildFromTomorrow() {
     regenerate.mutate({
-      goalId: program.goal.id,
-      goalIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
-      goalWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
+      philosophyId: sourceGoalIds.length === 1 ? sourceGoalIds[0] : undefined,
+      philosophyIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
+      philosophyWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
       constraints: program.constraints,
       numWeeks: weeksRemainingFromTomorrow,
     })

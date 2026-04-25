@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """CLI entry point for the training program generator.
 
-Usage examples:
-    python main.py --goal general_gpp --days 4 --level intermediate
-    python main.py --goal alpine_climbing --days 5 --time 90 --phase build --week 3
-    python main.py --goal general_gpp --days 3 --equipment kettlebell,pull_up_bar,open_space
-    python main.py --goal alpine_climbing --injuries shoulder_impingement --days 5
-    python main.py --goal alpine_climbing --event-date 2026-08-15 --days 5
+DEPRECATED: This CLI is deprecated after the removal of goal profiles.
+Use the web app instead (python api.py + cd frontend && npm run dev).
+
+The web app supports philosophy-based program generation with full blending capabilities.
 """
 import argparse
 import sys

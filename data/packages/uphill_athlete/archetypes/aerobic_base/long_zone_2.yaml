@@ -1,42 +1,50 @@
 id: long_zone_2
-name: "Long Zone 1–2 Aerobic Day"
+name: Long Zone 1–2 Aerobic Day
 modality: aerobic_base
 category: conditioning
 training_levels:
-  - novice
-  - intermediate
-  - advanced
-  - elite
+- novice
+- intermediate
+- advanced
+- elite
 duration_estimate_minutes: 180
 applicable_phases:
-  - base
-  - build
-  - peak
+- base
+- build
+- peak
+- specific
+- transition
 slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 10
-    intensity: low
-    exercise_filter:
-      category: mobility
-  - role: main_aerobic
-    slot_type: time_domain
-    duration_minutes: 160
-    intensity: zone2
-    exercise_filter:
-      category: aerobic
-  - role: cooldown
-    slot_type: time_domain
-    duration_minutes: 10
-    intensity: low
-    exercise_filter:
-      category: mobility
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+- role: main_aerobic
+  slot_type: time_domain
+  duration_minutes: 160
+  intensity: zone2
+  exercise_filter:
+    category: aerobic
+- role: cooldown
+  slot_type: time_domain
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
 sources:
-  - "Training for the New Alpinism, Ch. 7"
-notes: |
-  The cornerstone aerobic session. Strict Z1–Z2 (HR below AeT, conversational
+- Training for the New Alpinism, Ch. 7
+notes: 'The cornerstone aerobic session. Strict Z1–Z2 (HR below AeT, conversational
+
   pace, nose-breathing should be possible throughout). Hiking, easy
+
   trail-running, ski-touring, cycling — modality matches sport. Duration
-  starts at the athlete's current sustainable long day and progresses
+
+  starts at the athlete''s current sustainable long day and progresses
+
   toward the duration of the target objective during the Base phase.
+
   Refuel during the session for anything over 90 minutes.
+
+  '

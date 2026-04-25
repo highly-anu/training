@@ -37,6 +37,7 @@ def validate(
     _check_session_time(goal, constraints, archetypes, result)
     _check_injury_conflicts(goal, constraints, modalities, injury_flags_data, result)
     _check_phase(goal, constraints, result)
+    _check_schedule(goal, constraints, result)
     return result
 
 
@@ -159,3 +160,69 @@ def _check_phase(goal, constraints, result):
             f"Phase '{phase}' is not in goal '{goal['id']}' phase sequence "
             f"({phase_names}). Base-phase priorities will be used.",
         )
+
+
+def _check_schedule(goal, constraints, result):
+    """
+    Validate user schedule against framework expectations.
+
+    Warnings:
+    - Total weekly time < framework min_session_minutes × min_days_per_week
+    - Days available < framework min_days_per_week
+
+    Info:
+    - Schedule matches or exceeds framework ideals
+    """
+    day_configs = constraints.get('day_configs', {})
+    if not day_configs:
+        return
+
+    # Calculate total weekly minutes and days available
+    total_minutes = sum(cfg.get('minutes', 0) for cfg in day_configs.values())
+    days_available = len([d for d in day_configs.values() if d.get('minutes', 0) > 0])
+
+    # Get framework expectations
+    try:
+        fw = select_framework(goal, constraints)
+        expectations = fw.get('expectations', {})
+        if not expectations:
+            return
+
+        min_session_minutes = expectations.get('min_session_minutes', 45)
+        min_days = expectations.get('min_days_per_week', 3)
+        ideal_days = expectations.get('ideal_days_per_week', 5)
+        ideal_session_minutes = expectations.get('ideal_session_minutes', 60)
+
+        # Validate days
+        if days_available < min_days:
+            result.add_error(
+                'SCHEDULE_INSUFFICIENT_DAYS',
+                f"Your schedule provides {days_available} training day(s) but this program "
+                f"needs at least {min_days}.",
+                suggested_fix=f"Add {min_days - days_available} more training day(s) to your schedule.",
+            )
+        elif days_available < ideal_days:
+            result.add_warning(
+                'SCHEDULE_BELOW_IDEAL_DAYS',
+                f"Your schedule provides {days_available} day(s) (ideal: {ideal_days}). "
+                f"Some modalities may be compressed or dropped.",
+            )
+
+        # Validate time
+        min_weekly = min_session_minutes * min_days
+        ideal_weekly = ideal_session_minutes * ideal_days
+
+        if total_minutes < min_weekly:
+            result.add_warning(
+                'SCHEDULE_INSUFFICIENT_TIME',
+                f"Your schedule provides {total_minutes} min/week (minimum: {min_weekly}). "
+                f"Sessions will be scaled down.",
+            )
+        elif total_minutes >= ideal_weekly:
+            result.add_info(
+                'SCHEDULE_MEETS_IDEAL',
+                f"Your schedule ({days_available} days, {total_minutes} min/week) meets or exceeds "
+                f"framework recommendations.",
+            )
+    except Exception:
+        pass

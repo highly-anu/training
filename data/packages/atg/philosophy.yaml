@@ -14,8 +14,8 @@ scope:
   - rehab
   - relative_strength
 bias:
-  - durability
   - rehab
+  - durability
   - mobility
 avoid_with: []
 required_equipment:
@@ -36,3 +36,12 @@ notes: >
   are the minimum viable equipment. The system is compatible with concurrent
   strength training but mandates its own lower-body prep work regardless of other
   modalities in the program.
+
+primary_framework_id: atg_joint_health
+
+framework_groups:
+  - id: default
+    name: "ATG Joint Health Program"
+    type: alternatives
+    frameworks:
+      - atg_joint_health

@@ -11,6 +11,10 @@ sessions_per_week:
   rehab: 3
   mobility: 2
   durability: 1
+modality_priority:
+  committed: [rehab, mobility]
+  core: [durability]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.70
@@ -57,3 +61,12 @@ notes: >
   is performed regardless of other modalities in the program.
   Rehab sessions and mobility sessions are the primary training output; durability
   sessions use loaded carries and sled work for joint conditioning without impact.
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 20
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 30
+  ideal_session_minutes: 45
+  supports_split_days: false

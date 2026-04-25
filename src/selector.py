@@ -128,6 +128,25 @@ def _injury_exclusions(constraints: dict, injury_flags_data: dict) -> tuple[set,
     return excl_patterns, excl_ids
 
 
+def _blocked_categories_for_equipment(available_equip: set) -> set:
+    """Return exercise categories that are unlikely to have any matches given available equipment.
+
+    This is a fast proxy — used for archetype scoring, not for hard filtering.
+    """
+    blocked: set[str] = set()
+    if not available_equip.intersection({'barbell', 'rack', 'plates'}):
+        blocked.add('barbell')
+    if 'kettlebell' not in available_equip:
+        blocked.add('kettlebell')
+    if 'sandbag' not in available_equip:
+        blocked.add('sandbag')
+    if 'dumbbells' not in available_equip:
+        blocked.add('dumbbells')
+    if not available_equip.intersection({'ruck_pack', 'weight_vest'}):
+        blocked.add('carries')
+    return blocked
+
+
 def _slot_injury_blocked(slot: dict, excl_patterns: set) -> bool:
     """Return True if a slot's required movement pattern is fully excluded by injury flags."""
     if not excl_patterns:
@@ -161,10 +180,14 @@ def select_archetype(
     recent_ids: list | None = None,
     excl_patterns: set | None = None,
     return_trace: bool = False,
+    preferred_archetype_id: str | None = None,
+    day_session_types: list | None = None,
+    relax_equipment: bool = False,
 ) -> Optional[dict]:
     """Pick the best archetype for a session slot.
 
     When return_trace=True returns (archetype, trace_dict) instead of just archetype.
+    When preferred_archetype_id is provided, that archetype gets a strong scoring bonus.
     """
     available_equip = set(constraints.get('equipment', []))
     session_time = constraints.get('session_time_minutes', 75)
@@ -199,7 +222,8 @@ def select_archetype(
         required = set(arch.get('required_equipment', [])) - {'open_space'}
         if not required.issubset(available_equip):
             if not arch.get('scaling', {}).get('equipment_limited'):
-                continue  # no scaling — skip
+                if not relax_equipment:
+                    continue  # no scaling and not relaxed — skip
         n_equip += 1
 
         # Duration filter
@@ -207,7 +231,12 @@ def select_archetype(
         if is_deload:
             deload_sc = arch.get('scaling', {}).get('deload', {})
             duration = deload_sc.get('duration_estimate_minutes', int(duration * 0.7))
-        if duration > session_time:
+        # Hard cap: on short days, exclude archetypes that clearly can't fit
+        if day_session_types and 'short' in day_session_types and 'long' not in day_session_types:
+            if duration > 50:  # 40m budget + 25% tolerance
+                if not arch.get('scaling', {}).get('time_limited'):
+                    continue
+        elif duration > session_time:
             if not arch.get('scaling', {}).get('time_limited'):
                 continue  # no time-limited scaling — skip
 
@@ -217,6 +246,9 @@ def select_archetype(
 
     def _score_arch(arch: dict) -> tuple:
         score = 0
+        # Strong preference for complementary mobility archetype
+        if preferred_archetype_id and arch['id'] == preferred_archetype_id:
+            score += 10  # Higher than equipment bonus to take precedence
         # Prefer archetypes whose equipment is fully satisfied over equipment_limited fallbacks.
         # Bonus must exceed the max recency penalty (-3) so a recently-used fully-equipped
         # archetype always beats an equipment-limited one.
@@ -232,6 +264,15 @@ def select_archetype(
                     break
         if arch['id'] in recent:
             score -= 3
+        # Duration fit: reward archetypes that match the day's slot type
+        if day_session_types:
+            arch_dur = arch.get('duration_estimate_minutes', 60)
+            if 'long' in day_session_types and arch_dur >= 60:
+                score += 3
+            elif 'short' in day_session_types and 'long' not in day_session_types and arch_dur <= 45:
+                score += 3
+            elif 'long' in day_session_types and arch_dur <= 45:
+                score -= 2  # Short archetype on long day is suboptimal
         # Penalise archetypes with a high injury-skip rate: prefer alternatives
         # that can actually be executed with the athlete's active injury constraints.
         if _excl:
@@ -240,6 +281,17 @@ def select_archetype(
                 skipped = sum(1 for s in slots if _slot_injury_blocked(s, _excl))
                 skip_rate = skipped / len(slots)
                 score -= round(skip_rate * 8)
+        # Penalise archetypes whose exercise slots require equipment the athlete doesn't have.
+        # Uses -8 per blocked slot (not rate-based) so a blocked main-strength slot is always
+        # decisive: a bodyweight-only alternative will beat a partially-filled barbell session.
+        blocked_cats = _blocked_categories_for_equipment(available_equip)
+        if blocked_cats:
+            all_slots = [s for s in arch.get('slots', []) if not s.get('skip_exercise') and not s.get('is_meta')]
+            equip_blocked = sum(
+                1 for s in all_slots
+                if s.get('exercise_filter', {}).get('category') in blocked_cats
+            )
+            score -= equip_blocked * 10
         return (score, arch['id'])  # id as stable tiebreaker
 
     if not candidates:
@@ -326,66 +378,88 @@ def select_exercise(
     phase: str = 'base',
     session_used_ids: list | None = None,
     return_trace: bool = False,
+    primary_sources: set | None = None,
 ) -> Optional[dict]:
     """Pick the best exercise for an archetype slot.
 
     When return_trace=True returns (exercise, trace_dict) instead of just exercise.
+    primary_sources: set of philosophy package IDs to filter exercises by (e.g. {'starting_strength'})
     """
     available_equip = set(constraints.get('equipment', []))
     recent = recent_ex_ids or []
     session_used = set(session_used_ids or [])
     ex_filter = slot.get('exercise_filter', {})
+    primary_sources = primary_sources or set()
 
     n_pool = 0
+    n_package = 0
     n_equip = 0
     n_filter = 0
 
-    candidates = []
-    for ex_id in unlocked_ids:
-        if ex_id in excl_ids:
-            continue
-        ex = exercises.get(ex_id)
-        if ex is None:
-            continue
+    def _build_candidates(restrict_to_primary: bool) -> list:
+        """Collect candidate exercises, optionally restricted to primary_sources packages."""
+        nonlocal n_pool, n_package, n_equip, n_filter
+        cands = []
+        for ex_id in unlocked_ids:
+            if ex_id in excl_ids:
+                continue
+            ex = exercises.get(ex_id)
+            if ex is None:
+                continue
 
-        # Contraindication check
-        if set(ex.get('contraindicated_with', [])).intersection(
-                set(constraints.get('injury_flags', []))):
-            continue
-        n_pool += 1
+            # Contraindication check
+            if set(ex.get('contraindicated_with', [])).intersection(
+                    set(constraints.get('injury_flags', []))):
+                continue
+            n_pool += 1
 
-        # Equipment
-        if not _equipment_ok(ex, available_equip):
-            continue
-        n_equip += 1
+            # Philosophy package filter
+            if restrict_to_primary and primary_sources:
+                ex_package = ex.get('_package')
+                if ex_package and ex_package not in primary_sources:
+                    continue
+            n_package += 1
 
-        # Slot filter
-        if not _matches_slot_filter(ex, ex_filter, excl_patterns):
-            continue
-        n_filter += 1
+            # Equipment
+            if not _equipment_ok(ex, available_equip):
+                continue
+            n_equip += 1
 
-        # Taper: no max-effort exercises
-        if phase == 'taper' and ex.get('effort') == 'max':
-            continue
+            # Slot filter
+            if not _matches_slot_filter(ex, ex_filter, excl_patterns):
+                continue
+            n_filter += 1
 
-        slot_intensity = ex_filter.get('intensity') or slot.get('intensity', '')
-        slot_type = slot.get('slot_type', '')
+            # Taper: no max-effort exercises
+            if phase == 'taper' and ex.get('effort') == 'max':
+                continue
 
-        # AMRAP / for_time / circuit slots: skill and mobility exercises are poor fits
-        # (these slots need compound, repeatable movements under fatigue)
-        if slot_type in ('amrap', 'amrap_movement', 'for_time') and ex.get('category') in ('skill', 'mobility', 'rehab'):
-            continue
+            slot_intensity = ex_filter.get('intensity') or slot.get('intensity', '')
+            slot_type = slot.get('slot_type', '')
 
-        # Zone1-2 aerobic time_domain slots: only low-effort exercises
-        # (prevents tempo runs / threshold exercises appearing in easy aerobic slots)
-        # Does NOT apply to distance/carry slots — ruck_carry is medium effort but zone2 pace
-        if (slot_intensity in ('zone1', 'zone2')
-                and slot_type == 'time_domain'
-                and ex_filter.get('category') == 'aerobic'
-                and ex.get('effort') not in ('low', None, '')):
-            continue
+            # AMRAP / for_time / circuit slots: skill and mobility exercises are poor fits
+            if slot_type in ('amrap', 'amrap_movement', 'for_time') and ex.get('category') in ('skill', 'mobility', 'rehab'):
+                continue
 
-        candidates.append(ex)
+            # Zone1-2 aerobic time_domain slots: only low-effort exercises
+            if (slot_intensity in ('zone1', 'zone2')
+                    and slot_type == 'time_domain'
+                    and ex_filter.get('category') == 'aerobic'
+                    and ex.get('effort') not in ('low', None, '')):
+                continue
+
+            cands.append(ex)
+        return cands
+
+    # Pass 1: primary-sources exercises only
+    candidates = _build_candidates(restrict_to_primary=True)
+
+    # Pass 2: if primary sources have no exercises for this slot, fall back to global pool.
+    # This handles cases like uphill_athlete barbell slots where barbell exercises live in
+    # gym_jones/starting_strength — any well-known compound lift is appropriate.
+    if not candidates and primary_sources:
+        n_pool = n_package = n_equip = n_filter = 0  # reset counters for accurate trace
+        candidates = _build_candidates(restrict_to_primary=False)
 
     def _score_ex(ex: dict) -> tuple:
         recency_penalty = sum(2 for eid in recent if eid == ex['id'])
@@ -401,8 +475,8 @@ def select_exercise(
             'selected_id': None,
             'injury_blocked': _slot_injury_blocked(slot, excl_patterns),
             'filter_counts': {
-                'in_pool': n_pool, 'after_equip': n_equip,
-                'after_filter': n_filter, 'final': 0,
+                'in_pool': n_pool, 'after_package': n_package,
+                'after_equip': n_equip, 'after_filter': n_filter, 'final': 0,
             },
             'candidates': [],
         }
@@ -422,13 +496,14 @@ def select_exercise(
         'selected_id': selected['id'],
         'injury_blocked': False,
         'filter_counts': {
-            'in_pool': n_pool, 'after_equip': n_equip,
-            'after_filter': n_filter, 'final': len(candidates),
+            'in_pool': n_pool, 'after_package': n_package,
+            'after_equip': n_equip, 'after_filter': n_filter, 'final': len(candidates),
         },
         'candidates': [
             {
                 'id': ex['id'],
                 'name': ex.get('name', ex['id']),
+                'package': ex.get('_package', ''),
                 'score': round(_score_ex(ex)[0], 2),
                 'breakdown': {
                     'recency_penalty': -sum(2 for eid in recent if eid == ex['id']),
@@ -460,6 +535,9 @@ def populate_session(
     collect_trace: bool = False,
     forced_archetype: dict | None = None,
     exercises_by_package: dict | None = None,
+    preferred_archetype_id: str | None = None,
+    day_session_types: list | None = None,
+    relax_equipment: bool = False,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -468,6 +546,9 @@ def populate_session(
 
     When forced_archetype is provided, archetype selection is skipped and the
     given archetype dict is used directly (used by the single-session replace endpoint).
+
+    When preferred_archetype_id is provided, that archetype gets strong preference
+    (used for complementary mobility pairing).
     """
     modality = session['modality']
     is_deload = session.get('is_deload', False)
@@ -475,6 +556,7 @@ def populate_session(
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags_data)
     training_level = constraints.get('training_level', 'intermediate')
     unlocked = _get_unlocked(training_level, exercises) - excl_ids
+    primary_sources = set(goal.get('primary_sources', []))
 
     # Select archetype
     if forced_archetype is not None:
@@ -486,6 +568,9 @@ def populate_session(
             goal, archetypes, recent_arch_ids,
             excl_patterns=excl_patterns,
             return_trace=True,
+            preferred_archetype_id=preferred_archetype_id,
+            day_session_types=day_session_types,
+            relax_equipment=relax_equipment,
         )
         arch, arch_trace = arch_result if isinstance(arch_result, tuple) else (arch_result, {})
     else:
@@ -493,6 +578,9 @@ def populate_session(
             modality, constraints, phase, is_deload,
             goal, archetypes, recent_arch_ids,
             excl_patterns=excl_patterns,
+            preferred_archetype_id=preferred_archetype_id,
+            day_session_types=day_session_types,
+            relax_equipment=relax_equipment,
         )
 
     if arch is None:
@@ -554,6 +642,7 @@ def populate_session(
                 excl_patterns, excl_ids, used_ex_ids, phase,
                 session_used_ids=session_used_ids,
                 return_trace=True,
+                primary_sources=primary_sources,
             )
             ex, ex_trace = ex_result if isinstance(ex_result, tuple) else (ex_result, {})
         else:
@@ -561,6 +650,7 @@ def populate_session(
                 slot, constraints, exercises, unlocked,
                 excl_patterns, excl_ids, used_ex_ids, phase,
                 session_used_ids=session_used_ids,
+                primary_sources=primary_sources,
             )
 
         if ex is None:

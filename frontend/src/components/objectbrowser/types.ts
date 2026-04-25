@@ -2,7 +2,6 @@ export type ModelType =
   | 'exercises'
   | 'archetypes'
   | 'modalities'
-  | 'goals'
   | 'frameworks'
   | 'philosophies'
   | 'benchmarks'
