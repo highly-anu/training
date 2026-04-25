@@ -32,3 +32,19 @@ notes: >
   with linear progression due to recovery interference. Scope limited to strength
   domains — this philosophy has no conditioning prescription beyond "don't do much."
   Novice completion benchmarks: squat 1.5× BW, deadlift 2× BW, press 0.75× BW.
+
+primary_framework_id: linear_progression
+
+framework_groups:
+  - id: default
+    name: "Linear Progression Program"
+    type: alternatives
+    frameworks:
+      - linear_progression
+canonical_phase_sequence:
+  - phase: base
+    weeks: 8
+  - phase: build
+    weeks: 6
+  - phase: peak
+    weeks: 4

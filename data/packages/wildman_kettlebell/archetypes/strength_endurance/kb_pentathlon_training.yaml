@@ -1,0 +1,49 @@
+id: kb_pentathlon_training
+name: "KB Pentathlon Timed Sets (Wildman)"
+modality: strength_endurance
+category: kettlebell
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 50
+applicable_phases: [build, peak]
+
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: hip_hinge
+
+  - role: main
+    slot_type: time_domain
+    duration_minutes: 30
+    intensity: high
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: ballistic
+
+  - role: skill_cooldown
+    slot_type: skill_practice
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: rotation
+
+required_equipment:
+  - kettlebell
+sources:
+  - Wildman
+  - Pavel
+notes: >
+  Pentathlon-specific timed sets. Events: jerk, snatch, half-snatch, push press,
+  long cycle clean & jerk. Competition format: 6 minutes per event; one hand switch
+  permitted (snatch only). Training builds from shorter sets (2–3 min) at competition
+  RPM toward full 6-minute sets. RPM targets at 1 pood (16 kg): jerk ~20 RPM,
+  snatch ~14 RPM, long cycle ~8–10 RPM. Rest between sets equals or exceeds work
+  duration early in training; rest decreases as competition approaches.
+  TGU cooldown assesses shoulder status after overhead volume.

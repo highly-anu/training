@@ -24,6 +24,8 @@ export type TrainingPhase =
   | 'maintenance'
   | 'rehab'
   | 'post_op'
+  | 'transition'
+  | 'specific'
 
 export type TrainingLevel = 'novice' | 'intermediate' | 'advanced' | 'elite'
 
@@ -76,6 +78,19 @@ export type EquipmentProfileId =
   | 'bodyweight_only'
   | 'outdoor_ruck_only'
   | 'home_barbell'
+
+// ─── Weekly Schedule ───────────────────────────────────────────────────────────
+
+export type Day = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'
+
+export type SessionType = 'rest' | 'short' | 'long' | 'mobility'
+
+export interface DaySchedule {
+  session1: SessionType
+  session2: SessionType
+  session3: SessionType
+  session4: SessionType
+}
 
 // ─── Goal Profile ──────────────────────────────────────────────────────────────
 
@@ -147,6 +162,10 @@ export interface AthleteConstraints {
   preferred_days?: number[]
   forced_rest_days?: number[]
   notes?: string
+}
+
+export interface Equipment {
+  id: EquipmentId
 }
 
 export interface EquipmentProfile {
@@ -338,6 +357,7 @@ export interface CandidateScore {
   name: string
   score: number
   breakdown: Record<string, number>
+  package?: string  // Philosophy package ID (for exercises)
 }
 
 export interface ArchetypeTrace {
@@ -414,6 +434,8 @@ export interface WeekTrace {
 
 export interface GenerationTrace {
   weeks: WeekTrace[]
+  primary_sources?: string[]  // Philosophy package IDs (e.g. ['starting_strength'])
+  philosophy_mode?: 'synthetic_goal' | 'explicit_goal'
 }
 
 export interface TracedProgram extends GeneratedProgram {
@@ -462,6 +484,21 @@ export interface PhilosophyConnections {
   goals: string[]
 }
 
+export interface FrameworkPhaseEntry {
+  phase: string
+  weeks: number
+  framework_id?: string
+  focus?: string
+}
+
+export interface FrameworkGroup {
+  id: string
+  name: string
+  type: 'alternatives' | 'sequential'
+  frameworks: string[]  // Framework IDs
+  canonical_phase_sequence?: FrameworkPhaseEntry[]  // Required when type=sequential
+}
+
 export interface Philosophy {
   id: string
   name: string
@@ -475,6 +512,13 @@ export interface Philosophy {
   sources: string[]
   notes: string
   system_connections: PhilosophyConnections
+  primary_framework_id?: string
+  framework_groups?: FrameworkGroup[]  // NEW - replaces frameworks_are_phases
+  expectations?: GoalExpectations  // Full program expectations (for phased/sequential programs)
+
+  // DEPRECATED - kept for backward compatibility during transition
+  frameworks_are_phases?: boolean
+  canonical_phase_sequence?: FrameworkPhaseEntry[]
 }
 
 // ─── Framework ────────────────────────────────────────────────────────────────
@@ -498,6 +542,7 @@ export interface Framework {
   deload_protocol?: { frequency_weeks: number; volume_reduction_pct: number; intensity_change: string }
   sources?: string[]
   notes?: string
+  expectations?: GoalExpectations
 }
 
 // ─── Custom Injury ────────────────────────────────────────────────────────────

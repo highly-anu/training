@@ -248,6 +248,49 @@ progression_philosophy: range_based # required — one of:
                                     #   time_based, density_based, feel_based,
                                     #   rpm_based, range_based
 
+primary_framework_id: your_framework_id
+                                    # required — default framework ID for this philosophy
+
+framework_groups:                   # optional — defines how frameworks are organized
+  - id: default                     # For single framework or alternatives (pick one):
+    name: "Your Program Name"
+    type: alternatives              # alternatives = user picks one framework
+    frameworks:
+      - your_framework_id
+                                    # For multiple alternative styles:
+  # - id: training_styles
+  #   name: "Training Approaches"
+  #   type: alternatives
+  #   frameworks:
+  #     - your_concurrent_framework
+  #     - your_block_framework
+                                    # For sequential phased programs:
+  # - id: full_program
+  #   name: "Full Your Program"
+  #   type: sequential              # sequential = all phases in order
+  #   frameworks:
+  #     - your_transition_phase
+  #     - your_base_phase
+  #     - your_specific_phase
+  #     - your_taper_phase
+  #   canonical_phase_sequence:     # Required when type=sequential
+  #     - phase: transition         # Each phase needs matching framework file
+  #       weeks: 4
+  #       framework_id: your_transition_phase
+  #       focus: "Recovery and movement prep"
+  #     - phase: base
+  #       weeks: 16
+  #       framework_id: your_base_phase
+  #       focus: "Foundation building"
+  #     - phase: specific
+  #       weeks: 8
+  #       framework_id: your_specific_phase
+  #       focus: "Sport-specific adaptation"
+  #     - phase: taper
+  #       weeks: 3
+  #       framework_id: your_taper_phase
+  #       focus: "Peak and recover for event"
+
 sources:                            # required — citations
   - "Book title (Author, Year)"
 
@@ -310,6 +353,18 @@ deload_protocol:                    # required
   frequency_weeks: 8                # deload every N weeks
   volume_reduction_pct: 0.30        # e.g. 0.30 = reduce volume by 30%
   intensity_change: maintain        # maintain / reduce_slightly / reduce
+
+expectations:                       # required — time and volume requirements
+  min_weeks: 8                      # minimum program duration in weeks
+  ideal_weeks: 12                   # ideal/recommended program duration
+  min_days_per_week: 3              # minimum training days per week
+  ideal_days_per_week: 4            # ideal training days per week
+  min_session_minutes: 45           # minimum session duration in minutes
+  ideal_session_minutes: 60         # ideal session duration in minutes
+  ideal_long_session_minutes: 90    # optional: ideal duration for long sessions
+                                    # (e.g., weekend endurance work)
+  supports_split_days: false        # whether this framework supports split sessions
+                                    # (AM/PM training on same day)
 
 incompatible_with: []               # optional — list of conflicting framework objects
 # Example incompatibility entry:
@@ -633,6 +688,14 @@ deload_protocol:
   frequency_weeks: 8
   volume_reduction_pct: 0.30
   intensity_change: maintain
+expectations:
+  min_weeks: 6
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 5
+  min_session_minutes: 15
+  ideal_session_minutes: 30
+  supports_split_days: true
 sources:
   - "Hyperice — Official Theragun Protocol Guides"
 notes: >

@@ -10,6 +10,10 @@ goals_served:
 sessions_per_week:
   movement_skill: 5
   mobility: 3
+modality_priority:
+  committed: [movement_skill]
+  core: [mobility]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.70
@@ -80,3 +84,12 @@ notes: >
   without cueing. Daily practice targets (time-based, not rep-based) are preferred:
   e.g. "10 min of locomotion practice daily." Overlaps with GTG (Pavel): practice
   a lift or skill at 50-60% effort multiple times per day, never to failure.
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 24
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  supports_split_days: true

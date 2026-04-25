@@ -13,7 +13,12 @@ sessions_per_week:
   strength_endurance: 2
   max_strength: 1
   durability: 1
-  mobility: 2
+  # mobility omitted — split-session logic handles it via _add_split_sessions
+allocation_mode: exclusive
+modality_priority:
+  committed: [aerobic_base, strength_endurance]
+  core: [anaerobic_intervals, max_strength, durability]
+  supplementary: []
 intensity_distribution:
   zone1_2_pct: 0.80
   zone3_pct: 0.15
@@ -45,3 +50,13 @@ notes: |
   near peak (14–22 hours/week typical). Progression is by shifting the
   intensity distribution and increasing specificity (load, vertical), not
   by adding hours.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 10
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 75
+  ideal_session_minutes: 105
+  ideal_long_session_minutes: 360
+  supports_split_days: true

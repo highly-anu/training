@@ -1,110 +1,113 @@
 id: strength_mobility
-name: "Strength Mobility (Hip Flexor, Thoracic & Shoulder Focus)"
+name: Strength Mobility (Hip Flexor, Thoracic & Shoulder Focus)
 modality: mobility
 category: movement_skill
 duration_estimate_minutes: 20
 required_equipment:
-  - open_space
+- open_space
 applicable_phases:
-  - base
-  - build
-  - peak
-  - taper
-  - deload
-  - maintenance
+- base
+- build
+- peak
+- taper
+- deload
+- maintenance
+- specific
+- transition
 sources:
-  - "Starting Strength"
-  - "Gym Jones"
-notes: >
-  20-minute mobility session targeting the positions that degrade fastest under
-  heavy barbell training: anterior chain tightness from squats and deadlifts,
-  thoracic kyphosis from bench and rowing, shoulder impingement risk from pressing,
-  and ankle restriction that limits squat depth. Starting Strength: the positions
-  required by the lifts must be available before the bar is loaded — mobility
-  work is technique work. Gym Jones: longevity in strength training requires
-  deliberate tissue maintenance; the athlete who ignores it loses years off their
-  training life. Designed as a secondary session after primary strength work or
-  on active recovery days.
+- Starting Strength
+- Gym Jones
+notes: '20-minute mobility session targeting the positions that degrade fastest under
+  heavy barbell training: anterior chain tightness from squats and deadlifts, thoracic
+  kyphosis from bench and rowing, shoulder impingement risk from pressing, and ankle
+  restriction that limits squat depth. Starting Strength: the positions required by
+  the lifts must be available before the bar is loaded — mobility work is technique
+  work. Gym Jones: longevity in strength training requires deliberate tissue maintenance;
+  the athlete who ignores it loses years off their training life. Designed as a secondary
+  session after primary strength work or on active recovery days.
 
+  '
 slots:
-  - role: hip_flexor_prep
-    slot_type: skill_practice
-    sets: 1
-    duration_minutes: 6
-    duration_sec: 360
-    intensity: light
-    exercise_filter:
-      category: mobility
-    notes: >
-      Couch stretch (90 sec per side), hip flexor stretch in half-kneeling with
-      posterior pelvic tilt (60 sec per side), hip 90/90 switching (10 reps each
-      direction), deep lunge with reach (5 reps per side). Anterior chain tightness
-      from heavy squats and deadlifts pulls the pelvis into anterior tilt, compressing
-      the lumbar spine under load. Starting Strength: the hip flexor position
-      determines whether the lumbar spine can maintain extension in the squat
-      and deadlift. ~6 min.
+- role: hip_flexor_prep
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 6
+  duration_sec: 360
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: 'Couch stretch (90 sec per side), hip flexor stretch in half-kneeling with
+    posterior pelvic tilt (60 sec per side), hip 90/90 switching (10 reps each direction),
+    deep lunge with reach (5 reps per side). Anterior chain tightness from heavy squats
+    and deadlifts pulls the pelvis into anterior tilt, compressing the lumbar spine
+    under load. Starting Strength: the hip flexor position determines whether the
+    lumbar spine can maintain extension in the squat and deadlift. ~6 min.
 
-  - role: thoracic_shoulder
-    slot_type: skill_practice
-    sets: 1
-    duration_minutes: 7
-    duration_sec: 420
-    intensity: light
-    exercise_filter:
-      category: mobility
-    notes: >
-      Thoracic extension over foam roller or floor (10 reps, 2 sec hold at top),
-      thoracic rotation seated (10 reps per side), shoulder circles forward and
-      back (10 reps each direction), band pull-apart or banded external rotation
-      (15 reps — or bodyweight scapula retraction if no band), face-pull equivalent
-      (wall slide, 10 reps). Gym Jones: pressing volume without rotator cuff
-      maintenance is the fastest path to shoulder pathology. Overhead position
-      restoration is non-negotiable after any pressing block. ~7 min.
+    '
+- role: thoracic_shoulder
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 7
+  duration_sec: 420
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: 'Thoracic extension over foam roller or floor (10 reps, 2 sec hold at top),
+    thoracic rotation seated (10 reps per side), shoulder circles forward and back
+    (10 reps each direction), band pull-apart or banded external rotation (15 reps
+    — or bodyweight scapula retraction if no band), face-pull equivalent (wall slide,
+    10 reps). Gym Jones: pressing volume without rotator cuff maintenance is the fastest
+    path to shoulder pathology. Overhead position restoration is non-negotiable after
+    any pressing block. ~7 min.
 
-  - role: ankle_squat_prep
-    slot_type: skill_practice
-    sets: 1
-    duration_minutes: 4
-    duration_sec: 240
-    intensity: light
-    exercise_filter:
-      category: mobility
-    notes: >
-      Ankle circles (10 per side), wall ankle dorsiflexion stretch (60 sec per side),
-      ATG split squat bodyweight (5 reps per side, focus on ROM not reps), deep
-      squat hold with controlled breathing (60 sec total). Ankle dorsiflexion
-      restriction forces heel rise or forward lean in the squat — the root cause
-      of most squat depth and knee tracking problems. Starting Strength: fix the
-      ankle before adding plates. ~4 min.
+    '
+- role: ankle_squat_prep
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 4
+  duration_sec: 240
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: 'Ankle circles (10 per side), wall ankle dorsiflexion stretch (60 sec per
+    side), ATG split squat bodyweight (5 reps per side, focus on ROM not reps), deep
+    squat hold with controlled breathing (60 sec total). Ankle dorsiflexion restriction
+    forces heel rise or forward lean in the squat — the root cause of most squat depth
+    and knee tracking problems. Starting Strength: fix the ankle before adding plates.
+    ~4 min.
 
-  - role: upper_prep
-    slot_type: skill_practice
-    sets: 1
-    duration_minutes: 3
-    duration_sec: 180
-    intensity: light
-    exercise_filter:
-      category: mobility
-    notes: >
-      Wrist circles (10 per direction per hand), wrist flexion and extension loading
-      with bodyweight on fists (10 reps each), scapula mobilization: push-up plus
-      at top of push-up position (10 reps), shoulder internal/external rotation
-      (10 reps per side). Pressing and pulling readiness — wrist and scapula
-      position are the first things to degrade under accumulated barbell volume.
-      ~3 min.
+    '
+- role: upper_prep
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  duration_sec: 180
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: 'Wrist circles (10 per direction per hand), wrist flexion and extension loading
+    with bodyweight on fists (10 reps each), scapula mobilization: push-up plus at
+    top of push-up position (10 reps), shoulder internal/external rotation (10 reps
+    per side). Pressing and pulling readiness — wrist and scapula position are the
+    first things to degrade under accumulated barbell volume. ~3 min.
 
+    '
 scaling:
   deload:
     volume_multiplier: 1.0
     intensity_pct: 1.0
-    notes: "On deload days extend holds by 30 sec and add passive loaded stretching (e.g., couch stretch with light load). No bar work."
+    notes: On deload days extend holds by 30 sec and add passive loaded stretching
+      (e.g., couch stretch with light load). No bar work.
   time_limited:
     drop_slots:
-      - upper_prep
-    notes: "Drop upper prep. Prioritize hip flexor and thoracic/shoulder as highest-value for heavy barbell athletes."
+    - upper_prep
+    notes: Drop upper prep. Prioritize hip flexor and thoracic/shoulder as highest-value
+      for heavy barbell athletes.
   equipment_limited:
     substitutions:
-      - missing_equipment: foam_roller
-        substitute_approach: "Thoracic extension can be performed on the floor with hands behind head. Effectiveness is reduced but the position is accessible."
-      - missing_equipment: resistance_band
-        substitute_approach: "Replace band pull-aparts with wall slides and scapula retraction holds. All exercises executable without bands."
+    - missing_equipment: foam_roller
+      substitute_approach: Thoracic extension can be performed on the floor with hands
+        behind head. Effectiveness is reduced but the position is accessible.
+    - missing_equipment: resistance_band
+      substitute_approach: Replace band pull-aparts with wall slides and scapula retraction
+        holds. All exercises executable without bands.

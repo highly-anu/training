@@ -12,6 +12,10 @@ sessions_per_week:
   strength_endurance: 2
   anaerobic_intervals: 1
   mobility: 1
+modality_priority:
+  committed: [combat_sport]
+  core: [strength_endurance, anaerobic_intervals]
+  supplementary: [mobility]
 
 intensity_distribution:
   zone1_2_pct: 0.25
@@ -59,3 +63,12 @@ notes: >
   hard_easy_alternation. Grappling mobility sessions are mandatory to protect
   vulnerable joints. RPE autoregulation governs S&C load based on accumulated
   mat fatigue.
+
+expectations:
+  min_weeks: 10
+  ideal_weeks: 14
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: true

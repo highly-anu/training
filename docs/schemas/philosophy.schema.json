@@ -92,6 +92,127 @@
     "notes": {
       "type": "string",
       "description": "Free-text notes, known gaps, or caveats about this entry."
+    },
+    "frameworks_are_phases": {
+      "type": "boolean",
+      "description": "DEPRECATED: Use framework_groups instead. When true, frameworks from this philosophy are sequential phases (user gets 'Full Program' option that includes all phases in order). When false/omitted, frameworks are alternatives for different goals/styles (user picks one).",
+      "default": false,
+      "deprecated": true
+    },
+    "primary_framework_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Default framework ID for this philosophy. Used when no specific framework is selected or as the starting phase for phased frameworks."
+    },
+    "framework_groups": {
+      "type": "array",
+      "description": "Defines how frameworks are grouped and presented to users. Each group is either alternatives (pick one) or sequential (all phases in order). Replaces frameworks_are_phases pattern.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "type", "frameworks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Unique group identifier within this philosophy"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable group name shown to user (e.g., 'Year-Round Training', '4-Month Periodization')"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["alternatives", "sequential"],
+            "description": "alternatives = user picks one framework; sequential = all frameworks run as phases"
+          },
+          "frameworks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "minItems": 1,
+            "description": "Framework IDs belonging to this group. Must reference valid framework files."
+          },
+          "canonical_phase_sequence": {
+            "type": "array",
+            "description": "Required when type=sequential. Defines phase progression with framework_id per phase.",
+            "items": {
+              "type": "object",
+              "required": ["phase", "weeks", "framework_id"],
+              "additionalProperties": false,
+              "properties": {
+                "phase": {
+                  "type": "string",
+                  "description": "Phase name (e.g., 'base', 'build', 'peak', 'taper', 'transition', 'specific')"
+                },
+                "weeks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Duration of this phase in weeks"
+                },
+                "framework_id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$",
+                  "description": "Framework to use for this phase. Must be in group's frameworks array."
+                },
+                "focus": {
+                  "type": "string",
+                  "description": "Optional description of this phase's training focus"
+                },
+                "priority_override": {
+                  "type": "object",
+                  "description": "Optional modality priority adjustments specific to this phase",
+                  "additionalProperties": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "canonical_phase_sequence": {
+      "type": "array",
+      "description": "DEPRECATED: Move into framework_groups[].canonical_phase_sequence for sequential groups. Standard periodization phases for this philosophy. Required when frameworks_are_phases is true.",
+      "deprecated": true,
+      "items": {
+        "type": "object",
+        "required": ["phase", "weeks"],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "description": "Phase name (e.g., 'base', 'build', 'peak', 'taper', 'transition', 'specific')"
+          },
+          "weeks": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Duration of this phase in weeks"
+          },
+          "framework_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Phase-specific framework override. Required when frameworks_are_phases is true."
+          },
+          "focus": {
+            "type": "string",
+            "description": "Optional description of this phase's training focus"
+          },
+          "priority_override": {
+            "type": "object",
+            "description": "Optional modality priority adjustments specific to this phase",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      }
     }
   }
 }

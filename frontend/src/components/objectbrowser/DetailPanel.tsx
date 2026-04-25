@@ -4,7 +4,6 @@ import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ExerciseDetail } from './detail/ExerciseDetail'
 import { ArchetypeDetail } from './detail/ArchetypeDetail'
 import { ModalityDetail } from './detail/ModalityDetail'
-import { GoalDetail } from './detail/GoalDetail'
 import { FrameworkDetail } from './detail/FrameworkDetail'
 import { PhilosophyDetail } from './detail/PhilosophyDetail'
 import { BenchmarkDetail } from './detail/BenchmarkDetail'
@@ -12,7 +11,7 @@ import { InjuryFlagDetail } from './detail/InjuryFlagDetail'
 import { EquipmentProfileDetail } from './detail/EquipmentProfileDetail'
 import type { ModelType, NavigateToFn, OpenInOntologyFn } from './types'
 import type {
-  Exercise, Archetype, Modality, GoalProfile, Framework,
+  Exercise, Archetype, Modality, Framework,
   Philosophy, BenchmarkStandard, InjuryFlag, EquipmentProfile,
 } from '@/api/types'
 
@@ -20,7 +19,6 @@ interface AllData {
   exercises: Exercise[]
   archetypes: Archetype[]
   modalities: Modality[]
-  goals: GoalProfile[]
   frameworks: Framework[]
   philosophies: Philosophy[]
   benchmarks: BenchmarkStandard[]
@@ -74,16 +72,10 @@ export function DetailPanel({ type, selectedId, data, navigateTo, onOpenInOntolo
           <ModalityDetail
             modality={item}
             archetypes={data.archetypes}
-            goals={data.goals}
             navigateTo={navigateTo}
             onOpenInOntology={onOpenInOntology}
           />
         )
-      }
-      case 'goals': {
-        const item = data.goals.find(g => g.id === selectedId)
-        if (!item) return null
-        return <GoalDetail goal={item} navigateTo={navigateTo} />
       }
       case 'frameworks': {
         const item = data.frameworks.find(f => f.id === selectedId)

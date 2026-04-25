@@ -1,53 +1,56 @@
 id: gym_jones_tgu_recovery
-name: "Gym Jones TGU Recovery (100 Total Reps)"
+name: Gym Jones TGU Recovery (100 Total Reps)
 modality: durability
 category: kettlebell
 duration_estimate_minutes: 60
 required_equipment:
-  - kettlebell
+- kettlebell
 applicable_phases:
-  - base
-  - build
-  - maintenance
+- base
+- build
+- maintenance
+- transition
 training_levels:
-  - intermediate
-  - advanced
-  - elite
+- intermediate
+- advanced
+- elite
 sources:
-  - "Gym Jones"
-notes: >
-  Gym Jones recovery session: 100 total Turkish Get-Up reps at a sub-maximal
-  load (typically 16 kg for advanced athletes; 12 kg for intermediate).
-  Performed at a slow, deliberate pace — this is restorative, not conditioning.
-  Each rep demands full shoulder stability, hip flexor mobility, and joint
-  integrity through a complex multi-position movement. The high rep count at
-  low load flushes the tissues without adding stress load.
-  Twight on TGU recovery: "Movement quality under fatigue. The fatigue reveals
-  the compensation patterns." Take all the rest you need — the goal is 100
-  quality reps, not speed.
+- Gym Jones
+notes: 'Gym Jones recovery session: 100 total Turkish Get-Up reps at a sub-maximal
+  load (typically 16 kg for advanced athletes; 12 kg for intermediate). Performed
+  at a slow, deliberate pace — this is restorative, not conditioning. Each rep demands
+  full shoulder stability, hip flexor mobility, and joint integrity through a complex
+  multi-position movement. The high rep count at low load flushes the tissues without
+  adding stress load. Twight on TGU recovery: "Movement quality under fatigue. The
+  fatigue reveals the compensation patterns." Take all the rest you need — the goal
+  is 100 quality reps, not speed.
 
+  '
 slots:
-  - role: tgu_volume
-    slot_type: sets_reps
-    sets: 10
-    reps: 5
-    intensity: low
-    exercise_filter:
-      movement_pattern: tgu
-    notes: >
-      10×5 TGU alternating sides (or 10×10 if counting per arm). Use a light bell —
-      this is recovery, not strength. Rest 60–90 sec between sets. Focus on positional
-      quality at each pause point: floor press, half-kneeling, standing. Reach 100 total reps.
+- role: tgu_volume
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  intensity: low
+  exercise_filter:
+    movement_pattern: tgu
+  notes: '10×5 TGU alternating sides (or 10×10 if counting per arm). Use a light bell
+    — this is recovery, not strength. Rest 60–90 sec between sets. Focus on positional
+    quality at each pause point: floor press, half-kneeling, standing. Reach 100 total
+    reps.
 
+    '
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Reduce to 60 total reps (6×5 sets). Drop load by one KB size."
+    notes: Reduce to 60 total reps (6×5 sets). Drop load by one KB size.
   time_limited:
     drop_slots: []
-    notes: "Reduce total reps to 50 (5×5) if session time < 40 min. Maintain movement quality over volume."
+    notes: Reduce total reps to 50 (5×5) if session time < 40 min. Maintain movement
+      quality over volume.
   equipment_limited:
     substitutions:
-      - missing_equipment: kettlebell
-        substitute_approach: "A dumbbell can substitute for TGU. Grip is different but the movement pattern is preserved."
+    - missing_equipment: kettlebell
+      substitute_approach: A dumbbell can substitute for TGU. Grip is different but
+        the movement pattern is preserved.

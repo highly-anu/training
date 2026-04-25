@@ -12,7 +12,12 @@ sessions_per_week:
   max_strength: 2
   strength_endurance: 1
   durability: 1
-  mobility: 2
+  # mobility omitted — split-session logic handles it via _add_split_sessions
+allocation_mode: exclusive
+modality_priority:
+  committed: [aerobic_base]
+  core: [max_strength, durability, strength_endurance]
+  supplementary: []
 intensity_distribution:
   zone1_2_pct: 0.90
   zone3_pct: 0.10
@@ -42,3 +47,13 @@ notes: |
   AeT is solid: weighted step-ups become the signature session. Strength
   shifts from general to mountain-specific. Total weekly volume 12–20
   hours typical for serious mountain athletes; elites may exceed.
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 16
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  ideal_long_session_minutes: 240
+  supports_split_days: true

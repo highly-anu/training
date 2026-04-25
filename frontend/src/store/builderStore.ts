@@ -4,12 +4,20 @@ import type { AthleteConstraints, ModalityId } from '@/api/types'
 
 type Step = 1 | 2 | 3 | 4
 type Direction = 'forward' | 'backward'
+export type SourceMode = 'philosophy' | 'blend' | 'custom'
 
 interface BuilderStore {
   step: Step
   direction: Direction
+  sourceMode: SourceMode | null
   selectedGoalIds: string[]
   goalWeights: Record<string, number>
+  // Philosophy IDs selected in ProgramSource (modes 1 + 2)
+  selectedPhilosophyIds: string[]
+  // Blend weights for mode 2: philosophyId → weight (0–100 raw, normalized at generate time)
+  philosophyWeights: Record<string, number>
+  // The "original" priorities set by ProgramSource — used as reset baseline in ProgramTuner
+  sourcePriorities: Partial<Record<ModalityId, number>> | null
   constraints: Partial<AthleteConstraints>
   eventDate: string | null
   startDate: string | null
@@ -20,6 +28,12 @@ interface BuilderStore {
   numWeeks: number | null
 
   setStep: (step: Step, dir?: Direction) => void
+  setSourceMode: (mode: SourceMode | null) => void
+  setGoalIds: (ids: string[]) => void
+  setGoalWeightsBulk: (weights: Record<string, number>) => void
+  setPhilosophyIds: (ids: string[]) => void
+  setPhilosophyWeights: (weights: Record<string, number>) => void
+  setSourcePriorities: (p: Partial<Record<ModalityId, number>> | null) => void
   toggleGoal: (id: string) => void
   setGoalWeight: (id: string, weight: number) => void
   updateConstraints: (patch: Partial<AthleteConstraints>) => void
@@ -65,8 +79,12 @@ export const useBuilderStore = create<BuilderStore>()(
     (set) => ({
       step: 1,
       direction: 'forward',
+      sourceMode: null,
       selectedGoalIds: [],
       goalWeights: {},
+      selectedPhilosophyIds: [],
+      philosophyWeights: {},
+      sourcePriorities: null,
       constraints: defaultConstraints,
       eventDate: null,
       startDate: null,
@@ -75,12 +93,18 @@ export const useBuilderStore = create<BuilderStore>()(
       numWeeks: null,
 
       setStep: (step, dir = 'forward') => set({ step, direction: dir }),
+      // Clearing source mode also resets philosophy context
+      setSourceMode: (mode) => set({ sourceMode: mode, selectedPhilosophyIds: [], philosophyWeights: {}, sourcePriorities: null }),
+      setGoalIds: (ids) => set({ selectedGoalIds: ids, selectedFrameworkId: null, priorityOverrides: null, numWeeks: null }),
+      setGoalWeightsBulk: (weights) => set({ goalWeights: weights }),
+      setPhilosophyIds: (ids) => set({ selectedPhilosophyIds: ids }),
+      setPhilosophyWeights: (weights) => set({ philosophyWeights: weights }),
+      setSourcePriorities: (p) => set({ sourcePriorities: p }),
       toggleGoal: (id) =>
         set((s) => ({
           selectedGoalIds: s.selectedGoalIds.includes(id)
             ? s.selectedGoalIds.filter((gid) => gid !== id)
             : [...s.selectedGoalIds, id],
-          // Reset tune state when goals change
           selectedFrameworkId: null,
           priorityOverrides: null,
           numWeeks: null,
@@ -98,8 +122,12 @@ export const useBuilderStore = create<BuilderStore>()(
         set({
           step: 1,
           direction: 'forward',
+          sourceMode: null,
           selectedGoalIds: [],
           goalWeights: {},
+          selectedPhilosophyIds: [],
+          philosophyWeights: {},
+          sourcePriorities: null,
           constraints: defaultConstraints,
           eventDate: null,
           startDate: null,
@@ -124,8 +152,12 @@ export const useBuilderStore = create<BuilderStore>()(
       name: 'training-builder',
       partialize: (s) => ({
         step: s.step,
+        sourceMode: s.sourceMode,
         selectedGoalIds: s.selectedGoalIds,
         goalWeights: s.goalWeights,
+        selectedPhilosophyIds: s.selectedPhilosophyIds,
+        philosophyWeights: s.philosophyWeights,
+        sourcePriorities: s.sourcePriorities,
         eventDate: s.eventDate,
         selectedFrameworkId: s.selectedFrameworkId,
         priorityOverrides: s.priorityOverrides,

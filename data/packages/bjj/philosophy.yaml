@@ -36,3 +36,12 @@ notes: >
   be followed by drilling or technique days to manage cumulative joint stress.
   Progression is time_based: mat hours and drilling volume are the primary
   advancement mechanism, not load or complexity increments.
+
+primary_framework_id: bjj_performance
+
+framework_groups:
+  - id: default
+    name: "BJJ Performance Program"
+    type: alternatives
+    frameworks:
+      - bjj_performance

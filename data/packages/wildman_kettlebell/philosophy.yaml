@@ -33,3 +33,13 @@ notes: >
   Anti-glycolytic principle: sets stay below the glycolytic threshold — breathing
   mechanics and movement quality take priority over grinding. Operator readiness
   means daily session selection responds to how the athlete actually feels.
+
+primary_framework_id: kb_general_practice
+
+framework_groups:
+  - id: alternatives
+    name: "Training Focus"
+    type: alternatives
+    frameworks:
+      - kb_general_practice
+      - kb_pentathlon

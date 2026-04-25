@@ -1,38 +1,44 @@
 id: scrambling_durability
-name: "Technical Terrain Durability Day"
+name: Technical Terrain Durability Day
 modality: durability
 category: gpp_durability
 training_levels:
-  - advanced
-  - elite
+- advanced
+- elite
 duration_estimate_minutes: 240
 applicable_phases:
-  - build
-  - peak
+- build
+- peak
+- specific
 slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 15
-    intensity: low
-    exercise_filter:
-      category: mobility
-  - role: main_durability
-    slot_type: time_domain
-    duration_minutes: 215
-    intensity: zone2
-    exercise_filter:
-      category: aerobic
-  - role: cooldown
-    slot_type: time_domain
-    duration_minutes: 10
-    intensity: low
-    exercise_filter:
-      category: mobility
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 15
+  intensity: low
+  exercise_filter:
+    category: mobility
+- role: main_durability
+  slot_type: time_domain
+  duration_minutes: 215
+  intensity: zone2
+  exercise_filter:
+    category: aerobic
+- role: cooldown
+  slot_type: time_domain
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
 sources:
-  - "Training for the Uphill Athlete, Ch. 7"
-notes: |
-  Technical movement under aerobic load: 3rd/4th class scrambling, talus,
+- Training for the Uphill Athlete, Ch. 7
+notes: 'Technical movement under aerobic load: 3rd/4th class scrambling, talus,
+
   ridge traverses, glacier travel. Trains foot placement, route-finding,
+
   and movement economy on objective-specific terrain — qualities that
-  pure trail running doesn't develop. Effort stays aerobic; the
+
+  pure trail running doesn''t develop. Effort stays aerobic; the
+
   difficulty is movement, not lungs.
+
+  '

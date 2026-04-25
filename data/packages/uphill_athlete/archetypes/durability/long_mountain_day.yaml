@@ -1,42 +1,50 @@
 id: long_mountain_day
-name: "Long Mountain Day (Durability)"
+name: Long Mountain Day (Durability)
 modality: durability
 category: gpp_durability
 training_levels:
-  - intermediate
-  - advanced
-  - elite
+- intermediate
+- advanced
+- elite
 duration_estimate_minutes: 360
 applicable_phases:
-  - base
-  - build
-  - peak
+- base
+- build
+- peak
+- specific
 slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 15
-    intensity: low
-    exercise_filter:
-      category: mobility
-  - role: main_durability
-    slot_type: time_domain
-    duration_minutes: 330
-    intensity: zone2
-    exercise_filter:
-      category: aerobic
-  - role: cooldown
-    slot_type: time_domain
-    duration_minutes: 15
-    intensity: low
-    exercise_filter:
-      category: mobility
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 15
+  intensity: low
+  exercise_filter:
+    category: mobility
+- role: main_durability
+  slot_type: time_domain
+  duration_minutes: 330
+  intensity: zone2
+  exercise_filter:
+    category: aerobic
+- role: cooldown
+  slot_type: time_domain
+  duration_minutes: 15
+  intensity: low
+  exercise_filter:
+    category: mobility
 sources:
-  - "Training for the Uphill Athlete, Ch. 7 — The Long Day"
-notes: |
-  Weekend back-to-back long days are the most specific possible
+- Training for the Uphill Athlete, Ch. 7 — The Long Day
+notes: 'Weekend back-to-back long days are the most specific possible
+
   preparation. Duration progresses through Base toward objective duration
+
   (4–10+ hours). Carry pack, eat and drink as you would on the objective,
+
   practice pacing and fueling. HR strict Z2. Tissue durability — joints,
+
   feet, posterior chain — is the adaptation target equal to the aerobic
+
   one. The day after = recovery jog, never an off-day (unless ME the
+
   next day).
+
+  '

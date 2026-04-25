@@ -142,7 +142,11 @@ def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool)
 
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
                   max_minutes: int | None = None) -> dict:
-    base_sec = slot.get('duration_sec', 5400)  # default 90 min
+    # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
+    if 'duration_minutes' in slot:
+        base_sec = slot['duration_minutes'] * 60
+    else:
+        base_sec = slot.get('duration_sec', 5400)  # default 90 min
 
     phase_targets = {
         'base':        base_sec,

@@ -1,4 +1,4 @@
-import { Dumbbell, Layers, Gauge, Target, Network, BookOpen, BarChart2, Shield, Package } from 'lucide-react'
+import { Dumbbell, Layers, Gauge, Network, BookOpen, BarChart2, Shield, Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ModelType } from './types'
 
@@ -12,7 +12,6 @@ const MODEL_TYPES: { type: ModelType; label: string; icon: React.ElementType }[]
   { type: 'exercises', label: 'Exercises', icon: Dumbbell },
   { type: 'archetypes', label: 'Archetypes', icon: Layers },
   { type: 'modalities', label: 'Modalities', icon: Gauge },
-  { type: 'goals', label: 'Goals', icon: Target },
   { type: 'frameworks', label: 'Frameworks', icon: Network },
   { type: 'philosophies', label: 'Philosophies', icon: BookOpen },
   { type: 'benchmarks', label: 'Benchmarks', icon: BarChart2 },

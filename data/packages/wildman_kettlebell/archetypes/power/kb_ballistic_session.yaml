@@ -1,0 +1,56 @@
+id: kb_ballistic_session
+name: "KB Ballistic Power Session (Wildman)"
+modality: power
+category: kettlebell
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 45
+applicable_phases: [base, build, maintenance]
+
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: hip_hinge
+
+  - role: skill_work
+    slot_type: skill_practice
+    duration_minutes: 10
+    intensity: moderate
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: ballistic
+
+  - role: main
+    slot_type: time_domain
+    duration_minutes: 20
+    intensity: high
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: ballistic
+
+  - role: cooldown
+    slot_type: skill_practice
+    duration_minutes: 5
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: rotation
+
+required_equipment:
+  - kettlebell
+sources:
+  - Wildman
+notes: >
+  Ballistic power session centred on hip-hinge driven movements. Warmup uses halo
+  and deadlift to prime the pattern. Skill block addresses technique at sub-maximal
+  RPM before the main timed work. Main sets are typically 2–10 min at a target RPM
+  well below lactate threshold — breathing stays nasal throughout. TGU cooldown
+  restores shoulder position and doubles as a fatigue check. Progression: increase
+  timed-set duration or RPM, not load, until RPM targets are comfortably met.

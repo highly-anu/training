@@ -10,6 +10,10 @@ goals_served:
 sessions_per_week:
   mobility: 5
   rehab: 2
+modality_priority:
+  committed: [mobility]
+  core: [rehab]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.80
@@ -63,3 +67,12 @@ notes: >
   any loaded movement. Tissue prep is prescribed before and after sessions.
   Compatible with any strength or conditioning program; designed to run
   alongside rather than replace it.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 4
+  ideal_days_per_week: 6
+  min_session_minutes: 15
+  ideal_session_minutes: 30
+  supports_split_days: true

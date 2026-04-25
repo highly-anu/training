@@ -1,45 +1,54 @@
 id: me_max_strength_gym
-name: "Max Strength Gym Session"
+name: Max Strength Gym Session
 modality: max_strength
 category: strength
 training_levels:
-  - intermediate
-  - advanced
-  - elite
+- intermediate
+- advanced
+- elite
 duration_estimate_minutes: 60
 applicable_phases:
-  - base
-  - build
-  - peak
+- base
+- build
+- peak
+- specific
+- transition
 slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 10
-    intensity: low
-    exercise_filter:
-      category: mobility
-  - role: main_strength
-    slot_type: sets_reps
-    sets: 5
-    reps: 5
-    intensity: heavy
-    rest_sec: 180
-    exercise_filter:
-      category: barbell
-  - role: accessory
-    slot_type: sets_reps
-    sets: 3
-    reps: 10
-    intensity: submaximal
-    exercise_filter:
-      category: bodyweight
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+- role: main_strength
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  rest_sec: 180
+  exercise_filter:
+    category: barbell
+- role: accessory
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  intensity: submaximal
+  exercise_filter:
+    category: bodyweight
 sources:
-  - "Training for the New Alpinism, Ch. 8 — Strength Training for Climbers"
-notes: |
-  Max strength, Uphill-style: low reps, heavy load, long rest. 4–6 sets
+- Training for the New Alpinism, Ch. 8 — Strength Training for Climbers
+notes: 'Max strength, Uphill-style: low reps, heavy load, long rest. 4–6 sets
+
   × 4–6 reps at ~85–90% 1RM on a primary compound (back squat, deadlift,
+
   front squat, weighted pull-up). Rest 3 min between heavy sets. Goal is
+
   neural — increase force production without adding muscle mass that
+
   would cost on the mountain. Twice weekly in Base, once in Specific
+
   (maintenance), zero in Taper. Always pair with the next-day recovery
+
   jog rule.
+
+  '

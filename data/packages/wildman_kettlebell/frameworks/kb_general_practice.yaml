@@ -13,6 +13,10 @@ sessions_per_week:
   movement_skill: 2
   strength_endurance: 1
   max_strength: 1
+modality_priority:
+  committed: [power, movement_skill]
+  core: [strength_endurance]
+  supplementary: [max_strength]
 
 intensity_distribution:
   zone1_2_pct: 0.6
@@ -44,3 +48,12 @@ notes: >
   skill and durability work. RPM targets and timed-set length increase as technique
   matures; load increases only when RPM targets are consistently met with clean
   mechanics and nasal breathing.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: false

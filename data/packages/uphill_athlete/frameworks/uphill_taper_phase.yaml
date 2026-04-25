@@ -9,7 +9,12 @@ sessions_per_week:
   aerobic_base: 3
   anaerobic_intervals: 1
   strength_endurance: 1
-  mobility: 3
+  # mobility omitted — split-session logic handles it; taper uses fewer splits anyway
+allocation_mode: exclusive
+modality_priority:
+  committed: [aerobic_base]
+  core: [strength_endurance, anaerobic_intervals]
+  supplementary: []
 intensity_distribution:
   zone1_2_pct: 0.80
   zone3_pct: 0.15
@@ -36,3 +41,13 @@ notes: |
   neuromuscular sharpness. No new stimuli. No long days within 7–10 days
   of the objective. Sleep, nutrition, and mobility are prioritized over
   training. The taper IS the deload — no separate deload week.
+
+expectations:
+  min_weeks: 2
+  ideal_weeks: 3
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  ideal_long_session_minutes: 120
+  supports_split_days: false

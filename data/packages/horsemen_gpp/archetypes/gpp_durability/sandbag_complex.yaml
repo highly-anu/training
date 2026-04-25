@@ -1,74 +1,73 @@
 id: sandbag_complex
-name: "Sandbag Complex (Horsemen GPP)"
+name: Sandbag Complex (Horsemen GPP)
 modality: strength_endurance
 category: gpp_durability
 duration_estimate_minutes: 50
 required_equipment:
-  - sandbag
+- sandbag
 applicable_phases:
-  - base
-  - build
-  - peak
-  - maintenance
+- base
+- build
+- peak
+- maintenance
+- specific
 sources:
-  - "Horsemen"
-  - "Gym Jones"
-notes: >
-  Horsemen-style 5–8 movement sandbag complex performed for 3–5 rounds. No rest
-  between movements within a round; rest 60–90 seconds between rounds. Total
-  session time is honest GPP work — the athlete accumulates fatigue across diverse
-  movement patterns with the same implement. Sandbag loads range 60–95 lb;
-  select load based on the athlete's capacity for quality reps across all movements.
-  If any movement breaks down before the round is complete, load is too heavy.
-  Horsemen philosophy: durability and repeatable output under fatigue, not peak strength.
-  Movements include: clean & press, front squat, bent row, deadlift, lunge, shoulder
-  carry, get-up, half moon (arc overhead from side to side), double eagle (shoulder +
-  squat + drag).
+- Horsemen
+- Gym Jones
+notes: 'Horsemen-style 5–8 movement sandbag complex performed for 3–5 rounds. No rest
+  between movements within a round; rest 60–90 seconds between rounds. Total session
+  time is honest GPP work — the athlete accumulates fatigue across diverse movement
+  patterns with the same implement. Sandbag loads range 60–95 lb; select load based
+  on the athlete''s capacity for quality reps across all movements. If any movement
+  breaks down before the round is complete, load is too heavy. Horsemen philosophy:
+  durability and repeatable output under fatigue, not peak strength. Movements include:
+  clean & press, front squat, bent row, deadlift, lunge, shoulder carry, get-up, half
+  moon (arc overhead from side to side), double eagle (shoulder + squat + drag).
 
+  '
 slots:
-  - role: warm_up_movement
-    slot_type: time_domain
-    duration_sec: 480
-    intensity: light
-    notes: "8-min general movement warm-up: joint prep + 1 round of the complex at 60% load to learn/confirm movement patterns."
-
-  - role: sandbag_complex_work
-    slot_type: sets_reps
-    sets: 4
-    reps: 6
-    intensity: moderate
-    rest_sec: 75
-    exercise_filter:
-      category: sandbag
-    notes: >
-      4 rounds of 5–6 movement complex. Default complex (6 movements × 6 reps each):
-        1. Sandbag deadlift
-        2. Sandbag clean to shoulder (alternating sides)
-        3. Sandbag front squat
-        4. Sandbag bent row
-        5. Sandbag lunge (6 per side)
-        6. Sandbag shoulder carry (20m each side)
-      No rest within the complex. 75-sec rest between rounds.
-      Optional 7th–8th movement: half moon, sandbag get-up, or slasher variation.
-      Selector populates from sandbag exercise pool based on available movements
-      and athlete prerequisites.
-
-  - role: conditioning_finisher
-    slot_type: time_domain
-    duration_sec: 600
-    intensity: zone3
-    notes: "10-min conditioning piece following the complex: light jog, row, or 3 rounds of AMRAP burpees. Optional; keep intensity low — this is a cool-down stressor not a max effort."
-
+- role: warm_up_movement
+  slot_type: time_domain
+  duration_sec: 480
+  intensity: light
+  notes: '8-min general movement warm-up: joint prep + 1 round of the complex at 60%
+    load to learn/confirm movement patterns.'
+- role: sandbag_complex_work
+  slot_type: sets_reps
+  sets: 4
+  reps: 6
+  intensity: moderate
+  rest_sec: 75
+  exercise_filter:
+    category: sandbag
+  notes: "4 rounds of 5–6 movement complex. Default complex (6 movements × 6 reps\
+    \ each):\n  1. Sandbag deadlift\n  2. Sandbag clean to shoulder (alternating sides)\n\
+    \  3. Sandbag front squat\n  4. Sandbag bent row\n  5. Sandbag lunge (6 per side)\n\
+    \  6. Sandbag shoulder carry (20m each side)\nNo rest within the complex. 75-sec\
+    \ rest between rounds. Optional 7th–8th movement: half moon, sandbag get-up, or\
+    \ slasher variation. Selector populates from sandbag exercise pool based on available\
+    \ movements and athlete prerequisites.\n"
+- role: conditioning_finisher
+  slot_type: time_domain
+  duration_sec: 600
+  intensity: zone3
+  notes: '10-min conditioning piece following the complex: light jog, row, or 3 rounds
+    of AMRAP burpees. Optional; keep intensity low — this is a cool-down stressor
+    not a max effort.'
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Reduce to 2 rounds. Drop load 20%. Maintain all movement patterns. Extend rest to 90–120 sec between rounds."
+    notes: Reduce to 2 rounds. Drop load 20%. Maintain all movement patterns. Extend
+      rest to 90–120 sec between rounds.
   time_limited:
     drop_slots:
-      - conditioning_finisher
-    notes: "Drop the finisher. Reduce complex rounds to 3. Never reduce below 3 rounds — the GPP effect requires sustained multi-round effort."
+    - conditioning_finisher
+    notes: Drop the finisher. Reduce complex rounds to 3. Never reduce below 3 rounds
+      — the GPP effect requires sustained multi-round effort.
   equipment_limited:
     substitutions:
-      - missing_equipment: sandbag
-        substitute_approach: "Substitute a heavy dumbbell or kettlebell held in both hands for sandbag deadlift and row. For carry: use kettlebell farmer carry or barbell zercher hold. Load and awkward feel cannot be fully replicated."
+    - missing_equipment: sandbag
+      substitute_approach: 'Substitute a heavy dumbbell or kettlebell held in both
+        hands for sandbag deadlift and row. For carry: use kettlebell farmer carry
+        or barbell zercher hold. Load and awkward feel cannot be fully replicated.'

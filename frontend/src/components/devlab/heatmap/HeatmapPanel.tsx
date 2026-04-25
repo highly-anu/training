@@ -7,7 +7,7 @@ import { HeatmapControls } from './HeatmapControls'
 import { useHeatmapData } from './useHeatmapData'
 import type { HeatNode, HeatmapGraphData } from './useHeatmapData'
 import { useOntology } from '@/api/ontology'
-import { useGoals } from '@/api/goals'
+// Goals deprecated
 import { useGenerateWithTrace } from '@/api/programs'
 import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -279,7 +279,8 @@ interface HeatmapPanelProps {
 
 export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }: HeatmapPanelProps) {
   const { data: ontology, isLoading: ontologyLoading } = useOntology()
-  const { data: goals = [] } = useGoals()
+  // Goals deprecated - philosophy-based only
+  const goals: any[] = []
   const generateMutation = useGenerateWithTrace()
 
   const [weekRange, setWeekRange] = useState<[number, number]>([1, program?.weeks.length ?? 1])
@@ -386,7 +387,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
     if (!compareGoalId || !constraints) return
     try {
       const data = await generateMutation.mutateAsync({
-        goalId: compareGoalId,
+        philosophyId: compareGoalId,
         constraints: {
           equipment: constraints.equipment,
           days_per_week: constraints.days_per_week,

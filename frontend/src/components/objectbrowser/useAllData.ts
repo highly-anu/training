@@ -1,7 +1,7 @@
 import { useExercises } from '@/api/exercises'
 import { useArchetypes } from '@/api/archetypes'
 import { useModalities } from '@/api/modalities'
-import { useGoals } from '@/api/goals'
+// Goals deprecated
 import { useFrameworks } from '@/api/frameworks'
 import { usePhilosophies } from '@/api/philosophies'
 import { useBenchmarks } from '@/api/benchmarks'
@@ -11,7 +11,7 @@ export function useAllData() {
   const exercises = useExercises()
   const archetypes = useArchetypes()
   const modalities = useModalities()
-  const goals = useGoals()
+  // Goals deprecated - use philosophies instead
   const frameworks = useFrameworks()
   const philosophies = usePhilosophies()
   const benchmarks = useBenchmarks()
@@ -22,7 +22,6 @@ export function useAllData() {
     exercises.isLoading ||
     archetypes.isLoading ||
     modalities.isLoading ||
-    goals.isLoading ||
     frameworks.isLoading ||
     philosophies.isLoading ||
     benchmarks.isLoading ||
@@ -33,7 +32,6 @@ export function useAllData() {
     exercises: exercises.data ?? [],
     archetypes: archetypes.data ?? [],
     modalities: modalities.data ?? [],
-    goals: goals.data ?? [],
     frameworks: frameworks.data ?? [],
     philosophies: philosophies.data ?? [],
     benchmarks: benchmarks.data ?? [],

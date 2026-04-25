@@ -12,6 +12,10 @@ sessions_per_week:
   power: 1
   movement_skill: 1
   aerobic_base: 1
+modality_priority:
+  committed: [strength_endurance]
+  core: [power, aerobic_base]
+  supplementary: [movement_skill]
 
 intensity_distribution:
   zone1_2_pct: 0.5
@@ -43,3 +47,12 @@ notes: >
   6-minute timed sets at competition RPM targets. Volume and RPM increase weekly;
   deload weeks use reduced RPM and shorter set duration. Not appropriate for novices
   — requires proficiency in all five movements before entering this framework.
+
+expectations:
+  min_weeks: 10
+  ideal_weeks: 14
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  supports_split_days: false

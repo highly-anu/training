@@ -131,6 +131,55 @@
         "type": "array",
         "items": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 } }
       }
+    },
+    "expectations": {
+      "type": "object",
+      "description": "Time and volume requirements for this framework. Required for all frameworks.",
+      "required": ["min_weeks", "ideal_weeks", "min_days_per_week", "ideal_days_per_week", "min_session_minutes", "ideal_session_minutes", "supports_split_days"],
+      "additionalProperties": false,
+      "properties": {
+        "min_weeks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum program duration in weeks for this framework to be effective"
+        },
+        "ideal_weeks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Ideal/recommended program duration in weeks"
+        },
+        "min_days_per_week": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7,
+          "description": "Minimum training days per week required"
+        },
+        "ideal_days_per_week": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7,
+          "description": "Ideal training days per week for this framework"
+        },
+        "min_session_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "description": "Minimum session duration in minutes"
+        },
+        "ideal_session_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "description": "Ideal session duration in minutes"
+        },
+        "ideal_long_session_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "description": "Optional: ideal duration for long sessions (e.g., weekend endurance work)"
+        },
+        "supports_split_days": {
+          "type": "boolean",
+          "description": "Whether this framework supports split sessions (AM/PM training on same day)"
+        }
+      }
     }
   }
 }

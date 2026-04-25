@@ -49,3 +49,42 @@ notes: |
   rises. Athletes progress Transition → Base → Specific → Taper. Volume,
   not intensity, is the primary progression lever. Recovery (sleep,
   nutrition, easy days) is treated as part of training, not separate from it.
+
+primary_framework_id: uphill_base_phase
+
+# Full program expectations (sum of all phases)
+expectations:
+  min_weeks: 20
+  ideal_weeks: 31  # 4 transition + 16 base + 8 specific + 3 taper
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  supports_split_days: true
+
+framework_groups:
+  - id: full_program
+    name: "Full Alpine Training Program"
+    type: sequential
+    frameworks:
+      - uphill_transition_phase
+      - uphill_base_phase
+      - uphill_specific_phase
+      - uphill_taper_phase
+    canonical_phase_sequence:
+      - phase: transition
+        weeks: 4
+        framework_id: uphill_transition_phase
+        focus: "Recovery and movement prep"
+      - phase: base
+        weeks: 16
+        framework_id: uphill_base_phase
+        focus: "Aerobic base building"
+      - phase: specific
+        weeks: 8
+        framework_id: uphill_specific_phase
+        focus: "Sport-specific muscular endurance"
+      - phase: taper
+        weeks: 3
+        framework_id: uphill_taper_phase
+        focus: "Peak and recover for event"

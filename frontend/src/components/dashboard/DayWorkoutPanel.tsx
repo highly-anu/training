@@ -73,6 +73,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
       {/* Scrollable content */}
       <div className="p-5 space-y-6">
         {sessions.map((session, si) => {
+          if (!session.archetype) return null
           const isComplete = sessionLogs[sessionKey]?.[si] === true
           return (
             <div key={si} className={cn('space-y-4', si > 0 && 'border-t border-border pt-6')}>

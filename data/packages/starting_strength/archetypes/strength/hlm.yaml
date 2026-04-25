@@ -1,92 +1,89 @@
 id: hlm
-name: "Heavy/Light/Medium (HLM)"
+name: Heavy/Light/Medium (HLM)
 modality: max_strength
 category: strength
 duration_estimate_minutes: 70
 required_equipment:
-  - barbell
-  - rack
-  - plates
+- barbell
+- rack
+- plates
 applicable_phases:
-  - base
-  - build
-  - peak
+- base
+- build
+- peak
+- transition
 sources:
-  - "Starting Strength"
-  - "Rippetoe"
-notes: >
-  Rippetoe's Heavy/Light/Medium weekly variant. Three training sessions per week on
-  the same movement patterns but at differentiated intensities: Heavy day (Monday) at
-  90%+, Light day (Wednesday) at 80%, Medium day (Friday) at 85%. This distributes
-  stress and recovery across the week, allows continued practice of patterns at every
-  session, and prevents the repeated-heavy-exposure fatigue of 3×5 run long-term.
-  Particularly useful when the athlete has stalled on linear progression.
-  The three slots below are parameterized for the Heavy day; intensity_pct_1rm values
-  should be scaled by the day modifier at generation time:
-    heavy_day_modifier: 1.00
-    medium_day_modifier: 0.94
-    light_day_modifier: 0.89
-
+- Starting Strength
+- Rippetoe
+notes: "Rippetoe's Heavy/Light/Medium weekly variant. Three training sessions per\
+  \ week on the same movement patterns but at differentiated intensities: Heavy day\
+  \ (Monday) at 90%+, Light day (Wednesday) at 80%, Medium day (Friday) at 85%. This\
+  \ distributes stress and recovery across the week, allows continued practice of\
+  \ patterns at every session, and prevents the repeated-heavy-exposure fatigue of\
+  \ 3×5 run long-term. Particularly useful when the athlete has stalled on linear\
+  \ progression. The three slots below are parameterized for the Heavy day; intensity_pct_1rm\
+  \ values should be scaled by the day modifier at generation time:\n  heavy_day_modifier:\
+  \ 1.00\n  medium_day_modifier: 0.94\n  light_day_modifier: 0.89\n"
 slots:
-  - role: primary_squat
-    slot_type: sets_reps
-    sets: 3
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.90
-    rest_sec: 300
-    exercise_filter:
-      movement_pattern: squat
-      category: barbell
-      bilateral: true
-    notes: "Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%."
-
-  - role: upper_press
-    slot_type: sets_reps
-    sets: 3
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.90
-    rest_sec: 240
-    exercise_filter:
-      movement_pattern: press
-      category: barbell
-    notes: "Alternate press and bench across sessions. Intensity follows same H/L/M pattern."
-
-  - role: primary_pull
-    slot_type: sets_reps
-    sets: 1
-    reps: 5
-    intensity: heavy
-    intensity_pct_1rm: 0.90
-    rest_sec: 300
-    exercise_filter:
-      movement_pattern: hinge
-      category: barbell
-      bilateral: true
-    notes: "Single top set deadlift. On Light day deadlift may be replaced with power clean 3×3."
-
-  - role: accessory_upper
-    slot_type: sets_reps
-    sets: 3
-    reps: 10
-    intensity: moderate
-    intensity_pct_1rm: 0.65
-    rest_sec: 90
-    exercise_filter:
-      movement_pattern: pull
-    notes: "Chin-ups or rows. Present on all three days; load does not vary with H/L/M."
-
+- role: primary_squat
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.9
+  rest_sec: 300
+  exercise_filter:
+    movement_pattern: squat
+    category: barbell
+    bilateral: true
+  notes: 'Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%.'
+- role: upper_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.9
+  rest_sec: 240
+  exercise_filter:
+    movement_pattern: press
+    category: barbell
+  notes: Alternate press and bench across sessions. Intensity follows same H/L/M pattern.
+- role: primary_pull
+  slot_type: sets_reps
+  sets: 1
+  reps: 5
+  intensity: heavy
+  intensity_pct_1rm: 0.9
+  rest_sec: 300
+  exercise_filter:
+    movement_pattern: hinge
+    category: barbell
+    bilateral: true
+  notes: Single top set deadlift. On Light day deadlift may be replaced with power
+    clean 3×3.
+- role: accessory_upper
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  intensity: moderate
+  intensity_pct_1rm: 0.65
+  rest_sec: 90
+  exercise_filter:
+    movement_pattern: pull
+  notes: Chin-ups or rows. Present on all three days; load does not vary with H/L/M.
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: "Convert all three sessions to Light-day intensity (80%) and reduce sets to 2 per lift."
+    notes: Convert all three sessions to Light-day intensity (80%) and reduce sets
+      to 2 per lift.
   time_limited:
     drop_slots:
-      - accessory_upper
-    notes: "Drop accessory upper work. The three primary slots are non-negotiable for HLM integrity."
+    - accessory_upper
+    notes: Drop accessory upper work. The three primary slots are non-negotiable for
+      HLM integrity.
   equipment_limited:
     substitutions:
-      - missing_equipment: rack
-        substitute_approach: "Cannot perform back squat. Substitute goblet squat or trap bar DL for lower. Floor press replaces bench."
+    - missing_equipment: rack
+      substitute_approach: Cannot perform back squat. Substitute goblet squat or trap
+        bar DL for lower. Floor press replaces bench.

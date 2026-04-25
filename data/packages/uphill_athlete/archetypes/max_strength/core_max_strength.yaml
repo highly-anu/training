@@ -1,36 +1,42 @@
 id: core_max_strength
-name: "Climbing-Specific Core Strength"
+name: Climbing-Specific Core Strength
 modality: max_strength
 category: strength
 training_levels:
-  - novice
-  - intermediate
-  - advanced
-  - elite
+- novice
+- intermediate
+- advanced
+- elite
 duration_estimate_minutes: 30
 applicable_phases:
-  - base
-  - build
-  - peak
-  - taper
+- base
+- build
+- peak
+- taper
+- specific
+- transition
 slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 5
-    intensity: low
-    exercise_filter:
-      category: mobility
-  - role: main_strength
-    slot_type: sets_reps
-    sets: 4
-    reps: 10
-    intensity: submaximal
-    exercise_filter:
-      category: bodyweight
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 5
+  intensity: low
+  exercise_filter:
+    category: mobility
+- role: main_strength
+  slot_type: sets_reps
+  sets: 4
+  reps: 10
+  intensity: submaximal
+  exercise_filter:
+    category: bodyweight
 sources:
-  - "Training for the New Alpinism, Ch. 8"
-notes: |
-  Anti-extension, anti-rotation, and hip-flexor strength. Plank variations,
+- Training for the New Alpinism, Ch. 8
+notes: 'Anti-extension, anti-rotation, and hip-flexor strength. Plank variations,
+
   side plank, hanging leg raise, dragon flag progressions. 3–4 sets, hard
+
   but not failure. Core is treated as the link between pack-load and legs;
+
   trained year-round, including Taper (low volume).
+
+  '

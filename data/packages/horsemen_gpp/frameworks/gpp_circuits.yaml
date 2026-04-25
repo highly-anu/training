@@ -12,6 +12,10 @@ sessions_per_week:
   durability: 2
   mixed_modal_conditioning: 1
   max_strength: 1
+modality_priority:
+  committed: [durability]
+  core: [mixed_modal_conditioning, max_strength]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.10
@@ -82,3 +86,12 @@ notes: >
   full framework. 4-day Horsemen weekly template: Mon strength complex (sandbag or
   barbell), Tue conditioning (AMRAP/circuit), Thu loaded carries + bodyweight, Sat
   long ruck or GPP circuit.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: false

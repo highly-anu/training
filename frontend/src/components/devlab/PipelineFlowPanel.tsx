@@ -200,17 +200,19 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
         )}
       </div>
 
-      {/* ① Goal */}
+      {/* ① Philosophy / Goal */}
       <Block
         color="border-l-violet-500"
-        label="① GOAL"
-        reads={['goal profile YAML', 'athlete constraints']}
-        outputs={['priority weights', 'phase sequence', 'primary sources']}
+        label="① PHILOSOPHY → GOAL"
+        reads={['philosophy selection', 'athlete constraints']}
+        outputs={['priority weights', 'phase sequence', 'primary_sources (package filter)']}
       >
         <div className="font-mono text-[10px] font-medium text-foreground/80">{goal.name}</div>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          {goal.description.slice(0, 120)}{goal.description.length > 120 ? '…' : ''}
-        </p>
+        {goal.description && (
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            {goal.description.slice(0, 120)}{goal.description.length > 120 ? '…' : ''}
+          </p>
+        )}
         <div className="space-y-1 mt-1">
           {sortedPriorities.slice(0, 6).map(([mod, prio]) => (
             <div key={mod} className="flex items-center gap-2">

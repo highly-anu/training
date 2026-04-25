@@ -17,6 +17,8 @@ import { Separator } from '@/components/ui/separator'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
+import { useBuilderStore } from '@/store/builderStore'
+import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
 
@@ -37,6 +39,22 @@ export function ProgramView() {
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
+  const sourceMode = useBuilderStore((s) => s.sourceMode)
+  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const { data: philosophies } = usePhilosophies()
+
+  const programTitle = (() => {
+    if (sourceMode === 'philosophy') {
+      const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
+      return phil?.name ?? 'Training Program'
+    }
+    if (sourceMode === 'blend') {
+      const names = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)).map((p) => p.name) ?? []
+      return names.length > 0 ? names.join(' + ') : 'Blended Program'
+    }
+    if (sourceMode === 'custom') return 'Custom Program'
+    return program?.goal.name ?? 'Training Program'
+  })()
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
   const regenerate = useRegenerateFromWeek()
@@ -67,9 +85,13 @@ export function ProgramView() {
 
   function handleRegenerate() {
     if (!program || !currentWeekData) return
+    // Get source philosophy IDs from store (stored as sourceGoalIds for now)
+    const sourceIds = useProgramStore.getState().sourceGoalIds.filter((id) => id !== '_blended')
     regenerate.mutate(
       {
-        goalId: program.goal.id,
+        philosophyId: sourceIds.length === 1 ? sourceIds[0] : undefined,
+        philosophyIds: sourceIds.length > 1 ? sourceIds : undefined,
+        philosophyWeights: sourceIds.length > 1 ? useProgramStore.getState().sourceGoalWeights : undefined,
         constraints: {
           ...program.constraints,
           injury_flags: localFlags,
@@ -93,7 +115,7 @@ export function ProgramView() {
       >
         <EmptyState
           title="No program generated yet"
-          description="Use the builder to configure your goal and generate a personalized program."
+          description="Use the builder to pick a philosophy and generate a personalized program."
           action={{ label: 'Build a Program', onClick: () => navigate('/builder') }}
           icon={<Wand2 className="size-10" />}
         />
@@ -113,7 +135,7 @@ export function ProgramView() {
       <div className="border-b px-6 py-4 space-y-3 shrink-0">
         <div className="flex flex-wrap items-center gap-2">
           <CalendarDays className="size-5 text-primary shrink-0" />
-          <h1 className="text-lg font-semibold">{program.goal.name}</h1>
+          <h1 className="text-lg font-semibold">{programTitle}</h1>
           <span className="text-muted-foreground/50 text-xs select-none">·</span>
           <span className="text-xs text-muted-foreground">{totalWeeks}-week program</span>
           <div className="ml-4 flex gap-1">

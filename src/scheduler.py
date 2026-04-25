@@ -47,12 +47,28 @@ def _eval_condition(condition: str, constraints: dict) -> bool:
 
 
 def select_framework(goal: dict, constraints: dict,
+                     phase_framework_id: str | None = None,
                      _trace: dict | None = None) -> dict:
     """Select the best framework for the given goal and constraints.
 
+    Args:
+        phase_framework_id: Phase-specific framework from canonical_phase_sequence (highest priority)
+
     If _trace dict is provided it will be populated with framework selection details.
     """
-    # Explicit override from the API request (set by api.py from body.framework_id)
+    # Priority 1: Phase-specific framework from canonical_phase_sequence
+    if phase_framework_id:
+        try:
+            fw = loader.load_framework(phase_framework_id)
+            if _trace is not None:
+                _trace['selected_id'] = fw['id']
+                _trace['selection_reason'] = 'phase_framework_override'
+                _trace['phase_framework_id'] = phase_framework_id
+            return fw
+        except FileNotFoundError:
+            pass  # fall through to other selection methods
+
+    # Priority 2: Explicit override from the API request (set by api.py from body.framework_id)
     forced = constraints.get('forced_framework')
     fw_sel = goal.get('framework_selection', {})
     default_id = fw_sel.get('default_framework', 'concurrent_training')
@@ -61,6 +77,7 @@ def select_framework(goal: dict, constraints: dict,
         _trace['forced_override'] = forced
         _trace['default_id'] = default_id
         _trace['alternatives_checked'] = []
+        _trace['phase_framework_id'] = phase_framework_id
 
     if forced:
         try:
@@ -149,29 +166,134 @@ def _proportional_round(raw: dict, target: int) -> dict:
     return result
 
 
-def allocate_sessions(priorities: dict, days_per_week: int, framework: dict) -> dict:
+def _apply_modality_priority(
+    allocation: dict, modality_priority: dict, days_per_week: int, ideal_days: int
+) -> dict:
+    """Compress allocation when days_per_week < ideal_days using modality_priority tiers.
+
+    Tiers:
+      committed   — always keep ≥ 1 slot; never cut
+      core        — keep if budget allows; cut last
+      supplementary — cut first (before core)
+
+    Trims supplementary then core until sum(allocation) ≤ days_per_week,
+    but never cuts committed modalities.
+    """
+    if days_per_week >= ideal_days or not modality_priority:
+        return allocation
+
+    allocation = dict(allocation)  # copy
+    committed = set(modality_priority.get('committed', []))
+    core = set(modality_priority.get('core', []))
+
+    def _trim_pass(skip_set: set) -> bool:
+        """Try to trim one slot from the lowest-priority non-skip modality. Returns True if trimmed."""
+        for mod in list(allocation.keys()):
+            if mod in skip_set:
+                continue
+            if allocation[mod] > 0:
+                allocation[mod] -= 1
+                if allocation[mod] == 0:
+                    del allocation[mod]
+                return True
+        return False
+
+    # Guarantee ≥ 1 slot for each committed modality
+    for mod in committed:
+        if allocation.get(mod, 0) == 0:
+            allocation[mod] = 1
+
+    # Trim until we fit within days_per_week
+    iterations = 0
+    while sum(allocation.values()) > days_per_week and iterations < 20:
+        iterations += 1
+        # Pass 1: trim supplementary (not committed, not core)
+        trimmed = _trim_pass(committed | core)
+        if not trimmed:
+            # Pass 2: trim core (not committed)
+            trimmed = _trim_pass(committed)
+        if not trimmed:
+            break  # can't trim further without touching committed
+
+    return allocation
+
+
+def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
+                      modalities_dict: dict | None = None,
+                      allow_split_sessions: bool = False,
+                      constraints: dict | None = None) -> dict:
     """Convert priority vector + framework to session counts per modality.
 
     Goal priorities are always the primary driver.  When the framework defines
     sessions_per_week, it guides the *ratio* among overlapping modalities, but
     modalities the goal does not prioritise are excluded and the freed slots
     flow to goal-priority modalities not covered by the framework.
+
+    With modalities_dict: applies priority tier filtering to drop low-priority
+    modalities when days_per_week is limited.
+
+    When the framework sets allocation_mode: exclusive, goal priorities are
+    ignored entirely and the framework's sessions_per_week is scaled directly
+    to days_per_week. This prevents cross-phase bleed-in.
+
+    Returns:
+        {
+            'allocated': {modality: count},
+            'compromises': [str]  # List of adjustments made
+        }
     """
     fw_sessions = framework.get('sessions_per_week', {})
 
+    # Exclusive mode: scale framework sessions directly, skip goal-priority blending
+    if framework.get('allocation_mode') == 'exclusive' and fw_sessions:
+        effective_sessions = dict(fw_sessions)
+        # When split sessions are enabled, mobility is handled by _add_split_sessions —
+        # remove it from the primary allocation to prevent double-counting.
+        if allow_split_sessions:
+            effective_sessions.pop('mobility', None)
+        total_fw = sum(effective_sessions.values()) or 1
+        raw = {mod: cnt * days_per_week / total_fw for mod, cnt in effective_sessions.items() if cnt > 0}
+        allocation = _proportional_round(raw, days_per_week)
+        # Apply modality_priority compression if schedule is smaller than ideal
+        modality_priority = framework.get('modality_priority', {})
+        if modality_priority:
+            ideal_days = framework.get('expectations', {}).get('ideal_days_per_week', days_per_week)
+            allocation = _apply_modality_priority(allocation, modality_priority, days_per_week, ideal_days)
+        return {'allocated': {k: v for k, v in allocation.items() if v > 0}, 'compromises': []}
+    compromises = []
+
+    # PHASE 1: Apply priority tier filtering if modalities_dict provided
+    filtered_priorities = priorities
+    if modalities_dict:
+        filtered_priorities = {}
+        for mod, weight in priorities.items():
+            if weight <= 0:
+                continue
+
+            tier = modalities_dict.get(mod, {}).get('priority_tier', 3)
+
+            # Tier thresholds: 1 (always), 2 (needs 3+ days), 3 (needs 4+ days), 4 (needs 5+ days)
+            if tier == 1 or days_per_week >= (tier + 1):
+                filtered_priorities[mod] = weight
+            else:
+                # Track dropped modalities
+                mod_name = mod.replace('_', ' ')
+                compromises.append(f"Dropped {mod_name} (tier {tier}) - needs {tier + 1}+ training days")
+
+    # PHASE 2: Calculate raw allocation (same logic as before)
     if fw_sessions:
         # Only keep framework modalities the goal actually prioritises
         active_fw = {mod: cnt for mod, cnt in fw_sessions.items()
-                     if priorities.get(mod, 0) > 0}
+                     if filtered_priorities.get(mod, 0) > 0}
         active_total = sum(active_fw.values())
 
         if not active_fw or active_total == 0:
             # No overlap — fall back to pure goal priorities
             raw = {mod: weight * days_per_week
-                   for mod, weight in priorities.items() if weight > 0}
+                   for mod, weight in filtered_priorities.items() if weight > 0}
         else:
-            total_prio = sum(w for w in priorities.values() if w > 0) or 1
-            fw_covered_prio = sum(priorities.get(m, 0) for m in active_fw)
+            total_prio = sum(w for w in filtered_priorities.values() if w > 0) or 1
+            fw_covered_prio = sum(filtered_priorities.get(m, 0) for m in active_fw)
             goal_only_prio = total_prio - fw_covered_prio
 
             # Slots allocated to fw-covered modalities (proportional to their priority share)
@@ -183,7 +305,7 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict) -> 
             raw = {mod: (cnt / active_total) * fw_slots for mod, cnt in active_fw.items()}
 
             # Goal-only modalities: split goal_only_slots by their relative priority
-            goal_only = {mod: w for mod, w in priorities.items()
+            goal_only = {mod: w for mod, w in filtered_priorities.items()
                          if w > 0 and mod not in fw_sessions}
             if goal_only:
                 goal_only_total = sum(goal_only.values()) or 1
@@ -191,10 +313,37 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict) -> 
                     raw[mod] = (w / goal_only_total) * goal_only_slots
     else:
         raw = {mod: weight * days_per_week
-               for mod, weight in priorities.items() if weight > 0}
+               for mod, weight in filtered_priorities.items() if weight > 0}
+
+    # PHASE 3: Track volume reductions
+    ideal_sessions = sum(priorities.values() if priorities else [])
+    actual_sessions = sum(raw.values() if raw else [])
+    if ideal_sessions > 0 and actual_sessions < ideal_sessions * 0.8:
+        reduction_pct = int((1 - actual_sessions / ideal_sessions) * 100)
+        compromises.append(f"Total volume reduced ~{reduction_pct}%")
 
     allocation = _proportional_round(raw, days_per_week)
-    return {k: v for k, v in allocation.items() if v > 0}
+
+    # Apply modality_priority compression
+    modality_priority = framework.get('modality_priority', {})
+    if modality_priority:
+        ideal_days = framework.get('expectations', {}).get('ideal_days_per_week', days_per_week)
+        allocation = _apply_modality_priority(allocation, modality_priority, days_per_week, ideal_days)
+
+    # Session time scaling: when user sessions are < 70% of ideal, reduce non-committed by 1
+    if constraints and modality_priority:
+        ideal_time = framework.get('expectations', {}).get('ideal_session_minutes', 75)
+        actual_time = constraints.get('session_time_minutes', 75)
+        if actual_time < ideal_time * 0.7:
+            committed = set(modality_priority.get('committed', []))
+            for mod in list(allocation.keys()):
+                if mod not in committed and allocation[mod] > 1:
+                    allocation[mod] -= 1
+
+    return {
+        'allocated': {k: v for k, v in allocation.items() if v > 0},
+        'compromises': compromises,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -243,12 +392,19 @@ def _session_compatible(day: int, new_mod: str, mod_data: dict,
 
 
 def _score_days(days: list, schedule: dict, modality: str,
-                mod_data: dict, modalities: dict) -> list:
-    """Return days sorted by placement desirability (best first)."""
+                mod_data: dict, modalities: dict, day_configs: dict | None = None) -> list:
+    """Return days sorted by placement desirability (best first).
+
+    Considers recovery windows and (optionally) duration matching.
+    """
     my_cost = _RECOVERY_COST_RANK.get(mod_data.get('recovery_cost', 'low'), 1)
+    mod_duration = mod_data.get('typical_duration_minutes', 60)
+
     scored = []
     for day in days:
         gap_score = 0
+
+        # Recovery-based scoring (existing logic)
         for prev_day in range(max(1, day - 4), day):
             hours = (day - prev_day) * 24
             for prev_mod in schedule.get(prev_day, []):
@@ -258,6 +414,23 @@ def _score_days(days: list, schedule: dict, modality: str,
                 pm_cost = _recovery_cost_rank(prev_mod, modalities)
                 if my_cost == 3 and pm_cost == 3:
                     gap_score -= max(0, 48 - hours)
+
+        # Duration matching: prefer placing modalities on days whose time budget fits
+        if day_configs and day in day_configs:
+            cfg = day_configs[day]
+            session_types = cfg.get('session_types', [])
+            day_minutes = cfg.get('minutes', 75)
+
+            # Reward duration fit
+            if mod_duration >= 60 and 'long' in session_types:
+                gap_score += 3   # long modality → long day
+            elif mod_duration <= 45 and 'short' in session_types and 'long' not in session_types:
+                gap_score += 3   # short modality → short day
+
+            # Penalise duration overflow: modality won't fit in this day's budget
+            if mod_duration > day_minutes * 1.25:
+                gap_score -= 6   # strong push away from days too short to hold this session
+
         session_load_penalty = len(schedule.get(day, [])) * 12
         scored.append((gap_score - session_load_penalty, day))
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -382,10 +555,12 @@ def _build_day_pool(days_per_week: int,
 
 def assign_to_days(allocation: dict, modalities: dict,
                    days_per_week: int,
-                   day_pool: List[int] | None = None) -> Dict[int, List[str]]:
-    """Place modalities on specific days with recovery-awareness.
+                   day_pool: List[int] | None = None,
+                   constraints: dict | None = None) -> Dict[int, List[str]]:
+    """Place modalities on specific days with recovery-awareness and duration matching.
 
     day_pool: pre-computed ordered day numbers (1=Mon … 7=Sun).
+    constraints: optional dict with day_configs for duration matching.
     The returned dict always has keys 1–7 so the calendar shows rest days.
     """
     schedule: Dict[int, List[str]] = {d: [] for d in range(1, 8)}
@@ -401,10 +576,12 @@ def assign_to_days(allocation: dict, modalities: dict,
         reverse=True,
     )
 
+    day_configs = (constraints or {}).get('day_configs', {})
+
     for modality, count in sorted_mods:
         mod_data = modalities.get(modality, {})
         placed = 0
-        ordered_days = _score_days(days, schedule, modality, mod_data, modalities)
+        ordered_days = _score_days(days, schedule, modality, mod_data, modalities, day_configs)
 
         for day in ordered_days:
             if placed >= count:
@@ -436,42 +613,106 @@ def _order_day(modality_list: list, modalities: dict) -> list:
     )
 
 
+def _select_complementary_mobility(
+    primary_modality: str,
+    primary_sources: list,
+) -> str:
+    """
+    Select mobility archetype type complementary to primary session modality.
+
+    Mapping strategy:
+    - Strength modalities → strength_mobility
+    - Endurance modalities → endurance_mobility
+    - Combat/BJJ → grappling_mobility
+    - Default → joint_prep_circuit
+
+    Returns archetype ID preference (actual archetype selected in selector.py)
+    """
+    MOBILITY_MAPPING = {
+        'max_strength': 'strength_mobility',
+        'power': 'strength_mobility',
+        'relative_strength': 'strength_mobility',
+        'strength_endurance': 'strength_mobility',
+        'aerobic_base': 'endurance_mobility',
+        'anaerobic_intervals': 'endurance_mobility',
+        'mixed_modal_conditioning': 'endurance_mobility',
+        'durability': 'endurance_mobility',
+    }
+
+    # Check if primary sources include BJJ/combat philosophies
+    if any('bjj' in s.lower() for s in primary_sources):
+        return 'grappling_mobility'
+
+    return MOBILITY_MAPPING.get(primary_modality, 'joint_prep_circuit')
+
+
 def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
                         constraints: dict) -> None:
     """Append a secondary mobility/skill session to primary training days.
+
+    Enhanced to use day_configs from weekly_schedule for smart pairing.
 
     Mutates *raw* in place. Only adds a secondary session when:
     - the day already has exactly one primary session
     - the secondary modality is compatible with the existing session
     - the day's available time has at least 20 min of headroom after the primary
     """
-    # Days 6-7 are Sat/Sun; everything else is weekday (Mon-Fri)
+    day_configs = constraints.get('day_configs') or {}
+
+    # Enhanced path: Use day_configs if available (from weekly_schedule)
+    if day_configs:
+        primary_sources = constraints.get('primary_sources', [])
+
+        for day_idx, cfg in day_configs.items():
+            # Convert string keys to int if needed
+            day = int(day_idx) if isinstance(day_idx, str) else day_idx
+
+            if not cfg.get('has_secondary'):
+                continue
+
+            existing = raw.get(day, [])
+            if not existing:
+                continue
+
+            session_types = cfg.get('session_types', [])
+
+            # If user explicitly requested mobility in their schedule and it's not already there
+            if 'mobility' in session_types and len(session_types) > 1 and 'mobility' not in existing:
+                primary = existing[0] if existing else None
+
+                # Add mobility modality
+                raw[day] = existing + ['mobility']
+
+                # Store hint for complementary mobility archetype selection
+                if primary:
+                    mobility_pref = _select_complementary_mobility(
+                        primary,
+                        primary_sources
+                    )
+                    # Store in day_configs for generator.py to use
+                    cfg['mobility_archetype_hint'] = mobility_pref
+        return
+
+    # Fallback path: Legacy behavior for backwards compatibility
     weekday_time = constraints.get('weekday_session_minutes') or constraints.get('session_time_minutes', 75)
     weekend_time = constraints.get('weekend_session_minutes') or constraints.get('session_time_minutes', 75)
-    secondary_min_time = 20  # minimum spare minutes required to add a secondary session
+    secondary_min_time = 20
 
     secondary_days = constraints.get('secondary_days') or []
-    day_configs = constraints.get('day_configs') or {}
 
     # Add secondary sessions to active training days
     for day in sorted(raw.keys()):
-        # If specific secondary_days are given, only process those
         if secondary_days and day not in secondary_days:
             continue
 
         existing = raw[day]
         if len(existing) != 1:
-            continue  # only add to single-session days
+            continue
         if existing[0] in ('mobility', 'movement_skill'):
-            continue  # already a mobility-only day — do not stack another
+            continue
 
-        day_cfg = day_configs.get(day) or day_configs.get(str(day))
-        if day_cfg:
-            available_time = day_cfg.get('minutes', 0)
-        else:
-            available_time = weekend_time if day >= 6 else weekday_time
+        available_time = weekend_time if day >= 6 else weekday_time
 
-        # Primary session rough estimate: assume 60 min if we can't determine exactly
         if available_time - 60 < secondary_min_time:
             continue
 
@@ -484,7 +725,7 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
     # Add mobility-only sessions to rest days that the user marked for mobility
     for day in secondary_days:
         if day in raw:
-            continue  # already has a training session (handled above)
+            continue
         raw[day] = ['mobility']
 
 
@@ -494,9 +735,13 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
 
 def schedule_week(goal: dict, constraints: dict, data: dict,
                   phase: str, week_number: int,
+                  phase_framework_id: str | None = None,
                   collect_trace: bool = False) -> dict:
     """
     Build a weekly schedule.
+
+    Args:
+        phase_framework_id: Optional phase-specific framework override (from canonical_phase_sequence)
 
     Returns:
         {
@@ -510,7 +755,7 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
     priorities = get_phase_priorities(goal, phase)
 
     fw_trace: dict | None = {} if collect_trace else None
-    framework = select_framework(goal, constraints, _trace=fw_trace)
+    framework = select_framework(goal, constraints, phase_framework_id=phase_framework_id, _trace=fw_trace)
 
     forced_workout: List[int] = sorted(
         d for d in (constraints.get('preferred_days') or []) if 1 <= d <= 7
@@ -527,14 +772,20 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         framework=framework,
     )
 
-    allocation = allocate_sessions(priorities, len(pool), framework)
+    allocation_result = allocate_sessions(
+        priorities, len(pool), framework, data['modalities'],
+        allow_split_sessions=constraints.get('allow_split_sessions', False),
+        constraints=constraints,
+    )
+    allocation = allocation_result['allocated']
+    compromises = allocation_result.get('compromises', [])
 
     deload_freq = framework.get('deload_protocol', {}).get('frequency_weeks', 4)
     is_deload = (week_number % deload_freq == 0)
     if constraints.get('fatigue_state') == 'overreached':
         is_deload = True
 
-    raw = assign_to_days(allocation, data['modalities'], len(pool), pool)
+    raw = assign_to_days(allocation, data['modalities'], len(pool), pool, constraints)
 
     if constraints.get('allow_split_sessions'):
         _add_split_sessions(raw, data['modalities'], constraints)
@@ -549,6 +800,7 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         'framework': framework,
         'is_deload': is_deload,
         'allocation': allocation,
+        'compromises': compromises,
     }
 
     if collect_trace:

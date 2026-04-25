@@ -15,6 +15,9 @@ export const queryKeys = {
   benchmarks: {
     all: ['benchmarks'] as const,
   },
+  equipment: {
+    all: ['equipment'] as const,
+  },
   constraints: {
     equipmentProfiles: ['constraints', 'equipmentProfiles'] as const,
     injuryFlags: ['constraints', 'injuryFlags'] as const,

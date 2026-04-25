@@ -36,3 +36,19 @@ notes: >
   before sessions (2 min minimum per target joint); mobilization is also effective
   post-session and throughout the day. Resistance bands are the core tool for joint
   distraction work; no heavy equipment required.
+
+primary_framework_id: kelly_starrett_mobility
+
+framework_groups:
+  - id: default
+    name: "Supple Leopard Mobility System"
+    type: alternatives
+    frameworks:
+      - kelly_starrett_mobility
+canonical_phase_sequence:
+  - phase: base
+    weeks: 6
+  - phase: build
+    weeks: 6
+  - phase: maintenance
+    weeks: 4

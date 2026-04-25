@@ -104,6 +104,37 @@
     "notes": {
       "type": "string",
       "description": "Free-text notes about this athlete's context. Not used by the algorithm."
+    },
+    "weekly_schedule": {
+      "type": "object",
+      "description": "User's weekly training schedule with up to 4 sessions per day. Each session can be rest, short (30-45min), long (60+ min), or mobility (15-20min).",
+      "properties": {
+        "Monday": { "$ref": "#/definitions/DaySchedule" },
+        "Tuesday": { "$ref": "#/definitions/DaySchedule" },
+        "Wednesday": { "$ref": "#/definitions/DaySchedule" },
+        "Thursday": { "$ref": "#/definitions/DaySchedule" },
+        "Friday": { "$ref": "#/definitions/DaySchedule" },
+        "Saturday": { "$ref": "#/definitions/DaySchedule" },
+        "Sunday": { "$ref": "#/definitions/DaySchedule" }
+      }
+    }
+  },
+  "definitions": {
+    "DaySchedule": {
+      "type": "object",
+      "description": "Schedule for a single day with up to 4 session slots",
+      "properties": {
+        "session1": { "$ref": "#/definitions/SessionType" },
+        "session2": { "$ref": "#/definitions/SessionType" },
+        "session3": { "$ref": "#/definitions/SessionType" },
+        "session4": { "$ref": "#/definitions/SessionType" }
+      },
+      "required": ["session1", "session2", "session3", "session4"]
+    },
+    "SessionType": {
+      "type": "string",
+      "enum": ["rest", "short", "long", "mobility"],
+      "description": "Session type: rest (no training), short (30-45min), long (60+ min), mobility (15-20min)"
     }
   }
 }
