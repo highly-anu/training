@@ -33,6 +33,11 @@ app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
 _raw_origins = os.environ.get('FRONTEND_URL') or ''
 _allowed_origins = set(o.strip() for o in _raw_origins.split(',') if o.strip()) or {'*'}
 
+@app.before_request
+def _handle_options():
+    if request.method == 'OPTIONS':
+        return app.make_default_options_response()
+
 @app.after_request
 def _cors(response):
     origin = request.headers.get('Origin', '')
