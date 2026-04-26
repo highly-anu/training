@@ -64,7 +64,6 @@ export function ConstraintsForm() {
   const constraints = useBuilderStore((s) => s.constraints)
   const update = useBuilderStore((s) => s.updateConstraints)
   const eventDate = useBuilderStore((s) => s.eventDate)
-  const setEventDate = useBuilderStore((s) => s.setEventDate)
   const startDate = useBuilderStore((s) => s.startDate)
   const setStartDate = useBuilderStore((s) => s.setStartDate)
 

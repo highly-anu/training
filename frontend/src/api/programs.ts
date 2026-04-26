@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
-import { useBuilderStore } from '@/store/builderStore'
 import { useUiStore } from '@/store/uiStore'
 import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram } from './types'
 

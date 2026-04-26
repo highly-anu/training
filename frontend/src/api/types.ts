@@ -348,6 +348,7 @@ export interface GeneratedProgram {
   weeks: WeekData[]
   volume_summary?: WeekVolumeSummary[]
   program_start_date?: string
+  compromises?: string[]
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────
