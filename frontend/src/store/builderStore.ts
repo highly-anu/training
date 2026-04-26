@@ -149,7 +149,7 @@ export const useBuilderStore = create<BuilderStore>()(
         }),
     }),
     {
-      name: 'training-builder',
+      name: 'training-builder-v2',
       partialize: (s) => ({
         step: s.step,
         sourceMode: s.sourceMode,
