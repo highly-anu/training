@@ -32,6 +32,7 @@ def validate(
     injury_flags_data: dict,
 ) -> ValidationResult:
     result = ValidationResult()
+    _check_forced_framework(goal, constraints, result)
     _check_equipment(goal, constraints, archetypes, result)
     _check_days(goal, constraints, result)
     _check_session_time(goal, constraints, archetypes, result)
@@ -44,6 +45,33 @@ def validate(
 # ---------------------------------------------------------------------------
 # Individual checks
 # ---------------------------------------------------------------------------
+
+def _check_forced_framework(goal, constraints, result):
+    forced_id = constraints.get('forced_framework')
+    if not forced_id:
+        return
+    primary_sources = goal.get('primary_sources', [])
+    if not primary_sources:
+        return  # blended goal — skip ownership check
+
+    owned: set = set()
+    fw_sel = goal.get('framework_selection', {})
+    if fw_sel.get('default_framework'):
+        owned.add(fw_sel['default_framework'])
+    owned.update(fw_sel.get('alternatives', []))
+    for phase in goal.get('phase_sequence', []):
+        if phase.get('framework_id'):
+            owned.add(phase['framework_id'])
+
+    if forced_id not in owned:
+        phil_id = primary_sources[0]
+        result.add_error(
+            'FRAMEWORK_PHILOSOPHY_MISMATCH',
+            f"Framework '{forced_id}' does not belong to philosophy '{phil_id}'. "
+            f"Owned frameworks: {sorted(owned)}.",
+            suggested_fix=f"Remove framework_id or use one of: {sorted(owned)}.",
+        )
+
 
 def _check_equipment(goal, constraints, archetypes, result):
     available = set(constraints.get('equipment', []))

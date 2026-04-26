@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Search, X, Zap } from 'lucide-react'
+import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Network, Search, X, Zap } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -17,7 +17,7 @@ import { PhilosophyExplorerPanel, ArchetypeCard } from '@/components/devlab/Phil
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { useSimilarity } from '@/api/similarity'
-import type { Philosophy, Modality, Archetype, ModalityId, Exercise } from '@/api/types'
+import type { Philosophy, Modality, Archetype, ModalityId, Exercise, Framework } from '@/api/types'
 
 // ─── Intensity zone definitions (HR % thresholds) ────────────────────────────
 
@@ -48,9 +48,61 @@ function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
   )
 }
 
+// ─── Shared sort helpers ─────────────────────────────────────────────────────
+
+function sortByLikeness<T extends { id: string }>(
+  items: T[],
+  scores: Record<string, Record<string, { score: number }>> | undefined,
+): T[] {
+  if (!scores || items.length === 0) return items
+  const getScore = (a: string, b: string) =>
+    scores[a]?.[b]?.score ?? scores[b]?.[a]?.score ?? 0
+  const remaining = new Set(items.map(i => i.id))
+  const order: string[] = []
+  let current = items[0].id
+  while (remaining.size > 0) {
+    order.push(current)
+    remaining.delete(current)
+    if (remaining.size === 0) break
+    let bestId = '', bestScore = -1
+    for (const id of remaining) {
+      const s = getScore(current, id)
+      if (s > bestScore) { bestScore = s; bestId = id }
+    }
+    current = bestId
+  }
+  const byId = Object.fromEntries(items.map(i => [i.id, i])) as Record<string, T>
+  return order.map(id => byId[id]).filter(Boolean)
+}
+
+function SortToggle({ sort, onChange }: {
+  sort: 'alpha' | 'likeness'
+  onChange: (s: 'alpha' | 'likeness') => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Sort</span>
+      {(['alpha', 'likeness'] as const).map(s => (
+        <button
+          key={s}
+          onClick={() => onChange(s)}
+          className={cn(
+            'px-2.5 py-1 rounded text-[11px] border transition-colors',
+            sort === s
+              ? 'bg-primary/15 border-primary/40 text-primary'
+              : 'border-border/40 text-muted-foreground hover:bg-muted/40'
+          )}
+        >
+          {s === 'alpha' ? 'A → Z' : 'By likeness'}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── Topic Selector ───────────────────────────────────────────────────────────
 
-type Topic = 'philosophies' | 'modalities' | 'exercises' | 'archetypes'
+type Topic = 'philosophies' | 'modalities' | 'exercises' | 'archetypes' | 'frameworks'
 
 interface TopicTab {
   id: Topic
@@ -60,6 +112,7 @@ interface TopicTab {
 
 const TOPICS: TopicTab[] = [
   { id: 'philosophies', label: 'Philosophies', Icon: BookOpen },
+  { id: 'frameworks',   label: 'Frameworks',   Icon: Network },
   { id: 'modalities',   label: 'Modalities',   Icon: Zap },
   { id: 'archetypes',   label: 'Archetypes',   Icon: Layers },
   { id: 'exercises',    label: 'Exercises',     Icon: Dumbbell },
@@ -116,6 +169,9 @@ function PhilosophyOverview({ philosophies, frameworks, onSelect }: {
   frameworks: { source_philosophy?: string; sessions_per_week?: Record<string, number> }[]
   onSelect: (p: Philosophy) => void
 }) {
+  const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
+  const { data: matrix } = useSimilarity()
+
   const philSummaries = useMemo(() =>
     philosophies.map(p => ({
       p,
@@ -124,6 +180,13 @@ function PhilosophyOverview({ philosophies, frameworks, onSelect }: {
     })),
     [philosophies, frameworks]
   )
+
+  const sorted = useMemo(() => {
+    if (sort === 'alpha') return [...philSummaries].sort((a, b) => a.p.name.localeCompare(b.p.name))
+    const ordered = sortByLikeness(philosophies, matrix?.['philosophies'])
+    const byId = Object.fromEntries(philSummaries.map(s => [s.p.id, s]))
+    return ordered.map(p => byId[p.id]).filter(Boolean)
+  }, [philSummaries, philosophies, sort, matrix])
 
   return (
     <div className="h-full overflow-y-auto">
@@ -142,26 +205,26 @@ function PhilosophyOverview({ philosophies, frameworks, onSelect }: {
           </p>
         </div>
 
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            {philSummaries.map(({ p, fwCount, color }) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => onSelect(p)}
-                className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
-                           transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
-                style={{ borderLeftColor: color, borderLeftWidth: 2 }}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                    {fwCount} framework{fwCount !== 1 ? 's' : ''} · {p.bias.length} bias{p.bias.length !== 1 ? 'es' : ''}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+        <SortToggle sort={sort} onChange={setSort} />
+
+        <div className="grid grid-cols-2 gap-2">
+          {sorted.map(({ p, fwCount, color }) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onSelect(p)}
+              className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
+                         transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
+              style={{ borderLeftColor: color, borderLeftWidth: 2 }}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                  {fwCount} framework{fwCount !== 1 ? 's' : ''} · {p.bias.length} bias{p.bias.length !== 1 ? 'es' : ''}
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
 
         <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
@@ -181,6 +244,14 @@ function ModalityOverview({
   modalities: Modality[]
   onSelect: (m: Modality) => void
 }) {
+  const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
+  const { data: matrix } = useSimilarity()
+
+  const sorted = useMemo(() => {
+    if (sort === 'alpha') return [...modalities].sort((a, b) => a.name.localeCompare(b.name))
+    return sortByLikeness(modalities, matrix?.['modalities'])
+  }, [modalities, sort, matrix])
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-8">
@@ -196,8 +267,10 @@ function ModalityOverview({
           </p>
         </div>
 
+        <SortToggle sort={sort} onChange={setSort} />
+
         <div className="grid grid-cols-3 gap-2">
-          {modalities.map((mod) => {
+          {sorted.map((mod) => {
             const color = MODALITY_COLORS[mod.id]
             const hex = color?.hex ?? '#6366f1'
             return (
@@ -598,12 +671,18 @@ const EX_EFFORT_COLORS: Record<string, string> = {
 function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[]; onSelect: (e: Exercise) => void }) {
   const [search, setSearch] = useState('')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
+  const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
   const debouncedSearch = useDebounce(search, 250)
   const { data: searched = [] } = useExercises(debouncedSearch ? { search: debouncedSearch } : undefined)
+  const { data: matrix } = useSimilarity()
   const searchBase = debouncedSearch ? searched : allExercises
-  const displayed = activeCategories.size > 0
+  const filtered = activeCategories.size > 0
     ? searchBase.filter(e => activeCategories.has(e.category))
     : searchBase
+  const displayed = useMemo(() => {
+    if (sort === 'alpha') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+    return sortByLikeness(filtered, matrix?.['exercises'])
+  }, [filtered, sort, matrix])
 
   const byCat = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -684,6 +763,8 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
             </button>
           )}
         </div>
+
+        <SortToggle sort={sort} onChange={setSort} />
 
         {/* Count */}
         {(debouncedSearch || activeCategories.size > 0) && (
@@ -935,7 +1016,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
   archetypes: Archetype[]
   onSelect: (a: Archetype) => void
 }) {
-  const [sort, setSort] = useState<'alpha' | 'likeness'>('alpha')
+  const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const { data: matrix } = useSimilarity()
 
@@ -959,27 +1040,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
 
   const sorted = useMemo(() => {
     if (sort === 'alpha') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
-    if (!matrix) return filtered
-    const scores = matrix['archetypes'] ?? {}
-    const getScore = (a: string, b: string) =>
-      scores[a]?.[b]?.score ?? scores[b]?.[a]?.score ?? 0
-    const remaining = new Set(filtered.map(a => a.id))
-    const order: string[] = []
-    let current = filtered[0]?.id ?? ''
-    while (remaining.size > 0) {
-      order.push(current)
-      remaining.delete(current)
-      if (remaining.size === 0) break
-      let bestId = ''
-      let bestScore = -1
-      for (const id of remaining) {
-        const s = getScore(current, id)
-        if (s > bestScore) { bestScore = s; bestId = id }
-      }
-      current = bestId
-    }
-    const byId = Object.fromEntries(filtered.map(a => [a.id, a]))
-    return order.map(id => byId[id]).filter(Boolean)
+    return sortByLikeness(filtered, matrix?.['archetypes'])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, sort, matrix])
 
@@ -1032,24 +1093,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
           )}
         </div>
 
-        {/* Sort controls */}
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Sort</span>
-          {(['alpha', 'likeness'] as const).map(s => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
-              className={cn(
-                'px-2.5 py-1 rounded text-[11px] border transition-colors',
-                sort === s
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'border-border/40 text-muted-foreground hover:bg-muted/40'
-              )}
-            >
-              {s === 'alpha' ? 'A → Z' : 'By likeness'}
-            </button>
-          ))}
-        </div>
+        <SortToggle sort={sort} onChange={setSort} />
 
         {/* Grid */}
         <div className="grid grid-cols-2 gap-2">
@@ -1124,6 +1168,474 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
   )
 }
 
+// ─── Framework overview (landing) ────────────────────────────────────────────
+
+function FrameworkOverview({
+  frameworks,
+  philosophies,
+  onSelect,
+}: {
+  frameworks: Framework[]
+  philosophies: Philosophy[]
+  onSelect: (fw: Framework) => void
+}) {
+  const [activePhil, setActivePhil] = useState<string | null>(null)
+
+  const philMap = useMemo(
+    () => Object.fromEntries(philosophies.map(p => [p.id, p])),
+    [philosophies]
+  )
+
+  function fwColor(fw: Framework): string {
+    const p = fw.source_philosophy ? philMap[fw.source_philosophy] : null
+    return p ? (MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1') : '#6366f1'
+  }
+
+  const philsWithFrameworks = useMemo(() => {
+    const seen = new Set<string>()
+    const out: Philosophy[] = []
+    for (const fw of frameworks) {
+      if (fw.source_philosophy && !seen.has(fw.source_philosophy)) {
+        seen.add(fw.source_philosophy)
+        const p = philMap[fw.source_philosophy]
+        if (p) out.push(p)
+      }
+    }
+    return out
+  }, [frameworks, philMap])
+
+  const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
+  const { data: matrix } = useSimilarity()
+
+  const filtered = activePhil
+    ? frameworks.filter(fw => fw.source_philosophy === activePhil)
+    : frameworks
+
+  const displayed = useMemo(() => {
+    if (sort === 'alpha') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+    return sortByLikeness(filtered, matrix?.['frameworks'])
+  }, [filtered, sort, matrix])
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
+
+        <div className="space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+            Training ontology
+          </p>
+          <h2 className="text-2xl font-semibold leading-snug">
+            {frameworks.length} training frameworks.
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+            Frameworks define the structural "how" of each philosophy — weekly modality allocation,
+            intensity distribution, and progression logic. Each framework is owned by exactly one philosophy.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-2">
+            {philsWithFrameworks.map(p => {
+              const color = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1'
+              const active = activePhil === p.id
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setActivePhil(active ? null : p.id)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all"
+                  style={active
+                    ? { backgroundColor: `${color}30`, color, border: `1px solid ${color}60` }
+                    : { backgroundColor: `${color}15`, color, border: `1px solid ${color}30`, opacity: 0.7 }
+                  }
+                >
+                  <div className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
+                  {p.name}
+                </button>
+              )
+            })}
+          </div>
+          {activePhil && (
+            <button
+              onClick={() => setActivePhil(null)}
+              className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors"
+            >
+              Clear filter
+            </button>
+          )}
+        </div>
+
+        <SortToggle sort={sort} onChange={setSort} />
+
+        <div className="grid grid-cols-2 gap-2">
+          {displayed.map(fw => {
+            const color = fwColor(fw)
+            const philName = fw.source_philosophy
+              ? (philMap[fw.source_philosophy]?.name ?? prettify(fw.source_philosophy))
+              : 'Unknown'
+            const totalSessions = fw.sessions_per_week
+              ? Object.values(fw.sessions_per_week).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+              : null
+            const levels = fw.applicable_when?.training_level ?? []
+            return (
+              <button
+                key={fw.id}
+                type="button"
+                onClick={() => onSelect(fw)}
+                className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
+                           transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
+                style={{ borderLeftColor: color, borderLeftWidth: 2 }}
+              >
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{fw.name}</p>
+                  <p className="text-[10px] text-muted-foreground/60 font-mono">{philName}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {fw.progression_model && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-muted/50 text-muted-foreground border border-border/30">
+                        {fw.progression_model}
+                      </span>
+                    )}
+                    {totalSessions != null && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-muted/50 text-muted-foreground border border-border/30">
+                        {totalSessions}×/wk
+                      </span>
+                    )}
+                    {levels.slice(0, 2).map(l => (
+                      <span key={l} className="text-[9px] px-1.5 py-0.5 rounded font-mono"
+                        style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
+          Select a framework to explore its full structure
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Framework Explorer detail ────────────────────────────────────────────────
+
+interface FrameworkRuntime extends Framework {
+  modality_priority?: {
+    committed?: ModalityId[]
+    core?: ModalityId[]
+    supplementary?: ModalityId[]
+  }
+  cadence_options?: Record<string, number[][]>
+  incompatible_with?: Array<{
+    framework_id: string
+    reason?: string
+    interference_level?: string
+    mitigation?: string
+  }>
+}
+
+function FrameworkExplorerDetail({
+  fw: fwRaw,
+  philosophies,
+  frameworks,
+  onBack,
+  onSelect,
+}: {
+  fw: Framework
+  philosophies: Philosophy[]
+  frameworks: Framework[]
+  onBack: () => void
+  onSelect: (fw: Framework) => void
+}) {
+  const fw = fwRaw as FrameworkRuntime
+
+  const philMap = useMemo(
+    () => Object.fromEntries(philosophies.map(p => [p.id, p])),
+    [philosophies]
+  )
+  const fwMap = useMemo(
+    () => Object.fromEntries(frameworks.map(f => [f.id, f])),
+    [frameworks]
+  )
+
+  const sourcePhil = fw.source_philosophy ? philMap[fw.source_philosophy] : null
+  const hex = sourcePhil
+    ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? '#6366f1')
+    : '#6366f1'
+
+  const sessionsPerWeek = fw.sessions_per_week
+    ? Object.entries(fw.sessions_per_week).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
+    : []
+
+  const intensityEntries = fw.intensity_distribution
+    ? Object.entries(fw.intensity_distribution)
+    : []
+
+  const levels = fw.applicable_when?.training_level ?? []
+  const daysMin = fw.applicable_when?.days_per_week_min
+  const daysMax = fw.applicable_when?.days_per_week_max
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 py-4 space-y-4">
+
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="size-3" />
+          All frameworks
+        </button>
+
+        {/* Header card */}
+        <div
+          className="rounded-lg border p-4"
+          style={{ borderColor: `${hex}40`, backgroundColor: `${hex}05` }}
+        >
+          <div className="flex gap-0 items-start">
+            <div className="flex-1 min-w-0 pr-5 space-y-3">
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Framework</p>
+                <h2 className="text-base font-semibold" style={{ color: hex }}>{fw.name}</h2>
+                {sourcePhil && (
+                  <p className="text-[11px] text-muted-foreground/70">{sourcePhil.name}</p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {fw.progression_model && (
+                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted/50 text-muted-foreground">
+                    {fw.progression_model}
+                  </span>
+                )}
+                {levels.map(l => (
+                  <span key={l}
+                    className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono"
+                    style={{ color: hex, backgroundColor: `${hex}15`, border: `1px solid ${hex}30` }}>
+                    {l}
+                  </span>
+                ))}
+              </div>
+              {fw.expectations && (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <StatCell label="Min weeks" value={`${fw.expectations.min_weeks}wk`} />
+                  <StatCell label="Ideal weeks" value={`${fw.expectations.ideal_weeks}wk`} />
+                  <StatCell label="Min days/wk" value={`${fw.expectations.min_days_per_week}`} />
+                  <StatCell label="Ideal days/wk" value={`${fw.expectations.ideal_days_per_week}`} />
+                  <StatCell label="Min session" value={`${fw.expectations.min_session_minutes}min`} />
+                  <StatCell label="Ideal session" value={`${fw.expectations.ideal_session_minutes}min`} />
+                </div>
+              )}
+            </div>
+
+            <div className="shrink-0 pl-5 border-l space-y-3" style={{ borderColor: `${hex}20`, width: '36%', minWidth: 200 }}>
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground/35 font-medium">Applicable when</p>
+              {daysMin != null && (
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Days / week</p>
+                  <p className="text-xs font-mono">{daysMin}–{daysMax}</p>
+                </div>
+              )}
+              {levels.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Training level</p>
+                  <div className="flex flex-wrap gap-1">
+                    {levels.map(l => (
+                      <span key={l}
+                        className="text-[9px] px-1.5 py-0.5 rounded font-mono"
+                        style={{ color: hex, backgroundColor: `${hex}15`, border: `1px solid ${hex}30` }}>
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {fw.expectations?.supports_split_days != null && (
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Split days</p>
+                  <p className="text-xs font-mono">{fw.expectations.supports_split_days ? 'Supported' : 'Not supported'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sessions per week — dot visualization */}
+        {sessionsPerWeek.length > 0 && (
+          <Section label="Sessions / week">
+            <div className="space-y-1.5">
+              {sessionsPerWeek.map(([mod, count]) => (
+                <div key={mod} className="flex items-center gap-2 text-xs">
+                  <span className="w-48 truncate text-muted-foreground text-[11px]">{prettify(mod)}</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: count ?? 0 }).map((_, i) => (
+                      <div key={i} className="size-2 rounded-full" style={{ backgroundColor: hex, opacity: 0.7 }} />
+                    ))}
+                  </div>
+                  <span className="font-mono text-muted-foreground text-[10px]">{count}×/wk</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Intensity distribution */}
+        {intensityEntries.length > 0 && (
+          <Section label="Intensity distribution">
+            <div className="space-y-1.5">
+              {intensityEntries.map(([zone, pct]) => (
+                <div key={zone} className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-36 truncate">{zone.replace(/_/g, ' ')}</span>
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${(pct ?? 0) * 100}%`, backgroundColor: hex, opacity: 0.7 }} />
+                  </div>
+                  <span className="text-xs font-mono text-muted-foreground w-8 text-right">
+                    {((pct ?? 0) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Modality priority tiers */}
+        {fw.modality_priority && (
+          <Section label="Modality priority">
+            <div className="space-y-2">
+              {(['committed', 'core', 'supplementary'] as const).map(tier => {
+                const mods = fw.modality_priority?.[tier] ?? []
+                if (!mods.length) return null
+                const tierColor = tier === 'committed' ? '#ef4444' : tier === 'core' ? '#f97316' : '#64748b'
+                return (
+                  <div key={tier} className="space-y-1">
+                    <p className="text-[9px] uppercase tracking-wider font-medium" style={{ color: tierColor }}>{tier}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {mods.map(mod => {
+                        const mc = MODALITY_COLORS[mod as ModalityId]
+                        return (
+                          <span key={mod}
+                            className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                            style={{ color: mc?.hex ?? tierColor, backgroundColor: `${mc?.hex ?? tierColor}15`, border: `1px solid ${mc?.hex ?? tierColor}30` }}>
+                            {mc?.label ?? prettify(mod)}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Section>
+        )}
+
+        {/* Cadence options */}
+        {fw.cadence_options && Object.keys(fw.cadence_options).length > 0 && (
+          <Section label="Cadence options">
+            <div className="space-y-1.5">
+              {Object.entries(fw.cadence_options).map(([days, patterns]) => (
+                <div key={days} className="flex items-start gap-3">
+                  <span className="text-[10px] font-mono text-muted-foreground w-12 shrink-0">{days}-day</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {patterns.map((pat, i) => (
+                      <span key={i} className="text-[10px] font-mono text-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded border border-border/30">
+                        {pat.join(', ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Deload protocol */}
+        {fw.deload_protocol && (
+          <Section label="Deload protocol">
+            <div className="grid grid-cols-3 gap-2">
+              <StatCell label="Frequency" value={`Every ${fw.deload_protocol.frequency_weeks}wk`} />
+              <StatCell label="Volume reduction" value={`${Math.round(fw.deload_protocol.volume_reduction_pct * 100)}%`} />
+              <StatCell label="Intensity" value={fw.deload_protocol.intensity_change} />
+            </div>
+          </Section>
+        )}
+
+        {/* Incompatible frameworks */}
+        {fw.incompatible_with && fw.incompatible_with.length > 0 && (
+          <Section label="Incompatible frameworks">
+            <div className="space-y-2">
+              {fw.incompatible_with.map(item => {
+                const other = fwMap[item.framework_id]
+                return (
+                  <div key={item.framework_id}
+                    className="rounded-md border border-border/30 bg-card/30 px-3 py-2.5 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-medium text-foreground">
+                        {other?.name ?? prettify(item.framework_id)}
+                      </span>
+                      {item.interference_level && (
+                        <span className={cn(
+                          'text-[9px] px-1.5 py-0.5 rounded font-mono',
+                          item.interference_level === 'high'
+                            ? 'bg-red-500/15 text-red-400'
+                            : item.interference_level === 'manageable'
+                            ? 'bg-amber-500/15 text-amber-400'
+                            : 'bg-muted/50 text-muted-foreground'
+                        )}>
+                          {item.interference_level}
+                        </span>
+                      )}
+                    </div>
+                    {item.reason && (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">{item.reason}</p>
+                    )}
+                    {item.mitigation && (
+                      <p className="text-[10px] text-muted-foreground/60 italic leading-relaxed">
+                        Mitigation: {item.mitigation}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </Section>
+        )}
+
+        {/* Notes */}
+        {fw.notes && (
+          <Section label="Notes">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{fw.notes}</p>
+          </Section>
+        )}
+
+        {/* Sources */}
+        {fw.sources && fw.sources.length > 0 && (
+          <Section label="Sources">
+            <ul className="space-y-0.5">
+              {fw.sources.map((s, i) => (
+                <li key={i} className="text-[10px] text-muted-foreground/60 italic">{s}</li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
+        <SimilarItems
+          category="frameworks"
+          id={fw.id}
+          getLabel={(id) => frameworks.find(f => f.id === id)?.name ?? prettify(id)}
+          onSelect={(id) => {
+            const f = frameworks.find(f => f.id === id)
+            if (f) onSelect(f)
+          }}
+          accentHex={hex}
+        />
+
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type ExploreSection = 'explorer' | 'ontology'
@@ -1140,9 +1652,10 @@ export function Explore() {
   const [selectedMod, setSelectedMod] = useState<Modality | null>(null)
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null)
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+  const [selectedFramework, setSelectedFramework] = useState<Framework | null>(null)
 
   const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
-  const { data: frameworks = [] } = useFrameworks()
+  const { data: frameworks = [], isLoading: fwLoading, error: fwError } = useFrameworks()
   const { data: modalities = [], isLoading: modLoading, error: modError } = useModalities()
   const { data: allArchetypes = [] } = useArchetypes()
   const { data: allExercises = [] } = useExercises()
@@ -1153,6 +1666,7 @@ export function Explore() {
     setSelectedMod(null)
     setSelectedArchetype(null)
     setSelectedExercise(null)
+    setSelectedFramework(null)
   }
 
   function handleNavigateExercise(id: string) {
@@ -1160,8 +1674,8 @@ export function Explore() {
     if (ex) setSelectedExercise(ex)
   }
 
-  const isLoading = topic === 'philosophies' ? philLoading : modLoading
-  const error = topic === 'philosophies' ? philError : modError
+  const isLoading = topic === 'philosophies' ? philLoading : topic === 'frameworks' ? fwLoading : modLoading
+  const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError : modError
 
   return (
     <motion.div
@@ -1201,9 +1715,9 @@ export function Explore() {
 
       {/* ── Explorer: unified landing ↔ detail pattern for all topics ── */}
       {section === 'explorer' && (
-        (topic === 'philosophies' || topic === 'modalities') && isLoading
+        (topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks') && isLoading
           ? <div className="flex-1 p-6"><LoadingCard /></div>
-          : (topic === 'philosophies' || topic === 'modalities') && error
+          : (topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks') && error
           ? <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
           : (
             <div className="flex-1 min-h-0 overflow-hidden">
@@ -1240,6 +1754,21 @@ export function Explore() {
                         onBack={() => setSelectedArchetype(null)}
                       />
                     : <ArchetypeLanding archetypes={allArchetypes} onSelect={setSelectedArchetype} />
+                )}
+                {topic === 'frameworks' && (
+                  selectedFramework
+                    ? <FrameworkExplorerDetail
+                        fw={selectedFramework}
+                        philosophies={philosophies}
+                        frameworks={frameworks}
+                        onBack={() => setSelectedFramework(null)}
+                        onSelect={setSelectedFramework}
+                      />
+                    : <FrameworkOverview
+                        frameworks={frameworks}
+                        philosophies={philosophies}
+                        onSelect={setSelectedFramework}
+                      />
                 )}
                 {topic === 'exercises' && (
                   selectedExercise
