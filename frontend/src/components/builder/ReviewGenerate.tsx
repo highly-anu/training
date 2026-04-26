@@ -13,7 +13,7 @@ import { useFeasibility } from '@/hooks/useFeasibility'
 import { useGenerateProgram } from '@/api/programs'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
-import { scheduleToConstraints } from '@/lib/scheduleToConstraints'
+import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
 import type { AthleteConstraints } from '@/api/types'
 
 export function ReviewGenerate() {
@@ -44,7 +44,7 @@ export function ReviewGenerate() {
   // Always derive schedule-based constraints from the saved weekly schedule.
   // This overrides stale persisted values in the builder store so the API call
   // and the Configuration Summary always reflect the actual training days.
-  const scheduleOverride = weeklySchedule ? scheduleToConstraints(weeklySchedule) : {}
+  const scheduleOverride: Partial<ScheduleConstraints> = weeklySchedule ? scheduleToConstraints(weeklySchedule) : {}
 
   // Whether the user has made a selection that allows generation
   const canGenerate = sourceMode !== null

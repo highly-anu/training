@@ -43,7 +43,7 @@ export function Dashboard() {
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
 
   const currentWeek = program?.weeks[weekIndex]
-  const { totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
+  const { totalWeeks: _totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
 
   const weekComplete = useMemo(() => {
     if (!currentWeek) return false
