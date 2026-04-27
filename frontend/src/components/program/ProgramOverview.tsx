@@ -9,8 +9,9 @@ import type { GeneratedProgram, ModalityId, TrainingPhase } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
 import { useBuilderStore } from '@/store/builderStore'
 import { usePhilosophies } from '@/api/philosophies'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
 
-// ── Category config ────────────────────────────────────────────────────────────
+// ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
 const VOL_CATEGORIES = [
   { id: 'Strength',     color: '#ef4444' },
@@ -18,25 +19,6 @@ const VOL_CATEGORIES = [
   { id: 'Durability',   color: '#f59e0b' },
   { id: 'Mobility',     color: '#10b981' },
 ] as const
-
-const MODALITY_TO_CATEGORY: Partial<Record<ModalityId, string>> = {
-  max_strength:             'Strength',
-  strength_endurance:       'Strength',
-  relative_strength:        'Strength',
-  power:                    'Strength',
-  aerobic_base:             'Conditioning',
-  anaerobic_intervals:      'Conditioning',
-  mixed_modal_conditioning: 'Conditioning',
-  durability:               'Durability',
-  mobility:                 'Mobility',
-  movement_skill:           'Mobility',
-  rehab:                    'Mobility',
-  combat_sport:             'Conditioning',
-}
-
-const CATEGORY_COLOR: Record<string, string> = Object.fromEntries(
-  VOL_CATEGORIES.map(({ id, color }) => [id, color])
-)
 
 // ── Phase theory content ───────────────────────────────────────────────────────
 
@@ -153,8 +135,8 @@ function buildArchetypeRows(
       for (const session of sessions) {
         if (!session.archetype) continue
         const dur = session.duration_min ?? session.archetype.duration_estimate_minutes ?? 0
-        const cat = MODALITY_TO_CATEGORY[session.modality] ?? 'Conditioning'
-        const color = CATEGORY_COLOR[cat] ?? '#888'
+        const mod = session.modality as ModalityId
+        const color = MODALITY_COLORS[mod]?.hex ?? '#6366f1'
         const name = session.archetype.name
 
         const existing = map.get(name)
@@ -163,7 +145,7 @@ function buildArchetypeRows(
           existing.minDur = Math.min(existing.minDur, dur)
           existing.maxDur = Math.max(existing.maxDur, dur)
         } else {
-          map.set(name, { name, color, count: 1, minDur: dur, maxDur: dur, modality: cat })
+          map.set(name, { name, color, count: 1, minDur: dur, maxDur: dur, modality: mod })
         }
       }
     }
@@ -459,22 +441,25 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                         ) : (
                           <div className="space-y-2 flex-1">
                             {archetypeRows.map((row) => (
-                              <div key={row.name} className="flex items-baseline gap-2">
+                              <div key={row.name} className="flex items-start gap-2">
                                 <span
-                                  className="inline-block size-1.5 rounded-full shrink-0 mt-1"
+                                  className="inline-block size-1.5 rounded-full shrink-0 mt-1.5"
                                   style={{ backgroundColor: row.color }}
                                 />
                                 <span
-                                  className="text-xs font-semibold tabular-nums shrink-0 w-5 text-right"
+                                  className="text-xs font-semibold tabular-nums shrink-0 w-5 text-right mt-0.5"
                                   style={{ color: row.color }}
                                 >
                                   {row.count}×
                                 </span>
-                                <span className="text-xs text-foreground leading-snug flex-1 min-w-0">
-                                  {row.name}
-                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs text-foreground leading-snug">{row.name}</div>
+                                  <div className="text-[10px] font-medium" style={{ color: row.color }}>
+                                    {MODALITY_COLORS[row.modality as ModalityId]?.label ?? row.modality}
+                                  </div>
+                                </div>
                                 {row.maxDur > 0 && (
-                                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 ml-auto">
+                                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 mt-0.5">
                                     {fmtDur(row.minDur, row.maxDur)}
                                   </span>
                                 )}
