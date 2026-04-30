@@ -49,3 +49,16 @@ notes: 'THE signature Uphill Athlete session. Weighted ruck step-ups on a
   not aerobic stress. Once a week in Base, twice in Specific.
 
   '
+scaling:
+  time_limited:
+    drop_slots:
+    - warmup
+    notes: 'Drop the formal warmup. Begin with 5 minutes of light unloaded
+      step-ups on the box to warm up naturally before loading the pack.
+      Main ME block (50 min) + cooldown (10 min) = 60 min total.
+      '
+  deload:
+    volume_multiplier: 0.6
+    notes: 'Reduce main ME block to 30 min. Keep warmup and cooldown.
+      Use deload weeks to focus on movement quality and breathing pattern
+      rather than duration or load.'
