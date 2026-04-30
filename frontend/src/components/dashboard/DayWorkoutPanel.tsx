@@ -55,7 +55,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
             Week {weekData.week_number}
             {sessions.length > 0 && (
               <span className="ml-1 capitalize">
-                · {sessions.map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
+                · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
               </span>
             )}
           </p>
@@ -73,7 +73,22 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
       {/* Scrollable content */}
       <div className="p-5 space-y-6">
         {sessions.map((session, si) => {
-          if (!session.archetype) return null
+          if (!session.archetype) return (
+            <div key={si} className={cn('space-y-2', si > 0 && 'border-t border-border pt-6')}>
+              <p className="text-sm font-medium capitalize">{session.modality.replace(/_/g, ' ')}</p>
+              <div className="flex items-center gap-3 rounded-md border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                <RefreshCw className="size-3.5 shrink-0" />
+                <span>No session could be generated for this slot. Use <strong>Replace</strong> to regenerate.</span>
+                <button
+                  type="button"
+                  onClick={() => setReplaceTarget({ idx: si })}
+                  className="ml-auto shrink-0 rounded border border-border px-2 py-1 text-[11px] hover:border-primary/40 hover:text-foreground transition-colors"
+                >
+                  Replace
+                </button>
+              </div>
+            </div>
+          )
           const isComplete = sessionLogs[sessionKey]?.[si] === true
           return (
             <div key={si} className={cn('space-y-4', si > 0 && 'border-t border-border pt-6')}>
