@@ -71,7 +71,7 @@ def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: st
     fallback pass so bodyweight/equipment-limited archetypes are still found.
     """
     available = set(constraints.get('equipment', []))
-    session_time = constraints.get('session_time_minutes', 60)
+    session_time = constraints.get('session_time_minutes', 90)
     training_level = constraints.get('training_level', 'intermediate')
     for arch in archetypes:
         if arch.get('modality') != modality:
@@ -83,9 +83,13 @@ def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: st
         levels = arch.get('training_levels', [])
         if levels and training_level not in levels:
             continue
-        # Duration — skip archetypes that are too long and have no time_limited scaling
+        # Duration — skip archetypes that can't fit the session budget.
+        # time_limited scaling is assumed to save ~25% (dropping one warm-up/accessory slot);
+        # this prevents a 75-min archetype's 60-min variant from matching a 30-min budget.
         duration = arch.get('duration_estimate_minutes', 60)
-        if duration > session_time and not arch.get('scaling', {}).get('time_limited'):
+        tl = arch.get('scaling', {}).get('time_limited')
+        effective_duration = int(duration * 0.75) if tl else duration
+        if effective_duration > session_time:
             continue
         if relax_equipment:
             return True  # Phase/level/duration match is sufficient when equipment filter is relaxed

@@ -47,8 +47,6 @@ slots:
     sets: 1
     duration_sec: 1200
     intensity: moderate
-    exercise_filter:
-      category: bodyweight
     notes: >
       20-minute AMRAP or EMOM. Example movements: DB thruster, DB renegade row,
       burpee, step-up. RPE 7 pace — sustainable for the full 20 minutes. Marcus
