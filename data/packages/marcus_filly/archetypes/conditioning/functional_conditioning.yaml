@@ -1,0 +1,104 @@
+id: functional_conditioning
+name: Functional Bodybuilding Conditioning
+modality: mixed_modal_conditioning
+category: conditioning
+duration_estimate_minutes: 40
+required_equipment:
+  - dumbbell
+  - resistance_band
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+  - transition
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - Marcus Filly — Functional Bodybuilding
+notes: >
+  RPE-governed mixed-modal conditioning session. Marcus Filly's conditioning is
+  not maximal-intensity CrossFit — it is sustainable aerobic-metabolic work at
+  RPE 7, preserving shoulder function even under conditioning volume. AMRAP or
+  EMOM structure with a dumbbell and bodyweight stack; face pulls / band work
+  appended to every conditioning session as a shoulder maintenance cooldown.
+  Warm-up circuit builds movement fluency before the conditioning block; the work
+  itself is medium-pace, not sprint. Athletes should feel "could do one more round"
+  at the end — not destroyed.
+
+slots:
+  - role: warm_up_circuit
+    slot_type: time_domain
+    duration_sec: 480
+    intensity: light
+    exercise_filter:
+      category: bodyweight
+    notes: >
+      8-minute bodyweight warm-up circuit: 3 rounds of push-up, air squat, ring
+      row (or inverted row). Moderate pace — not a sprint. Prepares connective
+      tissue, rehearses movement patterns for the conditioning block, and builds
+      aerobic readiness without pre-fatigue. Marcus Filly: always warm-up with
+      movements that mirror the conditioning session's demand patterns.
+
+  - role: conditioning_block
+    slot_type: amrap
+    sets: 1
+    duration_sec: 1200
+    intensity: moderate
+    exercise_filter:
+      category: bodyweight
+    notes: >
+      20-minute AMRAP or EMOM. Example movements: DB thruster, DB renegade row,
+      burpee, step-up. RPE 7 pace — sustainable for the full 20 minutes. Marcus
+      Filly conditioning ethos: you should be able to hold a conversation (barely)
+      throughout; this is aerobic-metabolic work, not anaerobic sprint. Score is
+      rounds completed; progress by adding 1 round over 3 sessions at the same
+      movements and load.
+
+  - role: shoulder_cooldown
+    slot_type: sets_reps
+    sets: 3
+    reps: 12
+    intensity: light
+    rest_sec: 45
+    exercise_filter:
+      movement_pattern: horizontal_pull
+      category: accessory
+    notes: >
+      Band pull-apart and face pull superset after every conditioning session.
+      Marcus Filly: conditioning volume accumulates anterior shoulder fatigue
+      (pushing, pressing, rowing motions). The shoulder cooldown stack counter-
+      balances that fatigue immediately. Never skip — 3 rounds of 12 takes
+      under 5 minutes and prevents the cumulative anterior shoulder loading
+      that causes impingement over time.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: >
+      Reduce conditioning block to 12 minutes. Drop warm-up circuit to 5 minutes
+      (2 rounds). Keep shoulder cooldown unchanged. Use deload conditioning
+      weeks to focus on movement quality within the AMRAP — slow down, do fewer
+      rounds, maintain perfect form.
+  time_limited:
+    drop_slots:
+      - warm_up_circuit
+    notes: >
+      Drop structured warm-up. Begin conditioning block with 5 easy minutes of
+      movement prep. Shoulder cooldown remains mandatory.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: dumbbell
+        substitute_approach: >
+          Replace DB thruster with air squat + push-up superset. Replace DB
+          renegade row with plank shoulder tap. Conditioning block becomes
+          fully bodyweight. Shoulder cooldown: replace with band pull-apart
+          only (band usually available).
+      - missing_equipment: resistance_band
+        substitute_approach: >
+          Replace band-based shoulder cooldown with DB rear delt fly (light)
+          + cross-body shoulder stretch (30 sec each side). Movement quality
+          cooldown substitutes for the band protocol.

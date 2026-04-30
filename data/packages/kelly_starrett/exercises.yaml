@@ -1,0 +1,1343 @@
+exercises:
+# ─── Ankle / foot ─────────────────────────────────────────────────────────────
+- id: ankle_circles_ks
+  name: Ankle Circles
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - wall_ankle_dorsiflexion
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Kelly Starrett — Ready to Run
+  notes: 'Non-weight-bearing ankle circumduction, both clockwise and counterclockwise.
+    Standard joint prep before any lower-body or locomotive work. Slow, full circles
+    loading the joint through all planes of ankle motion.'
+
+- id: calf_stretch_wall
+  name: Calf Stretch (Wall — Straight Leg)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - soleus_stretch_bent_knee
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+    complexity: soleus_stretch_bent_knee
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Ready to Run
+  notes: 'Hands on wall, rear leg straight, heel pressed to floor. Targets gastrocnemius
+    (straight knee). 60 seconds each side. Calf complex tightness is a primary driver
+    of ankle dorsiflexion restriction — address daily.'
+
+- id: soleus_stretch_bent_knee
+  name: Soleus Stretch (Wall — Bent Knee)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires:
+  - calf_stretch_wall
+  unlocks:
+  - wall_ankle_dorsiflexion
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - calf_stretch_wall
+  typical_volume:
+    sets: 2
+    duration_sec: 45
+  sources:
+  - Kelly Starrett — Ready to Run
+  notes: 'Same wall position as calf stretch but knee bent — shifts the stretch
+    from gastrocnemius to soleus. The soleus is often the primary dorsiflexion
+    limiter once the gastrocnemius restriction is addressed.'
+
+- id: wall_ankle_dorsiflexion
+  name: Knee-to-Wall Ankle Dorsiflexion
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires:
+  - soleus_stretch_bent_knee
+  unlocks: []
+  contraindicated_with:
+  - achilles_tendinopathy
+  progressions:
+    volume: increase_duration
+    load: move_foot_farther_from_wall
+  scaling_down:
+  - soleus_stretch_bent_knee
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Foot against wall, drive knee forward toward little toe. Kelly Starrett
+    primary ankle dorsiflexion test and drill — can the knee reach the wall with
+    the foot 10cm out? Contraindicated with acute Achilles pathology.'
+
+- id: tibialis_raise_wall_ks
+  name: Tibialis Raise (Wall)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources:
+  - Kelly Starrett — Ready to Run
+  notes: 'Heels 2-3 inches from wall, lean back, lift toes and forefeet as high
+    as possible. Tibialis anterior strengthening. Convergence point with ATG —
+    anterior tibialis strength controls pronation rate and dorsiflexion quality.'
+
+# ─── Knee ─────────────────────────────────────────────────────────────────────
+- id: knee_circles_ks
+  name: Knee Circles
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Hands on knees, feet shoulder-width. Draw circles with knees in both
+    directions. Joint prep for the knee — distributes synovial fluid before
+    loaded squat patterns.'
+
+- id: atg_split_squat_bw
+  name: ATG Split Squat (Bodyweight — ROM Focus)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - squat
+  requires:
+  - ankle_circles_ks
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    volume: increase_range_of_motion
+  scaling_down:
+  - knee_circles_ks
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources:
+  - Kelly Starrett — Ready to Run
+  - ATG (Ben Patrick)
+  notes: 'Split squat with front knee tracking far forward — ATG full ROM principle.
+    Focus is range not load. Kelly Starrett convergence with ATG: full-range split
+    squat restores knee and ankle mobility simultaneously.'
+
+# ─── Hip ──────────────────────────────────────────────────────────────────────
+- id: hip_circles_standing_ks
+  name: Hip Circles (Standing)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - hip_90_90_ks
+  contraindicated_with: []
+  progressions:
+    volume: increase_reps_per_set
+    load: increase_circle_diameter
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Single-leg stand, draw large hip circles both directions each side. Standard
+    hip joint prep and quick functional assessment of hip joint integrity — quality
+    of the circle (smoothness, range, symmetry) is the marker.'
+
+- id: hip_90_90_ks
+  name: Hip 90/90 (Seated — Active Switches)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires:
+  - hip_circles_standing_ks
+  unlocks:
+  - thoracic_rotation_90_90_ks
+  - pigeon_pose_ks
+  contraindicated_with: []
+  progressions:
+    volume: active_switches_per_set
+  scaling_down:
+  - hip_circles_standing_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Seated with both legs in 90-degree angles (one in front, one behind).
+    Actively switch legs by rotating through the hip — 10 active switches.
+    Primary hip rotation test and trainer; assesses internal and external rotation
+    capacity. Switch active (not passive) to train the full rotational range.'
+
+- id: pigeon_pose_ks
+  name: Pigeon Pose (Hip External Rotation)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - hip_90_90_ks
+  unlocks: []
+  contraindicated_with:
+  - hip_labrum_pathology
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - hip_90_90_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Front leg horizontal, rear leg extended. Targets external hip rotators
+    (piriformis, short external rotators). 60-90 seconds each side. Posterior
+    tilt cue — flatten the lower back — deepens the external rotator stretch
+    versus the passive yoga version.'
+
+- id: couch_stretch_ks
+  name: Couch Stretch (Hip Flexor / Quad)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - deep_lunge_reach_ks
+  contraindicated_with:
+  - knee_meniscus_acute
+  - patellar_tendinopathy_acute
+  progressions:
+    volume: increase_hold_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Rear foot elevated against wall, knee on floor, hip driven toward wall.
+    Primary hip flexor / rectus femoris test. 90 seconds each side. With posterior
+    pelvic tilt cue — flatten the lower back before driving the hip forward.
+    Athletes who sit all day develop couch stretch deficits that become squat
+    position problems.'
+
+- id: hip_flexor_stretch_kneeling_ks
+  name: Hip Flexor Stretch (Kneeling)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - couch_stretch_ks
+  contraindicated_with: []
+  progressions:
+    volume: increase_hold_duration
+    complexity: couch_stretch_ks
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Half-kneeling lunge, drive front hip forward. Posterior pelvic tilt
+    cue — "tuck the tailbone." Hip flexor tightness in the half-kneeling
+    position predicts lumbar dysfunction under load. 60 seconds each side.'
+
+- id: deep_lunge_reach_ks
+  name: Deep Lunge with Thoracic Reach
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - couch_stretch_ks
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - couch_stretch_ks
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Lunge forward, drop rear knee, then rotate the thorax and reach the
+    ipsilateral arm overhead. Combined hip flexor and thoracic rotation mobilization.
+    5 reps each side with 3-second hold at end range. Combined hip/thorax
+    mobilizations reflect athletic movement patterns better than isolated stretches.'
+
+- id: lying_hip_rotation_ks
+  name: Lying Hip Rotation (IR/ER)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - hip_90_90_ks
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Lying on back, knee bent to 90 degrees. Rotate internally and externally
+    through full range — 10 reps internal, 10 reps external, each side. Passive
+    hip rotation range-of-motion assessment. Identifies side-to-side asymmetries
+    that drive compensatory lumbar loading.'
+
+- id: deep_squat_hold_ks
+  name: Deep Squat Hold
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_labrum_pathology
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - hip_90_90_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Full-depth squat, heels on floor, hands in prayer position pressing
+    knees out. The primary squat test — a healthy athlete should hold this for
+    10 minutes. Accumulate 10 minutes per day as a mobility practice baseline.
+    Combines hip flexion, ankle dorsiflexion, and thoracic extension.'
+
+# ─── Thoracic / spine ─────────────────────────────────────────────────────────
+- id: cat_cow_ks
+  name: Cat-Cow (Spinal Flexion / Extension)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - cat_cow_lateral_ks
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Quadruped, alternate between full spinal flexion (cat) and full extension
+    (cow). 10 reps. Standard spinal mobility warm-up — segments all spinal levels
+    simultaneously. Establishes full sagittal range before adding rotation or load.'
+
+- id: cat_cow_lateral_ks
+  name: Cat-Cow Lateral (Spinal Lateral Flexion)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires:
+  - cat_cow_ks
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - cat_cow_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Quadruped — laterally flex the spine, bringing hip and shoulder on the
+    same side toward each other. Both directions. Adds the frontal plane component
+    missing from standard cat-cow.'
+
+- id: open_books_ks
+  name: Open Books (Thoracic Rotation — Lying)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - thoracic_rotation_seated_ks
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - cat_cow_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Lying on side, knees stacked at 90 degrees, top arm sweeps overhead
+    following the rib cage rotation. Thoracic rotation is the mobility most
+    commonly lost in desk workers and athletes. 10 reps each side.'
+
+- id: thoracic_rotation_seated_ks
+  name: Thoracic Rotation (Seated)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - open_books_ks
+  unlocks:
+  - thoracic_rotation_90_90_ks
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - open_books_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Cross-legged or 90/90 seated, hands behind head. Rotate the thorax
+    fully left and right, keeping the pelvis fixed. 10 reps each side. Trains
+    the thorax independent of the hip, isolating the spinal contribution to
+    total-body rotation.'
+
+- id: thoracic_rotation_90_90_ks
+  name: Thoracic Rotation (Hip 90/90 Position)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - thoracic_rotation_seated_ks
+  - hip_90_90_ks
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - thoracic_rotation_seated_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Hip in 90/90 position, thorax rotates over the hip. Combined hip and
+    thorax mobilization — the most sport-specific thoracic rotation pattern as
+    it requires both hip and spinal mobility simultaneously.'
+
+- id: thoracic_extension_floor_ks
+  name: Thoracic Extension (Floor — Hands Behind Head)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - open_books_ks
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - cat_cow_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Lying on back, hands behind head. Lift upper back off floor into
+    thoracic extension (not lumbar extension). 2-second hold at end range.
+    Targets segmental thoracic extension mobility from T1 to T12.'
+
+- id: worlds_greatest_stretch_ks
+  name: World''s Greatest Stretch
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - hip_flexor_stretch_kneeling_ks
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Lunge forward, drop elbow inside front foot, then rotate arm overhead.
+    Combined hip flexor, ankle, and thoracic rotation mobilization. Standard
+    pre-session prep. 5 reps each side with 3-second pause at end range of
+    each position.'
+
+- id: spinal_rotation_squat_ks
+  name: Spinal Rotation in Squat
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  - squat
+  requires:
+  - deep_squat_hold_ks
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - deep_squat_hold_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'In full deep squat position, rotate the thorax fully left and right.
+    The squat locks the pelvis and forces all rotation through the thoracic
+    spine — the most demanding thoracic rotation drill. Requires established
+    deep squat hold.'
+
+# ─── Shoulder / upper ─────────────────────────────────────────────────────────
+- id: shoulder_circles_ks
+  name: Shoulder Circles (Arm Circles)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - cross_body_shoulder_stretch_ks
+  contraindicated_with: []
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Full arm circles forward and backward at varied speeds. Standard
+    shoulder joint prep before any upper-body or overhead work. Both forward
+    and backward directions required to address the full circumduction range.'
+
+- id: cross_body_shoulder_stretch_ks
+  name: Cross-Body Shoulder Stretch
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires:
+  - shoulder_circles_ks
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - shoulder_circles_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 45
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Arm across the chest, opposite hand at the elbow pressing gently.
+    Targets posterior deltoid and posterior capsule. 45 seconds each side.
+    Posterior shoulder tightness drives internal rotation restriction and is
+    common in athletes with high pressing volumes.'
+
+- id: behind_back_reach_ks
+  name: Behind-Back Reach (Internal Rotation)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - shoulder_circles_ks
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - cross_body_shoulder_stretch_ks
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Reach one arm behind the back as high as possible toward the opposite
+    shoulder blade. Internal rotation + extension. Shoulder internal rotation
+    test — reaching T6 or higher indicates normal internal rotation. 5 reps
+    each arm.'
+
+- id: shoulder_90_90_rotation_ks
+  name: Shoulder 90/90 Rotation (IR/ER)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires:
+  - shoulder_circles_ks
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+  - shoulder_circles_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Arm abducted to 90 degrees, elbow bent to 90 degrees. Rotate forearm
+    forward (IR) and backward (ER) through full range. Primary shoulder IR/ER
+    test — end range should be pain-free. 10 reps each direction each side.'
+
+- id: push_up_plus_ks
+  name: Push-Up Plus (Serratus Anterior)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks:
+  - wall_slide_ks
+  contraindicated_with:
+  - shoulder_impingement
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Standard push-up position; at the top of each rep, push the floor away
+    to protract the scapulae (round the upper back further). Targets serratus
+    anterior — the muscle responsible for scapular upward rotation. Serratus
+    weakness drives winging and impingement.'
+
+- id: wall_slide_ks
+  name: Wall Slide (Shoulder Flexion + Upward Rotation)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires:
+  - push_up_plus_ks
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+  - push_up_plus_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Forearms against wall, slide hands from shoulder height to overhead
+    while maintaining forearm contact. Shoulder flexion with scapular upward
+    rotation. Trains the coupled motion of shoulder flexion + scapular upward
+    rotation required for pain-free overhead position.'
+
+- id: band_pull_apart_ks
+  name: Band Pull-Apart (Scapular Focus)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Band at shoulder width, pull apart to full horizontal extension.
+    Retract and depress the scapulae at end range — "lock the shoulder blades
+    in your back pockets." Posterior rotator cuff and lower trapezius.
+    High frequency prehab — can be performed daily.'
+
+- id: banded_external_rotation_ks
+  name: Banded External Rotation (Standing)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: add_reps_per_side
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 12
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Band anchored at waist height, elbow at 90 degrees tucked to body.
+    Rotate forearm away from body through full external rotation. 12 reps
+    each side. Primary isolated external rotation strengthener in the
+    Starrett system.'
+
+# ─── Wrist ────────────────────────────────────────────────────────────────────
+- id: wrist_circles_ks
+  name: Wrist Circles
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - wrist_extension_stretch_ks
+  contraindicated_with:
+  - wrist_injury
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Slow wrist circumduction both directions. Standard wrist joint prep
+    before any push, carry, or Olympic lifting. Both hands simultaneously
+    or alternating.'
+
+- id: wrist_extension_stretch_ks
+  name: Wrist Extension Stretch (Floor)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires:
+  - wrist_circles_ks
+  unlocks:
+  - wrist_flexion_compression_ks
+  contraindicated_with:
+  - wrist_injury
+  - tennis_elbow
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - wrist_circles_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 30
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Hands palm-down on floor, fingers pointing toward knees, shift weight
+    back to load wrist extension. 30 seconds. Wrist extension deficit drives
+    front-rack and front-squat compensations.'
+
+- id: wrist_flexion_compression_ks
+  name: Wrist Flexion Compression (Fists)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires:
+  - wrist_extension_stretch_ks
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - golfers_elbow
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+  - wrist_extension_stretch_ks
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Quadruped on fists — load the wrist flexors through compression.
+    Strengthens wrist flexor tendons. All extension-focused wrist work must
+    be balanced with flexion loading.'
+
+# ─── Neck ─────────────────────────────────────────────────────────────────────
+- id: neck_rotation_controlled_ks
+  name: Neck Rotation (Controlled)
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - cervical_instability
+  - neck_strain
+  progressions:
+    volume: add_reps_per_side
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Slow, controlled cervical rotation to each side. No overpressure.
+    Loss of cervical rotation range-of-motion predicts upper thoracic restriction.
+    Contraindicated with cervical instability.'
+
+- id: neck_lateral_flexion_ks
+  name: Neck Lateral Flexion
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - cervical_instability
+  - neck_strain
+  progressions:
+    volume: add_reps_per_side
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 5
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Slow ear-to-shoulder lateral neck flexion. Gravity only — no overpressure.
+    Lateral flexion restriction reflects scalene and SCM tightness, often
+    associated with desk work or forward head posture. Contraindicated with
+    cervical instability.'
+
+# ─── Tissue prep / banded distraction ─────────────────────────────────────────
+- id: foam_roll_quads_ks
+  name: Foam Roll Quads
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - wall_ankle_dorsiflexion
+  contraindicated_with:
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 120
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Prone, foam roller under quads. 120 seconds each leg. Slow rolling
+    with 2-second pauses at tender points — "find the hot spot and breathe
+    into it." Reduces quadriceps tone before knee mobility or squat work.'
+
+- id: foam_roll_it_band_ks
+  name: Foam Roll IT Band
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 120
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Side-lying, roller under lateral thigh from hip to knee. Slow rolling.
+    120 seconds each side. IT band tightness restricts hip internal rotation
+    and knee flexion — important before hip mobility work.'
+
+- id: foam_roll_thoracic_ks
+  name: Foam Roll Thoracic Spine
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - thoracic_extension_floor_ks
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - cat_cow_ks
+  typical_volume:
+    sets: 1
+    duration_sec: 120
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Roller perpendicular to spine at mid-back. Extend over the roller
+    segment by segment — hands behind head, lower belly button toward floor.
+    Each segment 5-10 seconds. Do not roll the lumbar spine.'
+
+- id: lacrosse_ball_piriformis_ks
+  name: Lacrosse Ball Piriformis
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - pigeon_pose_ks
+  contraindicated_with:
+  - hip_labrum_pathology
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 120
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Seated with lacrosse ball under the piriformis (deep to gluteus maximus).
+    Cross the ipsilateral ankle over the opposite knee. 120 seconds each side.
+    Piriformis and deep external rotator tone is the primary driver of hip
+    internal rotation restriction.'
+
+- id: lacrosse_ball_pec_minor_ks
+  name: Lacrosse Ball Pec Minor
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - cross_body_shoulder_stretch_ks
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Ball against wall, placed under pec minor (medial coracoid process,
+    lateral to sternal border at T3-T5 rib level). 90 seconds each side.
+    Pec minor tightness drives anterior shoulder tipping (loss of scapular
+    upward rotation) — the most common cause of impingement in pressing athletes.'
+
+- id: banded_hip_distraction_ks
+  name: Banded Hip Distraction
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks:
+  - hip_90_90_ks
+  contraindicated_with:
+  - hip_labrum_pathology
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - hip_90_90_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Heavy band looped around the hip capsule (proximal thigh). Step forward
+    into a lunge; band tracts the femur laterally and posteriorly while the
+    athlete moves the hip through circles, hinges, and flexion. A joint
+    mobilization, not a stretch — restores joint capsule mobility that
+    stretching cannot address. 60 seconds each side.'
+
+- id: banded_ankle_distraction_ks
+  name: Banded Ankle Distraction
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks:
+  - wall_ankle_dorsiflexion
+  contraindicated_with:
+  - achilles_tendinopathy
+  - ankle_sprain
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - ankle_circles_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Band anchored low, looped around the talus (front of ankle). Athlete
+    steps back to create traction then moves the ankle into dorsiflexion.
+    Anterior ankle capsule tightness is often the primary dorsiflexion limiter —
+    not the calf. Band traction is the only way to address the anterior capsule.
+    60 seconds each side.'
+
+- id: banded_shoulder_distraction_ks
+  name: Banded Shoulder Distraction
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks:
+  - shoulder_90_90_rotation_ks
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+  - shoulder_circles_ks
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  notes: 'Band anchored high, looped around the humerus. Move the arm through
+    flexion, rotation, and abduction while band tracts the humeral head
+    inferiorly and posteriorly. Addresses the inferior and posterior shoulder
+    capsule directly — stretching only addresses the muscular component.
+    60 seconds each side.'
+
+# ─── Breathing / bracing ──────────────────────────────────────────────────────
+- id: diaphragmatic_breathing_360_ks
+  name: Diaphragmatic Breathing — 360 Expansion
+  category: mobility
+  modality:
+  - mobility
+  - rehab
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_breath_cycles
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 5
+  sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  - MobilityWOD
+  notes: '5 slow breaths expanding the rib cage forward, sideways, and backward
+    simultaneously (360 expansion). Not chest-breathing. Then brace without
+    holding the breath — create intra-abdominal pressure (IAP) by contracting
+    the trunk while continuing to breathe. Athletes who cannot brace with
+    neutral spine substitute with lumbar flexion or breath-holding, both of
+    which are injury mechanisms. This is a skill requiring deliberate daily
+    practice to become automatic.'

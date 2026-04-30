@@ -1,0 +1,135 @@
+id: functional_bodybuilding_strength
+name: Functional Bodybuilding Strength (Barbell + Bodyweight)
+modality: max_strength
+category: strength
+duration_estimate_minutes: 65
+required_equipment:
+  - barbell
+  - dumbbell
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+  - transition
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - Marcus Filly — Functional Bodybuilding
+notes: >
+  RPE-governed barbell strength session with controlled eccentrics and dedicated
+  shoulder maintenance work. Load is self-selected each session by perceived exertion
+  (RPE 7-8 = 2-3 reps in the tank). Primary tools: 3-second eccentric on compound
+  lifts, isometric pauses, shoulder health stack after main work. Session structure:
+  heavy compound squat or hinge → barbell press → weighted pull → shoulder maintenance
+  → eccentric accessory. Progress is sustainable: add load when RPE drops below 7 for
+  two consecutive sessions, not on a fixed schedule.
+
+slots:
+  - role: primary_compound
+    slot_type: sets_reps
+    sets: 4
+    reps: 4
+    intensity: heavy
+    rest_sec: 180
+    exercise_filter:
+      movement_pattern: squat
+      category: barbell
+    notes: >
+      RPE 7-8: back squat, front squat, or deadlift. 3-second eccentric on squat
+      variants — controlled descent builds tissue resilience and positions the body
+      for the concentric without momentum. Deadlift: controlled lowering (2 sec) is
+      sufficient. Load governed by feel; do not grind past RPE 8. If RPE < 7 for
+      two sessions at the same load, add 2.5–5 kg.
+
+  - role: secondary_press
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    intensity: moderate
+    rest_sec: 120
+    exercise_filter:
+      movement_pattern: press
+      category: barbell
+    notes: >
+      RPE 7: bench press or overhead press. 2-second pause at bottom of bench press
+      (chest contact) or at shoulder on OHP — eliminates bounce and develops stability
+      in the weakest position. Controlled descent (2 sec) on both. Load selection:
+      working weight where 6 reps feels controlled and strong, not grinding.
+
+  - role: weighted_pull
+    slot_type: sets_reps
+    sets: 4
+    reps: 5
+    intensity: heavy
+    rest_sec: 120
+    exercise_filter:
+      movement_pattern: vertical_pull
+      category: bodyweight
+    notes: >
+      Weighted pull-up or ring pull-up. Start with bodyweight for novice, add load
+      via dip belt when 5 reps feel easy (RPE < 6). Marcus Filly: pulling strength
+      must keep pace with pressing volume. Full ROM — start from dead hang, chin
+      clears bar at top. Ring pull-up is the advanced variant; more instability
+      demand on the scapular stabilizers.
+
+  - role: shoulder_health
+    slot_type: sets_reps
+    sets: 3
+    reps: 12
+    intensity: light
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: horizontal_pull
+      category: accessory
+    notes: >
+      The Marcus Filly shoulder protocol maintenance stack: face pull + DB external
+      rotation + band pull-apart in superset or sequence. Light load — this is tissue
+      quality work, not strength work. Never skip: athletes who skip the shoulder
+      maintenance stack are the ones who accumulate shoulder pathology over long
+      training cycles. 3 sets of 12 for each movement; can alternate (face pull →
+      external rotation → pull-apart per round).
+
+  - role: eccentric_accessory
+    slot_type: sets_reps
+    sets: 3
+    reps: 8
+    intensity: light
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: horizontal_push
+      category: bodyweight
+    notes: >
+      Eccentric push-up on parallettes (5-second lower, push is optional) or
+      step-down eccentric (4-second lower off step). Marcus Filly: eccentric overload
+      through bodyweight movement builds tissue resilience without additional load
+      stress after the heavy barbell work. These slots target the tendons and connective
+      tissue that barbell work alone does not stress.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: >
+      Reduce to 3×3 primary compound at RPE 6. Drop weighted pull to bodyweight
+      only. Keep shoulder health and eccentric accessory — deload weeks are when
+      tissue quality work becomes the primary focus. Remove secondary press if
+      session is over 50 minutes.
+  time_limited:
+    drop_slots:
+      - eccentric_accessory
+    notes: Drop eccentric accessory. Shoulder health stack must stay.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: barbell
+        substitute_approach: >
+          Replace primary_compound with heavy KB deadlift or goblet squat.
+          Replace secondary_press with DB press variations. Weighted pull remains
+          unchanged. Shoulder health stack unchanged (band + DB).
+      - missing_equipment: pull_up_bar
+        substitute_approach: >
+          Replace weighted_pull with DB row (3×8 each side, heavy). All other
+          slots unchanged.

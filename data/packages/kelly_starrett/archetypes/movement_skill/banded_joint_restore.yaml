@@ -1,0 +1,145 @@
+id: banded_joint_restore
+name: Banded Joint Restoration (Kelly Starrett Protocol)
+modality: rehab
+category: movement_skill
+duration_estimate_minutes: 30
+required_equipment:
+  - resistance_band
+  - open_space
+applicable_phases:
+  - base
+  - build
+  - maintenance
+  - rehab
+  - recovery
+  - transition
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - Kelly Starrett — Becoming a Supple Leopard
+  - Kelly Starrett — Ready to Run
+  - MobilityWOD
+notes: >
+  Kelly Starrett's joint restoration session. Distinct from ATG (which is
+  load-progressive) and from other mobility work (which is stretching-based).
+  Starrett rehab is position restoration: banded joint distraction creates space
+  in the joint capsule, contract-relax mobilization exploits post-inhibition
+  relaxation to gain range, breathing/bracing builds the mechanical skill
+  prerequisite for all loaded movement. Session sequence is non-negotiable:
+  tissue prep (reduce tone) → banded distraction (create space) → contract-relax
+  (gain range) → breathing/bracing (integrate the mechanics). Applies to any
+  joint; the exercises selected adapt to active injury flags.
+
+slots:
+  - role: tissue_prep
+    slot_type: time_domain
+    duration_sec: 480
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      8 minutes tissue preparation: foam roll and lacrosse ball on the target
+      region. Kelly Starrett minimum: 2 minutes per area. Soft tissue work
+      reduces muscular tone and allows the joint to move into new range during
+      the distraction and contract-relax work. Target regions by injury flag:
+        - knee_related: quadriceps, IT band, calf
+        - shoulder_related: lat, pec minor, thoracic spine
+        - hip_related: TFL, hip flexors, piriformis
+        - ankle_related: calf, Achilles insertion, plantar fascia
+      Do not skip tissue prep — it is the prerequisite for the distraction work.
+
+  - role: banded_distraction
+    slot_type: skill_practice
+    sets: 1
+    duration_sec: 480
+    intensity: light
+    exercise_filter:
+      category: mobility
+      movement_pattern: isometric
+    notes: >
+      8 minutes banded joint distraction. Band placed around the joint proximal
+      to the target surface; athlete moves the joint actively through range while
+      the band creates traction (pulls the joint surfaces apart, creating space
+      in the capsule). Examples by target:
+        - hip: banded hip distraction — band around hip capsule, step forward,
+          move hip through circles and hinges
+        - ankle: banded ankle distraction — band around talus, move ankle through
+          dorsiflexion ROM
+        - shoulder: banded shoulder distraction — band around humerus, arm moves
+          through flexion/rotation arcs
+      Kelly Starrett: the banded distraction does not stretch muscles — it
+      restores joint capsule mobility, which no amount of stretching reaches.
+
+  - role: contract_relax
+    slot_type: skill_practice
+    sets: 1
+    duration_sec: 480
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      8 minutes contract-relax mobilization. Cycle: move into target position →
+      contract the target muscle group for 7 seconds (isometric, against the
+      stretch) → relax and move into new range for 7 seconds → repeat.
+      Kelly Starrett's PNF principle: after isometric contraction, the GTO
+      (Golgi tendon organ) triggers autogenic inhibition — the muscle releases
+      further than passive stretching allows. Applied to whatever region the
+      distraction addressed. Example:
+        - hip external rotation: pigeon pose → contract glute and external
+          rotators for 7 sec → relax and sink deeper → repeat ×5 cycles
+        - ankle dorsiflexion: wall stretch → contract calf for 7 sec → relax
+          and push knee forward → repeat
+
+  - role: breathing_bracing
+    slot_type: skill_practice
+    sets: 1
+    duration_sec: 360
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      6 minutes breathing and bracing mechanics. Two components:
+      1. 360° breathing: expand the rib cage forward, sideways, and backward
+         simultaneously on inhale — diaphragmatic expansion in all three planes.
+         Not chest-breathing. 5 slow breaths (5 in, 5 hold, 5 out).
+      2. IAP bracing: inhale 360°, create intra-abdominal pressure by bracing
+         the trunk (not by holding breath), then move. Kelly Starrett: IAP is
+         the spinal stabilization mechanism before any loaded movement. Athletes
+         who do not have this skill substitute lumbar flexion or breath-holding,
+         both of which are injury mechanisms. This slot is the teaching and
+         reinforcement session for the bracing prerequisite. Cue: "big breath
+         and brace, then move — not hold your breath."
+
+scaling:
+  deload:
+    volume_multiplier: 0.75
+    intensity_pct: 1.0
+    notes: >
+      Reduce tissue prep to 5 minutes. Reduce banded distraction to 5 minutes.
+      Keep contract-relax and breathing/bracing unchanged. On deload weeks,
+      the rehabilitation session does not deload — the volume reduction is
+      in other modalities. Starrett: range restoration work requires consistent
+      frequency; deload weeks are when additional sessions can be added.
+  time_limited:
+    drop_slots:
+      - breathing_bracing
+    notes: >
+      Drop breathing/bracing if under 20 minutes. Tissue prep + distraction +
+      contract-relax is the minimum effective dose for joint restoration.
+      Breathing mechanics should be addressed in a future full session.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: resistance_band
+        substitute_approach: >
+          Replace banded distraction with passive joint loading and contract-relax
+          only. Use bodyweight in the end-range position instead of band traction.
+          Effectiveness is reduced — the distraction is what uniquely restores
+          joint capsule mobility. Use band as soon as one is available.
+      - missing_equipment: open_space
+        substitute_approach: >
+          All movements can be performed in a 2×2 meter space. No locomotion
+          required. Tissue prep on floor with foam roll or lacrosse ball.
+          Joint distraction in quadruped or supine positions.
