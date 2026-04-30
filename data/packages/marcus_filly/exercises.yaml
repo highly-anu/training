@@ -1,0 +1,1199 @@
+exercises:
+# ─── Barbell compounds ────────────────────────────────────────────────────────
+- id: mf_back_squat
+  name: Back Squat (Marcus Filly — RPE Eccentric)
+  category: barbell
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - barbell
+    - rack
+    - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - squat
+    - hip_hinge
+  requires:
+    - bracing_mechanics
+  unlocks:
+    - mf_front_squat
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - hip_flexor_strain
+    - lumbar_disc
+  progressions:
+    load: rpe_autoregulation_add_2.5_5kg_when_rpe_drops_below_7
+    complexity: mf_front_squat
+  scaling_down:
+    - bulgarian_split_squat
+  typical_volume:
+    sets: 4
+    reps: 4
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Back squat with 3-second eccentric. RPE 7-8 load — 2-3 reps in the tank per set. 3-sec controlled descent builds tissue resilience. No bounce at the bottom; brief pause before concentric. Progressed to front squat once RPE stabilizes below 7 at working weight across two consecutive sessions.'
+  starting_load_kg:
+    novice: 40
+    intermediate: 70
+    advanced: 100
+    elite: 130
+
+- id: mf_front_squat
+  name: Front Squat (Marcus Filly)
+  category: barbell
+  modality:
+    - max_strength
+  equipment:
+    - barbell
+    - rack
+    - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - squat
+  requires:
+    - mf_back_squat
+    - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - wrist_injury
+    - shoulder_impingement
+    - hip_flexor_strain
+  progressions:
+    load: rpe_autoregulation_add_2.5kg_when_rpe_drops_below_7
+  scaling_down:
+    - mf_back_squat
+  typical_volume:
+    sets: 4
+    reps: 4
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Front squat with 3-sec eccentric and upright torso. Demands thoracic extension and upper back stability. RPE 7-8. A staple Marcus Filly variation — develops a more athletic squat position than high-bar back squat alone.'
+  starting_load_kg:
+    novice: 30
+    intermediate: 55
+    advanced: 80
+    elite: 110
+
+- id: mf_deadlift
+  name: Deadlift (Marcus Filly — RPE)
+  category: barbell
+  modality:
+    - max_strength
+  equipment:
+    - barbell
+    - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - hip_hinge
+  requires:
+    - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+    - lumbar_disc
+    - hip_flexor_strain
+  progressions:
+    load: rpe_autoregulation_add_5kg_when_rpe_drops_below_7
+  scaling_down:
+    - bulgarian_split_squat
+  typical_volume:
+    sets: 4
+    reps: 4
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Conventional deadlift. 2-second controlled lowering — no dropping. RPE 7-8; sets should feel heavy but never grinding. In Marcus Filly programming, deadlift alternates weekly with back squat as the primary compound to avoid cumulative spinal loading.'
+  starting_load_kg:
+    novice: 50
+    intermediate: 90
+    advanced: 130
+    elite: 170
+
+- id: mf_bench_press
+  name: Bench Press (Marcus Filly — Pause)
+  category: barbell
+  modality:
+    - max_strength
+  equipment:
+    - barbell
+    - rack
+    - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires:
+    - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+    - wrist_injury
+    - tennis_elbow
+  progressions:
+    load: rpe_autoregulation_add_2.5kg_when_rpe_drops_below_7
+  scaling_down:
+    - db_incline_press
+    - parallette_push_up
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Bench press with 2-second pause at chest — chest contact, no bounce. Controlled descent 2 sec. RPE 7. The pause eliminates elastic energy and demands full chest+shoulder recruitment from a dead stop. Marcus Filly uses paused bench to develop bottom-position strength and reduce injury risk.'
+  starting_load_kg:
+    novice: 35
+    intermediate: 60
+    advanced: 90
+    elite: 120
+
+- id: mf_overhead_press
+  name: Strict Overhead Press (Marcus Filly)
+  category: barbell
+  modality:
+    - max_strength
+  equipment:
+    - barbell
+    - rack
+    - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - vertical_push
+  requires:
+    - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+    - neck_strain
+    - wrist_injury
+  progressions:
+    load: rpe_autoregulation_add_1.25_2.5kg_when_rpe_drops_below_7
+  scaling_down:
+    - landmine_press
+    - db_incline_press
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Strict barbell OHP. No leg drive. 2-second pause at shoulder between reps (not at lockout). RPE 7. Marcus Filly programs OHP as the primary vertical press — the pause at the shoulder develops starting strength and reduces the tendency to use momentum off the chest/shoulder.'
+  starting_load_kg:
+    novice: 25
+    intermediate: 40
+    advanced: 60
+    elite: 80
+
+# ─── Bodyweight pulls ─────────────────────────────────────────────────────────
+- id: pull_up
+  name: Pull-Up
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - vertical_pull
+  requires: []
+  unlocks:
+    - weighted_pull_up
+    - chin_up
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+    - tennis_elbow
+    - golfers_elbow
+  progressions:
+    complexity: weighted_pull_up
+    volume: add_reps_per_set
+  scaling_down:
+    - ring_row
+    - chin_up
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Full ROM pull-up — dead hang start, chin clears bar. Pronated grip. The fundamental vertical pull; progression base for the Marcus Filly pulling strength stack. Add load once 5 clean reps with 2 reps in tank.'
+
+- id: weighted_pull_up
+  name: Weighted Pull-Up
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - pull_up_bar
+    - dip_belt
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - vertical_pull
+  requires:
+    - pull_up
+  unlocks:
+    - ring_pull_up
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+    - tennis_elbow
+    - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    complexity: ring_pull_up
+  scaling_down:
+    - pull_up
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Pull-up with added load via dip belt or weight vest. RPE 7-8. Marcus Filly treats weighted pull-up as the primary pulling strength metric — a top set at RPE 8 is the standard strength goal.'
+
+- id: ring_pull_up
+  name: Ring Pull-Up
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+    - movement_skill
+  equipment:
+    - rings
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - vertical_pull
+  requires:
+    - weighted_pull_up
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+  progressions:
+    load: add_load_via_weight_vest
+  scaling_down:
+    - weighted_pull_up
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Pull-up on gymnastics rings — rings rotate freely, increasing instability demand on the scapular stabilizers and rotator cuff. Full ROM; rings can be turned out at the top for additional supination demand.'
+
+- id: chin_up
+  name: Chin-Up
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - vertical_pull
+  requires: []
+  unlocks:
+    - pull_up
+  contraindicated_with:
+    - shoulder_impingement
+    - golfers_elbow
+  progressions:
+    complexity: pull_up
+    volume: add_reps_per_set
+  scaling_down:
+    - ring_row
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Supinated (underhand) grip pull-up. Greater bicep activation than pronated pull-up; slightly easier for most athletes. Used as a regression from or warm-up to pronated pull-ups, or as a bicep development tool.'
+
+- id: ring_row
+  name: Ring Row (Inverted Row)
+  category: bodyweight
+  modality:
+    - relative_strength
+    - strength_endurance
+  equipment:
+    - rings
+  effort: low
+  bilateral: true
+  movement_patterns:
+    - horizontal_pull
+  requires: []
+  unlocks:
+    - chin_up
+  contraindicated_with:
+    - shoulder_impingement
+  progressions:
+    complexity: chin_up
+    volume: decrease_foot_elevation_angle
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Inverted row on rings or bar. Body angle governs difficulty — more horizontal = harder. Entry-level horizontal pull. Used in warm-up circuits and as a regression when vertical pulling strength is insufficient.'
+
+# ─── Bodyweight pushes ────────────────────────────────────────────────────────
+- id: dip
+  name: Dip (Parallel Bar)
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires: []
+  unlocks:
+    - weighted_dip
+    - parallette_push_up
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+    - tennis_elbow
+  progressions:
+    complexity: weighted_dip
+    volume: add_reps_per_set
+  scaling_down:
+    - parallette_push_up
+    - eccentric_push_up
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Full ROM dip — shoulders below elbows at bottom, full lockout at top. Marcus Filly: dips and push-up variations are the primary push tools alongside barbell pressing. Progression base for the push chain.'
+
+- id: weighted_dip
+  name: Weighted Dip
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - pull_up_bar
+    - dip_belt
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires:
+    - dip
+  unlocks:
+    - ring_dip
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+  progressions:
+    load: add_2.5_5kg_per_session
+    complexity: ring_dip
+  scaling_down:
+    - dip
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Dip with added load via dip belt or weight vest. RPE 7-8. Heavy dips build upper body pressing strength comparable to the barbell bench press while demanding more scapular stabilizer activation.'
+
+- id: ring_dip
+  name: Ring Dip
+  category: bodyweight
+  modality:
+    - max_strength
+    - movement_skill
+  equipment:
+    - rings
+  effort: high
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires:
+    - weighted_dip
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+  progressions:
+    load: add_load_via_weight_vest
+  scaling_down:
+    - weighted_dip
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Dip on gymnastics rings — rings rotate freely, requiring active stabilization throughout. The highest relative-strength push movement in the Marcus Filly stack. Rings turn out at the bottom for maximal pec and serratus demand.'
+
+- id: parallette_push_up
+  name: Parallette Push-Up
+  category: bodyweight
+  modality:
+    - relative_strength
+    - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires: []
+  unlocks:
+    - dip
+    - eccentric_push_up
+  contraindicated_with:
+    - shoulder_impingement
+    - wrist_injury
+  progressions:
+    complexity: dip
+    volume: add_reps_or_pause_at_bottom
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Push-up on parallettes allows chest to drop below hand level for greater pec and serratus range of motion than floor push-up. Foundation for parallette skill work. Can be performed as a warm-up for dip work.'
+
+- id: eccentric_push_up
+  name: Eccentric Push-Up (Parallette)
+  category: bodyweight
+  modality:
+    - relative_strength
+    - rehab
+  equipment: []
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires:
+    - parallette_push_up
+  unlocks: []
+  contraindicated_with:
+    - wrist_injury
+  progressions:
+    volume: extend_eccentric_duration_to_8sec
+  scaling_down:
+    - parallette_push_up
+  typical_volume:
+    sets: 3
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: '5-second controlled eccentric lower to chest/floor; concentric (push-up) is optional. Used on parallettes for extended ROM. Marcus Filly: eccentric overload through push movement pattern builds tendon and connective tissue resilience. Rehab and durability tool that builds where barbell work cannot.'
+
+- id: archer_push_up
+  name: Archer Push-Up
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - horizontal_push
+  requires:
+    - parallette_push_up
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+  progressions:
+    volume: add_reps_per_side
+  scaling_down:
+    - parallette_push_up
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Wide push-up position; lower to one side while the other arm stays extended. Unilateral load distribution — bridges the gap between bilateral push-up and one-arm push-up. Demands greater serratus and lateral shoulder stability than standard push-up.'
+
+# ─── Single-leg / lower ───────────────────────────────────────────────────────
+- id: bulgarian_split_squat
+  name: Bulgarian Split Squat
+  category: bodyweight
+  modality:
+    - max_strength
+    - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - squat
+  requires: []
+  unlocks:
+    - box_pistol_squat
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - hip_flexor_strain
+  progressions:
+    load: add_dumbbell_or_weight_vest
+    complexity: box_pistol_squat
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Rear foot elevated on bench, front foot forward. Drive through the front heel; torso stays upright. 8 reps each side. Marcus Filly uses BSS as the primary unilateral lower-body strength movement — load with DBs or a barbell once bodyweight is easy.'
+
+- id: box_pistol_squat
+  name: Box Pistol Squat
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - squat
+  requires:
+    - bulgarian_split_squat
+  unlocks:
+    - pistol_squat
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - hip_flexor_strain
+    - ankle_sprain
+  progressions:
+    complexity: pistol_squat
+    volume: lower_box_height
+  scaling_down:
+    - bulgarian_split_squat
+  typical_volume:
+    sets: 3
+    reps: 6
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Single-leg squat to a box or bench — box limits depth and provides a target. Box height decreases progressively as ankle and hip mobility improve. Bridge between Bulgarian split squat and free pistol squat.'
+
+- id: pistol_squat
+  name: Pistol Squat
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: high
+  bilateral: false
+  movement_patterns:
+    - squat
+  requires:
+    - box_pistol_squat
+  unlocks: []
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - hip_flexor_strain
+    - ankle_sprain
+  progressions:
+    load: add_counterweight_or_weight_vest
+    volume: add_reps_per_side
+  scaling_down:
+    - box_pistol_squat
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Free single-leg squat to full depth, non-working leg extended forward. Full hip and ankle mobility required. Marcus Filly milestone movement — 5 clean reps per side is a functional strength standard.'
+
+- id: step_down_eccentric
+  name: Step-Down Eccentric
+  category: bodyweight
+  modality:
+    - relative_strength
+    - rehab
+  equipment: []
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - squat
+    - knee_extension
+  requires: []
+  unlocks:
+    - box_pistol_squat
+  contraindicated_with:
+    - knee_meniscus_post_op
+  progressions:
+    complexity: box_pistol_squat
+    volume: increase_step_height
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Stand on a step or box edge; lower the non-working foot slowly (4-sec) toward the floor, controlling the single-leg descent. Marcus Filly: eccentric single-leg work builds VMO and quad tendon resilience. Used as a tissue durability tool and prehab for the knee complex.'
+
+# ─── Core / isometric ─────────────────────────────────────────────────────────
+- id: dead_bug
+  name: Dead Bug
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - isometric
+  requires: []
+  unlocks:
+    - hollow_body_hold
+  contraindicated_with: []
+  progressions:
+    complexity: hollow_body_hold
+    volume: add_reps_per_side
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Lying on back, lower back pressed to floor. Extend opposite arm and leg simultaneously while maintaining lumbar contact. 5 reps per side per set. Marcus Filly: anti-extension core control is the prerequisite for all loaded pressing and pulling patterns.'
+
+- id: hollow_body_hold
+  name: Hollow Body Hold
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - isometric
+  requires:
+    - dead_bug
+  unlocks:
+    - l_sit
+  contraindicated_with: []
+  progressions:
+    complexity: l_sit
+    volume: increase_hold_duration
+  scaling_down:
+    - dead_bug
+  typical_volume:
+    sets: 3
+    duration_sec: 30
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Supine position, lower back pressed to floor, arms overhead and legs low — hold the banana shape. Foundational gymnastics anti-extension core position. Marcus Filly uses hollow body as the baseline test for core integration before progressing to L-sit.'
+
+- id: l_sit
+  name: L-Sit (Parallette or Floor)
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - isometric
+  requires:
+    - hollow_body_hold
+  unlocks: []
+  contraindicated_with:
+    - wrist_injury
+    - tennis_elbow
+  progressions:
+    volume: increase_hold_duration
+  scaling_down:
+    - hollow_body_hold
+  typical_volume:
+    sets: 3
+    duration_sec: 15
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Supported on parallettes or hands on floor, legs extended horizontal — hold. Requires hip flexor strength and scapular depression. Compress by tucking knees first (tuck L-sit) before extending legs. Marcus Filly milestone for relative strength and core integration.'
+
+- id: side_plank
+  name: Side Plank
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment: []
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - isometric
+  requires: []
+  unlocks:
+    - side_plank_lat_activation
+  contraindicated_with: []
+  progressions:
+    complexity: side_plank_lat_activation
+    volume: increase_hold_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 30
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Side-lying plank on forearm and foot, body in a straight line. Anti- lateral-flexion core stability. Marcus Filly uses side plank as baseline lateral core assessment before the shoulder rehab protocol.'
+
+- id: side_plank_lat_activation
+  name: Side Plank with Lat Activation (Arm Reach)
+  category: bodyweight
+  modality:
+    - relative_strength
+    - rehab
+  equipment: []
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - isometric
+  requires:
+    - side_plank
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down:
+    - side_plank
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Side plank position; top arm reaches long overhead rather than resting on hip. Each rep = controlled reach and return. Forces active scapular upward rotation against the lateral core brace. Marcus Filly shoulder rehab protocol: lateral shoulder stabilization with integrated core demand.'
+
+- id: pallof_press
+  name: Pallof Press
+  category: bodyweight
+  modality:
+    - relative_strength
+    - movement_skill
+  equipment:
+    - resistance_band
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Band or cable anchored at chest height to one side; athlete stands perpendicular, presses band straight out and holds. Anti-rotation core stability. Marcus Filly: Pallof press in the sagittal plane is the primary anti-rotation drill for athletes whose sports involve rotational demands.'
+
+# ─── Shoulder protocol (Marcus Filly) ────────────────────────────────────────
+- id: dip_support_hold
+  name: Dip Support Hold (Isometric)
+  category: bodyweight
+  modality:
+    - rehab
+    - movement_skill
+  equipment:
+    - pull_up_bar
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - isometric
+  requires: []
+  unlocks:
+    - dip
+  contraindicated_with:
+    - shoulder_instability
+    - wrist_injury
+  progressions:
+    volume: increase_hold_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 30
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Arms locked on dip bars or rings, body suspended. Focus on scapular depression and retraction — packed shoulder position. Entry to the Marcus Filly shoulder rehabilitation sequence. Builds shoulder stabilizer endurance before any push movement.'
+
+- id: landmine_press
+  name: Landmine Press
+  category: accessory
+  modality:
+    - max_strength
+    - rehab
+  equipment:
+    - barbell
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - shoulder_instability
+  progressions:
+    load: add_2.5kg_per_session
+  scaling_down:
+    - db_incline_press
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Barbell in floor corner (no attachment needed) or landmine attachment. Press at 45-degree angle — the most shoulder-friendly press plane. 10 reps each arm. Marcus Filly uses landmine press when standard press planes are symptomatic or as an alternative pressing stimulus.'
+
+- id: face_pull_mf
+  name: Face Pull (Marcus Filly Protocol)
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - resistance_band
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: add_reps_per_set
+  scaling_down:
+    - band_pull_apart_mf
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Face pull with thumbs-up grip, elbows high and flared, pull to forehead level. Full external rotation at end range. The Marcus Filly shoulder protocol non-negotiable — performed after every pressing session and in every shoulder rehab session. Targets posterior deltoid, infraspinatus, and mid-lower trapezius.'
+
+- id: db_external_rotation
+  name: DB External Rotation (Elbow on Knee)
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - dumbbell
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: add_0.5_1kg_per_session
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 12
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Seated, elbow resting on knee. Rotate forearm from vertical to horizontal (full external rotation). 12 reps each arm. Light DB — 2-4 kg. The isolated rotator cuff exercise in the Marcus Filly protocol. Primarily targets infraspinatus and teres minor.'
+
+- id: band_pull_apart_mf
+  name: Band Pull-Apart (Marcus Filly Protocol)
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - resistance_band
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Band held at shoulder width, pull apart to full horizontal extension at chest height. Scapular retraction and posterior rotator cuff at end range. Performed after every conditioning session and as part of the shoulder protocol. High-frequency prehab — can be done daily.'
+
+- id: banded_external_rotation_mf
+  name: Banded External Rotation (Standing)
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - resistance_band
+  effort: light
+  bilateral: false
+  movement_patterns:
+    - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 12
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Band anchored at waist height to the side. Elbow at 90 degrees tucked to body, rotate forearm away from body. Alternative to DB external rotation when no dumbbell is available. Same rotator cuff targets; continuous tension through full range.'
+
+# ─── DB accessories ───────────────────────────────────────────────────────────
+- id: db_row
+  name: DB Row (Single-Arm)
+  category: accessory
+  modality:
+    - max_strength
+    - relative_strength
+  equipment:
+    - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - lumbar_disc
+    - tennis_elbow
+    - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+    - ring_row
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Single-arm DB row with bench support. Elbow tracks close to body, full ROM — shoulder blade retracts at top. Marcus Filly uses DB row as horizontal pull accessory balancing the volume of pressing work. 10 reps each side.'
+
+- id: db_incline_press
+  name: DB Incline Press
+  category: accessory
+  modality:
+    - max_strength
+    - rehab
+  equipment:
+    - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - shoulder_instability
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+    - parallette_push_up
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'DB press on incline bench (30-45 degrees). More shoulder-friendly than flat bench due to the angle reducing impingement risk. Marcus Filly uses incline DB press as an accessory to barbell bench, or as the primary pressing movement when shoulder symptoms warrant a more neutral plane.'
+
+- id: db_lateral_raise
+  name: DB Lateral Raise
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - dumbbell
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+  progressions:
+    load: add_1_2kg_per_session
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 12
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Strict lateral raise to shoulder height — slight forward lean of the torso allows full lateral deltoid isolation. Light load; no swinging. Marcus Filly uses lateral raises to maintain shoulder width and structural integrity alongside the posterior rotator cuff work.'
+
+- id: db_rear_delt_fly
+  name: DB Rear Delt Fly
+  category: accessory
+  modality:
+    - rehab
+    - mobility
+  equipment:
+    - dumbbell
+  effort: light
+  bilateral: true
+  movement_patterns:
+    - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: add_1_2kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+    - band_pull_apart_mf
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Seated or standing hinge forward, DB fly with elbows slightly bent. Targets posterior deltoid. Marcus Filly posterior shoulder health stack: rear delt fly pairs with face pull and external rotation for comprehensive posterior rotator cuff coverage.'
+
+# ─── Conditioning ─────────────────────────────────────────────────────────────
+- id: db_thruster
+  name: DB Thruster
+  category: accessory
+  modality:
+    - mixed_modal_conditioning
+    - strength_endurance
+  equipment:
+    - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - squat
+    - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - shoulder_impingement
+    - knee_meniscus_post_op
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+    - db_goblet_squat
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'DB front squat into overhead press in one continuous movement. The squat drives momentum into the press. Primary Marcus Filly AMRAP movement — conditions the squat-to-press pattern at moderate loads and high volume. RPE 7 throughout the AMRAP.'
+
+- id: db_renegade_row
+  name: DB Renegade Row
+  category: accessory
+  modality:
+    - mixed_modal_conditioning
+    - relative_strength
+  equipment:
+    - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - horizontal_pull
+    - isometric
+  requires:
+    - parallette_push_up
+  unlocks: []
+  contraindicated_with:
+    - shoulder_instability
+    - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session
+  scaling_down:
+    - db_row
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Plank on two DBs; row one DB while the other and feet stabilize. Anti-rotation core demand + horizontal pull in a single movement. Marcus Filly uses renegade row as a compound conditioning movement — combines pushing stability, pulling strength, and rotary core resistance.'
+
+- id: burpee
+  name: Burpee
+  category: bodyweight
+  modality:
+    - mixed_modal_conditioning
+    - aerobic_base
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+    - squat
+    - horizontal_push
+    - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - shoulder_instability
+    - wrist_injury
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+    - parallette_push_up
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Squat thrust to push-up to jump. Primarily used as a conditioning movement in AMRAP/EMOM blocks at RPE 7 sustainable pace. Not sprint-paced in the Marcus Filly system — controlled burpees at moderate pace build aerobic capacity without accumulating fatigue that disrupts the strength work.'
+
+- id: step_up
+  name: Step-Up (DB or Bodyweight)
+  category: bodyweight
+  modality:
+    - mixed_modal_conditioning
+    - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+    - squat
+    - locomotion
+  requires: []
+  unlocks:
+    - step_down_eccentric
+  contraindicated_with:
+    - knee_meniscus_post_op
+    - knee_osteoarthritis
+  progressions:
+    load: add_dumbbell
+    complexity: step_down_eccentric
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+    - Marcus Filly — Functional Bodybuilding
+  notes: 'Step up onto box (knee height) driving through the lead heel. 10 reps each leg. Used in conditioning blocks as a low-impact locomotive lower-body movement. Load with DBs at sides when bodyweight becomes easy. Also serves as a unilateral strength entry movement.'
