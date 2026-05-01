@@ -4,12 +4,14 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
+    @StateObject private var programStore = ProgramStore()
 
     var body: some View {
         if auth.isSignedIn {
             MainTabView()
                 .environmentObject(sync)
                 .environmentObject(appState)
+                .environmentObject(programStore)
                 .onAppear {
                     sync.configure(auth: auth)
                     appState.configure(auth: auth)

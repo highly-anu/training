@@ -57,6 +57,11 @@ final class APIClient {
         return try? JSONDecoder().decode(ServerProgram.self, from: data)
     }
 
+    func fetchArchetypes() async throws -> [AppArchetype] {
+        let data = try await get("/archetypes")
+        return (try? JSONDecoder().decode([AppArchetype].self, from: data)) ?? []
+    }
+
     func saveWorkoutLog(sessionKey: String, log: [String: Any]) async throws {
         guard let body = try? JSONSerialization.data(withJSONObject: log) else { return }
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
@@ -591,6 +596,14 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    func generateSession(_ request: GenerateSessionRequest) async throws -> ProgramSession {
+        return try await post("/sessions/generate", body: request)
+    }
+
+    func saveProgram(_ payload: UserProgramSavePayload) async throws {
+        _ = try await put("/user/program", body: payload)
+    }
+
     // MARK: - Private
 
     private func multipartBody(data: Data, filename: String, mimeType: String, boundary: String) -> Data {
@@ -636,6 +649,21 @@ final class APIClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
         return data
+    }
+
+    private func post<T: Encodable, R: Decodable>(_ path: String, body: T) async throws -> R {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuth(to: &request)
+        request.httpBody = try JSONEncoder().encode(body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validateStatus(response)
+        guard let result = try? JSONDecoder().decode(R.self, from: data) else {
+            throw APIError.decodingError
+        }
+        return result
     }
 
     private func put<T: Encodable>(_ path: String, body: T) async throws -> Data {

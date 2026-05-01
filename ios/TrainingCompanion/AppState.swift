@@ -155,7 +155,7 @@ final class AppState: ObservableObject {
         guard let api else { return }
         do {
             let logs = try await api.fetchRecentSessionLogs()
-            sessionLogs = Dictionary(uniqueKeysWithValues: logs.map { ($0.sessionKey, $0) })
+            sessionLogs = Dictionary(logs.map { ($0.sessionKey, $0) }, uniquingKeysWith: { _, last in last })
         } catch {}
     }
 

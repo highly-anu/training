@@ -347,6 +347,7 @@ struct SessionWithKey: Identifiable {
     let session: ProgramSession
     let key: String
     var dateLabel: String = ""
+    var sessionIndex: Int = 0
 }
 
 // MARK: - Session Log Detail

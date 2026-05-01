@@ -3,8 +3,9 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var sync: SyncManager
+    @EnvironmentObject var programStore: ProgramStore
 
-    @State private var selectedSession: (session: ProgramSession, key: String)? = nil
+    @State private var selectedSession: (session: ProgramSession, key: String, weekIndex: Int, dayName: String, sessionIndex: Int)? = nil
     @State private var dayOffset: Int = 0          // 0 = today, ±n = days from today
     @State private var dragOffset: CGFloat = 0
     @State private var lockedAdjacentOffset: Int? = nil  // the peek card's day, locked at drag start
@@ -29,12 +30,17 @@ struct TodayView: View {
         Calendar.current.date(byAdding: .day, value: offset, to: Date()) ?? Date()
     }
 
-    private func sessionsFor(_ offset: Int) -> [(session: ProgramSession, sessionKey: String)] {
+    private func sessionsFor(_ offset: Int) -> [(session: ProgramSession, sessionKey: String, weekIndex: Int, dayName: String, sessionIndex: Int)] {
         let date = dateFor(offset)
         guard let week = appState.week(for: date) else { return [] }
         let dayName = weekdayNames[Calendar.current.component(.weekday, from: date) - 1]
+        let wi = appState.allWeeks.firstIndex(where: { $0.weekNumber == week.weekNumber }) ?? 0
         return (week.schedule[dayName] ?? []).enumerated().map { (i, s) in
-            (session: s, sessionKey: appState.makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i))
+            (session: s,
+             sessionKey: appState.makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i),
+             weekIndex: wi,
+             dayName: dayName,
+             sessionIndex: i)
         }
     }
 
@@ -56,8 +62,13 @@ struct TodayView: View {
                 get: { selectedSession.map { SessionSheetItem(session: $0.session, key: $0.key) } },
                 set: { if $0 == nil { selectedSession = nil } }
             )) { item in
-                SessionDetailView(session: item.session, sessionKey: item.key)
-                    .environmentObject(appState)
+                if let sel = selectedSession {
+                    SessionDetailView(session: item.session, sessionKey: item.key,
+                                      weekIndex: sel.weekIndex, dayName: sel.dayName,
+                                      sessionIndex: sel.sessionIndex)
+                        .environmentObject(appState)
+                        .environmentObject(programStore)
+                }
             }
             .task {
                 if appState.serverProgram == nil {
@@ -234,7 +245,9 @@ struct TodayView: View {
                                 .onTapGesture {
                                     guard interactive else { return }
                                     AppHaptics.light()
-                                    selectedSession = (session: pair.session, key: pair.sessionKey)
+                                    selectedSession = (session: pair.session, key: pair.sessionKey,
+                                                       weekIndex: pair.weekIndex, dayName: pair.dayName,
+                                                       sessionIndex: pair.sessionIndex)
                                 }
                         }
                     }

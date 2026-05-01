@@ -1,5 +1,20 @@
 import Foundation
 
+// MARK: - Archetypes
+
+struct AppArchetype: Codable, Identifiable {
+    let id: String
+    let name: String
+    let modality: String
+    let category: String
+    let durationEstimateMinutes: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, modality, category
+        case durationEstimateMinutes = "duration_estimate_minutes"
+    }
+}
+
 // MARK: - Goals
 
 struct GoalProfile: Codable, Identifiable {
@@ -306,4 +321,13 @@ extension EquipmentItem {
         EquipmentItem(id: "cable_machine", label: "Cable Machine", group: "Strength"),
         EquipmentItem(id: "box", label: "Plyo Box", group: "GPP"),
     ]
+}
+
+
+// MARK: - Array safe subscript
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
 }
