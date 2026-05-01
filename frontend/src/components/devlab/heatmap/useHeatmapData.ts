@@ -11,6 +11,8 @@ export interface HeatNode {
   layer: LayerKind
   /** Modality this node is associated with (for coloring) */
   modalityHint?: ModalityId
+  /** Package this node belongs to (set on archetype nodes) */
+  _package?: string
   heat: number        // 0–1 normalized
   rawCount: number    // absolute usage count
 }
@@ -32,6 +34,7 @@ export interface ExerciseInGroup {
   heat: number
   rawCount: number
   movement_patterns: string[]
+  _package?: string
 }
 
 export interface HeatmapGraphData {
@@ -194,6 +197,7 @@ function buildStaticGraph(ontology: OntologyData) {
       label: arch.name,
       layer: 'archetype',
       modalityHint: modHint,
+      _package: arch._package,
       heat: 0,
       rawCount: 0,
     })
@@ -304,7 +308,7 @@ function buildStaticGraph(ontology: OntologyData) {
         : exerciseMatchesPattern(exPatterns, exCategory, patternKey)
 
       if (matches) {
-        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns })
+        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns, _package: (ex as any)._package })
         groups.push(gId)
       }
     }

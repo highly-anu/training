@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-A training logic system that algorithmically generates periodized training programs from goals, constraints, and weighted priorities. Sources: Starting Strength, Uphill Athlete, CrossFit Endurance, Wildman Kettlebell, Ido Portal, Horsemen GPP, Gym Jones, Marcus Filly, ATG.
+A training logic system that algorithmically generates periodized training programs from philosophies (training methodologies), constraints, and weighted priorities. Sources: Starting Strength, Uphill Athlete, CrossFit, Wildman Kettlebell, Ido Portal, Horsemen GPP, Gym Jones, Marcus Filly, ATG, BJJ, Kelly Starrett.
 
 ## Current State
 
@@ -30,10 +30,15 @@ training/
 │   ├── output.py             # Markdown formatter
 │   └── summary.py            # Volume summary computation
 ├── data/
-│   ├── goals/                # 7 goal profiles (YAML): general_gpp, alpine_climbing,
-│   │                         #   sof_operator, bjj_competitor, ultra_endurance,
-│   │                         #   max_strength_focus, injury_rehab
-│   ├── archetypes/           # ~25 workout archetypes across 5 categories
+│   ├── packages/             # 11 philosophy packages (philosophy + frameworks + exercises)
+│   │   ├── uphill_athlete/
+│   │   ├── starting_strength/
+│   │   ├── horsemen_gpp/
+│   │   ├── wildman_kettlebell/
+│   │   └── ...
+│   ├── commons/
+│   │   ├── modalities/       # 12 core modalities
+│   │   └── archetypes/       # ~25 workout archetypes across 5 categories
 │   │   ├── strength/         # 5x5, 3x5_linear, hlm, emom_strength, gym_jones_operator
 │   │   ├── conditioning/     # long_zone_2, threshold_intervals, mixed_modal_amrap,
 │   │   │                     #   tabata, gym_jones_circuit, gym_jones_accumulation, etc.
@@ -62,15 +67,18 @@ All prefixed `/api/`:
 
 | Method | Path | Returns |
 |--------|------|---------|
-| GET | `/goals` | `GoalProfile[]` |
-| GET | `/goals/<id>` | `GoalProfile` |
+| GET | `/philosophies` | `Philosophy[]` |
+| GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
 | GET | `/modalities` | `Modality[]` |
+| GET | `/archetypes` | `Archetype[]` |
+| GET | `/ontology` | Lightweight projection with counts |
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` |
+| POST | `/sessions/generate` | `Session` (single session regeneration) |
 
-`POST /programs/generate` body: `{ goal_id: string, constraints: AthleteConstraints, num_weeks?: number }`
+`POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
 
 ## Frontend (frontend/)
 
@@ -85,15 +93,17 @@ React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanSt
 ## System Architecture
 
 ```
-Philosophy → Methodology → Modalities → Archetypes → Exercises → Progression → Constraints → Goal → Program
+Philosophy → Framework Groups → Frameworks → Modalities → Archetypes → Exercises → Progression → Constraints → Program
 ```
 
-1. **Goal profile** — weighted priority vector (e.g. `{ aerobic_base: 0.6, max_strength: 0.2 }`) + phase sequence
-2. **Scheduler** — maps goal priorities + framework → session slots per day (recovery-aware)
-3. **Selector** — picks best archetype per slot; fills archetype slots with exercises (injury/equipment/level filtered)
-4. **Progression** — calculates load prescription per slot type (linear_load, rpe_autoregulation, time_to_task, distance, density)
-5. **Validator** — pre-flight checks on equipment, days, session time, injury conflicts, phase validity
-6. **API** — transforms integer day keys → day names; wraps in `{ goal, constraints, validation, weeks, volume_summary }`
+1. **Philosophy** — training methodology with framework_groups (sequential or alternatives)
+2. **Framework groups** — organize frameworks as sequential phases (e.g., base→build→peak) or alternative approaches
+3. **Synthetic goal** — generated from philosophy priorities + phase sequence; allows philosophy blending
+4. **Scheduler** — maps priorities + framework → session slots per day (recovery-aware)
+5. **Selector** — picks best archetype per slot; fills archetype slots with exercises (injury/equipment/level filtered)
+6. **Progression** — calculates load prescription per slot type (linear_load, rpe_autoregulation, time_to_task, distance, density)
+7. **Validator** — pre-flight checks on equipment, days, session time, injury conflicts, phase validity
+8. **API** — transforms integer day keys → day names; wraps in `{ goal, constraints, validation, weeks, volume_summary }`
 
 ## Key Engine Behaviors
 
@@ -102,6 +112,9 @@ Philosophy → Methodology → Modalities → Archetypes → Exercises → Progr
 - **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back to `aerobic_base`.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: auto-triggered every N weeks (per framework) or when `fatigue_state: overreached`.
+- **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
+- **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
+- **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
 
 ## Known Gaps / Next Work
 

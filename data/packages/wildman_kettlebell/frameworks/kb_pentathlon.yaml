@@ -1,0 +1,58 @@
+id: kb_pentathlon
+name: "Kettlebell Pentathlon Training (Wildman)"
+source_philosophy: wildman_kettlebell
+
+goals_served:
+  - strength_endurance
+  - power
+  - aerobic_base
+
+sessions_per_week:
+  strength_endurance: 2
+  power: 1
+  movement_skill: 1
+  aerobic_base: 1
+modality_priority:
+  committed: [strength_endurance]
+  core: [power, aerobic_base]
+  supplementary: [movement_skill]
+
+intensity_distribution:
+  zone1_2_pct: 0.5
+  zone3_pct: 0.3
+  zone4_5_pct: 0.2
+  max_effort_pct: 0.0
+
+progression_model: pentathlon_rpm
+
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 3
+  days_per_week_max: 5
+
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.6
+  intensity_change: reduce_slightly
+
+sources:
+  - Wildman
+  - Pavel
+notes: >
+  Sport-specific preparation for the 5-event kettlebell pentathlon: jerk, snatch,
+  half-snatch, push press, and long cycle clean & jerk. Sessions build toward
+  6-minute timed sets at competition RPM targets. Volume and RPM increase weekly;
+  deload weeks use reduced RPM and shorter set duration. Not appropriate for novices
+  — requires proficiency in all five movements before entering this framework.
+
+expectations:
+  min_weeks: 10
+  ideal_weeks: 14
+  min_days_per_week: 4
+  ideal_days_per_week: 5
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  supports_split_days: false

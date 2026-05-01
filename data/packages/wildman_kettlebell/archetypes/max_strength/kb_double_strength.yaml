@@ -1,0 +1,48 @@
+id: kb_double_strength
+name: "Double KB Strength Session (Wildman)"
+modality: max_strength
+category: kettlebell
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 40
+applicable_phases: [build, peak]
+
+slots:
+  - role: warmup
+    slot_type: skill_practice
+    duration_minutes: 10
+    intensity: moderate
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: rotation
+
+  - role: main
+    slot_type: sets_reps
+    duration_minutes: 22
+    intensity: heavy
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: vertical_push
+
+  - role: accessory
+    slot_type: sets_reps
+    duration_minutes: 8
+    intensity: moderate
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: squat
+
+required_equipment:
+  - kettlebell
+sources:
+  - Wildman
+  - Pavel
+notes: >
+  Double-bell strength session. TGU warmup activates shoulder stability before heavy
+  pressing. Main work is double KB clean + press or double KB press in straight sets
+  (typically 3–5 × 3–5 reps). Accessory uses double front squat. Load is
+  auto-regulated: only increase bell weight when all reps are clean and breathing is
+  fully controlled. Wildman standard: 5×5 at bodyweight-proportionate bells
+  (roughly bodyweight / 2 split across both bells).

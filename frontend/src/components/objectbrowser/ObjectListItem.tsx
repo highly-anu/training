@@ -21,11 +21,6 @@ function getSubtitle(type: ModelType, item: AnyItem): string {
       const m = item as Modality
       return `recovery: ${m.recovery_cost}`
     }
-    case 'goals': {
-      const g = item as GoalProfile
-      const count = Object.keys(g.priorities).length
-      return `${count} modalities`
-    }
     case 'frameworks': {
       const f = item as Framework
       return `${f.goals_served?.length ?? 0} modalities served`

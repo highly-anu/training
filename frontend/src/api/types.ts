@@ -24,6 +24,8 @@ export type TrainingPhase =
   | 'maintenance'
   | 'rehab'
   | 'post_op'
+  | 'transition'
+  | 'specific'
 
 export type TrainingLevel = 'novice' | 'intermediate' | 'advanced' | 'elite'
 
@@ -77,6 +79,19 @@ export type EquipmentProfileId =
   | 'outdoor_ruck_only'
   | 'home_barbell'
 
+// ─── Weekly Schedule ───────────────────────────────────────────────────────────
+
+export type Day = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'
+
+export type SessionType = 'rest' | 'short' | 'long' | 'mobility'
+
+export interface DaySchedule {
+  session1: SessionType
+  session2: SessionType
+  session3: SessionType
+  session4: SessionType
+}
+
 // ─── Goal Profile ──────────────────────────────────────────────────────────────
 
 export type GoalPriorities = Partial<Record<ModalityId, number>>
@@ -84,7 +99,7 @@ export type GoalPriorities = Partial<Record<ModalityId, number>>
 export interface PhaseEntry {
   phase: TrainingPhase
   weeks: number
-  focus: string
+  focus?: string
   priority_override?: GoalPriorities
 }
 
@@ -149,6 +164,10 @@ export interface AthleteConstraints {
   notes?: string
 }
 
+export interface Equipment {
+  id: EquipmentId
+}
+
 export interface EquipmentProfile {
   id: EquipmentProfileId
   name: string
@@ -190,8 +209,11 @@ export interface Exercise {
   progressions: ExerciseProgressions
   scaling_down?: string[]
   typical_volume?: { sets?: number; reps?: number; duration_sec?: number; distance_m?: number }
+  starting_load_kg?: Record<string, number>
+  weekly_increment_kg?: number
   sources: string[]
   notes?: string
+  _package?: string
 }
 
 // ─── Archetypes ───────────────────────────────────────────────────────────────
@@ -201,7 +223,10 @@ export interface ArchetypeSlot {
   slot_type: string
   sets?: number
   reps?: number | string
+  duration_sec?: number
+  distance_m?: number
   intensity?: string
+  intensity_pct_1rm?: number
   rest_sec?: number
   notes?: string
   skip_exercise?: boolean
@@ -214,6 +239,7 @@ export interface ArchetypeSlot {
 export interface Archetype {
   id: string
   name: string
+  _package?: string
   modality: ModalityId
   category: string
   duration_estimate_minutes: number
@@ -222,6 +248,12 @@ export interface Archetype {
   training_levels: TrainingLevel[]
   slots: ArchetypeSlot[]
   sources: string[]
+  notes?: string
+  scaling?: {
+    deload?: string
+    time_limited?: string
+    equipment_limited?: string
+  }
 }
 
 // ─── Exercise Load (per session assignment) ───────────────────────────────────
@@ -231,6 +263,8 @@ export interface ExerciseLoad {
   reps?: number | string
   weight_kg?: number
   target_rpe?: number
+  rir?: number          // reps in reserve
+  suggested_weight_kg?: number
   duration_minutes?: number
   zone_target?: string
   distance_km?: number
@@ -257,10 +291,20 @@ export interface ExerciseAssignment {
   notes?: string
 }
 
+export interface ComplementaryExercise {
+  exercise: Exercise
+  prescription: {
+    sets: number
+    duration_sec: number
+    note: string
+  }
+}
+
 export interface Session {
   modality: ModalityId
   archetype: Archetype
   exercises: ExerciseAssignment[]
+  complementary_work?: ComplementaryExercise[]
   duration_min?: number
 }
 
@@ -304,6 +348,7 @@ export interface GeneratedProgram {
   weeks: WeekData[]
   volume_summary?: WeekVolumeSummary[]
   program_start_date?: string
+  compromises?: string[]
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────
@@ -313,6 +358,7 @@ export interface CandidateScore {
   name: string
   score: number
   breakdown: Record<string, number>
+  package?: string  // Philosophy package ID (for exercises)
 }
 
 export interface ArchetypeTrace {
@@ -389,6 +435,8 @@ export interface WeekTrace {
 
 export interface GenerationTrace {
   weeks: WeekTrace[]
+  primary_sources?: string[]  // Philosophy package IDs (e.g. ['starting_strength'])
+  philosophy_mode?: 'synthetic_goal' | 'explicit_goal'
 }
 
 export interface TracedProgram extends GeneratedProgram {
@@ -437,6 +485,21 @@ export interface PhilosophyConnections {
   goals: string[]
 }
 
+export interface FrameworkPhaseEntry {
+  phase: string
+  weeks: number
+  framework_id?: string
+  focus?: string
+}
+
+export interface FrameworkGroup {
+  id: string
+  name: string
+  type: 'alternatives' | 'sequential'
+  frameworks: string[]  // Framework IDs
+  canonical_phase_sequence?: FrameworkPhaseEntry[]  // Required when type=sequential
+}
+
 export interface Philosophy {
   id: string
   name: string
@@ -450,6 +513,13 @@ export interface Philosophy {
   sources: string[]
   notes: string
   system_connections: PhilosophyConnections
+  primary_framework_id?: string
+  framework_groups?: FrameworkGroup[]  // NEW - replaces frameworks_are_phases
+  expectations?: GoalExpectations  // Full program expectations (for phased/sequential programs)
+
+  // DEPRECATED - kept for backward compatibility during transition
+  frameworks_are_phases?: boolean
+  canonical_phase_sequence?: FrameworkPhaseEntry[]
 }
 
 // ─── Framework ────────────────────────────────────────────────────────────────
@@ -473,6 +543,7 @@ export interface Framework {
   deload_protocol?: { frequency_weeks: number; volume_reduction_pct: number; intensity_change: string }
   sources?: string[]
   notes?: string
+  expectations?: GoalExpectations
 }
 
 // ─── Custom Injury ────────────────────────────────────────────────────────────

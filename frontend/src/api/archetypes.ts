@@ -21,3 +21,14 @@ export function useCreateArchetype() {
     },
   })
 }
+
+export function useUpdateArchetype() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...data }: Partial<Archetype> & { id: string }) =>
+      apiClient.put(`/archetypes/${id}`, data) as unknown as Promise<Archetype>,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.archetypes.all })
+    },
+  })
+}

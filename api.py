@@ -12,12 +12,12 @@ import yaml
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, jsonify, redirect, request
-from flask_cors import CORS
 
 # Ensure src/ is importable when running from repo root
 sys.path.insert(0, os.path.dirname(__file__))
 
 from src import loader
+from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.progression import calculate_load
@@ -28,9 +28,24 @@ from flask import g
 
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
-_frontend_url = os.environ.get('FRONTEND_URL', '*')
-_allowed_origins = [_frontend_url, 'http://localhost:5173', 'http://localhost:4173'] if _frontend_url != '*' else '*'
-CORS(app, resources={r"/api/*": {"origins": _allowed_origins}})
+
+_raw_origins = os.environ.get('FRONTEND_URL') or ''
+_allowed_origins = set(o.strip() for o in _raw_origins.split(',') if o.strip()) or {'*'}
+
+@app.before_request
+def _handle_options():
+    if request.method == 'OPTIONS':
+        return app.make_default_options_response()
+
+@app.after_request
+def _cors(response):
+    origin = request.headers.get('Origin', '')
+    if '*' in _allowed_origins or origin in _allowed_origins:
+        response.headers['Access-Control-Allow-Origin'] = origin or '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PATCH'
+        response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+        response.headers['Access-Control-Max-Age'] = '600'
+    return response
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -45,40 +60,45 @@ def _load_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def _all_goals() -> list[dict]:
-    goals = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'goals', '*.yaml'))):
-        goals.append(_load_yaml(path))
-    return goals
-
-
 def _all_exercises() -> list[dict]:
+    global_index, _ = loader.load_all_exercises()
     result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'exercises', '*.yaml'))):
-        data = _load_yaml(path)
-        for ex in data.get('exercises', []):
-            # Ensure sources is always a list
-            if isinstance(ex.get('sources'), str):
-                ex['sources'] = [ex['sources']]
-            result.append(ex)
-    return result
+    for ex in global_index.values():
+        ex = dict(ex)
+        # Ensure sources is always a list
+        if isinstance(ex.get('sources'), str):
+            ex['sources'] = [ex['sources']]
+        result.append(ex)
+    return sorted(result, key=lambda e: e.get('id', ''))
 
 
 def _all_modalities() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
-        result.append(_load_yaml(path))
-    return result
+    return sorted(loader.load_all_modalities().values(), key=lambda m: m.get('id', ''))
 
 
 def _equipment_profiles() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'equipment_profiles.yaml'))
-    return raw.get('equipment_profiles', [])
+    return loader.load_equipment_profiles()
+
+
+# Similarity cache — computed once at first request (lazy, not blocking startup)
+_similarity_cache: dict | None = None
+
+def _get_similarity() -> dict:
+    global _similarity_cache
+    if _similarity_cache is None:
+        philosophies = loader.load_philosophies()
+        frameworks   = loader.load_all_frameworks()
+        modalities   = loader.load_all_modalities()
+        archetypes   = loader.load_all_archetypes()
+        exercises, _ = loader.load_all_exercises()
+        _similarity_cache = compute_all_similarities(
+            philosophies, frameworks, modalities, archetypes, exercises
+        )
+    return _similarity_cache
 
 
 def _injury_flags() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'injury_flags.yaml'))
-    return raw.get('injury_flags', [])
+    return list(loader.load_injury_flags().values())
 
 
 _BENCHMARK_CATEGORY_MAP = {
@@ -302,25 +322,13 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         'weeks':          weeks,
         'volume_summary': volume_summary,
+        'compromises':    raw.get('compromises', []),
     }
 
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-
-@app.get('/api/goals')
-def get_goals():
-    return jsonify(_all_goals())
-
-
-@app.get('/api/goals/<goal_id>')
-def get_goal(goal_id: str):
-    try:
-        return jsonify(loader.load_goal(goal_id))
-    except FileNotFoundError as e:
-        return jsonify({'detail': str(e)}), 404
-
 
 @app.get('/api/exercises')
 def get_exercises():
@@ -330,6 +338,27 @@ def get_exercises():
 @app.get('/api/modalities')
 def get_modalities():
     return jsonify(_all_modalities())
+
+
+@app.post('/api/modalities')
+def create_modality():
+    body = request.get_json(silent=True) or {}
+    if not body.get('id') or not body.get('name'):
+        return jsonify({'detail': 'id and name are required'}), 400
+    if body.get('recovery_cost') not in ('high', 'medium', 'low'):
+        return jsonify({'detail': 'recovery_cost must be high, medium, or low'}), 400
+    existing_ids = {m['id'] for m in _all_modalities()}
+    if body['id'] in existing_ids:
+        return jsonify({'detail': f"Modality id '{body['id']}' already exists"}), 409
+    path = os.path.join(_DATA_DIR, 'commons', 'modalities', f"{body['id']}.yaml")
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(body), 201
+
+
+@app.get('/api/equipment')
+def get_equipment():
+    return jsonify(loader.load_equipment())
 
 
 @app.get('/api/constraints/equipment-profiles')
@@ -349,11 +378,8 @@ def get_benchmarks():
 
 @app.get('/api/frameworks')
 def get_frameworks():
-    result = []
-    fw_dir = os.path.join(_DATA_DIR, 'frameworks')
-    for path in sorted(glob.glob(os.path.join(fw_dir, '*.yaml'))):
-        result.append(_load_yaml(path))
-    return jsonify(result)
+    fw_dict = loader.load_all_frameworks()
+    return jsonify(sorted(fw_dict.values(), key=lambda fw: fw.get('id', '')))
 
 
 @app.get('/api/philosophies')
@@ -371,15 +397,12 @@ def get_ontology():
     """Lightweight static graph of the full ontology for heatmap visualization."""
     # Philosophies
     philosophies = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'philosophies', '*.yaml'))):
-        p = _load_yaml(path)
+    for p in loader.load_philosophies():
         philosophies.append({'id': p['id'], 'name': p.get('name', p['id'])})
 
     # Frameworks (with source_philosophy + modality links)
     frameworks = []
-    fw_dir = os.path.join(_DATA_DIR, 'frameworks')
-    for path in sorted(glob.glob(os.path.join(fw_dir, '*.yaml'))):
-        fw = _load_yaml(path)
+    for fw in sorted(loader.load_all_frameworks().values(), key=lambda f: f.get('id', '')):
         frameworks.append({
             'id': fw['id'],
             'name': fw.get('name', fw['id']),
@@ -389,8 +412,7 @@ def get_ontology():
 
     # Modalities
     modalities = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
-        m = _load_yaml(path)
+    for m in sorted(loader.load_all_modalities().values(), key=lambda m: m.get('id', '')):
         modalities.append({'id': m['id'], 'name': m.get('name', m['id'])})
 
     # Archetypes — include slot exercise_filter so the heatmap can reflect actual selection logic
@@ -417,8 +439,8 @@ def get_ontology():
 
     # Exercises — include movement_patterns for slot-filter matching in heatmap
     exercises = []
-    all_ex = loader.load_all_exercises()
-    for ex in sorted(all_ex.values(), key=lambda e: e['id']):
+    all_ex_index, _ = loader.load_all_exercises()
+    for ex in sorted(all_ex_index.values(), key=lambda e: e['id']):
         mod = ex.get('modality', [])
         if isinstance(mod, str):
             mod = [mod]
@@ -428,6 +450,7 @@ def get_ontology():
             'category': ex.get('category'),
             'modality': mod,
             'movement_patterns': ex.get('movement_patterns', []),
+            '_package': ex.get('_package'),
         })
 
     return jsonify({
@@ -439,6 +462,16 @@ def get_ontology():
     })
 
 
+@app.get('/api/similarity')
+def get_similarity():
+    """Pairwise likeness scores for all ontology categories.
+
+    Returns {category: {id_a: {id_b: {score, primary, secondary}}}}
+    Scores are symmetric and pre-computed on first call.
+    """
+    return jsonify(_get_similarity())
+
+
 @app.post('/api/exercises')
 def create_exercise():
     body = request.get_json(silent=True) or {}
@@ -447,7 +480,9 @@ def create_exercise():
     existing_ids = {ex['id'] for ex in _all_exercises()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
-    custom_path = os.path.join(_DATA_DIR, 'exercises', 'custom.yaml')
+    custom_pkg_dir = os.path.join(_DATA_DIR, 'packages', 'custom')
+    os.makedirs(custom_pkg_dir, exist_ok=True)
+    custom_path = os.path.join(custom_pkg_dir, 'exercises.yaml')
     if os.path.exists(custom_path):
         data = _load_yaml(custom_path) or {'exercises': []}
     else:
@@ -456,6 +491,74 @@ def create_exercise():
     with open(custom_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(body), 201
+
+
+def _find_exercise_file_and_index(ex_id: str):
+    """Return (path, index, data) for an exercise by id, or (None, None, None)."""
+    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'exercises.yaml'))):
+        data = _load_yaml(path) or {}
+        for i, ex in enumerate(data.get('exercises', [])):
+            if ex.get('id') == ex_id:
+                return path, i, data
+    return None, None, None
+
+
+@app.put('/api/exercises/<ex_id>')
+def update_exercise(ex_id: str):
+    body = request.get_json(silent=True) or {}
+    path, idx, data = _find_exercise_file_and_index(ex_id)
+    if path is None:
+        return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
+    data['exercises'][idx].update({k: v for k, v in body.items() if k != 'id'})
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data['exercises'][idx]), 200
+
+
+def _find_archetype_file(arch_id: str) -> str | None:
+    """Return the YAML file path for an archetype by id, or None."""
+    for path in glob.glob(
+        os.path.join(_DATA_DIR, 'packages', '*', 'archetypes', '**', '*.yaml'),
+        recursive=True,
+    ):
+        try:
+            data = _load_yaml(path)
+            if data.get('id') == arch_id:
+                return path
+        except Exception:
+            continue
+    return None
+
+
+@app.put('/api/archetypes/<arch_id>')
+def update_archetype(arch_id: str):
+    body = request.get_json(silent=True) or {}
+    path = _find_archetype_file(arch_id)
+    if not path:
+        return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
+    data = _load_yaml(path)
+    data.update({k: v for k, v in body.items() if v is not None})
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data), 200
+
+
+@app.put('/api/frameworks/<fw_id>')
+def update_framework(fw_id: str):
+    body = request.get_json(silent=True) or {}
+    matches = glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'frameworks', f'{fw_id}.yaml'))
+    if not matches:
+        return jsonify({'detail': f"Framework '{fw_id}' not found"}), 404
+    path = matches[0]
+    data = _load_yaml(path)
+    allowed = {'name', 'source_philosophy', 'sessions_per_week', 'cadence_options',
+               'deload_protocol', 'applicable_when', 'notes'}
+    for k, v in body.items():
+        if k in allowed and v is not None:
+            data[k] = v
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(data), 200
 
 
 @app.post('/api/archetypes')
@@ -469,7 +572,7 @@ def create_archetype():
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
     if arch_id in existing_ids:
         return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
-    custom_dir = os.path.join(_DATA_DIR, 'archetypes', 'custom')
+    custom_dir = os.path.join(_DATA_DIR, 'packages', 'custom', 'archetypes')
     os.makedirs(custom_dir, exist_ok=True)
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -492,16 +595,203 @@ def generate_program():
         raise
 
 
-def _generate_program_inner(body):
-    goal_id = body.get('goal_id')
-    goal_ids = body.get('goal_ids', [])
+def _philosophy_to_goal(phil_id: str, all_frameworks: list) -> dict:
+    """Build a synthetic goal dict from a philosophy's framework_groups."""
+    phil = loader.load_philosophy(phil_id)
 
-    if not goal_id and not goal_ids:
-        return jsonify({'detail': 'goal_id or goal_ids is required'}), 400
-    if not goal_ids:
-        goal_ids = [goal_id]
+    # Find sequential group (if any)
+    groups = phil.get('framework_groups', [])
+    sequential_group = next((g for g in groups if g.get('type') == 'sequential'), None)
+
+    # Get phase sequence from sequential group or fall back to old canonical_phase_sequence
+    if sequential_group and sequential_group.get('canonical_phase_sequence'):
+        seq = sequential_group['canonical_phase_sequence']
+        primary_fw_id = phil.get('primary_framework_id') or sequential_group['frameworks'][0]
+    elif phil.get('canonical_phase_sequence'):
+        # Legacy support: old canonical_phase_sequence at philosophy level
+        seq = phil['canonical_phase_sequence']
+        primary_fw_id = phil.get('primary_framework_id')
+        if not primary_fw_id:
+            fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
+            primary_fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
+    else:
+        # No sequential group - create synthetic phases
+        fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
+        fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
+        seq = [
+            {'phase': 'base', 'weeks': 8},
+            {'phase': 'build', 'weeks': 6},
+            {'phase': 'peak', 'weeks': 4},
+        ]
+        primary_fw_id = fw_id
+
+    # Calculate priorities from primary framework
+    primary_fw = next((f for f in all_frameworks if f['id'] == primary_fw_id), None)
+    sessions = (primary_fw or {}).get('sessions_per_week', {})
+    total = sum(sessions.values()) or 1
+    priorities = {mod: count / total for mod, count in sessions.items()}
+
+    # Fallback to bias if no sessions_per_week found
+    if not priorities:
+        bias = phil.get('bias', phil.get('scope', []))
+        n = len(bias) or 1
+        priorities = {mod: 1.0 / n for mod in bias}
+
+    return {
+        'id': f'_phil_{phil_id}',
+        'name': phil.get('name', phil_id),
+        'priorities': priorities,
+        'phase_sequence': [
+            {
+                'phase': e.get('phase', 'base'),
+                'weeks': e.get('weeks', 8),
+                'framework_id': e.get('framework_id'),  # Phase-specific framework override
+                'focus': e.get('focus'),
+            }
+            for e in seq
+        ],
+        'framework_selection': {
+            'default_framework': primary_fw_id,
+            'alternatives': [],
+        },
+        'primary_sources': [phil_id],
+        'minimum_prerequisites': {},
+        'incompatible_with': [],
+        'notes': phil.get('notes', ''),
+    }
+
+
+def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list) -> dict:
+    """Weighted-average a set of philosophy synthetic goals into one."""
+    total_w = sum(phil_weights.get(pid, 1.0 / len(phil_ids)) for pid in phil_ids)
+    blended_priorities: dict = {}
+    primary_phil_id = max(phil_ids, key=lambda pid: phil_weights.get(pid, 1.0 / len(phil_ids)))
+    primary_goal = _philosophy_to_goal(primary_phil_id, all_frameworks)
+
+    for pid in phil_ids:
+        w = phil_weights.get(pid, 1.0 / len(phil_ids)) / total_w
+        g = _philosophy_to_goal(pid, all_frameworks)
+        for mod, val in g['priorities'].items():
+            blended_priorities[mod] = blended_priorities.get(mod, 0.0) + val * w
+
+    # Normalize
+    p_total = sum(blended_priorities.values()) or 1.0
+    blended_priorities = {k: v / p_total for k, v in blended_priorities.items()}
+
+    result = dict(primary_goal)
+    result['id'] = '_phil_blend'
+    result['name'] = ' + '.join(
+        loader.load_philosophy(pid).get('name', pid).split(' /')[0].split(' —')[0].strip()
+        for pid in phil_ids
+    )
+    result['priorities'] = blended_priorities
+    result['primary_sources'] = phil_ids
+    return result
+
+
+def _normalize_schedule_constraints(constraints: dict) -> dict:
+    """
+    Convert weekly_schedule into scheduler-compatible constraints.
+
+    Maps session types to time allocations:
+    - short: 40 minutes
+    - long: 75 minutes
+    - mobility: 20 minutes
+    - rest: 0 minutes
+
+    Extracts:
+    - days_per_week: count of days with non-rest sessions
+    - preferred_days: list of day indices (1=Mon, 7=Sun) with training
+    - forced_rest_days: days marked as all rest
+    - day_configs: per-day {minutes, has_secondary, session_types}
+    - weekday_session_minutes, weekend_session_minutes: computed averages
+    - allow_split_sessions: true if any day has multiple sessions
+    """
+    schedule = constraints.get('weekly_schedule')
+    if not schedule:
+        return constraints  # No schedule provided, use existing constraints
+
+    DAY_INDICES = {
+        'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4,
+        'Friday': 5, 'Saturday': 6, 'Sunday': 7
+    }
+    TIME_MAP = {'short': 40, 'long': 75, 'mobility': 20, 'rest': 0}
+
+    preferred_days = []
+    forced_rest_days = []
+    day_configs = {}
+    weekday_times = []
+    weekend_times = []
+
+    for day_name, day_schedule in schedule.items():
+        day_idx = DAY_INDICES[day_name]
+        sessions = [
+            day_schedule['session1'],
+            day_schedule['session2'],
+            day_schedule['session3'],
+            day_schedule['session4']
+        ]
+
+        non_rest = [s for s in sessions if s != 'rest']
+
+        if non_rest:
+            preferred_days.append(day_idx)
+            total_time = sum(TIME_MAP[s] for s in non_rest)
+
+            # Classify session types by duration for smart matching
+            duration_buckets = {
+                'long': [s for s in non_rest if s == 'long'],       # 75min
+                'short': [s for s in non_rest if s == 'short'],     # 40min
+                'mobility': [s for s in non_rest if s == 'mobility']  # 20min
+            }
+
+            day_configs[day_idx] = {
+                'minutes': total_time,
+                'has_secondary': len(non_rest) > 1,
+                'session_types': non_rest,  # For smart pairing
+                'duration_buckets': duration_buckets,  # For duration matching
+            }
+
+            # Track weekday/weekend averages
+            if day_idx <= 5:
+                weekday_times.append(total_time)
+            else:
+                weekend_times.append(total_time)
+        else:
+            forced_rest_days.append(day_idx)
+
+    # Build normalized constraints
+    normalized = dict(constraints)
+    normalized['days_per_week'] = len(preferred_days)
+    normalized['preferred_days'] = preferred_days
+    normalized['forced_rest_days'] = forced_rest_days
+    normalized['day_configs'] = day_configs
+
+    if weekday_times:
+        normalized['weekday_session_minutes'] = int(sum(weekday_times) / len(weekday_times))
+    if weekend_times:
+        normalized['weekend_session_minutes'] = int(sum(weekend_times) / len(weekend_times))
+
+    # Enable split sessions if any day has multiple sessions
+    normalized['allow_split_sessions'] = any(
+        cfg.get('has_secondary') for cfg in day_configs.values()
+    )
+
+    return normalized
+
+
+def _generate_program_inner(body):
+    philosophy_id = body.get('philosophy_id')
+    philosophy_ids = body.get('philosophy_ids', [])
+    philosophy_weights = body.get('philosophy_weights', {})
+
+    if not philosophy_id and not philosophy_ids:
+        return jsonify({'detail': 'philosophy_id or philosophy_ids is required'}), 400
 
     constraints = body.get('constraints', {})
+
+    # Normalize weekly_schedule into scheduler-compatible constraints (BEFORE defaults)
+    constraints = _normalize_schedule_constraints(constraints)
 
     # Normalise constraints — fill in any missing fields with sensible defaults
     constraints.setdefault('days_per_week', 5)
@@ -519,23 +809,19 @@ def _generate_program_inner(body):
     if framework_id:
         constraints['forced_framework'] = framework_id
 
-    goal_weights_raw = body.get('goal_weights', {})
-    goals_loaded = []
-    for gid in goal_ids:
-        try:
-            w = goal_weights_raw.get(gid, 1.0 / len(goal_ids))
-            goals_loaded.append({'goal': loader.load_goal(gid), 'weight': w})
-        except FileNotFoundError as e:
-            return jsonify({'detail': str(e)}), 404
-
     blend_warnings: list[str] = []
-    if len(goals_loaded) == 1:
-        goal = goals_loaded[0]['goal']
-        goal_dict_for_generate = None
-    else:
-        from src.blender import blend_goals as _blend
-        goal, blend_warnings = _blend(goals_loaded)
-        goal_dict_for_generate = goal
+
+    # ── Philosophy path: build synthetic goal from philosophy data ──────────
+    all_frameworks = list(loader.load_all_frameworks().values())
+    try:
+        if philosophy_id:
+            goal = _philosophy_to_goal(philosophy_id, all_frameworks)
+        else:
+            goal = _blend_philosophy_goals(philosophy_ids, philosophy_weights, all_frameworks)
+    except FileNotFoundError as e:
+        return jsonify({'detail': str(e)}), 404
+    goal_dict_for_generate = goal
+    goal_ids = [goal['id']]
 
     # Priority overrides — normalised and applied on top of the loaded/blended goal
     priority_overrides = body.get('priority_overrides')
@@ -583,7 +869,16 @@ def _generate_program_inner(body):
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
 
-    validation = validate(goal, constraints, data['archetypes'], data['modalities'],
+    # Filter archetypes by primary_sources (philosophy packages)
+    archetypes_filtered = data['archetypes']
+    primary_sources = set(goal.get('primary_sources', []))
+    if primary_sources:
+        archetypes_filtered = [
+            arch for arch in data['archetypes']
+            if arch.get('_package') in primary_sources
+        ]
+
+    validation = validate(goal, constraints, archetypes_filtered, data['modalities'],
                           merged_injury_flags)
 
     for w in blend_warnings:
@@ -627,7 +922,8 @@ def _generate_program_inner(body):
 def generate_session():
     """Generate a single replacement session for a given modality/phase/constraints.
 
-    Accepts an optional archetype_id to force a specific archetype (Browse tab);
+    Accepts optional primary_sources (philosophy IDs) to prefer archetypes from those philosophies.
+    Accepts optional archetype_id to force a specific archetype (Browse tab);
     without it the selector chooses the best-fit archetype (Generate tab).
     """
     import traceback as _tb
@@ -643,14 +939,12 @@ def generate_session():
 
 
 def _generate_session_inner(body):
-    goal_id  = body.get('goal_id')
+    primary_sources = body.get('primary_sources', [])  # Philosophy IDs
     modality = body.get('modality')
     phase    = body.get('phase')
     week_in_phase = body.get('week_in_phase', 1)
     is_deload = bool(body.get('is_deload', False))
 
-    if not goal_id:
-        return jsonify({'detail': 'goal_id is required'}), 400
     if not modality:
         return jsonify({'detail': 'modality is required'}), 400
     if not phase:
@@ -664,10 +958,8 @@ def _generate_session_inner(body):
     constraints.setdefault('injury_flags', [])
     constraints.setdefault('fatigue_state', 'normal')
 
-    try:
-        goal = loader.load_goal(goal_id)
-    except FileNotFoundError as e:
-        return jsonify({'detail': str(e)}), 404
+    # Build minimal goal-like dict for populate_session (only needs primary_sources)
+    goal = {'primary_sources': primary_sources}
 
     data = loader.load_all_data()
 
@@ -680,6 +972,14 @@ def _generate_session_inner(body):
             if flag_id not in constraints['injury_flags']:
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
+
+    # Filter archetypes by primary_sources (philosophy packages)
+    archetypes_filtered = data['archetypes']
+    if primary_sources:
+        archetypes_filtered = [
+            arch for arch in data['archetypes']
+            if arch.get('_package') in primary_sources
+        ]
 
     # Resolve forced archetype if archetype_id provided (Browse tab)
     archetype_id = body.get('archetype_id')
@@ -694,9 +994,10 @@ def _generate_session_inner(body):
     session_stub = {'modality': modality, 'is_deload': is_deload}
     populated = populate_session(
         session_stub, goal, constraints,
-        data['exercises'], data['archetypes'],
+        data['exercises'], archetypes_filtered,
         merged_injury_flags, phase, week_in_phase,
         forced_archetype=forced_arch,
+        exercises_by_package=data.get('exercises_by_package'),
     )
 
     if populated.get('archetype') is None:
@@ -1194,65 +1495,62 @@ def _profile_to_frontend(row: dict) -> dict:
         'customInjuryFlags': row.get('custom_injury_flags') or [],
         'activeGoalId':      row.get('active_goal_id'),
         'dateOfBirth':       str(row['date_of_birth']) if row.get('date_of_birth') else None,
+        'weeklySchedule':    row.get('weekly_schedule'),
     }
 
 
 @app.get('/api/profile')
 @require_auth
 def get_profile():
-    import json as _json
     try:
-        from src.db import get_conn
+        from src.db import get_user_profile
         user_id = g.user_id
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('SELECT * FROM user_profiles WHERE id = %s', (user_id,))
-                row = cur.fetchone()
-                if row is None:
-                    cur.execute(
-                        'INSERT INTO user_profiles (id) VALUES (%s) RETURNING *', (user_id,)
-                    )
-                    row = cur.fetchone()
-                    conn.commit()
-        return jsonify(_profile_to_frontend(dict(row)) if row else {})
+        profile = get_user_profile(user_id)
+        if profile is None:
+            # Return default profile
+            return jsonify({
+                'trainingLevel': 'intermediate',
+                'equipment': [],
+                'injuryFlags': [],
+                'customInjuryFlags': [],
+                'activeGoalId': None,
+                'dateOfBirth': None,
+                'weeklySchedule': None,
+            })
+        return jsonify(profile)
     except Exception as e:
         app.logger.warning('get_profile error: %s', e)
-        return jsonify({})
+        return jsonify({
+            'trainingLevel': 'intermediate',
+            'equipment': [],
+            'injuryFlags': [],
+            'customInjuryFlags': [],
+            'activeGoalId': None,
+            'dateOfBirth': None,
+            'weeklySchedule': None,
+        })
 
 
 @app.put('/api/profile')
 @require_auth
 def update_profile():
-    import json as _json
     try:
-        from src.db import get_conn
+        from src.db import save_user_profile
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('''
-                    INSERT INTO user_profiles
-                        (id, training_level, equipment, injury_flags,
-                         custom_injury_flags, active_goal_id, date_of_birth, updated_at)
-                    VALUES (%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s, %s, NOW())
-                    ON CONFLICT (id) DO UPDATE SET
-                        training_level      = EXCLUDED.training_level,
-                        equipment           = EXCLUDED.equipment,
-                        injury_flags        = EXCLUDED.injury_flags,
-                        custom_injury_flags = EXCLUDED.custom_injury_flags,
-                        active_goal_id      = EXCLUDED.active_goal_id,
-                        date_of_birth       = EXCLUDED.date_of_birth,
-                        updated_at          = NOW()
-                ''', (
-                    user_id,
-                    body.get('trainingLevel', 'intermediate'),
-                    _json.dumps(body.get('equipment', [])),
-                    _json.dumps(body.get('injuryFlags', [])),
-                    _json.dumps(body.get('customInjuryFlags', [])),
-                    body.get('activeGoalId'),
-                    body.get('dateOfBirth'),
-                ))
-                conn.commit()
+
+        # Build profile data dict
+        profile_data = {
+            'trainingLevel': body.get('trainingLevel', 'intermediate'),
+            'equipment': body.get('equipment', []),
+            'injuryFlags': body.get('injuryFlags', []),
+            'customInjuryFlags': body.get('customInjuryFlags', []),
+            'activeGoalId': body.get('activeGoalId'),
+            'dateOfBirth': body.get('dateOfBirth'),
+            'weeklySchedule': body.get('weeklySchedule'),
+        }
+
+        save_user_profile(user_id, profile_data)
         return jsonify({'saved': True})
     except Exception as e:
         app.logger.warning('update_profile error: %s', e)
@@ -1261,23 +1559,12 @@ def update_profile():
 
 @app.get('/api/user/program')
 @require_auth
-def get_user_program():
+def get_user_program_endpoint():
     try:
-        from src.db import get_conn
+        from src.db import get_user_program
         user_id = g.user_id
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('SELECT * FROM user_programs WHERE user_id = %s', (user_id,))
-                row = cur.fetchone()
-        if not row:
-            return jsonify(None)
-        return jsonify({
-            'currentProgram':    row.get('current_program'),
-            'programStartDate':  str(row['program_start_date']) if row.get('program_start_date') else None,
-            'eventDate':         str(row['event_date']) if row.get('event_date') else None,
-            'sourceGoalIds':     row.get('source_goal_ids') or [],
-            'sourceGoalWeights': row.get('source_goal_weights') or {},
-        })
+        program = get_user_program(user_id)
+        return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
         return jsonify(None)
@@ -1285,35 +1572,13 @@ def get_user_program():
 
 @app.put('/api/user/program')
 @require_auth
-def save_user_program():
-    import json as _json
+def save_user_program_endpoint():
     try:
-        from src.db import get_conn
+        from src.db import save_user_program
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute('''
-                    INSERT INTO user_programs
-                        (user_id, current_program, program_start_date,
-                         event_date, source_goal_ids, source_goal_weights, updated_at)
-                    VALUES (%s, %s::jsonb, %s, %s, %s::jsonb, %s::jsonb, NOW())
-                    ON CONFLICT (user_id) DO UPDATE SET
-                        current_program     = EXCLUDED.current_program,
-                        program_start_date  = EXCLUDED.program_start_date,
-                        event_date          = EXCLUDED.event_date,
-                        source_goal_ids     = EXCLUDED.source_goal_ids,
-                        source_goal_weights = EXCLUDED.source_goal_weights,
-                        updated_at          = NOW()
-                ''', (
-                    user_id,
-                    _json.dumps(body.get('currentProgram')),
-                    body.get('programStartDate'),
-                    body.get('eventDate'),
-                    _json.dumps(body.get('sourceGoalIds', [])),
-                    _json.dumps(body.get('sourceGoalWeights', {})),
-                ))
-                conn.commit()
+
+        save_user_program(user_id, body)
         return jsonify({'saved': True})
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)

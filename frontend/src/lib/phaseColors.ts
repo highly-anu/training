@@ -17,4 +17,6 @@ export const PHASE_COLORS: Record<TrainingPhase, PhaseColor> = {
   rehab: { hex: '#84cc16', bg: 'bg-lime-500/15', text: 'text-lime-400 dark:text-lime-300', label: 'Rehab' },
   post_op: { hex: '#a855f7', bg: 'bg-purple-500/15', text: 'text-purple-400 dark:text-purple-300', label: 'Post-Op' },
   active: { hex: '#94a3b8', bg: 'bg-slate-500/15', text: 'text-slate-400 dark:text-slate-300', label: 'Active' },
+  transition: { hex: '#8b5cf6', bg: 'bg-violet-500/15', text: 'text-violet-400 dark:text-violet-300', label: 'Transition' },
+  specific: { hex: '#f97316', bg: 'bg-orange-500/15', text: 'text-orange-400 dark:text-orange-300', label: 'Specific' },
 }

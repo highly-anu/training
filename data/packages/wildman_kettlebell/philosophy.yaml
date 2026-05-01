@@ -1,0 +1,45 @@
+id: wildman_kettlebell
+name: "Mark Wildman Kettlebell"
+core_principles:
+  - skill_before_load
+  - rpm_based_intensity
+  - anti_glycolytic_training
+  - movement_complexity_progression
+  - minimum_effective_dose
+scope:
+  - power
+  - strength_endurance
+  - aerobic_base
+  - relative_strength
+  - movement_skill
+  - mobility
+bias:
+  - power
+  - strength_endurance
+  - movement_skill
+avoid_with:
+  - mixed_modal_conditioning
+required_equipment:
+  - kettlebell
+intensity_model: operator_readiness
+progression_philosophy: rpm_based
+sources:
+  - Wildman
+  - Pavel
+notes: >
+  Kettlebell sport and general practice methodology developed by Mark Wildman.
+  Progression is driven by movement complexity (deadlift → swing → clean → press →
+  push press → snatch → jerk) and RPM targets rather than raw load increases.
+  Anti-glycolytic principle: sets stay below the glycolytic threshold — breathing
+  mechanics and movement quality take priority over grinding. Operator readiness
+  means daily session selection responds to how the athlete actually feels.
+
+primary_framework_id: kb_general_practice
+
+framework_groups:
+  - id: alternatives
+    name: "Training Focus"
+    type: alternatives
+    frameworks:
+      - kb_general_practice
+      - kb_pentathlon

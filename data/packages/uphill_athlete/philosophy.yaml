@@ -1,0 +1,90 @@
+id: uphill_athlete
+name: "Uphill Athlete — Steve House & Scott Johnston"
+core_principles:
+  - aerobic_base_is_foundation
+  - continuity_over_intensity
+  - polarized_intensity_distribution
+  - sport_specificity_funnel
+  - individualization_via_aet_ant_testing
+  - durability_before_performance
+  - recovery_is_training
+  - long_term_athlete_development
+  - general_to_specific_progression
+  - modulate_by_fatigue
+  - aerobic_deficiency_must_be_fixed_first
+  - muscular_endurance_is_the_mountain_specific_quality
+scope:
+  - aerobic_base
+  - anaerobic_intervals
+  - max_strength
+  - strength_endurance
+  - durability
+  - mobility
+bias:
+  - aerobic_base
+  - durability
+  - strength_endurance
+avoid_with:
+  - mixed_modal_conditioning
+required_equipment:
+  - ruck_pack
+  - box
+  - barbell
+  - kettlebell
+  - pull_up_bar
+  - open_space
+intensity_model: polarized_80_20_uphill
+progression_philosophy: volume_based
+sources:
+  - "Training for the New Alpinism — House & Johnston (2014)"
+  - "Training for the Uphill Athlete — House, Johnston & Jornet (2019)"
+  - "uphillathlete.com training articles and podcasts"
+notes: |
+  Mountain endurance methodology built on a large aerobic base, polarized
+  intensity distribution, sport-specific muscular endurance, and durability.
+  AeT (aerobic threshold, nose-breathing test) and AnT (anaerobic threshold,
+  ~1hr time-trial HR) testing individualize zones. The AeT–AnT gap is the
+  primary diagnostic: a gap >10% of max HR indicates aerobic deficiency
+  syndrome (ADS) and the athlete must spend months only in Z1–Z2 until AeT
+  rises. Athletes progress Transition → Base → Specific → Taper. Volume,
+  not intensity, is the primary progression lever. Recovery (sleep,
+  nutrition, easy days) is treated as part of training, not separate from it.
+
+primary_framework_id: uphill_base_phase
+
+# Full program expectations (sum of all phases)
+expectations:
+  min_weeks: 20
+  ideal_weeks: 31  # 4 transition + 16 base + 8 specific + 3 taper
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 90
+  supports_split_days: true
+
+framework_groups:
+  - id: full_program
+    name: "Full Alpine Training Program"
+    type: sequential
+    frameworks:
+      - uphill_transition_phase
+      - uphill_base_phase
+      - uphill_specific_phase
+      - uphill_taper_phase
+    canonical_phase_sequence:
+      - phase: transition
+        weeks: 4
+        framework_id: uphill_transition_phase
+        focus: "Recovery and movement prep"
+      - phase: base
+        weeks: 16
+        framework_id: uphill_base_phase
+        focus: "Aerobic base building"
+      - phase: specific
+        weeks: 8
+        framework_id: uphill_specific_phase
+        focus: "Sport-specific muscular endurance"
+      - phase: taper
+        weeks: 3
+        framework_id: uphill_taper_phase
+        focus: "Peak and recover for event"

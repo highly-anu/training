@@ -7,8 +7,11 @@ import {
 } from 'recharts'
 import type { GeneratedProgram, ModalityId, TrainingPhase } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
+import { useBuilderStore } from '@/store/builderStore'
+import { usePhilosophies } from '@/api/philosophies'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
 
-// ── Category config ────────────────────────────────────────────────────────────
+// ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
 const VOL_CATEGORIES = [
   { id: 'Strength',     color: '#ef4444' },
@@ -16,25 +19,6 @@ const VOL_CATEGORIES = [
   { id: 'Durability',   color: '#f59e0b' },
   { id: 'Mobility',     color: '#10b981' },
 ] as const
-
-const MODALITY_TO_CATEGORY: Partial<Record<ModalityId, string>> = {
-  max_strength:             'Strength',
-  strength_endurance:       'Strength',
-  relative_strength:        'Strength',
-  power:                    'Strength',
-  aerobic_base:             'Conditioning',
-  anaerobic_intervals:      'Conditioning',
-  mixed_modal_conditioning: 'Conditioning',
-  durability:               'Durability',
-  mobility:                 'Mobility',
-  movement_skill:           'Mobility',
-  rehab:                    'Mobility',
-  combat_sport:             'Conditioning',
-}
-
-const CATEGORY_COLOR: Record<string, string> = Object.fromEntries(
-  VOL_CATEGORIES.map(({ id, color }) => [id, color])
-)
 
 // ── Phase theory content ───────────────────────────────────────────────────────
 
@@ -100,6 +84,18 @@ const PHASE_THEORY: Record<TrainingPhase, PhaseTheory> = {
     intensityProfile: 'Low intensity only · Z1–Z2 ceiling',
     methodology: 'Horsemen GPP · Active Recovery',
   },
+  transition: {
+    theory: 'Rebuilds movement quality and general work capacity after a rest period or following an objective. Intensity stays strictly aerobic (Z1–Z2 only — nose-breathing). Strength work is general and progressed linearly. No anaerobic work. Uphill Athlete describes this as "filling the tank" before structured loading begins — the training age of the tissue must catch up to the ambition of the athlete.',
+    keyAdaptations: ['Movement pattern restoration', 'Aerobic re-priming', 'Connective tissue tolerance', 'General work capacity', 'Training habit re-establishment'],
+    intensityProfile: '90–100% low intensity (Z1–Z2) · no anaerobic',
+    methodology: 'Uphill Athlete — Transition Period · Starting Strength linear reload',
+  },
+  specific: {
+    theory: 'Applies accumulated base fitness directly to the demands of the target objective. Muscular endurance (ME) — the mountain-specific quality — peaks here through weighted box step-ups and uphill carries. Interval intensity rises to approach AnT. Long days back-to-back simulate the event. Volume is near peak; progression shifts from "more volume" to "higher specificity." This is the phase that separates mountain athletes from general endurance athletes.',
+    keyAdaptations: ['Muscular endurance (ME)', 'Sport-specific power', 'AnT approach', 'Back-to-back long-day tolerance', 'Load-bearing capacity'],
+    intensityProfile: '80% low intensity · 15% threshold · 5% high intensity',
+    methodology: 'Uphill Athlete — Specific Period · ME box step-ups · AnT intervals',
+  },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -139,8 +135,8 @@ function buildArchetypeRows(
       for (const session of sessions) {
         if (!session.archetype) continue
         const dur = session.duration_min ?? session.archetype.duration_estimate_minutes ?? 0
-        const cat = MODALITY_TO_CATEGORY[session.modality] ?? 'Conditioning'
-        const color = CATEGORY_COLOR[cat] ?? '#888'
+        const mod = session.modality as ModalityId
+        const color = MODALITY_COLORS[mod]?.hex ?? '#6366f1'
         const name = session.archetype.name
 
         const existing = map.get(name)
@@ -149,7 +145,7 @@ function buildArchetypeRows(
           existing.minDur = Math.min(existing.minDur, dur)
           existing.maxDur = Math.max(existing.maxDur, dur)
         } else {
-          map.set(name, { name, color, count: 1, minDur: dur, maxDur: dur, modality: cat })
+          map.set(name, { name, color, count: 1, minDur: dur, maxDur: dur, modality: mod })
         }
       }
     }
@@ -204,6 +200,10 @@ interface ProgramOverviewProps {
 export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set())
 
+  const sourceMode = useBuilderStore((s) => s.sourceMode)
+  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const { data: philosophies } = usePhilosophies()
+
   const { goal, volume_summary } = program as GeneratedProgram & {
     minimum_prerequisites?: Record<string, number>
   }
@@ -231,7 +231,45 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
     <div className="p-6 space-y-8">
 
       {/* 1. Program rationale */}
-      {goal.notes && (
+      {sourceMode !== null ? (
+        <div>
+          <h2 className="text-sm font-semibold mb-2">About this Program</h2>
+          {sourceMode === 'philosophy' && (() => {
+            const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
+            return phil ? (
+              <>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Built from the <span className="font-medium text-foreground">{phil.name}</span> philosophy.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <Badge variant="secondary" className="text-xs">{phil.id}</Badge>
+                </div>
+              </>
+            ) : null
+          })()}
+          {sourceMode === 'blend' && (() => {
+            const phils = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)) ?? []
+            return (
+              <>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Blended from {phils.length} philosoph{phils.length === 1 ? 'y' : 'ies'}:{' '}
+                  {phils.map((p) => p.name).join(', ')}.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {phils.map((p) => (
+                    <Badge key={p.id} variant="secondary" className="text-xs">{p.id}</Badge>
+                  ))}
+                </div>
+              </>
+            )
+          })()}
+          {sourceMode === 'custom' && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Built from custom modality priorities. Priorities are set directly — no source philosophy.
+            </p>
+          )}
+        </div>
+      ) : goal.notes ? (
         <div>
           <h2 className="text-sm font-semibold mb-2">About this Program</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
@@ -243,7 +281,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* 2. Phase cards — two separate cards per phase */}
       {segments.length > 0 && (
@@ -403,22 +441,25 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                         ) : (
                           <div className="space-y-2 flex-1">
                             {archetypeRows.map((row) => (
-                              <div key={row.name} className="flex items-baseline gap-2">
+                              <div key={row.name} className="flex items-start gap-2">
                                 <span
-                                  className="inline-block size-1.5 rounded-full shrink-0 mt-1"
+                                  className="inline-block size-1.5 rounded-full shrink-0 mt-1.5"
                                   style={{ backgroundColor: row.color }}
                                 />
                                 <span
-                                  className="text-xs font-semibold tabular-nums shrink-0 w-5 text-right"
+                                  className="text-xs font-semibold tabular-nums shrink-0 w-5 text-right mt-0.5"
                                   style={{ color: row.color }}
                                 >
                                   {row.count}×
                                 </span>
-                                <span className="text-xs text-foreground leading-snug flex-1 min-w-0">
-                                  {row.name}
-                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs text-foreground leading-snug">{row.name}</div>
+                                  <div className="text-[10px] font-medium" style={{ color: row.color }}>
+                                    {MODALITY_COLORS[row.modality as ModalityId]?.label ?? row.modality}
+                                  </div>
+                                </div>
                                 {row.maxDur > 0 && (
-                                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 ml-auto">
+                                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 mt-0.5">
                                     {fmtDur(row.minDur, row.maxDur)}
                                   </span>
                                 )}

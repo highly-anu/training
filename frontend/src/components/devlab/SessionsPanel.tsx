@@ -119,6 +119,7 @@ function SlotRow({ slot }: { slot: SlotTrace }) {
                 <thead>
                   <tr className="text-left text-muted-foreground">
                     <th className="pb-1 pr-3">Exercise</th>
+                    <th className="pb-1 pr-3">Package</th>
                     <th className="pb-1 pr-3 text-right">Score</th>
                     <th className="pb-1 pr-3 text-right">Recency</th>
                     <th className="pb-1 pr-3 text-right">Unlocks</th>
@@ -139,6 +140,13 @@ function SlotRow({ slot }: { slot: SlotTrace }) {
                           <span className="text-primary mr-1">✓</span>
                         )}
                         {c.name || c.id}
+                      </td>
+                      <td className="py-0.5 pr-3">
+                        {c.package && (
+                          <Badge variant="outline" className="text-[9px] border-violet-500/30 bg-violet-500/10 text-violet-400">
+                            {c.package}
+                          </Badge>
+                        )}
                       </td>
                       <td className="py-0.5 pr-3 text-right font-mono font-bold">{c.score}</td>
                       <td className="py-0.5 pr-3 text-right font-mono text-amber-400">

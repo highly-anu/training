@@ -1,0 +1,36 @@
+id: kb_antiglycolic_session
+name: KB Anti-Glycolytic Practice (Wildman)
+modality: aerobic_base
+category: kettlebell
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 40
+applicable_phases:
+- base
+- maintenance
+- transition
+slots:
+- role: main
+  slot_type: time_domain
+  duration_minutes: 35
+  intensity: zone2
+  exercise_filter:
+    category: kettlebell
+    movement_pattern: ballistic
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+- Pavel
+notes: 'Anti-glycolytic KB session popularised by Pavel and taught by Wildman. Short
+  timed sets (10–20 sec) of swings or snatches alternate with full rest until HR returns
+  below ~130 bpm. Total session volume accumulates over 30–40 min; the glycolytic
+  system is never taxed. Builds aerobic base and repeatable work capacity without
+  accumulated fatigue or soreness. Breathing must remain nasal throughout — if mouth-breathing
+  is required, the set was too long or the bell too heavy. This is not cardio: it
+  is high-quality ballistic repetitions performed aerobically.
+
+  '

@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
-import { useBuilderStore } from '@/store/builderStore'
 import { useUiStore } from '@/store/uiStore'
 import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram } from './types'
 
@@ -18,9 +17,10 @@ function getMondayOf(date: Date): string {
 }
 
 interface GenerateParams {
-  goalId: string
-  goalIds?: string[]
-  goalWeights?: Record<string, number>
+  // Philosophy-based program generation
+  philosophyId?: string
+  philosophyIds?: string[]
+  philosophyWeights?: Record<string, number>
   constraints: AthleteConstraints
   eventDate?: string
   startDate?: string | null
@@ -31,11 +31,13 @@ interface GenerateParams {
 }
 
 function buildPostBody(params: GenerateParams) {
-  const multi = params.goalIds && params.goalIds.length > 1
+  const multiPhil = params.philosophyIds && params.philosophyIds.length > 1
+
   return {
-    ...(multi
-      ? { goal_ids: params.goalIds, goal_weights: params.goalWeights }
-      : { goal_id: params.goalId }),
+    // Philosophy path
+    ...(multiPhil
+      ? { philosophy_ids: params.philosophyIds, philosophy_weights: params.philosophyWeights }
+      : { philosophy_id: params.philosophyId ?? params.philosophyIds![0] }),
     constraints: params.constraints,
     ...(params.eventDate ? { event_date: params.eventDate } : {}),
     ...(params.startDate ? { start_date: params.startDate } : {}),
@@ -54,17 +56,17 @@ export function useGenerateProgram() {
       apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
     onSuccess: (data, params) => {
       queryClient.setQueryData(queryKeys.programs.current, data)
-      const ids = (params.goalIds ?? [params.goalId]).filter((id) => id !== '_blended')
       const startMonday = data.program_start_date ?? getMondayOf(new Date())
       // Single atomic update + server persist
       useProgramStore.getState().setFullProgram(
         data,
         params.eventDate ?? null,
         startMonday,
-        ids,
-        params.goalWeights ?? {}
+        params.philosophyIds ?? [params.philosophyId ?? ''],
+        params.philosophyWeights ?? {}
       )
-      useBuilderStore.getState().reset()
+      // Note: reset() is NOT called here — ReviewGenerate calls it after navigation
+      // so infeasible results don't silently bounce the user back to step 1.
       useUiStore.getState().setSelectedWeekIndex(0)
     },
   })
@@ -103,7 +105,7 @@ export function useCurrentProgram(): GeneratedProgram | undefined {
 }
 
 export interface GenerateSessionParams {
-  goalId: string
+  primarySources?: string[]  // Philosophy IDs to prefer archetypes from
   modality: ModalityId
   phase: TrainingPhase
   weekInPhase: number
@@ -123,7 +125,7 @@ export function useGenerateSession() {
   return useMutation({
     mutationFn: (p: GenerateSessionParams) =>
       apiClient.post('/sessions/generate', {
-        goal_id: p.goalId,
+        primary_sources: p.primarySources ?? [],
         modality: p.modality,
         phase: p.phase,
         week_in_phase: p.weekInPhase,

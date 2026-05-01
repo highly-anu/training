@@ -1,22 +1,18 @@
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Wand2 } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { StepIndicator } from '@/components/builder/StepIndicator'
-import { GoalGrid } from '@/components/builder/GoalGrid'
+import { ProgramSource } from '@/components/builder/ProgramSource'
 import { ProgramTuner } from '@/components/builder/ProgramTuner'
 import { ConstraintsForm } from '@/components/builder/ConstraintsForm'
 import { ReviewGenerate } from '@/components/builder/ReviewGenerate'
 import { useBuilderStore } from '@/store/builderStore'
-import { useGoals } from '@/api/goals'
-
-const GOAL_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#f43f5e', '#0ea5e9', '#a855f7']
 
 const STEP_TITLES = {
-  1: { title: 'Choose your Goal', sub: 'Select one or more training profiles that match your objective' },
-  2: { title: 'Tune your Program', sub: 'Adjust framework, priorities, and duration' },
-  3: { title: 'Set Constraints', sub: 'Equipment, schedule, injuries, and current phase' },
-  4: { title: 'Review & Generate', sub: 'Confirm your settings and generate your program' },
+  1: { title: 'Programming Source', sub: 'Philosophy, blend, or custom modality priorities' },
+  2: { title: 'Tune & Periodize', sub: 'Framework selection, priorities, and program duration' },
+  3: { title: 'Athlete Constraints', sub: 'Schedule, equipment, training level, and injuries' },
+  4: { title: 'Review & Generate', sub: 'Verify configuration and create your program' },
 }
 
 function getStepVariants(direction: 'forward' | 'backward'): Variants {
@@ -28,8 +24,7 @@ function getStepVariants(direction: 'forward' | 'backward'): Variants {
 }
 
 export function ProgramBuilder() {
-  const { step, direction, selectedGoalIds, goalWeights, toggleGoal, setGoalWeight, setStep } = useBuilderStore()
-  const { data: goals } = useGoals()
+  const { step, direction, selectedGoalIds, sourceMode, setStep } = useBuilderStore()
   const stepInfo = STEP_TITLES[step]
   const variants = getStepVariants(direction)
 
@@ -69,92 +64,8 @@ export function ProgramBuilder() {
               initial="enter"
               animate="center"
               exit="exit"
-              className="p-6 space-y-4"
             >
-              <GoalGrid selectedIds={selectedGoalIds} onToggle={toggleGoal} />
-
-              {/* Weight controls — shown when 2+ goals selected */}
-              {selectedGoalIds.length >= 2 && (() => {
-                const totalRaw = selectedGoalIds.reduce((s, gid) => s + (goalWeights[gid] ?? 50), 0)
-                const pieData = selectedGoalIds.map((id, i) => ({
-                  id,
-                  name: goals?.find((g) => g.id === id)?.name ?? id.replace(/_/g, ' '),
-                  value: Math.round(((goalWeights[id] ?? 50) / totalRaw) * 100),
-                  raw: goalWeights[id] ?? 50,
-                  color: GOAL_COLORS[i % GOAL_COLORS.length],
-                }))
-                return (
-                  <div className="rounded-xl border bg-card p-4 space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Goal Weights
-                    </p>
-
-                    {/* Pie chart */}
-                    <div className="relative">
-                      <ResponsiveContainer width="100%" height={160}>
-                        <PieChart>
-                          <Pie
-                            data={pieData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={44}
-                            outerRadius={68}
-                            paddingAngle={3}
-                            dataKey="value"
-                            animationBegin={0}
-                            animationDuration={500}
-                          >
-                            {pieData.map((entry) => (
-                              <Cell key={entry.id} fill={entry.color} stroke="transparent" />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'var(--card)',
-                              border: '1px solid var(--border)',
-                              borderRadius: '8px',
-                              fontSize: '12px',
-                              color: 'var(--foreground)',
-                            }}
-                            formatter={(v, name) => [`${String(v)}%`, String(name)]}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {/* Sliders */}
-                    <div className="space-y-3">
-                      {pieData.map((entry) => (
-                        <div key={entry.id} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span
-                                className="size-2 rounded-full shrink-0"
-                                style={{ backgroundColor: entry.color }}
-                              />
-                              <span className="truncate capitalize">{entry.name}</span>
-                            </div>
-                            <span className="font-semibold ml-2 shrink-0 tabular-nums">
-                              {entry.value}%
-                            </span>
-                          </div>
-                          <input
-                            type="range" min={5} max={95} step={5}
-                            value={entry.raw}
-                            onChange={(e) => setGoalWeight(entry.id, parseInt(e.target.value))}
-                            style={{ accentColor: entry.color }}
-                            className="w-full"
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    <p className="text-[10px] text-muted-foreground">
-                      Weights control how much each goal's priorities shape the generated program.
-                    </p>
-                  </div>
-                )
-              })()}
+              <ProgramSource />
             </motion.div>
           )}
 
@@ -211,7 +122,7 @@ export function ProgramBuilder() {
           <Button
             size="sm"
             onClick={goNext}
-            disabled={selectedGoalIds.length === 0 && step === 1}
+            disabled={step === 1 && (sourceMode === null || selectedGoalIds.length === 0)}
             className="gap-1"
           >
             Next <ChevronRight className="size-4" />

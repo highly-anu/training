@@ -12,7 +12,8 @@ interface HeatmapNodeProps {
   highlighted: boolean | null // null = no highlight mode, true = highlighted, false = dimmed
   onClick: (nodeId: string) => void
   onHover: (nodeId: string | null) => void
-  isExpanded?: boolean
+  isSelected?: boolean  // 1st click
+  isLocked?: boolean    // 2nd click — drives layout centering
 }
 
 function getNodeColor(node: HeatNode): string {
@@ -26,7 +27,7 @@ function getNodeColor(node: HeatNode): string {
   }
 }
 
-export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isExpanded }: HeatmapNodeProps) {
+export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, onHover, isSelected, isLocked }: HeatmapNodeProps) {
   const color = getNodeColor(node)
   const baseOpacity = node.heat > 0 ? 0.15 + node.heat * 0.85 : 0.08
   const dimmed = highlighted === false
@@ -36,9 +37,7 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
   const textOpacity = dimmed ? 0.2 : Math.max(0.4, baseOpacity)
   const glowRadius = bright && node.heat > 0.5 ? 6 : 0
 
-  const label = node.layer === 'exercise_group'
-    ? `${node.label}${isExpanded ? ' ▲' : ' ▼'}`
-    : node.label
+  const label = node.label
 
   const maxChars = Math.floor(width / 6.5)
   const displayLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label
@@ -71,6 +70,20 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
           filter="url(#glow)"
         />
       )}
+      {(isSelected || isLocked) && (
+        <rect
+          x={-2}
+          y={-2}
+          width={width + 4}
+          height={height + 4}
+          rx={6}
+          fill="none"
+          stroke={color}
+          strokeWidth={isLocked ? 2 : 1.5}
+          strokeOpacity={isLocked ? 1 : 0.6}
+          strokeDasharray={isLocked ? undefined : '3 2'}
+        />
+      )}
       <rect
         x={0}
         y={0}
@@ -80,8 +93,8 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
         fill={color}
         fillOpacity={fillOpacity}
         stroke={color}
-        strokeWidth={bright ? 1.5 : 0.5}
-        strokeOpacity={strokeOpacity}
+        strokeWidth={(isSelected || isLocked) ? 2 : bright ? 1.5 : 0.5}
+        strokeOpacity={(isSelected || isLocked) ? 1 : strokeOpacity}
       />
       <text
         x={width / 2}

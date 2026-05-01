@@ -121,6 +121,8 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   },
 
   loadFromServer: async () => {
+    // Clear immediately so stale data from a previous user is never shown
+    set({ currentProgram: null, programStartDate: null, eventDate: null, sourceGoalIds: [], sourceGoalWeights: {} })
     const data = await fetchUserProgram()
     if (!data) return
     set({

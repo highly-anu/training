@@ -1,0 +1,37 @@
+id: vo2_hill_repeats
+name: "VO2max Hill Repeats"
+modality: anaerobic_intervals
+category: conditioning
+training_levels:
+  - advanced
+  - elite
+duration_estimate_minutes: 60
+applicable_phases:
+  - peak
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 20
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+  - role: main_intervals
+    slot_type: time_domain
+    duration_minutes: 30
+    intensity: zone4_5
+    exercise_filter:
+      category: aerobic
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+sources:
+  - "Training for the Uphill Athlete, Ch. 6"
+notes: |
+  6–10 × 2–4 min hill repeats at Z4–Z5 (hard, ~95% max HR by final reps),
+  walk/jog down for full recovery (1:1 to 1:2 work:rest). Steep grade
+  preferred. Late Specific phase only, 1×/week or every 10 days. Highest-
+  stress aerobic session of the cycle — never on consecutive days, never
+  before a long day.

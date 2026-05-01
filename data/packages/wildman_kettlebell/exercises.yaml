@@ -1,0 +1,814 @@
+exercises:
+  - id: kb_deadlift
+    name: "Kettlebell Deadlift"
+    category: kettlebell
+    modality:
+      - max_strength
+      - durability
+    equipment:
+      - kettlebell
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - hip_hinge
+    unlocks:
+      - wk_kb_swing_two_hand
+      - wk_kb_swing_single_arm
+    contraindicated_with:
+      - lumbar_disc
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+      complexity: wk_kb_swing_two_hand
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Hip-hinge pattern with kettlebell between feet, pulled to standing. No
+      prerequisites beyond basic motor control; the first movement taught in
+      Wildman's complexity ladder. Direct gateway to swings; teaches the hip hinge
+      without ballistic demand.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 48
+
+  - id: wk_kb_halo
+    name: "Kettlebell Halo"
+    category: kettlebell
+    modality:
+      - movement_skill
+    equipment:
+      - kettlebell
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - rotation
+    requires: []
+    unlocks:
+      - wk_kb_tgu
+      - kb_windmill
+    contraindicated_with:
+      - shoulder_impingement
+      - neck_strain
+      - wrist_injury
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_side
+      complexity: wk_kb_tgu
+    scaling_down: []
+    typical_volume:
+      sets: 2
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Bell held by horns and circled around the head in a controlled arc; direction
+      alternated each rep. Standard Wildman warm-up movement used to prime the
+      shoulder girdle, thoracic spine, and neck before any pressing or overhead work.
+      Teaches scapular control and positions the shoulder for TGU and windmill loading.
+    starting_load_kg:
+      novice: 8
+      intermediate: 12
+      advanced: 16
+      elite: 20
+
+  - id: wk_kb_swing_two_hand
+    name: "Kettlebell Swing (Two-Hand)"
+    category: kettlebell
+    modality:
+      - power
+      - aerobic_base
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - hip_hinge
+      - ballistic
+    requires:
+      - hip_hinge
+      - bracing_mechanics
+    unlocks:
+      - wk_kb_swing_single_arm
+      - kb_deadlift
+    contraindicated_with:
+      - lumbar_disc
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_duration_or_reps
+      complexity: wk_kb_swing_single_arm
+    scaling_down:
+      - kb_deadlift
+    typical_volume:
+      sets: 3
+      reps: 20
+    sources:
+      - Wildman
+      - Pavel
+      - Horsemen
+      - Gym Jones
+    notes: >
+      Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder
+      height on the hip-snap. Horsemen warm-up complex: 1 min two-hand swings. Gym
+      Jones breathing ladder uses swings 1–20 at 53 lb. Wildman complexity
+      progression begins here. Two hands on the bell; posterior-chain power driver.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
+  - id: wk_kb_swing_single_arm
+    name: "Kettlebell Swing (Single-Arm)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+      - aerobic_base
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - ballistic
+    requires:
+      - wk_kb_swing_two_hand
+    unlocks:
+      - wk_kb_clean_single
+      - wk_kb_snatch
+    contraindicated_with:
+      - lumbar_disc
+      - hip_flexor_strain
+      - shoulder_instability
+    progressions:
+      load: increase_bell_weight
+      volume: increase_duration_or_reps
+      complexity: wk_kb_clean_single
+    scaling_down:
+      - wk_kb_swing_two_hand
+    typical_volume:
+      sets: 3
+      reps: 15
+    sources:
+      - Wildman
+      - Pavel
+      - Horsemen
+    notes: >
+      One hand on the bell; free hand assists balance and counter-rotation.
+      Horsemen warm-up complex: 1 min swings each arm. Direct prerequisite to
+      single-arm clean and snatch. Anti-rotation demand is greater than two-hand swing.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: wk_kb_clean_single
+    name: "Kettlebell Clean (Single-Arm)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - olympic_lift
+      - ballistic
+    requires:
+      - wk_kb_swing_single_arm
+    unlocks:
+      - kb_clean_double
+      - wk_kb_press_single
+      - wk_kb_push_press_single
+      - kb_jerk_single
+      - wk_kb_snatch
+    contraindicated_with:
+      - lumbar_disc
+      - wrist_injury
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_duration_or_reps
+      complexity: kb_clean_double
+    scaling_down:
+      - wk_kb_swing_single_arm
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources:
+      - Wildman
+      - Pavel
+      - Horsemen
+    notes: >
+      Bell pulled from swing arc into rack position at shoulder. Elbow nestled
+      against body; bell resting on forearm. Horsemen 12-min KB complex: 1 min
+      clean & press each arm. Wildman complexity ladder: swing → clean → press → snatch.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: kb_clean_double
+    name: "Kettlebell Clean (Double)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+      - max_strength
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - hip_hinge
+      - olympic_lift
+      - ballistic
+    requires:
+      - wk_kb_clean_single
+    unlocks:
+      - kb_press_double
+      - kb_squat_double
+    contraindicated_with:
+      - lumbar_disc
+      - wrist_injury
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+      complexity: kb_jerk_double
+    scaling_down:
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 5
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Two bells simultaneously cleaned to double rack position. Bilateral load
+      significantly increases systemic demand. Prerequisite for all double-bell
+      pressing and squatting patterns.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
+  - id: wk_kb_press_single
+    name: "Kettlebell Press (Single-Arm)"
+    category: kettlebell
+    modality:
+      - max_strength
+      - relative_strength
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - vertical_push
+    requires:
+      - push_pattern
+      - bracing_mechanics
+    unlocks:
+      - kb_press_double
+      - wk_kb_push_press_single
+      - wk_kb_overhead_carry
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+      complexity: kb_press_double
+    scaling_down:
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+      - Horsemen
+    notes: >
+      Strict shoulder press from rack position. No leg drive. Horsemen 12-min
+      warm-up complex: clean & press 1 min each arm. Requires tight lat engagement
+      at lockout. Wildman cues: keep the shoulder packed, press in an arc not
+      straight up.
+    starting_load_kg:
+      novice: 8
+      intermediate: 12
+      advanced: 16
+      elite: 24
+
+  - id: kb_press_double
+    name: "Kettlebell Press (Double)"
+    category: kettlebell
+    modality:
+      - max_strength
+      - relative_strength
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - vertical_push
+    requires:
+      - wk_kb_press_single
+      - kb_clean_double
+    unlocks: []
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - lumbar_disc
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+    scaling_down:
+      - wk_kb_press_single
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Both bells pressed from double rack simultaneously. Significantly higher systemic
+      demand and core bracing requirement than single press. 5×5 at matching bells is
+      the standard prescription; bodyweight-proportionate loading guides bell selection.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: wk_kb_push_press_single
+    name: "Kettlebell Push Press (Single-Arm)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - vertical_push
+      - ballistic
+    requires:
+      - wk_kb_press_single
+      - wk_kb_clean_single
+    unlocks:
+      - kb_jerk_single
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - knee_meniscus_post_op
+    progressions:
+      load: increase_bell_weight
+      volume: increase_duration
+      complexity: kb_jerk_single
+    scaling_down:
+      - wk_kb_press_single
+    typical_volume:
+      sets: 3
+      duration_sec: 60
+    sources:
+      - Wildman
+      - Horsemen
+    notes: >
+      Hip dip drives bell off shoulder; arm locks out overhead. Bridge movement from
+      strict press to jerk. Horsemen warm-up protocol: 1 min push press each arm.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: kb_jerk_single
+    name: "Kettlebell Jerk (Single-Arm)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+      - anaerobic_intervals
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: false
+    movement_patterns:
+      - vertical_push
+      - ballistic
+      - olympic_lift
+    requires:
+      - wk_kb_clean_single
+      - wk_kb_push_press_single
+    unlocks:
+      - kb_jerk_double
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - knee_meniscus_post_op
+      - ankle_sprain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_rpm_target
+      complexity: kb_jerk_double
+    scaling_down:
+      - wk_kb_push_press_single
+    typical_volume:
+      sets: 4
+      duration_sec: 120
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Double-dip jerk: first dip drives bell overhead, second dip catches arm locked
+      under bell. KB sport RPM target: 10 RPM at 1 pood (16 kg). Timed protocol:
+      8 min at 10 RPM switching hands every 2 min. Pentathlon standard: 120 reps
+      in 6 min (20 RPM).
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: kb_jerk_double
+    name: "Kettlebell Jerk (Double)"
+    category: kettlebell
+    modality:
+      - power
+      - max_strength
+      - anaerobic_intervals
+    equipment:
+      - kettlebell
+    effort: max
+    bilateral: true
+    movement_patterns:
+      - vertical_push
+      - ballistic
+      - olympic_lift
+    requires:
+      - kb_jerk_single
+      - kb_clean_double
+    unlocks: []
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - knee_meniscus_post_op
+      - ankle_sprain
+      - lumbar_disc
+    progressions:
+      load: increase_bell_weight
+      volume: increase_rpm_target
+    scaling_down:
+      - kb_jerk_single
+    typical_volume:
+      sets: 5
+      duration_sec: 60
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Two bells jerked simultaneously from double rack. Highest systemic demand of
+      all KB pressing patterns. Demands exceptional breathing mechanics and core
+      stability. Pentathlon long cycle clean & jerk uses double bells.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
+  - id: wk_kb_snatch
+    name: "Kettlebell Snatch"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+      - aerobic_base
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - olympic_lift
+      - ballistic
+      - vertical_push
+    requires:
+      - wk_kb_swing_single_arm
+      - wk_kb_clean_single
+    unlocks: []
+    contraindicated_with:
+      - lumbar_disc
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_rpm_target
+    scaling_down:
+      - wk_kb_swing_single_arm
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 3
+      duration_sec: 180
+    sources:
+      - Wildman
+      - Pavel
+      - Horsemen
+    notes: >
+      Bell punched from hip-hinge to overhead lockout in one movement. Horsemen
+      12-min complex: 1 min snatch each arm. Horsemen SSST standard: 200+ snatches
+      in 10 min at 53 lb. Pentathlon half-snatch: 108 reps in 6 min. KB sport RPM
+      target: 14 RPM at 1 pood.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
+  - id: wk_kb_squat_goblet
+    name: "Kettlebell Goblet Squat"
+    category: kettlebell
+    modality:
+      - max_strength
+      - movement_skill
+    equipment:
+      - kettlebell
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - squat
+    requires: []
+    unlocks:
+      - kb_squat_double
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+      complexity: kb_squat_double
+    scaling_down: []
+    typical_volume:
+      sets: 3
+      reps: 10
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Bell held by horns at chest; squat to full depth. Primary teaching tool for
+      squat mechanics — the anterior load self-corrects forward lean and teaches
+      upright torso positioning. Entry point for squatting before loading double
+      bells. No prerequisites beyond basic motor control.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: kb_squat_double
+    name: "Kettlebell Double Front Squat"
+    category: kettlebell
+    modality:
+      - max_strength
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - squat
+    requires:
+      - wk_kb_squat_goblet
+      - kb_clean_double
+    unlocks: []
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - hip_flexor_strain
+      - wrist_injury
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_set
+    scaling_down:
+      - wk_kb_squat_goblet
+    typical_volume:
+      sets: 5
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Two bells held in rack position; front squat pattern. Anterior load demands
+      significant thoracic extension and core bracing. Requires double clean to set up.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
+  - id: wk_kb_tgu
+    name: "Kettlebell Turkish Get-Up"
+    category: kettlebell
+    modality:
+      - movement_skill
+      - durability
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - vertical_push
+      - rotation
+      - isometric
+    requires:
+      - bracing_mechanics
+    unlocks:
+      - wk_kb_overhead_carry
+      - wk_kb_rack_carry
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - neck_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_side
+    scaling_down:
+      - wk_kb_halo
+    typical_volume:
+      sets: 5
+      reps: 2
+    sources:
+      - Gym Jones
+      - Horsemen
+      - Wildman
+    notes: >
+      From lying to standing with bell locked overhead throughout; reverse to return.
+      Foundational Wildman movement — practiced in nearly every session. Gym Jones:
+      100 TGUs at 15 lb (recovery) and 5–6 reps at 25 lb (strength). Horsemen SMMF:
+      100 get-ups at 35 lb (15–20 min). Tests shoulder stability, hip mobility, and
+      whole-body integration. Wildman: move slowly through every position; there are
+      no shortcuts.
+    starting_load_kg:
+      novice: 8
+      intermediate: 12
+      advanced: 16
+      elite: 24
+
+  - id: wk_kb_overhead_carry
+    name: "Kettlebell Overhead Carry"
+    category: kettlebell
+    modality:
+      - movement_skill
+      - durability
+      - relative_strength
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - loaded_carry
+      - isometric
+      - vertical_push
+    requires:
+      - wk_kb_tgu
+      - wk_kb_press_single
+    unlocks: []
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+    progressions:
+      load: increase_bell_weight
+      volume: increase_distance
+    scaling_down:
+      - wk_kb_rack_carry
+    typical_volume:
+      sets: 3
+      duration_sec: 30
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Bell locked overhead at arm's length; walk for distance or time. Demands
+      sustained shoulder stability and thoracic extension under fatigue. Builds
+      the overhead position endurance required for snatch and jerk. Wildman uses
+      carries as a diagnostic — instability shows up quickly under locomotion.
+    starting_load_kg:
+      novice: 8
+      intermediate: 12
+      advanced: 16
+      elite: 24
+
+  - id: wk_kb_rack_carry
+    name: "Kettlebell Rack Carry"
+    category: kettlebell
+    modality:
+      - movement_skill
+      - durability
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - loaded_carry
+      - isometric
+    requires:
+      - wk_kb_clean_single
+    unlocks:
+      - wk_kb_overhead_carry
+    contraindicated_with:
+      - wrist_injury
+      - shoulder_instability
+    progressions:
+      load: increase_bell_weight
+      volume: increase_distance
+      complexity: wk_kb_overhead_carry
+    scaling_down:
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 3
+      duration_sec: 45
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Bell held in rack position (elbow down, bell resting on forearm) while walking.
+      Develops rack endurance critical for long jerk and long cycle sets. Builds
+      core bracing under lateral load. The rack position must be sustainable, not
+      just achievable.
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 24
+      elite: 32
+
+  - id: kb_windmill
+    name: "Kettlebell Windmill"
+    category: kettlebell
+    modality:
+      - movement_skill
+      - durability
+    equipment:
+      - kettlebell
+    effort: low
+    bilateral: false
+    movement_patterns:
+      - rotation
+      - hip_hinge
+      - vertical_push
+    requires:
+      - wk_kb_tgu
+      - wk_kb_halo
+    unlocks: []
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
+      - lumbar_disc
+      - wrist_injury
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_reps_per_side
+    scaling_down:
+      - wk_kb_halo
+    typical_volume:
+      sets: 3
+      reps: 5
+    sources:
+      - Wildman
+      - Pavel
+    notes: >
+      Bell locked overhead; athlete hinges laterally to touch floor with free hand
+      while maintaining overhead lockout. Develops lateral hip mobility, shoulder
+      stability under rotation, and hamstring length. One of the most demanding
+      single-arm overhead stability exercises in the Wildman curriculum.
+    starting_load_kg:
+      novice: 8
+      intermediate: 12
+      advanced: 16
+      elite: 24

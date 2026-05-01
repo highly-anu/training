@@ -1,0 +1,125 @@
+id: rehab_protocol
+name: "Rehab Protocol (Targeted Tissue Restoration)"
+modality: rehab
+category: movement_skill
+duration_estimate_minutes: 45
+required_equipment:
+  - resistance_band
+applicable_phases:
+  - rehab
+  - post_op
+  - recovery
+  - base
+  - maintenance
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "Kelly Starrett"
+  - "ATG (Ben Patrick)"
+  - "Starting Strength — injury modification protocols"
+  - "Gym Jones — tissue-first approach to training"
+notes: >
+  Structured rehabilitation session for active injury management or post-surgical
+  recovery. Session structure follows the Kelly Starrett principle: movement quality
+  assessment first, tissue prep before load, then active range restoration under
+  progressively heavier load. ATG principle: pain-free range of motion precedes
+  loaded range. Exercises are selected from the rehab category and matched to the
+  athlete's current injury flags and unlocked prerequisites.
+  This archetype is designed to be compatible with any concurrent training —
+  scheduled on off-days or before lighter sessions. Rep targets are low; control
+  and range of motion are the metrics, not fatigue. Progress is measured by ROM
+  milestones and pain-free movement, not load increments.
+
+slots:
+  - role: tissue_prep
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: light
+    exercise_filter:
+      category: mobility
+    notes: >
+      10-min tissue prep: foam roll and lacrosse ball on target region (Kelly Starrett
+      minimum 2 min per area). Soft tissue work reduces tone and improves joint range
+      before loading. Target regions based on active injury flags:
+        - knee: quad, IT band, calf
+        - shoulder: lat, pec minor, thoracic spine
+        - hip: TFL, hip flexor, piriformis
+      Do not skip — tissue prep is a prerequisite for loaded rehab work.
+
+  - role: isometric_holds
+    slot_type: static_hold
+    sets: 3
+    duration_sec: 30
+    intensity: light
+    rest_sec: 45
+    exercise_filter:
+      movement_pattern: isometric
+      category: rehab
+    notes: >
+      3 × 30-sec isometric holds at the target joint. Isometrics are the safest
+      initial load — no eccentric component, controllable position, immediate pain
+      feedback. ATG: begin in the most comfortable position, gradually work toward
+      full range across sessions. Kelly Starrett: bracing sequence (360° air, IAP)
+      before every isometric set. Examples: quad set, wall sit, pallof press hold,
+      dead hang.
+
+  - role: range_of_motion_work
+    slot_type: sets_reps
+    sets: 3
+    reps: 12
+    intensity: light
+    rest_sec: 60
+    exercise_filter:
+      category: rehab
+    notes: >
+      Active range of motion work through the target joint's current usable range.
+      ATG: pain-free range is the ceiling — never load into pain. Progress is adding
+      range across sessions, not adding weight. Examples: heel slide (knee flexion
+      ROM), external rotation DB (shoulder IR/ER), straight leg raise (hip flexion),
+      dead bug (lumbar stabilization). Selector picks based on injury flag pattern.
+
+  - role: load_progression
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: light
+    rest_sec: 75
+    exercise_filter:
+      category: rehab
+    notes: >
+      Loaded functional movement in the newly restored range — progressive load
+      is the final step, not the first. Examples: step-up low → terminal knee extension
+      → split squat bodyweight, shoulder: band external rotation → face pull light →
+      dumbbell lateral raise. Load is only added when full pain-free ROM is achieved
+      and maintained across 2 consecutive sessions. ATG: the sled drag (reverse) is
+      the ideal load-progressive entry movement for knee rehab when available.
+
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.9
+    notes: >
+      On deload weeks, reduce to isometric holds + ROM work only. Drop load progression
+      slot. Focus on passive mobility and gentle range restoration. Rehab deload is
+      about reducing strain on healing tissue, not reducing effort perception.
+  time_limited:
+    drop_slots:
+      - load_progression
+    notes: >
+      Drop the load progression slot. Tissue prep and isometric holds are the
+      minimum effective dose for maintaining tissue quality and joint mobility
+      on a compressed schedule.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: resistance_band
+        substitute_approach: >
+          Replace banded exercises with bodyweight isometrics and ROM work.
+          Most rehab exercises use no equipment. Band is optional but preferred
+          for external rotation and face pull work.
+      - missing_equipment: box
+        substitute_approach: >
+          Replace step-up variations with flat-surface exercises (quad set, leg press
+          bodyweight, wall sit, pistol squat regression).

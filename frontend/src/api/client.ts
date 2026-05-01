@@ -9,6 +9,7 @@ export const apiClient = axios.create({
 
 // Inject Supabase JWT on every request (no-op when no session / local dev)
 apiClient.interceptors.request.use(async (config) => {
+  if (!supabase) return config
   const { data: { session } } = await supabase.auth.getSession()
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`

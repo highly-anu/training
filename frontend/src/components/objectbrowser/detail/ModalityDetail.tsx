@@ -1,19 +1,18 @@
 import { Network } from 'lucide-react'
 import { CrossRefBadge } from '../CrossRefBadge'
-import type { Modality, Archetype, GoalProfile } from '@/api/types'
+import type { Modality, Archetype } from '@/api/types'
 import type { NavigateToFn, OpenInOntologyFn } from '../types'
 
 interface ModalityDetailProps {
   modality: Modality
   archetypes: Archetype[]
-  goals: GoalProfile[]
   navigateTo: NavigateToFn
   onOpenInOntology?: OpenInOntologyFn
 }
 
-export function ModalityDetail({ modality: m, archetypes, goals, navigateTo, onOpenInOntology }: ModalityDetailProps) {
+export function ModalityDetail({ modality: m, archetypes, navigateTo, onOpenInOntology }: ModalityDetailProps) {
   const implementedBy = archetypes.filter(a => a.modality === m.id)
-  const weightedBy = goals.filter(g => (g.priorities[m.id] ?? 0) > 0)
+  // Goals deprecated - modalities now sourced from philosophies
 
   return (
     <div className="space-y-5">
@@ -120,17 +119,6 @@ export function ModalityDetail({ modality: m, archetypes, goals, navigateTo, onO
             <div className="flex flex-wrap gap-1">
               {implementedBy.map(a => (
                 <CrossRefBadge key={a.id} label={a.name} type="archetypes" id={a.id} navigateTo={navigateTo} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {weightedBy.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Weighted by goals</p>
-            <div className="flex flex-wrap gap-1">
-              {weightedBy.map(g => (
-                <CrossRefBadge key={g.id} label={g.name} type="goals" id={g.id} navigateTo={navigateTo} />
               ))}
             </div>
           </div>

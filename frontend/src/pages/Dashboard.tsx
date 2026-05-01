@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wand2, ChevronRight, Flag } from 'lucide-react'
@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
+import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -28,11 +29,21 @@ export function Dashboard() {
   const { selectedWeekIndex: weekIndex, setSelectedWeekIndex } = useUiStore()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const eventDate = useProgramStore((s) => s.eventDate)
+  const programStartDate = useProgramStore((s) => s.programStartDate)
+
+  // Auto-select the week containing today when the program or start date changes
+  useEffect(() => {
+    if (!programStartDate || !program) return
+    const dayOffset = differenceInCalendarDays(new Date(), parseISO(programStartDate))
+    const todayWeekIndex = Math.max(0, Math.min(Math.floor(dayOffset / 7), program.weeks.length - 1))
+    setSelectedWeekIndex(todayWeekIndex)
+  }, [programStartDate, program?.weeks.length])
 
   const daysToEvent = eventDate ? differenceInCalendarDays(parseISO(eventDate), new Date()) : null
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
 
   const currentWeek = program?.weeks[weekIndex]
+  const { totalWeeks: _totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
 
   const weekComplete = useMemo(() => {
     if (!currentWeek) return false
@@ -68,6 +79,8 @@ export function Dashboard() {
   const canAdvance = weekComplete && weekIndex < program.weeks.length - 1
 
   // Reset selected day when week changes
+  // Navigation is bounded by actual generated weeks; totalWeeks may exceed program.weeks.length
+  // for multi-phase programs where only some phases have been generated.
   const handleWeekChange = (delta: number) => {
     setSelectedDay(null)
     setSelectedWeekIndex(Math.max(0, Math.min(program.weeks.length - 1, weekIndex + delta)))
@@ -115,12 +128,14 @@ export function Dashboard() {
             </div>
             {currentWeek && (
               <WeekSelector
-                week={currentWeek.week_number}
+                week={weekIndex + 1}
                 totalWeeks={program.weeks.length}
                 phase={currentWeek.phase}
                 isDeload={currentWeek.is_deload}
                 onPrev={() => handleWeekChange(-1)}
                 onNext={() => handleWeekChange(1)}
+                prevDisabled={weekIndex <= 0}
+                nextDisabled={weekIndex >= program.weeks.length - 1}
               />
             )}
           </div>
@@ -133,7 +148,7 @@ export function Dashboard() {
               className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
             >
               <p className="text-sm font-medium text-emerald-500">
-                Week {currentWeek?.week_number} complete
+                Week {weekIndex + 1} complete
               </p>
               <button
                 type="button"
@@ -148,7 +163,7 @@ export function Dashboard() {
           {/* Current week overview — full width */}
           <div>
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Week {currentWeek?.week_number} Overview
+              Week {weekIndex + 1} Overview
             </h2>
             <div className="rounded-xl border bg-card p-4">
               <WeekOverview
@@ -190,7 +205,7 @@ export function Dashboard() {
           {program.weeks[weekIndex + 1] && (
             <div>
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Next Up — Week {program.weeks[weekIndex + 1].week_number}
+                Next Up — Week {weekIndex + 2}
                 {program.weeks[weekIndex + 1].is_deload && (
                   <span className="ml-2 text-amber-500 normal-case font-medium">deload</span>
                 )}

@@ -1375,6 +1375,79 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 `absolute inset-0` on the step content div allows `AnimatePresence mode="wait"` to stack-and-replace without layout shifts.
 
+### 13.6 Explorer Landing Page Pattern
+
+**Use case:** Browsing/selecting from a collection (philosophies, modalities, exercises, equipment profiles, injury flags, benchmarks).
+
+**Structure:**
+```tsx
+<div className="h-full overflow-y-auto">
+  <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+    
+    {/* Header section */}
+    <div className="space-y-3">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+        Category label
+      </p>
+      <h2 className="text-2xl font-semibold leading-snug">
+        {count} items.
+      </h2>
+      <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+        Brief description of what this collection represents and how it's used in the system.
+      </p>
+    </div>
+
+    {/* Card grid */}
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => onSelect(item)}
+            className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
+                       transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
+            style={{ borderLeftColor: item.color, borderLeftWidth: 2 }}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">
+                {item.name}
+              </p>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                {item.metadata}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Footer hint */}
+    <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
+      Select an item to see details
+    </p>
+    
+  </div>
+</div>
+```
+
+**Key patterns:**
+- **Centered column:** `max-w-2xl mx-auto` keeps content readable, not stretched
+- **Generous top padding:** `py-12` gives breathing room
+- **Hierarchical spacing:** Small gaps within sections (`space-y-3`), larger between sections (`space-y-10`)
+- **Color-coded borders:** `borderLeftColor: item.color, borderLeftWidth: 2` — semantic color shows category/type at a glance
+- **Hover feedback:** `hover:-translate-y-px hover:shadow-md` — lift on hover confirms interactivity
+- **Metadata line:** `text-[10px] text-muted-foreground/60` — shows count or secondary info without competing with title
+
+**When to use:**
+- Browsing mode before selection (Explore tab for philosophies/modalities/exercises)
+- Profile tab sub-sections (equipment picker, injury flags, benchmarks)
+- Any "choose from collection" UI
+
+**When NOT to use:**
+- Active training view (calendar, session detail) — use dense layouts
+- Forms with many fields — use vertical stack with labels
+- Dashboards with live data — use cards with metrics, not landing page pattern
+
 ---
 
 ## 14. Responsive Design

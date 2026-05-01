@@ -1,0 +1,39 @@
+id: ant_threshold_intervals
+name: "AnT Threshold Intervals"
+modality: anaerobic_intervals
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 75
+applicable_phases:
+  - build
+  - peak
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 20
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+  - role: main_intervals
+    slot_type: time_domain
+    duration_minutes: 40
+    intensity: zone3
+    exercise_filter:
+      category: aerobic
+  - role: cooldown
+    slot_type: time_domain
+    duration_minutes: 15
+    intensity: zone1
+    exercise_filter:
+      category: aerobic
+sources:
+  - "Training for the Uphill Athlete, Ch. 6 — Z3/Z4 work"
+notes: |
+  4–6 × 8–12 min at AnT (top of Z3 / bottom of Z4), 2–3 min easy jog
+  between. Performed on uphill terrain when possible. Purpose: raise
+  AnT, push it closer to VO2max, increase the ceiling of sustainable
+  output. Used sparingly — 1×/week max during Specific. Skip if athlete
+  still has aerobic deficiency (AeT–AnT gap >10% max HR).

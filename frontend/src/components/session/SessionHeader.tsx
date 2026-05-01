@@ -18,15 +18,15 @@ export function SessionHeader({ session, day, weekNumber, weekInPhase, phase }: 
         <ModalityBadge modality={session.modality} />
         <PhaseBadge phase={phase} />
       </div>
-      <h2 className="text-lg font-bold text-foreground">{session.archetype.name}</h2>
+      <h2 className="text-lg font-bold text-foreground">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</h2>
       <p className="text-sm text-muted-foreground">
         Week {weekNumber} — {day}
         <span className="ml-2 text-xs text-muted-foreground/60">(phase wk {weekInPhase})</span>
       </p>
-      {session.archetype.duration_estimate_minutes > 0 && (
+      {(session.archetype?.duration_estimate_minutes ?? 0) > 0 && (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-3.5" />
-          ~{session.archetype.duration_estimate_minutes} min
+          ~{session.archetype!.duration_estimate_minutes} min
         </div>
       )}
     </div>

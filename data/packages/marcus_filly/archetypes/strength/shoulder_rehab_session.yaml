@@ -1,0 +1,176 @@
+id: shoulder_rehab_session
+name: Shoulder Rehab Session (Marcus Filly Protocol)
+modality: rehab
+category: strength
+duration_estimate_minutes: 35
+required_equipment:
+  - dumbbell
+  - resistance_band
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - maintenance
+  - rehab
+  - recovery
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - Marcus Filly — Functional Bodybuilding
+notes: >
+  Explicit shoulder restoration protocol from the Marcus Filly system. Run on a
+  fifth or sixth day, as a deload-week substitute for a strength session, or
+  concurrent with any training when shoulder symptoms warrant. Not a prehab
+  warm-up — a full session dedicated to restoring shoulder function and
+  structural integrity. Sequence: isometric activation → lateral stabilization →
+  shoulder-safe press plane (landmine) → eccentric push → rotator cuff stack.
+  Load is universally light; the metric is position quality and range of motion,
+  not weight moved.
+
+slots:
+  - role: activation
+    slot_type: static_hold
+    sets: 3
+    duration_sec: 30
+    intensity: light
+    rest_sec: 45
+    exercise_filter:
+      movement_pattern: isometric
+      category: bodyweight
+    notes: >
+      Dip support hold: arms locked on bars or rings, body suspended. Isometric
+      shoulder stabilizer activation before any movement. Marcus Filly: establish
+      the packed shoulder position (depression + retraction) before loading any
+      range of motion. 30-sec holds; focus on lat engagement and scapular seating.
+
+  - role: lateral_stabilization
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: light
+    rest_sec: 60
+    exercise_filter:
+      movement_pattern: isometric
+      category: bodyweight
+    notes: >
+      Side plank with lat activation: standard side plank, top arm reaches long
+      overhead (not resting on hip). The reach forces active upward rotation of
+      the scapula while the lateral core braces. 10 reps = 10 controlled reaches
+      per side per set. Develops the lateral shoulder stabilizers in a functional,
+      integrated pattern rather than isolation.
+
+  - role: landmine_press
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    intensity: light
+    rest_sec: 75
+    exercise_filter:
+      movement_pattern: vertical_push
+      category: accessory
+    notes: >
+      Landmine press: barbell in floor corner or landmine attachment. The angled
+      press plane (approximately 45 degrees from vertical) is the most
+      shoulder-friendly pressing angle — keeps the humerus away from impingement
+      position throughout. 10 reps each arm, alternating. Focus on scapular
+      upward rotation tracking the bar path. Used when standard pressing planes
+      are symptomatic.
+
+  - role: eccentric_push
+    slot_type: sets_reps
+    sets: 3
+    reps: 6
+    intensity: light
+    rest_sec: 90
+    exercise_filter:
+      movement_pattern: horizontal_push
+      category: bodyweight
+    notes: >
+      Eccentric push-up on parallettes: 5-second controlled lower, pause at bottom,
+      push-up concentric is optional (skip if shoulder is symptomatic). Parallettes
+      allow the chest to go below hand level, increasing range of motion and
+      serratus anterior demand. Marcus Filly: this eccentric overload rebuilds
+      tissue in the most vulnerable position of the press. 6 reps is sufficient —
+      quality over volume here.
+
+  - role: face_pull
+    slot_type: sets_reps
+    sets: 3
+    reps: 15
+    intensity: light
+    rest_sec: 45
+    exercise_filter:
+      movement_pattern: horizontal_pull
+      category: accessory
+    notes: >
+      Face pull: thumbs-up grip, elbows high and flared to shoulder height, pull
+      to forehead level. Full external rotation at end range. Targets posterior
+      deltoid, infraspinatus, and mid-lower trapezius. Marcus Filly programs face
+      pulls as the primary posterior rotator cuff maintenance movement — non-negotiable
+      in any shoulder rehab context.
+
+  - role: external_rotation
+    slot_type: sets_reps
+    sets: 3
+    reps: 12
+    intensity: light
+    rest_sec: 45
+    exercise_filter:
+      movement_pattern: rotation
+      category: accessory
+    notes: >
+      DB external rotation: elbow resting on knee (seated) or braced against body.
+      Rotate forearm from vertical to horizontal (full external rotation range).
+      12 reps each arm. The primary isolated rotator cuff strength exercise in the
+      Marcus Filly shoulder protocol. Light DB — 2-4 kg maximum; this is a rehab
+      movement, not a strength movement.
+
+  - role: pull_apart
+    slot_type: sets_reps
+    sets: 3
+    reps: 15
+    intensity: light
+    rest_sec: 30
+    exercise_filter:
+      movement_pattern: horizontal_pull
+      category: accessory
+    notes: >
+      Band pull-apart: arms start at shoulder width holding band, pull apart to
+      full horizontal extension. Scapular retraction + posterior rotator cuff at
+      end range. Perform at chest height. High frequency — can be done daily.
+      Finishes the shoulder protocol by cementing scapular retraction capacity
+      after all the rotation and activation work.
+
+scaling:
+  deload:
+    volume_multiplier: 0.7
+    intensity_pct: 0.9
+    notes: >
+      Drop eccentric_push. Run activation + face_pull + external_rotation +
+      pull_apart only. On true deload weeks, this session becomes a pure recovery
+      and maintenance block.
+  time_limited:
+    drop_slots:
+      - lateral_stabilization
+      - landmine_press
+    notes: >
+      Keep activation, eccentric push, face pull, external rotation, pull apart.
+      These five movements form the minimal effective dose for shoulder maintenance.
+  equipment_limited:
+    substitutions:
+      - missing_equipment: pull_up_bar
+        substitute_approach: >
+          Replace dip support hold with plank shoulder tap hold (static plank,
+          one hand lifted slightly). Same stabilization principle; lower load.
+      - missing_equipment: dumbbell
+        substitute_approach: >
+          Replace DB external rotation with banded external rotation (band looped
+          around wrist, elbow braced at side). All other movements unchanged.
+      - missing_equipment: resistance_band
+        substitute_approach: >
+          Replace face pull with DB rear delt fly (light, elbows high). Replace
+          pull apart with wall slide (hands on wall, slide overhead). DB substitute
+          for all band movements.

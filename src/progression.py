@@ -45,6 +45,16 @@ _SESSIONS_PER_WEEK: dict[str, int] = {
     '_default': 2,
 }
 
+# RPE → load factor relative to a "comfortable working weight" baseline (RPE 8)
+# Used to suggest a starting weight when exercise has starting_load_kg data
+_RPE_LOAD_FACTOR: dict[int, float] = {
+    10: 1.09,   # 0 RIR — maximal
+    9:  1.05,   # 1 RIR
+    8:  1.00,   # 2 RIR — standard working set
+    7:  0.95,   # 3 RIR
+    6:  0.90,   # 4 RIR — deload / technique
+}
+
 
 def _round_kg(kg: float, step: float = 2.5) -> float:
     return round(kg / step) * step
@@ -57,8 +67,14 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 def _linear_load(exercise: dict, slot: dict, week: int,
                  level: str, is_deload: bool) -> dict:
     ex_id = exercise.get('id', '')
-    start = _STARTING_LOADS.get(ex_id, {}).get(level)
-    increment = _LINEAR_INCREMENTS.get(ex_id, _LINEAR_INCREMENTS['_default'])
+    start = (
+        exercise.get('starting_load_kg', {}).get(level)
+        or _STARTING_LOADS.get(ex_id, {}).get(level)
+    )
+    increment = (
+        exercise.get('weekly_increment_kg')
+        or _LINEAR_INCREMENTS.get(ex_id, _LINEAR_INCREMENTS['_default'])
+    )
     sessions_pw = _SESSIONS_PER_WEEK.get(ex_id, _SESSIONS_PER_WEEK['_default'])
 
     sets = slot.get('sets', 3)
@@ -91,17 +107,46 @@ def _linear_load(exercise: dict, slot: dict, week: int,
     return {'sets': sets, 'reps': reps, 'weight_kg': _round_kg(weight), 'load_note': load_note}
 
 
-def _rpe_autoregulation(slot: dict, is_deload: bool) -> dict:
+def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool) -> dict:
     sets = slot.get('sets', 3)
     reps = slot.get('reps', 5)
-    target_rpe = 6 if is_deload else 8
-    return {'sets': sets, 'reps': reps, 'target_rpe': target_rpe,
-            'load_note': f'Self-regulate load to RPE {target_rpe}'}
+    target_rpe = 6 if is_deload else int(slot.get('rpe_target', 8))
+    rir = 10 - target_rpe  # reps in reserve
+
+    base_load = (
+        exercise.get('starting_load_kg', {}).get(level)
+        or _STARTING_LOADS.get(exercise.get('id', ''), {}).get(level)
+    )
+
+    result: dict = {
+        'sets': sets,
+        'reps': reps,
+        'target_rpe': target_rpe,
+        'rir': rir,
+    }
+
+    if base_load is not None:
+        factor = _RPE_LOAD_FACTOR.get(target_rpe, 1.00)
+        result['suggested_weight_kg'] = _round_kg(base_load * factor)
+        result['load_note'] = (
+            f'RPE {target_rpe} ({rir} RIR) — '
+            f'start near {result["suggested_weight_kg"]}kg, adjust by feel'
+        )
+    else:
+        result['load_note'] = (
+            f'RPE {target_rpe} ({rir} reps in reserve) — self-regulate load to feel'
+        )
+
+    return result
 
 
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
                   max_minutes: int | None = None) -> dict:
-    base_sec = slot.get('duration_sec', 5400)  # default 90 min
+    # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
+    if 'duration_minutes' in slot:
+        base_sec = slot['duration_minutes'] * 60
+    else:
+        base_sec = slot.get('duration_sec', 5400)  # default 90 min
 
     phase_targets = {
         'base':        base_sec,
@@ -192,7 +237,7 @@ def calculate_load(
         if progression_model in ('linear_load', 'volume_block', 'density'):
             return _linear_load(exercise, slot, week_number, training_level, is_deload)
         elif progression_model == 'rpe_autoregulation':
-            return _rpe_autoregulation(slot, is_deload)
+            return _rpe_autoregulation(exercise, slot, training_level, is_deload)
         else:
             sets = slot.get('sets', 3)
             reps = slot.get('reps', 5)

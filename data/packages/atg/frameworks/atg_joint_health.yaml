@@ -1,0 +1,72 @@
+id: atg_joint_health
+name: ATG Joint Health (Knees Over Toes / Ben Patrick)
+source_philosophy: atg
+
+goals_served:
+  - injury_rehab
+  - durability
+  - mobility
+
+sessions_per_week:
+  rehab: 3
+  mobility: 2
+  durability: 1
+modality_priority:
+  committed: [rehab, mobility]
+  core: [durability]
+  supplementary: []
+
+intensity_distribution:
+  zone1_2_pct: 0.70
+  zone3_pct: 0.20
+  zone4_5_pct: 0.05
+  max_effort_pct: 0.05
+
+progression_model: rpe_autoregulation
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+  days_per_week_min: 3
+  days_per_week_max: 6
+  goal_priority_min:
+    rehab: 0.2
+
+deload_protocol:
+  frequency_weeks: 6
+  volume_reduction_pct: 0.50
+  intensity_change: reduce_slightly
+
+# Spread sessions for joint recovery — never stack consecutive high-demand days
+cadence_options:
+  3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]]
+  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
+  5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7]]
+  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+
+sources:
+  - "ATG (Athletic Truth Group) — Ben Patrick"
+  - "Knees Over Toes Guy — Zero program, ATG program"
+
+notes: >
+  Built around Ben Patrick's ATG methodology: progressive range of motion precedes
+  progressive load. The reverse sled is the entry-level movement — zero eccentric
+  load, rebuilds knee tolerance from scratch. Session structure: reverse sled or
+  tibialis work → full-range lower body movements (split squats, step-ups progressing
+  to ATG split squat) → Nordic-type posterior chain work → upper body accessory.
+  Pain-free range of motion is always the primary criterion for progression.
+  Compatible with concurrent strength training — mandatory lower-body prep work
+  is performed regardless of other modalities in the program.
+  Rehab sessions and mobility sessions are the primary training output; durability
+  sessions use loaded carries and sled work for joint conditioning without impact.
+
+expectations:
+  min_weeks: 12
+  ideal_weeks: 20
+  min_days_per_week: 3
+  ideal_days_per_week: 4
+  min_session_minutes: 30
+  ideal_session_minutes: 45
+  supports_split_days: false

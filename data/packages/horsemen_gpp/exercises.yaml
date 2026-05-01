@@ -1,0 +1,3113 @@
+exercises:
+- id: ruck
+  name: Ruck (Loaded Walk / Run)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - durability
+  equipment:
+  - ruck_pack
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_pack_weight
+    volume: increase_distance
+  scaling_down:
+  - run_easy
+  typical_volume:
+    duration_sec: 5400
+    distance_m: 10000
+  sources:
+  - Horsemen
+  - Uphill Athlete
+  - Gym Jones
+  notes: 'Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation, 30kg
+    pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
+    recovery endurance hike: 90–120 min with 20–30# pack. Progressions: distance
+    first, then load, then speed. Simple, durable training modality requiring minimal
+    equipment.
+
+    '
+- id: back_squat
+  name: Back Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - hip_hinge
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - front_squat
+  - box_squat
+  - overhead_squat
+  - barbell_complex
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  - lumbar_disc
+  progressions:
+    load: add_2.5_5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: front_squat
+  scaling_down:
+  - box_squat
+  - goblet_squat
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Foundational lower-body strength movement. Horsemen standard: 2×BW squat.
+    Starting Strength uses 3×5 linear progression as primary novice driver.
+
+    '
+  starting_load_kg:
+    novice: 40
+    intermediate: 70
+    advanced: 100
+    elite: 130
+  weekly_increment_kg: 2.5
+- id: front_squat
+  name: Front Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - back_squat
+  - bracing_mechanics
+  unlocks:
+  - overhead_squat
+  - squat_clean
+  - hang_squat_clean
+  - thruster
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - wrist_injury
+  - shoulder_impingement
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: overhead_squat
+  scaling_down:
+  - back_squat
+  - box_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  - Starting Strength
+  notes: 'Featured prominently in Gym Jones Operator programs (10×2 @ 1-min rest)
+    and Horsemen strength cycles. Horsemen standard: 1.5×BW front squat. Requires
+    wrist mobility and upright torso.
+
+    '
+  starting_load_kg:
+    novice: 30
+    intermediate: 55
+    advanced: 80
+    elite: 110
+  weekly_increment_kg: 2.5
+- id: overhead_squat
+  name: Overhead Squat
+  category: barbell
+  modality:
+  - max_strength
+  - mobility
+  - movement_skill
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  requires:
+  - front_squat
+  - bracing_mechanics
+  unlocks:
+  - snatch
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  - lumbar_disc
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x3_to_5x3
+  scaling_down:
+  - front_squat
+  - kb_squat_goblet
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Gym Jones uses OHS 5×3 as primary strength movement and tests 1RM. Demands
+    significant shoulder mobility, thoracic extension, and ankle dorsiflexion. Referenced
+    in Gym Jones SOTS press variant.
+
+    '
+- id: deadlift
+  name: Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - romanian_deadlift
+  - sumo_deadlift
+  - deficit_deadlift
+  - power_clean
+  - barbell_row
+  - pendlay_row
+  - good_morning
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_session_novice
+    volume: progress_1x5_to_3x3
+    complexity: sumo_deadlift
+  scaling_down:
+  - kb_deadlift
+  - romanian_deadlift
+  typical_volume:
+    sets: 1
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Horsemen standard: 2.5×BW deadlift. Starting Strength programs 1×5 as
+    novice primary. Gym Jones tests 1RM and builds training percentages from it (80%
+    common). King of posterior-chain loading; prerequisite for all Olympic lifting
+    derivatives.
+
+    '
+  starting_load_kg:
+    novice: 50
+    intermediate: 90
+    advanced: 130
+    elite: 170
+  weekly_increment_kg: 5.0
+- id: deficit_deadlift
+  name: Deficit Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - deadlift
+  - sumo_deadlift
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - knee_meniscus_post_op
+  - ankle_sprain
+  progressions:
+    load: add_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - deadlift
+  typical_volume:
+    sets: 4
+    reps: 3
+  sources:
+  - Horsemen
+  notes: 'Performed standing on plates or blocks (2–4 inch deficit). Increases range
+    of motion demanding greater hip and hamstring recruitment at the bottom. Builds
+    starting strength off the floor.
+
+    '
+- id: bench_press
+  name: Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - close_grip_bench
+  - floor_press
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - tennis_elbow
+  progressions:
+    load: add_2.5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: close_grip_bench
+  scaling_down:
+  - floor_press
+  - push_press
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  notes: 'Horsemen standard: 1.5×BW bench press. Starting Strength uses 3×5 linear
+    progression as novice primary horizontal pressing movement.
+
+    '
+  starting_load_kg:
+    novice: 35
+    intermediate: 60
+    advanced: 90
+    elite: 120
+  weekly_increment_kg: 2.5
+- id: strict_press
+  name: Strict Press (Overhead)
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - push_press
+  - push_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - neck_strain
+  - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: push_press
+  scaling_down:
+  - kb_press_single
+  - kb_press_double
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  notes: 'Horsemen standard: 1×BW military press. Starting Strength uses 3×5 linear
+    progression. No leg drive permitted; pure upper-body pressing strength. Foundational
+    prerequisite for all jerk and push-press variants.
+
+    '
+  starting_load_kg:
+    novice: 25
+    intermediate: 40
+    advanced: 60
+    elite: 80
+  weekly_increment_kg: 1.25
+- id: push_press
+  name: Push Press
+  category: barbell
+  modality:
+  - max_strength
+  - power
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  requires:
+  - strict_press
+  unlocks:
+  - push_jerk
+  - split_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - wrist_injury
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+    complexity: push_jerk
+  scaling_down:
+  - strict_press
+  typical_volume:
+    sets: 4
+    reps: 4
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Hip dip and drive transfers leg power into the bar; arms lockout overhead.
+    Used in Gym Jones Six-Way Barbell Complex and Horsemen power-endurance workouts
+    (e.g. 5 push press while holding 45# bar for 400m).
+
+    '
+- id: push_jerk
+  name: Push Jerk
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  - olympic_lift
+  requires:
+  - push_press
+  unlocks:
+  - split_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - ankle_sprain
+  - wrist_injury
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+    complexity: split_jerk
+  scaling_down:
+  - push_press
+  - strict_press
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Drive bar overhead then dip under into quarter squat to catch. Horsemen
+    Olympic Day features jerk in wave patterns (3r/2r/1r) at 80–90%. Tests 1RM in
+    Horsemen power benchmarks.
+
+    '
+- id: split_jerk
+  name: Split Jerk
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: max
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  - olympic_lift
+  requires:
+  - push_jerk
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  - ankle_sprain
+  - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - push_jerk
+  - push_press
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  notes: 'Drive bar overhead and split legs into lunge position to receive. Most technically
+    demanding jerk variant. Bilateral is false because each repetition uses an asymmetric
+    split stance. Horsemen tests 1RM split jerk.
+
+    '
+- id: barbell_row
+  name: Barbell Row (Bent Over)
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires:
+  - deadlift
+  - bracing_mechanics
+  unlocks:
+  - pendlay_row
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x5_to_5x5
+    complexity: pendlay_row
+  scaling_down:
+  - kb_row_single
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Featured in the Gym Jones / Horsemen Six-Way Barbell Complex (6 reps). Starting
+    Strength uses as the primary horizontal pull for novice programming. Hip-hinged
+    torso roughly parallel to floor; bar pulled into lower chest.
+
+    '
+- id: power_clean
+  name: Power Clean
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - hip_hinge
+  - deadlift
+  unlocks:
+  - hang_power_clean
+  - squat_clean
+  - hang_squat_clean
+  - barbell_complex
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: squat_clean
+  scaling_down:
+  - hang_power_clean
+  - deadlift
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Starting Strength programs 1×5 power clean as the primary upper-back and
+    power movement on alternate days. Gym Jones references clean triplets (EMOM 10
+    min). Horsemen Olympic Day programs cleans in wave patterns at 80–90%.
+
+    '
+  starting_load_kg:
+    novice: 30
+    intermediate: 50
+    advanced: 75
+    elite: 100
+  weekly_increment_kg: 2.5
+- id: hang_power_clean
+  name: Hang Power Clean
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - power_clean
+  unlocks:
+  - hang_squat_clean
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+    complexity: hang_squat_clean
+  scaling_down:
+  - power_clean
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Pull initiates from hang position (above knee). Removes the first pull from
+    the floor, emphasizing the hip snap and turnover. Featured in Horsemen "Purple
+    Church" EMOM (3 power clean + 3 hang squat clean + 3 push press).
+
+    '
+  starting_load_kg:
+    novice: 25
+    intermediate: 45
+    advanced: 70
+    elite: 95
+  weekly_increment_kg: 2.5
+- id: squat_clean
+  name: Squat Clean
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  requires:
+  - power_clean
+  - front_squat
+  unlocks:
+  - hang_squat_clean
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  - ankle_sprain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+  scaling_down:
+  - power_clean
+  - front_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Full clean receiving the bar in a full squat. Highest expression of the
+    clean movement. Demands front rack mobility, squat depth, and fast footwork. Horsemen
+    Olympic Day programs at 80–90% in wave patterns.
+
+    '
+- id: hang_squat_clean
+  name: Hang Squat Clean
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  requires:
+  - hang_power_clean
+  - squat_clean
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  - ankle_sprain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - hang_power_clean
+  - squat_clean
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  notes: 'Horsemen "Purple Church" EMOM uses hang squat clean in a triplet sequence.
+    Combines the limited range-of-motion pull with a full receiving squat. Highly
+    metabolic; used in conditioning-strength hybrid sessions.
+
+    '
+- id: power_snatch
+  name: Power Snatch
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_clean
+  - bracing_mechanics
+  unlocks:
+  - hang_power_snatch
+  - snatch
+  - overhead_squat
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+    complexity: snatch
+  scaling_down:
+  - power_clean
+  - overhead_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Bar pulled from floor to overhead lockout, receiving above parallel. Horsemen
+    Olympic Day ("Snatch Your Face") programs snatch at 80–90% in waves. Prerequisite
+    to full snatch; builds the hip-to-overhead pathway.
+
+    '
+- id: hang_power_snatch
+  name: Hang Power Snatch
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_snatch
+  unlocks:
+  - snatch
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - lumbar_disc
+  - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+    complexity: snatch
+  scaling_down:
+  - power_snatch
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Initiates from hang position above the knee. Removes the floor pull and
+    isolates the second pull and turnover. Useful for coaching overhead position and
+    hip extension timing without the complexity of the full first pull.
+
+    '
+- id: snatch
+  name: Snatch
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  - movement_skill
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_snatch
+  - overhead_squat
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  - ankle_sprain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+  scaling_down:
+  - power_snatch
+  - hang_power_snatch
+  - overhead_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Full Olympic snatch: bar from floor to overhead in one movement, receiving
+    in a full squat. Most technically demanding barbell movement. Horsemen programs
+    at 80–90% in wave patterns. Tests 1RM for power benchmarks.
+
+    '
+- id: barbell_complex
+  name: Barbell Complex (Six-Way)
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - power
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - horizontal_pull
+  - olympic_lift
+  - vertical_push
+  - ballistic
+  requires:
+  - deadlift
+  - barbell_row
+  - power_clean
+  - front_squat
+  - push_press
+  - back_squat
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_set_progressive_loading
+    volume: add_rounds
+  scaling_down:
+  - barbell_row
+  - power_clean
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Six-movement barbell warm-up complex used by both Gym Jones and Horsemen:
+    Deadlift → Bent Row → Hang Clean → Front Squat → Push Press → Back Squat
+    (6 reps each, no rest between movements, bar does not touch the floor between
+    the row and clean). Performed for 3–4 sets with progressive loading: 75#–85#–95#–105#.
+    1–2 min rest between sets. Serves as both warm-up and conditioning stimulus.
+
+    '
+- id: thruster
+  name: Thruster
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - power
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  - ballistic
+  requires:
+  - front_squat
+  - push_press
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+  - front_squat
+  - push_press
+  - kb_squat_goblet
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Front squat into push press in a single continuous movement. The squat drives
+    the bar off the shoulders; the hips extend and press the bar overhead in one motion.
+    Featured in CrossFit benchmark "Fran" (21-15-9 thrusters + pull-ups) and Horsemen
+    breathing ladder format. One of the most metabolically demanding barbell movements.
+
+    '
+- id: farmer_carry_barbell
+  name: Farmer Carry (Barbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - farmer_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - rack_carry_barbell
+  - overhead_carry_barbell
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - farmer_carry_db
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Barbell held at thigh in each hand (trap-bar if available) or one barbell
+    in each hand. Higher load ceiling than KB or DB variant; useful for max-load carries.
+    Maintain neutral spine; no lateral lean. Gym Jones programs farmer carry as a
+    loaded carry accessory.
+
+    '
+- id: farmer_carry_kb
+  name: Farmer Carry (Kettlebell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - farmer_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - rack_carry_kb
+  - overhead_carry_kb
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance
+    complexity: rack_carry_kb
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'Primary farmer carry variation. One KB in each hand, arms straight, packed
+    shoulders. High grip, trapezius, and core anti-lateral-flexion demand. Horsemen
+    and SOF-style GPP staple. Unlocks rack and overhead carry once positional stability
+    is established.
+
+    '
+- id: rack_carry_kb
+  name: Rack Carry (Kettlebell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - rack_carry
+  requires:
+  - farmer_carry_kb
+  - kb_clean
+  unlocks:
+  - overhead_carry_kb
+  contraindicated_with:
+  - wrist_injury
+  - elbow_tendinopathy
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance
+    complexity: overhead_carry_kb
+  scaling_down:
+  - farmer_carry_kb
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'KB(s) held in rack position (bell resting on forearm, elbow tucked, wrist
+    neutral). Core bracing and vertical posture are the primary demands. Can be done
+    unilaterally (one bell) or bilaterally. Unilateral rack carry is a strong anti-lateral-flexion
+    challenge.
+
+    '
+- id: rack_carry_barbell
+  name: Rack Carry (Barbell — Front Rack)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - rack_carry
+  requires:
+  - farmer_carry_barbell
+  - front_squat
+  unlocks:
+  - overhead_carry_barbell
+  contraindicated_with:
+  - wrist_injury
+  - elbow_tendinopathy
+  - lumbar_disc_pathology
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+    complexity: overhead_carry_barbell
+  scaling_down:
+  - rack_carry_kb
+  typical_volume:
+    sets: 3
+    distance_m: 30
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'Barbell in front-rack position (fingertips on bar, elbows high) while walking.
+    High thoracic mobility and wrist mobility demand. Used in Horsemen-style loaded
+    carry circuits. Heavier loading ceiling than KB variant.
+
+    '
+- id: overhead_carry_kb
+  name: Overhead Carry (Kettlebell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - vertical_push
+  - isometric
+  requires:
+  - rack_carry_kb
+  - shoulder_stability
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance
+  scaling_down:
+  - rack_carry_kb
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'KB locked out overhead, arm fully extended, shoulder packed (active upward
+    rotation). Typically performed unilaterally; bilateral variant possible with two
+    bells. High rotator cuff and serratus anterior demand. Walk tall; do not side-bend
+    under load. Train each arm independently.
+
+    '
+- id: overhead_carry_barbell
+  name: Overhead Carry (Barbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - vertical_push
+  - isometric
+  requires:
+  - rack_carry_barbell
+  - overhead_squat
+  - shoulder_stability
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - overhead_carry_kb
+  typical_volume:
+    sets: 3
+    distance_m: 20
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Barbell locked out overhead while walking. Gym Jones programs overhead hold
+    static (300-sec accumulated) as a core/shoulder endurance component; overhead
+    carry is the ambulatory progression. High scapular and rotator cuff demand. Requires
+    solid overhead squat mechanics before loading.
+
+    '
+- id: suitcase_carry
+  name: Suitcase Carry (Unilateral)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  requires:
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - lumbar_spondylolysis
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance
+  scaling_down:
+  - farmer_carry_kb
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Single implement (KB, DB, or heavy object) carried on one side while maintaining
+    a vertical torso. Primary anti-lateral-flexion demand on the contralateral oblique/quadratus
+    lumborum. Gym Jones references suitcase carry in loaded carry accessory work.
+    Alternate sides each set.
+
+    '
+- id: zercher_carry
+  name: Zercher Carry (Barbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - squat
+  requires:
+  - bracing_mechanics
+  - front_squat
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - elbow_bursitis
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - rack_carry_barbell
+  typical_volume:
+    sets: 3
+    distance_m: 20
+  sources:
+  - Horsemen
+  notes: 'Barbell held in the crook of the elbows, forearms crossed. Chest-level load
+    keeps the centre of mass high and forward. High anterior core demand; upper-back
+    and biceps fatigue is a limiting factor. Horsemen GPP carries this as a sandbag
+    or barbell variation.
+
+    '
+- id: yoke_carry
+  name: Yoke Carry
+  category: loaded_carry
+  modality:
+  - durability
+  - max_strength
+  - strength_endurance
+  equipment:
+  - sled
+  - open_space
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  requires:
+  - bracing_mechanics
+  - back_squat
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - knee_meniscus_post_op
+  progressions:
+    load: add_10kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - farmer_carry_barbell
+  typical_volume:
+    sets: 4
+    distance_m: 20
+  sources:
+  - Horsemen
+  notes: 'A-frame yoke loaded with plates; athlete walks under the yoke with the crossbar
+    across the upper back. Highest absolute load potential in the carry family. Strong-man
+    derivative used in Horsemen GPP for total-body structural durability and compressive
+    loading.
+
+    '
+- id: sandbag_shoulder_carry
+  name: Sandbag Shoulder Carry
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - sandbag_bear_hug_carry
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - cervical_injury
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_distance
+    complexity: sandbag_bear_hug_carry
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  notes: 'Sandbag draped over one shoulder, load sitting on the upper trapezius. Horsemen
+    staple for GPP and durability work. Unilateral; alternate shoulders each set or
+    at midpoint. The uneven, shifting load of the sandbag demands continuous stabilisation
+    that rigid implements do not.
+
+    '
+- id: sandbag_bear_hug_carry
+  name: Sandbag Bear-Hug Carry
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  requires:
+  - sandbag_shoulder_carry
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - rib_injury
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_distance
+  scaling_down:
+  - sandbag_shoulder_carry
+  typical_volume:
+    sets: 3
+    distance_m: 30
+  sources:
+  - Horsemen
+  notes: 'Sandbag hugged against the chest with both arms. High anterior core and
+    thoracic erector demand. Breathing is compressed; heavy bags become a respiratory
+    challenge as well as a strength-endurance test. Horsemen GPP primary sandbag carry.
+
+    '
+- id: ruck_carry
+  name: Ruck Carry (Loaded — Strength Focus)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - ruck_pack
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - cervical_injury
+  - achilles_tendinopathy
+  progressions:
+    load: increase_pack_weight
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    distance_m: 3000
+  sources:
+  - Horsemen
+  notes: 'Slow, heavy, deliberate loaded carry as a strength-endurance exercise, distinct
+    from the aerobic ruck (which is higher volume, lower load, time-based). Pack weight
+    ≥30% bodyweight; pace is controlled walk. Horsemen Fan Dance standard: 30kg,
+    22km with +1000m elevation. This entry targets shorter heavy training sets rather
+    than aerobic events.
+
+    '
+- id: tire_drag_forward
+  name: Tire Drag (Forward)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - tire
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - locomotion
+  - hip_hinge
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - tire_drag_backward
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - achilles_tendinopathy
+  - ankle_sprain
+  progressions:
+    load: add_weight_to_tire
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'Harness or rope attached to tire; athlete walks or runs forward dragging
+    load. High posterior chain, hip, and grip demand. Horsemen GPP staple. Impact-free
+    locomotion pattern useful when running volume is high. Tyre weight adjusted by
+    adding plates inside.
+
+    '
+- id: tire_drag_backward
+  name: Tire Drag (Backward)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  - rehab
+  equipment:
+  - tire
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - locomotion
+  - knee_extension
+  requires:
+  - tire_drag_forward
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - achilles_tendinopathy
+  progressions:
+    load: add_weight_to_tire
+    volume: increase_distance
+  scaling_down:
+  - tire_drag_forward
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Horsemen
+  - ATG
+  notes: 'Backward walking with tire in tow. ATG / Knees Over Toes principle: backward
+    sled and tire drag loads the VMO and quad through terminal extension range without
+    compressive load on the knee. Used in Horsemen GPP and as a knee prehab modality.
+    Primary quad-focused carry variant.
+
+    '
+- id: sled_push
+  name: Sled Push
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  - anaerobic_intervals
+  equipment:
+  - sled
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - locomotion
+  - horizontal_push
+  requires:
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - achilles_tendinopathy
+  - lumbar_disc_pathology
+  progressions:
+    load: add_plates_to_sled
+    volume: increase_distance
+  scaling_down:
+  - tire_drag_forward
+  typical_volume:
+    sets: 6
+    distance_m: 20
+  sources:
+  - Horsemen
+  - CrossFit
+  notes: 'Low (handles near ground, body angled forward) or upright (handles at chest
+    height) variants. High-load sled push develops strength-endurance and posterior
+    chain drive; lighter fast sled push develops anaerobic power. No eccentric component
+    — extremely low DOMS; can be programmed frequently. Horsemen GPP uses sled push
+    as a primary conditioning tool.
+
+    '
+- id: kb_swing_two_hand
+  name: Kettlebell Swing (Two-Hand)
+  category: kettlebell
+  modality:
+  - power
+  - aerobic_base
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - kb_swing_single_arm
+  - kb_deadlift
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration_or_reps
+    complexity: kb_swing_single_arm
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  - Gym Jones
+  notes: 'Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder
+    height on the backswing hip snap. Horsemen warm-up complex: 1 min two-hand swings.
+    Gym Jones breathing ladder uses swings 1–20 at 53#. Wildman progression begins
+    here. Two hands on the bell; posterior-chain power driver.
+
+    '
+  starting_load_kg:
+    novice: 24
+    intermediate: 32
+    advanced: 40
+    elite: 48
+- id: kb_swing_single_arm
+  name: Kettlebell Swing (Single-Arm)
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  - aerobic_base
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires:
+  - kb_swing_two_hand
+  unlocks:
+  - kb_clean_single
+  - kb_snatch
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - shoulder_instability
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration_or_reps
+    complexity: kb_clean_single
+  scaling_down:
+  - kb_swing_two_hand
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  notes: 'One hand on the bell; free hand assists with balance and counter-rotation.
+    Horsemen warm-up complex: 1 min swings each arm (left then right). Direct prerequisite
+    to single-arm clean and snatch. Anti-rotation demand is greater than two-hand
+    swing.
+
+    '
+  starting_load_kg:
+    novice: 16
+    intermediate: 24
+    advanced: 32
+    elite: 40
+- id: kb_clean_single
+  name: Kettlebell Clean (Single-Arm)
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - kb_swing_single_arm
+  unlocks:
+  - kb_clean_double
+  - kb_press_single
+  - kb_push_press_single
+  - kb_jerk_single
+  - kb_snatch
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration_or_reps
+    complexity: kb_clean_double
+  scaling_down:
+  - kb_swing_single_arm
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  notes: 'Bell pulled from swing arc into rack position at shoulder. Elbow nestled
+    against body; bell resting on forearm. Horsemen 12-min KB complex: 1 min clean
+    & press each arm. Wildman progression: swing → clean → press → snatch.
+
+    '
+  starting_load_kg:
+    novice: 16
+    intermediate: 24
+    advanced: 32
+    elite: 40
+- id: kb_press_single
+  name: Kettlebell Press (Single-Arm)
+  category: kettlebell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  requires:
+  - push_pattern
+  - bracing_mechanics
+  unlocks:
+  - kb_press_double
+  - kb_push_press_single
+  - kb_overhead_carry
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+    complexity: kb_press_double
+  scaling_down:
+  - kb_clean_single
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  notes: 'Strict shoulder press from rack position. No leg drive. Horsemen 12-min
+    warm-up complex uses clean & press 1 min each arm. Kettlebell workout cycles feature
+    press in all three cycles. Requires tight lat engagement at lockout.
+
+    '
+  starting_load_kg:
+    novice: 12
+    intermediate: 16
+    advanced: 24
+    elite: 32
+- id: kb_push_press_single
+  name: Kettlebell Push Press (Single-Arm)
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  requires:
+  - kb_press_single
+  - kb_clean_single
+  unlocks:
+  - kb_jerk_single
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration
+    complexity: kb_jerk_single
+  scaling_down:
+  - kb_press_single
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - Wildman
+  - Horsemen
+  notes: 'Hip dip drives bell off shoulder; arm locks out overhead. Horsemen warm-up
+    protocol: 1 min push press each arm. KB workout standard warm-up cycle includes
+    push press as timed interval. Bridge movement from strict press to jerk.
+
+    '
+- id: kb_snatch
+  name: Kettlebell Snatch
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  - aerobic_base
+  equipment:
+  - kettlebell
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - kb_swing_single_arm
+  - kb_clean_single
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_rpm_target
+  scaling_down:
+  - kb_swing_single_arm
+  - kb_clean_single
+  typical_volume:
+    sets: 3
+    duration_sec: 180
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  notes: 'Bell punched from hip-hinge to overhead lockout in one movement. Horsemen
+    12-min complex: 1 min snatch each arm. Horsemen SSST standard: 200+ snatches in
+    10 min at 53# (Team Guy standard). KB pentathlon half-snatch: 108 reps in 6 min.
+    KB sport RPM target: 14 RPM at 1 pood.
+
+    '
+  starting_load_kg:
+    novice: 24
+    intermediate: 32
+    advanced: 40
+    elite: 48
+- id: kb_squat_goblet
+  name: Kettlebell Goblet Squat
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - mobility
+  equipment:
+  - kettlebell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - hip_hinge
+  unlocks:
+  - kb_squat_double
+  - kb_clean_single
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+    complexity: kb_squat_double
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Bell held at chest level with both hands, elbows track inside knees. Gym
+    Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching
+    tool for squat mechanics. Low technical demand; appropriate as first-session squat
+    pattern.
+
+    '
+- id: kb_tgu
+  name: Kettlebell Turkish Get-Up
+  category: kettlebell
+  modality:
+  - movement_skill
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  - rotation
+  - isometric
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - kb_overhead_carry
+  - kb_rack_carry
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - neck_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_side
+  scaling_down:
+  - kb_halo
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  - Wildman
+  notes: 'From lying to standing with bell locked overhead throughout; reverse to
+    return. Foundational Wildman movement. Gym Jones programs 100 TGUs at 15# (recovery
+    day) and 5–6 reps at 25# (strength day core work with 60-sec FLR). Horsemen
+    SMMF: 100 get-ups at 35# KB (15–20 min). Unlocks all overhead carries. Tests
+    shoulder stability, hip mobility, and whole-body integration.
+
+    '
+  starting_load_kg:
+    novice: 12
+    intermediate: 16
+    advanced: 24
+    elite: 32
+- id: kb_step_up
+  name: Kettlebell Step-Up (Single-Arm)
+  category: kettlebell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - kettlebell
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - step_up
+  - squat
+  requires:
+  - squat_pattern
+  unlocks:
+  - weighted_step_up
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - knee_osteoarthritis
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+    complexity: weighted_step_up
+  scaling_down:
+  - single_leg_squat_box
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Dan John
+  notes: 'Single-arm kettlebell step-up. Hold one KB at the chest (rack) or goblet
+    position. Drive through the heel of the lead foot; no assistance from the trailing
+    leg. 5×2 each side at a heavy bell. KB step-up approximates the Gym Jones loaded
+    step-up protocol when a barbell is unavailable. Box height governs difficulty
+    — a higher box increases unilateral demand.
+
+    '
+- id: kb_figure_eight
+  name: Kettlebell Figure-Eight
+  category: kettlebell
+  modality:
+  - movement_skill
+  - strength_endurance
+  - mobility
+  equipment:
+  - kettlebell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires:
+  - kb_swing_two_hand
+  unlocks:
+  - kb_windmill
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - knee_meniscus_post_op
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration
+  scaling_down:
+  - kb_swing_two_hand
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - Horsemen
+  notes: 'Bell passed between legs in figure-eight pattern, alternating hands. Horsemen
+    12-min warm-up complex includes figure-eight both directions. Develops rotational
+    hip mobility, lateral hip hinge control, and hand-switching timing.
+
+    '
+- id: kb_halo
+  name: Kettlebell Halo
+  category: kettlebell
+  modality:
+  - mobility
+  - movement_skill
+  equipment:
+  - kettlebell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks:
+  - kb_tgu
+  - kb_windmill
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - neck_strain
+  - wrist_injury
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Horsemen
+  notes: 'Bell circled around the head in a halo pattern, both directions. Horsemen
+    12-min complex includes slasher-to-halo. Develops thoracic and shoulder mobility;
+    prepares the shoulder girdle for overhead loading. Appropriate as first-session
+    shoulder prep.
+
+    '
+- id: kb_farmer_carry
+  name: Kettlebell Farmer Carry (Single)
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_deadlift
+  unlocks:
+  - kb_farmer_carry_double
+  - kb_suitcase_carry
+  contraindicated_with:
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Single kettlebell carried in one hand at side for distance or time. Asymmetric
+    load demands lateral core stability. Gym Jones programs farmer carry in loaded
+    carry circuits. Foundation for all loaded carry variants.
+
+    '
+- id: kb_farmer_carry_double
+  name: Kettlebell Farmer Carry (Double)
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_farmer_carry
+  unlocks: []
+  contraindicated_with:
+  - hip_flexor_strain
+  - lumbar_disc
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_farmer_carry
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Two kettlebells carried bilaterally for distance or time. Featured in AMRAP
+    kettlebell workouts (20m farmer''s walk between sets). Develops grip endurance,
+    trapezius, and lateral core under bilateral load.
+
+    '
+- id: kb_suitcase_carry
+  name: Kettlebell Suitcase Carry
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_farmer_carry
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_farmer_carry
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Identical to farmer carry but emphasizes anti-lateral-flexion: the athlete
+    resists the bell pulling the torso sideways. Gym Jones programs suitcase carry
+    in loaded carry circuits. Trains the quadratus lumborum and lateral core in a
+    functional walking pattern.
+
+    '
+- id: kb_rack_carry
+  name: Kettlebell Rack Carry
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_clean_single
+  - kb_tgu
+  unlocks:
+  - kb_overhead_carry
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_instability
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_farmer_carry
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  notes: 'Bell held in rack position at shoulder while walking. Anti-flexion and anti-rotation
+    demand on the ipsilateral hip and core. Horsemen progressive TGU protocol feeds
+    into rack carry as shoulder stability development. Intermediate between farmer
+    carry and overhead carry.
+
+    '
+- id: kb_overhead_carry
+  name: Kettlebell Overhead Carry
+  category: kettlebell
+  modality:
+  - durability
+  - movement_skill
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - vertical_push
+  - isometric
+  - locomotion
+  requires:
+  - kb_press_single
+  - kb_tgu
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - neck_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_rack_carry
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Horsemen
+  notes: 'Bell pressed and held at full overhead lockout while walking. Maximum shoulder
+    stability demand of all carry variants. Scapular upward rotation and packed shoulder
+    essential. Horsemen uses overhead carries in loaded carry circuits. Requires intact
+    shoulder function; contraindicated with most shoulder pathologies.
+
+    '
+- id: kb_complex_12min
+  name: Kettlebell 12-Minute Complex (Horsemen Warm-Up)
+  category: kettlebell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - movement_skill
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  - vertical_push
+  - olympic_lift
+  - rotation
+  - squat
+  - locomotion
+  requires:
+  - kb_swing_two_hand
+  - kb_swing_single_arm
+  - kb_clean_single
+  - kb_press_single
+  - kb_figure_eight
+  - kb_halo
+  - kb_snatch
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  - knee_meniscus_post_op
+  progressions:
+    load: increase_bell_weight
+    volume: add_additional_rounds
+  scaling_down:
+  - kb_swing_two_hand
+  - kb_complex_12min
+  typical_volume:
+    sets: 1
+    duration_sec: 720
+  sources:
+  - Horsemen
+  notes: 'Official Horsemen 12-minute kettlebell warm-up complex at 35# (16kg). Sequence
+    (1 minute each, no rest): two-hand swings, left-arm swings, right-arm swings,
+    figure-eight both directions, clean & press left, clean & press right, slasher-to-halo
+    ×2, snatch left, snatch right, lunge with KB left, lunge with KB right. Total:
+    12 movements, 12 minutes, continuous. Used as warm-up before strength or conditioning
+    sessions.
+
+    '
+- id: hip_circle
+  name: Hip Circle
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  requires: []
+  unlocks:
+  - hip_90_90
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources:
+  - Ido Portal
+  - Horsemen
+  notes: Standing hip circumduction — large circles in both directions. Standard
+    joint prep for any lower body session. Low threshold entry movement for hip mobility
+    warm-up sequences.
+- id: hip_flexor_stretch
+  name: Hip Flexor Stretch (kneeling)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks:
+  - couch_stretch
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+    complexity: couch_stretch
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Horsemen
+  - Ido Portal
+  notes: Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior
+    pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and
+    heavy squat/deadlift days.
+- id: ankle_circle
+  name: Ankle Circle
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources:
+  - Horsemen
+  - Ido Portal
+  notes: Non-weight-bearing ankle circumduction. Standard joint prep before any lower
+    body or locomotive work. Perform both clockwise and counterclockwise.
+- id: thoracic_extension_foam_roll
+  name: Thoracic Extension (foam roll)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - thoracic_rotation
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - Horsemen
+  - Ido Portal
+  notes: Foam roller placed perpendicular to spine at mid-back. Segment-by-segment
+    extension over roller. Avoid rolling lumbar spine directly. Contraindicated with
+    active lumbar disc pathology due to spinal extension load.
+- id: shoulder_circle
+  name: Shoulder Circle
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks:
+  - shoulder_dislocate_pvc
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources:
+  - Ido Portal
+  - Horsemen
+  notes: Standing arm circles in both directions at varied speeds. Standard shoulder
+    joint prep before any upper body or overhead work. Both forward and backward directions
+    required.
+- id: band_pull_apart
+  name: Band Pull-Apart
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - Horsemen
+  - Ido Portal
+  notes: Horizontal band pull-apart at chest height or overhead. Activates posterior
+    deltoid, infraspinatus, and lower trapezius. Critical for shoulder health maintenance.
+    Prehab staple for any pressing-heavy program.
+- id: face_pull
+  name: Face Pull (band or cable)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: increase_band_resistance
+    volume: increase_reps_per_set
+  scaling_down:
+  - band_pull_apart
+  typical_volume:
+    sets: 3
+    reps: 15
+  sources:
+  - Horsemen
+  notes: Pull toward face with thumbs-up grip, elbows high and flared. Full external
+    rotation at end range. Targets rotator cuff, posterior deltoid, and lower/mid
+    trapezius. High-frequency exercise; can be performed daily as prehab without recovery
+    cost.
+- id: couch_stretch
+  name: Couch Stretch (hip flexor/quad)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  - knee_extension
+  requires:
+  - hip_flexor_stretch
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  - patellar_tendinopathy_acute
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - hip_flexor_stretch
+  typical_volume:
+    sets: 2
+    duration_sec: 120
+  sources:
+  - Horsemen
+  - Ido Portal
+  notes: Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets
+    rectus femoris and hip flexor complex simultaneously. One of the most effective
+    hip extension mobility drills. Contraindicated with acute knee conditions due
+    to end-range knee flexion load.
+- id: world_greatest_stretch
+  name: World Greatest Stretch
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down:
+  - hip_flexor_stretch
+  - thoracic_rotation
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources:
+  - Horsemen
+  notes: Lunge forward, drop elbow to floor inside front foot, rotate arm overhead
+    — combined hip flexor, thoracic rotation, and ankle mobility in one movement.
+    Standard pre-session prep. Performed slowly with 3-sec pause at each position
+    for maximum benefit.
+- id: neck_rotation
+  name: Neck Rotation
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - cervical_spine_injury
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Horsemen
+  notes: Slow, controlled cervical rotation to each side. Standard joint prep. No
+    forceful range of motion. Contraindicated with active cervical spine injury.
+- id: neck_lateral_flexion
+  name: Neck Lateral Flexion
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - cervical_spine_injury
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 10
+  sources:
+  - Horsemen
+  notes: Slow ear-to-shoulder lateral neck flexion. Targets scalenes and lateral cervical
+    musculature. Complements neck rotation in cervical joint prep sequence. Contraindicated
+    with active cervical spine injury.
+- id: sb_deadlift
+  name: Sandbag Deadlift
+  category: sandbag
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - hip_hinge_pattern
+  - bracing_mechanics
+  unlocks:
+  - sb_clean
+  - sb_bent_row
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - hip_hinge_pattern
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - Horsemen
+  notes: Foundational sandbag pattern. Bag sits on floor; grip around middle or handles.
+    Unstable load demands strong bracing compared to barbell equivalent.
+- id: sb_clean
+  name: Sandbag Clean
+  category: sandbag
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  - olympic_lift
+  requires:
+  - sb_deadlift
+  - hip_hinge_pattern
+  unlocks:
+  - sb_clean_press
+  - sb_complex
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  - wrist_injury
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - sb_deadlift
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+  - Horsemen
+  notes: Power clean mechanics applied to sandbag. Clean to shoulder or front rack
+    position depending on bag style. Unstable load requires strong lat engagement
+    at pull initiation.
+- id: sb_clean_press
+  name: Sandbag Clean and Press
+  category: sandbag
+  modality:
+  - power
+  - strength_endurance
+  - durability
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  - vertical_push
+  - olympic_lift
+  requires:
+  - sb_clean
+  - vertical_push_pattern
+  unlocks:
+  - sb_complex
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - sb_clean
+  - sb_press_overhead
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Horsemen
+  notes: Core Horsemen compound — clean to shoulder then strict or push press overhead.
+    Used in complexes and EMOM density work. Contraindicated with shoulder and wrist
+    injuries due to overhead demand under unstable load.
+- id: sb_squat
+  name: Sandbag Back Squat (shoulder carry)
+  category: sandbag
+  modality:
+  - max_strength
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - squat_pattern
+  - bracing_mechanics
+  unlocks:
+  - sb_squat_jump
+  - sb_lunge
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  - knee_meniscus_acute
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - bodyweight_squat
+  typical_volume:
+    sets: 4
+    reps: 8
+  sources:
+  - Horsemen
+  notes: Bag draped over one or both shoulders (bearhug or shoulder carry). Asymmetric
+    loading variant challenges lateral bracing. Count toward durability due to non-standard
+    carry position.
+- id: sb_front_squat
+  name: Sandbag Front Squat
+  category: sandbag
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - squat_pattern
+  - bracing_mechanics
+  - sb_clean
+  unlocks:
+  - sb_squat_jump
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  - knee_meniscus_acute
+  - wrist_injury
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - sb_squat
+  - bodyweight_squat
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - Horsemen
+  notes: Bag held in front rack / bearhug position. Demands strong thoracic extension
+    and anterior bracing. Appears in Horsemen strength days and named complexes.
+- id: sb_bent_row
+  name: Sandbag Bent-Over Row
+  category: sandbag
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires:
+  - hip_hinge_pattern
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - sb_deadlift
+  typical_volume:
+    sets: 4
+    reps: 8
+  sources:
+  - Horsemen
+  notes: Hinge to roughly 45-degree torso angle; pull bag to lower chest. Unstable
+    bag challenges grip and lat engagement throughout.
+- id: sb_carry_shoulder
+  name: Sandbag Shoulder Carry (single shoulder)
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - sb_getup
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  - shoulder_instability
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_duration
+  scaling_down:
+  - sb_carry_bearhug
+  typical_volume:
+    sets: 4
+    duration_sec: 60
+  sources:
+  - Horsemen
+  notes: Bag loaded on one shoulder for distance or time. Heavily asymmetric — trains
+    lateral bracing and single-side stability. Alternate shoulders each set or each
+    round.
+- id: sb_carry_bearhug
+  name: Sandbag Bearhug Carry
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - sb_carry_shoulder
+  contraindicated_with:
+  - lumbar_disc
+  - acute_low_back
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    duration_sec: 60
+  sources:
+  - Horsemen
+  notes: Bag held tight against chest, arms wrapped around. Compresses anterior chain;
+    excellent for work capacity circuits. Used in Horsemen GPP carries and loaded
+    intervals.
+- id: sb_getup
+  name: Sandbag Get-Up
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - isometric
+  requires:
+  - kb_tgu
+  - hip_hinge_pattern
+  - bracing_mechanics
+  unlocks:
+  - sb_complex
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_instability
+  - knee_meniscus_acute
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - kb_tgu
+  - sb_carry_shoulder
+  typical_volume:
+    sets: 5
+    reps: 20
+  sources:
+  - Horsemen
+  notes: TGU mechanics with sandbag on shoulder instead of kettlebell overhead. Used
+    in Horsemen warm-ups and SMMF challenges (100 get-ups at 85-95#). Asymmetric load
+    is more forgiving than overhead KB but demands robust bracing. Cited volume —
+    20 reps each shoulder at 80# — is a standard warm-up block.
+- id: sb_lunge
+  name: Sandbag Lunge
+  category: sandbag
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  requires:
+  - squat_pattern
+  - bracing_mechanics
+  unlocks:
+  - sb_complex
+  contraindicated_with:
+  - knee_meniscus_acute
+  - lumbar_disc
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - bodyweight_lunge
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - Horsemen
+  notes: Walking lunge with bag on shoulder or in bearhug. Appears in Horsemen power
+    endurance work ("Counting Dead Bodies") and SMMF 500m lunge challenge. Alternate
+    carry position every 50m in long-distance variants.
+- id: sb_halfmoon
+  name: Sandbag Half Moon
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  - power
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - rotation
+  - hip_hinge
+  - ballistic
+  requires:
+  - bracing_mechanics
+  - hip_hinge_pattern
+  unlocks:
+  - sb_slam
+  contraindicated_with:
+  - lumbar_disc
+  - lumbar_rotation_injury
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - sb_bent_row
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - Horsemen
+  notes: From Horsemen notes — 'reach over body, pick up, arc high overhead, place
+    down other side.' Heavy rotational ballistic. Strong bracing absolutely required
+    throughout arc. Contraindicated with lumbar disc pathology due to combination
+    of flexion-rotation under load.
+- id: sb_squat_jump
+  name: Sandbag Squat Jump
+  category: sandbag
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires:
+  - squat_pattern
+  - bracing_mechanics
+  - sb_squat
+  unlocks:
+  - sb_complex
+  contraindicated_with:
+  - knee_meniscus_acute
+  - lumbar_disc
+  - patellar_tendinopathy_acute
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - sb_squat
+  - bodyweight_squat_jump
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - Horsemen
+  notes: Explosive jump from squat position while holding sandbag in bearhug or shoulder
+    carry. Appears in Horsemen power work and leg blaster variants. Land soft; prioritize
+    triple extension at peak.
+- id: sb_slam
+  name: Sandbag Slam
+  category: sandbag
+  modality:
+  - power
+  - mixed_modal_conditioning
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - vertical_push
+  requires:
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_instability
+  - acute_low_back
+  progressions:
+    load: increase_sandbag_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - medicine_ball_slam
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - Horsemen
+  notes: Lift bag overhead and throw/slam it down with maximal force. Unlike medicine
+    ball slams, the bag doesn't bounce — requires picking it back up, adding a hip
+    hinge rep per slam. Metabolically demanding. Used in Tabata Hell (Horsemen) and
+    conditioning circuits.
+- id: sb_press_overhead
+  name: Sandbag Overhead Press
+  category: sandbag
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires:
+  - vertical_push_pattern
+  - bracing_mechanics
+  - sb_clean
+  unlocks:
+  - sb_clean_press
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - sb_clean
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+  - Horsemen
+  notes: Strict press from shoulder or front rack position. Unstable bag demands more
+    shoulder stabilizer activation than barbell. Can be pressed from one shoulder
+    for unilateral challenge.
+- id: sb_complex
+  name: Horsemen Sandbag Complex
+  category: sandbag
+  modality:
+  - strength_endurance
+  - durability
+  - mixed_modal_conditioning
+  equipment:
+  - sandbag
+  effort: max
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - vertical_push
+  - loaded_carry
+  - ballistic
+  requires:
+  - sb_clean
+  - sb_front_squat
+  - sb_clean_press
+  - sb_lunge
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_acute
+  progressions:
+    load: increase_sandbag_weight
+    volume: add_sets
+  scaling_down:
+  - sb_clean_press
+  - sb_front_squat
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Horsemen
+  notes: 'Named Horsemen complex — multiple sandbag movements chained without rest.
+    Example sequence: clean to shoulder → 5 deep squats → carry 40ft → drag
+    back (ref: Double Eagle). Other variants chain clean + press + lunge. Used in
+    EMOM format: 2× clean & squat + 3 burpees every minute for 20 min (''Teabag Your
+    Buddy Tonight''). Treat reps as complex rounds — one rep = full sequence.'

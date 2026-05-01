@@ -1,5 +1,95 @@
 [
   {
+    "id": "atg_joint_health",
+    "name": "ATG Joint Health (Knees Over Toes / Ben Patrick)",
+    "source_philosophy": "atg",
+    "goals_served": [
+      "injury_rehab",
+      "durability",
+      "mobility"
+    ],
+    "sessions_per_week": {
+      "rehab": 3,
+      "mobility": 2,
+      "durability": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.7,
+      "zone3_pct": 0.2,
+      "zone4_5_pct": 0.05,
+      "max_effort_pct": 0.05
+    },
+    "progression_model": "rpe_autoregulation",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced"
+      ],
+      "days_per_week_min": 3,
+      "days_per_week_max": 6,
+      "goal_priority_min": {
+        "rehab": 0.2
+      }
+    },
+    "deload_protocol": {
+      "frequency_weeks": 6,
+      "volume_reduction_pct": 0.5,
+      "intensity_change": "reduce_slightly"
+    },
+    "sources": [
+      "ATG (Athletic Truth Group) — Ben Patrick",
+      "Knees Over Toes Guy — Zero program, ATG program"
+    ],
+    "notes": "Built around Ben Patrick's ATG methodology: progressive range of motion precedes progressive load. The reverse sled is the entry-level movement — zero eccentric load, rebuilds knee tolerance from scratch. Session structure: reverse sled or tibialis work → full-range lower body movements (split squats, step-ups progressing to ATG split squat) → Nordic-type posterior chain work → upper body accessory. Pain-free range of motion is always the primary criterion for progression. Compatible with concurrent strength training — mandatory lower-body prep work is performed regardless of other modalities in the program. Rehab sessions and mobility sessions are the primary training output; durability sessions use loaded carries and sled work for joint conditioning without impact.\n"
+  },
+  {
+    "id": "bjj_performance",
+    "name": "BJJ Performance (Combat Sport S&C)",
+    "source_philosophy": "bjj",
+    "goals_served": [
+      "bjj_competitor",
+      "strength_endurance",
+      "combat_sport"
+    ],
+    "sessions_per_week": {
+      "combat_sport": 3,
+      "strength_endurance": 2,
+      "anaerobic_intervals": 1,
+      "mobility": 1
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.25,
+      "zone3_pct": 0.25,
+      "zone4_5_pct": 0.3,
+      "max_effort_pct": 0.2
+    },
+    "progression_model": "rpe_autoregulation",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 4,
+      "days_per_week_max": 7,
+      "goal_priority_min": {
+        "combat_sport": 0.3
+      }
+    },
+    "deload_protocol": {
+      "frequency_weeks": 4,
+      "volume_reduction_pct": 0.4,
+      "intensity_change": "reduce_slightly"
+    },
+    "sources": [
+      "BJJ (Gracie, Gym Jones, Ido Portal)",
+      "Kelly Starrett — mobility and joint health for grapplers"
+    ],
+    "notes": "Designed around the physical demands of competitive BJJ: isometric strength endurance (maintaining frames under sustained pressure), hip explosiveness (sweeps, escapes, takedowns), grip endurance (6-minute rounds of sustained pulling), and robust joint health in shoulders, knees, and neck. Structure: mat time (BJJ class) is the non-negotiable anchor — S&C sessions support mat performance and do not compete with it for recovery. Hard rolling days are followed by drilling or lower-intensity S&C. Intensity model is hard_easy_alternation. Grappling mobility sessions are mandatory to protect vulnerable joints. RPE autoregulation governs S&C load based on accumulated mat fatigue.\n"
+  },
+  {
     "id": "block_periodization",
     "name": "Block Periodization",
     "source_philosophy": "gym_jones",
@@ -11,6 +101,7 @@
     ],
     "sessions_per_week": {
       "max_strength": 2,
+      "power": 1,
       "mixed_modal_conditioning": 2,
       "durability": 1,
       "aerobic_base": 1
@@ -348,6 +439,50 @@
     "notes": "The KB Pentathlon is a 5-event competition format: Cleans (120 reps target / 20 RPM), Long Cycle Press (60 reps / 10 RPM), Jerks (120 reps / 20 RPM), Half Snatch (108 reps / 18 RPM), Push Press (120 reps / 20 RPM). Each event is 6 minutes with 5 minutes rest between. Points scale with bell weight: 8kg=1pt, 12kg=1.5pt, 16kg=2pt, 20kg=2.5pt, 24kg=3pt, 28kg=3.5pt per rep. Progression via pentathlon_rpm: establish baseline RPM at current bell weight, train to hit target RPM consistently, then step up bell weight. Breathing mechanics govern the intensity ceiling — Wildman principle: breathing pattern determines whether a ballistic set stays aerobic or goes anaerobic. Progression sequence: two-hand swing → single-arm swing → clean → clean & press → TGU → squat → snatch → double KB. The framework also serves as a conditioning benchmark: SSST (Secret Service Snatch Test) standard is 200+ reps in 10 min at 53# (Horsemen \"Team Guy Standard\"), 250 = excellent, 275 = record.\n"
   },
   {
+    "id": "kelly_starrett_mobility",
+    "name": "Supple Leopard (Kelly Starrett Mobility System)",
+    "source_philosophy": "kelly_starrett",
+    "goals_served": [
+      "injury_rehab",
+      "mobility",
+      "durability"
+    ],
+    "sessions_per_week": {
+      "mobility": 5,
+      "rehab": 2
+    },
+    "intensity_distribution": {
+      "zone1_2_pct": 0.8,
+      "zone3_pct": 0.1,
+      "zone4_5_pct": 0.05,
+      "max_effort_pct": 0.05
+    },
+    "progression_model": "complexity",
+    "applicable_when": {
+      "training_level": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "days_per_week_min": 3,
+      "days_per_week_max": 7,
+      "goal_priority_min": {
+        "mobility": 0.3
+      }
+    },
+    "deload_protocol": {
+      "frequency_weeks": 8,
+      "volume_reduction_pct": 0.3,
+      "intensity_change": "maintain"
+    },
+    "sources": [
+      "Becoming a Supple Leopard (Starrett & Cordoza, 2013)",
+      "Ready to Run (Starrett, 2014)"
+    ],
+    "notes": "Not a standalone strength program — a mobility and movement quality layer applied on top of any other methodology. Primary tools: banded joint distraction, soft tissue work, contract-relax mobilizations, and positional assessments. Ten physical archetypes (hip extension, internal rotation, ankle, thoracic spine, etc.) each have a testing standard and prescribed mobilization sequence. Session structure: movement screen or targeted assessment → tissue prep (2 min minimum per target region, lacrosse ball / foam roller) → banded joint distraction work → active range restoration under light load → breathing and bracing practice. Progression model is complexity — advancing from passive range to active range under load. Breathing and bracing sequence is a prerequisite for any loaded movement. Tissue prep is prescribed before and after sessions. Compatible with any strength or conditioning program; designed to run alongside rather than replace it.\n"
+  },
+  {
     "id": "linear_progression",
     "name": "Linear Progression (SS)",
     "source_philosophy": "starting_strength",
@@ -483,6 +618,7 @@
     ],
     "sessions_per_week": {
       "max_strength": 3,
+      "relative_strength": 1,
       "mobility": 1
     },
     "intensity_distribution": {

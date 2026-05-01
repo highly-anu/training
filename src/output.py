@@ -111,6 +111,18 @@ def _fmt_session(session: dict) -> str:
                 line += f"  *({role})*"
             lines.append(line)
 
+    # Complementary recovery work
+    comp_work = session.get('complementary_work', [])
+    if comp_work:
+        lines.append('\n**Cool-down / Recovery**')
+        for cw in comp_work:
+            ex = cw.get('exercise') or {}
+            p = cw.get('prescription') or {}
+            sets = p.get('sets', 2)
+            dur = p.get('duration_sec', 60)
+            note = p.get('note', '')
+            lines.append(f"- {ex.get('name', '?')} — {sets}×{dur}s  *{note}*")
+
     # Brief archetype note (first sentence only)
     raw_note = arch.get('notes', '').strip()
     if raw_note:

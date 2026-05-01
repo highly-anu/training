@@ -1,0 +1,47 @@
+id: kb_movement_skill_session
+name: KB Movement Skill Session (Wildman)
+modality: movement_skill
+category: kettlebell
+training_levels:
+- novice
+- intermediate
+- advanced
+duration_estimate_minutes: 35
+applicable_phases:
+- base
+- maintenance
+- recovery
+- transition
+slots:
+- role: warmup
+  slot_type: time_domain
+  duration_minutes: 8
+  intensity: low
+  exercise_filter:
+    category: kettlebell
+    movement_pattern: rotation
+- role: main
+  slot_type: skill_practice
+  duration_minutes: 22
+  intensity: moderate
+  exercise_filter:
+    category: kettlebell
+- role: cooldown
+  slot_type: skill_practice
+  duration_minutes: 5
+  intensity: low
+  exercise_filter:
+    category: kettlebell
+    movement_pattern: hip_hinge
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+notes: 'Skill development session covering Wildman''s foundational movement vocabulary:
+  halo, TGU, windmill, and carries. No set is performed while fatigued — quality is
+  the only metric. Appropriate as a standalone session or as the opening block of
+  any other session. Novices use this to develop the TGU before loading swings. Intermediate
+  athletes add windmill and overhead carry. No RPM targets or time pressure; each
+  rep is treated as a practice, not a performance.
+
+  '

@@ -6,16 +6,36 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 
 ## Schemas
 
-| File | What it governs | Phase 2 output |
-|------|-----------------|----------------|
-| `philosophy.schema.json` | One entry per training source (SS, UA, Gym Jones, etc.) | `data/philosophies/*.yaml` |
-| `framework.schema.json` | One entry per methodological framework | `data/frameworks/*.yaml` |
-| `modality.schema.json` | One entry per training domain | `data/modalities/*.yaml` |
-| `archetype.schema.json` | One entry per workout shape | `data/archetypes/*.yaml` |
-| `exercise.schema.json` | One entry per exercise | `data/exercises/*.yaml` |
-| `goal_profile.schema.json` | One entry per goal type | `data/goals/*.yaml` |
+| File | What it governs | Location in repo |
+|------|-----------------|-----------------|
+| `philosophy.schema.json` | One entry per training source (SS, UA, Gym Jones, etc.) | `data/packages/{name}/philosophy.yaml` |
+| `framework.schema.json` | One entry per methodological framework | `data/packages/{name}/frameworks/{id}.yaml` |
+| `modality.schema.json` | One entry per training domain | `data/modalities/{id}.yaml` (shared, rarely edited) |
+| `archetype.schema.json` | One entry per workout shape | `data/packages/{name}/archetypes/{category}/{id}.yaml` |
+| `exercise.schema.json` | One entry per exercise | `data/packages/{name}/exercises.yaml` (list under `exercises:` key) |
+| `goal_profile.schema.json` | One entry per goal type | `data/goals/{id}.yaml` |
 | `constraints.schema.json` | Runtime athlete input (not a library) | Input to generator |
 | `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml` |
+
+### Package structure
+
+Each training methodology lives in its own self-contained package directory:
+
+```
+data/packages/{name}/
+  philosophy.yaml          ← the package's philosophy (exactly one)
+  frameworks/
+    {id}.yaml              ← one file per framework (usually one)
+  archetypes/
+    strength/              ← barbell/free weight strength sessions
+    conditioning/          ← aerobic, intervals, AMRAPs, circuits
+    kettlebell/            ← KB-specific sessions
+    gpp_durability/        ← carries, sandbag, rucking
+    movement_skill/        ← mobility, joint prep, skill practice
+  exercises.yaml           ← all exercises for this package (list under exercises: key)
+```
+
+Modalities are shared infrastructure (`data/modalities/`) — they are not owned by any package and almost never change.
 
 ---
 
@@ -40,11 +60,24 @@ rope, box, ghd, jump_rope, open_space
 ```
 
 ### Movement Pattern IDs
+
+**Exercise `movement_patterns` field** — use these exact IDs:
 ```
 hip_hinge, squat, horizontal_push, horizontal_pull,
 vertical_push, vertical_pull, loaded_carry, rotation,
 hip_flexion, knee_extension, locomotion, ballistic,
-olympic_lift, isometric, aerobic_monostructural
+olympic_lift, isometric, aerobic_monostructural,
+farmer_carry, rack_carry, step_up
+```
+
+**Archetype `exercise_filter.movement_pattern` field** — these are *aliases* resolved at runtime, not raw pattern IDs. The resolver in `data/commons/movement_patterns.yaml` expands them to one or more of the exercise pattern IDs above:
+```
+squat       hinge / hip_hinge    carry / loaded_carry    rotation
+locomotion  ballistic            olympic / olympic_lift   isometric
+horizontal_push  vertical_push  horizontal_pull  vertical_pull
+press / push     pull            aerobic          swing
+clean       jerk    snatch    tgu    skill    ruck
+farmer_carry    rack_carry    step_up
 ```
 
 ### Training Phase IDs
@@ -85,18 +118,31 @@ Different goals using the same framework (e.g. concurrent training) can have dif
 **Why `slot_type` on archetype slots?**
 The generator needs to know how to represent a slot to the athlete (sets×reps vs. 20-min AMRAP vs. 400m run). Different slot types also have different scaling rules.
 
+**Why `expectations` on framework instead of goal?**
+Different frameworks have different time/volume requirements even when serving the same goal. Starting Strength needs 3×/week 60-min sessions; Uphill Athlete base phase needs 5×/week with varied session durations. The framework defines the actual training structure, so it owns the expectations. Goals can derive composite expectations when blending multiple frameworks.
+
+**Why `framework_groups[]` on philosophy?**
+Some methodologies prescribe sequential periodization phases (Uphill Athlete: transition → base → specific → taper), while others offer alternative frameworks for different goals or styles (Horsemen GPP, Wildman Kettlebell). The `framework_groups` array organizes frameworks by type:
+- `type: sequential` — Frameworks are phases that run in order. UI shows "Full Program (All Phases)" button. Each group has `canonical_phase_sequence` with phase durations and framework assignments.
+- `type: alternatives` — Frameworks are different approaches where the user picks one. UI shows framework picker grid.
+
+This structure allows a single philosophy to define both sequential programs AND alternative approaches (e.g., a base program plus specialized variants) in a single unified model.
+
+**Why `canonical_phase_sequence` inside framework groups?**
+For `type: sequential` groups, the philosophy defines the standard phase progression. Each phase entry specifies weeks, framework_id, and focus description. This allows the generator to construct multi-phase programs with correct framework selection per phase, and lets the UI show expected total duration (sum of all phase weeks). The sequence lives inside the group rather than at philosophy level to support philosophies with multiple sequential programs.
+
 ---
 
 ## Validating data files
 
-Once data population begins, validate YAML files against these schemas using any JSON Schema validator. Example with Python:
+Validate YAML files against these schemas using any JSON Schema validator. Example with Python:
 
 ```python
 import json, yaml
 from jsonschema import validate
 
 schema = json.load(open('docs/schemas/exercise.schema.json'))
-data   = yaml.safe_load(open('data/exercises/barbell.yaml'))
+data   = yaml.safe_load(open('data/packages/starting_strength/exercises.yaml'))
 
 for exercise in data['exercises']:
     validate(instance=exercise, schema=schema)

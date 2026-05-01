@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { Philosophy } from './types'
-import philosophiesData from '@/data/static/philosophies.json'
 
 export function usePhilosophies() {
   return useQuery({
     queryKey: queryKeys.philosophies.all,
-    queryFn: () => Promise.resolve(philosophiesData as Philosophy[]),
-    staleTime: Infinity,
+    queryFn: () => apiClient.get<Philosophy[]>('/philosophies') as unknown as Promise<Philosophy[]>,
+    staleTime: 60_000,
   })
 }

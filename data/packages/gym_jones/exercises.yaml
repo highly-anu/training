@@ -1,0 +1,2349 @@
+exercises:
+- id: run_interval
+  name: Interval Run (Zone 4–5)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires:
+  - run_tempo
+  unlocks:
+  - run_sprint
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - run_tempo
+  typical_volume:
+    sets: 6
+    distance_m: 400
+  sources:
+  - CrossFit Endurance
+  - Gym Jones
+  notes: 'Gym Jones: 5× 1-min all-out, 4-min active recovery; or 4× 800 yards at
+    10% faster than 2-mile PR pace. CrossFit Endurance pyramid intervals: 1-2-3-4-3-2-1
+    min at Zone 3–4. Work:rest ratio typically 1:2 to 1:4.
+
+    '
+- id: run_sprint
+  name: Sprint Run (Max Effort)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - power
+  equipment:
+  - open_space
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  - ballistic
+  requires:
+  - run_interval
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  - hamstring_strain
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - run_interval
+  typical_volume:
+    sets: 6
+    distance_m: 50
+  sources:
+  - CrossFit Endurance
+  - Gym Jones
+  notes: 'Flat-out maximal effort, ≤60 sec duration per rep. Gym Jones 3-mile time
+    trial is the primary run performance test. Sprint work builds top-end speed and
+    anaerobic capacity. Full warm-up mandatory; do not programme on days following
+    high lower-body strength volume.
+
+    '
+- id: row_easy
+  name: Easy Row (Zone 1–2)
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - rower
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks:
+  - row_threshold
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    duration_sec: 3600
+  sources:
+  - Gym Jones
+  - CrossFit
+  notes: 'Concept II rower rated highest for metabolic conditioning by CrossFit Journal.
+    Gym Jones recovery day format A: 60–120 min easy row at conversational pace.
+    Damper setting 4–6 for most athletes. Stroke rate 18–22 SPM at recovery pace.
+
+    '
+- id: row_threshold
+  name: Threshold Row (Zone 3–4)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - anaerobic_intervals
+  equipment:
+  - rower
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires:
+  - row_easy
+  unlocks:
+  - row_interval
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - row_easy
+  typical_volume:
+    sets: 4
+    duration_sec: 480
+  sources:
+  - Gym Jones
+  - CrossFit Endurance
+  notes: 'Gym Jones: 6× 500m at ~15 sec per 500m slower than PR pace, 3-min active
+    rest between pieces (1:2 work:rest). CrossFit Endurance threshold row format mirrors
+    run threshold protocol. Stroke rate 24–28 SPM.
+
+    '
+- id: row_interval
+  name: Interval Row (Zone 4–5)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - rower
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires:
+  - row_threshold
+  unlocks:
+  - row_500m_test
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - row_threshold
+  typical_volume:
+    sets: 15
+    duration_sec: 30
+  sources:
+  - Gym Jones
+  notes: 'Gym Jones format: 15× (30-sec row / 90-sec rest), with target distance
+    incrementing 1m per set (150m→165m). Alternatively: 4× 20-sec all-out / 10-sec
+    rest (Tabata row). High CNS demand; limit to 2× per week.
+
+    '
+- id: row_500m_test
+  name: 500m Row Time Trial
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  equipment:
+  - rower
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires:
+  - row_interval
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - row_interval
+  typical_volume:
+    sets: 1
+    distance_m: 500
+  sources:
+  - Gym Jones
+  - CrossFit
+  notes: 'Gym Jones benchmark: establish 500m PR pace; all interval training references
+    this pace. CrossFit benchmark Jackie includes 1000m row. All-out effort; use as
+    test 1–2× per training block, not as regular conditioning stimulus.
+
+    '
+- id: ruck
+  name: Ruck (Loaded Walk / Run)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - durability
+  equipment:
+  - ruck_pack
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_pack_weight
+    volume: increase_distance
+  scaling_down:
+  - run_easy
+  typical_volume:
+    duration_sec: 5400
+    distance_m: 10000
+  sources:
+  - Horsemen
+  - Uphill Athlete
+  - Gym Jones
+  notes: 'Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation, 30kg
+    pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
+    recovery endurance hike: 90–120 min with 20–30# pack. Progressions: distance
+    first, then load, then speed. Simple, durable training modality requiring minimal
+    equipment.
+
+    '
+- id: swim_easy
+  name: Easy Swim (Zone 1–2)
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - pool
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    duration_sec: 2400
+    distance_m: 1500
+  sources:
+  - Gym Jones
+  notes: 'Gym Jones recovery day format A includes swimming at conversational pace.
+    Zero-impact; excellent when lower-limb injuries are present. Requires pool access.
+    Technique-intensive; freestyle recommended for conditioning efficiency.
+
+    '
+- id: back_squat
+  name: Back Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - hip_hinge
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - front_squat
+  - box_squat
+  - overhead_squat
+  - barbell_complex
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  - lumbar_disc
+  progressions:
+    load: add_2.5_5kg_per_session_novice
+    volume: progress_3x5_to_5x5
+    complexity: front_squat
+  scaling_down:
+  - box_squat
+  - goblet_squat
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Foundational lower-body strength movement. Horsemen standard: 2×BW squat.
+    Starting Strength uses 3×5 linear progression as primary novice driver.
+
+    '
+  starting_load_kg:
+    novice: 60
+    intermediate: 90
+    advanced: 120
+    elite: 150
+  weekly_increment_kg: 2.5
+- id: front_squat
+  name: Front Squat
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - back_squat
+  - bracing_mechanics
+  unlocks:
+  - overhead_squat
+  - squat_clean
+  - hang_squat_clean
+  - thruster
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - wrist_injury
+  - shoulder_impingement
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: overhead_squat
+  scaling_down:
+  - back_squat
+  - box_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  - Starting Strength
+  notes: 'Featured prominently in Gym Jones Operator programs (10×2 @ 1-min rest)
+    and Horsemen strength cycles. Horsemen standard: 1.5×BW front squat. Requires
+    wrist mobility and upright torso.
+
+    '
+  starting_load_kg:
+    novice: 30
+    intermediate: 55
+    advanced: 80
+    elite: 110
+  weekly_increment_kg: 2.5
+- id: overhead_squat
+  name: Overhead Squat
+  category: barbell
+  modality:
+  - max_strength
+  - mobility
+  - movement_skill
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  requires:
+  - front_squat
+  - bracing_mechanics
+  unlocks:
+  - snatch
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  - lumbar_disc
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x3_to_5x3
+  scaling_down:
+  - front_squat
+  - kb_squat_goblet
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Gym Jones uses OHS 5×3 as primary strength movement and tests 1RM. Demands
+    significant shoulder mobility, thoracic extension, and ankle dorsiflexion. Referenced
+    in Gym Jones SOTS press variant.
+
+    '
+- id: deadlift
+  name: Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - romanian_deadlift
+  - sumo_deadlift
+  - deficit_deadlift
+  - power_clean
+  - barbell_row
+  - pendlay_row
+  - good_morning
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_session_novice
+    volume: progress_1x5_to_3x3
+    complexity: sumo_deadlift
+  scaling_down:
+  - kb_deadlift
+  - romanian_deadlift
+  typical_volume:
+    sets: 1
+    reps: 5
+  sources:
+  - Starting Strength
+  - Horsemen
+  - Gym Jones
+  notes: 'Horsemen standard: 2.5×BW deadlift. Starting Strength programs 1×5 as
+    novice primary. Gym Jones tests 1RM and builds training percentages from it (80%
+    common). King of posterior-chain loading; prerequisite for all Olympic lifting
+    derivatives.
+
+    '
+  starting_load_kg:
+    novice: 70
+    intermediate: 110
+    advanced: 150
+    elite: 190
+  weekly_increment_kg: 5.0
+- id: romanian_deadlift
+  name: Romanian Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - deadlift
+  unlocks:
+  - good_morning
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - Starting Strength
+  - Gym Jones
+  notes: 'Gym Jones programs SLDL (stiff-leg DL / RDL) at 95–135# for 3×10 in Accumulation
+    sessions. Emphasizes hamstring length and posterior-chain resilience. Hip hingeing
+    with a neutral spine under load; bar remains close to legs.
+
+    '
+  starting_load_kg:
+    novice: 40
+    intermediate: 75
+    advanced: 110
+    elite: 140
+  weekly_increment_kg: 2.5
+- id: floor_press
+  name: Floor Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires:
+  - bench_press
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  - wrist_injury
+  - tennis_elbow
+  - elbow_injury
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+  scaling_down:
+  - bench_press
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Gym Jones
+  notes: 'Pressing from the floor eliminates the leg drive and stretch reflex from
+    bench pressing. Used in Gym Jones programming; limits range of motion which can
+    be shoulder-friendly for some presentations. Removes lower-body contribution.
+
+    '
+  starting_load_kg:
+    novice: 35
+    intermediate: 50
+    advanced: 75
+    elite: 100
+  weekly_increment_kg: 2.5
+- id: push_press
+  name: Push Press
+  category: barbell
+  modality:
+  - max_strength
+  - power
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  requires:
+  - strict_press
+  unlocks:
+  - push_jerk
+  - split_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - wrist_injury
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+    complexity: push_jerk
+  scaling_down:
+  - strict_press
+  typical_volume:
+    sets: 4
+    reps: 4
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Hip dip and drive transfers leg power into the bar; arms lockout overhead.
+    Used in Gym Jones Six-Way Barbell Complex and Horsemen power-endurance workouts
+    (e.g. 5 push press while holding 45# bar for 400m).
+
+    '
+- id: push_jerk
+  name: Push Jerk
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  - olympic_lift
+  requires:
+  - push_press
+  unlocks:
+  - split_jerk
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - ankle_sprain
+  - wrist_injury
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_sets
+    complexity: split_jerk
+  scaling_down:
+  - push_press
+  - strict_press
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Drive bar overhead then dip under into quarter squat to catch. Horsemen
+    Olympic Day features jerk in wave patterns (3r/2r/1r) at 80–90%. Tests 1RM in
+    Horsemen power benchmarks.
+
+    '
+- id: barbell_row
+  name: Barbell Row (Bent Over)
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires:
+  - deadlift
+  - bracing_mechanics
+  unlocks:
+  - pendlay_row
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x5_to_5x5
+    complexity: pendlay_row
+  scaling_down:
+  - kb_row_single
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Featured in the Gym Jones / Horsemen Six-Way Barbell Complex (6 reps). Starting
+    Strength uses as the primary horizontal pull for novice programming. Hip-hinged
+    torso roughly parallel to floor; bar pulled into lower chest.
+
+    '
+- id: power_clean
+  name: Power Clean
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - hip_hinge
+  - deadlift
+  unlocks:
+  - hang_power_clean
+  - squat_clean
+  - hang_squat_clean
+  - barbell_complex
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: progress_3x3_to_5x3
+    complexity: squat_clean
+  scaling_down:
+  - hang_power_clean
+  - deadlift
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Starting Strength
+  - Gym Jones
+  - Horsemen
+  notes: 'Starting Strength programs 1×5 power clean as the primary upper-back and
+    power movement on alternate days. Gym Jones references clean triplets (EMOM 10
+    min). Horsemen Olympic Day programs cleans in wave patterns at 80–90%.
+
+    '
+  starting_load_kg:
+    novice: 40
+    intermediate: 60
+    advanced: 85
+    elite: 110
+  weekly_increment_kg: 2.5
+- id: hang_power_clean
+  name: Hang Power Clean
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires:
+  - power_clean
+  unlocks:
+  - hang_squat_clean
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+    complexity: hang_squat_clean
+  scaling_down:
+  - power_clean
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Pull initiates from hang position (above knee). Removes the first pull from
+    the floor, emphasizing the hip snap and turnover. Featured in Horsemen "Purple
+    Church" EMOM (3 power clean + 3 hang squat clean + 3 push press).
+
+    '
+  starting_load_kg:
+    novice: 25
+    intermediate: 45
+    advanced: 70
+    elite: 95
+  weekly_increment_kg: 2.5
+- id: squat_clean
+  name: Squat Clean
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  requires:
+  - power_clean
+  - front_squat
+  unlocks:
+  - hang_squat_clean
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - wrist_injury
+  - shoulder_instability
+  - hip_flexor_strain
+  - ankle_sprain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+  scaling_down:
+  - power_clean
+  - front_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Full clean receiving the bar in a full squat. Highest expression of the
+    clean movement. Demands front rack mobility, squat depth, and fast footwork. Horsemen
+    Olympic Day programs at 80–90% in wave patterns.
+
+    '
+- id: power_snatch
+  name: Power Snatch
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_clean
+  - bracing_mechanics
+  unlocks:
+  - hang_power_snatch
+  - snatch
+  - overhead_squat
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+    complexity: snatch
+  scaling_down:
+  - power_clean
+  - overhead_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Bar pulled from floor to overhead lockout, receiving above parallel. Horsemen
+    Olympic Day ("Snatch Your Face") programs snatch at 80–90% in waves. Prerequisite
+    to full snatch; builds the hip-to-overhead pathway.
+
+    '
+- id: hang_power_snatch
+  name: Hang Power Snatch
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_snatch
+  unlocks:
+  - snatch
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - lumbar_disc
+  - wrist_injury
+  progressions:
+    load: add_2.5kg_per_session
+    volume: add_sets
+    complexity: snatch
+  scaling_down:
+  - power_snatch
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Initiates from hang position above the knee. Removes the floor pull and
+    isolates the second pull and turnover. Useful for coaching overhead position and
+    hip extension timing without the complexity of the full first pull.
+
+    '
+- id: snatch
+  name: Snatch
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  - movement_skill
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires:
+  - power_snatch
+  - overhead_squat
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  - ankle_sprain
+  progressions:
+    load: add_2.5kg_per_session
+    volume: progress_3x2_to_5x2
+  scaling_down:
+  - power_snatch
+  - hang_power_snatch
+  - overhead_squat
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Full Olympic snatch: bar from floor to overhead in one movement, receiving
+    in a full squat. Most technically demanding barbell movement. Horsemen programs
+    at 80–90% in wave patterns. Tests 1RM for power benchmarks.
+
+    '
+- id: barbell_complex
+  name: Barbell Complex (Six-Way)
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - power
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - horizontal_pull
+  - olympic_lift
+  - vertical_push
+  - ballistic
+  requires:
+  - deadlift
+  - barbell_row
+  - power_clean
+  - front_squat
+  - push_press
+  - back_squat
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    load: add_5kg_per_set_progressive_loading
+    volume: add_rounds
+  scaling_down:
+  - barbell_row
+  - power_clean
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Six-movement barbell warm-up complex used by both Gym Jones and Horsemen:
+    Deadlift → Bent Row → Hang Clean → Front Squat → Push Press → Back Squat
+    (6 reps each, no rest between movements, bar does not touch the floor between
+    the row and clean). Performed for 3–4 sets with progressive loading: 75#–85#–95#–105#.
+    1–2 min rest between sets. Serves as both warm-up and conditioning stimulus.
+
+    '
+- id: thruster
+  name: Thruster
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - power
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  - ballistic
+  requires:
+  - front_squat
+  - push_press
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+  - front_squat
+  - push_press
+  - kb_squat_goblet
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Front squat into push press in a single continuous movement. The squat drives
+    the bar off the shoulders; the hips extend and press the bar overhead in one motion.
+    Featured in CrossFit benchmark "Fran" (21-15-9 thrusters + pull-ups) and Horsemen
+    breathing ladder format. One of the most metabolically demanding barbell movements.
+
+    '
+- id: push_up
+  name: Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks:
+  - push_up_ring
+  - push_up_clapping
+  - push_up_archer
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  progressions:
+    volume: increase_reps_per_set
+    complexity: push_up_ring
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    reps: 15
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Foundation horizontal push. Cue: full lockout at top, chest to floor at
+    bottom, elbows at 45 degrees. Scale up via ring, archer, or clapping variants.
+    Gym Jones programs 200+ reps in Murph-style sessions.
+
+    '
+- id: pull_up
+  name: Pull-Up (Overhand)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires:
+  - dead_hang
+  - scapular_control
+  unlocks:
+  - pull_up_weighted
+  - muscle_up_bar
+  - pull_up_ring
+  contraindicated_with:
+  - shoulder_instability
+  - shoulder_impingement
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+    complexity: pull_up_weighted
+  scaling_down:
+  - dead_hang
+  typical_volume:
+    sets: 5
+    reps: 5
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Pronated grip, full hang to chin over bar. Gym Jones programs pull-up ladders
+    (1-2-3-4-5-6 per set) accumulating 50+ reps. CrossFit benchmark Murph: 100 reps.
+    Prerequisite dead_hang ensures shoulder stability under passive load before active
+    pulling.
+
+    '
+- id: chin_up
+  name: Chin-Up (Supinated)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires:
+  - dead_hang
+  - scapular_control
+  unlocks:
+  - pull_up_weighted
+  contraindicated_with:
+  - shoulder_instability
+  - elbow_tendinopathy
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+    complexity: pull_up_weighted
+  scaling_down:
+  - dead_hang
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Supinated grip increases biceps contribution; generally accessible for beginners
+    due to stronger elbow flexor line. Useful substitute when pronated pull-up volume
+    is high to reduce elbow fatigue.
+
+    '
+- id: pull_up_weighted
+  name: Pull-Up (Weighted)
+  category: bodyweight
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires:
+  - pull_up
+  unlocks:
+  - muscle_up_bar
+  contraindicated_with:
+  - shoulder_instability
+  - shoulder_impingement
+  progressions:
+    load: add_5kg_per_cycle
+    volume: add_sets
+  scaling_down:
+  - pull_up
+  typical_volume:
+    sets: 5
+    reps: 3
+  sources:
+  - Gym Jones
+  notes: 'Belt, vest, or dumbbell between knees. Primary strength developer for vertical
+    pull. Gym Jones references adding load as the primary progression for the pull
+    (reduce rest periods secondary).
+
+    '
+- id: dip
+  name: Dip (Bar / Parallel Bars)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - parallettes
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks:
+  - dip_ring
+  - muscle_up_bar
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+    complexity: dip_ring
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Shoulder-width grip on bars or parallel bars. Slight forward lean loads
+    chest; upright torso emphasises triceps. Full range: shoulder below elbow at bottom.
+    CrossFit benchmark Elizabeth uses ring dips.
+
+    '
+- id: handstand_push_up
+  name: Handstand Push-Up (Wall)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - max_strength
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires:
+  - handstand_hold
+  unlocks:
+  - handstand_push_up_ring
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  progressions:
+    volume: increase_reps_per_set
+    complexity: handstand_push_up_ring
+  scaling_down:
+  - handstand_hold
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Chest-to-wall kick-up. Head to floor at bottom; full lockout at top. Deficit
+    HSPU (hands on parallettes) increases range of motion and difficulty. Kipping
+    variant increases volume capacity for metabolic conditioning; strict variant is
+    primary strength developer.
+
+    '
+- id: plank_hold
+  name: Plank Hold (FLR — Front Leaning Rest)
+  category: bodyweight
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks:
+  - side_plank
+  contraindicated_with:
+  - wrist_injury
+  progressions:
+    volume: increase_duration
+    load: add_weight_vest
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - Gym Jones
+  - CrossFit
+  notes: 'Gym Jones programs 300-second accumulated FLR (Front Leaning Rest) as a
+    core and shoulder endurance component. Maintain neutral spine; do not allow hip
+    sag. Progress toward 5 continuous minutes before loading.
+
+    '
+- id: sit_up
+  name: Sit-Up (Abmat)
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks:
+  - l_sit
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: increase_reps_per_set
+    complexity: l_sit
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'CrossFit benchmark Annie: 50-40-30-20-10 sit-ups. Gym Jones uses in accumulation
+    days as high-rep core work. Anchored foot variant increases hip flexor contribution;
+    abmat allows full lumbar extension at bottom.
+
+    '
+- id: squat_air
+  name: Air Squat
+  category: bodyweight
+  modality:
+  - movement_skill
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks:
+  - squat_jump
+  - pistol_squat
+  contraindicated_with:
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_reps_per_set
+    complexity: squat_jump
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'CrossFit fundamental movement. Rippetoe squatting standards apply: below
+    parallel, neutral spine, heels flat. Gym Jones warm-up protocol: 2×5 wall squats
+    then 2×10 air squats before loading. Chelsea benchmark: 15 squats per minute
+    EMOM 30 min.
+
+    '
+- id: squat_jump
+  name: Jump Squat
+  category: bodyweight
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires:
+  - squat_air
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+  scaling_down:
+  - squat_air
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Squat to full depth then explode vertically. Land soft, reabsorb through
+    hip/knee/ankle. Gym Jones programs tuck jumps and split jumps as variants. High-impact;
+    contraindicated post knee surgery.
+
+    '
+- id: lunge
+  name: Walking Lunge
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - movement_skill
+  equipment:
+  - none
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  requires: []
+  unlocks:
+  - lunge_jumping
+  - lunge_overhead
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+    complexity: lunge_overhead
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Alternating legs, stepping forward. Knee tracks over foot, front shin near-vertical.
+    Gym Jones programs 2×20m walking lunges in single-leg accessory work. Bodyweight
+    version is the baseline; progress to overhead or weighted variants.
+
+    '
+- id: lunge_jumping
+  name: Split Jump Lunge
+  category: bodyweight
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - none
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - squat
+  - ballistic
+  - locomotion
+  requires:
+  - lunge
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down:
+  - lunge
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - Gym Jones
+  notes: 'Plyometric lunge: explosive vertical jump from split stance, switch legs
+    mid-air. High metabolic and power demand. Gym Jones references split jumps in
+    lower body power circuits.
+
+    '
+- id: lunge_overhead
+  name: Overhead Lunge
+  category: bodyweight
+  modality:
+  - relative_strength
+  - durability
+  equipment:
+  - none
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - vertical_push
+  - locomotion
+  requires:
+  - lunge
+  - shoulder_stability
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - wrist_injury
+  progressions:
+    load: add_weight_overhead
+    volume: increase_reps_per_set
+  scaling_down:
+  - lunge
+  typical_volume:
+    sets: 3
+    reps: 12
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Arms locked overhead with weight or simply arms raised. Gymn Jones programs
+    45lb bar overhead during 400m lunge walks as a power-endurance challenge. Without
+    load this is a mobility and stability developer.
+
+    '
+- id: burpee
+  name: Burpee
+  category: bodyweight
+  modality:
+  - mixed_modal_conditioning
+  - anaerobic_intervals
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - squat
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 60
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Gym Jones accumulation day benchmark: 60 burpees as final element of "Those
+    Burpees Suck" circuit. High metabolic cost, full-body demand. Standard: chest-to-floor,
+    jump-and-clap overhead at top.
+
+    '
+- id: dead_hang
+  name: Dead Hang
+  category: bodyweight
+  modality:
+  - durability
+  - rehab
+  equipment:
+  - pull_up_bar
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - isometric
+  requires: []
+  unlocks:
+  - pull_up
+  - chin_up
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - Gym Jones
+  - CrossFit
+  notes: 'Passive hang, shoulders fully elevated (shrug into ears) or active (scapular
+    depression). Gym Jones programs 300-second accumulated dead hang on accumulation
+    days. Decompresses spine; builds grip and shoulder passive stability prerequisite
+    for pulling movements.
+
+    '
+- id: box_jump
+  name: Box Jump
+  category: bodyweight
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  progressions:
+    load: increase_box_height
+    volume: increase_reps_per_set
+  scaling_down:
+  - squat_jump
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'Standard CrossFit box: 24" male, 20" female. Gym Jones uses 20–24" boxes
+    in circuits (e.g., 30 box jumps in "Those Burpees Suck"). Land softly in partial
+    squat; step down (do not jump down) to protect Achilles under fatigue. Jump-and-land
+    variant vs. rebound variant — program intentionally.
+
+    '
+- id: man_maker
+  name: Man Maker (Bodyweight / Dumbbell)
+  category: bodyweight
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - horizontal_pull
+  - squat
+  requires:
+  - push_up
+  - squat_air
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - knee_meniscus_post_op
+  progressions:
+    load: increase_dumbbell_weight
+    volume: add_sets
+  scaling_down:
+  - burpee
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - CrossFit
+  - Gym Jones
+  notes: 'With DBs: plank on DBs → push-up → renegade row (each arm) → stand
+    up into squat → press. Each rep is a compound sequence. Gym Jones programs DB
+    complexes incorporating this movement pattern. Scale load by reducing DB weight;
+    bodyweight version removes push-up row but retains squat + press.
+
+    '
+- id: farmer_carry_barbell
+  name: Farmer Carry (Barbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - farmer_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - rack_carry_barbell
+  - overhead_carry_barbell
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - farmer_carry_db
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Horsemen
+  - Gym Jones
+  notes: 'Barbell held at thigh in each hand (trap-bar if available) or one barbell
+    in each hand. Higher load ceiling than KB or DB variant; useful for max-load carries.
+    Maintain neutral spine; no lateral lean. Gym Jones programs farmer carry as a
+    loaded carry accessory.
+
+    '
+- id: farmer_carry_db
+  name: Farmer Carry (Dumbbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - dumbbell
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - farmer_carry
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - farmer_carry_kb
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_dumbbell_weight
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    distance_m: 30
+  sources:
+  - Gym Jones
+  - CrossFit
+  notes: 'Entry-level farmer carry using dumbbells. Lower load ceiling than KB or
+    barbell but accessible with standard gym equipment. Technique and breathing mechanics
+    same as KB variant. Gym Jones uses DB carries in circuit and accumulation days.
+
+    '
+- id: overhead_carry_barbell
+  name: Overhead Carry (Barbell)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - vertical_push
+  - isometric
+  requires:
+  - rack_carry_barbell
+  - overhead_squat
+  - shoulder_stability
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_distance
+  scaling_down:
+  - overhead_carry_kb
+  typical_volume:
+    sets: 3
+    distance_m: 20
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Barbell locked out overhead while walking. Gym Jones programs overhead hold
+    static (300-sec accumulated) as a core/shoulder endurance component; overhead
+    carry is the ambulatory progression. High scapular and rotator cuff demand. Requires
+    solid overhead squat mechanics before loading.
+
+    '
+- id: suitcase_carry
+  name: Suitcase Carry (Unilateral)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  requires:
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  - lumbar_spondylolysis
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance
+  scaling_down:
+  - farmer_carry_kb
+  typical_volume:
+    sets: 4
+    distance_m: 30
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Single implement (KB, DB, or heavy object) carried on one side while maintaining
+    a vertical torso. Primary anti-lateral-flexion demand on the contralateral oblique/quadratus
+    lumborum. Gym Jones references suitcase carry in loaded carry accessory work.
+    Alternate sides each set.
+
+    '
+- id: wall_squat
+  name: Wall Squat (Mobility Drill)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks:
+  - single_leg_squat_box
+  contraindicated_with: []
+  progressions:
+    depth: increase_range_of_motion
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - Gym Jones
+  notes: 'Gym Jones warm-up staple used in virtually every strength and circuit session.
+    Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking
+    toes; contact the wall with knees to enforce vertical shin position and upright
+    torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening,
+    and thoracic extension. Not a strength exercise — a diagnostic and mobility
+    drill. 2–3 sets of 5 before any lower body session.
+
+    '
+- id: single_leg_squat_box
+  name: Single-Leg Squat (Box)
+  category: bodyweight
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - open_space
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - squat
+  requires:
+  - squat_pattern
+  unlocks:
+  - pistol_squat
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  progressions:
+    volume: increase_sets
+    complexity: lower_box_height
+  scaling_down:
+  - back_squat
+  typical_volume:
+    sets: 5
+    reps: 5
+  sources:
+  - Gym Jones
+  notes: 'Standing on a 18–20 inch box, lower on one leg until the non-working heel
+    touches the ground, then stand. Uses the box to limit depth and provide a proprioceptive
+    endpoint — more accessible than a full pistol squat. Gym Jones Operator Fitness
+    I and II primary single-leg strength exercise, performed 5×5. Eliminates assistance
+    from the trailing leg. Builds posterior chain, quad, and hip stability for unilateral
+    movement demands. Progress by lowering the box height toward full pistol range.
+
+    '
+- id: weighted_step_up
+  name: Weighted Step-Up
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - plates
+  - open_space
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - squat
+  - step_up
+  requires:
+  - squat_pattern
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  progressions:
+    load: add_5kg_per_session
+    volume: increase_sets
+  scaling_down:
+  - single_leg_squat_box
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  notes: 'Barbell on back (or DBs at side), step up onto a 20-inch box. Eliminate
+    all assistance from the trailing leg — this is a true single-leg lift. Gym Jones
+    Operator Fitness prescription: work up to heavy single (95–135 lb) then perform
+    5×2 each side at that load, rest 60 sec between sets. Higher transfer to unilateral
+    field demands (stairs, slopes, climbing) than bilateral squat alone. Emphasis
+    on single-leg deployment fitness.
+
+    '
+- id: bear_crawl
+  name: Bear Crawl
+  category: bodyweight
+  modality:
+  - durability
+  - mixed_modal_conditioning
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  progressions:
+    volume: increase_distance
+    load: weighted_vest
+  scaling_down:
+  - plank_hold
+  typical_volume:
+    sets: 3
+    distance_m: 20
+  sources:
+  - Gym Jones
+  notes: 'Quadruped locomotion — hips close to the ground, opposite limbs moving
+    simultaneously. Gym Jones uses bear crawl in conditioning circuits and as a loaded
+    carry accessory (DB bear crawl: hands on dumbbells, hop feet forward). Builds
+    shoulder stability, hip flexor endurance, and total-body coordination. Weighted
+    version: push DBs forward, hop feet up in plank position. Distance-based or time-based.
+
+    '
+- id: ring_support_hold
+  name: Ring Support Hold (FLR on Rings)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - durability
+  equipment:
+  - rings
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - vertical_push
+  requires:
+  - push_pattern
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  progressions:
+    volume: increase_duration
+    complexity: turn_rings_out
+  scaling_down:
+  - plank_hold
+  typical_volume:
+    sets: 5
+    duration_sec: 60
+  sources:
+  - Gym Jones
+  notes: 'Arms straight, rings turned out at bottom of dip position, body held in
+    a tight plank. The ring instability dramatically increases rotator cuff and serratus
+    anterior demand vs. fixed bar support. Gym Jones uses "300 seconds of FLR (Front
+    Leaning Rest)" accumulated across sets as a core and shoulder endurance block.
+    Target: 60 seconds per set × 5 sets. Turn rings out progressively to increase
+    scapular stability demand.
+
+    '
+- id: kb_swing_breathing_ladder
+  name: KB Swing Breathing Ladder (1-20-1)
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - power
+  equipment:
+  - kettlebell
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires:
+  - kb_swing_two_hand
+  - bracing_mechanics
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    load: increase_bell_weight
+    volume: multiple_rounds
+  scaling_down:
+  - kb_swing_two_hand
+  typical_volume:
+    ladder_top: 20
+    reps_total: 400
+  sources:
+  - Gym Jones
+  notes: 'Gym Jones breathing ladder protocol: perform 1 KB swing, take 1 breath,
+    perform 2 swings, take 2 breaths... climb to 20, then descend back to 1. Total:
+    ~400 swings. The breathing is the rest — breath count equals rep count, enforcing
+    complete oxygen recovery between sets. KB weight: 24 kg (53 lb) for trained athletes.
+    The breathing ladder develops extraordinary KB endurance and trains the ability
+    to recover during work. Mark Twight: "The breathing ladder is a test of will as
+    much as fitness." Warm up with the same bell at lower rep counts before starting
+    the full ladder.
+
+    '
+- id: kb_swing_two_hand
+  name: Kettlebell Swing (Two-Hand)
+  category: kettlebell
+  modality:
+  - power
+  - aerobic_base
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - kb_swing_single_arm
+  - kb_deadlift
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration_or_reps
+    complexity: kb_swing_single_arm
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - Wildman
+  - Pavel
+  - Horsemen
+  - Gym Jones
+  notes: 'Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder
+    height on the backswing hip snap. Horsemen warm-up complex: 1 min two-hand swings.
+    Gym Jones breathing ladder uses swings 1–20 at 53#. Wildman progression begins
+    here. Two hands on the bell; posterior-chain power driver.
+
+    '
+- id: kb_squat_goblet
+  name: Kettlebell Goblet Squat
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - mobility
+  equipment:
+  - kettlebell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires:
+  - hip_hinge
+  unlocks:
+  - kb_squat_double
+  - kb_clean_single
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+    complexity: kb_squat_double
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Bell held at chest level with both hands, elbows track inside knees. Gym
+    Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching
+    tool for squat mechanics. Low technical demand; appropriate as first-session squat
+    pattern.
+
+    '
+- id: kb_tgu
+  name: Kettlebell Turkish Get-Up
+  category: kettlebell
+  modality:
+  - movement_skill
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  - rotation
+  - isometric
+  requires:
+  - bracing_mechanics
+  unlocks:
+  - kb_overhead_carry
+  - kb_rack_carry
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - neck_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_side
+  scaling_down:
+  - kb_halo
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Horsemen
+  - Wildman
+  notes: 'From lying to standing with bell locked overhead throughout; reverse to
+    return. Foundational Wildman movement. Gym Jones programs 100 TGUs at 15# (recovery
+    day) and 5–6 reps at 25# (strength day core work with 60-sec FLR). Horsemen
+    SMMF: 100 get-ups at 35# KB (15–20 min). Unlocks all overhead carries. Tests
+    shoulder stability, hip mobility, and whole-body integration.
+
+    '
+- id: kb_step_up
+  name: Kettlebell Step-Up (Single-Arm)
+  category: kettlebell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - kettlebell
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - step_up
+  - squat
+  requires:
+  - squat_pattern
+  unlocks:
+  - weighted_step_up
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - knee_osteoarthritis
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+    complexity: weighted_step_up
+  scaling_down:
+  - single_leg_squat_box
+  typical_volume:
+    sets: 5
+    reps: 2
+  sources:
+  - Gym Jones
+  - Dan John
+  notes: 'Single-arm kettlebell step-up. Hold one KB at the chest (rack) or goblet
+    position. Drive through the heel of the lead foot; no assistance from the trailing
+    leg. 5×2 each side at a heavy bell. KB step-up approximates the Gym Jones loaded
+    step-up protocol when a barbell is unavailable. Box height governs difficulty
+    — a higher box increases unilateral demand.
+
+    '
+- id: kb_row_single
+  name: Kettlebell Row (Single-Arm)
+  category: kettlebell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires:
+  - kb_deadlift
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - tennis_elbow
+  - golfers_elbow
+  progressions:
+    load: increase_bell_weight
+    volume: increase_reps_per_set
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - Gym Jones
+  notes: 'Hip-hinged torso; opposite hand braced on knee or bench. Bell pulled to
+    hip. Gym Jones programs one-arm row in circuit days. Anti-rotation demand develops
+    lateral core stability absent from bilateral barbell rows.
+
+    '
+- id: kb_farmer_carry
+  name: Kettlebell Farmer Carry (Single)
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_deadlift
+  unlocks:
+  - kb_farmer_carry_double
+  - kb_suitcase_carry
+  contraindicated_with:
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Single kettlebell carried in one hand at side for distance or time. Asymmetric
+    load demands lateral core stability. Gym Jones programs farmer carry in loaded
+    carry circuits. Foundation for all loaded carry variants.
+
+    '
+- id: kb_farmer_carry_double
+  name: Kettlebell Farmer Carry (Double)
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_farmer_carry
+  unlocks: []
+  contraindicated_with:
+  - hip_flexor_strain
+  - lumbar_disc
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_farmer_carry
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Two kettlebells carried bilaterally for distance or time. Featured in AMRAP
+    kettlebell workouts (20m farmer''s walk between sets). Develops grip endurance,
+    trapezius, and lateral core under bilateral load.
+
+    '
+- id: kb_suitcase_carry
+  name: Kettlebell Suitcase Carry
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - locomotion
+  requires:
+  - kb_farmer_carry
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_distance_m
+  scaling_down:
+  - kb_farmer_carry
+  typical_volume:
+    sets: 4
+    distance_m: 40
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: 'Identical to farmer carry but emphasizes anti-lateral-flexion: the athlete
+    resists the bell pulling the torso sideways. Gym Jones programs suitcase carry
+    in loaded carry circuits. Trains the quadratus lumborum and lateral core in a
+    functional walking pattern.
+
+    '

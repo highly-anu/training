@@ -112,16 +112,6 @@ export function PhilosophyDetail({ philosophy: p, navigateTo, onOpenInOntology }
             </div>
           ) : null}
 
-          {connections.goals?.length ? (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Goals using this philosophy</p>
-              <div className="flex flex-wrap gap-1">
-                {connections.goals.map(id => (
-                  <CrossRefBadge key={id} label={id} type="goals" id={id} navigateTo={navigateTo} />
-                ))}
-              </div>
-            </div>
-          ) : null}
         </div>
       )}
     </div>
