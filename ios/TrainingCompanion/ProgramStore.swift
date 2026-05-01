@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 @MainActor
@@ -33,6 +34,7 @@ final class ProgramStore: ObservableObject {
         schedule[fromDay] = fromSessions
         schedule[toDay] = toSessions
         week = ProgramWeek(weekNumber: week.weekNumber,
+                           weekInPhase: week.weekInPhase,
                            isDeload: week.isDeload,
                            phase: week.phase,
                            schedule: schedule)
@@ -59,6 +61,7 @@ final class ProgramStore: ObservableObject {
         var schedule = week.schedule
         schedule[day] = sessions
         week = ProgramWeek(weekNumber: week.weekNumber,
+                           weekInPhase: week.weekInPhase,
                            isDeload: week.isDeload,
                            phase: week.phase,
                            schedule: schedule)

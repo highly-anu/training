@@ -57,6 +57,11 @@ final class APIClient {
         return try? JSONDecoder().decode(ServerProgram.self, from: data)
     }
 
+    func fetchArchetypes() async throws -> [AppArchetype] {
+        let data = try await get("/archetypes")
+        return (try? JSONDecoder().decode([AppArchetype].self, from: data)) ?? []
+    }
+
     func saveWorkoutLog(sessionKey: String, log: [String: Any]) async throws {
         guard let body = try? JSONSerialization.data(withJSONObject: log) else { return }
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
@@ -651,7 +656,7 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        try addAuth(to: &request)
+        try await addAuth(to: &request)
         request.httpBody = try JSONEncoder().encode(body)
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)

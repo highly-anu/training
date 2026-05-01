@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var programStore: ProgramStore
 
     @State private var weekIndex: Int = 0
 
@@ -48,8 +49,9 @@ struct ProgramView: View {
                 ProgramSettingsSheet().environmentObject(appState)
             }
             .sheet(item: $selectedDay) { sel in
-                DaySessionsSheet(week: appState.allWeeks[sel.weekIndex], dayName: sel.dayName)
+                DaySessionsSheet(week: appState.allWeeks[sel.weekIndex], weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
+                    .environmentObject(programStore)
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
@@ -393,9 +395,11 @@ struct ProgramView: View {
 
 private struct DaySessionsSheet: View {
     let week: ProgramWeek
+    let weekIndex: Int
     let dayName: String
 
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
     @State private var selectedSession: SessionWithKey? = nil
 
@@ -408,7 +412,7 @@ private struct DaySessionsSheet: View {
                     let key = appState.makeSessionKey(
                         weekNumber: week.weekNumber, dayName: dayName, index: i)
                     Button {
-                        selectedSession = SessionWithKey(session: session, key: key)
+                        selectedSession = SessionWithKey(session: session, key: key, sessionIndex: i)
                     } label: {
                         sessionRow(session, key: key)
                     }
@@ -421,8 +425,11 @@ private struct DaySessionsSheet: View {
                 ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
             }
             .sheet(item: $selectedSession) { item in
-                SessionDetailView(session: item.session, sessionKey: item.key)
+                SessionDetailView(session: item.session, sessionKey: item.key,
+                                  weekIndex: weekIndex, dayName: dayName,
+                                  sessionIndex: item.sessionIndex)
                     .environmentObject(appState)
+                    .environmentObject(programStore)
             }
         }
     }

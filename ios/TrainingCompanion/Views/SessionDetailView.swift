@@ -3,14 +3,20 @@ import SwiftUI
 struct SessionDetailView: View {
     let session: ProgramSession
     let sessionKey: String
+    var weekIndex: Int? = nil
+    var dayName: String? = nil
+    var sessionIndex: Int? = nil
 
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
 
     @State private var notes: String = ""
     @State private var fatigueRating: Double = 5
     @State private var showFatigue = false
     @State private var isSaving = false
+    @State private var showMove = false
+    @State private var showReplace = false
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -19,9 +25,8 @@ struct SessionDetailView: View {
             List {
                 headerSection
                 exercisesSection
-                if isDone {
-                    notesSection
-                }
+                if canEditProgram { actionsSection }
+                if isDone { notesSection }
             }
             .navigationTitle(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
             .navigationBarTitleDisplayMode(.inline)
@@ -35,10 +40,44 @@ struct SessionDetailView: View {
                     .padding()
                     .background(.background)
             }
+            .sheet(isPresented: $showMove) {
+                if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
+                   let api = appState.api,
+                   let week = programStore.serverProgram?.currentProgram?.weeks[safe: wi] {
+                    MoveWorkoutSheet(api: api, weekIndex: wi, fromDay: dn,
+                                    sessionIndex: si, weekSchedule: week.schedule)
+                        .environmentObject(programStore)
+                }
+            }
+            .sheet(isPresented: $showReplace) {
+                if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
+                   let api = appState.api {
+                    ReplaceWorkoutSheet(api: api, weekIndex: wi, dayName: dn,
+                                       sessionIndex: si, session: session)
+                        .environmentObject(programStore)
+                }
+            }
             .task {
                 if let log = appState.sessionLogs[sessionKey] {
                     notes = log.notes ?? ""
                 }
+            }
+        }
+    }
+
+    // MARK: - Program Actions
+
+    private var canEditProgram: Bool {
+        weekIndex != nil && dayName != nil && sessionIndex != nil && appState.api != nil
+    }
+
+    private var actionsSection: some View {
+        Section("Workout") {
+            Button { showMove = true } label: {
+                Label("Move to Another Day", systemImage: "arrow.left.arrow.right")
+            }
+            Button { showReplace = true } label: {
+                Label("Replace Workout", systemImage: "arrow.2.circlepath")
             }
         }
     }

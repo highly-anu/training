@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import psycopg2.extras as _pg_extras
 
 
 def init_db() -> None:
@@ -14,7 +15,7 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 for w in workouts:
                     hr         = w.get('heartRate') or {}
                     dist       = w.get('distance') or {}
@@ -70,7 +71,7 @@ def delete_workout(user_id: str, workout_id: str) -> None:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'DELETE FROM workouts WHERE id = %s AND user_id = %s',
                     (workout_id, user_id),
@@ -88,7 +89,7 @@ def get_workout(user_id: str, workout_id: str) -> dict | None:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'SELECT * FROM workouts WHERE id = %s AND user_id = %s',
                     (workout_id, user_id),
@@ -103,7 +104,7 @@ def get_workouts(user_id: str) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'SELECT * FROM workouts WHERE user_id = %s ORDER BY date DESC',
                     (user_id,),
@@ -158,7 +159,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
     timeline = log.get('exerciseTimeline')
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 exercises_raw = log.get('exercises', {})
                 if isinstance(exercises_raw, str):
                     try:
@@ -209,7 +210,7 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     '''SELECT sl.session_key, sl.completed_at, sl.source, sl.notes,
                               sl.fatigue_rating, sl.avg_hr, sl.peak_hr,
@@ -243,7 +244,7 @@ def get_session_logs(user_id: str) -> dict:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('SELECT * FROM session_logs WHERE user_id = %s', (user_id,))
                 rows = cur.fetchall()
         result = {}
@@ -281,7 +282,7 @@ def upsert_daily_bio(user_id: str, entry: dict) -> None:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('''
                     INSERT INTO daily_bio (
                         date, user_id, resting_hr, hrv, notes,
@@ -331,7 +332,7 @@ def get_synced_dates(user_id: str) -> list[str]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     "SELECT date FROM daily_bio WHERE user_id = %s AND source = 'apple_watch'",
                     (user_id,),
@@ -347,7 +348,7 @@ def get_recent_bio_logs(user_id: str, days: int = 90) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'SELECT * FROM daily_bio WHERE user_id = %s '
                     'AND date >= CURRENT_DATE - %s::interval '
@@ -379,7 +380,7 @@ def get_daily_bio(user_id: str) -> dict:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('SELECT * FROM daily_bio WHERE user_id = %s', (user_id,))
                 rows = cur.fetchall()
         result = {}
@@ -425,7 +426,7 @@ def upsert_match(user_id: str, match: dict) -> None:
     session_key = match['sessionKey']
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 # Ensure the workout row exists so FK constraints are satisfied.
                 # If the parse-time upsert failed silently, this creates a minimal stub.
                 cur.execute('''
@@ -457,7 +458,7 @@ def get_matches(user_id: str) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('SELECT * FROM workout_matches WHERE user_id = %s', (user_id,))
                 rows = cur.fetchall()
         return [
@@ -479,7 +480,7 @@ def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'INSERT INTO performance_logs (user_id, benchmark_id, value, logged_at) '
                     'VALUES (%s, %s, %s, %s)',
@@ -494,7 +495,7 @@ def delete_performance_log(user_id: str, benchmark_id: str) -> None:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'DELETE FROM performance_logs WHERE benchmark_id = %s AND user_id = %s',
                     (benchmark_id, user_id),
@@ -509,7 +510,7 @@ def get_performance_logs(user_id: str) -> dict:
     from src.db import get_conn
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
                     'SELECT benchmark_id, value, logged_at FROM performance_logs '
                     'WHERE user_id = %s ORDER BY logged_at',
