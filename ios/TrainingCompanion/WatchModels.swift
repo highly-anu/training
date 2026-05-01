@@ -5,18 +5,18 @@ import Foundation
 
 // MARK: - Server-side program (decoded from GET /api/user/program)
 
-struct ServerProgram: Decodable {
+struct ServerProgram: Codable {
     let currentProgram: GeneratedProgram?
     let programStartDate: String?   // "YYYY-MM-DD"
     let eventDate: String?
     let sourceGoalIds: [String]
 }
 
-struct GeneratedProgram: Decodable {
+struct GeneratedProgram: Codable {
     let weeks: [ProgramWeek]
 }
 
-struct ProgramWeek: Decodable {
+struct ProgramWeek: Codable {
     let weekNumber: Int
     let weekInPhase: Int?
     let isDeload: Bool
@@ -33,7 +33,7 @@ struct ProgramWeek: Decodable {
     }
 }
 
-struct ProgramSession: Decodable {
+struct ProgramSession: Codable {
     let modality: String
     let archetype: ProgramArchetype?
     let isDeload: Bool
@@ -47,7 +47,7 @@ struct ProgramSession: Decodable {
     }
 }
 
-struct ProgramArchetype: Decodable {
+struct ProgramArchetype: Codable {
     let id: String
     let name: String
     let durationEstimateMinutes: Int?
@@ -61,7 +61,7 @@ struct ProgramArchetype: Decodable {
     }
 }
 
-struct ProgramExerciseAssignment: Decodable {
+struct ProgramExerciseAssignment: Codable {
     let exercise: ProgramExercise?
     let load: ProgramLoad
     let slotRole: String?
@@ -85,7 +85,7 @@ struct ProgramExerciseAssignment: Decodable {
     }
 }
 
-struct ProgramExercise: Decodable {
+struct ProgramExercise: Codable {
     let id: String
     let name: String
     let category: String?
@@ -93,7 +93,7 @@ struct ProgramExercise: Decodable {
 }
 
 /// Flexible load struct — not all fields are present for every slot_type.
-struct ProgramLoad: Decodable {
+struct ProgramLoad: Codable {
     let sets: Int?
     let reps: AnyCodable?           // Int or String ("8-10")
     let weightKg: Double?
@@ -124,7 +124,7 @@ struct ProgramLoad: Decodable {
 }
 
 /// Lets us decode reps as either an Int or a String without throwing.
-struct AnyCodable: Decodable {
+struct AnyCodable: Codable {
     let stringValue: String?
     let intValue: Int?
 
@@ -140,6 +140,59 @@ struct AnyCodable: Decodable {
     }
 
     var displayString: String { stringValue ?? "" }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        if let i = intValue { try c.encode(i) }
+        else if let s = stringValue { try c.encode(s) }
+        else { try c.encodeNil() }
+    }
+}
+
+// MARK: - Generate session request (POST /api/sessions/generate)
+
+struct GenerateSessionConstraints: Encodable {
+    let sessionTimeMinutes: Int
+    let fatigueState: String
+    enum CodingKeys: String, CodingKey {
+        case sessionTimeMinutes = "session_time_minutes"
+        case fatigueState       = "fatigue_state"
+    }
+}
+
+struct GenerateSessionRequest: Encodable {
+    let primarySources: [String]
+    let modality: String
+    let phase: String
+    let weekInPhase: Int
+    let isDeload: Bool
+    let constraints: GenerateSessionConstraints
+    let archetypeId: String?
+    enum CodingKeys: String, CodingKey {
+        case primarySources = "primary_sources"
+        case modality, phase
+        case weekInPhase    = "week_in_phase"
+        case isDeload       = "is_deload"
+        case constraints
+        case archetypeId    = "archetype_id"
+    }
+}
+
+// MARK: - Save program payload (PUT /api/user/program)
+
+struct UserProgramSavePayload: Encodable {
+    let currentProgram: GeneratedProgram?
+    let programStartDate: String?
+    let eventDate: String?
+    let sourceGoalIds: [String]
+    let sourceGoalWeights: [String: Double]
+    enum CodingKeys: String, CodingKey {
+        case currentProgram    = "current_program"
+        case programStartDate  = "program_start_date"
+        case eventDate         = "event_date"
+        case sourceGoalIds     = "source_goal_ids"
+        case sourceGoalWeights = "source_goal_weights"
+    }
 }
 
 // MARK: - Watch payload (sent from iPhone to Watch via WCSession)
