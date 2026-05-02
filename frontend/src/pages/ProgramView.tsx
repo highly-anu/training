@@ -111,7 +111,7 @@ export function ProgramView() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
         exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-        className="p-6"
+        className="flex h-full items-center justify-center p-6"
       >
         <EmptyState
           title="No program generated yet"
@@ -133,26 +133,27 @@ export function ProgramView() {
     >
       {/* Header */}
       <div className="border-b px-6 py-4 space-y-3 shrink-0">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <CalendarDays className="size-5 text-primary shrink-0" />
           <h1 className="text-lg font-semibold">{programTitle}</h1>
-          <span className="text-muted-foreground/50 text-xs select-none">·</span>
-          <span className="text-xs text-muted-foreground">{totalWeeks}-week program</span>
-          <div className="ml-4 flex gap-1">
-            {(['overview', 'calendar'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  'px-3 py-1 rounded text-xs border transition-colors capitalize',
-                  activeTab === tab
-                    ? 'bg-primary/15 border-primary/40 text-primary'
-                    : 'border-border text-muted-foreground hover:bg-muted'
-                )}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="ml-4 flex items-center gap-2">
+            <div className="w-px h-4 bg-border/60 shrink-0" />
+            <div className="flex items-center gap-1">
+              {(['overview', 'calendar'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    'px-3 py-1 rounded text-xs border transition-colors capitalize',
+                    activeTab === tab
+                      ? 'bg-primary/15 border-primary/40 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button
@@ -187,7 +188,7 @@ export function ProgramView() {
       {/* Body */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'calendar' ? (
-          <div className="p-6 space-y-8">
+          <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
             {program.weeks.map((weekData, idx) => (
               <div
                 key={weekData.week_number}

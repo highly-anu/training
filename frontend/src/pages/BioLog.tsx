@@ -1,12 +1,26 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { format, parseISO } from 'date-fns'
 import { Activity, Watch } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { DailyCheckin } from '@/components/bio/DailyCheckin'
 import { HRTrendChart } from '@/components/bio/HRTrendChart'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { SleepStageChart } from '@/components/bio/SleepStageChart'
-import { Separator } from '@/components/ui/separator'
 import { useBioStore } from '@/store/bioStore'
+import type { DailyBioLog } from '@/api/types'
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type SubTab = 'today' | 'trends' | 'history'
+
+const SUB_TABS: { id: SubTab; label: string }[] = [
+  { id: 'today',   label: 'Today'   },
+  { id: 'trends',  label: 'Trends'  },
+  { id: 'history', label: 'History' },
+]
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function fmtDuration(minutes: number): string {
   const h = Math.floor(minutes / 60)
@@ -22,49 +36,53 @@ function fmtTime(iso: string): string {
   }
 }
 
-export function BioLog() {
-  const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
-  const recentLogs = Object.values(dailyBioLogs)
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 14)
+// ── Tab Selector ───────────────────────────────────────────────────────────────
 
-  const hasSleepData = Object.values(dailyBioLogs).some((l) => l.sleepDurationMin != null)
-
-  // Last night = most recent log with sleep data
-  const lastSleepLog = Object.values(dailyBioLogs)
-    .filter((l) => l.sleepDurationMin != null)
-    .sort((a, b) => b.date.localeCompare(a.date))[0]
-
+function TabSelector({
+  active,
+  onChange,
+}: {
+  active: SubTab
+  onChange: (t: SubTab) => void
+}) {
   return (
-    <motion.div
-      key="bio-log"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-      className="flex h-full flex-col overflow-hidden"
-    >
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Activity className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Bio Log</h1>
-        <span className="text-muted-foreground/50 text-xs select-none">·</span>
-        <span className="text-xs text-muted-foreground">Readiness · Sleep · HRV</span>
-      </div>
+    <div className="flex items-center gap-1">
+      {SUB_TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onChange(tab.id)}
+          className={cn(
+            'px-3 py-1 text-xs rounded border transition-colors',
+            tab.id === active
+              ? 'bg-primary/15 border-primary/40 text-primary'
+              : 'border-border text-muted-foreground hover:bg-muted'
+          )}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
+// ── Today Tab ─────────────────────────────────────────────────────────────────
+
+function TodayTab({ lastSleepLog }: { lastSleepLog: DailyBioLog | undefined }) {
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <DailyCheckin />
         <ReadinessWidget />
       </div>
 
-      <Separator />
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Last Night's Sleep
+        </h2>
 
-      {/* Sleep summary card */}
-      {lastSleepLog ? (
-        <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Last Night's Sleep
-          </h2>
+        {lastSleepLog ? (
           <div className="rounded-xl border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -84,7 +102,6 @@ export function BioLog() {
               )}
             </div>
 
-            {/* Stage breakdown */}
             {(lastSleepLog.deepSleepMin != null || lastSleepLog.remSleepMin != null) && (
               <div className="flex flex-wrap gap-2">
                 {lastSleepLog.deepSleepMin != null && (
@@ -110,7 +127,6 @@ export function BioLog() {
               </div>
             )}
 
-            {/* SpO2 + respiratory rate */}
             {(lastSleepLog.spo2Avg != null || lastSleepLog.respiratoryRateAvg != null) && (
               <div className="flex gap-4 text-xs text-muted-foreground border-t border-border pt-2.5">
                 {lastSleepLog.spo2Avg != null && (
@@ -122,15 +138,27 @@ export function BioLog() {
               </div>
             )}
           </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-sm text-muted-foreground">
-          <Watch className="size-4 shrink-0" />
-          <span>No sleep data yet. Sync via the iOS companion app to see sleep stages here.</span>
-        </div>
-      )}
+        ) : (
+          <div className="rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-sm text-muted-foreground">
+            <Watch className="size-4 shrink-0" />
+            <span>No sleep data yet. Sync via the iOS companion app to see sleep stages here.</span>
+          </div>
+        )}
+      </div>
 
-      {/* Sleep stage chart */}
+    </div>
+  )
+}
+
+// ── Trends Tab ────────────────────────────────────────────────────────────────
+
+function TrendsTab({ dailyBioLogs, hasSleepData }: {
+  dailyBioLogs: Record<string, DailyBioLog>
+  hasSleepData: boolean
+}) {
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+
       {hasSleepData && (
         <div>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -142,9 +170,6 @@ export function BioLog() {
         </div>
       )}
 
-      <Separator />
-
-      {/* HR/HRV trend chart */}
       <div>
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           30-Day HR / HRV Trend
@@ -154,8 +179,26 @@ export function BioLog() {
         </div>
       </div>
 
-      {/* History table */}
-      {recentLogs.length > 0 && (
+      {!hasSleepData && (
+        <div className="rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-sm text-muted-foreground">
+          <Watch className="size-4 shrink-0" />
+          <span>No sleep data yet. Sync via the iOS companion app to see sleep trends here.</span>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+// ── History Tab ───────────────────────────────────────────────────────────────
+
+function HistoryTab({ recentLogs }: {
+  recentLogs: DailyBioLog[]
+}) {
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+
+      {recentLogs.length > 0 ? (
         <div>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Recent Check-ins
@@ -206,8 +249,61 @@ export function BioLog() {
               </tbody>
             </table>
           </div>
+          <p className="text-[10px] text-muted-foreground/30 text-center pt-4">
+            {recentLogs.length} {recentLogs.length === 1 ? 'entry' : 'entries'}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border p-8 flex flex-col items-center gap-3 text-center text-muted-foreground">
+          <Activity className="size-8 opacity-40" />
+          <p className="text-sm">No check-ins yet.</p>
+          <p className="text-xs">Use the Today tab to log your daily metrics.</p>
         </div>
       )}
+
+    </div>
+  )
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+
+export function BioLog() {
+  const [activeTab, setActiveTab] = useState<SubTab>('today')
+  const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
+
+  const recentLogs = Object.values(dailyBioLogs)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 30)
+
+  const hasSleepData = Object.values(dailyBioLogs).some((l) => l.sleepDurationMin != null)
+
+  const lastSleepLog = Object.values(dailyBioLogs)
+    .filter((l) => l.sleepDurationMin != null)
+    .sort((a, b) => b.date.localeCompare(a.date))[0]
+
+  return (
+    <motion.div
+      key="bio-log"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
+      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+      className="flex h-full flex-col overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <Activity className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Bio Log</h1>
+        <div className="ml-4 flex items-center gap-2">
+          <div className="w-px h-4 bg-border/60 shrink-0" />
+          <TabSelector active={activeTab} onChange={setActiveTab} />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === 'today'   && <TodayTab lastSleepLog={lastSleepLog} />}
+        {activeTab === 'trends'  && <TrendsTab dailyBioLogs={dailyBioLogs} hasSleepData={hasSleepData} />}
+        {activeTab === 'history' && <HistoryTab recentLogs={recentLogs} />}
       </div>
     </motion.div>
   )
