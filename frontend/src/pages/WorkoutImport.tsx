@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2, ChevronRight, ArrowDownToLine } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
 import { parseAppleHealthXml, parseStravaJson } from '@/lib/importParsers'
 import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
@@ -14,7 +14,17 @@ import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
 import type { ImportedWorkout, PendingMatch } from '@/api/types'
 
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type SubTab = 'import' | 'history'
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
+
+const SUB_TABS: { id: SubTab; label: string }[] = [
+  { id: 'import',  label: 'Import'  },
+  { id: 'history', label: 'History' },
+]
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function sessionLabel(sessionKey: string): string {
   const parts = sessionKey.split('-')
@@ -22,160 +32,80 @@ function sessionLabel(sessionKey: string): string {
   return `Week ${parts[0]} — ${parts.slice(1).join('-')}`
 }
 
-export function WorkoutImport() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const linkToSession = searchParams.get('linkTo')
-  const [status, setStatus] = useState<ParseStatus>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
-  const [parsed, setParsed] = useState<ImportedWorkout[]>([])
-  const [activePending, setActivePending] = useState<PendingMatch | null>(null)
-  const [linkedSuccess, setLinkedSuccess] = useState<string | null>(null)
-  const [duplicateCount, setDuplicateCount] = useState(0)
-
-  const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
-  const addAutoMatch = useBioStore((s) => s.addAutoMatch)
-  const setPendingMatches = useBioStore((s) => s.setPendingMatches)
-  const removeImportedWorkout = useBioStore((s) => s.removeImportedWorkout)
-  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const pendingMatches = useBioStore((s) => s.pendingMatches)
-
-  const program = useCurrentProgram()
-  const programStartDate = useProgramStore((s) => s.programStartDate)
-
-  function matchStatus(workoutId: string): 'matched' | 'pending' | 'unmatched' {
-    const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
-    if (match && match.matchConfidence !== 'rejected') return 'matched'
-    if (match?.matchConfidence === 'rejected') return 'unmatched'
-    if (pendingMatches.some((p) => p.importedWorkout.id === workoutId)) return 'pending'
-    return 'unmatched'
-  }
-
-  async function processFile(file: File) {
-    setStatus('parsing')
-    setErrorMsg('')
-    try {
-      let workouts: ImportedWorkout[] = []
-
-      if (file.name.endsWith('.xml')) {
-        if (file.size > 50 * 1024 * 1024) {
-          // Large file — use server-side parse
-          const fd = new FormData()
-          fd.append('workout_file', file)
-          const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
-          if (!res.ok) throw new Error('Server parse failed')
-          workouts = await res.json()
-        } else {
-          const text = await file.text()
-          workouts = parseAppleHealthXml(text)
-        }
-      } else if (file.name.endsWith('.json')) {
-        const text = await file.text()
-        workouts = parseStravaJson(JSON.parse(text))
-      } else if (file.name.endsWith('.fit')) {
-        // FIT is binary — always server-side
-        const fd = new FormData()
-        fd.append('workout_file', file)
-        const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          throw new Error(body.detail ?? 'FIT parse failed')
-        }
-        workouts = await res.json()
-      } else {
-        throw new Error('Unsupported file type. Please upload a .fit, .xml (Apple Health), or .json (Strava) file.')
-      }
-
-      setParsed(workouts)
-
-      // Track how many are genuinely new vs duplicates
-      const existingIds = new Set(importedWorkouts.map((w) => w.id))
-      const novelCount = workouts.filter((w) => !existingIds.has(w.id)).length
-      setDuplicateCount(workouts.length - novelCount)
-
-      addImportedWorkouts(workouts)
-
-      // Run matching if we have a program + start date
-      if (program && programStartDate) {
-        const { confirmed, pending } = autoMatchWorkouts(
-          workouts,
-          program,
-          programStartDate,
-          workoutMatches
-        )
-        confirmed.forEach((m) => addAutoMatch(m.importedWorkoutId, m.sessionKey))
-        setPendingMatches(pending)
-
-        // If we came from a specific session, try to link
-        if (linkToSession) {
-          const wasLinked = confirmed.some((m) => m.sessionKey === linkToSession)
-          if (wasLinked) {
-            setLinkedSuccess(linkToSession)
-          } else {
-            // Find workouts on the target date and offer manual match
-            const dashIdx = linkToSession.indexOf('-')
-            const weekNumber = parseInt(linkToSession.slice(0, dashIdx), 10)
-            const dayName = linkToSession.slice(dashIdx + 1)
-            const weekIdx = program.weeks.findIndex(w => w.week_number === weekNumber)
-            const calDate = weekIdx >= 0 ? sessionCalendarDate(programStartDate, weekIdx, dayName) : ''
-            const dateWorkouts = workouts.filter((w) => w.date === calDate)
-            if (dateWorkouts.length > 0) {
-              setActivePending({
-                importedWorkout: dateWorkouts[0],
-                candidateSessionKeys: [linkToSession],
-              })
-            }
-          }
-        }
-      }
-
-      setStatus('done')
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('error')
-    }
-  }
-
-  const onDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      const file = e.dataTransfer.files[0]
-      if (file) processFile(file)
-    },
-    [program, programStartDate, workoutMatches]
-  )
-
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) processFile(file)
-    e.target.value = ''
-  }
-
-  const allImported = importedWorkouts.slice().sort((a, b) => b.date.localeCompare(a.date))
-
+function formatActivityType(raw: string): string {
   return (
-    <motion.div
-      key="workout-import"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-      className="flex h-full flex-col overflow-hidden"
-    >
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <ArrowDownToLine className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Import Workouts</h1>
-      </div>
+    raw
+      .replace(/HKWorkoutActivityType/g, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .trim() || raw
+  )
+}
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
+// ── Tab Selector ───────────────────────────────────────────────────────────────
 
-      {/* Strava OAuth connect — hidden until Strava sync is ready */}
-      {/* <StravaConnect /> */}
+function TabSelector({
+  active,
+  onChange,
+}: {
+  active: SubTab
+  onChange: (t: SubTab) => void
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {SUB_TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onChange(tab.id)}
+          className={cn(
+            'px-3 py-1 text-xs rounded border transition-colors',
+            tab.id === active
+              ? 'bg-primary/15 border-primary/40 text-primary'
+              : 'border-border text-muted-foreground hover:bg-muted'
+          )}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
-      {/* Program start date input */}
-      {program && (
-        <ProgramStartDateInput />
-      )}
+// ── Import Tab ─────────────────────────────────────────────────────────────────
+
+function ImportTab({
+  status,
+  errorMsg,
+  parsed,
+  duplicateCount,
+  pendingMatches,
+  linkedSuccess,
+  linkToSession,
+  activePending,
+  hasProgram,
+  onDrop,
+  onFileChange,
+  setActivePending,
+  navigate,
+}: {
+  status: ParseStatus
+  errorMsg: string
+  parsed: ImportedWorkout[]
+  duplicateCount: number
+  pendingMatches: PendingMatch[]
+  linkedSuccess: string | null
+  linkToSession: string | null
+  activePending: PendingMatch | null
+  hasProgram: boolean
+  onDrop: (e: React.DragEvent) => void
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  setActivePending: (p: PendingMatch | null) => void
+  navigate: (to: string) => void
+}) {
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+
+      {hasProgram && <ProgramStartDateInput />}
 
       {/* Drop zone */}
       <div
@@ -187,7 +117,7 @@ export function WorkoutImport() {
         <div className="text-center">
           <p className="text-sm font-medium">Drop your export file here</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            .fit (Garmin/Suunto/WorkOutDoors) or Apple Health .xml
+            .fit (Garmin / Suunto / WorkOutDoors) · Apple Health .xml · Strava .json
           </p>
         </div>
         <label className="cursor-pointer">
@@ -203,7 +133,7 @@ export function WorkoutImport() {
         </label>
       </div>
 
-      {/* Status */}
+      {/* Parse status */}
       {status === 'parsing' && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -214,7 +144,9 @@ export function WorkoutImport() {
         <div className="flex items-center gap-2 text-sm text-emerald-500">
           <CheckCircle2 className="size-4" />
           {duplicateCount === parsed.length ? (
-            <span className="text-muted-foreground">All {parsed.length} workout{parsed.length !== 1 ? 's' : ''} already imported</span>
+            <span className="text-muted-foreground">
+              All {parsed.length} workout{parsed.length !== 1 ? 's' : ''} already imported
+            </span>
           ) : (
             <>
               Imported {parsed.length - duplicateCount} workout{parsed.length - duplicateCount !== 1 ? 's' : ''}
@@ -274,106 +206,325 @@ export function WorkoutImport() {
                 className="text-xs border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
               >
                 <Link2 className="size-3 mr-1" />
-                {p.importedWorkout.date} — {p.importedWorkout.activityType.replace(/HKWorkoutActivityType/, '')}
+                {p.importedWorkout.date} — {formatActivityType(p.importedWorkout.activityType)}
               </Button>
             ))}
           </div>
         </div>
       )}
 
-      {/* All imported workouts */}
-      {allImported.length > 0 && (
-        <>
-          <Separator />
-          <div>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Imported Workouts ({allImported.length})
-            </h2>
-            <div className="space-y-2">
-              {allImported.map((w) => {
-                const ms = matchStatus(w.id)
-                return (
-                  <div
-                    key={w.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => navigate(`/import/${w.id}`)}
-                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${w.id}`)}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
-                  >
-                    <FileText className="size-4 shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">
-                          {w.activityType.replace(/HKWorkoutActivityType/, '')}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className={
-                            ms === 'matched'
-                              ? 'text-[10px] border-emerald-500/40 text-emerald-500'
-                              : ms === 'pending'
-                              ? 'text-[10px] border-amber-500/40 text-amber-500'
-                              : 'text-[10px] border-border text-muted-foreground'
-                          }
-                        >
-                          {ms}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {(() => {
-                          try { return format(parseISO(w.startTime), 'EEE, MMM d') }
-                          catch { return w.date }
-                        })()}
-                        {' · '}{w.durationMinutes} min
-                        {w.heartRate.avg != null && ` · ${Math.round(w.heartRate.avg)} bpm`}
-                      </p>
-                    </div>
-                    {ms === 'pending' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => { e.stopPropagation(); setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null) }}
-                        className="text-xs text-amber-500 hover:text-amber-400"
-                      >
-                        Match
-                      </Button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeImportedWorkout(w.id) }}
-                      className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
-                      aria-label="Remove workout"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Match confirm dialog */}
       <MatchConfirmDialog
         match={activePending}
         onClose={() => setActivePending(null)}
       />
+    </div>
+  )
+}
+
+// ── History Tab ────────────────────────────────────────────────────────────────
+
+function HistoryTab({
+  allImported,
+  matchStatus,
+  pendingMatches,
+  activePending,
+  setActivePending,
+  removeImportedWorkout,
+  navigate,
+}: {
+  allImported: ImportedWorkout[]
+  matchStatus: (id: string) => 'matched' | 'pending' | 'unmatched'
+  pendingMatches: PendingMatch[]
+  activePending: PendingMatch | null
+  setActivePending: (p: PendingMatch | null) => void
+  removeImportedWorkout: (id: string) => void
+  navigate: (to: string) => void
+}) {
+  if (allImported.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <div className="rounded-xl border border-dashed border-border p-12 flex flex-col items-center gap-3 text-center text-muted-foreground">
+          <ArrowDownToLine className="size-8 opacity-40" />
+          <p className="text-sm">No workouts imported yet.</p>
+          <p className="text-xs">Use the Import tab to upload a .fit, .xml, or .json file.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Imported Workouts ({allImported.length})
+        </h2>
+        <div className="space-y-2">
+          {allImported.map((w) => {
+            const ms = matchStatus(w.id)
+            return (
+              <div
+                key={w.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/import/${w.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${w.id}`)}
+                className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
+              >
+                <FileText className="size-4 shrink-0 text-muted-foreground" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">
+                      {formatActivityType(w.activityType)}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={
+                        ms === 'matched'
+                          ? 'text-[10px] border-emerald-500/40 text-emerald-500'
+                          : ms === 'pending'
+                          ? 'text-[10px] border-amber-500/40 text-amber-500'
+                          : 'text-[10px] border-border text-muted-foreground'
+                      }
+                    >
+                      {ms}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {(() => {
+                      try { return format(parseISO(w.startTime), 'EEE, MMM d') }
+                      catch { return w.date }
+                    })()}
+                    {' · '}{w.durationMinutes} min
+                    {w.heartRate.avg != null && ` · ${Math.round(w.heartRate.avg)} bpm`}
+                  </p>
+                </div>
+                {ms === 'pending' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)
+                    }}
+                    className="text-xs text-amber-500 hover:text-amber-400"
+                  >
+                    Match
+                  </Button>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeImportedWorkout(w.id) }}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
+                  aria-label="Remove workout"
+                >
+                  <X className="size-3.5" />
+                </button>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <MatchConfirmDialog
+        match={activePending}
+        onClose={() => setActivePending(null)}
+      />
+    </div>
+  )
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+
+export function WorkoutImport() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const linkToSession = searchParams.get('linkTo')
+
+  const [activeTab, setActiveTab] = useState<SubTab>('import')
+  const [status, setStatus] = useState<ParseStatus>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [parsed, setParsed] = useState<ImportedWorkout[]>([])
+  const [activePending, setActivePending] = useState<PendingMatch | null>(null)
+  const [linkedSuccess, setLinkedSuccess] = useState<string | null>(null)
+  const [duplicateCount, setDuplicateCount] = useState(0)
+
+  const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
+  const addAutoMatch = useBioStore((s) => s.addAutoMatch)
+  const setPendingMatches = useBioStore((s) => s.setPendingMatches)
+  const removeImportedWorkout = useBioStore((s) => s.removeImportedWorkout)
+  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
+  const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const pendingMatches = useBioStore((s) => s.pendingMatches)
+
+  const program = useCurrentProgram()
+  const programStartDate = useProgramStore((s) => s.programStartDate)
+
+  function matchStatus(workoutId: string): 'matched' | 'pending' | 'unmatched' {
+    const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
+    if (match && match.matchConfidence !== 'rejected') return 'matched'
+    if (match?.matchConfidence === 'rejected') return 'unmatched'
+    if (pendingMatches.some((p) => p.importedWorkout.id === workoutId)) return 'pending'
+    return 'unmatched'
+  }
+
+  async function processFile(file: File) {
+    setStatus('parsing')
+    setErrorMsg('')
+    try {
+      let workouts: ImportedWorkout[] = []
+
+      if (file.name.endsWith('.xml')) {
+        if (file.size > 50 * 1024 * 1024) {
+          const fd = new FormData()
+          fd.append('workout_file', file)
+          const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
+          if (!res.ok) throw new Error('Server parse failed')
+          workouts = await res.json()
+        } else {
+          const text = await file.text()
+          workouts = parseAppleHealthXml(text)
+        }
+      } else if (file.name.endsWith('.json')) {
+        const text = await file.text()
+        workouts = parseStravaJson(JSON.parse(text))
+      } else if (file.name.endsWith('.fit')) {
+        const fd = new FormData()
+        fd.append('workout_file', file)
+        const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.detail ?? 'FIT parse failed')
+        }
+        workouts = await res.json()
+      } else {
+        throw new Error('Unsupported file type. Please upload a .fit, .xml (Apple Health), or .json (Strava) file.')
+      }
+
+      setParsed(workouts)
+
+      const existingIds = new Set(importedWorkouts.map((w) => w.id))
+      const novelCount = workouts.filter((w) => !existingIds.has(w.id)).length
+      setDuplicateCount(workouts.length - novelCount)
+
+      addImportedWorkouts(workouts)
+
+      if (program && programStartDate) {
+        const { confirmed, pending } = autoMatchWorkouts(
+          workouts,
+          program,
+          programStartDate,
+          workoutMatches
+        )
+        confirmed.forEach((m) => addAutoMatch(m.importedWorkoutId, m.sessionKey))
+        setPendingMatches(pending)
+
+        if (linkToSession) {
+          const wasLinked = confirmed.some((m) => m.sessionKey === linkToSession)
+          if (wasLinked) {
+            setLinkedSuccess(linkToSession)
+          } else {
+            const dashIdx = linkToSession.indexOf('-')
+            const weekNumber = parseInt(linkToSession.slice(0, dashIdx), 10)
+            const dayName = linkToSession.slice(dashIdx + 1)
+            const weekIdx = program.weeks.findIndex(w => w.week_number === weekNumber)
+            const calDate = weekIdx >= 0 ? sessionCalendarDate(programStartDate, weekIdx, dayName) : ''
+            const dateWorkouts = workouts.filter((w) => w.date === calDate)
+            if (dateWorkouts.length > 0) {
+              setActivePending({
+                importedWorkout: dateWorkouts[0],
+                candidateSessionKeys: [linkToSession],
+              })
+            }
+          }
+        }
+      }
+
+      setStatus('done')
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
+      setStatus('error')
+    }
+  }
+
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      const file = e.dataTransfer.files[0]
+      if (file) processFile(file)
+    },
+    [program, programStartDate, workoutMatches]
+  )
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) processFile(file)
+    e.target.value = ''
+  }
+
+  const allImported = importedWorkouts.slice().sort((a, b) => b.date.localeCompare(a.date))
+
+  return (
+    <motion.div
+      key="workout-import"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
+      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+      className="flex h-full flex-col overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+        <ArrowDownToLine className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Import Workouts</h1>
+        <div className="ml-4 flex items-center gap-2">
+          <div className="w-px h-4 bg-border/60 shrink-0" />
+          <TabSelector active={activeTab} onChange={setActiveTab} />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === 'import' && (
+          <ImportTab
+            status={status}
+            errorMsg={errorMsg}
+            parsed={parsed}
+            duplicateCount={duplicateCount}
+            pendingMatches={pendingMatches}
+            linkedSuccess={linkedSuccess}
+            linkToSession={linkToSession}
+            activePending={activePending}
+            hasProgram={!!program}
+            onDrop={onDrop}
+            onFileChange={onFileChange}
+            setActivePending={setActivePending}
+            navigate={navigate}
+          />
+        )}
+        {activeTab === 'history' && (
+          <HistoryTab
+            allImported={allImported}
+            matchStatus={matchStatus}
+            pendingMatches={pendingMatches}
+            activePending={activePending}
+            setActivePending={setActivePending}
+            removeImportedWorkout={removeImportedWorkout}
+            navigate={navigate}
+          />
+        )}
       </div>
     </motion.div>
   )
 }
 
-// ── Program start date input ───────────────────────────────────────────────────
+// ── Program Start Date Input ───────────────────────────────────────────────────
 
 function ProgramStartDateInput() {
   const programStartDate = useProgramStore((s) => s.programStartDate)
   const setProgramStartDate = useProgramStore((s) => s.setProgramStartDate)
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
       <div className="flex-1">
         <p className="text-xs font-medium text-muted-foreground">Program Start Date</p>
         <p className="text-[11px] text-muted-foreground/60 mt-0.5">

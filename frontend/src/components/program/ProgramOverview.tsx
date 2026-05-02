@@ -228,7 +228,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
 
       {/* 1. Program rationale */}
       {sourceMode !== null ? (
