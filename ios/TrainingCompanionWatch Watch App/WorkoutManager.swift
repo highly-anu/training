@@ -18,6 +18,7 @@ final class WorkoutManager: NSObject, ObservableObject {
     private var maxHR: Int = 190
 
     private var elapsedTimer: Timer?
+    private var lastAutoAdvancedExerciseIndex = -1
 
     // GPS
     private var locationManager: CLLocationManager?
@@ -64,6 +65,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         workoutStartedAt = Date()
         gpsPoints = []
         hrTimestampedSamples = []
+        lastAutoAdvancedExerciseIndex = -1
         sessionState.startSession()
         startElapsedTimer()
         isWorkoutActive = true
@@ -203,14 +205,68 @@ final class WorkoutManager: NSObject, ObservableObject {
 
     private func startElapsedTimer() {
         elapsedTimer?.invalidate()
-        elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.sessionState.tickElapsed() }
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.sessionState.tickElapsed()
+                self.tickCurrentPhase()
+            }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        elapsedTimer = timer
     }
 
     private func stopElapsedTimer() {
         elapsedTimer?.invalidate()
         elapsedTimer = nil
+    }
+
+    @MainActor
+    private func tickCurrentPhase() {
+        switch sessionState.phase {
+        case .resting:
+            sessionState.tickRest()
+
+        case let .timedWork(ei, elapsed):
+            guard !sessionState.isTimerPaused else { return }
+            sessionState.tickTimedWork()
+            guard let session = activeSession,
+                  ei < session.exercises.count,
+                  let durationMin = session.exercises[ei].durationMinutes else { return }
+            let target = durationMin * 60
+            guard elapsed + 1 == target, lastAutoAdvancedExerciseIndex != ei else { return }
+            lastAutoAdvancedExerciseIndex = ei
+            WKInterfaceDevice.current().play(.notification)
+            Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                WKInterfaceDevice.current().play(.notification)
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                let nextIndex = ei + 1
+                if nextIndex < session.exercises.count {
+                    if session.exercises[nextIndex].durationMinutes != nil {
+                        self.sessionState.autoAdvanceToNextTimedWork(
+                            currentExerciseId: session.exercises[ei].exerciseId,
+                            nextIndex: nextIndex
+                        )
+                    } else {
+                        self.sessionState.completeTimedWork(
+                            exerciseIndex: ei,
+                            exerciseId: session.exercises[ei].exerciseId
+                        )
+                    }
+                } else {
+                    self.sessionState.completeTimedWork(
+                        exerciseIndex: ei,
+                        exerciseId: session.exercises[ei].exerciseId
+                    )
+                    self.sessionState.completeSession()
+                    await self.endWorkout()
+                }
+            }
+
+        default:
+            break
+        }
     }
 
     private func hkActivityType(for modalityId: String) -> HKWorkoutActivityType {

@@ -64,12 +64,6 @@ struct RestTimerView: View {
                     .font(.caption)
                 }
             }
-            .task {
-                while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
-                    if case .resting = sessionState.phase { sessionState.tickRest() }
-                }
-            }
         )
     }
 
