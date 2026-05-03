@@ -4,6 +4,7 @@ struct SessionListView: View {
     @EnvironmentObject var connectivity: WatchConnectivityManager
 
     @State private var showThisWeek = false
+    @State private var deepLinkSession: WatchSession? = nil
 
     private var openSessions: [WatchSession] {
         connectivity.todaySessions.filter {
@@ -19,44 +20,59 @@ struct SessionListView: View {
 
     var body: some View {
         NavigationStack {
-            if connectivity.todaySessions.isEmpty {
-                restDayView
+            Group {
+                if connectivity.todaySessions.isEmpty {
+                    restDayView
+                        .navigationTitle("Today")
+                } else {
+                    List {
+                        // Readiness indicator (if available)
+                        if let readiness = connectivity.readiness {
+                            readinessRow(readiness)
+                                .listRowBackground(Color.clear)
+                        }
+
+                        if !openSessions.isEmpty {
+                            Section {
+                                ForEach(openSessions, id: \.sessionId) { session in
+                                    NavigationLink(destination: ActiveWorkoutView(session: session)) {
+                                        sessionRow(session, done: false)
+                                    }
+                                }
+                            }
+                        }
+                        if !doneSessions.isEmpty {
+                            Section("Completed") {
+                                ForEach(doneSessions, id: \.sessionId) { session in
+                                    NavigationLink(destination: ActiveWorkoutView(session: session)) {
+                                        sessionRow(session, done: true)
+                                    }
+                                }
+                            }
+                        }
+
+                        // This Week section
+                        if !connectivity.weeklyOverview.isEmpty {
+                            thisWeekSection
+                        }
+                    }
                     .navigationTitle("Today")
-            } else {
-                List {
-                    // Readiness indicator (if available)
-                    if let readiness = connectivity.readiness {
-                        readinessRow(readiness)
-                            .listRowBackground(Color.clear)
-                    }
-
-                    if !openSessions.isEmpty {
-                        Section {
-                            ForEach(openSessions, id: \.sessionId) { session in
-                                NavigationLink(destination: ActiveWorkoutView(session: session)) {
-                                    sessionRow(session, done: false)
-                                }
-                            }
-                        }
-                    }
-                    if !doneSessions.isEmpty {
-                        Section("Completed") {
-                            ForEach(doneSessions, id: \.sessionId) { session in
-                                NavigationLink(destination: ActiveWorkoutView(session: session)) {
-                                    sessionRow(session, done: true)
-                                }
-                            }
-                        }
-                    }
-
-                    // This Week section
-                    if !connectivity.weeklyOverview.isEmpty {
-                        thisWeekSection
-                    }
                 }
-                .navigationTitle("Today")
+            }
+            .navigationDestination(item: $deepLinkSession) { session in
+                ActiveWorkoutView(session: session)
             }
         }
+        .onChange(of: connectivity.pendingDeepLinkSessionId) { _, _ in resolveDeepLink() }
+        .onChange(of: connectivity.todaySessions) { _, _ in resolveDeepLink() }
+    }
+
+    private func resolveDeepLink() {
+        guard let sessionId = connectivity.pendingDeepLinkSessionId,
+              let match = connectivity.todaySessions.first(where: { $0.sessionId == sessionId })
+        else { return }
+        deepLinkSession = match
+        connectivity.pendingDeepLinkSessionId = nil
     }
 
     // MARK: - Readiness Row

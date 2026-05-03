@@ -197,7 +197,8 @@ struct UserProgramSavePayload: Encodable {
 
 // MARK: - Watch payload (sent from iPhone to Watch via WCSession)
 
-struct WatchSession: Codable {
+struct WatchSession: Codable, Identifiable, Hashable {
+    var id: String { sessionId }
     let sessionId: String           // "\(weekNumber)-\(dayName)-\(sessionIndex)"
     let modalityId: String
     let archetypeName: String
@@ -206,7 +207,7 @@ struct WatchSession: Codable {
     let exercises: [WatchExercise]
 }
 
-struct WatchExercise: Codable {
+struct WatchExercise: Codable, Hashable {
     // Identity
     let exerciseId: String
     let name: String

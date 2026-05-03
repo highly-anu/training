@@ -12,7 +12,6 @@ struct ActiveWorkoutView: View {
     @State private var isStarted = false
     @State private var workoutStartDate = Date()
     @State private var showStopConfirm = false
-    @State private var lastHapticExerciseIndex = -1
 
     var body: some View {
         Group {
@@ -64,51 +63,6 @@ struct ActiveWorkoutView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 timerStatusIndicator
-            }
-        }
-        .task(id: isStarted) {
-            guard isStarted else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard case let .timedWork(ei, elapsed) = sessionState.phase else { continue }
-                guard !sessionState.isTimerPaused else { continue }
-                sessionState.tickTimedWork()
-                guard ei < session.exercises.count,
-                      let durationMin = session.exercises[ei].durationMinutes else { continue }
-                let target = durationMin * 60
-                if elapsed + 1 == target && lastHapticExerciseIndex != ei {
-                    lastHapticExerciseIndex = ei
-                    WKInterfaceDevice.current().play(.notification)
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    WKInterfaceDevice.current().play(.notification)
-
-                    // Auto-advance to next exercise, or complete session if last
-                    let nextIndex = ei + 1
-                    try? await Task.sleep(nanoseconds: 800_000_000)
-                    if nextIndex < session.exercises.count {
-                        if session.exercises[nextIndex].durationMinutes != nil {
-                            // Next is also timed — start its timer immediately
-                            sessionState.autoAdvanceToNextTimedWork(
-                                currentExerciseId: session.exercises[ei].exerciseId,
-                                nextIndex: nextIndex
-                            )
-                        } else {
-                            // Next is not timed — advance to active phase
-                            sessionState.completeTimedWork(
-                                exerciseIndex: ei,
-                                exerciseId: session.exercises[ei].exerciseId
-                            )
-                        }
-                    } else {
-                        // Last exercise — complete it and end the session automatically
-                        sessionState.completeTimedWork(
-                            exerciseIndex: ei,
-                            exerciseId: session.exercises[ei].exerciseId
-                        )
-                        sessionState.completeSession()
-                        await workoutManager.endWorkout()
-                    }
-                }
             }
         }
     }

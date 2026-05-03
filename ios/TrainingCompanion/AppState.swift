@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WidgetKit
 
 /// Central state object for the iPhone app.
 /// Injected into the view hierarchy as an @EnvironmentObject from ContentView.
@@ -118,9 +119,33 @@ final class AppState: ObservableObject {
         defer { isLoadingProgram = false }
         do {
             serverProgram = try await api.fetchProgram()
+            writeWidgetData()
         } catch {
             programError = error.localizedDescription
         }
+    }
+
+    /// Writes today's sessions to the shared App Group container so iPhone widgets can display them.
+    func writeWidgetData() {
+        let today = todayDayName
+        let dateStr = dayFormatter.string(from: Date())
+        guard let week = currentWeek else {
+            WidgetDataStore.write(WidgetTodayData(date: dateStr, sessions: [], updatedAt: Date()))
+            return
+        }
+        let sessions = (week.schedule[today] ?? []).enumerated().map { (i, s) -> WidgetSession in
+            let key = makeSessionKey(weekNumber: week.weekNumber, dayName: today, index: i)
+            let names = s.exercises.compactMap { $0.exercise?.name }.filter { _ in true }
+            return WidgetSession(
+                id: key,
+                modalityId: s.modality,
+                archetypeName: s.archetype?.name ?? s.modality,
+                estimatedMinutes: s.archetype?.durationEstimateMinutes ?? 45,
+                isDeload: s.isDeload,
+                exerciseNames: Array(names.prefix(4))
+            )
+        }
+        WidgetDataStore.write(WidgetTodayData(date: dateStr, sessions: sessions, updatedAt: Date()))
     }
 
     // MARK: - Profile

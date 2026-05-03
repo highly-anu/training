@@ -5,10 +5,11 @@ struct ContentView: View {
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
     @StateObject private var programStore = ProgramStore()
+    @State private var selectedTab = 0
 
     var body: some View {
         if auth.isSignedIn {
-            MainTabView()
+            MainTabView(selectedTab: $selectedTab)
                 .environmentObject(sync)
                 .environmentObject(appState)
                 .environmentObject(programStore)
@@ -30,8 +31,14 @@ struct ContentView: View {
                     scheduleNextSync()
                 }
                 .onOpenURL { url in
-                    guard url.pathExtension.lowercased() == "fit" else { return }
-                    appState.pendingFITURL = url
+                    // .fit file import
+                    if url.pathExtension.lowercased() == "fit" {
+                        appState.pendingFITURL = url
+                        return
+                    }
+                    // Widget deep links — trainingcompanion://today or trainingcompanion://session?key=...
+                    guard url.scheme == "trainingcompanion" else { return }
+                    selectedTab = 0     // always land on the Dashboard tab
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },
@@ -50,20 +57,25 @@ struct ContentView: View {
 
 struct MainTabView: View {
     @EnvironmentObject var sync: SyncManager
+    @Binding var selectedTab: Int
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             TodayView()
                 .tabItem { Label("Dashboard", systemImage: "house") }
+                .tag(0)
 
             ProgramView()
                 .tabItem { Label("Program", systemImage: "calendar") }
+                .tag(1)
 
             LogView()
                 .tabItem { Label("Log", systemImage: "checkmark.circle") }
+                .tag(2)
 
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person") }
+                .tag(3)
 
             SyncStatusView()
                 .tabItem {
@@ -72,6 +84,7 @@ struct MainTabView: View {
                         systemImage: sync.isSyncing ? "arrow.clockwise.circle.fill" : "arrow.triangle.2.circlepath"
                     )
                 }
+                .tag(4)
         }
     }
 }

@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import WatchConnectivity
+import WidgetKit
 
 @MainActor
 final class WatchConnectivityManager: NSObject, ObservableObject {
@@ -12,6 +13,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     @Published var programState: ProgramState = .loading
     @Published var weeklyOverview: [WeeklyOverviewDay] = []
     @Published var readiness: ReadinessInfo? = nil
+    /// Set by deep link (watch widget tap) to navigate directly to a specific session.
+    @Published var pendingDeepLinkSessionId: String? = nil
 
     private let sessionsKey        = "watchTodaySessions"
     private let sessionsDayKey     = "watchTodaySessionsDay"  // "yyyy-MM-dd" of cached sessions
@@ -137,6 +140,23 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
             UserDefaults.standard.set(todayStr, forKey: completedKey + "_date")
         }
     }
+
+    // MARK: - Widget Data
+
+    /// Writes today's sessions to the shared App Group container so the watch widget can display them.
+    private func writeWidgetData(sessions: [WatchSession], date: String) {
+        let widgetSessions = sessions.map { s in
+            WidgetSession(
+                id: s.sessionId,
+                modalityId: s.modalityId,
+                archetypeName: s.archetypeName,
+                estimatedMinutes: s.estimatedMinutes,
+                isDeload: s.isDeload,
+                exerciseNames: Array(s.exercises.prefix(4).map { $0.name })
+            )
+        }
+        WidgetDataStore.write(WidgetTodayData(date: date, sessions: widgetSessions, updatedAt: Date()))
+    }
 }
 
 extension WatchConnectivityManager: WCSessionDelegate {
@@ -189,6 +209,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 }
 
                 programState = .ready
+                writeWidgetData(sessions: todaySessions, date: (userInfo["date"] as? String) ?? todayDateString)
 
             case "no_program":
                 todaySessions = []
