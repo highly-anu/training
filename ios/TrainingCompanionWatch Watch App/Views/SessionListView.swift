@@ -4,6 +4,7 @@ struct SessionListView: View {
     @EnvironmentObject var connectivity: WatchConnectivityManager
 
     @State private var showThisWeek = false
+    @State private var deepLinkSession: WatchSession? = nil
 
     private var openSessions: [WatchSession] {
         connectivity.todaySessions.filter {
@@ -55,6 +56,16 @@ struct SessionListView: View {
                     }
                 }
                 .navigationTitle("Today")
+                .navigationDestination(item: $deepLinkSession) { session in
+                    ActiveWorkoutView(session: session)
+                }
+                .onChange(of: connectivity.pendingDeepLinkSessionId) { _, sessionId in
+                    guard let sessionId,
+                          let match = connectivity.todaySessions.first(where: { $0.sessionId == sessionId })
+                    else { return }
+                    deepLinkSession = match
+                    connectivity.pendingDeepLinkSessionId = nil
+                }
             }
         }
     }
