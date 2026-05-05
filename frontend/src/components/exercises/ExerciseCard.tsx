@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { ExerciseAnimationPanel } from './ExerciseAnimationPanel'
 import type { Exercise } from '@/api/types'
 
 const EFFORT_DOT: Record<string, string> = {
@@ -44,10 +45,25 @@ export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <div
-            className={cn('size-2 rounded-full', EFFORT_DOT[exercise.effort] ?? 'bg-muted')}
-            title={`Effort: ${exercise.effort}`}
-          />
+          {exercise.animation?.type === 'gif' ? (
+            <div className="relative">
+              <ExerciseAnimationPanel
+                animation={exercise.animation}
+                exerciseName={exercise.name}
+                category={exercise.category}
+                variant="card"
+              />
+              <div
+                className={cn('absolute -bottom-0.5 -right-0.5 size-2 rounded-full border border-card', EFFORT_DOT[exercise.effort] ?? 'bg-muted')}
+                title={`Effort: ${exercise.effort}`}
+              />
+            </div>
+          ) : (
+            <div
+              className={cn('size-2 rounded-full', EFFORT_DOT[exercise.effort] ?? 'bg-muted')}
+              title={`Effort: ${exercise.effort}`}
+            />
+          )}
         </div>
       </div>
 

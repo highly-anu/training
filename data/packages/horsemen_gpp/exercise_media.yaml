@@ -1,0 +1,1874 @@
+ankle_circle:
+  animation:
+    type: none
+  coaching_focus: The circle reveals the joint -- slow it down and feel where the
+    range is restricted; that arc is the target for further ankle work.
+  common_errors:
+  - 'Moving only in the comfortable arc: the restricted range is where the work is
+    needed'
+  - 'Performing as a throwaway warm-up without attention: treat it as a joint assessment,
+    not just movement'
+  - 'Skipping after ankle sprains: the post-sprain period is when ankle circles are
+    most important for restoring joint mechanics'
+  cue_points:
+  - Seated or standing on one leg; draw large deliberate circles with the foot
+  - 'Lead through the full range: dorsiflexion, eversion, plantar flexion, inversion
+    in sequence'
+  - Both directions, equal repetitions
+  - Pair with active tibialis raises and calf stretches for a complete ankle prep
+    sequence
+  - If the ankle clicks or catches in a specific arc, spend extra time at that position
+  description: Ankle circumduction (Ido Portal variant) is standard joint preparation
+    before any lower-body or locomotive session. Non-weight-bearing ankle circles
+    prime the articular surfaces and assess joint health before loading. Ido Portal
+    includes them in his daily movement routine as a non-negotiable joint hygiene
+    practice.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+band_pull_apart:
+  animation:
+    external_id: Band_Pull_Apart
+    gif_alt: Band Pull-Apart
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/0.jpg
+    type: gif
+  coaching_focus: Pull apart, not just back -- the motion is horizontal and backward
+    simultaneously, separating the hands while drawing the shoulder blades together
+    and down.
+  common_errors:
+  - 'Band touching only the sternum without scapular retraction: the hands are moving
+    apart but the shoulder blades are not following'
+  - 'Insufficient band tension: a band that offers no resistance trains the motion
+    without the strengthening stimulus'
+  - 'Treating it as a throwaway warm-up: program sets and reps; the pull-apart is
+    a prehab exercise with real strength value'
+  cue_points:
+  - Band at chest height or overhead; hands shoulder-width or wider
+  - Pull apart until the band touches the chest (or the overhead equivalent)
+  - Shoulder blades retract and depress at end range
+  - 15-25 reps per set; high frequency -- can be done every session
+  - Overhead pull-apart variant develops scapular upward rotation simultaneously
+  description: The band pull-apart (Ido Portal and Horsemen variant) pulls a horizontal
+    resistance band apart at chest height or overhead to activate the posterior deltoid,
+    infraspinatus, and lower trapezius. Portal and Horsemen both program it as a daily
+    prehab staple for any pressing-heavy program -- the posterior shoulder structures
+    are chronically undertrained and the pull-apart is the most accessible corrective.
+    No recovery cost at moderate volumes.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+bench_press:
+  animation:
+    external_id: Bench_Press_-_Powerlifting
+    gif_alt: Bench Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Press_-_Powerlifting/0.jpg
+    type: gif
+  coaching_focus: Bench pressing is a full-body movement — leg drive and upper-back
+    tightness are not optional if you want to press heavy.
+  common_errors:
+  - Flared elbows at 90 degrees — places the shoulder in an impingement-prone position
+  - Butt rising off the bench — usually means the load exceeds current strength
+  - Losing upper-back tightness and letting shoulder blades wing under load
+  - Bouncing the bar off the chest — catching a bounce trains the wrong quality
+  cue_points:
+  - 'Grip: roughly 1 finger outside shoulder width; forearms vertical when bar touches
+    chest'
+  - Retract and depress the shoulder blades before unracking — hold this through every
+    rep
+  - Arch your upper back and keep glutes on the bench; feet drive actively into the
+    floor
+  - 'Bar path: slight diagonal from lower chest at the bottom to over the upper chest
+    at the top'
+  - Touch lower chest or upper sternum — not the clavicle and not the belly
+  - Elbows at 45–75 degrees to the torso — straight out stresses the shoulder
+  description: The bench press is the foundational horizontal pushing movement — a
+    bilateral press where the bar descends to the lower chest and is driven to lockout
+    while the feet drive into the floor and the upper back remains tight. Horsemen
+    benchmark is 1.5x bodyweight; Starting Strength builds from 3x5 linear progression.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - pec
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - forearms
+couch_stretch:
+  animation:
+    type: none
+  coaching_focus: The wall is the tool -- the rear shin must be vertical against the
+    wall, not just resting near it; the wall provides the traction that makes this
+    more effective than a standard kneeling hip flexor stretch.
+  common_errors:
+  - 'Foot sliding down from the wall: the foot must press against the wall to maintain
+    the knee flexion that creates the rectus femoris stretch'
+  - 'Anterior tilt of the pelvis: kills the stretch on the iliopsoas and turns this
+    into a lumbar extension exercise'
+  - 'Front foot too close to the wall: the torso tips forward and the hip cannot drive
+    toward the wall'
+  cue_points:
+  - Rear shin vertical against the wall; foot pressed against the wall, not resting
+    passively
+  - Front foot far enough forward to allow an upright torso
+  - Posterior pelvic tilt before driving the hip toward the wall
+  - Breathe slowly; the hip flexors often protect with increased tone -- exhale to
+    release
+  - 60-90 seconds each side; perform daily if hip flexion is a known restriction
+  description: The couch stretch (Ido Portal and Horsemen variant) targets the rectus
+    femoris and hip flexor complex with the rear foot elevated against a wall and
+    the knee on the floor. One of the most effective hip extension mobility drills
+    available. Portal and Horsemen both program it as a daily essential for athletes
+    with any sitting-intensive lifestyle. Contraindicated with acute knee conditions
+    due to end-range knee flexion load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+deficit_deadlift:
+  animation:
+    external_id: Deficit_Deadlift
+    gif_alt: Deficit Deadlift
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Deficit_Deadlift/0.jpg
+    type: gif
+  coaching_focus: Own the position at the bottom before you pull — a larger deficit
+    punishes any setup shortcuts mercilessly.
+  common_errors:
+  - Using the same load as conventional — the increased range demands a load reduction
+  - Rounding through the lower back at the extended range — if you cannot maintain
+    neutral, reduce the deficit height
+  - Initiating with the back rather than leg-pressing — fault amplified by the deficit
+  cue_points:
+  - Reduce load 10–20% versus conventional for the same rep scheme
+  - Set up identically to conventional but accept a lower hip position due to increased
+    range
+  - Lower back must remain neutral through the larger range — do not load this with
+    compromised mechanics
+  - Use a 3-second lowering tempo to build range deliberately
+  - Bar still stays over mid-foot; the platform does not change the bar path
+  description: The deficit deadlift is performed standing on a 2–4 inch elevation,
+    increasing the range of motion and demanding greater hip and hamstring recruitment
+    at the very bottom of the pull. It specifically develops starting strength off
+    the floor and improves first-pull mechanics of the conventional deadlift.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - quadriceps
+    - adductors
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - adductors
+  - core
+face_pull:
+  animation:
+    type: none
+  coaching_focus: Elbows high and finishing behind the plane of the ears -- if the
+    elbows stay low, the pull becomes a row and the external rotation demand disappears.
+  common_errors:
+  - 'Elbows staying low during the pull: this turns the face pull into a cable row
+    and eliminates the external rotation component'
+  - 'Pulling to the chin rather than the face: insufficient elbow elevation -- pull
+    to the nose or eyes with elbows high'
+  - 'Too much weight: heavy cable reduces the range of motion achievable with the
+    correct elbow pattern'
+  cue_points:
+  - Band or cable at face height; use a rope attachment or two-handed band grip with
+    thumbs up
+  - Pull toward the face with the elbows traveling high and wide -- ending with hands
+    at temples and elbows behind the plane of the ears
+  - 'Full external rotation at end range: thumbs point behind you'
+  - Hold 1 second at end range; return under control
+  - 15-25 reps per set; 2-3 sets daily or several times per week
+  description: The face pull (Horsemen) pulls a band or cable toward the face with
+    a thumbs-up grip and elbows high and flared, reaching full external rotation at
+    end range. It targets the rotator cuff posterior fibers, posterior deltoid, and
+    lower and mid trapezius. High-frequency programming is appropriate -- face pulls
+    can be performed daily without meaningful recovery cost and accumulate significant
+    prehabilitative stimulus over time.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+hang_squat_clean:
+  animation:
+    external_id: Hang_Clean
+    gif_alt: Hang Squat Clean
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Clean/0.jpg
+    type: gif
+  coaching_focus: The pull is short so the drop must be faster — think of punching
+    your elbows through rather than catching.
+  common_errors:
+  - 'Not achieving full squat depth: receiving high and then squatting down rather
+    than under'
+  - 'Elbows dropping at the bottom of the squat: front rack collapses under fatigue'
+  - 'Losing the hip hinge in the hang position under fatigue: knees push forward and
+    the power source is gone'
+  cue_points:
+  - 'Same hang setup as the hang power clean: hips loaded, bar above the knee'
+  - Hip snap drives the bar up; immediately rotate the elbows around and under
+  - Drop into the full squat simultaneously with the elbow turnover — no waiting
+  - Receive with elbows parallel to the floor in a full-depth front squat
+  - Drive out of the bottom immediately in conditioning contexts — do not rest in
+    the hole
+  description: The hang squat clean combines the shortened range of the hang position
+    with the full-depth front squat catch, making it highly metabolic and frequently
+    used in conditioning complexes. Horsemen feature it in the Purple Church EMOM
+    triplet. The limited pull range forces faster elbow turnover and a more aggressive
+    drop under the bar.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    highlight_secondary:
+    - core
+    - deltoids
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - core
+  - deltoids
+hip_circle:
+  animation:
+    type: none
+  coaching_focus: The circle is both the test and the treatment -- wherever it catches
+    or feels restricted is where the joint needs the most time.
+  common_errors:
+  - 'Passive dangling: the leg swings rather than the hip drawing a deliberate circle
+    -- the difference is active articular movement vs. pendulum motion'
+  - 'Only performing the comfortable arcs: the stiff arc is the training target'
+  - 'Skipping one direction: the two directions load the hip capsule on opposite arcs
+    -- both are required'
+  cue_points:
+  - Stand on one leg, relax the other completely and let the hip drive the circle
+  - 'Full range: high flexion arc, wide abduction arc, full extension at the back'
+  - Both directions, 10 reps each, both legs
+  - 'Speed: slow enough to feel the resistance in each arc'
+  - Include at the start of every lower-body session as a non-negotiable
+  description: Standing hip circumduction (Ido Portal variant) is a standard daily
+    joint prep movement -- large circles in both directions assessing and training
+    the full articular range of the hip. In the Portal system, joint circles are non-negotiable
+    daily practice, treating the hip as a joint requiring lubrication and range maintenance
+    independent of athletic training sessions.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+hip_flexor_stretch:
+  animation:
+    external_id: Kneeling_Hip_Flexor
+    gif_alt: Hip Flexor Stretch (kneeling)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Hip_Flexor/0.jpg
+    type: gif
+  coaching_focus: The stretch target is the front of the rear-leg hip, deep and slightly
+    lateral to the groin -- if the stretch is felt elsewhere, the position needs adjustment.
+  common_errors:
+  - 'Driving the hip forward without the pelvic tilt: stretches the lumbar spine,
+    not the iliopsoas'
+  - 'Front knee collapsing inward: maintain knee alignment over the second toe throughout'
+  - 'Short hold time: 20-second holds are insufficient for iliopsoas lengthening'
+  cue_points:
+  - 'Half-kneeling position: rear knee on the floor, front foot forward'
+  - Posterior pelvic tilt (tuck the tailbone) before any hip driving
+  - Drive the rear-leg hip forward and down while maintaining the tilt
+  - Add an overhead reach on the rear-leg side to increase the iliopsoas stretch length
+  - Hold 60 seconds; breathe slowly into the front of the rear-leg hip
+  description: The half-kneeling hip flexor stretch (Ido Portal variant) positions
+    the athlete in a lunge to load the iliopsoas in its shortened range. Portal treats
+    hip flexor restriction as one of the primary obstacles to full hip extension in
+    locomotion and bridge work -- a tight iliopsoas prevents the posterior pelvic
+    tilt required for all overhead and bridge-based patterns.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+kb_clean_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Clean
+    gif_alt: Kettlebell Clean (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean/0.jpg
+    type: gif
+  coaching_focus: The elbow arrives first — if the bell crashes onto the forearm,
+    the elbow was too slow or the path too wide.
+  common_errors:
+  - 'Bell looping wide: the elbow is not being pulled in early enough; the bell takes
+    a horizontal arc rather than a vertical one'
+  - 'Bell crashing on the forearm: the wrist is not rotating in time — practice the
+    wrist rotation separately'
+  - 'High catch (bell above the shoulder): the second pull was too aggressive; relax
+    the height and focus on the arc path'
+  cue_points:
+  - Initiate exactly like a single-arm swing; the distinction happens at the top of
+    the arc
+  - As the hips snap, pull the elbow back and in toward the body — the bell rotates
+    around the arm, not over it
+  - 'The rack: elbow tight against the body, bell resting on the forearm and shoulder,
+    wrist neutral'
+  - 'Do not let the bell crash: a quiet catch means the path was correct'
+  - 'Return to swing: push the bell forward and hinge back into the next rep — do
+    not drop it straight down'
+  description: The single-arm kettlebell clean takes the bell from the swing arc into
+    the rack position at the shoulder in one movement — the transition requires the
+    elbow to arrive inside the bell and nestle against the body before the bell settles.
+    It is the bridge between the swing and all overhead pressing patterns in the Wildman
+    curriculum.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - deltoids
+    highlight_secondary:
+    - core
+    - biceps
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - deltoids
+  muscles_secondary:
+  - core
+  - biceps
+  - forearms
+kb_complex_12min:
+  animation:
+    type: none
+  coaching_focus: Every movement should be textbook quality — this is not a conditioning
+    test, it is a movement rehearsal; slow down any movement that degrades.
+  common_errors:
+  - 'Treating it as a conditioning test: pushing pace or load above what technique
+    allows — the complex loses its value when quality degrades'
+  - 'Skipping the halo and figure-eight: these are the mobility components most athletes
+    want to rush; they are the most important for shoulder and hip preparation'
+  - 'Loading too heavy: the complex fails long before the time is up if the bell is
+    too heavy for the weakest movement'
+  cue_points:
+  - 'Load: 35 lb (16 kg) for most athletes; scale down for beginners, not up for advanced
+    — this is a warm-up'
+  - Each minute is one complete movement with proper mechanics — do not rush the transitions
+    between movements
+  - 'Treat each movement as its own session within the complex: reset your breath
+    and mechanics at every change'
+  - 'The sequence order is deliberate: movements build on each other from simple hip
+    hinge to complex overhead patterns'
+  - If a movement breaks down before the minute ends, stop and hold position rather
+    than grind through poor reps
+  description: The Horsemen 12-minute kettlebell warm-up complex sequences twelve
+    movements — each one minute with no rest — using a single 35 lb (16 kg) bell.
+    The sequence covers two-hand swings, single-arm swings, figure-eights, clean-and-press,
+    slasher-to-halo, snatches, and lunges with the bell. It is not a workout; it is
+    a warm-up that doubles as skill consolidation for the full kettlebell vocabulary.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - deltoids
+    - core
+    highlight_secondary:
+    - quadriceps
+    - upper_back
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - deltoids
+  - core
+  muscles_secondary:
+  - quadriceps
+  - upper_back
+  - forearms
+kb_figure_eight:
+  animation:
+    type: none
+  coaching_focus: Stay hinged — the moment you stand upright to reach the bell, you
+    are squatting through the movement and the hip mobility benefit is lost.
+  common_errors:
+  - 'Standing up between passes: the hip hinge must be maintained throughout the entire
+    set'
+  - 'Narrow stance: the bell cannot clear the legs cleanly and the athlete compensates
+    by standing taller'
+  - 'Passive non-working side: both arms must be active — reaching and meeting the
+    bell at every hand-off'
+  cue_points:
+  - 'Begin in a hip-hinged position: torso approximately 45 degrees, knees slightly
+    bent'
+  - Pass the bell from outside the right leg, through to the inside, and catch with
+    the left hand — then repeat on the other side
+  - The hinge is maintained throughout; do not stand up between passes
+  - Feet slightly wider than shoulder-width to allow the bell to pass through cleanly
+  - Reverse direction without stopping — both directions should feel equally smooth
+  description: The kettlebell figure-eight passes the bell between the legs in a figure-eight
+    pattern, alternating hands with each pass. Horsemen include it in the 12-minute
+    warm-up complex in both directions. It develops rotational hip mobility, lateral
+    hip hinge control, and the timing of hand-switches that is foundational for single-arm
+    ballistic work.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - adductors
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - adductors
+  muscles_secondary:
+  - core
+  - forearms
+kb_halo:
+  animation:
+    type: none
+  coaching_focus: Circle as close to the head as possible — a wide arc reduces the
+    mobility challenge and makes the exercise a strength exercise instead.
+  common_errors:
+  - 'Wide arc: the bell travels far from the head, reducing the mobility demand and
+    making it a shoulder strength exercise'
+  - 'Torso rotating to accommodate the bell: the trunk should be stable; any rotation
+    indicates a range-of-motion limitation'
+  - 'Too fast: the halo should be slow and deliberate, pausing at any restriction
+    to breathe into the position'
+  cue_points:
+  - Hold the bell by the horns (the sides of the handle), bottom up or upside-down
+  - Circle close to the head — the bell should practically graze the ears at the back
+  - Keep the elbows close to the head throughout; they should not flare wide on the
+    arc
+  - Maintain an upright torso; the head stays still while the bell moves around it
+  - Equal reps in both directions; asymmetry reveals thoracic or shoulder restriction
+  description: The kettlebell halo circles the bell around the head in both directions,
+    developing thoracic and shoulder mobility while loading the shoulder girdle through
+    a full circumduction pattern. Horsemen include it in the 12-minute warm-up complex
+    as the slasher-to-halo sequence. It is an appropriate first-session shoulder preparation
+    movement with very low injury risk.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - upper_back
+    highlight_secondary:
+    - core
+    - triceps
+    - biceps
+  muscles_primary:
+  - deltoids
+  - upper_back
+  muscles_secondary:
+  - core
+  - triceps
+  - biceps
+kb_overhead_carry:
+  animation:
+    type: none
+  coaching_focus: The shoulder is active, not passive — push the bell into the ceiling
+    while you walk; a passive arm will drift inward and forward under fatigue.
+  common_errors:
+  - 'Shoulder dropping forward under fatigue: the lat loses engagement and the joint
+    is no longer protected'
+  - 'Elbow bending: the arm is no longer locked; the carry becomes a waiter carry
+    and the joint stress shifts'
+  - 'Lateral trunk lean: the overhead load amplifies any core weakness; this is a
+    limiting factor, not a technique error to push through'
+  cue_points:
+  - Press to full lockout before beginning the walk; the arm must be fully extended
+    with a packed shoulder
+  - Eyes forward — do not look at the bell; trust the position
+  - Push the bell up actively throughout the carry — this is not a rest position
+  - The trunk must resist lateral flexion as in the farmer carry, plus the rotational
+    demand of the overhead load
+  - Set the bell down cleanly by reversing the press — do not drop it from overhead
+  description: The single-arm overhead carry holds the kettlebell at full lockout
+    overhead and walks for distance — the maximum shoulder stability demand of all
+    carry variants. It requires a packed shoulder, active lat engagement, and full
+    scapular upward rotation maintained under locomotion. Horsemen include it in loaded
+    carry circuits; it is contraindicated with nearly all shoulder pathologies.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - upper_back
+    highlight_secondary:
+    - triceps
+    - erector_spinae
+    - glutes
+  muscles_primary:
+  - deltoids
+  - core
+  - upper_back
+  muscles_secondary:
+  - triceps
+  - erector_spinae
+  - glutes
+kb_press_single:
+  animation:
+    type: none
+  coaching_focus: 'At lockout: actively pull the shoulder into the socket and engage
+    the lat — the arm should feel screwed into the shoulder, not just up in the air.'
+  common_errors:
+  - 'Lateral lean away from the bell: the load is shifting to the spine rather than
+    the shoulder — reduce load'
+  - 'Wrist deviation: the bell tips back and the wrist bends — use a tighter rack
+    position'
+  - 'Soft lockout: the arm bends slightly at the top; the shoulder must be actively
+    packed at full extension'
+  cue_points:
+  - 'Rack: elbow tight, wrist neutral, bell resting on the forearm — do not grip with
+    a white-knuckle clench'
+  - Take a big breath and brace; the press is a full-body effort even though the legs
+    do not move
+  - Press in a straight line; the bell travels up and slightly back as the arm locks
+    out
+  - 'At lockout: pack the shoulder, engage the lat, squeeze the glute on the pressing
+    side'
+  - Return to rack under control — do not drop the bell back to the shoulder
+  description: The single-arm kettlebell strict press tests raw overhead pressing
+    strength from the rack — no leg drive, no momentum. The offset load of the kettlebell
+    relative to the hand creates a rotational demand requiring active lat engagement
+    at lockout, making it more shoulder-stabilizing than a dumbbell press of the same
+    weight.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - erector_spinae
+    - pec
+  muscles_primary:
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - erector_spinae
+  - pec
+kb_push_press_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Push_Press
+    gif_alt: Kettlebell Push Press (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Push_Press/0.jpg
+    type: gif
+  coaching_focus: The dip must be vertical — if the torso tips forward, the bell path
+    goes forward and the press fails.
+  common_errors:
+  - 'Dipping forward: the bell path goes in front of the center of mass and the press
+    stalls'
+  - 'Soft dip with no explosion: the leg contribution is minimal and it becomes a
+    slow strict press'
+  - 'Not locking out: stopping short at the top; full lockout is the standard'
+  cue_points:
+  - 'Rack: identical starting position to the strict press'
+  - 'Dip: a quick, controlled knee bend with a vertical torso — 3–4 inches maximum'
+  - Drive explosively through the heels; the legs extend and then the arm takes over
+  - The push press should feel easier than the strict press for the first portion
+    of the range
+  - Lock out and stand tall; do not lean back to finish the press
+  description: The single-arm kettlebell push press uses a sharp leg dip to drive
+    the bell overhead, allowing heavier loading than the strict press and developing
+    power transfer from the lower body to the shoulder. Horsemen include it as a timed
+    interval in the warm-up complex (1 minute per arm) and it bridges strict pressing
+    to the jerk.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - core
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  muscles_secondary:
+  - glutes
+  - core
+kb_rack_carry:
+  animation:
+    type: none
+  coaching_focus: The rack position must be maintained perfectly throughout — if the
+    elbow drifts away from the body or the wrist bends, the carry is compromised.
+  common_errors:
+  - 'Elbow drifting away from the body: the rack becomes an extended carry position
+    and the load mechanics change'
+  - 'Forward lean: the anterior load pulls the torso into flexion; the abs must resist
+    this'
+  - 'Wrist deviation under fatigue: the bell tips and the forearm takes more of the
+    load awkwardly'
+  cue_points:
+  - Clean the bell to rack before beginning the walk
+  - Elbow tight to the body; wrist neutral; bell resting on the forearm — active position,
+    not passive
+  - Resist the bell pulling the torso forward into flexion — the abs must actively
+    oppose the anterior load
+  - Walk with normal gait; the loaded side hip should not hike or drop
+  - Maintain the rack position even at the turnaround and during any fatigue
+  description: The kettlebell rack carry holds the bell in the clean rack position
+    — elbow tight, bell resting on the forearm at the shoulder — and walks for distance.
+    It develops anti-flexion and anti-rotation core demand in a walking pattern and
+    is an intermediate carry between the farmer carry and the overhead carry in the
+    Horsemen progressive carry system.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - deltoids
+    - upper_back
+    highlight_secondary:
+    - forearms
+    - biceps
+    - glutes
+  muscles_primary:
+  - core
+  - deltoids
+  - upper_back
+  muscles_secondary:
+  - forearms
+  - biceps
+  - glutes
+kb_snatch:
+  animation:
+    type: none
+  coaching_focus: Punch through the bell at the top — the hand goes to the bell, not
+    the bell to the hand; this eliminates the forearm crash.
+  common_errors:
+  - 'Bell crashing onto the forearm at the top: the wrist rotation is too late — practice
+    the wrist turn at slow speed'
+  - 'Muscling the bell with the arm instead of projecting it with the hips: forearms
+    fatigue first and RPM collapses'
+  - 'Catching in hyperextension at the top: the shoulder is not packed; the lat must
+    be engaged at lockout'
+  - 'Loop path: the bell travels in a wide horizontal arc — the path should be as
+    vertical as possible'
+  cue_points:
+  - Path is the same as the swing and clean up to shoulder height; the distinction
+    is the arm continues upward
+  - As the bell rises past the ear, rotate the wrist and punch the hand through the
+    handle — the bell should float up and settle without slamming
+  - 'At lockout: arm straight, bell resting on the back of the forearm, shoulder packed,
+    glutes squeezed'
+  - 'Lower: tip the bell forward off the wrist, hinge back into the backswing — not
+    a drop, a controlled swing'
+  - 'RPM targets: 10 RPM is moderate pace; 14+ RPM requires exceptional hip efficiency
+    and minimized arm effort'
+  description: The kettlebell snatch pulls the bell from the hip-hinge arc to full
+    overhead lockout in one movement, punching the hand through the handle at the
+    top so the bell rests on the back of the wrist without impact. It is the signature
+    test of the Wildman system and the Horsemen SSST (200+ snatches in 10 minutes
+    at 24 kg). More than any other exercise it combines power, endurance, and skill.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - deltoids
+    highlight_secondary:
+    - erector_spinae
+    - core
+    - forearms
+    - triceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - deltoids
+  muscles_secondary:
+  - erector_spinae
+  - core
+  - forearms
+  - triceps
+kb_swing_single_arm:
+  animation:
+    type: none
+  coaching_focus: Keep the non-working shoulder packed — the free arm should counterbalance,
+    not flail.
+  common_errors:
+  - 'Torso rotation at the top: the hips and shoulders should stay square — rotation
+    means the core is not bracing'
+  - 'Shoulder shrug at the top: the arm is elevating the bell rather than the hip
+    snap projecting it'
+  - 'Free arm flailing: the free arm position tells you how controlled the rep is;
+    coach it actively'
+  cue_points:
+  - All cues from the two-hand swing apply — the hip hinge, the snap, the plank at
+    the top
+  - 'Free hand: either at the side or touching the working wrist as a guide — it should
+    not be passive'
+  - At the top, the shoulder of the working arm must stay packed and low — do not
+    shrug
+  - 'Hand switch (if applicable): release at the top of the float and pass at shoulder
+    height in a smooth arc'
+  - 'Anti-rotation: the trunk actively resists the asymmetric loading — brace harder
+    than you think you need to'
+  description: The single-arm kettlebell swing is mechanically identical to the two-hand
+    swing but with the free hand assisting balance and the trunk now managing anti-rotation
+    demand. It is the direct prerequisite to the single-arm clean and snatch in the
+    Wildman complexity ladder, and adds a rotational stability component absent from
+    the bilateral version.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - deltoids
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - deltoids
+  - forearms
+neck_lateral_flexion:
+  animation:
+    type: none
+  coaching_focus: Depress the opposite shoulder actively while the ear drops toward
+    the near shoulder -- this doubles the lateral stretch by pulling both ends of
+    the scalene chain apart simultaneously.
+  common_errors:
+  - 'Shoulder elevating on the dropping side: the movement should elongate the neck,
+    not compress it'
+  - 'Forcing range: the lateral cervical region is sensitive -- gravity-only range
+    is appropriate'
+  - 'Combining into neck circles: neck circles are generally not recommended as they
+    combine all planes in an uncontrolled arc'
+  cue_points:
+  - Seated or standing with a relaxed but tall spine
+  - Actively pull the opposite shoulder downward while the ear drops toward the near
+    shoulder
+  - 2-second hold at end range; return to center and switch sides
+  - 10 reps per side; no bouncing
+  - Combine with neck rotation in a complete cervical prep sequence
+  description: Neck lateral flexion (Horsemen variant) slowly brings the ear toward
+    the shoulder to target the scalenes and lateral cervical musculature -- a common
+    site of tightness in athletes who carry heavy loads on the shoulder (sandbag carries,
+    ruck) or who have desk-work-intensive lifestyles. Horsemen include it alongside
+    neck rotation in the pre-session joint prep. Contraindicated with active cervical
+    spine injury.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+neck_rotation:
+  animation:
+    type: none
+  coaching_focus: The rotation range should be comfortable and symmetric -- if one
+    direction is painful or significantly more restricted, do not load the neck that
+    session without addressing the restriction.
+  common_errors:
+  - 'Overpressure with the hands: never apply manual force to cervical rotation'
+  - 'Continuing into loaded work with significant rotation asymmetry: the neck asymmetry
+    is a signal to address first'
+  - 'Rushing through as a throwaway movement: the 2-second hold at end range is what
+    makes this a mobility drill rather than just a head movement'
+  cue_points:
+  - Seated or standing, tall spine, relaxed shoulders
+  - Slow controlled rotation to end range on each side; 2-second hold
+  - 10 reps each direction
+  - No overpressure -- gravity only for the cervical spine
+  - If restriction is found, add thoracic rotation and scalene stretching to the prep
+    sequence
+  description: Slow controlled cervical rotation (Horsemen variant) is standard joint
+    prep before any upper-body or loaded carry session -- the neck must be assessed
+    and prepared before it is placed under load. Horsemen include it in the pre-session
+    joint prep sequence along with shoulder circles and thoracic work. Contraindicated
+    with active cervical spine injury.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+ruck_carry:
+  animation:
+    type: none
+  coaching_focus: This is a strength exercise that happens to involve walking -- treat
+    each step as a loaded movement, not a shuffle; posture and deliberate foot placement
+    matter.
+  common_errors:
+  - 'Pack load exceeding current capacity: if posture collapses within 100m, reduce
+    the load -- grinding through poor posture under a heavy ruck trains bad patterns'
+  - 'Waist belt neglected: shoulder-only carry under heavy loads creates upper-back
+    and neck fatigue that ends sets prematurely'
+  - 'Treating it as a race: the pace is a walk; completing the distance with posture
+    intact is the goal'
+  cue_points:
+  - Load the pack to the prescribed weight; confirm the waist belt is taking the majority
+    of the load
+  - Stand tall under the pack -- the heavy load demands more active postural engagement
+    than aerobic rucking
+  - 'Walk deliberately: each step is controlled; this is not a speed exercise'
+  - Breathe rhythmically -- use a 4-count inhale / 4-count exhale pattern to manage
+    effort under heavy load
+  - Cover the target distance and set the pack down carefully
+  description: The ruck carry is a short, heavy, deliberate loaded pack carry as a
+    strength-endurance training set -- distinct from the long aerobic ruck. Pack weight
+    is 30% bodyweight or more; sets are distance-based (400-800m) rather than time-based.
+    Horsemen program heavy ruck carries as a structural loading tool in GPP blocks.
+    The heavy ruck carry transfers directly to the Fan Dance and similar field standards.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - quadriceps
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - upper_back
+    - hamstrings
+  muscles_primary:
+  - glutes
+  - quadriceps
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - upper_back
+  - hamstrings
+sandbag_bear_hug_carry:
+  animation:
+    type: none
+  coaching_focus: The bag is pushing you forward and down -- resist both forces simultaneously
+    with the core and upper back; a rounded thoracic spine is the first failure pattern.
+  common_errors:
+  - 'Thoracic rounding: the anterior load encourages a collapsed chest -- fight for
+    thoracic extension throughout'
+  - 'Bag slipping too low: a bag below the navel cannot be controlled with the arms;
+    re-grip higher or reduce load'
+  - 'Restricting breathing to avoid the discomfort: the compressed breathing pattern
+    is part of the training stimulus for the respiratory muscles'
+  cue_points:
+  - Grip the bag firmly around the middle; forearms stacked, bag pulled tight against
+    the chest
+  - 'Stand tall: the anterior load fights to pull the torso into flexion; drive the
+    hips forward and chest up'
+  - Breathing is compressed -- breathe in short, controlled nasal breaths throughout
+    the carry
+  - Walk with a stable gait; the shifting sand moves with each step and must be managed
+    in real time
+  - Set the bag down by hinging at the hips, not by rounding the back
+  description: The sandbag bear-hug carry hugs the bag against the chest with both
+    arms and walks for distance. The anterior bilateral load compresses the thorax,
+    making breathing restricted and turning the carry into a respiratory challenge
+    as well as a strength-endurance test at heavier loads. Horsemen GPP programs it
+    as the primary bilateral sandbag carry. The bear-hug position demands anti-flexion
+    core strength and thoracic erector engagement.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    - erector_spinae
+    highlight_secondary:
+    - biceps
+    - forearms
+    - glutes
+  muscles_primary:
+  - core
+  - upper_back
+  - erector_spinae
+  muscles_secondary:
+  - biceps
+  - forearms
+  - glutes
+sandbag_shoulder_carry:
+  animation:
+    type: none
+  coaching_focus: Control the bag -- the shifting load will want to slide off the
+    shoulder; the contralateral hand can assist but the shoulder and upper back must
+    be actively stabilizing.
+  common_errors:
+  - 'Bag sliding off the shoulder: the carry ends when it can no longer be controlled;
+    reduce distance or weight'
+  - 'Lateral lean toward the bag: the bag is pulling the shoulder down and the trunk
+    is following -- resist actively'
+  - 'Neglecting to alternate shoulders: asymmetric loading adaptations develop quickly;
+    alternate every set'
+  cue_points:
+  - Hoist the bag to one shoulder; it should rest across the trapezius and upper back,
+    not just on the neck
+  - Stand tall; the unilateral load creates anti-lateral-flexion demand on the opposite
+    side
+  - The free hand can rest on the bag to prevent sliding -- this is acceptable, not
+    a crutch
+  - Walk with a stable gait; the shifting sand inside the bag will move with each
+    step and must be managed
+  - Alternate shoulders; never complete all sets on one side only
+  description: The sandbag shoulder carry drapes the bag over one shoulder with the
+    load resting across the upper trapezius and carries for distance. The shifting,
+    uneven load of the sandbag demands continuous stabilization that rigid implements
+    cannot replicate. Horsemen GPP programs it as the primary GPP carry tool for general
+    durability work. Alternate shoulders between sets or at the midpoint.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - core
+    highlight_secondary:
+    - glutes
+    - quadriceps
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - core
+  muscles_secondary:
+  - glutes
+  - quadriceps
+  - deltoids
+sb_bent_row:
+  animation:
+    external_id: Bent_Over_Barbell_Row
+    gif_alt: Sandbag Bent-Over Row
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg
+    type: gif
+  coaching_focus: Hinge to the correct angle and hold it fixed -- the torso angle
+    should not change as you pull; if the hips rise with the row, the load is too
+    heavy.
+  common_errors:
+  - Hips rising during the row -- this turns the movement into a deadlift; set the
+    angle and hold it with the core
+  - Pulling with the arms rather than the elbows -- the elbows lead the pull; hands
+    follow
+  - Bag drifting away from the body during the pull -- the bag path should be close
+    to vertical; lat tension maintains the path
+  cue_points:
+  - Hinge at the hip to a 45-degree torso angle and grip the bag at mid-width
+  - Brace the core and maintain the hip hinge angle throughout every rep -- hips do
+    not move during the pull
+  - Drive the elbows back and up, pulling the bag to the lower chest
+  - Squeeze the shoulder blades together at the top -- the bag should contact the
+    lower chest on each rep
+  - Lower slowly -- the eccentric builds the lat and upper back strength that the
+    Horsemen system demands
+  description: The sandbag bent-over row applies a horizontal pull from a hinged torso
+    position -- approximately 45 degrees -- pulling the bag to the lower chest. The
+    bag grip demands significant forearm and lat engagement throughout, as the unstable
+    load shifts during the pull and challenges the lats to maintain consistent bar
+    path. It is a Horsemen upper back strength standard.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - rhomboids
+    highlight_secondary:
+    - hamstrings
+    - erector_spinae
+  muscles_primary:
+  - lats
+  - rhomboids
+  - middle_trapezius
+  muscles_secondary:
+  - hamstrings
+  - erector_spinae
+  - biceps
+sb_carry_bearhug:
+  animation:
+    type: none
+  coaching_focus: Squeeze the bag and stand tall -- the two competing demands (squeezing
+    inward and extending upright) define the exercise; give in to either and the carry
+    degrades.
+  common_errors:
+  - 'Loose grip on the bag: the bag shifts and the carry becomes a balancing act rather
+    than a loaded carry'
+  - 'Forward lean of the torso: resist the anterior load; forward lean loads the lumbar
+    under compression'
+  - 'Rapid pace: slower carries under the bear-hug position are harder and more productive
+    than a fast shuffle'
+  cue_points:
+  - Pull the bag tight against the chest; a loose bear hug allows the bag to shift
+    unpredictably
+  - Stand erect; thoracic extension against the anterior load
+  - Short nasal breaths throughout; do not attempt deep chest breaths under the compressed
+    load
+  - Hips drive forward to maintain an upright posture
+  - Set down with a controlled hip hinge
+  description: The sandbag bear-hug carry (Horsemen GPP variant) follows identical
+    mechanics to sandbag_bear_hug_carry -- the sb_ prefix indicates a Horsemen GPP
+    package exercise ID. Both arms embrace the bag against the chest; the shifting
+    sandbag load and compressed breathing position are the defining demands of this
+    carry variant.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    - erector_spinae
+    highlight_secondary:
+    - biceps
+    - forearms
+    - glutes
+  muscles_primary:
+  - core
+  - upper_back
+  - erector_spinae
+  muscles_secondary:
+  - biceps
+  - forearms
+  - glutes
+sb_carry_shoulder:
+  animation:
+    type: none
+  coaching_focus: Control the bag at all times -- the shifting load is the training
+    stimulus; fight it actively rather than accommodating it with trunk deviation.
+  common_errors:
+  - 'Accommodating the lateral pull by leaning: the trunk should stay vertical even
+    when the bag shifts'
+  - 'Bag too far forward on the neck: creates cervical loading; the bag should be
+    on the upper back, not the neck'
+  - 'No shoulder alternation: unilateral loading only develops one-sided adaptation'
+  cue_points:
+  - Bag rests across the upper trap and shoulder; the load center is behind the neck
+  - Contralateral hand may steady the bag; the stabilizing effort comes from the shoulder
+    and upper back
+  - Upright torso; resist lateral trunk flexion toward the loaded side
+  - Controlled walking pace -- speed increases bag movement and demands more rapid
+    stabilization responses
+  - Alternate shoulders between sets
+  description: The sandbag shoulder carry (Horsemen GPP variant) drapes the bag over
+    the shoulder in the Horsemen loaded carry circuit format. Functionally identical
+    to the sandbag_shoulder_carry -- the sb_ prefix indicates a Horsemen GPP package-specific
+    exercise ID. The shifting, compressible nature of the sandbag demands real-time
+    stabilization adjustments that barbell and dumbbell carries do not.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - core
+    highlight_secondary:
+    - glutes
+    - quadriceps
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - core
+  muscles_secondary:
+  - glutes
+  - quadriceps
+  - deltoids
+sb_clean:
+  animation:
+    external_id: Clean
+    gif_alt: Sandbag Clean
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean/0.jpg
+    type: gif
+  coaching_focus: Initiate with a strong lat pull to keep the bag tight to the body
+    during the extension -- a bag that floats away from the hips cannot be efficiently
+    received at the shoulder.
+  common_errors:
+  - Using the arms to lift instead of the hips -- the arms guide the bag, the hips
+    generate the power; any arm pull before full hip extension is a fault
+  - Letting the bag swing away from the body -- the bag must travel close to the thighs
+    throughout; lat tension prevents the swing
+  - Catching too high -- drop under the bag; catching at full height limits the transferable
+    load significantly
+  cue_points:
+  - Begin in the same position as the sandbag deadlift -- bag close, brace set, lats
+    engaged
+  - Drive through the legs and extend the hip explosively -- the power comes from
+    the hip, not the arms
+  - Pull the bag close to the body and drop under it as it rises -- receive it at
+    the shoulder
+  - Catch in a partial squat and stand to completion -- do not catch standing
+  - Alternate shoulders each set to develop bilateral receiving capacity
+  description: The sandbag clean applies power clean mechanics to an unstable load
+    -- an explosive hip hinge drives the bag from the floor to the shoulder or front
+    rack position. The shifting, non-rigid load demands stronger lat engagement at
+    pull initiation and a faster pull under the bag to catch it before it separates
+    from the body. It is the second movement in the Horsemen sandbag progression,
+    unlocking all complex work.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - traps
+    highlight_secondary:
+    - quadriceps
+    - lats
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  - traps
+  muscles_secondary:
+  - quadriceps
+  - lats
+  - core
+  - forearms
+sb_clean_press:
+  animation:
+    external_id: Clean_and_Press
+    gif_alt: Sandbag Clean and Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean_and_Press/0.jpg
+    type: gif
+  coaching_focus: Receive the clean in a stable position before initiating the press
+    -- do not press off a bouncing catch; the bag must be settled on the shoulder
+    first.
+  common_errors:
+  - Pressing before the bag is stable on the shoulder -- set the position fully before
+    pressing
+  - Elbows dropping during the press -- keep elbows under the bag throughout the press
+    path
+  - Not locking out -- the overhead position must be achieved on every rep; partial
+    lockout is not a rep
+  cue_points:
+  - 'Clean the bag to one shoulder and establish position: bag stable, hips under
+    the bar, brace set'
+  - 'For strict press: drive the bag straight overhead without any leg drive or hip
+    movement'
+  - 'For push press: dip slightly at the knees and drive through the legs, then press
+    to lockout'
+  - Lock out at the top with arms straight and the bag under control before the next
+    rep
+  - Lower the bag to the shoulder under control -- do not drop it; controlled descent
+    loads the shoulder eccentrically
+  description: The sandbag clean and press is the core Horsemen compound lift -- an
+    explosive clean to the shoulder followed immediately by a strict or push press
+    overhead. The unstable bag demands more shoulder stabilizer activation throughout
+    the press than a barbell, as the load shifts at the top. It appears in complexes,
+    EMOM density work, and as a standalone strength lift.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - glutes
+    - traps
+    highlight_secondary:
+    - triceps
+    - core
+  muscles_primary:
+  - shoulders
+  - glutes
+  - hamstrings
+  - traps
+  muscles_secondary:
+  - triceps
+  - core
+  - lats
+  - quadriceps
+sb_complex:
+  animation:
+    type: none
+  coaching_focus: Treat each movement within the complex as if it were a standalone
+    set -- standards do not drop because the complex is fatiguing; full reps at every
+    station.
+  common_errors:
+  - Attempting the complex before individual proficiency is established -- the complex
+    reveals weaknesses but does not fix them
+  - Lowering standards under fatigue -- the complex is only as valuable as the quality
+    of each movement within it
+  - Wrong EMOM pacing -- start the first set conservatively to confirm the work-to-rest
+    ratio is achievable across all rounds
+  cue_points:
+  - Identify the specific complex sequence before starting -- the sequence does not
+    change mid-complex
+  - 'Prerequisite: all component lifts (clean, squat, press, lunge) must be individually
+    proficient'
+  - Move through each component with the same mechanics standards as the isolated
+    exercise
+  - Transition between movements without putting the bag down -- the carry and drag
+    link the lifting movements
+  - In EMOM format, the rest period is the remainder of the minute after the complex
+    is complete -- minimize rest by moving efficiently
+  description: The Horsemen sandbag complex chains multiple sandbag movements without
+    rest -- clean to shoulder, deep squats, carry, drag, press, and lunge variations
+    assembled into a single round. One rep equals a complete sequence. It is the highest-demand
+    sandbag drill in the Horsemen system, appearing in EMOM formats (Double Eagle,
+    "Teabag Your Buddy Tonight") and as standalone power endurance work. All prerequisite
+    sandbag lifts must be individually proficient before attempting complexes.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - quadriceps
+    - shoulders
+    highlight_secondary:
+    - core
+    - obliques
+    - lats
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  - shoulders
+  - core
+  muscles_secondary:
+  - erector_spinae
+  - obliques
+  - lats
+  - triceps
+sb_deadlift:
+  animation:
+    type: none
+  coaching_focus: Brace hard before the pull and keep the lats engaged throughout
+    -- the bag will shift, and lat tension is the only defense against it pulling
+    the upper back into flexion.
+  common_errors:
+  - Losing lat tension as the bag shifts -- this rounds the upper back; cue "protect
+    your armpits" throughout the pull
+  - Jerking the bag off the floor -- settle the hips, set the brace, then pull; no
+    momentum to start
+  - Not gripping the bag close to the body -- the further the bag is from the centerline,
+    the more it destabilizes
+  cue_points:
+  - Set the bag on the floor and grip around the middle (or handles) with the bag
+    close to the shins
+  - Brace 360 degrees -- belly, sides, and back -- before any movement begins
+  - Drive the floor away with the legs while maintaining the hip hinge angle until
+    mid-shin
+  - Lock out at the top with hips fully extended and glutes squeezed
+  - Lower under control along the same path -- do not dump the bag; each eccentric
+    rep counts
+  description: The sandbag deadlift applies hip hinge mechanics to an unstable, shapeless
+    load -- gripping around the middle or handles of the bag rather than a fixed barbell.
+    The unstable load shifts during the pull, demanding stronger bracing and lat engagement
+    to maintain position compared to the barbell equivalent. It is the foundational
+    sandbag pattern in the Horsemen system and the prerequisite to all other sandbag
+    lifts.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - quadriceps
+    - lats
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - lats
+  - core
+sb_front_squat:
+  animation:
+    type: none
+  coaching_focus: Fight the bag forward -- the front rack position will pull the thoracic
+    spine into flexion if not actively countered; cue elbows up and chest tall throughout
+    the descent.
+  common_errors:
+  - Elbows dropping -- this collapses the front rack and dumps the bag forward; cue
+    elbows high before and during each rep
+  - Forward trunk lean -- a byproduct of dropping elbows; the front squat should be
+    more upright than the back squat
+  - Receiving in a static press rather than a clean -- the clean builds the explosive
+    power component; clean and front squat are linked
+  cue_points:
+  - Clean the bag and receive it in a bearhug or front rack position at chest height
+  - Elbows point forward and upward -- the higher the elbows, the better the anterior
+    chain bracing
+  - Descend into the squat with the torso as vertical as possible -- the bag weight
+    pulls the chest down; resist it
+  - At full depth, the hip crease clears the top of the knee -- do not cut depth to
+    preserve upper back position
+  - Drive through the heels to stand and keep the elbows elevated throughout the ascent
+  description: The sandbag front squat holds the bag in a front rack or bearhug position
+    against the chest, demanding strong thoracic extension and anterior bracing to
+    prevent the bag from pulling the upper back into flexion. It is a progression
+    from the shoulder carry squat and requires the sandbag clean for loading. It appears
+    regularly in Horsemen strength days and named complexes.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - core
+    - erector_spinae
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - upper_trapezius
+  - anterior_deltoid
+sb_getup:
+  animation:
+    type: none
+  coaching_focus: Keep the loaded shoulder packed and depressed at every stage of
+    the get-up -- the shoulder must stay in its socket throughout, not creep toward
+    the ear.
+  common_errors:
+  - Rushing the transitions -- each stage requires a stability check before moving
+    to the next
+  - Losing the loaded shoulder position -- the shoulder must stay packed at every
+    stage; if it creeps up, reduce load
+  - Skipping alternating sides -- always complete equal reps on both shoulders to
+    address bilateral asymmetry
+  cue_points:
+  - Load the bag on one shoulder and stabilize it before beginning the get-up sequence
+  - 'Use the standard TGU pattern: roll to elbow, post to hand, hip bridge, kneel,
+    stand'
+  - The loaded shoulder stays packed and depressed throughout every transition
+  - Move slowly and deliberately through each phase -- do not rush from position to
+    position
+  - 'Reverse the pattern to lower: step back, kneel, post, elbow, supine -- full control
+    throughout'
+  description: The sandbag get-up applies Turkish get-up mechanics to a bag loaded
+    on the shoulder rather than a kettlebell held overhead. The asymmetric shoulder
+    load is more forgiving than the overhead KB but demands robust bracing and core
+    stability throughout the multi-stage pattern. The Horsemen use this as a warm-up
+    staple (100 get-ups at 85-95 lb) and as a conditioning movement in SMMF challenges.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - glutes
+    highlight_secondary:
+    - shoulders
+    - obliques
+  muscles_primary:
+  - core
+  - glutes
+  - shoulders
+  muscles_secondary:
+  - obliques
+  - hip_flexors
+  - quadriceps
+sb_halfmoon:
+  animation:
+    type: none
+  coaching_focus: Generate the arc from the hips, not the lower back -- the rotation
+    comes from hip drive and thoracic rotation, not lumbar flexion-rotation under
+    load.
+  common_errors:
+  - Rotating from the lumbar spine -- the thorax must lead the rotation; lumbar rotation
+    under load causes injury
+  - Losing bracing at the top of the arc -- the overhead position is the highest-risk
+    moment; brace hardest here
+  - Insufficient hip drive -- the power must come from the hips, not from pulling
+    with the arms
+  cue_points:
+  - Stand over the bag and grip it by the handles or around the middle
+  - Initiate the movement with a hip hinge and then rotate from the thorax to arc
+    the bag high overhead
+  - The bag travels in a true semicircle -- up, over, and down to the opposite side
+  - Brace the core maximally throughout the entire arc -- no loose positions at any
+    point
+  - Set the bag down deliberately at the end -- do not drop it; the descent trains
+    deceleration
+  description: The sandbag half moon is a heavy rotational ballistic -- the bag is
+    picked up from one side, arced high overhead in a semicircle, and set down on
+    the other side. It is one of the most demanding rotational movements in the Horsemen
+    system, combining flexion-rotation under significant sandbag load. Strong bracing
+    is absolutely required throughout the entire arc. Contraindicated with lumbar
+    disc pathology due to the flexion-rotation demand.
+  muscle_diagram:
+    highlight_primary:
+    - obliques
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - shoulders
+    - core
+  muscles_primary:
+  - obliques
+  - glutes
+  - erector_spinae
+  - lats
+  muscles_secondary:
+  - shoulders
+  - core
+  - hamstrings
+sb_lunge:
+  animation:
+    type: none
+  coaching_focus: Stay tall -- the bag on the shoulder will try to pull the trunk
+    laterally; brace the opposite oblique hard to keep the spine vertical through
+    each step.
+  common_errors:
+  - Trunk lateral flexion toward the loaded shoulder -- the obliques on the opposite
+    side must fire; cue "stack your ribs over your hips"
+  - Short stride length -- a deeper lunge requires more hip flexor mobility and glute
+    engagement; short strides reduce the demand
+  - Front knee collapsing inward -- cue external rotation and push the knee out over
+    the second toe
+  cue_points:
+  - Load the bag on one shoulder or hold in bearhug at chest height before stepping
+  - Step forward with a long stride and lower the rear knee to touch the floor lightly
+  - Keep the front shin vertical -- no knee cave; track the knee over the second toe
+  - Drive through the front heel to step through to the next lunge -- do not pause
+    at the bottom
+  - Alternate the shoulder carry side every 50m in long-distance work; stay consistent
+    in short sets
+  description: The sandbag lunge is a walking lunge with the bag on the shoulder or
+    in a bearhug position. It appears in Horsemen power endurance work and the SMMF
+    500m lunge challenge. The asymmetric shoulder carry demands oblique and lateral
+    chain bracing with each step, turning a standard lunge into a unilateral carry
+    challenge. Bag position alternates every 50m in long-distance variants.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - obliques
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - obliques
+  muscles_secondary:
+  - hamstrings
+  - calves
+  - core
+sb_press_overhead:
+  animation:
+    type: none
+  coaching_focus: Press the bag in a straight vertical line -- any forward lean or
+    bar-path deviation under the unstable load is immediately magnified; stay tall
+    and press directly overhead.
+  common_errors:
+  - Pressing forward instead of overhead -- this causes the lower back to extend to
+    compensate; bracing prevents it
+  - Not locking out -- full elbow extension is required; partial lockout limits shoulder
+    strengthening
+  - Using momentum from the clean to initiate the press -- the clean and the press
+    are separate movements; complete the clean, pause, then press
+  cue_points:
+  - Clean the bag and receive it on the shoulder or in front rack before pressing
+  - Brace the core with full 360-degree tension and drive the bag overhead
+  - The press path is straight up -- no forward arc; think "press through the ceiling"
+  - Lock the arms out completely at the top -- elbows fully extended and shoulders
+    packed
+  - Lower the bag under control to the shoulder -- do not drop; the eccentric descent
+    is part of the lift
+  description: The sandbag overhead press is a strict press from the shoulder or front
+    rack position to full overhead lockout. The unstable bag requires significantly
+    more shoulder stabilizer activation than a barbell press, as the load shifts laterally
+    during the press. The unilateral single-shoulder variant adds a lateral bracing
+    challenge. It is a Horsemen strength standard and prerequisite to the clean and
+    press.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - triceps
+    highlight_secondary:
+    - core
+    - serratus_anterior
+  muscles_primary:
+  - shoulders
+  - triceps
+  - upper_trapezius
+  muscles_secondary:
+  - core
+  - serratus_anterior
+  - lats
+sb_slam:
+  animation:
+    type: none
+  coaching_focus: The slam is a full expression of power -- commit completely to the
+    overhead lift and the slam; half-hearted slams reduce the training stimulus and
+    are not in the Horsemen spirit.
+  common_errors:
+  - Not reaching full overhead extension before slamming -- the bag must be fully
+    overhead for the full power arc
+  - Letting the bag drift forward overhead -- the bag should be directly above the
+    body, not in front of it
+  - Skipping the hip hinge on the pick-up -- each slam-and-pick is a two-part movement;
+    the hinge is not optional
+  cue_points:
+  - Pick the bag up with a hip hinge and drive to full extension at the top
+  - Lift the bag overhead to full extension -- reach as high as possible before slamming
+  - Slam the bag downward with full force -- use the lats to accelerate the bag, not
+    just gravity
+  - After the slam, hinge at the hip to pick the bag back up -- each pick-up is an
+    additional hip hinge rep
+  - Maintain bracing throughout the overhead position -- do not let the lower back
+    hyperextend at the top
+  description: The sandbag slam lifts the bag overhead and throws it to the ground
+    with maximal force. Unlike a medicine ball slam, the bag does not bounce -- the
+    athlete picks it up after each slam, adding a hip hinge rep per slam and significantly
+    increasing metabolic demand. It appears in Horsemen Tabata Hell and conditioning
+    circuits as a high-output power endurance movement.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - shoulders
+    - core
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - lats
+  - shoulders
+  - core
+  - glutes
+  muscles_secondary:
+  - triceps
+  - hamstrings
+  - erector_spinae
+sb_squat:
+  animation:
+    type: none
+  coaching_focus: Brace the lateral chain as hard as the front -- asymmetric loading
+    exposes lateral stability deficits immediately; the obliques on the unloaded side
+    must work to keep the spine from laterally flexing.
+  common_errors:
+  - Lateral trunk lean toward the loaded shoulder -- brace the obliques on the opposite
+    side to prevent this
+  - Reducing depth due to load instability -- depth is non-negotiable; reduce load
+    if instability prevents full depth
+  - Neglecting to alternate sides in shoulder carry -- asymmetric loading must be
+    balanced across sets
+  cue_points:
+  - 'For shoulder carry: load the bag on one shoulder and brace hard laterally before
+    descending'
+  - 'For bearhug: wrap both arms around the bag on the back and brace into the load'
+  - Descend with a standard squat pattern -- hip crease below the top of the knee
+    at depth
+  - Drive through the full foot to stand -- do not rise onto the toes under the asymmetric
+    load
+  - Alternate the shoulder carry side each set to develop bilateral lateral stability
+  description: The sandbag back squat is performed with the bag draped over one or
+    both shoulders in a bearhug or shoulder carry position. The asymmetric single-shoulder
+    variant challenges lateral bracing and oblique stability throughout the squat
+    pattern. It is a Horsemen strength and durability staple, counting toward durability
+    volume due to the non-standard carry position demanding sustained postural effort.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - obliques
+    - erector_spinae
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - obliques
+  - hamstrings
+  - core
+sb_squat_jump:
+  animation:
+    type: none
+  coaching_focus: Prioritize triple extension at the peak -- ankles, knees, and hips
+    all extend fully before the feet leave the floor; it is a jump, not a bounce.
+  common_errors:
+  - Jumping without full triple extension -- reaching the peak without full extension
+    limits power output and defeats the training purpose
+  - Stiff landing -- the landing absorbs forces equal to 3-5x bodyweight; soft landing
+    with bent knees is essential
+  - Using a load that prevents full jumps -- the weight must allow complete triple
+    extension; reduce load if jumps become hops
+  cue_points:
+  - Hold the bag in a stable bearhug or on one shoulder before beginning
+  - Squat to parallel or below, pause briefly at the bottom, then explode upward
+  - Drive through the full foot and extend ankles, knees, and hips simultaneously
+    at the top
+  - Land softly on the balls of the feet first, then absorb with the whole foot --
+    do not land flat-footed or stiff-legged
+  - Absorb the landing into a squat and use that position to reload for the next rep
+  description: The sandbag squat jump is an explosive jump from a squat position while
+    holding the bag in a bearhug or shoulder carry. It trains triple extension under
+    load with an unstable weight and appears in Horsemen power work and leg blaster
+    variants. Soft landing mechanics are essential -- the bag load significantly increases
+    landing forces and joint stress.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - core
+  - erector_spinae
+shoulder_circle:
+  animation:
+    type: none
+  coaching_focus: The circle should feel smooth in all arcs -- a catch or pain at
+    a specific point in the arc is the signal, not something to push through.
+  common_errors:
+  - 'Pushing through a catch or pain: this is a warning signal, not a tightness to
+    force through'
+  - 'Only performing in one direction: forward and backward circles load the shoulder
+    capsule on opposite arcs'
+  - 'Stopping the shoulder prep at circles: circles are the starting point, not the
+    complete preparation'
+  cue_points:
+  - Arms straight, full range circumduction in both forward and backward directions
+  - Both arms simultaneously for efficiency; single-arm for targeted assessment
+  - 10 circles each direction
+  - Slow enough to feel each arc; speed is irrelevant here
+  - Pair with shoulder dislocate PVC and band pull-apart for a complete shoulder prep
+    sequence
+  description: 'Shoulder arm circles (Ido Portal variant) are a daily joint hygiene
+    practice in the Portal system -- full circumduction in both directions at the
+    start of any upper-body or overhead session. Portal treats shoulder circles as
+    a baseline indicator of joint health: a smooth, pain-free circumduction arc in
+    both directions signals a healthy shoulder; any catching, pain, or restricted
+    arc signals a need for targeted joint work.'
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+split_jerk:
+  animation:
+    external_id: Split_Jerk
+    gif_alt: Split Jerk
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jerk/0.jpg
+    type: gif
+  coaching_focus: The split is about getting under the bar, not forward to the bar
+    — the back foot lands directly behind the hip.
+  common_errors:
+  - 'Pressing out: arms not locking before the split — build punching speed drills'
+  - Front foot stepping too far forward, making recovery impossible
+  - 'Leaning forward in the split: bar drifts in front and must be pressed back —
+    usually a dip-forward fault carrying through'
+  - Both feet landing simultaneously rather than sequentially — causes instability
+    at the catch
+  cue_points:
+  - 'Same dip-drive as push jerk: vertical, explosive, short'
+  - As the bar leaves the shoulders, drive the back foot directly back and down; front
+    foot steps forward simultaneously
+  - Front shin vertical or slightly angled; back knee slightly bent — do not let back
+    knee touch the floor
+  - Receive with bar locked out directly over the shoulders and midfoot — not in front
+  - Recover by stepping the front foot back halfway, then the back foot to meet it
+    — front foot moves first
+  - Practice the footwork with an empty bar until it is automatic before loading
+  description: The split jerk is the most technically demanding overhead movement
+    in the barbell system — after driving the bar upward, the athlete splits into
+    a lunge position to receive the bar overhead, then recovers. It is the most common
+    competition jerk and allows maximum overhead load. Horsemen test 1RM.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - core
+    - adductors
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - core
+  - adductors
+strict_press:
+  animation:
+    type: none
+  coaching_focus: Squeeze your glutes at the top and press your head through the window
+    once the bar passes your forehead — do not lean back.
+  common_errors:
+  - 'Excessive lumbar hyperextension: leaning back to get the bar overhead — work
+    thoracic extension'
+  - 'Bar path forward away from vertical: wasted energy; bar should track vertically
+    over midfoot'
+  - 'Elbows flaring out and forward: bar rolls off the shoulder shelf before the press
+    begins'
+  cue_points:
+  - 'Front rack: bar resting on anterior deltoids, elbows slightly in front of the
+    bar'
+  - 'Brace hard before pressing: same trunk pressure as a deadlift'
+  - Press the bar in a straight line; move your head back to let the bar pass, then
+    press it back through
+  - Lock out with arms fully extended, bar stacked over the midfoot, glutes squeezed
+  - No leg dip — if the hips or knees bend at any point, it becomes a push press
+  description: The strict overhead press takes the barbell from a front-rack position
+    to full lockout overhead using pure upper-body pressing strength with no leg drive
+    permitted. Horsemen benchmark is 1x bodyweight; Starting Strength builds from
+    3x5. It is the prerequisite for all push press and jerk variants.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - erector_spinae
+    - pec
+  muscles_primary:
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - erector_spinae
+  - pec
+thoracic_extension_foam_roll:
+  animation:
+    type: none
+  coaching_focus: Breathe into the extension at each segment -- a full exhale at end
+    range of extension over each thoracic level maximizes the tissue response.
+  common_errors:
+  - 'Roller under the lumbar spine: this is both ineffective and potentially harmful
+    -- the lumbar region is not meant to extend over a roller'
+  - 'Moving too quickly between segments: the capsular response requires sustained
+    pressure, not a rolling massage'
+  - 'Skipping thoracic rotation after extension: extension restores the sagittal range;
+    rotation restores the transverse range -- both are needed'
+  cue_points:
+  - Roller perpendicular to spine at mid-back; hands behind head, hips on the floor
+  - Allow the thoracic spine to extend over the roller -- let gravity do the work
+    for 5-10 seconds
+  - Move the roller one hand-width up or down to address the adjacent segment
+  - Cover T4 through T10 systematically -- do not skip segments
+  - Follow with thoracic rotation work to complete the thoracic prep sequence
+  description: Thoracic extension over a foam roller (Ido Portal variant) places the
+    roller perpendicular to the spine and allows the thoracic spine to extend over
+    it segment by segment. Portal uses it as a daily thoracic extension restoration
+    drill in his movement practice. Contraindicated with active lumbar disc pathology
+    due to the spinal extension load -- keep the roller strictly in the thoracic region.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+world_greatest_stretch:
+  animation:
+    external_id: Worlds_Greatest_Stretch
+    gif_alt: World Greatest Stretch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Worlds_Greatest_Stretch/0.jpg
+    type: gif
+  coaching_focus: Perform each component as a complete, separate action -- lunge deeply,
+    then elbow down, then overhead reach; rushing through all three in one movement
+    reduces the benefit of each.
+  common_errors:
+  - 'Front foot too close: the elbow cannot reach the floor and the hip is not in
+    a full stretch position'
+  - 'Standing up between the lunge and the elbow down: maintain the lunge depth throughout
+    both the elbow drop and the overhead reach'
+  - 'Fast reps: the 3-second pause is mandatory; without it the mobility benefit is
+    minimal'
+  cue_points:
+  - Deep lunge with rear knee at or near the floor
+  - Elbow to the floor inside the front foot -- establish this position before the
+    reach
+  - Thoracic rotation with the overhead reach; feel the rib cage rotate
+  - 3-second pause at the overhead reach end range
+  - 5 reps per side in the Horsemen pre-session sequence
+  description: The world greatest stretch (Horsemen variant) follows the same pattern
+    as the Kelly Starrett version -- lunge forward, drop the elbow inside the front
+    foot, rotate the arm overhead with a 3-second pause. Horsemen program it as standard
+    pre-session prep performed slowly with a 3-second pause at each position for maximum
+    benefit. The combined hip flexor, thoracic rotation, and ankle mobility demand
+    makes it the highest-density single mobility exercise in the Horsemen GPP sequence.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+yoke_carry:
+  animation:
+    type: none
+  coaching_focus: Stay under the yoke -- if the yoke gets in front of your feet, you
+    will be chasing it and losing control; keep the yoke directly over the midfoot
+    at all times.
+  common_errors:
+  - 'Yoke drifting in front of the midfoot: this accelerates uncontrollably; the athlete
+    chases the yoke and speed spikes -- re-center or stop'
+  - 'Too-wide steps: lateral swaying of the yoke under wide gait creates instability
+    that compounds with each step'
+  - 'Insufficient brace before stepping: the compressive load is extreme; the intra-abdominal
+    pressure must be set before the walk begins'
+  cue_points:
+  - Walk under the yoke and stand to lift it -- treat the lift like a high-bar squat
+    setup
+  - Brace maximally before stepping; the compressive load is higher than any barbell
+    back squat
+  - 'Short, quick steps: a narrow stride keeps the yoke balanced; wide steps cause
+    lateral sway'
+  - Eyes forward and slightly down; keep the yoke directly over the midfoot throughout
+  - Set the yoke back on the uprights under control -- do not drop it
+  description: The yoke carry walks under an A-frame yoke loaded with plates, the
+    crossbar resting across the upper back in a high-bar squat position. It provides
+    the highest absolute compressive load of any carry variant and develops total-body
+    structural durability. Horsemen GPP uses it as a strongman-derived tool for building
+    the spinal, hip, and leg capacity required under extreme bilateral loading.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - upper_back
+    - calves
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - upper_back
+  - calves
+zercher_carry:
+  animation:
+    type: none
+  coaching_focus: Keep the elbows at the same height throughout the walk -- if the
+    elbows drop, the load tips forward and the carry fails; the upper back must fight
+    to keep the elbows elevated.
+  common_errors:
+  - 'Elbows dropping below chest height: the load tips forward and the carry becomes
+    a forward-lean walk -- reset the elbow position or end the set'
+  - 'Excessive forward lean: the anterior position of the load makes this easy to
+    fall into; fight it actively with the thoracic erectors'
+  - 'Padding the elbows to the point of removing the stimulus: some discomfort is
+    inherent in the Zercher; excessive padding removes the specific demand of this
+    carry'
+  cue_points:
+  - Cradle the barbell in the crooks of the elbows, forearms crossed or parallel
+  - Stand tall; the chest-height load fights to pull the torso into flexion -- resist
+    with the entire trunk
+  - Elbows stay at chest height; use padding on the elbows if the bar pressure is
+    limiting time under load
+  - Walk with controlled steps; the Zercher position destabilizes quickly if gait
+    becomes irregular
+  - Short sets are normal -- the upper back and elbow crook fatigue faster than the
+    legs
+  description: The Zercher carry holds a barbell or sandbag in the crook of the elbows
+    with forearms crossed at chest height -- a high anterior load position that demands
+    exceptional anti-flexion core strength and upper-back engagement. The biceps and
+    forearms fatigue quickly as the load digs into the soft tissue of the elbow crook.
+    Horsemen program it as a heavy GPP carry variant that no other implement can replicate.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    - biceps
+    highlight_secondary:
+    - erector_spinae
+    - forearms
+    - glutes
+  muscles_primary:
+  - core
+  - upper_back
+  - biceps
+  muscles_secondary:
+  - erector_spinae
+  - forearms
+  - glutes

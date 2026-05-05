@@ -3,6 +3,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from './PrereqChain'
+import { ExerciseAnimationPanel } from './ExerciseAnimationPanel'
+import { ExerciseCuePoints } from './ExerciseCuePoints'
+import { MuscleHighlightDiagram } from './MuscleHighlightDiagram'
 import type { Exercise } from '@/api/types'
 
 interface ExerciseDrawerProps {
@@ -31,6 +34,15 @@ export function ExerciseDrawer({ exercise, allExercises, open, onClose, onNaviga
                 ))}
               </div>
             </SheetHeader>
+
+            {exercise.animation && exercise.animation.type !== 'none' && (
+              <ExerciseAnimationPanel
+                animation={exercise.animation}
+                exerciseName={exercise.name}
+                category={exercise.category}
+                variant="drawer"
+              />
+            )}
 
             <Separator />
 
@@ -84,12 +96,35 @@ export function ExerciseDrawer({ exercise, allExercises, open, onClose, onNaviga
               </div>
             )}
 
+            {/* Description */}
+            {exercise.description && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">About</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{exercise.description}</p>
+              </div>
+            )}
+
+            {/* Cue points */}
+            {(exercise.cue_points?.length || exercise.coaching_focus || exercise.common_errors?.length) && (
+              <ExerciseCuePoints
+                cues={exercise.cue_points ?? []}
+                errors={exercise.common_errors}
+                coachingFocus={exercise.coaching_focus}
+              />
+            )}
+
             {/* Notes */}
             {exercise.notes && (
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Coaching Notes</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{exercise.notes}</p>
               </div>
+            )}
+
+            {/* Muscle diagram */}
+            {exercise.muscle_diagram &&
+              (exercise.muscle_diagram.highlight_primary.length > 0 || exercise.muscle_diagram.highlight_secondary.length > 0) && (
+              <MuscleHighlightDiagram diagram={exercise.muscle_diagram} />
             )}
 
             <Separator />

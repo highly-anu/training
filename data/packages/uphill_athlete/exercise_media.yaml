@@ -1,0 +1,528 @@
+ankle_dorsiflexion_drill:
+  animation:
+    type: none
+  coaching_focus: Quality of the end range is the training target -- the goal is to
+    reach further into dorsiflexion each session, not to perform more repetitions
+    at the same depth.
+  common_errors:
+  - 'Only training on training days: ankle dorsiflexion adaptation requires daily
+    stimulus -- do it every morning if it is a limiting factor'
+  - 'Neglecting the downhill demand: dorsiflexion under eccentric knee load (the downhill
+    pattern) should be trained with weighted split squats as well'
+  - 'Expecting fast progress: ankle mobility responds slowly -- weeks of consistent
+    work, not days'
+  cue_points:
+  - Knee-to-wall test position, foot progressively further from the wall as range
+    improves
+  - 'Each rep: drive the knee forward actively, breathe into the end range, release
+    back'
+  - Pair with calf stretching and banded distraction in a complete ankle prep sequence
+  - Track the maximum heel-to-wall distance weekly as a progress metric
+  - 'Priority movement for mountain athletes: schedule it daily, not just on training
+    days'
+  description: The ankle dorsiflexion drill (Uphill Athlete) trains the range of motion
+    critical for steep uphill and downhill terrain -- the single most important ankle
+    quality for mountain athletes. Limited dorsiflexion forces the athlete into a
+    toe-strike pattern on uphills and creates excessive knee valgus on downhills.
+    Uphill Athlete includes it in every preparatory phase.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+eccentric_step_down:
+  animation:
+    type: none
+  coaching_focus: Take the full 3-5 seconds to lower -- the entire value of this exercise
+    is the slow eccentric; rushing to touch the floor turns it into a step-down, not
+    an eccentric step-down.
+  common_errors:
+  - Lowering too fast -- the slow descent is the training stimulus; anything faster
+    than 3 seconds is not an eccentric step-down
+  - Knee caving inward -- cue external rotation and push the knee over the second
+    toe throughout
+  - Using a box too high -- 6-8 inches is appropriate initially; height is a progression
+    variable, not a starting point
+  cue_points:
+  - Stand on a box (6-12 inch) on the working leg with the non-working leg hanging
+    in the air
+  - Lower the non-working heel toward the floor over 3-5 seconds -- control every
+    degree of descent
+  - Keep the working knee tracking over the second toe throughout the descent -- no
+    valgus
+  - Touch the heel lightly to the floor before pressing back up through the working
+    leg
+  - The emphasis is eccentric (lowering) -- the concentric (press up) is simply reset
+    for the next rep
+  description: The eccentric step-down is a slow, controlled single-leg descent off
+    a box -- the working leg lowers the full bodyweight over 3-5 seconds. It is the
+    primary knee and quad durability drill for mountain athletes and runners, training
+    the eccentric quad control required for descents under load. It is both a rehabilitation
+    tool and a durability standard.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - calves
+  muscles_primary:
+  - quadriceps
+  - vmo
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - calves
+  - core
+hill_repeat:
+  animation:
+    type: none
+  coaching_focus: Commit fully to the uphill effort -- a hill repeat done at 85% is
+    a tempo run, not a hill repeat; the effort must reach Zone 4-5 to provide the
+    anaerobic threshold stimulus.
+  common_errors:
+  - Going out too hard on rep 1 -- pace reps 1-2 at 90% and build; blowing up on rep
+    2 wastes the rest of the session
+  - Jogging the descent -- the rest must be complete; active recovery between reps
+    is a different workout
+  - Too many reps at insufficient intensity -- fewer hard reps beat more moderate
+    reps every time
+  cue_points:
+  - Select a hill of 8-15% grade with 2-4 minutes of sustained climbing available
+  - Sprint (or run hard) uphill at Zone 4-5 intensity for the full repeat duration
+  - Walk the descent completely -- the rest period is the walk down; do not jog it
+  - Begin the next repeat once heart rate returns to approximately 120-130 bpm
+  - 'Total volume: 4-8 repeats; quality of each effort matters more than quantity'
+  description: Steep hill repeats are 2-4 minute hard uphill efforts followed by walking
+    descent recovery. They develop anaerobic threshold capacity, running-specific
+    leg power, and neuromuscular recruitment on grade. The steep gradient limits stride
+    length and maximizes hip extension recruitment while the descent provides passive
+    recovery with low cardiovascular demand.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hip_flexors
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - glutes
+  - hip_flexors
+  muscles_secondary:
+  - hamstrings
+  - core
+  - tibialis_anterior
+hip_flexor_mobilization:
+  animation:
+    external_id: Kneeling_Hip_Flexor
+    gif_alt: Half-Kneeling Hip Flexor Mobilization
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Hip_Flexor/0.jpg
+    type: gif
+  coaching_focus: This is remediation for a specific postural pattern -- the sustained
+    forward lean of uphills; treat it as a reset of the hip position, not just a stretch.
+  common_errors:
+  - 'Skipping it on high-volume training days: those are exactly the days the hip
+    flexors need the most work'
+  - 'Static hold only: the oscillating drive into end range is more effective for
+    the active hip flexors than passive holding'
+  - 'Front knee caving: maintain knee alignment throughout the mobilization'
+  cue_points:
+  - 'Half-kneeling: rear knee on floor, front foot forward at 90 degrees'
+  - Posterior pelvic tilt before driving the hip toward the front foot
+  - Oscillate gently at end range -- 10 small drives into the stretch with each breath
+  - Keep the torso upright and the front knee over the front foot
+  - Perform immediately after long uphill sessions before the hip flexors set into
+    their shortened position
+  description: The half-kneeling hip flexor mobilization (Uphill Athlete) addresses
+    the hip flexor restriction created by sustained uphill hiking posture -- the forward
+    lean of uphill movement progressively shortens the hip flexors and limits the
+    hip extension needed for efficient stride length and metabolic economy. Uphill
+    Athlete programs it in every preparatory phase to prevent the cumulative hip flexor
+    shortening that occurs during high-volume mountain training.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+plank:
+  animation:
+    external_id: Plank
+    gif_alt: Front Plank
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg
+    type: gif
+  coaching_focus: Treat the plank as active full-body tension, not a passive rest
+    -- squeeze everything and make every second count.
+  common_errors:
+  - 'Treating it as a rest: the plank is an active strength exercise, not a recovery
+    position; tension throughout or stop'
+  - 'Hip sag under fatigue: the set ends when the hips drop -- record actual clean
+    time, not total time with compromised form'
+  - 'Head dropping: neutral cervical spine throughout; neck should be an extension
+    of the spine'
+  cue_points:
+  - Hands or forearms, body in a rigid plank from heels to crown
+  - 'Neutral spine: no hip sag and no hip pike'
+  - Active glutes, braced core, packed shoulders throughout
+  - Breathe shallowly and normally -- do not hold the breath
+  - If the position degrades, rest and reset rather than grinding through a sag
+  description: The front plank is the Uphill Athlete version of the anti-extension
+    core hold used in the training program. Functionally identical to the plank_hold
+    (FLR), it develops the anti-extension core endurance required for sustained uphill
+    carrying loads and efficient running mechanics. Uphill Athlete programs it as
+    a baseline core exercise in the general physical preparation phase.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - deltoids
+    - glutes
+    - upper_back
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - deltoids
+  - glutes
+  - upper_back
+recovery_jog_easy:
+  animation:
+    type: none
+  coaching_focus: Walk the moment the effort increases -- this is not a jog with walk
+    breaks; it is a walk that becomes a jog when the terrain allows it without raising
+    HR.
+  common_errors:
+  - Running at a pace faster than true Z1 -- ego prevents recovery; the pace is always
+    slower than expected
+  - Skipping the session because it feels too easy -- the recovery stimulus requires
+    movement, not just rest
+  - Turning it into a longer aerobic session -- recovery jog duration is capped; more
+    is not better on a recovery day
+  cue_points:
+  - Keep heart rate at the very low end of Z1 -- below 120 bpm for most athletes
+  - Walk without guilt on any grade or surface that would raise HR above Z1
+  - Duration is 20-40 minutes -- long enough to create circulation benefit, short
+    enough not to add training load
+  - This is nose-breathing pace -- if nasal breathing becomes uncomfortable, walk
+  - 'Use this day to assess recovery: if any Z1 effort feels hard, it signals incomplete
+    recovery from prior sessions'
+  description: The easy recovery jog is a strict Zone 1 movement -- well below the
+    aerobic threshold, with walking permitted whenever pace would push HR higher.
+    It functions as active recovery, promoting blood flow, clearing metabolic byproducts,
+    and maintaining aerobic stimulus without adding training stress. Uphill Athlete
+    uses it as a between-session recovery modality rather than a training session.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - core
+single_leg_rdl:
+  animation:
+    type: none
+  coaching_focus: Hinge from the hip with a flat back -- the goal is hamstring length
+    and hip hinge control, not touching the floor; stop at the point where the back
+    stays flat.
+  common_errors:
+  - Rounding the lower back -- reduce the range of motion until the back stays flat
+  - 'Hip hiking on the trailing leg -- both hips must stay level; external cue: "keep
+    the ASIS facing down"'
+  - Wobbling excessively -- focus on a fixed point on the floor 2-3 feet ahead; reduce
+    range if stability cannot be maintained
+  cue_points:
+  - Stand on the working leg with a slight knee bend -- not a locked-out stiff leg
+  - Hinge at the hip by reaching the trailing leg back as the torso tips forward in
+    one plane
+  - Keep the back flat and the hips square -- do not allow the hip to hike as the
+    leg rises
+  - Lower until the torso approaches horizontal or the hamstring stretch is felt strongly
+  - Drive the hip forward to return to standing -- think "hip extension to stand"
+    rather than "lift the torso"
+  description: The single-leg Romanian deadlift is a bodyweight posterior chain and
+    balance exercise -- standing on one leg, the body hinges forward at the hip as
+    the trailing leg extends behind for counterbalance. It develops hamstring length,
+    hip stability, and proprioceptive control simultaneously. Used as a prehab staple
+    for runners and mountain athletes to address posterior chain and hip stability
+    deficits.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  muscles_secondary:
+  - erector_spinae
+  - core
+  - calves
+thoracic_extension:
+  animation:
+    type: none
+  coaching_focus: The roller should be perpendicular to the spine -- if it is parallel,
+    it rolls the spine rather than extending it.
+  common_errors:
+  - 'Rolling the lumbar spine: contraindicated -- the lumbar facets are not oriented
+    for the extension-over-roller position; stay in the thoracic region'
+  - 'Going too fast: spend 5-10 seconds at each segment to allow the capsular tissues
+    to respond to the pressure'
+  - 'Using the roller parallel to the spine: it should be perpendicular to extend
+    the spine over it, not parallel to roll along it'
+  cue_points:
+  - Place the foam roller perpendicular to the spine at mid-thoracic level (around
+    T6-T8)
+  - Hands behind the head, gently allow the thoracic spine to extend over the roller
+  - 'Segment-by-segment: move the roller up and down the thoracic spine, 5-10 seconds
+    at each level'
+  - Do not extend the lumbar spine over the roller -- keep the roller in the thoracic
+    region (between the bottom of the neck and the bottom of the rib cage)
+  - Perform immediately after ruck or pack carry sessions while the thoracic muscles
+    are still warm
+  description: Thoracic extension over a foam roller (Uphill Athlete) counteracts
+    the pack-induced kyphosis that develops during long ruck and mountain carry sessions
+    -- the sustained forward lean of carrying a pack progressively compresses the
+    thoracic spine into flexion. Uphill Athlete programs thoracic extension as a daily
+    intervention to maintain the upright posture needed for efficient breathing mechanics
+    and shoulder range under load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+uphill_run:
+  animation:
+    type: none
+  coaching_focus: Shorten the stride and increase cadence on the grade -- reaching
+    for a longer stride on uphill burns more energy per step without increasing speed
+    proportionally.
+  common_errors:
+  - Leaning forward from the waist -- this compresses the hip flexors and reduces
+    stride efficiency; the lean originates from the ankles
+  - Slowing cadence on steeper sections -- more steps at lower force per step is more
+    efficient than slow powerful strides on grade
+  - Overstriding -- reaching the foot too far forward creates a braking force; foot
+    strikes should land close to the center of mass
+  cue_points:
+  - Lean into the hill from the ankles, not the waist -- the body angle matches the
+    hill angle
+  - Use a short, quick stride -- cadence increases on grade while stride length decreases
+  - Drive the knees forward rather than up on steep grades
+  - Arms pump efficiently -- elbows at 90 degrees, driving back rather than crossing
+    the midline
+  - 'On threshold intervals: use a measured hill of known grade and time to track
+    pace progression'
+  description: Uphill running is the primary Uphill Athlete aerobic development tool
+    for mountain athletes -- the grade increases metabolic demand while reducing impact
+    forces compared to flat running, allowing more aerobic stimulus with less musculoskeletal
+    stress. It is used for both Zone 2 aerobic base building and Zone 4 anaerobic
+    threshold intervals depending on the phase of training.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hip_flexors
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hip_flexors
+  - hamstrings
+  - core
+uphill_weighted_carry_ex:
+  animation:
+    type: none
+  coaching_focus: This is objective preparation -- the load and grade should match
+    what the target mountain approach will demand; train specifically for the event.
+  common_errors:
+  - 'Training on flat terrain with extra load: the hip angle, calf demand, and balance
+    challenge of uphill cannot be replicated on flat ground'
+  - 'Ignoring the descent: the downhill phase is a different and important training
+    stimulus -- do not drive down'
+  - 'Only doing this exercise in the final weeks before an objective: the specific
+    phase must be built on a base phase of step-up and ruck volume'
+  cue_points:
+  - 'Use terrain that matches the target objective: if the approach is 1000m elevation
+    at 35% grade, train on similar grade'
+  - 'Pack weight at objective load: do not train significantly lighter or heavier
+    than the actual mission requires'
+  - Trekking poles are part of the tool -- include them in training if they will be
+    used on the objective
+  - 'Pace: sustainable and nasal throughout; the uphill carry is not a race'
+  - Include rest stops at natural waypoints to practice the recovery mechanics used
+    on real approaches
+  description: The Uphill Athlete uphill weighted carry is the outdoor analog of the
+    loaded step-up -- sustained steep grade carrying an objective pack weight. It
+    directly trains the movement pattern, metabolic demand, and postural requirements
+    of mountain approaches and summit bids. In the Uphill Athlete specific phase,
+    this replaces or supplements step-ups when outdoor terrain is available.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    highlight_secondary:
+    - calves
+    - core
+    - erector_spinae
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - calves
+  - core
+  - erector_spinae
+weighted_box_step_up:
+  animation:
+    type: none
+  coaching_focus: This is a muscular endurance exercise, not a strength exercise --
+    the pace should be sustainable for the full duration; if you cannot maintain form
+    for 30 minutes, reduce the pack weight.
+  common_errors:
+  - 'Treating it as a strength step-up: the ME step-up uses sub-maximal load for duration,
+    not heavy load for sets'
+  - 'Trailing leg push-off: both legs must work independently; push-off from the floor
+    negates the single-leg demand'
+  - 'Too heavy a pack for the duration: if the pace slows to a grinding halt within
+    15 minutes, reduce the load'
+  cue_points:
+  - 'Box height: 16-20 inches; the step should challenge the hip but not require a
+    maximal effort on each rep'
+  - 'Pack: 20-35% bodyweight; lighter in early phases, heavier as the specific phase
+    approaches'
+  - Alternate legs with each step; do not complete all reps on one side
+  - Drive through the heel of the working leg; the trailing leg should not push off
+    the ground
+  - 'Continuous pace: the ME step-up should be unbroken -- if you need to stop, the
+    load is too heavy for the duration'
+  description: The Uphill Athlete weighted box step-up carries a loaded pack and steps
+    onto a 16-20 inch box with alternating legs continuously for a sustained duration
+    -- the signature Uphill Athlete muscular endurance (ME) workout. Unlike a strength
+    step-up, the ME step-up is performed for 30-60 minutes at a low-intensity pace
+    with a pack at 20-35% bodyweight. It is the primary lower-body specific endurance
+    builder in the Uphill Athlete protocol.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - calves
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - calves
+  - core
+weighted_ruck_walk:
+  animation:
+    type: none
+  coaching_focus: Uphill terrain is the priority, not speed -- a steep grade at a
+    comfortable pace provides more training stimulus than flat fast walking for mountain
+    athletes.
+  common_errors:
+  - 'Flat terrain substitution: flat ruck walking does not prepare the hip extensors
+    and calf for the angle demands of uphill terrain'
+  - 'Too heavy a pack too early: Uphill Athlete periodizes pack weight; starting at
+    30% in the base phase causes joint overload'
+  - 'Ignoring the descent: the downhill return loads the quads eccentrically; do not
+    rush it and do not skip it'
+  cue_points:
+  - 'Use uphill terrain where possible: 15-30% grade is ideal for the Uphill Athlete
+    training prescription'
+  - 'Pace: nasal breathing throughout; if the grade forces mouth-breathing, slow down
+    or reduce grade'
+  - 'Trekking poles: acceptable and encouraged on steep terrain; they reduce lower-limb
+    fatigue and allow longer training duration'
+  - 'Pack weight: lighter in base phase; heavier in specific phase as objective demands
+    require'
+  - Track vertical gain and distance, not just time -- mountain fitness is expressed
+    in vertical meters per hour
+  description: 'The Uphill Athlete weighted ruck walk carries a pack at 10-30% bodyweight
+    on uphill terrain as the primary aerobic endurance builder in mountain and alpine
+    training. Uphill Athlete programs it as a lower-impact alternative to running
+    that mimics the demands of mountain approaches with a load. Pack weight is periodized
+    with volume: base phase uses 10-15%, specific phase up to 30% for objective pack
+    weight.'
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    highlight_secondary:
+    - calves
+    - core
+    - upper_back
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - calves
+  - core
+  - upper_back
+zone2_hike:
+  animation:
+    type: none
+  coaching_focus: Nose breathing is the intensity governor -- if you must open the
+    mouth to breathe, slow down; the pace is always secondary to the metabolic zone.
+  common_errors:
+  - Going too hard -- any conversation difficulty or mouth-breathing means the intensity
+    is above Z2; slow down without negotiation
+  - Treating it as conditioning -- Z2 hike is base-building, not training; the monotony
+    is the point
+  - Skipping the vert -- flat walking at Z2 has less transfer to mountain sport than
+    actual uphill; find the elevation
+  cue_points:
+  - Use nasal breathing as your intensity governor -- breathe in and out through the
+    nose only
+  - Walk sections that would force mouth breathing -- hiking poles are permitted and
+    encouraged on sustained grades
+  - Heart rate should stay at or below your AeT (aerobic threshold) -- typically 125-140
+    bpm depending on the athlete
+  - Vertical gain is the training variable, not speed -- focus on elevation per session
+    rather than pace
+  - Backpack at training load (10-20% bodyweight) increases metabolic demand without
+    raising HR above Z2
+  description: Zone 2 hiking is the Uphill Athlete foundation aerobic modality --
+    sustained uphill movement at a heart rate below the aerobic threshold (AeT), typically
+    maintained with nose breathing. It builds aerobic base, trains the fat-oxidation
+    metabolic pathway, and develops the musculotendinous structures of the lower leg
+    for mountain performance. Two hours at this intensity twice per week is the Uphill
+    Athlete base-phase standard.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - hip_flexors
+  muscles_primary:
+  - calves
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - hip_flexors
+  - core

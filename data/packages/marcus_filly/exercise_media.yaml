@@ -1,0 +1,1186 @@
+archer_push_up:
+  animation:
+    type: none
+  coaching_focus: The extended arm actively pushes the floor away even though it is
+    not bending -- it is a load-sharing partner, not a passive stabilizer.
+  common_errors:
+  - 'Passive straight arm: the straight arm must push -- if it is just resting there,
+    the exercise becomes a one-arm push-up with a kickstand'
+  - 'Narrow starting position: if the arms are too close together, the archer path
+    is short and the unilateral load is minimal'
+  - 'Torso rotation to reach lower: the torso should stay square -- rotation means
+    the range of motion exceeds the current unilateral pressing capacity'
+  cue_points:
+  - Start in a wide push-up position -- hands approximately 1.5x shoulder-width
+  - Shift the body toward one arm as you lower; that arm bends, the other stays straight
+    and extended
+  - The extended arm is actively pushing into the floor -- tension, not a limp arm
+  - At the bottom, the chest is close to the bending-arm hand; the straight arm bears
+    some load
+  - Alternate sides each rep or complete all reps on one side first -- both approaches
+    are valid
+  description: The archer push-up is a wide-stance push-up where the athlete lowers
+    to one side while keeping the other arm straight and extended -- distributing
+    the load asymmetrically toward the bending arm. It is Marcus Filly and Ido Portal
+    programming bridge between the bilateral push-up and the one-arm push-up, building
+    unilateral pressing strength while retaining bilateral base of support.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+band_pull_apart_mf:
+  animation:
+    external_id: Band_Pull_Apart
+    gif_alt: Band Pull-Apart (Marcus Filly Protocol)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/0.jpg
+    type: gif
+  coaching_focus: Initiate from the shoulder blades, not the hands -- the pull is
+    a scapular retraction; the hands simply hold the band while the shoulder blades
+    drive the movement.
+  common_errors:
+  - Band too heavy -- shrugging the upper traps to complete the pull means resistance
+    is too high; use the lightest effective band
+  - Elbows straightening at end range and turning into a tricep exercise -- maintain
+    the slight elbow bend throughout
+  - Pulling at waist height instead of chest height -- the height changes the muscle
+    emphasis; stay at chest
+  cue_points:
+  - Hold the band with a double overhand grip at chest height and shoulder width
+  - Pull the band apart by squeezing the shoulder blades together -- not by pulling
+    the hands
+  - Reach full horizontal extension -- arms completely to the sides with the band
+    against the chest
+  - Hold the end position 1-2 seconds with full scapular retraction before returning
+  - Keep elbows slightly bent and at chest height throughout -- do not let them drop
+    or rise
+  description: The Marcus Filly band pull-apart is a high-frequency scapular retraction
+    and posterior rotator cuff exercise -- a light resistance band is pulled apart
+    to full horizontal extension at chest height, emphasizing scapular retraction
+    at end range. It is performed after every conditioning session and daily as a
+    prehab standard. It can be safely programmed every day without risk of overtraining
+    at appropriate band resistance.
+  muscle_diagram:
+    highlight_primary:
+    - rhomboids
+    - posterior_deltoid
+    highlight_secondary:
+    - trapezius
+    - shoulders
+  muscles_primary:
+  - rhomboids
+  - middle_trapezius
+  - posterior_deltoid
+  muscles_secondary:
+  - lower_trapezius
+  - infraspinatus
+  - teres_minor
+banded_external_rotation_mf:
+  animation:
+    external_id: External_Rotation
+    gif_alt: Banded External Rotation (Standing)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/External_Rotation/0.jpg
+    type: gif
+  coaching_focus: Keep the elbow glued to the body throughout -- any elbow drift away
+    from the trunk turns this into a row; the rotation happens at the shoulder, not
+    the elbow.
+  common_errors:
+  - Elbow moving away from the body during rotation -- the elbow is a fixed pivot;
+    if it moves, the movement is no longer isolated external rotation
+  - Standing too far from the anchor -- excessive band tension beyond the working
+    range limits movement quality
+  - Rotating past the end range -- stop at the point where the forearm is parallel
+    to the floor; hyperextending the shoulder is not the goal
+  cue_points:
+  - Anchor the band at waist height to the side of the working arm
+  - Stand perpendicular to the anchor with elbow bent 90 degrees and tucked against
+    the body
+  - Rotate the forearm away from the body (external rotation) while keeping the elbow
+    fixed
+  - Full external rotation means the forearm is pointing away from the anchor -- roughly
+    parallel to the floor
+  - Return slowly -- the band provides continuous resistance throughout the return
+  description: The standing banded external rotation is the Marcus Filly band alternative
+    to the dumbbell external rotation -- a light band anchored at waist height provides
+    continuous tension through the external rotation arc while the elbow stays tucked
+    against the body. It trains the same infraspinatus and teres minor as the dumbbell
+    version but with accommodating resistance through the full range.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    highlight_secondary:
+    - posterior_deltoid
+  muscles_primary:
+  - infraspinatus
+  - teres_minor
+  muscles_secondary:
+  - posterior_deltoid
+  - rhomboids
+box_pistol_squat:
+  animation:
+    type: none
+  coaching_focus: Sit to the box under full control -- do not drop onto it; the eccentric
+    descent is where the strength is built.
+  common_errors:
+  - 'Dropping onto the box: if the athlete sits down, the movement has become a box
+    sit-to-stand, not a controlled eccentric pistol'
+  - 'Working leg heel rising: ankle dorsiflexion limitation; work on ankle mobility
+    and use a heel elevation temporarily'
+  - 'Using the non-working foot for balance: the extended leg must stay off the floor
+    -- touching the floor removes the pistol challenge'
+  cue_points:
+  - Stand facing away from the box at a distance that matches your squat depth
+  - Extend the non-working leg in front -- it should stay off the floor throughout
+    the movement
+  - Descend on the working leg with the non-working leg extended, controlling the
+    descent until the glutes touch the box
+  - Touch the box and return to standing without using the box as a support -- touch
+    only, do not sit and stand
+  - 'Progress by reducing box height: use progressively lower boxes or stacked plates
+    until no box is needed'
+  description: The box pistol squat is the assisted single-leg squat to a box or bench
+    that provides a depth target and a soft landing for athletes building toward the
+    full pistol squat. The box height is progressively reduced over weeks. Marcus
+    Filly programs it as the bridge between the Bulgarian split squat and the free
+    pistol squat in his unilateral strength ladder.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - core
+    - adductors
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
+  - adductors
+bulgarian_split_squat:
+  animation:
+    type: none
+  coaching_focus: Drive through the front heel -- if the front heel rises, the foot
+    placement is too close to the bench; step the front foot further forward.
+  common_errors:
+  - 'Front foot too close to the bench: the heel rises and the knee drives forward
+    -- step forward more'
+  - 'Rear foot on the ball instead of the top: creates ankle extension and makes the
+    position unstable'
+  - 'Forward torso lean: loading the trunk forward turns it into a hip-dominant movement;
+    keep the torso upright for balanced quad and glute demand'
+  cue_points:
+  - Front foot far enough forward that the front shin stays near-vertical at the bottom;
+    test by checking heel contact
+  - Rear foot rests on top of the bench across the top of the foot, not the ball of
+    the foot
+  - Descend vertically -- do not lean the torso forward; the back knee drops straight
+    down
+  - Front knee tracks over the toes throughout; no inward collapse
+  - Drive through the front heel to stand -- feel the glute of the front leg contracting
+    at the top
+  description: The Bulgarian split squat (rear-foot-elevated split squat) places the
+    rear foot on a bench and performs a single-leg squat through a full range of motion.
+    Marcus Filly programs it as the primary unilateral lower-body strength movement
+    at 8 reps per side. The elevated rear foot increases the front-leg demand and
+    the hip flexor stretch on the trailing side, making it a comprehensive lower-body
+    strength and mobility exercise.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+db_external_rotation:
+  animation:
+    type: none
+  coaching_focus: The elbow stays on the knee for the entire set -- any elbow lift
+    means the weight is too heavy; the only movement is forearm rotation.
+  common_errors:
+  - Elbow lifting off the knee as the weight rises -- this involves the upper arm
+    and eliminates the isolation
+  - Using too heavy a weight -- compensation includes trunk lean and elbow rise; reduce
+    the load immediately
+  - Stopping short of full external rotation -- the forearm must reach horizontal;
+    going further (into hyper external rotation) is acceptable
+  cue_points:
+  - Sit with the working elbow resting on the inner thigh just above the knee
+  - Allow the forearm to hang down as the start position -- do not start at neutral
+  - Rotate the forearm upward to horizontal (full external rotation) over 3 seconds
+  - Lower slowly over 3 seconds -- the eccentric matters as much as the concentric
+  - Start with 1-2 kg; 4 kg is a significant load for this isolation; do not rush
+    the progression
+  description: The seated dumbbell external rotation with elbow resting on the knee
+    is the isolated rotator cuff exercise in the Marcus Filly Functional Bodybuilding
+    protocol. The elbow rests on the inner thigh to eliminate compensatory movement;
+    only the forearm rotates through external rotation range. Light load (2-4 kg)
+    with a 3-second tempo in each direction. Primarily targets the infraspinatus and
+    teres minor.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    highlight_secondary:
+    - posterior_deltoid
+  muscles_primary:
+  - infraspinatus
+  - teres_minor
+  muscles_secondary:
+  - posterior_deltoid
+  - rhomboids
+db_incline_press:
+  animation:
+    external_id: Hammer_Grip_Incline_DB_Bench_Press
+    gif_alt: DB Incline Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Grip_Incline_DB_Bench_Press/0.jpg
+    type: gif
+  coaching_focus: Let the elbows track naturally -- do not force a fixed elbow path;
+    dumbbells allow the elbows to move to whatever angle is pain-free for each individual.
+  common_errors:
+  - Elbows flaring excessively wide -- a 45-75 degree elbow angle is appropriate;
+    full flare increases impingement risk
+  - Not controlling the descent -- the eccentric builds chest strength; dropping the
+    weights eliminates the training stimulus
+  - Bouncing at the bottom -- each rep starts from a controlled bottom position, not
+    from a bounce off the chest
+  cue_points:
+  - Set the bench at 30-45 degrees -- lower angle (30 degrees) is more shoulder-friendly;
+    higher angle (45) is more deltoid-focused
+  - Start with dumbbells at shoulder level with a neutral or slightly pronated grip
+  - Press up and slightly inward -- the dumbbells converge slightly at the top but
+    do not touch
+  - Lower to a 90-degree elbow angle and feel the chest stretch at the bottom
+  - Maintain scapular retraction throughout -- do not let the shoulders roll forward
+    at the top
+  description: The dumbbell incline press at 30-45 degrees is the Marcus Filly shoulder-friendly
+    pressing alternative -- the incline angle reduces subacromial impingement risk
+    compared to flat bench while still training the chest and shoulder pressing pattern.
+    Dumbbells allow natural rotation of the wrist and elbow path, reducing joint stress
+    further. It serves as the primary pressing movement when shoulder symptoms warrant
+    a more neutral plane.
+  muscle_diagram:
+    highlight_primary:
+    - chest
+    - shoulders
+    highlight_secondary:
+    - triceps
+    - serratus_anterior
+  muscles_primary:
+  - chest
+  - shoulders
+  - triceps
+  muscles_secondary:
+  - serratus_anterior
+  - core
+  - upper_trapezius
+db_lateral_raise:
+  animation:
+    type: none
+  coaching_focus: Lead with the elbow, not the hand -- raise the arm by driving the
+    elbow up and out; if the hand leads, the exercise becomes a shrug instead of a
+    lateral raise.
+  common_errors:
+  - Shrugging the upper trap -- this indicates the load is too heavy; reduce weight
+    and focus on pure lateral deltoid
+  - Swinging the weights -- momentum defeats the isolation; keep the torso still and
+    use only the deltoid
+  - Arms crossing above shoulder height -- stop at shoulder level; going higher involves
+    the traps and reduces deltoid tension
+  cue_points:
+  - Stand with a slight forward lean (about 10 degrees) -- this positions the lateral
+    deltoid for optimal isolation
+  - Hold the dumbbells with a neutral grip beside the hips
+  - Drive the elbows up and out to shoulder height -- the thumbs point down slightly
+    at the top (as if pouring a pitcher)
+  - Pause 1 second at the top with elbows at shoulder height
+  - Lower slowly over 3 seconds -- the eccentric lateral raise builds more strength
+    than the concentric
+  description: The dumbbell lateral raise is the Marcus Filly Functional Bodybuilding
+    lateral deltoid isolation exercise -- a slight forward lean of the torso allows
+    full lateral deltoid engagement without supraspinatus impingement. Light load
+    and strict form with no swinging maintain the isolation. It is used to maintain
+    shoulder width and structural integrity alongside posterior rotator cuff work.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    highlight_secondary:
+    - trapezius
+  muscles_primary:
+  - lateral_deltoid
+  muscles_secondary:
+  - upper_trapezius
+  - serratus_anterior
+db_rear_delt_fly:
+  animation:
+    external_id: Cable_Rear_Delt_Fly
+    gif_alt: DB Rear Delt Fly
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rear_Delt_Fly/0.jpg
+    type: gif
+  coaching_focus: Keep the elbows slightly bent and fixed -- the arms move as one
+    unit from the shoulder joint; any elbow bending during the fly turns it into a
+    rowing movement.
+  common_errors:
+  - Elbow bending during the fly -- this converts the exercise into a row; maintain
+    a slight fixed elbow angle throughout
+  - Torso rising during the movement -- the hinge angle must be maintained; if the
+    torso rises, the upper trap takes over
+  - Too much weight -- rear delt flies are done with very light dumbbells (2-6 kg);
+    swinging or torso rotation means the load is too heavy
+  cue_points:
+  - Hinge forward to horizontal (seated or standing) and hold the dumbbells with a
+    neutral grip
+  - Maintain the forward hinge throughout -- do not rise as the arms fly open
+  - Fly the elbows out and back, leading with the elbows -- elbows slightly higher
+    than wrists at the top
+  - Reach a position where the arms are roughly horizontal and the shoulder blades
+    retract
+  - Lower slowly -- the eccentric descent is the training stimulus; do not drop the
+    weights
+  description: The dumbbell rear delt fly is the Marcus Filly posterior deltoid isolation
+    exercise -- performed in a hinged-forward position (seated or standing), the dumbbells
+    fly outward with slightly bent elbows to target the posterior head of the deltoid.
+    It pairs with the face pull and external rotation work to provide comprehensive
+    posterior rotator cuff and deltoid coverage in the Marcus Filly shoulder health
+    stack.
+  muscle_diagram:
+    highlight_primary:
+    - posterior_deltoid
+    highlight_secondary:
+    - rhomboids
+    - trapezius
+  muscles_primary:
+  - posterior_deltoid
+  - rhomboids
+  muscles_secondary:
+  - middle_trapezius
+  - infraspinatus
+  - teres_minor
+db_renegade_row:
+  animation:
+    type: none
+  coaching_focus: The hips stay square -- the entire challenge of the renegade row
+    is keeping the body from rotating as one arm rows; if the hips rotate, the core
+    demand is lost.
+  common_errors:
+  - Hip rotation during the row -- feet too close together or core bracing insufficient;
+    widen the stance and brace harder
+  - Not fully extending the row -- the dumbbell must reach the hip; a partial row
+    reduces lat engagement
+  - Sagging at the hips -- the plank position must be maintained; any hip drop indicates
+    core fatigue before the rowing muscles are challenged
+  cue_points:
+  - Begin in a plank position on two dumbbells with feet wide for stability -- wider
+    stance reduces hip rotation
+  - Brace the core maximally before rowing -- the brace is what prevents rotation
+  - Row the dumbbell by driving the elbow back toward the hip, keeping the elbow close
+    to the body
+  - The non-rowing arm, hips, and feet stay completely still throughout the row
+  - Lower the dumbbell slowly before rowing the other side
+  description: The dumbbell renegade row combines a plank hold on two dumbbells with
+    a single-arm row -- the planted arm stabilizes while the working arm rows, creating
+    simultaneous anti-rotation core demand and horizontal pull training. Marcus Filly
+    uses it as a compound conditioning movement that combines pushing stability, pulling
+    strength, and rotary core resistance. 8 reps per side per set.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - core
+    highlight_secondary:
+    - rhomboids
+    - obliques
+  muscles_primary:
+  - lats
+  - rhomboids
+  - core
+  muscles_secondary:
+  - shoulders
+  - obliques
+  - triceps
+db_row:
+  animation:
+    type: none
+  coaching_focus: Reach the shoulder forward at the bottom to get full lat stretch,
+    then drive the elbow back and squeeze the shoulder blade at the top -- full range
+    on both ends.
+  common_errors:
+  - Rotating the torso to pull higher -- the hip and shoulder must stay square; rotation
+    is a cheat that reduces lat engagement
+  - Not reaching the bottom stretch -- the shoulder must reach forward to achieve
+    the full lat stretch; short range reduces the training stimulus
+  - Pulling with the bicep -- the elbow drives back, the hand follows; focusing on
+    the elbow keeps the lat engaged
+  cue_points:
+  - Support with the non-working hand and knee on the bench; working hip stays square
+    to the floor
+  - Allow the dumbbell to lower fully with the shoulder reaching forward slightly
+    -- achieve a lat stretch at the bottom
+  - Drive the elbow back and up, keeping it close to the body
+  - Squeeze the shoulder blade toward the spine at the top -- not just pulling the
+    elbow back
+  - Lower slowly to the starting stretched position -- do not drop the weight
+  description: The single-arm dumbbell row with bench support is the Marcus Filly
+    Functional Bodybuilding horizontal pull accessory -- used to balance pressing
+    volume and develop lat and upper back strength through full range of motion. The
+    elbow tracks close to the body and the shoulder blade fully retracts at the top.
+    Marcus Filly programs 10 reps per side as a direct pressing volume counterpart.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - rhomboids
+    highlight_secondary:
+    - biceps
+    - posterior_deltoid
+  muscles_primary:
+  - lats
+  - rhomboids
+  - middle_trapezius
+  muscles_secondary:
+  - biceps
+  - rear_deltoid
+  - erector_spinae
+db_thruster:
+  animation:
+    type: none
+  coaching_focus: Drive through the legs -- the power for the press comes from the
+    leg drive at the top of the squat; pressing with the arms alone on a thruster
+    loses the efficiency of the movement.
+  common_errors:
+  - Pressing before the legs finish extending -- the legs must drive fully before
+    the arms take over; early arm press loses the power chain
+  - Elbows dropping during the squat -- the front rack position must be maintained
+    through full depth; dropping elbows means the weight dumps forward
+  - Short squat depth -- below parallel is required; a half-squat thruster limits
+    the leg drive contribution
+  cue_points:
+  - Hold dumbbells at shoulder height in front rack; clean them up if needed
+  - Squat to full depth with elbows up -- the dumbbells stay at shoulder level during
+    the descent
+  - Drive explosively through the legs and use the momentum to initiate the press
+  - The arms extend to lockout as the legs come to full extension -- a seamless power
+    transfer
+  - Receive the dumbbells back at shoulder height for the next rep without dropping
+    them
+  description: The dumbbell thruster chains a front squat and an overhead press into
+    one continuous movement -- the squat drives momentum into the press, making it
+    both metabolically demanding and mechanically efficient. It is the primary Marcus
+    Filly AMRAP movement, conditioning the squat-to-press pattern at moderate loads
+    and high rep volume. The barbell equivalent (Fran thrusters) is a CrossFit benchmark.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - shoulders
+    highlight_secondary:
+    - core
+    - triceps
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - shoulders
+  - triceps
+  muscles_secondary:
+  - core
+  - hamstrings
+  - upper_trapezius
+face_pull_mf:
+  animation:
+    type: none
+  coaching_focus: Pull to the forehead with thumbs pointing behind the head -- the
+    external rotation at end range is the therapeutic element; stopping at the face
+    misses the most important part.
+  common_errors:
+  - Elbows dropping below wrist height -- the movement becomes a face-level row, not
+    a face pull; elbows must stay high
+  - Not reaching full external rotation -- the thumbs end up behind the head, not
+    beside it; incomplete range misses the therapeutic goal
+  - Using too heavy a resistance -- the load should allow perfect form for 15 reps;
+    heavier resistance causes shoulder shrugging
+  cue_points:
+  - Use a light band or cable at face height with a rope or dual-handle attachment
+  - Grip with thumbs pointing up (supinated) and elbows elevated above wrist height
+  - Pull toward the forehead -- not the chin or chest -- with elbows flaring wide
+  - At the end position, rotate until the thumbs point behind the head and hold 2
+    seconds
+  - Return slowly under control -- do not let the band snap the arms forward
+  description: The Marcus Filly face pull with thumbs-up grip is the cornerstone of
+    the Functional Bodybuilding shoulder protocol -- elbows high and flared, pulling
+    to forehead level with full external rotation at end range. It targets the posterior
+    deltoid, infraspinatus, and mid-lower trapezius, directly countering the internal
+    rotation bias of pressing-heavy training. Marcus Filly performs this after every
+    pressing session as a non-negotiable.
+  muscle_diagram:
+    highlight_primary:
+    - posterior_deltoid
+    - shoulders
+    highlight_secondary:
+    - rhomboids
+    - trapezius
+  muscles_primary:
+  - posterior_deltoid
+  - infraspinatus
+  - teres_minor
+  muscles_secondary:
+  - middle_trapezius
+  - lower_trapezius
+  - rhomboids
+hollow_body_hold:
+  animation:
+    type: none
+  coaching_focus: The lower back must be pressed into the floor at all times -- if
+    it arches, the legs are too low; raise the legs until the lower back contact is
+    maintained, then progress downward over time.
+  common_errors:
+  - 'Lower back arching off the floor: legs are too low for current core strength;
+    raise the legs'
+  - 'Arms breaking away from overhead: the arms must stay next to the ears for the
+    correct anti-extension demand'
+  - 'Legs crossing or spreading: tight, parallel legs maintain the body tension that
+    makes the hollow a useful position'
+  cue_points:
+  - Press the lower back into the floor by tilting the pelvis posteriorly -- create
+    maximum lumbar-floor contact
+  - Arms extend overhead next to the ears; shoulders reach long
+  - Legs extend and lower toward the floor -- find the lowest height where lumbar
+    contact can be maintained
+  - Point the toes and squeeze the legs together; tension throughout the entire chain
+  - Breathe shallowly and hold -- a single breath break returns the lower back to
+    neutral; this is the technique limit
+  description: The hollow body hold is the foundational gymnastics anti-extension
+    core position -- lying on the back with the lower back pressed into the floor,
+    arms extended overhead, and legs low, maintaining the hollow shape as a timed
+    isometric. It is the compression position that translates directly to handstand,
+    pull-up, ring work, and all overhead gymnastics patterns. Marcus Filly uses it
+    as a core prerequisite before gymnastics skill development.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - deltoids
+    - quadriceps
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - deltoids
+  - quadriceps
+mf_back_squat:
+  animation:
+    type: none
+  coaching_focus: Three full seconds on every descent -- count them out; if you cannot
+    maintain 3 seconds, the load is too heavy for the Marcus Filly protocol.
+  common_errors:
+  - Treating the pause as a bounce -- the bottom position is a true pause with full
+    tension maintained, not a stretch reflex
+  - Exceeding RPE 8 -- grinding reps defeats the tissue-resilience purpose; reduce
+    load
+  - Ignoring the eccentric tempo -- the 3-second descent is not optional; it is the
+    defining feature of the Marcus Filly squat protocol
+  cue_points:
+  - Set RPE at 7-8 -- should feel heavy but 2-3 reps remain at the top of each set
+  - Brace 360-degree tension before unracking -- belly, sides, and back
+  - 'Descend in exactly 3 seconds: count "1-2-3" on the way down'
+  - Brief pause at the bottom (no bounce) before driving the floor away on the concentric
+  - 'Progression: add 2.5-5 kg when the RPE drops below 7 across two consecutive sessions'
+  description: The Marcus Filly back squat uses a 3-second eccentric descent and RPE-based
+    autoregulation -- RPE 7-8 load with 2-3 reps left in the tank per set. The controlled
+    descent builds tissue resilience and eccentric strength without grinding to failure.
+    No bounce at the bottom; a brief pause before the concentric eliminates elastic
+    energy and develops bottom-position strength.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - erector_spinae
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+mf_bench_press:
+  animation:
+    type: none
+  coaching_focus: The pause is dead still with full tension -- the bar rests on the
+    chest with the muscles loaded; any bounce or loosening of tension defeats the
+    purpose of the paused bench press.
+  common_errors:
+  - Bouncing off the chest -- a bounce is not a pause; the purpose of the paused bench
+    is to eliminate exactly this
+  - Collapsing the arch and losing back tension during the pause -- the back stays
+    arched and tight throughout
+  - Going above RPE 8 -- the paused protocol at RPE 9+ increases injury risk significantly;
+    keep weights manageable
+  cue_points:
+  - Unrack and lower in 2 seconds to the chest -- no divebombing
+  - The bar contacts the lower chest (not the sternum) and holds for 2 full seconds
+  - Maintain full chest-and-back tension during the pause -- do not relax between
+    the descent and press
+  - Press from the dead stop with maximal force -- the lack of elastic rebound requires
+    deliberate power
+  - 'RPE 7: 3 reps in the tank after each set; reduce load rather than add reps to
+    maintain RPE'
+  description: The Marcus Filly bench press uses a 2-second pause at the chest --
+    full contact with the chest, no bounce. The controlled descent (2 seconds) and
+    dead-stop pause eliminate elastic energy and demand full chest and shoulder recruitment
+    from a static position. RPE 7 with 3 reps in the tank. The pause eliminates the
+    most common bench press energy leak and reduces injury risk.
+  muscle_diagram:
+    highlight_primary:
+    - chest
+    - triceps
+    highlight_secondary:
+    - shoulders
+    - serratus_anterior
+  muscles_primary:
+  - chest
+  - triceps
+  - shoulders
+  muscles_secondary:
+  - serratus_anterior
+  - core
+  - lats
+mf_deadlift:
+  animation:
+    type: none
+  coaching_focus: Two seconds on the way down on every rep -- brace the same on the
+    descent as on the ascent; the controlled lowering is as important as the pull.
+  common_errors:
+  - Dropping the bar -- the 2-second lowering is the protocol; dropping eliminates
+    eccentric stimulus and signals the load is too heavy
+  - Bouncing reps -- the dead-stop reset per rep is required; touch-and-go changes
+    the exercise
+  - Exceeding RPE 8 -- grinding reps with compromised form on the Marcus Filly protocol
+    defeats the injury-prevention premise
+  cue_points:
+  - Set RPE 7-8 -- heavy but with 2-3 quality reps in reserve per set
+  - Brace before every single rep -- reset completely between reps, do not bounce
+    off the floor
+  - Pull with lat engagement from the first inch -- the bar stays against the body
+    from floor to lockout
+  - At lockout, begin the controlled 2-second lowering -- same lat tension on the
+    descent
+  - Touch and go is not the Marcus Filly protocol; each rep starts from a brief dead-stop
+    with a bracing reset
+  description: The Marcus Filly deadlift uses RPE autoregulation (RPE 7-8) and a 2-second
+    controlled lowering on every rep -- no dropping the bar. It alternates weekly
+    with the back squat as the primary compound to avoid cumulative spinal loading.
+    The 2-second lowering builds eccentric hamstring and posterior chain strength
+    that is typically undertrained in conventional deadlift programming.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - lats
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - lats
+  - core
+mf_front_squat:
+  animation:
+    type: none
+  coaching_focus: Elbows must stay up throughout the descent -- if the elbows drop,
+    the bar rolls forward; thoracic mobility and upper back strength are what keep
+    the elbows elevated under load.
+  common_errors:
+  - Elbow drop during the descent -- the bar will roll forward; cue the athlete to
+    drive the elbows upward actively on each rep
+  - Excessive forward lean -- the front squat demands thoracic extension; a forward
+    lean means the upper back is not strong enough for the load
+  - Attempting before back squat mechanics and front rack flexibility are established
+    -- both prerequisites are real
+  cue_points:
+  - Clean the bar or use a cross-arm grip; elbows point forward and up before the
+    descent
+  - Begin the 3-second descent with the elbows elevated -- do not drop them as fatigue
+    accumulates
+  - The torso stays more vertical than in the back squat -- fight the forward lean
+    with deliberate upper back engagement
+  - Pause briefly at the bottom and drive through the heels with elbows remaining
+    elevated
+  - Transition from Marcus Filly back squat when RPE drops below 7 consistently across
+    two sessions
+  description: The Marcus Filly front squat uses a 3-second eccentric descent with
+    an upright torso, demanding thoracic extension and upper back stability throughout.
+    It is a progression from the Marcus Filly back squat and develops a more athletic
+    squat position. RPE 7-8 with the clean-based front rack position required (wrist
+    flexibility permitting).
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - upper_trapezius
+  - anterior_deltoid
+mf_overhead_press:
+  animation:
+    type: none
+  coaching_focus: Press in an arc, not straight up -- the bar moves slightly forward
+    and then back overhead to clear the face; a straight vertical path is mechanically
+    less efficient and more strain on the shoulder.
+  common_errors:
+  - Using leg drive -- no dip is allowed in the strict press protocol; any leg involvement
+    changes the exercise
+  - Bar path straight up rather than arcing -- pressing straight up jams the shoulders;
+    the natural press arc clears the face and arrives over the joint
+  - Not pausing at the shoulder -- the pause is the Marcus Filly differentiator; skipping
+    it removes the starting-strength demand
+  cue_points:
+  - Set the bar on the front deltoid with elbows slightly in front of the bar
+  - Brace the core as hard as a deadlift before every press -- the OHP requires full
+    trunk stability
+  - Press the bar slightly forward (clearing the face) then arc it back overhead to
+    stack over the base
+  - At lockout, the bar is directly over the shoulder joint -- ears forward, arms
+    locked
+  - Lower in 2 seconds to the shoulder -- brief pause and reset brace before the next
+    rep
+  description: The Marcus Filly strict overhead press includes a 2-second pause at
+    the shoulder between each rep -- the bar returns to the shoulder and stops before
+    the next press. No leg drive. RPE 7 with 3 reps in reserve. The pause at the shoulder
+    develops starting strength and reduces the tendency to use momentum off the chest
+    or shoulder that obscures pressing weaknesses.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - triceps
+    highlight_secondary:
+    - core
+    - upper_trapezius
+  muscles_primary:
+  - shoulders
+  - triceps
+  - upper_trapezius
+  muscles_secondary:
+  - core
+  - serratus_anterior
+  - lats
+pallof_press:
+  animation:
+    external_id: Pallof_Press
+    gif_alt: Pallof Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pallof_Press/0.jpg
+    type: gif
+  coaching_focus: The torso must not rotate at all during the press -- if the outside
+    shoulder is being pulled toward the anchor, the load is too heavy; the spine stays
+    vertical and square throughout.
+  common_errors:
+  - 'Torso rotating toward the press: the exercise becomes a rotational press rather
+    than an anti-rotation drill; reduce load'
+  - 'Pressing at an angle rather than straight out: the press must be perpendicular
+    to the body; any angle introduces a trunk rotation path'
+  - 'Feet too close together: a wide stable stance reduces the balance challenge and
+    allows the core to work purely on anti-rotation'
+  cue_points:
+  - Stand perpendicular to the anchor point with the band or handle at chest height
+  - Both hands on the handle, held at the sternum before pressing
+  - Press straight out from the chest to full arm extension -- the entire torso resists
+    the rotational pull of the cable
+  - Hold the extended position for a one-second count before returning
+  - Exhale on the press; the exhalation co-contracts the deep core and increases the
+    anti-rotation stiffness
+  description: The Pallof press uses a band or cable anchored at chest height perpendicular
+    to the athlete -- pressing the handle straight out from the chest and returning.
+    The anti-rotation demand comes from the cable pulling the athlete into rotation
+    that must be actively resisted. Marcus Filly programs it as the primary anti-rotation
+    drill for athletes in sports with high rotational demand. The horizontal pressing
+    movement maintains the neutral spine against continuous rotational force.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - deltoids
+    - upper_back
+    - pec
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - deltoids
+  - upper_back
+  - pec
+parallette_push_up:
+  animation:
+    type: none
+  coaching_focus: The depth below the parallettes is the point -- the extra range
+    of motion below floor level is why you are using parallettes; do not cut it short.
+  common_errors:
+  - 'Not going below the handle level: this defeats the purpose of parallettes --
+    if the chest does not go below the handles, use the floor'
+  - 'Parallettes too wide: forces the elbows out and loads the anterior shoulder capsule;
+    keep them shoulder-width'
+  - 'Wrists in extension: if the wrists are painful, the parallette diameter is too
+    large or wrist flexibility needs work'
+  cue_points:
+  - Parallettes shoulder-width apart; grip the handles firmly with wrists as neutral
+    as possible
+  - Descend until the chest drops below the level of the handles -- this is deeper
+    than a floor push-up
+  - At the bottom, feel the full stretch across the pectorals and anterior shoulder
+  - Full lockout at the top with scapular protraction; the shoulders should round
+    slightly forward at the top
+  - Maintain a rigid plank throughout -- the parallettes move slightly in response
+    to poor technique, providing immediate feedback
+  description: The parallette push-up performs the push-up on low parallettes, allowing
+    the chest to descend below the level of the hands for a greater pectoral and serratus
+    stretch than the floor push-up allows. Marcus Filly uses it as the foundation
+    for all parallette skill work and as a prerequisite for the L-sit and tuck-sit.
+    The increased depth also trains the shoulder through a more complete range of
+    motion.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - serratus
+    - core
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - serratus
+  - core
+ring_dip:
+  animation:
+    type: none
+  coaching_focus: Turn the rings out at the bottom (RTO) -- the rotation is an active
+    scapular and shoulder action, not a passive settling; the rings should look fully
+    pronated when the upper arms reach parallel.
+  common_errors:
+  - 'Not controlling the ring rotation on the way down: uncontrolled rotation destabilizes
+    the shoulder -- own the descent'
+  - 'Rings flaring wide at the bottom: the rings should remain close to the body throughout;
+    wide rings indicates a strength or technique gap'
+  - 'Shallow dips on rings: using the difficulty of the rings as an excuse to not
+    reach parallel -- the standard does not change'
+  cue_points:
+  - Mount the rings with arms straight and rings turned out (RTO) at the support position
+  - Descend with control; the rings will want to rotate -- allow them to while maintaining
+    active shoulder stabilization
+  - At the bottom, upper arms parallel, rings fully pronated (or close to it)
+  - Press up driving the rings back to the RTO support position at the top -- not
+    just to arms-straight
+  - The transition from dip support to the bottom is the most unstable part -- slow
+    it down until it is reliable
+  description: The ring dip performs the dip on gymnastic rings, which rotate freely
+    and demand active stabilization throughout the full movement. Rings turn out at
+    the bottom (fully pronated, RTO) for maximum pec and serratus anterior demand.
+    The stabilization requirement makes this significantly harder than the bar dip
+    at equivalent bodyweight. Marcus Filly and Ido Portal program it as the advanced
+    dip standard.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - rotator_cuff
+    - serratus
+    - core
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - rotator_cuff
+  - serratus
+  - core
+ring_pull_up:
+  animation:
+    type: none
+  coaching_focus: Turn the rings out at the top -- the external rotation at lockout
+    is the cue that distinguishes a ring pull-up from a bar pull-up on unstable equipment.
+  common_errors:
+  - 'Fighting the rotation: the rings are supposed to move -- resisting them removes
+    the stabilization benefit'
+  - 'Not turning out at the top: the ring turn-out is the primary distinguishing demand
+    of this movement; skipping it makes it just a harder bar pull-up'
+  - 'Excessive ring swing: a swinging ring path indicates a lack of body tension --
+    squeeze glutes and brace before pulling'
+  cue_points:
+  - Start with rings in a neutral grip (palms facing each other) at the bottom
+  - As you pull, allow the rings to rotate naturally -- do not resist the rotation
+  - At the top, actively turn the rings out to a pronated or semi-pronated position
+  - The rings should settle close to the chest at the top; do not let them flare wide
+  - Controlled descent back to a dead hang -- the ring movement during the descent
+    reveals tension and control quality
+  description: The ring pull-up performs the vertical pulling pattern on gymnastic
+    rings, which rotate freely throughout the movement. The instability demands active
+    shoulder stabilization and increased rotator cuff and scapular stabilizer recruitment
+    relative to the fixed bar. Rings can be turned out at the top for additional supination
+    demand and serve as the prerequisite for the ring muscle-up.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - rotator_cuff
+  - core
+  - forearms
+ring_row:
+  animation:
+    external_id: Inverted_Row
+    gif_alt: Ring Row (Inverted Row)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Inverted_Row/0.jpg
+    type: gif
+  coaching_focus: The body must stay rigid from heels to shoulders -- if the hips
+    sag, the exercise becomes a core endurance test rather than a pulling movement.
+  common_errors:
+  - 'Hip sag: the body must be in a plank -- any sag reduces the horizontal pulling
+    demand and loads the lumbar spine'
+  - 'Elbow flare: the elbows should travel back at roughly 45 degrees from the torso,
+    not flared 90 degrees out'
+  - 'Not retracting the scapulae at the top: the whole point of the row is scapular
+    movement -- finish each rep fully'
+  cue_points:
+  - 'Set ring height: higher = easier (more upright body angle); lower = harder (more
+    horizontal)'
+  - Heels on the floor, body in a rigid plank from heels to head before pulling
+  - Pull the rings to the lower chest -- the elbows travel back and the scapulae retract
+    and depress at the top
+  - Pause at the top for one count with scapulae fully retracted; then lower under
+    control
+  - Modify difficulty mid-set by walking the feet in (harder) or out (easier)
+  description: 'The ring row (inverted row) performs a horizontal pull with the body
+    suspended under gymnastic rings or a bar, feet on the floor. Body angle governs
+    difficulty: the more horizontal the body, the harder the row. Marcus Filly uses
+    it as the entry-level horizontal pull in circuits and as a regression when vertical
+    pulling strength is insufficient. It develops scapular retraction and the horizontal
+    pull motor pattern.'
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - deltoids
+step_down_eccentric:
+  animation:
+    type: none
+  coaching_focus: Four full seconds for the eccentric descent -- if the athlete cannot
+    control the descent for four seconds, the exercise is exposing a strength deficit
+    that must be addressed at this tempo, not avoided.
+  common_errors:
+  - 'Dropping faster than 4 seconds: the connective tissue adaptation requires slow,
+    sustained tension under load; speed defeats the purpose'
+  - 'Knee collapsing inward: VMO weakness or hip abductor weakness -- cue knee out
+    and strengthen both'
+  - 'Using the hanging foot to catch the descent: the non-working leg must remain
+    fully passive throughout'
+  cue_points:
+  - Stand on a step or platform on the working leg; the non-working leg hangs free
+  - Lower the non-working foot toward the floor over a 4-second count -- smooth and
+    controlled at every degree of flexion
+  - The working knee tracks over the toes throughout -- no inward collapse or outward
+    flare
+  - Touch the floor lightly and return to standing by driving through the working
+    heel; the concentric is less important than the eccentric
+  - Use a wall or railing for balance if needed -- balance assistance is acceptable;
+    weight assistance is not
+  description: The eccentric step-down stands on a step edge and slowly lowers the
+    non-working foot toward the floor on one leg. Marcus Filly programs it as his
+    primary VMO and quad tendon resilience tool -- eccentric single-leg loading builds
+    connective tissue at depth in a pattern that concentric-only step-ups and squats
+    do not reach. It is a foundational movement for athletes returning from patellar
+    tendinopathy.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
+step_up:
+  animation:
+    type: none
+  coaching_focus: The trailing leg does nothing -- if it pushes at all, the single-leg
+    demand is compromised; hold the trailing foot just above the floor as a self-check.
+  common_errors:
+  - 'Push-off from the trailing foot: the most common fault; test by floating the
+    trailing foot an inch off the floor'
+  - 'Only placing the toes on the box: reduces stability and loads the ankle rather
+    than the hip and knee'
+  - 'Not standing fully at the top: stopping short of full hip extension leaves the
+    glute out of the movement'
+  cue_points:
+  - 'Place the entire foot on the box: heel and ball fully on the surface, not just
+    the toes'
+  - Drive through the heel of the working leg; the trailing foot stays passive
+  - Stand fully at the top -- hips fully extended, not stopping 90% of the way up
+  - Descend with control on the working leg -- the eccentric is equally valuable
+  - Complete all reps on one side before switching; do not alternate legs
+  description: The step-up is a single-leg box exercise driving through the lead heel
+    to elevate the body onto the box, with the trailing leg providing no assistance.
+    Marcus Filly programs it in conditioning blocks as a low-impact unilateral lower-body
+    movement. The Gym Jones loaded step-up at bodyweight prepares athletes for the
+    weighted barbell step-up. The complete test is holding the trailing foot an inch
+    off the ground to prevent any push-off.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+weighted_dip:
+  animation:
+    type: none
+  coaching_focus: The range of motion must not shrink under added load -- if the upper
+    arms do not reach parallel at the prescribed load, reduce the weight.
+  common_errors:
+  - 'Partial range of motion under load: adding load is meaningless if the elbows
+    stop at 90 degrees instead of reaching parallel'
+  - 'Forward lean increasing uncontrollably with load: the extra lean shifts load
+    to the shoulder capsule in a stressful way'
+  - 'Not locking out: incomplete lockout under load means the triceps never complete
+    their function -- add lockout pause work if this is an issue'
+  cue_points:
+  - 'All strict dip cues apply: support position, elbows back, upper arms parallel
+    at the bottom, full lockout at top'
+  - Use a proper dip belt -- holding a dumbbell between the knees creates instability
+    that compromises technique at heavy loads
+  - The heavier the load, the more important the initial support position setup --
+    do not rush into the first rep
+  - 'RPE 7-8 target: 2 reps in reserve across the set; if grinding through the set,
+    reduce load'
+  - Lower under control -- the weighted eccentric is a significant connective tissue
+    stimulus
+  description: The weighted dip adds load to the parallel bar dip via a dip belt or
+    weight vest. Marcus Filly programs heavy dips as a primary pushing strength indicator,
+    comparable to the barbell bench press but with greater scapular stabilizer demand.
+    The free movement of the body (compared to a fixed-bar bench press) requires continuous
+    core and shoulder stability throughout the loaded set.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+weighted_pull_up:
+  animation:
+    type: none
+  coaching_focus: The added load must not change the mechanics -- if the range of
+    motion or dead hang position degrades, reduce the load.
+  common_errors:
+  - 'Loading before bodyweight pull-up mechanics are solid: added weight amplifies
+    every existing fault'
+  - 'Partial descents under load: the eccentric is when the connective tissue adaptations
+    occur -- do not skip it'
+  - 'Kipping to complete reps: once form breaks, the set is over; log the clean reps
+    only'
+  cue_points:
+  - All strict pull-up cues apply -- dead hang, elbows back, chin over bar
+  - Use a dip belt with a weight plate for loads over 5 kg; dumbbell-between-knees
+    creates asymmetry at higher loads
+  - The descent is slower under load -- control the eccentric to extract the full
+    stimulus
+  - 'RPE 7-8 target: the load should allow perfect form across the full set with 2
+    reps in reserve'
+  - If the last rep at the bottom cannot reach full extension, the load is too heavy
+    for that rep count
+  description: The weighted pull-up adds load via a dip belt, weight vest, or dumbbell
+    between the feet and follows identical mechanics to the strict pull-up. Marcus
+    Filly treats it as the primary pulling strength progression once five clean bodyweight
+    pull-ups are achievable with two reps in reserve. Gym Jones references added load
+    as the primary pull-up progression path.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - deltoids

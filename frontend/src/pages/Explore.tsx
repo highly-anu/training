@@ -5,6 +5,9 @@ import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from '@/components/exercises/PrereqChain'
+import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
+import { ExerciseCuePoints } from '@/components/exercises/ExerciseCuePoints'
+import { MuscleHighlightDiagram } from '@/components/exercises/MuscleHighlightDiagram'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useModalities } from '@/api/modalities'
@@ -843,6 +846,16 @@ function ExercisePanel({
           </div>
         </div>
 
+        {/* Animation */}
+        {exercise.animation && exercise.animation.type !== 'none' && (
+          <ExerciseAnimationPanel
+            animation={exercise.animation}
+            exerciseName={exercise.name}
+            category={exercise.category}
+            variant="drawer"
+          />
+        )}
+
         {/* Meta grid */}
         <div className="grid grid-cols-2 gap-2">
           {[
@@ -906,6 +919,29 @@ function ExercisePanel({
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Coaching Notes</p>
             <p className="text-xs text-muted-foreground leading-relaxed">{exercise.notes}</p>
           </div>
+        )}
+
+        {/* Description */}
+        {exercise.description && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">About</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{exercise.description}</p>
+          </div>
+        )}
+
+        {/* Cue points */}
+        {(exercise.cue_points?.length || exercise.coaching_focus || exercise.common_errors?.length) && (
+          <ExerciseCuePoints
+            cues={exercise.cue_points ?? []}
+            errors={exercise.common_errors}
+            coachingFocus={exercise.coaching_focus}
+          />
+        )}
+
+        {/* Muscle diagram */}
+        {exercise.muscle_diagram &&
+          (exercise.muscle_diagram.highlight_primary.length > 0 || exercise.muscle_diagram.highlight_secondary.length > 0) && (
+          <MuscleHighlightDiagram diagram={exercise.muscle_diagram} />
         )}
 
         {/* Prereq chain */}

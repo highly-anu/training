@@ -194,7 +194,37 @@ export interface ExerciseProgressions {
   complexity?: string
 }
 
-export interface Exercise {
+export type AnimationType = 'gif' | 'lottie' | 'svg_css' | 'none'
+export type AnimationSource = 'free_exercise_db' | 'exercisedb_api' | 'custom'
+
+export interface ExerciseAnimation {
+  type: AnimationType
+  gif_url?: string
+  gif_alt?: string
+  gif_source?: AnimationSource
+  external_id?: string
+  lottie_path?: string
+  lottie_source?: string
+  svg_path?: string
+}
+
+export interface MuscleDiagram {
+  highlight_primary: string[]
+  highlight_secondary: string[]
+}
+
+export interface ExerciseMedia {
+  description?: string
+  cue_points?: string[]
+  muscles_primary?: string[]
+  muscles_secondary?: string[]
+  common_errors?: string[]
+  coaching_focus?: string
+  animation?: ExerciseAnimation
+  muscle_diagram?: MuscleDiagram
+}
+
+export interface Exercise extends ExerciseMedia {
   id: string
   name: string
   category: string

@@ -1,0 +1,822 @@
+kb_clean_double:
+  animation:
+    external_id: Double_Kettlebell_Alternating_Hang_Clean
+    gif_alt: Kettlebell Clean (Double)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Double_Kettlebell_Alternating_Hang_Clean/0.jpg
+    type: gif
+  coaching_focus: Both bells must arrive simultaneously — if one is late, the setup
+    is rushed and the press will be unstable.
+  common_errors:
+  - 'Asymmetric timing: one bell arrives early and the other crashes — usually a technique
+    imbalance between hands'
+  - 'Elbows outside the rack: the bells tip forward and the press starts in a weak
+    position'
+  - 'Not resetting in the rack: rushing to press before the bells are settled and
+    the brace is set'
+  cue_points:
+  - Both bells start between the feet; the setup resembles a sumo deadlift width with
+    handles angled outward
+  - Hinge, hike both bells back together — synchronization from the start
+  - Both elbows pull in and rotate simultaneously — two separate arm paths make for
+    two crashes
+  - 'Double rack: both bells resting on the forearms, elbows tight, wrists neutral'
+  - Breathe and reset in the rack before pressing — the rack is a rest position, not
+    a transition
+  description: The double kettlebell clean simultaneously pulls two bells into the
+    double rack position, demanding bilateral posterior-chain power and a significantly
+    higher core bracing requirement than the single-arm version. It sets up all double-bell
+    pressing and squatting and is a systemic conditioning stimulus at heavy loads.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - deltoids
+    - biceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - deltoids
+  - biceps
+kb_deadlift:
+  animation:
+    type: none
+  coaching_focus: This is a hip hinge, not a squat — push the floor away with the
+    legs while keeping the shins nearly vertical.
+  common_errors:
+  - 'Squatting to the bell: shins travel forward and the back rounds — the hips must
+    hinge back, not down'
+  - 'Rounding the lower back: almost always a hip hinge coordination failure, not
+    a strength issue'
+  - 'Jerking the bell off the floor: take the slack out of the handle before pulling,
+    then drive smoothly'
+  cue_points:
+  - Bell centered between feet, roughly shoulder-width apart or slightly wider
+  - Hinge the hips back until you can grip the handle with a flat back — do not squat
+    down to it
+  - 'Pack the shoulders: pull the lats down and back before pulling the bell'
+  - Drive the floor away — the legs initiate the movement, not the back
+  - Lock out at the top with glutes squeezed; hips and shoulders rise at the same
+    rate
+  description: The kettlebell deadlift is the first movement in the Wildman complexity
+    ladder — a hip hinge performed with the bell between the feet, pulled to standing.
+    It teaches the fundamental mechanics of loading the hips and bracing the trunk
+    without any ballistic demand, making it the universal starting point for all kettlebell
+    work.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - quadriceps
+    - core
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - core
+  - forearms
+kb_jerk_double:
+  animation:
+    external_id: Double_Kettlebell_Jerk
+    gif_alt: Kettlebell Jerk (Double)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Double_Kettlebell_Jerk/0.jpg
+    type: gif
+  coaching_focus: Breathing is the most important tool in the double jerk -- without
+    a deliberate ventilation strategy, the set ends long before the legs do.
+  common_errors:
+  - 'Losing breathing rhythm: the most common reason sets end prematurely at high
+    reps'
+  - 'Asymmetric double dip: one bell catches while the other presses out — builds
+    a technique fault under load'
+  - 'Insufficient recovery in the rack: rushing into the next rep without re-establishing
+    a brace and breath'
+  cue_points:
+  - Clean to double rack; establish breathing before the first rep
+  - Both bells must travel identical paths — any asymmetry compounds under load
+  - 'First dip: simultaneous, vertical, short; both legs drive together'
+  - 'Second dip: both arms punch to lockout simultaneously as the legs rebend to catch'
+  - 'Develop a breathing ladder: typically inhale on the rack, hold for the dip-drive,
+    exhale after the catch'
+  - Rest in the rack between reps when needed — the rack is a recovery position, not
+    just a transition
+  description: The double kettlebell jerk is the highest systemic demand pressing
+    movement in the kettlebell system — two bells jerked simultaneously, requiring
+    explosive bilateral leg drive, coordinated double-dip mechanics, and exceptional
+    breathing and core management. It is a centerpiece of kettlebell sport and the
+    Wildman advanced curriculum.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    - glutes
+    - core
+    highlight_secondary:
+    - erector_spinae
+    - calves
+    - adductors
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  - glutes
+  - core
+  muscles_secondary:
+  - erector_spinae
+  - calves
+  - adductors
+kb_jerk_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Jerk
+    gif_alt: Kettlebell Jerk (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Jerk/0.jpg
+    type: gif
+  coaching_focus: The second dip is a punch under the bell — you are meeting the bell
+    at lockout by dropping under it, not pressing through the entire range.
+  common_errors:
+  - 'Pressing out: the arm locks out slowly by muscular effort rather than by catching
+    the bell in a drop — efficiency is lost and fatigue accumulates faster'
+  - 'Not completing the second dip: the catch is missed and the rep degrades to a
+    push press'
+  - 'Poor breathing mechanics: holding the breath across multiple reps in high-rep
+    sets leads to premature fatigue'
+  cue_points:
+  - 'First dip: identical to push press — vertical, short, explosive'
+  - As the bell reaches shoulder height and is floating upward, punch the arm to lockout
+    and simultaneously rebend the knees
+  - The arm locks out as the legs absorb; you do not press through the full range
+    — you meet the bell at the top
+  - Stand to full lockout before returning to rack
+  - 'Breathe: exhale on the first dip, brief hold through the catch, inhale on the
+    way down to rack'
+  description: The single-arm kettlebell jerk is a two-dip movement — the first dip
+    drives the bell overhead, the second dip catches the arm locked under the bell
+    before standing. The double-dip makes it more efficient than the push press under
+    fatigue, allowing heavier loads and higher rep targets. Wildman programs it as
+    timed sets at target RPM (10 RPM at 16 kg).
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - core
+    - calves
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - core
+  - calves
+kb_press_double:
+  animation:
+    external_id: Double_Kettlebell_Push_Press
+    gif_alt: Kettlebell Press (Double)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Double_Kettlebell_Push_Press/0.jpg
+    type: gif
+  coaching_focus: The double press exposes core leakage the single press hides — if
+    you cannot stay rigid through the entire set, you are not ready for the load.
+  common_errors:
+  - 'Lumbar hyperextension under the bilateral load: the most dangerous pattern; brace
+    must be set before the press begins'
+  - 'One bell arriving at lockout before the other: asynchrony indicates a strength
+    imbalance; address it'
+  - 'Bells tipping excessively: wrist and forearm strength limitation — practice rack
+    holds before progressing to press'
+  cue_points:
+  - Clean to double rack; reset breath and brace before the first rep
+  - Press both bells simultaneously — any asynchrony creates a lateral imbalance
+  - 'The trunk must stay vertical: any lean, twist, or hip shift under load is a failure
+    pattern'
+  - Active lats at lockout on both arms — both shoulders packed simultaneously
+  - Return to rack together; re-brace before the next rep
+  description: The double kettlebell strict press presses both bells from the double
+    rack simultaneously, demanding exceptional core bracing — the bilateral load compresses
+    the spine and requires the trunk to resist both anterior and rotational forces.
+    The systemic demand far exceeds two separate single-arm presses. Wildman programs
+    5×5 as the double press standard.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - core
+    highlight_secondary:
+    - erector_spinae
+    - pec
+    - glutes
+  muscles_primary:
+  - deltoids
+  - triceps
+  - core
+  muscles_secondary:
+  - erector_spinae
+  - pec
+  - glutes
+kb_squat_double:
+  animation:
+    type: none
+  coaching_focus: Elbows must stay high throughout — if they drop, the bells tip forward,
+    the chest drops, and the squat degrades immediately.
+  common_errors:
+  - 'Elbows dropping: the most consequential fault — the bells tip and the entire
+    rack position collapses'
+  - 'Not achieving full depth: usually thoracic restriction preventing the upright
+    torso necessary for full squat depth with anterior load'
+  - 'Rushing through the clean to squat transition: the rack must be established before
+    the squat begins'
+  cue_points:
+  - Clean to double rack; establish the rack position before descending
+  - Elbows parallel to the floor, pointing forward — identical discipline to the barbell
+    front squat
+  - 'Descent: maintain elbows while squatting to full depth'
+  - 'Drive from the floor: same mechanics as goblet squat but with bilateral rack
+    load'
+  - 'At the top: extend the hips fully and reset the brace before the next rep'
+  description: The double kettlebell front squat holds two bells in the double rack
+    position and squats to depth — the anterior bilateral load demands significant
+    thoracic extension and core bracing while the legs perform the squat. The systemic
+    demand is higher than either the goblet squat or back squat at equivalent loads
+    due to the thoracic extension requirement of the double rack.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - core
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - erector_spinae
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - core
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - erector_spinae
+kb_windmill:
+  animation:
+    external_id: Kettlebell_Windmill
+    gif_alt: Kettlebell Windmill
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Windmill/0.jpg
+    type: gif
+  coaching_focus: The overhead bell never moves — if it does, you have lost shoulder
+    stability and the exercise is over; reduce load and rebuild.
+  common_errors:
+  - 'Bell drifting forward: shoulder instability under rotation — reduce load until
+    the shoulder can maintain the pack'
+  - 'Side-bending the torso instead of hip-hinging: the hip must push laterally; the
+    torso follows the hip, it does not lead'
+  - 'Knee of the front leg bending: turns it into a lunge hybrid; the front knee stays
+    soft but controlled'
+  cue_points:
+  - Press the bell to lockout; feet slightly wider than shoulder-width, toes of the
+    leading foot angled out 45 degrees
+  - Push the hip opposite the bell outward as you hinge laterally — it is a hip hinge,
+    not a side bend
+  - Eyes track the bell throughout; the neck stays in a neutral position relative
+    to the spine
+  - The free hand descends along the inside of the front leg toward the floor
+  - Return by driving the hip back through and returning to standing — do not pull
+    yourself up with the arm
+  description: 'The kettlebell windmill holds the bell at full overhead lockout while
+    the athlete hinges laterally to touch the floor with the free hand — a maximum
+    demand on shoulder stability under rotation and hip mobility in abduction. It
+    is one of the most diagnostically revealing exercises in the Wildman curriculum:
+    any restriction in the hip, thoracic spine, or shoulder makes the movement immediately
+    apparent.'
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - hamstrings
+    - core
+    highlight_secondary:
+    - glutes
+    - adductors
+    - erector_spinae
+  muscles_primary:
+  - deltoids
+  - hamstrings
+  - core
+  muscles_secondary:
+  - glutes
+  - adductors
+  - erector_spinae
+wk_kb_clean_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Clean
+    gif_alt: Kettlebell Clean (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean/0.jpg
+    type: gif
+  coaching_focus: The rack position is the goal of every clean -- the bell should
+    arrive quietly at the shoulder with the elbow nestled, not crash into the forearm;
+    a loud impact means the lat did not finish the pull.
+  common_errors:
+  - Bell crashing into the forearm -- the lat must redirect the bell before it reaches
+    the forearm; increase lat awareness in the pull phase
+  - Elbow not staying close to the body -- a wide elbow in the rack puts stress on
+    the shoulder; the elbow must nest against the ribs
+  - Not transitioning smoothly from the swing -- the clean requires establishing the
+    single-arm swing first; do not attempt the clean without the swing foundation
+  cue_points:
+  - Begin with single-arm swing mechanics -- the clean starts identically to the single-arm
+    swing
+  - As the bell rises past the hip, pull the elbow back and up (toward the shoulder)
+    to redirect the bell into the rack
+  - The lat engagement on the pull redirects the bell -- it should not hit the forearm
+    hard
+  - 'Receive the bell in rack: elbow against the body, bell resting on the forearm,
+    wrist straight'
+  - Return by letting the bell swing down and back through the legs -- do not drop
+    it straight down
+  description: The single-arm kettlebell clean pulls the bell from the swing arc into
+    the rack position at the shoulder -- the bell hikes back, the hip snaps, and the
+    lat pulls the bell into the rack as the elbow nestles against the body with the
+    bell resting on the forearm. It is the Wildman complexity ladder intermediate
+    step (swing → clean → press → snatch) and the prerequisite to all single-arm pressing
+    and jerking work.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - lats
+    highlight_secondary:
+    - core
+    - biceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - erector_spinae
+wk_kb_halo:
+  animation:
+    type: none
+  coaching_focus: Keep the circle tight around the head -- the bell should just clear
+    the ears and the back of the head; a wide arc puts unnecessary load on the shoulder
+    and reduces the warm-up specificity.
+  common_errors:
+  - Wide arc around the body instead of the head -- the halo is a head-level circle,
+    not a torso circle; wide arcs are a different movement entirely
+  - Torso rotating with the bell -- the torso stays fixed; only the arms and bell
+    move
+  - Too heavy a bell -- the halo is a warm-up; heavier bells sacrifice speed and control
+    for no benefit
+  cue_points:
+  - Hold the bell by the horns with both hands, inverted (horns pointing up)
+  - Circle the bell around the head in a controlled arc, passing in front of the face
+    and behind the head
+  - The circle should be as tight as possible -- the bell just clears the ears on
+    each pass
+  - 'Alternate direction each rep: clockwise, counterclockwise, clockwise, etc.'
+  - Start with 5 reps per direction at light weight; keep the neck neutral and the
+    torso still
+  description: The kettlebell halo circles the bell around the head in a controlled
+    arc, alternating direction each rep. It is the standard Wildman session opener
+    -- used to prime the shoulder girdle, thoracic spine, and neck before any pressing
+    or overhead work. Pavel and Wildman use it as the foundational shoulder warm-up
+    and as the prerequisite movement for TGU and windmill loading.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    highlight_secondary:
+    - upper_trapezius
+    - serratus_anterior
+  muscles_primary:
+  - shoulders
+  - upper_trapezius
+  muscles_secondary:
+  - serratus_anterior
+  - core
+  - neck_stabilizers
+wk_kb_overhead_carry:
+  animation:
+    type: none
+  coaching_focus: Push the bell into the ceiling actively throughout -- a passive
+    overhead arm will fail within 20 meters; the shoulder is working, not resting.
+  common_errors:
+  - 'Elbow bending under fatigue: the arm must stay locked -- a bent elbow ends the
+    overhead carry standard'
+  - 'Shoulder shrugging: the shoulder should be packed, not elevated; shrugging indicates
+    lat disengagement'
+  - 'Lateral trunk lean: a sign the core is not managing the asymmetric overhead load
+    -- reduce distance before adding load'
+  cue_points:
+  - Press to lockout before stepping; establish the packed shoulder position before
+    the first step
+  - Eyes forward; trust the overhead position rather than looking up at the bell
+  - 'Active lat throughout: pull the shoulder into the socket while pushing upward
+    simultaneously'
+  - Resist lateral trunk flexion -- the unilateral overhead load creates a powerful
+    pull toward the loaded side
+  - 'Wildman standard: the arm must stay locked for the full prescribed distance with
+    no wrist deviation or elbow bend'
+  description: The Wildman Kettlebell overhead carry holds the bell at full lockout
+    overhead and walks for distance -- identical in mechanics to the kb_overhead_carry
+    but prescribed within the Wildman curriculum as a diagnostic tool. In the Wildman
+    system, carries reveal positional instability that does not show under static
+    loading; the overhead carry exposes shoulder and thoracic weaknesses that cannot
+    be hidden when walking.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - upper_back
+    highlight_secondary:
+    - triceps
+    - erector_spinae
+    - glutes
+  muscles_primary:
+  - deltoids
+  - core
+  - upper_back
+  muscles_secondary:
+  - triceps
+  - erector_spinae
+  - glutes
+wk_kb_press_single:
+  animation:
+    type: none
+  coaching_focus: Press in an arc, not straight up -- Wildman cues an arc rather than
+    a vertical path; the bell sweeps slightly outward and then inward overhead, which
+    is more natural for the shoulder joint.
+  common_errors:
+  - Lateral trunk lean to complete the press -- the obliques on the opposite side
+    must brace; if the lean is unavoidable, reduce load
+  - Pressing straight up vertically -- the natural arc is more shoulder-joint-friendly;
+    straight vertical paths create more impingement
+  - Loose lat at lockout -- the overhead position is only stable when the lat is engaged;
+    a loose lat means the shoulder is unsupported
+  cue_points:
+  - 'Start in the rack position: elbow against the body, bell on the forearm, wrist
+    straight'
+  - Brace the core hard before pressing -- the single-arm press creates a significant
+    lateral lean temptation
+  - Press the bell up and slightly outward, then arc it overhead to stack over the
+    shoulder
+  - 'At lockout: arm locked, shoulder packed, lat engaged -- the lat at lockout is
+    what protects the shoulder'
+  - Descend in a controlled arc back to the rack -- do not drop the bell to the rack
+  description: The single-arm kettlebell strict press drives the bell from the rack
+    position to overhead lockout with no leg drive. The Wildman and Pavel approach
+    requires tight lat engagement at lockout to seat the shoulder and pack the shoulder
+    joint. Horsemen program 1-minute press bouts per arm in their 12-minute warm-up
+    complex. It is the gateway to the push press, jerk, and overhead carry.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - triceps
+    highlight_secondary:
+    - obliques
+    - lats
+  muscles_primary:
+  - shoulders
+  - triceps
+  - upper_trapezius
+  muscles_secondary:
+  - core
+  - obliques
+  - lats
+wk_kb_push_press_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Push_Press
+    gif_alt: Kettlebell Push Press (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Push_Press/0.jpg
+    type: gif
+  coaching_focus: The hip dip is a sharp, shallow pulse -- not a slow squat; the dip
+    is only 2-3 inches deep, and the drive back up through the legs is what launches
+    the bell.
+  common_errors:
+  - Too deep a dip -- a slow squat-dip eliminates the elastic leg drive; the dip must
+    be shallow and explosive
+  - Press before the legs finish driving -- the legs drive first; the arm extends
+    as they reach full extension
+  - Using push press as a substitute for strict press weakness -- build the strict
+    press to the target load before using push press as a progression
+  cue_points:
+  - Start in the rack position as with the strict press
+  - Dip 2-3 inches at the knee -- sharp and quick, not a squat
+  - Drive through the legs explosively; the leg drive launches the bell off the shoulder
+  - The arm extends to lockout as the legs come to full extension -- the press follows
+    the leg drive
+  - Lower the bell back to the rack under control before the next rep
+  description: The single-arm kettlebell push press adds a hip dip to drive the bell
+    off the shoulder, using leg power to assist the overhead lockout. It bridges the
+    strict press and the jerk on the Wildman complexity ladder. Horsemen program 1-minute
+    push press bouts per arm in their warm-up. The hip dip allows heavier bells than
+    the strict press and develops the leg-to-press power transfer.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - glutes
+    - quadriceps
+    highlight_secondary:
+    - triceps
+    - core
+  muscles_primary:
+  - shoulders
+  - triceps
+  - glutes
+  - quadriceps
+  muscles_secondary:
+  - core
+  - calves
+  - upper_trapezius
+wk_kb_rack_carry:
+  animation:
+    type: none
+  coaching_focus: The rack must be the same at the end of the distance as at the start
+    -- if the elbow drifts or the wrist deviates under fatigue, the rack carry is
+    eroding the position rather than building it.
+  common_errors:
+  - 'Elbow drifting outward: the rack collapses into a waiter carry position -- this
+    trains the wrong position for jerk and long cycle'
+  - 'Wrist deviation: the bell tips and the forearm takes excess load awkwardly; strengthen
+    the rack position with static holds before progressing to carries'
+  - 'Too short a distance: rack carry endurance requires at least 50-100m sets to
+    develop the sustained rack position tolerance'
+  cue_points:
+  - 'Establish a textbook rack before stepping: elbow tight, wrist neutral, bell resting
+    on the forearm'
+  - Treat the rack carry as rack position practice under locomotor demand -- every
+    step should reinforce the position
+  - Core braces against the anterior load; do not allow forward lean
+  - Walk normally; do not shuffle or break into a run -- carry mechanics matter more
+    than speed
+  - 'Wildman context: use rack carry after jerk or long cycle practice to build rack
+    endurance under fatigue'
+  description: The Wildman Kettlebell rack carry holds the bell in the clean rack
+    position and walks for distance within the Wildman curriculum. In the Wildman
+    progression, rack carry endurance directly supports long jerk and long cycle performance
+    -- the rack is the recovery position between reps in those movements, and training
+    its endurance under locomotion builds the capacity to use it effectively under
+    competition conditions.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - deltoids
+    - upper_back
+    highlight_secondary:
+    - forearms
+    - biceps
+    - glutes
+  muscles_primary:
+  - core
+  - deltoids
+  - upper_back
+  muscles_secondary:
+  - forearms
+  - biceps
+  - glutes
+wk_kb_snatch:
+  animation:
+    type: none
+  coaching_focus: Punch through, do not pull -- at the apex of the hip drive, insert
+    the hand under the bell and punch it overhead; pulling causes the bell to crash
+    on the wrist.
+  common_errors:
+  - Pulling instead of punching -- a pull causes the bell to crash on the wrist; the
+    fist inserts under the bell and punches upward
+  - The bell spinning away from the hand at the top -- the bell should sit in the
+    heel of the hand at lockout; spinning indicates insufficient punch-through speed
+  - Not training the drop separately -- the lowering path requires practice; athletes
+    who only train the snatch going up develop rough, inefficient drop mechanics
+  cue_points:
+  - 'Prerequisite: clean and single-arm swing must be fully established before attempting
+    the snatch'
+  - The movement begins as a single-arm swing; the bell hikes and the hip drives explosively
+  - As the bell rises to face height, insert the hand under the bell and punch the
+    fist toward the ceiling
+  - The bell should turn over the hand smoothly and arrive at lockout without hitting
+    the forearm
+  - 'Lower by reversing the path: let the bell swing back down in front of the face
+    to the hiked position'
+  description: The kettlebell snatch pulls the bell from the hip to overhead lockout
+    in a single movement -- a more explosive and technically demanding combination
+    of the swing and the press. Horsemen program 1-minute snatch bouts per arm in
+    their 12-minute complex; the Horsemen SSST standard is 200+ snatches in 10 minutes
+    at 53 lb. KB sport RPM target is 14 per minute at 1 pood. It is the apex of the
+    Wildman single-bell complexity ladder.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - shoulders
+    highlight_secondary:
+    - lats
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - shoulders
+  - lats
+  muscles_secondary:
+  - core
+  - triceps
+  - forearms
+wk_kb_squat_goblet:
+  animation:
+    external_id: Goblet_Squat
+    gif_alt: Kettlebell Goblet Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg
+    type: gif
+  coaching_focus: Use the bell as a teacher -- if the torso pitches forward excessively,
+    the bell will fall; the bell weight keeps you honest about thoracic extension
+    and elbows-up position.
+  common_errors:
+  - Leaning excessively forward -- the goblet squat self-corrects this; if the lean
+    is severe, the bell weight is too high or ankle mobility needs work
+  - Heels rising -- ankle dorsiflexion limitation; address with ankle mobility before
+    adding load
+  - Not reaching full depth -- the goblet squat is specifically designed to access
+    full depth; partial depth defeats the teaching purpose
+  cue_points:
+  - Hold the bell by the horns at chest height, elbows pointing down and forward
+  - Squat to full depth -- hip crease well below the knee; use the bell weight as
+    counterbalance
+  - Keep the elbows inside the knees and use them to drive the knees apart at the
+    bottom
+  - Thoracic spine extended throughout -- the chest stays tall, not pitched forward
+  - Drive through the full foot to stand, keeping the bell close to the chest throughout
+  description: The kettlebell goblet squat holds the bell by the horns at chest height,
+    using the anterior load to self-correct forward lean and teach upright torso positioning.
+    It is the Wildman and Pavel entry-level squatting movement -- the counterbalance
+    of the bell at the chest naturally cues the athlete toward the proper front squat
+    posture without requiring wrist flexibility. It is the prerequisite to double
+    bell squatting.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - adductors
+  - hamstrings
+  - core
+wk_kb_swing_single_arm:
+  animation:
+    type: none
+  coaching_focus: The free hand mirrors the working arm -- it swings naturally as
+    a counterbalance; do not hold it stiffly or use it to assist the swing.
+  common_errors:
+  - Bell drifting away from the body on the backswing -- the lat must stay engaged;
+    the bell hikes between the knees, not behind the body
+  - Torso rotating toward the working arm -- the core must resist rotation; if the
+    torso turns, reduce load or reps
+  - Neglecting the equal-reps standard -- always match left and right; the weaker
+    side determines the session volume
+  cue_points:
+  - 'Transfer from two-hand swing: let go with one hand at the top on a strong rep'
+  - The hip drive mechanics are identical to the two-hand swing -- nothing changes
+    in the legs or hips
+  - The free arm swings naturally as a counterbalance and assists with the anti-rotation
+    demand
+  - The bell path should be narrow and close to the body -- a wide arc indicates lat
+    disengagement
+  - Train equal reps on both sides -- single-arm work reveals asymmetries that the
+    two-hand swing hides
+  description: The single-arm kettlebell swing adds an anti-rotation demand to the
+    two-hand swing -- the free hand provides counter-rotation balance while the working
+    arm and hip drive the bell unilaterally. Horsemen programs 1-minute single-arm
+    swing bouts per arm as the warm-up complex standard. It is the direct prerequisite
+    to the single-arm clean and snatch in the Wildman progression.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - obliques
+    - lats
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - obliques
+  - lats
+wk_kb_swing_two_hand:
+  animation:
+    type: none
+  coaching_focus: The bell is a consequence of the hips -- the hip snap drives the
+    bell, the arms do not pull it up; any arm engagement before full hip extension
+    breaks the ballistic chain.
+  common_errors:
+  - Squatting instead of hinging -- the knees should not travel forward; this is a
+    hip hinge, not a squat
+  - 'Arm pull -- the shoulders pull the bell up rather than the hips driving it; check:
+    do the arms engage before full hip extension?'
+  - Forward lean at the top -- the body should be vertical at hip lockout; forward
+    lean means the hips did not fully extend
+  cue_points:
+  - Hike the bell back between the knees (not a squat -- a hip hinge) and load the
+    hamstrings
+  - Drive the hips explosively forward with a sharp hip snap -- squeeze the glutes
+    hard at full extension
+  - The arms float forward as a result of the hip drive -- do not pull the bell up
+    with the shoulders
+  - The bell reaches shoulder height on its own momentum -- resist the urge to press
+    it higher
+  - 'Let the bell swing back and hike it through again -- the rhythm is continuous:
+    hinge-snap-hinge-snap'
+  description: The two-hand kettlebell swing is the foundational Wildman ballistic
+    -- a hip-hinge-driven movement where the bell floats to shoulder height on the
+    hip snap. Both hands on the bell train the bilateral hip drive pattern that underpins
+    all Wildman KB work. Horsemen programs 1-minute two-hand swing bouts as warm-up;
+    Gym Jones breathing ladder uses swings 1-20 at 53 lb. It is the gateway to the
+    entire Wildman complexity progression.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - forearms
+  - lats
+wk_kb_tgu:
+  animation:
+    external_id: Kettlebell_Turkish_Get-Up_Lunge_style
+    gif_alt: Kettlebell Turkish Get-Up
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Lunge_style/0.jpg
+    type: gif
+  coaching_focus: Watch the bell, not the floor -- keeping the gaze on the bell throughout
+    every transition maintains the shoulder position and cues the overhead alignment
+    that keeps the wrist packed.
+  common_errors:
+  - Rushing through transitions -- the Wildman standard is deliberate; each position
+    deserves a 2-second stability check before moving
+  - Losing the vertical arm -- the working arm must stay vertical throughout every
+    stage; any tipping means the load is too heavy
+  - Looking down instead of at the bell -- gaze on the bell maintains alignment; looking
+    down invites shoulder instability
+  cue_points:
+  - Begin supine, bell pressed overhead with the working arm vertical; bend the working
+    knee
+  - Roll to the forearm, post to the hand, bridge the hips up -- three separate stages,
+    not one motion
+  - Sweep the free leg back into a kneeling position while maintaining vertical arm
+    alignment
+  - Stand from the lunge with the bell still locked overhead and the gaze on the bell
+    throughout
+  - 'Reverse every step to return: lunge back, sweep the leg forward, post back, roll
+    to supine'
+  description: 'The Wildman Turkish get-up moves from supine to standing with the
+    bell locked overhead throughout, then reverses to return -- a complete whole-body
+    movement that tests shoulder stability, hip mobility, and total integration. Wildman
+    programs it in nearly every session: move slowly through every position, there
+    are no shortcuts. Gym Jones uses 100 TGUs at 15 lb for recovery; Horsemen SMMF
+    programs 100 get-ups at 35 lb in 15-20 minutes.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - glutes
+    - serratus_anterior
+  muscles_primary:
+  - shoulders
+  - core
+  - glutes
+  muscles_secondary:
+  - hip_flexors
+  - serratus_anterior
+  - obliques

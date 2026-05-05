@@ -1,0 +1,1133 @@
+air_baby:
+  animation:
+    type: none
+  coaching_focus: Press the supporting arm into the floor to stay elevated -- the
+    moment the arm bends, the hip drops and the pattern is lost.
+  common_errors:
+  - Bending the supporting elbow -- this indicates insufficient tricep and shoulder
+    strength; train frog stance first
+  - Letting the hips sag -- the hip must stay elevated above the floor throughout
+    the entire extension
+  - Rushing the leg return -- decelerate the returning leg rather than dropping it,
+    for full muscle control
+  cue_points:
+  - Begin in a seated position with one hand on the floor beside the hip and both
+    feet flat
+  - Press into the supporting hand to lift the hips off the floor before extending
+    the leg
+  - Extend the free leg laterally -- straight and at hip height -- while counter-rotating
+    the torso
+  - Support arm stays fully extended and firmly pressed throughout each rep
+  - 'Control the return: bring the leg back before lowering the hips -- do not collapse
+    between reps'
+  description: 'Air baby extensions are an Ido Portal equilibre movement performed
+    from a ground support position: one arm supports on the floor while the opposite
+    leg extends laterally and the upper body counter-rotates. The static version holds
+    10-15 seconds per side; the dynamic version performs 5-10 controlled extensions.
+    It demands single-arm ground support strength, hip abductor mobility, and contralateral
+    coordination.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - hip_abductors
+    - obliques
+  muscles_primary:
+  - shoulders
+  - hip_abductors
+  - core
+  muscles_secondary:
+  - obliques
+  - wrist_extensors
+  - glutes
+ankle_calf_stretch:
+  animation:
+    external_id: Standing_Gastrocnemius_Calf_Stretch
+    gif_alt: Ankle Calf Stretch (gastrocnemius)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Gastrocnemius_Calf_Stretch/0.jpg
+    type: gif
+  coaching_focus: The stretch is at the heel, not the calf -- feel the pull from the
+    heel attachment, not the belly of the muscle.
+  common_errors:
+  - 'Knee bending during the stretch: immediately shifts the target from gastrocnemius
+    to soleus'
+  - 'Foot externally rotated: reduces specificity -- keep toes pointing straight forward'
+  - 'Bouncing: sustained pressure is what elongates the gastrocnemius fascicles'
+  cue_points:
+  - 'Wall version: hands on wall, heel pressed down, knee straight'
+  - 'Step version: heel off edge of step, lower slowly into dorsiflexion while keeping
+    knee extended'
+  - Apply gentle overpressure by leaning into the wall or holding the stretch at end
+    range
+  - 45-60 seconds per side, twice daily if addressing a deficit
+  - Follow with the soleus stretch (bent knee) to address the full calf complex
+  description: The ankle calf stretch targets the gastrocnemius (straight-leg calf)
+    using a wall-lean or step-edge variant. Straight-leg calf stretching is the first
+    line of intervention for ankle dorsiflexion restriction before squat depth work.
+    Addressing the gastrocnemius before the soleus is the standard progression --
+    the two-joint muscle has greater mechanical influence on dorsiflexion and must
+    be released first.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+au_cortado:
+  animation:
+    type: none
+  coaching_focus: Press through the supporting arm at the apex and arch the thoracic
+    spine fully -- the cortado (cut) is the moment of maximum arch, not just a pass-through.
+  common_errors:
+  - Bypassing the arch -- cue "look for the floor behind you" at the apex to find
+    thoracic extension
+  - Collapsing the supporting arm -- strengthen shoulder stability with frog stance
+    and handstand holds first
+  - Only training the dominant side -- always complete equal reps on both sides
+  cue_points:
+  - 'Prerequisite: establish clean cartwheel mechanics and low bridge before attempting'
+  - Drive the leading leg over with speed -- momentum through the apex reduces shoulder
+    load
+  - At the peak of inversion, actively extend the thoracic spine into the arch position
+  - Land softly with bent knees and immediately prepare for the next rep
+  - Train both sides -- Ido Portal requires bilateral proficiency for flow integration
+  description: The au cortado is a capoeira-derived cartwheel variation that adds
+    a lateral inversion and a bridge arch at the apex. It is an intermediate floreio
+    element requiring simultaneous bridge mobility, shoulder stability, and the lateral
+    weight-transfer mechanics established through cartwheel practice. Ido Portal programs
+    10-14 reps per set as part of the floreio tri-set.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - glutes
+    - hip_flexors
+  muscles_primary:
+  - shoulders
+  - thoracic_extensors
+  - hip_flexors
+  muscles_secondary:
+  - core
+  - glutes
+  - wrist_extensors
+balance_frog_stance:
+  animation:
+    type: none
+  coaching_focus: Press through all ten fingers and push the floor away -- balance
+    is controlled through the fingertips, not through body weight shifting.
+  common_errors:
+  - Collapsing the wrists -- build wrist extension strength with wrist preparation
+    drills before loading
+  - Leaning too far back -- the balance point is forward; lean until the feet naturally
+    lift
+  - Holding breath -- breathe continuously throughout the hold to maintain diaphragmatic
+    tension
+  cue_points:
+  - Place hands flat on the floor, shoulder-width apart, and lean forward until knees
+    rest on the elbows
+  - Lift feet simultaneously and find the point of balance -- the center of gravity
+    is forward of where most expect
+  - Press actively through the fingertips to make micro-adjustments rather than shifting
+    the wrists
+  - Keep elbows bent at 90 degrees and tucked into the inner thigh -- do not allow
+    them to flare
+  - Build from 5-sec holds toward 15-30-sec holds before progressing to tuck sit and
+    L-sit
+  description: Frog stance is the Ido Portal equilibre entry movement -- a squat with
+    knees resting on the backs of the elbows and feet lifted off the floor, balancing
+    on the hands. It builds wrist loading tolerance, shoulder stability, and the proprioceptive
+    feedback required for handstand progression. Ido Portal prescribes 15-30 seconds
+    per set, 3-5 sets, with 60 seconds rest.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - wrist_extensors
+    highlight_secondary:
+    - core
+    - serratus_anterior
+  muscles_primary:
+  - wrist_extensors
+  - shoulders
+  - serratus_anterior
+  muscles_secondary:
+  - core
+  - hip_flexors
+  - triceps
+bridge_high:
+  animation:
+    type: none
+  coaching_focus: Push the floor away through straight arms and drive the hips up
+    -- the limiting factor is almost always shoulder flexion, not lower back arch.
+  common_errors:
+  - Bending the elbows at the top -- cue lock-out and push; build tricep strength
+    with handstand holds
+  - Hips dropping backward -- drive forward with the hips to stack over the base
+  - Skipping the wrist warm-up -- always do wrist circles, wrist extensions, and compressions
+    before loading
+  cue_points:
+  - Begin supine with hands beside the ears, fingers pointing toward the feet
+  - Press to full arm extension first, then drive hips up -- do not lift hips before
+    arms are straight
+  - Aim to stack hips over hands and shoulders, not angle them back toward the feet
+  - Breathe -- hold 30 sec total, breaking into attempts if necessary (not one continuous
+    hold)
+  - 'Descend controlled: lower hips first, then head last -- reverse the ascent sequence'
+  description: The high bridge (gymnastic wheel) drives the hips to maximum height
+    with arms and legs fully extended, demanding simultaneous wrist, shoulder, thoracic,
+    and hip flexor mobility. It is the primary arch skill in Ido Portal programming,
+    used both as a static hold and as a dynamic transition into bridge walks and au
+    cortado. Mastering the low bridge is a prerequisite.
+  muscle_diagram:
+    highlight_primary:
+    - erector_spinae
+    - glutes
+    - shoulders
+    highlight_secondary:
+    - quadriceps
+    - hip_flexors
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  - shoulders
+  - hip_flexors
+  muscles_secondary:
+  - quadriceps
+  - wrist_extensors
+  - thoracic_extensors
+bridge_low:
+  animation:
+    type: none
+  coaching_focus: Distribute weight evenly between all four limbs and press the hips
+    toward the ceiling rather than just arching the lower back.
+  common_errors:
+  - Hinging only at the lower lumbar -- cue thoracic extension and reach the chest
+    toward the ceiling
+  - Wrists collapsing inward -- establish wrist preparation drills before full load
+  - Rushing to high bridge -- spend 4+ weeks on low bridge rotations before progressing
+  cue_points:
+  - Plant hands flat with fingers pointing toward the feet and push the floor away
+  - Keep elbows tracking over wrists -- do not allow them to flare wide
+  - Press through all four limbs simultaneously when lifting into the position
+  - Hold for 5 seconds with full tension before lowering -- do not collapse down
+  - Work rotations into low bridge (10 reps) before holding the static version
+  description: The low bridge is a ground-level backbend from supine -- hips remain
+    low while weight transfers to hands and feet. It is the foundation of all Ido
+    Portal arch work, developing wrist loading tolerance, shoulder extension range,
+    and spinal articulation without the thoracic demand of the full wheel. Multiple
+    approach variations exist from beginner to advanced.
+  muscle_diagram:
+    highlight_primary:
+    - erector_spinae
+    - glutes
+    highlight_secondary:
+    - shoulders
+    - hip_flexors
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  - shoulders
+  muscles_secondary:
+  - hip_flexors
+  - wrist_extensors
+  - quadriceps
+bridge_walk:
+  animation:
+    type: none
+  coaching_focus: Maintain full hip drive throughout each step -- do not allow the
+    hips to drop between foot placements.
+  common_errors:
+  - Collapsing the hips between steps -- shorter steps and slower cadence until hip
+    height is maintained
+  - Attempting bridge walk before owning the static hold -- cannot walk a position
+    you cannot hold
+  - Rushing the distance -- 12m is a minimum, not a warm-up; treat each set with full
+    intent
+  cue_points:
+  - Establish a solid static high bridge hold before attempting to walk
+  - Move one limb at a time and keep three points of contact while each limb moves
+  - Lead with the feet for front walking -- shuffle feet toward hands, then walk hands
+    forward
+  - Keep the gaze between the hands on the floor -- do not look toward the destination
+  - Rest completely between distance attempts -- accumulate total distance, not time
+    under tension
+  description: Bridge walking is locomotion in the high bridge position -- stepping
+    hands and feet alternately to travel across the floor forward or backward. It
+    challenges sustained spinal extension, shoulder stability, and hip flexor length
+    under the demand of coordinated movement. Ido Portal programs front bridge walking
+    (12m beginner, intermediate; 15m advanced) as part of the locomotion circuit.
+  muscle_diagram:
+    highlight_primary:
+    - erector_spinae
+    - glutes
+    - shoulders
+    highlight_secondary:
+    - hip_flexors
+    - core
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  - shoulders
+  - hip_flexors
+  muscles_secondary:
+  - quadriceps
+  - core
+  - wrist_extensors
+cartwheel:
+  animation:
+    type: none
+  coaching_focus: Place both hands sequentially in line on the floor and swing both
+    legs over in a single plane -- cartwheel is a vertical plane of motion, not a
+    sprawl.
+  common_errors:
+  - Stepping sideways instead of in line -- the cartwheel moves along a straight line,
+    not perpendicular to it
+  - Bending the arms -- elbows must lock out as the legs pass overhead; build shoulder
+    strength first
+  - Legs bending during the swing -- cue straight legs; bent-leg cartwheels are a
+    regression until hip mobility improves
+  cue_points:
+  - Step into the cartwheel with the lead foot and reach the lead hand to the floor
+    in line with it
+  - Place the trailing hand beside the lead hand -- both hands form a straight line
+    on the floor
+  - Swing both legs over in sequence, maintaining a single plane of motion throughout
+  - Land the lead foot first, then the trailing foot, and remain standing -- do not
+    stumble to a stop
+  - Train both directions equally; Ido Portal requires bilateral proficiency for au
+    cortado progression
+  description: The cartwheel is the prerequisite bridge between Ido Portal role work
+    and the au cortado -- it establishes lateral inversion mechanics and the hand-to-floor
+    weight transfer required for more complex floreio movements. Both directions must
+    be clean and the movement bilateral before progression to au cortado. Despite
+    its apparent simplicity, the cartwheel reveals deficits in lateral hip mobility
+    and single-arm weight tolerance.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - obliques
+    highlight_secondary:
+    - hip_flexors
+    - core
+  muscles_primary:
+  - shoulders
+  - hip_flexors
+  - obliques
+  muscles_secondary:
+  - wrist_extensors
+  - glutes
+  - core
+floreio_sequence:
+  animation:
+    type: none
+  coaching_focus: The quality criterion is seamless transitions -- if you have to
+    pause to set up for the next movement, the prerequisite skills are not yet ready
+    for integration.
+  common_errors:
+  - Programming the sequence before the components are isolated -- the sequence reveals
+    gaps, it does not fix them
+  - Treating it as conditioning -- floreio is a quality practice; rest fully between
+    bouts and focus on expression
+  - Skipping sides -- every asymmetrical movement (au cortado, QDR) must be trained
+    bilaterally even in flow
+  cue_points:
+  - All component movements (role, bridge, au cortado, QDR) must be individually solid
+    before combining
+  - Begin with prescribed sequences (role into bridge, bridge into au cortado) before
+    improvising
+  - Let each movement complete fully before beginning the next -- no truncated reps
+    to make the flow work
+  - 'Use the 2-minute bout as an exploration: vary the order, discover transitions,
+    play with timing'
+  - Film a set periodically -- what feels smooth is often not; video reveals actual
+    vs. perceived quality
+  description: 'The floreio sequence is the Ido Portal integration tier: chained role,
+    bridge, au cortado, and QDR movements performed without pause. Where the isolation
+    drills develop individual skills, floreio sequences train the transitions between
+    them -- the connective tissue of movement expression. Ido Portal programs 2-minute
+    continuous flow with improvisation of learned elements, 3 sets, 30 seconds rest.'
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - shoulders
+    highlight_secondary:
+    - erector_spinae
+    - glutes
+  muscles_primary:
+  - core
+  - shoulders
+  - erector_spinae
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - obliques
+handstand_freestanding:
+  animation:
+    type: none
+  coaching_focus: Build the handstand line from the floor up -- active wrists, packed
+    and elevated scapulae, neutral spine, squeezed glutes, pointed toes.
+  common_errors:
+  - Banana back in the inverted position -- build thoracic mobility and scapular strength
+    with wall drills first
+  - Collapsing onto the heel of the hand -- always stay fingertip-active and treat
+    every press as a balance correction
+  - Rushing to freestanding before owning the wall shape -- spend weeks building the
+    line before removing the wall
+  cue_points:
+  - 'Begin with wall drill: chest-to-wall or back-to-wall hold for 10-30 sec, 3-5
+    sets'
+  - Press through all ten fingers and maintain active wrist extension -- do not collapse
+    onto the heel of the hand
+  - Protract and elevate the scapulae (push the floor away) to seat the shoulders
+  - Squeeze glutes and point feet to lock the posterior chain -- a loose body cannot
+    balance
+  - Kick up with controlled momentum, not a jump -- arrive close to balance rather
+    than recovering from a crash
+  description: 'The freestanding handstand is Ido Portal equilibre foundation -- a
+    vertical inverted balance with full body alignment from wrist to ankle. The quality
+    of the line (not the duration) is the primary goal: shoulders stacked over wrists,
+    hips over shoulders, and feet over hips. Wall drills build the shape before balance
+    is attempted freestanding.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - serratus_anterior
+    - glutes
+  muscles_primary:
+  - shoulders
+  - serratus_anterior
+  - core
+  muscles_secondary:
+  - glutes
+  - wrist_extensors
+  - triceps
+handstand_push_up_ring:
+  animation:
+    type: none
+  coaching_focus: 'This movement is a diagnostic: if the rings wobble uncontrollably
+    at any point, the prerequisite shoulder stability is not yet present -- return
+    to the wall HSPU and ring support hold.'
+  common_errors:
+  - 'Attempting without prerequisite strength: ring HSPU requires a solid wall HSPU
+    AND a controlled ring support hold first'
+  - 'Rings drifting wide on descent: insufficient lat and rotator cuff engagement
+    -- the rings must stay close'
+  - 'Using momentum to kick up: a ballistic kick into an unstable ring inversion is
+    dangerous; build the controlled entry first'
+  cue_points:
+  - Set rings at a height that allows a full inverted press with the rings level with
+    or below the shoulder at the top
+  - Kick or press up to the inverted position slowly -- do not momentum-kick into
+    rings
+  - Lower with extreme control; the rings will want to move outward as you descend
+  - Head between the rings at the bottom; press back to lockout with rings close to
+    the body
+  - This is a low-rep strength exercise -- 1-3 reps per set; this is not a conditioning
+    tool
+  description: The ring handstand push-up is the extreme instability variant of the
+    HSPU -- the athlete inverts onto gymnastic rings set low and performs a press
+    from an inverted hang position. The ring instability demands complete shoulder
+    proprioception and stability across the full overhead press range. Ido Portal
+    programs it only for athletes with a solid freestanding handstand and established
+    ring strength baseline.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - rotator_cuff
+    highlight_secondary:
+    - core
+    - upper_back
+    - serratus
+  muscles_primary:
+  - deltoids
+  - triceps
+  - rotator_cuff
+  muscles_secondary:
+  - core
+  - upper_back
+  - serratus
+handstand_walk:
+  animation:
+    type: none
+  coaching_focus: Walk through the fingers, not through falls -- each step is a controlled
+    tap, not a rescue from an imbalance.
+  common_errors:
+  - Walking to save the balance instead of walking with control -- slow down and take
+    shorter steps
+  - Banana back during the walk -- stop, reset, and re-establish the handstand line
+    before continuing
+  - Not building sufficient freestanding balance first -- wall handstand drills must
+    precede free balance
+  cue_points:
+  - 'Prerequisite: own a 15-30-sec freestanding handstand before attempting to walk'
+  - Keep the body in full extension -- no banana back; the line must be established
+    first
+  - Take small, deliberate steps (6-8 inches) rather than reaching to cover distance
+    quickly
+  - Shift weight to one arm completely before lifting the other hand
+  - Gaze stays between the hands -- looking forward causes the back to arch and balance
+    to break
+  description: 'Handstand walking transfers the freestanding handstand into locomotion,
+    requiring continuous micro-adjustments through the shoulders, wrists, and core
+    to maintain balance while stepping the hands forward. Ido Portal programs this
+    as part of the five-exercise locomotion circuit: beginner 12m, intermediate 12m,
+    advanced 15m with an elbow-to-knee variation for additional hip engagement.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - serratus_anterior
+    - wrist_extensors
+  muscles_primary:
+  - shoulders
+  - core
+  - serratus_anterior
+  muscles_secondary:
+  - wrist_extensors
+  - triceps
+  - glutes
+hip_90_90:
+  animation:
+    type: none
+  coaching_focus: Sit tall in the position before applying any pressure -- if the
+    pelvis is already posterior-tilting to get into the position, the range has already
+    been exceeded before the stretch begins.
+  common_errors:
+  - 'Posterior pelvic tilt in the position: the pelvis is compensating for restricted
+    hip rotation -- do not force it; reduce the shin angle'
+  - 'Forcing the knee toward the floor: if the knee cannot reach the floor comfortably,
+    the hip rotation range is the limiter -- do not force the knee'
+  - 'Rushing the hold: 30-60 seconds per side minimum for connective tissue adaptation'
+  cue_points:
+  - 'Both legs in 90/90: front shin parallel to the front edge of your mat, rear shin
+    parallel to the side'
+  - Sit as tall as possible from this position -- posterior pelvic tilt indicates
+    insufficient hip rotation range
+  - Lean gently forward over the front shin to increase the external rotation stretch
+    on the front hip
+  - Switch sides by rotating the torso and legs
+  - 'Progress: eventually sit fully upright without any posterior pelvic tilt in either
+    direction'
+  description: The hip 90/90 stretch (Ido Portal variant) holds both hips in 90-degree
+    angles simultaneously, addressing internal and external hip rotation in the same
+    position. The transition between sides is itself a mobility drill. Portal programs
+    it in the movement practice as a daily hip rotation drill, holding each side for
+    30-60 seconds while applying gentle oscillating pressure toward the floor.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+locomotion_duck_walk:
+  animation:
+    type: none
+  coaching_focus: Maintain a tall torso and full depth throughout the walk -- do not
+    stand up between steps or let the chest fall forward.
+  common_errors:
+  - Rising between steps -- the purpose is sustained deep hip flexion; any rise defeats
+    the drill
+  - Heel lifting off the floor -- limited dorsiflexion is the cause; address with
+    ankle mobility work
+  - Leaning excessively forward -- cue elbows on thighs or hands behind head to force
+    upright posture
+  cue_points:
+  - Squat to full depth before initiating movement -- thighs parallel or below parallel
+  - Keep the torso as upright as possible -- chest up and eyes forward, not looking
+    at the floor
+  - Step one foot forward while maintaining depth in the trailing leg
+  - Do not bounce out of the bottom position between steps -- stay low continuously
+  - Use the distance (24m or 30m) as the metric, not time -- take the distance without
+    standing up
+  description: 'Duck walk is a low-squat locomotion pattern that develops deep hip
+    flexion, ankle dorsiflexion range, and knee tolerance under sustained positional
+    demand. Ido Portal programs it as one of five locomotion patterns in the locomotion
+    circuit: beginner and intermediate 24m, advanced 30m. It is contraindicated with
+    acute meniscus injury.'
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hip_flexors
+    - adductors
+    - calves
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - hip_flexors
+  muscles_secondary:
+  - adductors
+  - calves
+  - erector_spinae
+locomotion_horse_walk:
+  animation:
+    type: none
+  coaching_focus: Move opposite hand and foot simultaneously and keep the knees consistently
+    just off the floor -- not dragging, not high.
+  common_errors:
+  - Knees touching the floor -- defeats the purpose; slow down and rebuild position
+  - Hips rising into a bear crawl -- maintain horizontal spine and lower the hips
+    back down
+  - Moving same-side limbs together -- practice slow single-limb cues before combining
+    into full gait
+  cue_points:
+  - Begin in quadruped with hips just above knee height and knees floating 2-3 cm
+    off the floor
+  - Move opposite limbs together (right hand + left foot, then left hand + right foot)
+  - Maintain horizontal spine -- do not let the hips rise or the lower back sag
+  - Keep knees at a consistent height off the floor throughout the full distance
+  - Slow is correct -- rushing produces bad mechanics; quality of gait over speed
+  description: Horse walk is a quadruped locomotion pattern with the knees bent and
+    floating just above the floor, body parallel to the ground. It develops hip and
+    shoulder mobility simultaneously, proprioceptive coordination, and the spatial
+    body awareness central to Ido Portal locomotion work. Programmed at beginner/intermediate
+    24m and advanced 30m in the locomotion circuit.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - hip_flexors
+    - glutes
+  muscles_primary:
+  - shoulders
+  - hip_flexors
+  - core
+  muscles_secondary:
+  - glutes
+  - quadriceps
+  - serratus_anterior
+locomotion_lizard_walk:
+  animation:
+    type: none
+  coaching_focus: The elbow reaches toward the floor and beside the hip -- create
+    length through the side body rather than pulling the body up with the arms.
+  common_errors:
+  - Pushing up with the arms and raising the body -- the pattern is horizontal, not
+    vertical; stay low
+  - Arm and leg on the same side moving together -- opposite limb pairing is the correct
+    gait pattern
+  - Resting on elbows rather than pressing through a long arm -- maintain active shoulder
+    stability
+  cue_points:
+  - Start prone with hips close to the floor and arms reaching forward wide, palms
+    down
+  - Step one foot forward outside the same-side arm while reaching the opposite arm
+    forward
+  - The driving leg pushes through the heel -- use leg power to propel, not upper-body
+    pulling
+  - Keep the chest skimming just above the floor -- not dragging, not raised
+  - Train both arms leading for full bilateral competency across the full distance
+  description: 'Lizard walk is a low crawl pattern with the hips and chest close to
+    the floor, mimicking lizard locomotion through lateral arm reach and hip-driven
+    stepping. It is the most shoulder-intensive of the Ido Portal locomotion patterns,
+    requiring active shoulder stability throughout the reach phase. Beginner: 12m
+    standard variant; advanced: 12-15m with altered arm mechanics.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - chest
+    highlight_secondary:
+    - obliques
+    - hip_flexors
+  muscles_primary:
+  - shoulders
+  - chest
+  - hip_flexors
+  muscles_secondary:
+  - obliques
+  - serratus_anterior
+  - glutes
+locomotion_ostrich_walk:
+  animation:
+    type: none
+  coaching_focus: Maintain a flat back throughout -- the hinge comes from the hip,
+    not from rounding the lumbar spine.
+  common_errors:
+  - Rounding the lower back -- this defeats the hip hinge goal; lighten the forward
+    pitch until the back stays flat
+  - Leg swing from the knee -- the leg should be straight and the swing initiated
+    from the hip
+  - Short, choppy steps -- reach for a full stride length to get the hamstring lengthening
+    benefit
+  cue_points:
+  - Pitch the torso forward to approximately 45 degrees at the hip joint -- back flat
+    throughout
+  - Swing the free leg straight and high -- feel hamstring extensibility at the top
+    of the swing
+  - Plant the heel first on each step and absorb with a soft knee -- do not slap the
+    foot down
+  - Arms swing opposite to the legs for counterbalance
+  - Maintain the hip hinge angle consistently -- do not stand up between steps
+  description: Ostrich walk is a hip-hinge-based locomotion pattern with the torso
+    pitched far forward and each step driven from hip extension and a long leg swing.
+    It develops hamstring extensibility, hip hinge motor patterning, and lumbopelvic
+    control under the demands of forward movement. Ido Portal programs it at 24m (beginner/intermediate)
+    and 30m (advanced) in the locomotion circuit.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - hip_flexors
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - hip_flexors
+  - core
+  - calves
+pigeon_pose:
+  animation:
+    type: none
+  coaching_focus: Feel the stretch deep in the glute, not on the outside of the knee
+    -- if the knee is the prominent sensation, reduce the hip rotation angle.
+  common_errors:
+  - 'Knee as the primary sensation: move out of the position and use the supine figure-4
+    regression'
+  - 'Not holding long enough: the piriformis responds to sustained tension -- 30-second
+    holds miss the adaptation window'
+  - 'Forcing the shin to be perfectly horizontal before range allows: start with an
+    angled shin and progress toward horizontal over weeks'
+  cue_points:
+  - 'Floor pigeon: front shin crosses the mat, rear leg extends straight behind'
+  - 'Supine figure-4 regression: lying on back, cross the ankle over the opposite
+    knee, press the crossed knee away'
+  - Actively pull the hip into the position rather than passively collapsing into
+    it
+  - Breathe into the glute -- exhale and allow the external rotators to release with
+    each breath
+  - 60 seconds minimum; progress to 90 seconds as tolerance improves
+  description: The pigeon pose (Ido Portal variant) is an external hip rotation stretch
+    targeting the piriformis and short external rotators. Portal programs both the
+    floor version and the supine figure-4 as regressions for athletes with knee discomfort
+    under hip rotation. It is a cornerstone of the Portal daily movement practice
+    and appears in the cool-down sequence of virtually every session. Contraindicated
+    with acute meniscus injury due to knee flexion under hip rotation load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+push_up_archer:
+  animation:
+    type: none
+  coaching_focus: The goal is gradual load transfer to the working arm across weeks
+    -- each session, the straight arm bears slightly less weight; this is a month-long
+    progression, not a single-session fix.
+  common_errors:
+  - 'Rushing the progression: attempting too steep a load shift too soon leads to
+    compensation patterns that will need to be unlearned'
+  - 'Hip rotation to compensate for missing pressing strength: keep the hips locked
+    and reduce the assist instead'
+  - 'Not tracking progression: without intentionally reducing assistance over time,
+    the exercise remains static rather than a genuine progression'
+  cue_points:
+  - Wide stance, one arm bending toward the floor, one arm extended laterally
+  - 'Track the progress of the assisting arm: start with a fully loaded straight arm;
+    over weeks, shift progressively more weight to the working arm'
+  - Hips stay square throughout -- any rotation means the unilateral capacity is being
+    exceeded
+  - The tempo should be controlled (2 seconds down, 1 second up) to develop proprioceptive
+    awareness of the load distribution
+  - Use parallettes for increased range of motion depth when comfortable at floor
+    level
+  description: The Ido Portal archer push-up variant emphasizes the transition toward
+    single-arm pressing through asymmetric loading. In the Portal framework it appears
+    in the pushing strength ladder (bilateral > archer > one-arm assisted > one-arm)
+    and is practiced for controlled reps at a deliberate pace rather than for speed.
+    The extended arm progressively bears less load as the practitioner advances toward
+    the one-arm push-up.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+qdr_rotational_pushup:
+  animation:
+    type: none
+  coaching_focus: Lead the rotation with the upper thoracic spine, not the lower back
+    -- the chest drives the turn, and the hips follow.
+  common_errors:
+  - Rotating from the lumbar spine -- cue the chest to open and the lower back to
+    stay neutral
+  - Collapsing the supporting arm -- maintain active shoulder packing on the base
+    arm throughout
+  - Too wide a stance -- knees track over feet; if hips wobble, narrow the base
+  cue_points:
+  - Start in a low, wide quadruped with hips near knee height -- not a standard push-up
+    position
+  - Lower into the press phase, then rotate the thoracic spine as you push up
+  - The rotating arm opens toward the ceiling; the supporting arm stays firm and packed
+  - Return to center before initiating the next rep -- do not use momentum to carry
+    through
+  - 'Beginners: 10-14 reps alternating; advanced: same reps with feet elevated for
+    added instability'
+  description: The QDR (quadruped development) rotational push-up is an Ido Portal
+    movement that combines a horizontal press with thoracic rotation in a low, wide-stance
+    position. It develops shoulder stability, scapular control, and spinal rotation
+    simultaneously and is a central element of the Floreio Basic tri-set. The advanced
+    variant lifts the feet to increase rotational demand.
+  muscle_diagram:
+    highlight_primary:
+    - chest
+    - shoulders
+    highlight_secondary:
+    - core
+    - obliques
+  muscles_primary:
+  - chest
+  - shoulders
+  - thoracic_extensors
+  muscles_secondary:
+  - core
+  - obliques
+  - serratus_anterior
+role_basic:
+  animation:
+    type: none
+  coaching_focus: Initiate from the crown of the head, tuck the chin, and let the
+    spine articulate sequentially -- never land on a single vertebra.
+  common_errors:
+  - Landing on the back of the neck -- cue chin tuck and initiate from the crown,
+    not the head
+  - Collapsing flat at mid-roll -- maintain spinal rounding and let momentum carry
+    through
+  - Stopping between rolls -- practice continuous transitions to build the flow quality
+    Ido Portal requires
+  cue_points:
+  - Tuck the chin to the chest before contact and keep it tucked throughout the roll
+  - Round the entire back -- no flat sections -- so the spine rolls like a wheel
+  - Use momentum to transition without pushing off the floor midway
+  - Practice both directions (forward and backward) and across both shoulders
+  - 'Accumulate time continuously: 2-5 min flow with 30-sec rest between bouts'
+  description: The basic roll (corta capim/role) is Ido Portal ground work entry --
+    continuous rolling patterns on the floor that teach body awareness, spinal articulation,
+    and the kinesthetic vocabulary required for all floreio movement. The roll establishes
+    safe inversion and transitions between ground positions without interruption.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - erector_spinae
+    highlight_secondary:
+    - obliques
+    - trapezius
+  muscles_primary:
+  - core
+  - erector_spinae
+  - neck_flexors
+  muscles_secondary:
+  - obliques
+  - trapezius
+  - hip_flexors
+scapula_mobilization:
+  animation:
+    type: none
+  coaching_focus: The movements should be deliberate and complete -- full protraction,
+    full retraction, full depression, full elevation; half-range scapular mobilization
+    does not address the restriction.
+  common_errors:
+  - 'Arm movement substituting for scapular movement: the arms should hang relaxed;
+    the scapulae move independently'
+  - 'Incomplete range in each direction: half-range mobilization misses the restricted
+    position'
+  - 'Skipping the circumduction: isolated protraction and retraction are useful, but
+    the full circumduction is the most complete intervention'
+  cue_points:
+  - Standing or seated; arms relaxed at the sides
+  - 'Protract (round forward): shoulder blades separate and move away from the spine'
+  - 'Retract (pinch back): shoulder blades move toward each other'
+  - 'Depress (pull down): shoulder blades move away from the ears'
+  - 'Full circumduction: combine all four movements into a slow scapular circle both
+    directions'
+  description: Scapular mobilization moves the shoulder blades through protraction,
+    retraction, depression, elevation, and circumduction -- addressing scapulohumeral
+    rhythm restrictions that accumulate from pressing, pulling, and overhead work.
+    Ido Portal programs it as a cool-down staple after any overhead or pushing session
+    (3 sets, 60-second rest). Restricted scapular mobility forces compensatory glenohumeral
+    motion under overhead load, directly causing rotator cuff impingement.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+shoulder_dislocate_pvc:
+  animation:
+    type: none
+  coaching_focus: The grip width tells the story -- the narrowest grip that allows
+    a pain-free pass is the current shoulder mobility range; note it and narrow it
+    progressively over weeks.
+  common_errors:
+  - 'Elbows bending during the pass: the elbow bend allows passage through a range
+    that does not actually exist in the shoulder -- keep arms straight'
+  - 'Using too narrow a grip too soon: forces the shoulder through a range it does
+    not have; start wide and progress gradually'
+  - 'Performing with shoulder instability: individuals with ligamentous laxity should
+    not do dislocates -- the range they can achieve is not mobility but instability'
+  cue_points:
+  - 'Start wide: hands outside shoulder width, grip the PVC pipe or a band'
+  - With straight arms, pass the pipe from in front of the body overhead and behind
+    to touch the back of the thighs
+  - The arms must stay straight throughout the arc -- any elbow bend compensates for
+    restricted range
+  - Return over the same arc to the starting position
+  - Progress by moving the grip in by one hand-width per session until pain-free at
+    close grip
+  description: The PVC shoulder dislocate passes a wide-grip PVC pipe from in front
+    of the body overhead and behind the back in one continuous arc, then returns.
+    The grip progressively narrows as shoulder mobility improves. It develops the
+    full shoulder circumduction range demanded by overhead gymnastics and snatch positions.
+    Contraindicated with shoulder instability (hypermobility). A resistance band is
+    used as a regression when the PVC arc feels binding.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+soleus_stretch:
+  animation:
+    type: none
+  coaching_focus: Sink the knee over the little toe -- the direction of the knee drive
+    determines whether the stretch reaches the soleus insertion near the heel.
+  common_errors:
+  - 'Heel lifting off the floor: the stretch has ended -- use a heel elevation if
+    ankle mobility is severely limited'
+  - 'Knee driving toward the big toe instead of the little toe: reduces the posterior
+    capsule opening effect'
+  - 'Treating it as less important than the gastrocnemius stretch: soleus is often
+    the harder and more limiting of the two'
+  cue_points:
+  - 'Wall or floor version: foot flat on the floor, knee driven forward over the foot'
+  - Drive the knee toward the little toe to maximize the dorsiflexion arc
+  - Keep the heel on the floor at all times
+  - Oscillate gently at end range to encourage the joint capsule to open in addition
+    to the muscle
+  - Combine with banded ankle distraction for capsular restriction alongside muscular
+    restriction
+  description: The soleus stretch (bent-knee calf variant) is the second movement
+    in the two-step calf mobility sequence, targeting the soleus by bending the knee
+    to take the gastrocnemius off tension. It is more directly relevant to deep squat
+    dorsiflexion mechanics than the straight-leg variant because the knee is bent
+    in the deep squat position. Ido Portal includes it as a prerequisite for pistol
+    squat and deep squat hold work.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+squat_clinic:
+  animation:
+    type: none
+  coaching_focus: Move through the clinic with curiosity -- each movement is both
+    an assessment and a practice; if something is stiff, spend more time there rather
+    than moving on.
+  common_errors:
+  - 'Rushing through to start the session: the squat clinic is the first exercise
+    of the session, not a throwaway warm-up'
+  - 'Feet too wide or heels elevated: these accommodations let the athlete into the
+    squat without addressing the restriction that the clinic is designed to reveal'
+  - 'Skipping the weight shift and rotation work: the static deep squat hold is only
+    one component -- the dynamic elements develop the range'
+  cue_points:
+  - Start in a deep squat hold with heels flat; hold 60 seconds and breathe
+  - 'Weight shift side to side: transfer the load from one leg to the other while
+    maintaining depth'
+  - 'Heel raises: lift one heel at a time, then both, exploring the ankle mobility
+    limit'
+  - 'Hip circles in the deep squat: internal and external rotation exploration while
+    fully loaded in the squat'
+  - Stand, then return to deep squat -- smooth transition both ways; the transition
+    is a skill
+  description: The Ido Portal squat clinic is a standardized squat mobility sequence
+    performed as one continuous set at session start -- deep squat hold, weight shifts,
+    heel raises, internal and external rotation exploration, and ankle mobilization.
+    Duration is 3-5 minutes. Portal programs it as part of the standard Floreio warm-up.
+    The clinic treats the deep squat as a fundamental human position that should be
+    habituated through daily practice rather than trained periodically.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+thoracic_rotation:
+  animation:
+    type: none
+  coaching_focus: Exhale at end range -- the exhalation relaxes the thoracic cage
+    and allows another 5-10 degrees of rotation; inhaling at end range maintains a
+    guarded position.
+  common_errors:
+  - 'Lumbar rotation substituting for thoracic rotation: the lower back should not
+    move -- the range is in the thorax'
+  - 'Inhaling at end range: the breath significantly affects the thoracic cage mobility;
+    always exhale into the end range'
+  - 'Stopping at the comfortable range: end range is where the adaptation happens'
+  cue_points:
+  - 'Quadruped open-book: one hand behind the head, rotate the elbow toward the ceiling
+    following the rib cage'
+  - 'Seated: cross-legged, hands behind head, rotate maximally while the pelvis stays
+    fixed'
+  - 'Slow: 3-4 seconds to reach end range; hold 2 seconds; return over 2 seconds'
+  - Exhale into the rotation at end range -- breathe into the stretch
+  - 10 reps per direction per side; include in daily practice, not just sessions
+  description: Thoracic rotation (Ido Portal) uses either a quadruped open-book or
+    a seated rotation to develop mid-back rotational mobility. Portal treats thoracic
+    rotation as a prerequisite for all overhead patterns and rotational movement skill
+    -- a thorax that cannot rotate fully forces compensations into the lumbar spine
+    or shoulder that eventually cause injury. Perform slowly with an exhale at end
+    range.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+tuck_sit:
+  animation:
+    type: none
+  coaching_focus: Feet must be off the floor -- if the toes touch the floor, the scapular
+    depression is not supporting the full bodyweight; build the hold duration with
+    feet clear before advancing to L-sit.
+  common_errors:
+  - 'Feet touching the floor: removes the support demand -- the entire point is to
+    be suspended with no foot contact'
+  - 'Toes only just off the floor: the feet must be clearly lifted, not hovering a
+    millimeter above'
+  - 'Scapulae not depressed: the shoulders creep toward the ears -- depress them actively
+    before bringing the knees up'
+  cue_points:
+  - 'Support position: arms straight, scapulae depressed, body hanging off the parallettes'
+  - Draw both knees up to or beyond 90 degrees; keep the feet together and off the
+    floor
+  - Hold the position -- the target is accumulated time with feet fully clear of the
+    floor
+  - 'Do not let the elbows bend: straight arms throughout; any elbow bend drops the
+    difficulty to a rest position'
+  - 'Progress: once 30 seconds tuck sit is achievable cleanly, begin extending one
+    leg at a time toward the L-sit'
+  description: The tuck sit holds the body on parallettes or the floor with both knees
+    drawn to the chest and feet lifted -- the direct regression of the L-sit. Ido
+    Portal and Marcus Filly both program it as the entry into the L-sit progression,
+    developing the scapular depression strength, wrist loading, and hip compression
+    that full L-sit requires without the hip flexor demand of horizontal legs.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - hip_flexors
+    highlight_secondary:
+    - deltoids
+    - triceps
+    - upper_back
+  muscles_primary:
+  - core
+  - hip_flexors
+  muscles_secondary:
+  - deltoids
+  - triceps
+  - upper_back
+wrist_circle:
+  animation:
+    type: none
+  coaching_focus: Both directions equally -- the wrist has four arcs of motion; skipping
+    any direction leaves restriction that will become pain under load.
+  common_errors:
+  - 'Restricted arcs treated as normal: any limited arc is a training target, not
+    an anatomical variant to accommodate'
+  - 'Skipping the wrist prep when time is short: the wrist is disproportionately susceptible
+    to overuse injury without adequate preparation'
+  - 'Fast circles: slow deliberate circumduction is the prep stimulus; speed defeats
+    the purpose'
+  cue_points:
+  - Extend the arm forward; circle the wrist through its full range in both directions
+  - 'Full range in each arc: flexion, radial deviation, extension, ulnar deviation'
+  - 10 circles each direction per wrist
+  - Pair with wrist flexion and extension stretches for a complete wrist sequence
+  - Always include before handstand or parallette work
+  description: Wrist circumduction (Ido Portal variant) is part of the Portal wrist
+    prep routine performed before any load-bearing hand position -- push-ups, handstands,
+    parallette work, or kettlebell pressing. Portal treats wrist joint prep as non-negotiable
+    before any hand-bearing load, treating wrist injury prevention as foundational
+    to all floor-based movement practice.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wrist_extension_stretch:
+  animation:
+    type: none
+  coaching_focus: Use the other hand to apply gentle overpressure at the end range
+    -- the wrist extensors respond to sustained tension, and a gentle assist at the
+    limit of range accelerates adaptation.
+  common_errors:
+  - 'Forcing the range with the assisting hand: gentle sustained pressure is appropriate;
+    jerking or forcing causes micro-trauma'
+  - 'Pulling the fingers instead of the hand: the stretch should be applied to the
+    metacarpals, not the finger joints individually'
+  - 'Skipping the paired flexion stretch: extension and flexion restriction often
+    coexist; address both'
+  cue_points:
+  - Extend one arm forward; use the other hand to pull the fingers back toward the
+    body
+  - Hold at end range of the dorsal wrist stretch -- feel the pull along the back
+    of the hand and wrist
+  - 30 seconds per wrist
+  - Follow with the flexion stretch to address both sides of the wrist in sequence
+  - Include before any handstand or heavy pushing session
+  description: The wrist extension stretch (Ido Portal variant) extends the arm forward
+    with the hand pulled back to stretch the wrist extensors and the dorsal capsule.
+    Part of the Portal wrist routine performed before any pressing or overhead work.
+    Contraindicated with acute wrist injury. Portal programs the wrist routine (circles,
+    flexion stretch, extension stretch, loaded compression) as a complete wrist preparation
+    sequence.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wrist_flexion_stretch:
+  animation:
+    type: none
+  coaching_focus: Feel the stretch along the palm and the flexor tendons in the forearm
+    -- if the stretch is only in the wrist, the elbow is bent; straighten the arm
+    to engage the full flexor chain.
+  common_errors:
+  - 'Elbow bending: the elbow must stay extended to engage the full flexor chain;
+    bent elbow localizes the stretch only to the wrist'
+  - 'Only performing the extension stretch: both flexors and extensors must be addressed
+    for complete wrist prep'
+  - 'Rushing: 10-second holds are insufficient for wrist flexor tissue response'
+  cue_points:
+  - Extend one arm forward, palm facing away; point the fingers down
+  - Use the other hand or a wall to gently apply overpressure, pressing the back of
+    the hand toward the body
+  - 30 seconds per wrist
+  - The arm must stay straight to stretch the full wrist flexor chain from the forearm
+    through the wrist
+  - Pair immediately with the extension stretch to complete the wrist mobility sequence
+  description: The wrist flexion stretch (Ido Portal) extends the arm with fingers
+    pointing down and presses the back of the hand away from the body, stretching
+    the wrist flexors and the palmar capsule. Part of the Portal wrist routine. Contraindicated
+    with acute wrist injury. The flexion stretch balances the extension stretch --
+    both directions of wrist mobility are required for complete joint health.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []

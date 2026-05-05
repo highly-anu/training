@@ -1,0 +1,1023 @@
+ankle_pump:
+  animation:
+    type: none
+  coaching_focus: Full range in both directions on every repetition -- all the way
+    up (dorsiflexion) and all the way down (plantarflexion) to maximize calf pump
+    effect.
+  common_errors:
+  - Partial range -- small movements do not produce the calf-pump venous return effect;
+    full excursion is required
+  - Skipping sets -- frequency is the primary variable; 20 reps every 2 hours beats
+    100 reps once a day
+  - Doing it without elevation -- pumping without elevation does not produce the same
+    venous return benefit
+  cue_points:
+  - Elevate the leg above heart level before beginning -- the purpose is venous return
+  - Pull toes fully toward the shin (dorsiflexion) and hold 1 second
+  - Press toes fully away (plantarflexion) and hold 1 second -- complete range both
+    directions
+  - Perform 20-30 reps per set, every 1-2 hours during the acute phase
+  - Can be done in bed, in a chair, or lying down -- frequency matters more than position
+  description: The ankle pump is an immediate post-operative or post-injury drill
+    -- repeated dorsiflexion and plantarflexion of the ankle while the leg is elevated.
+    It promotes venous return, reduces swelling, and maintains circulatory health
+    without any joint loading. It is safe and appropriate every 1-2 hours in the acute
+    phase and has no contraindications.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    highlight_secondary:
+    - tibialis_anterior
+  muscles_primary:
+  - calves
+  - tibialis_anterior
+  muscles_secondary: []
+band_pull_apart_rehab:
+  animation:
+    external_id: Band_Pull_Apart
+    gif_alt: Band Pull-Apart (Rehab variant)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/0.jpg
+    type: gif
+  coaching_focus: Keep a slight bend in the elbows and initiate from the shoulder
+    blades pulling together -- not from pulling with the hands.
+  common_errors:
+  - Using too heavy a band -- compensation appears as shrugging; lower trapezius cannot
+    engage when the upper traps dominate
+  - Elbows locking out and the movement becoming a tricep exercise -- maintain a slight
+    elbow bend throughout
+  - Skipping the diagonal and overhead variants -- these angles are often where the
+    deficits responsible for impingement exist
+  cue_points:
+  - Use the lightest band available (typically a thin therapy band) -- this is not
+    a strength exercise
+  - Hold the band with a double overhand grip at shoulder width and arms at chest
+    height
+  - Pull the band apart by squeezing the shoulder blades together -- not by pulling
+    with the hands
+  - Reach full width (arms fully extended to the sides) and hold 1-2 seconds
+  - Practice horizontal (chest height), diagonal (from low-left to high-right), and
+    overhead variants
+  description: The band pull-apart for shoulder rehabilitation uses the lightest available
+    resistance band to train the posterior deltoid, lower trapezius, and rhomboids
+    in a horizontal pulling pattern. Multiple directions (horizontal, diagonal, overhead)
+    address different angles of posterior shoulder weakness contributing to impingement.
+    It is safe to program daily at rehabilitation loads.
+  muscle_diagram:
+    highlight_primary:
+    - posterior_deltoid
+    - rhomboids
+    highlight_secondary:
+    - shoulders
+  muscles_primary:
+  - posterior_deltoid
+  - rhomboids
+  - lower_trapezius
+  muscles_secondary:
+  - infraspinatus
+  - teres_minor
+  - serratus_anterior
+bird_dog:
+  animation:
+    type: none
+  coaching_focus: The lower back does not move -- if the lumbar spine rotates or extends
+    as the arm and leg reach, shorten the range of motion until spinal position is
+    maintained.
+  common_errors:
+  - Rotating the spine to reach higher -- height is not the goal; perfect spinal position
+    with limited range beats full range with compensation
+  - Rushing the return -- lower the limbs as slowly as they were raised; deceleration
+    is also a core demand
+  - Losing the neutral lumbar position at the start -- set the position deliberately
+    before every rep, not just the first
+  cue_points:
+  - Begin in quadruped with wrists under shoulders and knees under hips -- a neutral
+    spine
+  - Brace the core and extend opposite arm and leg simultaneously without allowing
+    the spine to rotate
+  - Reach the hand forward (thumb up) and the heel back -- create length, not height
+  - Hold 3-5 seconds at full extension and return slowly to the start position
+  - If the spine rotates during the hold, place a foam roller on the lower back as
+    feedback
+  description: The bird dog is a quadruped core stability exercise -- from hands-and-knees
+    position, the opposite arm and leg extend simultaneously while the lumbar spine
+    remains completely still. It trains anti-rotation and anti-extension core stability
+    through the challenge of moving limbs on a fixed spine. It follows the dead bug
+    in rehabilitation progressions and is foundational for lumbar, hip, and shoulder
+    rehab.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - glutes
+    highlight_secondary:
+    - erector_spinae
+    - shoulders
+  muscles_primary:
+  - core
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - shoulders
+  - hip_extensors
+  - trapezius
+bulgarian_split_squat_light:
+  animation:
+    type: none
+  coaching_focus: Allow the front knee to travel forward over the toes -- ATG-style
+    depth is the goal; do not restrict knee travel in a rehab context.
+  common_errors:
+  - Restricting knee travel -- the rehabilitative value of this exercise depends on
+    forward knee travel through full ROM
+  - Leaning forward excessively -- the torso stays relatively upright; excessive lean
+    shifts load to the hip and reduces quad stimulus
+  - Adding load before pain-free bodyweight -- load progression follows full ROM achievement,
+    not time elapsed
+  cue_points:
+  - Place rear foot flat on a low bench (12-16 inches) and step the front foot far
+    enough forward to allow vertical shin on the working leg
+  - Lower straight down -- not backward -- and allow the knee to travel forward over
+    the toes
+  - Touch the rear knee lightly to the floor and pause before pressing through the
+    heel to rise
+  - Keep the torso upright -- do not lean excessively forward; maintain a neutral
+    spine
+  - Add load (hands holding light dumbbells) only when 10 bodyweight reps are fully
+    pain-free
+  description: The Bulgarian split squat at rehabilitation load is a mid-phase single-leg
+    knee exercise with the rear foot elevated on a bench -- the rear foot provides
+    stability assistance while the working leg handles a controlled single-leg squat
+    pattern. It trains the quad and glute through full range without the proprioceptive
+    challenge of a fully unassisted single-leg movement. Bodyweight only until full
+    ROM is pain-free.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - hip_flexors
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - vmo
+  muscles_secondary:
+  - hamstrings
+  - hip_flexors
+  - calves
+dead_bug:
+  animation:
+    external_id: Dead_Bug
+    gif_alt: Dead Bug
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dead_Bug/0.jpg
+    type: gif
+  coaching_focus: The lower back must stay in contact with the floor at every point
+    of the movement -- the moment it arches, the anti-extension stimulus is gone and
+    the lumber spine is loading.
+  common_errors:
+  - 'Lower back arching off the floor during extension: the exercise has been exceeded;
+    reduce range of motion by not extending the leg fully'
+  - 'Rushing the movement: the dead bug reveals anti-extension deficits that are best
+    exposed slowly -- count to 3 for each extension'
+  - 'Holding the breath: exhalation is the co-contraction cue that keeps the lumbar
+    pressed down'
+  cue_points:
+  - Lie on your back, lower back pressed firmly into the floor -- use this pressure
+    as the cue throughout
+  - Start with arms pointing straight up and knees at 90 degrees (tabletop position)
+  - Extend the right arm overhead and the left leg simultaneously while maintaining
+    lumbar contact
+  - 'Return to the starting position and repeat on the other side: left arm, right
+    leg'
+  - Breathe out as you extend -- exhaling helps maintain the lumbar press and engages
+    the deep core
+  description: 'The dead bug is a supine anti-extension core exercise: lying on the
+    back with the lower back pressed into the floor, extending opposite arm and leg
+    simultaneously while maintaining lumbar contact. Marcus Filly uses it as the prerequisite
+    core movement before any loaded pressing or pulling pattern -- it establishes
+    the anti-extension position that protects the lumbar spine under overhead load.'
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - deltoids
+    - quadriceps
+  muscles_primary:
+  - core
+  - erector_spinae
+  muscles_secondary:
+  - deltoids
+  - quadriceps
+dip_support_hold:
+  animation:
+    type: none
+  coaching_focus: Depress the scapulae actively -- the shoulders should move away
+    from the ears, not just hold still; this active depression is what makes this
+    a training stimulus.
+  common_errors:
+  - 'Passive support: just hanging on bent arms with no scapular engagement; this
+    is a rest, not an exercise'
+  - 'Scapular elevation: shrugging the shoulders up instead of depressing them --
+    the opposite of the intended stimulus'
+  - 'Rushed progression: moving to dynamic dips before the support hold can be held
+    for 30-60 seconds without fatigue'
+  cue_points:
+  - Arms straight, elbows locked -- not bent 5 degrees; full extension
+  - Pull the scapulae down and back actively -- the shoulders drop away from the ears
+    and the chest rises slightly
+  - Keep the body vertical and still; no swinging or leg movement
+  - Breathe normally throughout the hold -- do not hold the breath for the entire
+    duration
+  - Progress by increasing hold duration before adding any dynamic dip movement
+  description: The dip support hold is an isometric hold at the top of the dip position
+    -- arms straight, scapulae depressed and retracted, body suspended. Marcus Filly
+    uses it as the entry exercise in his shoulder rehabilitation sequence to develop
+    scapular depression strength before introducing any dynamic pressing or pulling.
+    It is the base position for all bar and ring upper-body work.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - upper_back
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - deltoids
+  - triceps
+  - upper_back
+  muscles_secondary:
+  - core
+  - serratus
+eccentric_push_up:
+  animation:
+    type: none
+  coaching_focus: Five full seconds for the eccentric -- if you reach the floor in
+    less than five seconds, you are not doing this exercise; the slowness is the stimulus.
+  common_errors:
+  - 'Lowering in 2-3 seconds and calling it an eccentric push-up: the prescribed time
+    must be adhered to -- set a timer'
+  - 'Collapsing at the end of the eccentric: if the athlete drops the last inch to
+    the floor, the eccentric capacity ran out at that depth -- reduce time'
+  - 'Skipping the eccentric on tired reps: fatigue makes the eccentric harder and
+    more valuable -- this is when adaptation happens'
+  cue_points:
+  - Start in the top push-up or parallette push-up position with a rigid plank
+  - Begin a 5-count descent, moving exactly 20% of the range of motion per second
+  - The descent should feel controlled at every point -- if it accelerates, the eccentric
+    capacity is exhausted for that rep
+  - At the bottom, the concentric (push-up) is optional -- for pure eccentric work,
+    step back to the start position without pressing up
+  - Progress by increasing time under tension (6 seconds, 8 seconds) or by using a
+    deficit on parallettes
+  description: The eccentric push-up (Marcus Filly parallette variant) applies a deliberate
+    5-second controlled lowering phase to the push-up movement. Eccentric overload
+    builds tendon and connective tissue resilience faster than concentric-focused
+    work alone. Marcus Filly programs it as a rehab and durability tool for athletes
+    returning from shoulder or elbow injuries and as a prehabilitative measure in
+    general strength programming.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - serratus
+    - core
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - serratus
+  - core
+external_rotation_db:
+  animation:
+    type: none
+  coaching_focus: The elbow stays fixed on the knee throughout -- only the forearm
+    moves; any elbow shift means the load is too heavy.
+  common_errors:
+  - Using too much weight -- any compensation (elbow moving, trunk rotating) means
+    the load is too heavy; reduce immediately
+  - Rushing the lowering phase -- the eccentric is equally important; control every
+    degree of descent
+  - Stopping short of full external rotation -- the forearm should reach horizontal
+    or beyond based on pain-free range
+  cue_points:
+  - Sit with the elbow resting on the inner thigh just above the knee, forearm hanging
+    vertically
+  - Hold the dumbbell with a neutral grip and let the forearm hang to a natural resting
+    position
+  - Rotate the forearm upward (externally rotate the shoulder) to a horizontal position
+    and hold 1 second
+  - Lower slowly over 3 seconds -- do not let the weight drop; decelerate through
+    the full range
+  - Start with 1-2 kg; the weight is trivially light by design -- rotator cuff isolation
+    requires minimal load
+  description: The dumbbell external rotation with elbow on knee is a cornerstone
+    rotator cuff rehabilitation exercise -- seated with the elbow resting on the knee
+    and the forearm hanging, the dumbbell rotates upward against gravity through external
+    rotation range. It isolates the infraspinatus and teres minor at low load to rebuild
+    rotator cuff function. Start with 1-2 kg; use a 3-second tempo in both directions.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    highlight_secondary:
+    - posterior_deltoid
+  muscles_primary:
+  - infraspinatus
+  - teres_minor
+  muscles_secondary:
+  - posterior_deltoid
+  - rhomboids
+face_pull_rehab:
+  animation:
+    external_id: Face_Pull
+    gif_alt: Face Pull (Rehab variant)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg
+    type: gif
+  coaching_focus: Lead with the elbows and finish with the thumbs pointing behind
+    the head -- the external rotation at end range is the therapeutic element, not
+    just the pull.
+  common_errors:
+  - Elbows dropping below wrist height -- this turns the movement into a horizontal
+    row; elbows must stay high
+  - Not reaching full external rotation -- the thumbs should end up behind the head,
+    not beside it
+  - Allowing the band to pull the arms too fast on the return -- control the entire
+    return path
+  cue_points:
+  - Attach a light band at face height and grip with thumbs pointing up (supinated
+    grip)
+  - Keep elbows elevated above wrist height throughout the entire movement
+  - Pull toward the face and externally rotate the arms so thumbs end up pointing
+    behind the head
+  - Hold the end position 2 seconds with maximum external rotation before returning
+  - This exercise is safe in virtually all shoulder pathologies -- use it daily if
+    tolerated
+  description: The rehabilitation face pull with a light resistance band targets external
+    rotation and posterior shoulder strength at the end range of the movement -- thumbs-up
+    grip, elbows high, pulling toward the face with maximum external rotation at the
+    end position. It addresses posterior deltoid and external rotator weakness in
+    impingement and instability protocols per Marcus Filly approach.
+  muscle_diagram:
+    highlight_primary:
+    - posterior_deltoid
+    - shoulders
+    highlight_secondary:
+    - rhomboids
+  muscles_primary:
+  - posterior_deltoid
+  - infraspinatus
+  - teres_minor
+  muscles_secondary:
+  - rhomboids
+  - lower_trapezius
+  - rear_delts
+glute_bridge:
+  animation:
+    external_id: Barbell_Glute_Bridge
+    gif_alt: Glute Bridge
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/0.jpg
+    type: gif
+  coaching_focus: Drive the hips to full extension -- squeeze the glutes at the top,
+    not just lift; the hamstrings should not be the primary driver.
+  common_errors:
+  - Driving through the heels only -- the full foot presses into the floor; heel-only
+    drive causes hamstring dominance
+  - Not reaching full hip extension -- the hips must level with the knee and shoulder
+    line; partial bridges do not fully activate glute max
+  - Letting the hips drop between reps -- lower and immediately prepare for the next
+    rep without resting on the floor
+  cue_points:
+  - Lie supine with feet flat on the floor, knees at about 90 degrees
+  - Press through the full foot (not just the heels) and drive the hips upward
+  - Squeeze the glutes at the top and achieve full hip extension -- hips level with
+    knees and shoulders
+  - Hold 2 seconds at the top before lowering slowly -- do not drop the hips
+  - Feet stay flat on the floor throughout -- do not rise onto the toes
+  description: The glute bridge is a fundamental lower-extremity rehabilitation exercise
+    -- supine with feet flat and knees bent, the hips drive to full extension and
+    hold for 2 seconds. It activates the glute max and posterior chain without compressive
+    knee loading, making it appropriate across all lower extremity rehabilitation
+    phases. It is commonly programmed alongside quad sets in the earliest knee and
+    hip rehabilitation phase.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  muscles_secondary:
+  - core
+  - erector_spinae
+  - calves
+heel_slide:
+  animation:
+    type: none
+  coaching_focus: Slide to the limit of comfortable range and hold -- do not force
+    through sharp pain, but mild discomfort at end range is expected and acceptable.
+  common_errors:
+  - Forcing through sharp pain -- differentiate "muscle stretch" discomfort from joint
+    or scar-tissue pain; stop and consult if sharp
+  - Lifting the heel off the floor -- the heel must slide, not be lifted; use a surface
+    that allows gliding
+  - Stopping at a comfortable range instead of the end range -- progress requires
+    consistently working at the limit
+  cue_points:
+  - Lie supine with legs straight -- both heels flat on a low-friction surface (bare
+    floor or sock)
+  - Slide the heel toward the glute as far as comfortable, maintaining heel contact
+    with the floor
+  - Hold the end position 5 seconds with gentle relaxation into the stretch
+  - Slide back to start and rest before the next rep -- do not rush the return
+  - Measure the angle each session and track progress toward 90 degrees then full
+    flexion milestone
+  description: The heel slide is an early-phase knee rehabilitation drill for restoring
+    flexion ROM -- lying supine, the heel slides toward the glute to increase knee
+    bend, held at maximum tolerable range for 5 seconds before returning. It can be
+    performed actively or with gentle manual assistance. Track progress toward ROM
+    milestones (90 degrees, then full range).
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    highlight_secondary:
+    - quadriceps
+    - hip_flexors
+  muscles_primary:
+  - hamstrings
+  - hip_flexors
+  muscles_secondary:
+  - quadriceps
+  - calves
+landmine_press:
+  animation:
+    type: none
+  coaching_focus: Press along the bar -- the arm follows the barbell angle, not a
+    straight vertical path; the elbow stays close to the body throughout.
+  common_errors:
+  - Pressing vertically instead of following the bar arc -- the angled path is what
+    protects the shoulder; do not straighten it
+  - Starting with too much load -- the rehabilitation benefit comes from the movement
+    quality, not from load
+  - Using the trunk to assist -- this is a single-arm press; the core stabilizes but
+    the trunk does not rotate into the press
+  cue_points:
+  - Stand perpendicular to the barbell with the working shoulder facing the landmine
+    point
+  - Hold the barbell at shoulder height with the arm at a 45-degree angle -- not vertical,
+    not horizontal
+  - Press the bar upward and forward along its natural arc to full arm extension
+  - Return along the same arc -- do not let the bar path deviate or the shoulder will
+    compensate
+  - Begin with the empty barbell or a 2.5-5 kg plate on the end; add load only when
+    pain-free
+  description: The landmine press is a single-arm pushing exercise with the barbell
+    fixed in a landmine or corner mount, creating an angled press path rather than
+    a vertical one. The angle eliminates the subacromial impingement risk of overhead
+    pressing, making it the standard pushing pattern in shoulder rehabilitation protocols
+    per Marcus Filly. It trains the entire pressing chain while protecting the impingement
+    zone.
+  muscle_diagram:
+    highlight_primary:
+    - chest
+    - shoulders
+    highlight_secondary:
+    - triceps
+    - serratus_anterior
+  muscles_primary:
+  - chest
+  - shoulders
+  - triceps
+  muscles_secondary:
+  - core
+  - serratus_anterior
+  - upper_trapezius
+leg_press_single_light:
+  animation:
+    type: none
+  coaching_focus: Control the depth -- start with partial ROM (45 degrees of knee
+    bend) and add depth only when that range is pain-free for two consecutive sessions.
+  common_errors:
+  - Allowing the knee to cave inward -- press the knee out throughout the entire movement
+  - Using too much load too soon -- pain is the signal to reduce load or ROM, not
+    to push through
+  - Not progressing ROM -- if 45 degrees is pain-free for two sessions, attempt 60
+    degrees; do not stay at partial forever
+  cue_points:
+  - Set foot placement high on the plate to bias glutes and hamstrings; low placement
+    biases quads
+  - Begin with 45 degrees of knee bend and full extension -- not full depth until
+    cleared
+  - Press through the full foot to full extension on every rep -- do not stop short
+    of lock-out
+  - Slow the eccentric (lowering) to 3 seconds to maximize tissue loading at safe
+    loads
+  - Start bilateral if single-leg is painful; progress to single-leg once bilateral
+    is pain-free
+  description: The single-leg press at light rehabilitation load provides controlled
+    knee joint loading on a machine, protecting the joint while progressively stressing
+    the quadriceps and glutes. The machine controls the movement path, reducing proprioceptive
+    demands while the athlete focuses on ROM progression and quad recruitment. Requires
+    an active knee rehab flag in programming.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - calves
+  - vmo
+nordic_hamstring_curl:
+  animation:
+    type: none
+  coaching_focus: Lower as slowly as possible before catching with the hands -- every
+    extra degree of eccentric control is the rehabilitation stimulus; use the hands
+    only as a last resort.
+  common_errors:
+  - Allowing the hips to flex during the descent -- hips must stay extended; any hip
+    fold means hamstrings are no longer working at their full length
+  - Lowering too quickly -- the eccentric is the entire dose; slow is always better
+  - Starting before the acute phase resolves -- contraindicated with acute proximal
+    hamstring tendinopathy; follow guidance from a clinician
+  cue_points:
+  - Anchor feet under a barbell, a partner, or in a nordic curl device -- kneel upright
+    with hips extended
+  - Cross arms over the chest and lower the body toward the floor as slowly as possible
+  - When unable to hold, catch with the hands and use a push-up to return to kneeling
+  - Return to kneeling under hip extension -- do not curl up using the hamstrings
+    on the concentric
+  - Begin with hands-available catches from 30 degrees of descent; progress to full
+    floor touch over weeks
+  description: The Nordic hamstring curl is the highest-evidence exercise for hamstring
+    strain prevention and rehabilitation -- feet anchored, the athlete lowers the
+    body toward the floor under eccentric hamstring control and catches with the hands.
+    ATG-style application develops the hamstrings through the long muscle length where
+    strains most commonly occur. Contraindicated in acute proximal hamstring tendinopathy.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    highlight_secondary:
+    - glutes
+    - erector_spinae
+  muscles_primary:
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - calves
+  - erector_spinae
+quad_set:
+  animation:
+    type: none
+  coaching_focus: Press the back of the knee firmly into the towel and hold the contraction
+    for the full 5-10 seconds -- partial contractions do not recruit VMO effectively.
+  common_errors:
+  - Partial contraction -- cue maximum effort; the isometric must be high-intensity
+    to recruit VMO
+  - Skipping this drill as "too easy" -- the neural reconnection is the goal, not
+    the load
+  - Allowing the knee to rise -- the knee presses into the towel, not away from it
+  cue_points:
+  - Roll a small towel and place it under the knee so the joint is slightly flexed
+  - Contract the quad as hard as possible and press the knee down into the towel
+  - Hold the contraction for 5-10 seconds -- feel the VMO (inner quad) engage
+  - Fully relax before the next rep -- do not hold a partial contraction between reps
+  - Can be done bilaterally for symmetry -- even the uninjured leg benefits from daily
+    practice
+  description: The quad set is the earliest-phase knee rehabilitation exercise --
+    an isometric quadriceps contraction performed lying flat with a rolled towel under
+    the knee, pressing the knee down without any joint movement. It activates the
+    VMO and establishes quad-to-neural communication in the first days after surgery
+    or acute injury when no ROM is available.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    highlight_secondary: []
+  muscles_primary:
+  - quadriceps
+  - vmo
+  muscles_secondary: []
+reverse_nordic:
+  animation:
+    type: none
+  coaching_focus: Lean back in one rigid body plane -- hips stay extended and the
+    entire body tips back like a plank; any hip flexion during the lean turns it into
+    a hip flexor exercise.
+  common_errors:
+  - Sitting back into the hips -- this flexes the hip and removes the quad stimulus;
+    the hips must stay extended throughout
+  - Using the arms to push back up -- the return phase is concentric quad work; arms
+    are only for safety, not assistance
+  - Attempting too large a range initially -- 15-20 degrees is a safe first-session
+    target; excessive range causes knee pain and discourages the exercise
+  cue_points:
+  - Kneel on a mat with hips at full extension -- do not sit on the heels
+  - Cross arms over the chest or extend them forward for counterbalance
+  - Lean the entire body back as one unit, maintaining straight hip extension throughout
+  - Descend to the point of control then catch with the hands if needed, or return
+    using the quads
+  - Begin with 15-20 degrees of lean; progress toward full supine over weeks as quad
+    strength builds
+  description: The reverse Nordic curl is the ATG approach to terminal knee extension
+    and patellofemoral rehabilitation -- kneeling on a soft surface, the athlete leans
+    backward under eccentric quadriceps control, targeting the rectus femoris and
+    VMO through the full terminal extension range. It is the direct eccentric complement
+    to the Nordic hamstring curl, loading the quads where they are weakest.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    highlight_secondary:
+    - hip_flexors
+    - core
+  muscles_primary:
+  - quadriceps
+  - rectus_femoris
+  - vmo
+  muscles_secondary:
+  - hip_flexors
+  - core
+side_plank_lat_activation:
+  animation:
+    type: none
+  coaching_focus: The reach should be active and long -- the arm extends as if reaching
+    for something far away, with the lat engaging to keep the shoulder packed; a passive
+    arm just adds weight.
+  common_errors:
+  - 'Hip dropping on the reach: the lateral core is destabilized by the overhead arm;
+    reduce the reach range until hip stability is maintained'
+  - 'Passive arm: the reach should be active -- if the arm just flops overhead, the
+    lat engagement benefit is lost'
+  - 'Elbow bending during the reach: keep the arm straight throughout the movement'
+  cue_points:
+  - Establish a solid side plank first; do not reach before the base position is stable
+  - From the side plank, extend the top arm toward the ceiling and then reach it overhead
+    toward the floor in front
+  - 'The lat of the reaching arm engages as the arm travels overhead: feel the shoulder
+    pack and stay away from the ear'
+  - Return the arm to vertical between each rep; this is a moving series, not a static
+    hold with the arm overhead
+  - If the hip drops during the reach, reduce the range of motion until hip stability
+    can be maintained
+  description: The side plank with lat activation extends the top arm overhead in
+    a controlled reach from the side plank position, adding a shoulder stability and
+    lat engagement component to the lateral core hold. Marcus Filly programs it in
+    his shoulder rehabilitation protocol as lateral shoulder stabilization with integrated
+    core demand -- a step up from the basic side plank that is safe in early shoulder
+    rehab contexts.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - lats
+    - deltoids
+    highlight_secondary:
+    - upper_back
+    - glutes
+  muscles_primary:
+  - core
+  - lats
+  - deltoids
+  muscles_secondary:
+  - upper_back
+  - glutes
+single_leg_deadlift_light:
+  animation:
+    type: none
+  coaching_focus: Hinge at the hip, not the spine -- the back stays flat and the hinge
+    comes from flexion at the hip joint as the trailing leg reaches back for counterbalance.
+  common_errors:
+  - Rotating the hip as the trailing leg rises -- keep both hips level and facing
+    down throughout the hinge
+  - Rounding the lower back -- the back stays flat; reduce the range of motion until
+    back position is maintained
+  - Using excessive load -- this is a proprioceptive balance drill; load undermines
+    the neuromuscular goal
+  cue_points:
+  - Stand on the working leg with a very slight knee bend -- not a locked-out stiff
+    leg
+  - Hinge at the hip by driving the trailing leg back as the torso tips forward in
+    one plane
+  - Keep the back flat and the hips square -- do not rotate toward the standing leg
+    as you descend
+  - Lower until the torso is parallel to the floor (or as tolerated) then drive the
+    hip forward to stand
+  - Use bodyweight or 1-2 kg dumbbell in the opposite hand -- load is minimal; balance
+    and mechanics are the goal
+  description: The single-leg Romanian deadlift at rehabilitation load builds posterior
+    chain strength and proprioceptive knee control through a hip hinge without significant
+    knee compression. It is a mid-phase exercise for knee rehabilitation, loading
+    the hamstrings and glutes while demanding single-leg balance that exposes and
+    addresses neuromuscular deficits in the affected limb.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  muscles_secondary:
+  - erector_spinae
+  - core
+  - calves
+single_leg_glute_bridge:
+  animation:
+    external_id: Single_Leg_Glute_Bridge
+    gif_alt: Single-Leg Glute Bridge
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Glute_Bridge/0.jpg
+    type: gif
+  coaching_focus: The hips stay level -- if one hip drops on the non-working side,
+    the hip abductors are the limiting factor, not the glutes; cue lateral hip stability
+    before driving up.
+  common_errors:
+  - Hip drop on the non-working side -- this indicates hip abductor weakness; add
+    clamshells or lateral band walks to the program
+  - Pushing through the toes rather than the heel -- the heel presses into the floor;
+    toes may lift slightly
+  - Not completing equal reps both sides -- always match the volume and track whether
+    one side is weaker
+  cue_points:
+  - From supine with both feet flat, extend one leg straight in the air or cross it
+    over the working thigh
+  - Drive through the working heel and press the hips to full extension
+  - Both hips must reach the same height -- do not allow the unsupported side to drop
+  - Hold 2 seconds at the top with glutes squeezed before lowering
+  - Complete all reps on one side before switching -- do not alternate; asymmetries
+    are easier to identify this way
+  description: The single-leg glute bridge adds unilateral loading to the bilateral
+    glute bridge -- one leg extends or crosses over while the working leg drives the
+    hips to full extension. It identifies and addresses bilateral glute strength asymmetry
+    without significant joint compression, making it effective for hip and knee rehabilitation
+    as a mid-phase progression from the bilateral version.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - core
+    - hip_abductors
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - hip_abductors
+  muscles_secondary:
+  - core
+  - erector_spinae
+stationary_bike_easy:
+  animation:
+    type: none
+  coaching_focus: Keep resistance very low and cadence moderate -- this is a rehabilitation
+    modality, not a workout; any joint pain during or after the session means reducing
+    duration or seat height.
+  common_errors:
+  - Using too much resistance -- increased resistance increases compressive knee forces;
+    stay at minimum
+  - Riding before 90 degrees of flexion ROM is available -- the knee must clear the
+    pedal stroke top; do not force it
+  - Not adjusting seat height as ROM improves -- the seat should progressively lower
+    as a rehabilitation metric
+  cue_points:
+  - Set seat height high enough that the knee reaches only 70-80 degrees of bend at
+    the bottom of the pedal stroke
+  - Use the lowest resistance setting available -- the goal is circulation and movement,
+    not cardiovascular intensity
+  - Maintain a smooth, circular pedal stroke -- do not push and coast; keep continuous
+    light pressure throughout
+  - Begin with 10 minutes and progress to 20-30 minutes as the knee tolerates
+  - Lower seat height by 1-2 cm per session as flexion ROM improves -- track this
+    as a rehabilitation milestone
+  description: Low-resistance stationary cycling is a cardiovascular maintenance modality
+    during knee rehabilitation -- providing aerobic stimulus and synovial fluid circulation
+    with minimal joint compression. It requires approximately 90 degrees of knee flexion
+    ROM to perform comfortably. Seat height is set high initially to minimize flexion
+    demand, then lowered gradually as ROM returns.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - hamstrings
+    highlight_secondary:
+    - calves
+    - glutes
+  muscles_primary:
+  - quadriceps
+  - hamstrings
+  - calves
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+step_up_low:
+  animation:
+    type: none
+  coaching_focus: The eccentric (step-down) phase is the medicine -- slow the descent
+    to 3 seconds and keep the knee tracking over the second toe throughout.
+  common_errors:
+  - Pushing off the floor with the trailing foot -- defeats the single-leg loading
+    purpose; the trail foot is a touch for balance only
+  - Rushing the eccentric -- the slow descent is where quad strengthening occurs;
+    do not step down quickly
+  - Adding height or load before 10 pain-free reps are established -- progress conservatively
+    based on symptom response
+  cue_points:
+  - Use a 4-6 inch platform only -- this is not a standard step-up; height is the
+    rehab variable
+  - Step up with the working leg and drive through the heel, not the ball of the foot
+  - Do not push off the floor with the trailing foot -- all the work is from the working
+    leg
+  - Step down slowly on the same working leg -- 3 seconds for the eccentric descent
+  - Keep the knee tracking over the second toe -- no valgus at any point in the movement
+  description: The low step-up (4-6 inch platform) is a mid-phase knee rehabilitation
+    milestone -- a controlled single-leg step-up and eccentric step-down that rebuilds
+    quad strength and knee stability under load without high joint compression. It
+    progresses only when 10 reps are pain-free at the current height, and only bodyweight
+    is used until full control is established.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - calves
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - vmo
+  muscles_secondary:
+  - hamstrings
+  - calves
+  - core
+straight_leg_raise:
+  animation:
+    type: none
+  coaching_focus: Lock the knee fully before lifting -- if the knee bends during the
+    raise, the quad is not ready for the load; return to quad sets.
+  common_errors:
+  - Knee bending during the raise -- indicates insufficient quad strength; add ankle
+    weight only when the knee stays locked
+  - Lifting too fast -- slow and controlled preserves the isometric quality of the
+    knee lock
+  - Neglecting the uninjured side -- bilateral training reduces neural inhibition
+    and maintains symmetry
+  cue_points:
+  - Lie supine with the uninjured knee bent and the working leg straight on the floor
+  - Contract the quad on the working leg fully -- push the back of the knee into the
+    floor
+  - With the knee locked, raise the leg to approximately 45 degrees (height of the
+    bent knee)
+  - Hold 2 seconds at the top then lower slowly with the quad still contracted
+  - Train the uninjured leg bilaterally to maintain symmetry and reduce atrophy on
+    the healthy side
+  description: The straight leg raise (SLR) is an early-phase knee rehabilitation
+    drill -- the quad contracts fully to lock the knee before the leg is raised to
+    45 degrees and held. It trains hip flexion without knee joint compression and
+    establishes quad strength progression from quad set toward functional loading.
+    Progress to ankle weights (0.5kg increments) as strength returns.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - hip_flexors
+    highlight_secondary:
+    - core
+  muscles_primary:
+  - quadriceps
+  - hip_flexors
+  - vmo
+  muscles_secondary:
+  - core
+  - hip_abductors
+terminal_knee_extension_band:
+  animation:
+    type: none
+  coaching_focus: Drive all the way to full lock-out on every rep -- partial extension
+    does not train the terminal range that the VMO needs to control.
+  common_errors:
+  - Not reaching full extension -- the terminal range is the entire point; cue "straighten
+    completely" on every rep
+  - Using too heavy a band -- this is not a strength exercise; use the lightest band
+    that provides feedback
+  - Rushing the reps -- slow and deliberate with a 1-2 second hold at full extension
+    for optimal VMO recruitment
+  cue_points:
+  - Loop a light resistance band around a fixed point and behind the working knee
+    at knee height
+  - Step back until the band is taut with the knee slightly flexed -- this is the
+    start position
+  - Drive the knee to full extension against the band resistance and hold 1-2 seconds
+  - Return slowly to a 10-15 degree bend before repeating -- do not go into deep flexion
+  - Progress resistance only when 15+ reps feel easy -- the band color is the load
+    variable
+  description: Terminal knee extension with a resistance band trains the last few
+    degrees of knee straightening -- a band looped behind the knee creates resistance
+    as the athlete drives to full extension while standing. It targets the VMO and
+    restores the terminal extension mechanics critical for normal patellofemoral function
+    after knee injury or surgery. ATG-style application for early to mid-phase rehab.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    highlight_secondary:
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - vmo
+  muscles_secondary:
+  - hamstrings
+  - calves
+tgu_light:
+  animation:
+    type: none
+  coaching_focus: Keep the loaded arm vertical and the wrist packed at every stage
+    -- the overhead position is maintained throughout the entire get-up; the arm never
+    tips.
+  common_errors:
+  - Rushing through the phases -- each transitional position deserves a 2-second pause
+    to establish stability
+  - Allowing the wrist to collapse -- the wrist must stay packed (neutral or slight
+    extension) throughout; stop if the wrist caves
+  - Starting with too much load -- 8 kg is the maximum starting point; most rehabilitation
+    athletes should begin lighter
+  cue_points:
+  - Begin at 4-6 kg -- the load is a cue for shoulder position, not a strength stimulus
+  - Set the working arm vertical before moving; it stays vertical through every phase
+  - Move slowly through each phase and establish full stability before continuing
+    to the next
+  - The "stacked shoulder" position -- packed and externally rotated -- is the therapeutic
+    position throughout
+  - Complete both sides equally -- a weak side revealed by the TGU is the rehabilitation
+    target
+  description: The Turkish get-up at rehabilitation load (4-8 kg) is a late-phase
+    shoulder rehabilitation exercise that challenges the shoulder in multiple planes
+    through a complete movement pattern -- from supine, through a half-kneeling press,
+    to standing and back. Per the Marcus Filly progressive carry protocol, the TGU
+    is the most comprehensive single exercise for restoring shoulder function and
+    overhead stability.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - glutes
+    - serratus_anterior
+  muscles_primary:
+  - shoulders
+  - rotator_cuff
+  - core
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - serratus_anterior
+tire_drag_backward:
+  animation:
+    external_id: Backward_Drag
+    gif_alt: Tire Drag (Backward)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Backward_Drag/0.jpg
+    type: gif
+  coaching_focus: Walk backward with a tall spine -- the tendency is to look over
+    the shoulder and round the back; look forward and feel the quads doing the work.
+  common_errors:
+  - 'Looking over the shoulder constantly: disrupts the walking rhythm and rounds
+    the thoracic spine -- glance back as needed, walk forward with the torso'
+  - 'Tire too heavy: backward drag requires good proprioception; a tire that overwhelms
+    the quad prevents the terminal extension range from being trained'
+  - 'Walking too fast: the slower the backward walk, the more time the quad spends
+    in the target range of motion'
+  cue_points:
+  - Rope or harness attaches to the front of the athlete; tire trails behind
+  - 'Walk backward with a controlled step: heel to toe in reverse, feeling the quad
+    engagement throughout'
+  - 'Stay tall: upright torso, eyes forward or slightly down, no excessive forward
+    lean'
+  - The quad contracts through the full step -- focus on the feeling of terminal knee
+    extension at each push-off
+  - Distance and weight are secondary to quality of the quad engagement; feel the
+    VMO working
+  description: The backward tire drag walks backward with the tire in tow, loading
+    the quadriceps through terminal knee extension without the compressive joint loading
+    of barbell squats. ATG (Ben Patrick / Knees Over Toes) programs backward sled
+    and tire drag as the primary VMO and quad tendon prehabilitation modality -- the
+    backward locomotion pattern eccentric-loads the quad in a range the forward gait
+    pattern does not reach. Horsemen GPP includes it as a knee health tool.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - calves
+    - core
+  muscles_primary:
+  - quadriceps
+  muscles_secondary:
+  - glutes
+  - calves
+  - core

@@ -62,12 +62,14 @@ def _load_yaml(path: str) -> dict:
 
 def _all_exercises() -> list[dict]:
     global_index, _ = loader.load_all_exercises()
+    media = loader.load_exercise_media()
     result = []
     for ex in global_index.values():
         ex = dict(ex)
-        # Ensure sources is always a list
         if isinstance(ex.get('sources'), str):
             ex['sources'] = [ex['sources']]
+        if ex['id'] in media:
+            ex.update(media[ex['id']])
         result.append(ex)
     return sorted(result, key=lambda e: e.get('id', ''))
 
@@ -333,6 +335,12 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
 @app.get('/api/exercises')
 def get_exercises():
     return jsonify(_all_exercises())
+
+
+@app.get('/api/exercises/<ex_id>/media')
+def get_exercise_media(ex_id: str):
+    entry = loader.load_exercise_media().get(ex_id)
+    return jsonify(entry or {}), 200
 
 
 @app.get('/api/modalities')
