@@ -1,0 +1,1754 @@
+back_squat:
+  animation:
+    type: none
+  coaching_focus: Think hip hinge loaded onto your back, not a knee bend — sit back
+    and down, not just down.
+  common_errors:
+  - 'Morning star: hips shoot up and chest drops forward — fix with box squat and
+    intentional hip-drive cuing'
+  - Knees caving medially — cue external rotation, use band above knees as feedback
+  - Excessive forward lean — usually ankle dorsiflexion restriction or bar position
+    too high
+  - 'Half reps: hip crease above parallel — use a box or depth marker until the habit
+    is built'
+  cue_points:
+  - 'Brace hard before unracking: 360-degree air pressure through your belt, not just
+    your belly'
+  - Break at the hips and knees simultaneously — do not initiate with the knees
+  - Push knees out in the direction of your toes throughout the descent
+  - Hip crease must pass below the top of the patella at depth
+  - Drive the floor away on the ascent — spread the floor, not raise the bar
+  - Keep the bar over mid-foot; weight shifts forward or heels rise when this fails
+  description: The back squat is the foundational bilateral lower-body strength movement
+    — a loaded hip hinge and knee flexion pattern that demands coordinated engagement
+    of the entire posterior chain and trunk. Horsemen set the benchmark at 2x bodyweight;
+    Starting Strength builds to this from a 3x5 novice progression.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+barbell_complex:
+  animation:
+    type: none
+  coaching_focus: Every rep of every movement counts — the complex fails the moment
+    one movement is performed poorly, even if you do not drop the bar.
+  common_errors:
+  - 'Loading too heavy: the complex exposes the weakest link — start lighter than
+    feels right'
+  - 'Dropping the bar between movements: this ends the complex; if you must put it
+    down, the load is too heavy'
+  - 'Rushing movements under fatigue: the complex should be performed with controlled
+    aggression'
+  cue_points:
+  - 'Load conservatively: the complex is finished when the weakest movement fails,
+    usually the push press'
+  - 'Movement order is non-negotiable for flow: the clean leads naturally into the
+    front squat and then push press'
+  - 'Between movements: reset your breath and brace briefly — do not rush the transitions'
+  - The bar never leaves your hands and never touches the floor between the row and
+    the clean
+  - 'The back squat comes last: upper body is pre-fatigued, so the load feels heavier
+    than it is'
+  - Use 1–2 minutes rest between sets; this is conditioning, not a max-strength test
+  description: The Six-Way Barbell Complex strings together six movements without
+    rest or touching the bar to the floor — deadlift, bent row, hang clean, front
+    squat, push press, back squat — for six reps each. Used by both Gym Jones and
+    Horsemen as a loaded warm-up and conditioning stimulus, performed for 3–4 sets
+    with progressively increasing loads (75–105 lb).
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    - erector_spinae
+    highlight_secondary:
+    - deltoids
+    - triceps
+    - core
+    - upper_back
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  - erector_spinae
+  muscles_secondary:
+  - deltoids
+  - triceps
+  - core
+  - upper_back
+barbell_row:
+  animation:
+    external_id: Bent_Over_Barbell_Row
+    gif_alt: Barbell Row (Bent Over)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg
+    type: gif
+  coaching_focus: The torso angle is everything — if it rises above 45 degrees, you
+    are doing a shrug with a bent-over press, not a row.
+  common_errors:
+  - 'Torso rising: using hip extension to generate momentum; becomes a deadlift-shrug
+    hybrid'
+  - 'Bar pulled to the belly rather than the chest: lats work but upper back and rear
+    delt do not'
+  - 'Rounding the lower back: the hip hinge must be maintained with a neutral spine
+    throughout'
+  cue_points:
+  - Set up in a deadlift-like position with the bar over mid-foot, then hinge to 45–60
+    degrees
+  - Pull the bar into the lower chest; elbows drive back and past the torso
+  - Keep the lower back arched throughout — same neutral spine rules as the deadlift
+  - Touch the body on every rep — if the bar stops short, the scapulae are not retracting
+    fully
+  - 'A controlled lower is as important as the pull: do not drop the bar'
+  description: The barbell row is performed with the torso hip-hinged roughly parallel
+    to the floor, pulling the bar into the lower chest or upper abdomen. It is the
+    primary horizontal pulling movement in the Starting Strength novice program and
+    is featured in the Gym Jones and Horsemen Six-Way Barbell Complex.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - erector_spinae
+    - hamstrings
+    - core
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - erector_spinae
+  - hamstrings
+  - core
+bear_crawl:
+  animation:
+    external_id: Bear_Crawl_Sled_Drags
+    gif_alt: Bear Crawl
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bear_Crawl_Sled_Drags/0.jpg
+    type: gif
+  coaching_focus: Hips stay low and level -- if the hips are swaying side to side
+    or rising high with each step, the crawl has degenerated into a four-point trot;
+    slow down and keep the hips level.
+  common_errors:
+  - 'Hips rising too high: the crawl becomes a downward-dog walk; keep the knees close
+    to the floor'
+  - 'Ipsilateral movement (same-side hand and foot together): this is the common untrained
+    pattern and removes the contralateral coordination demand'
+  - 'Head dropping: the head should be neutral, not hanging down; maintain full-body
+    awareness throughout'
+  cue_points:
+  - Start on hands and knees (tabletop position) with knees hovering 1-2 inches off
+    the floor
+  - Move the right hand and left foot simultaneously, then the left hand and right
+    foot -- opposite limbs move together
+  - 'Hips stay level: neither rising nor swaying side-to-side during each step'
+  - 'Head neutral: looking slightly forward, neck an extension of the spine'
+  - 'Slow is more challenging than fast: a slow, controlled bear crawl with level
+    hips is harder than a fast, sloppy one'
+  description: The bear crawl is a quadruped locomotion pattern with the hips kept
+    low and opposite limbs moving simultaneously -- right hand with left foot, left
+    hand with right foot. Gym Jones programs it in GPP circuits for shoulder stability,
+    hip flexor endurance, and total-body coordination. It develops the contralateral
+    coordination pattern foundational to efficient running and directly challenges
+    the scapular stabilizers under dynamic loading.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - quadriceps
+    highlight_secondary:
+    - upper_back
+    - hip_flexors
+    - serratus
+  muscles_primary:
+  - deltoids
+  - core
+  - quadriceps
+  muscles_secondary:
+  - upper_back
+  - hip_flexors
+  - serratus
+deadlift:
+  animation:
+    external_id: Axle_Deadlift
+    gif_alt: Deadlift
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Axle_Deadlift/0.jpg
+    type: gif
+  coaching_focus: 'Set the back before you pull: establish your lumbar arch and brace,
+    then leg-press the floor away — the back does not initiate the pull.'
+  common_errors:
+  - 'Hips shooting up first: back rounds as hips rise faster than the bar — corrected
+    by pause deadlifts at submaximal load'
+  - Bar drifting forward away from the legs — increases moment arm dramatically; keep
+    it dragging up the shins
+  - Jerking the bar off the floor — causes spinal flexion under rapid load; take slack
+    out first
+  - Hyperextending at lockout — squeeze glutes and stand tall, do not lever the lower
+    back
+  cue_points:
+  - Bar over mid-foot at setup — roughly 1 inch from shins, directly below the scapulae
+  - 'Hip hinge to the bar: push the floor away with the legs to find the pull, do
+    not bend and grip'
+  - 'Establish the arch before pulling: chest up, shoulders slightly in front of the
+    bar, hips above knees'
+  - 'Take the slack out before pulling: tension the bar against the floor — no jerking'
+  - Bar stays in contact with the legs on the way up — a bar path away from the body
+    is a mechanical disadvantage
+  - Lock out by squeezing glutes and pushing hips forward, not by hyperextending the
+    lower back
+  description: The deadlift is the master posterior-chain loading movement and the
+    king of absolute strength — the bar is lifted from the floor to hip extension
+    using the legs, hips, and back working in concert. Horsemen benchmark is 2.5x
+    bodyweight; Starting Strength programs 1x5 as the novice primary; Gym Jones builds
+    all Olympic lifting percentages from the tested deadlift 1RM.
+  muscle_diagram:
+    highlight_primary:
+    - erector_spinae
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - quadriceps
+    - adductors
+    - core
+    - forearms
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  - hamstrings
+  muscles_secondary:
+  - quadriceps
+  - adductors
+  - core
+  - forearms
+farmer_carry_barbell:
+  animation:
+    type: none
+  coaching_focus: The increased load ceiling is the only reason to use a barbell over
+    kettlebells -- the technique demands are identical; do not let the heavier implement
+    degrade the mechanics.
+  common_errors:
+  - 'Bar rolling in the grip: for straight barbells, a mixed grip or hook grip may
+    be needed to maintain control at maximal loads'
+  - 'Barbell swinging during walking: longer implements amplify any gait irregularity;
+    slow the pace until the carry is stable'
+  - 'Not deadlifting to start: jerking the barbell off the floor to begin a carry
+    sets a poor positional start'
+  cue_points:
+  - 'Trap-bar preferred: neutral grip, load centered; straight barbell requires supinated
+    or pronated grip with increased wrist loading'
+  - Deadlift the barbell to the standing position before beginning the walk -- do
+    not skip the setup
+  - 'Same postural standards as all farmer carry variants: packed shoulders, upright
+    torso, controlled gait'
+  - Longer implements require wider turning arcs -- plan the course before beginning
+  - Set the barbells down with the same care as a deadlift -- controlled descent,
+    not a drop
+  description: The barbell farmer carry uses a barbell (or trap bar) in each hand,
+    offering the highest absolute load potential in the farmer carry family. Gym Jones
+    programs barbell carries in loaded carry accessory work. The trap-bar variant
+    is preferable where available -- the neutral grip and centered load reduce lateral
+    wrist stress under maximal loading.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - forearms
+    - core
+    highlight_secondary:
+    - quadriceps
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - upper_back
+  - forearms
+  - core
+  muscles_secondary:
+  - quadriceps
+  - glutes
+  - hamstrings
+floor_press:
+  animation:
+    external_id: Floor_Press
+    gif_alt: Floor Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Floor_Press/0.jpg
+    type: gif
+  coaching_focus: Complete stop at the bottom with triceps on the floor — pause and
+    press, no bounce.
+  common_errors:
+  - Bouncing the triceps off the floor — eliminates the pause stimulus; treat it as
+    dead-stop
+  - Elbows flared to 90 degrees — increases shoulder impingement risk
+  - 'Expecting full range of motion: the floor inherently limits ROM, do not fight
+    it'
+  cue_points:
+  - Set up with the bar over the lower chest; roll to get under it if no rack available
+  - Elbows at roughly 45 degrees from the torso — not flared to 90 degrees
+  - Triceps touch the floor; pause completely before pressing — this is the point
+    of the exercise
+  - Drive through the triceps to lockout; do not try to create a chest-emphasis arch
+  - Upper-back retraction is still important even without a bench
+  description: The floor press is a horizontal pressing movement performed lying on
+    the floor, which limits range of motion by stopping the triceps on the floor and
+    eliminates leg-drive contribution and the stretch reflex. Gym Jones uses it as
+    a pressing strength variant; it is inherently shoulder-friendly for many athletes.
+  muscle_diagram:
+    highlight_primary:
+    - triceps
+    - pec
+    - deltoids
+    highlight_secondary:
+    - core
+  muscles_primary:
+  - triceps
+  - pec
+  - deltoids
+  muscles_secondary:
+  - core
+front_squat:
+  animation:
+    external_id: Front_Barbell_Squat
+    gif_alt: Front Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Barbell_Squat/0.jpg
+    type: gif
+  coaching_focus: Elbows up — if they drop, the bar rolls and the lift is over; everything
+    else flows from keeping them high.
+  common_errors:
+  - Elbows dropping during descent — this tips the bar forward and dumps the lift;
+    wrist and lat stretch are usually the root cause
+  - 'Good morning out of the hole: hips rise faster than the bar — means the load
+    exceeds current front-rack strength'
+  - Bar sits on hands rather than shoulders — causes wrist strain and an unstable
+    rack
+  cue_points:
+  - 'Clean grip or crossed-arm: fingertips only on the bar, no wrapping — elbows must
+    travel high and forward'
+  - Keep elbows parallel to the floor throughout; they should point forward, not toward
+    the floor
+  - Torso stays upright — a vertical shin is less important here than a vertical torso
+  - Push knees out just as in the back squat; the front rack does not change that
+    demand
+  - Stand tall on the way up — do not dump the elbows as fatigue sets in
+  description: The front squat holds the barbell in a front-rack position across the
+    anterior deltoids, forcing a more upright torso than the back squat and placing
+    greater demand on the quadriceps and thoracic spine. Gym Jones programs it as
+    a primary strength movement (10x2 at 1-min rest); Horsemen benchmark is 1.5x bodyweight.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - core
+    - erector_spinae
+    highlight_secondary:
+    - glutes
+    - adductors
+    - deltoids
+  muscles_primary:
+  - quadriceps
+  - core
+  - erector_spinae
+  muscles_secondary:
+  - glutes
+  - adductors
+  - deltoids
+hang_power_clean:
+  animation:
+    external_id: Hang_Clean
+    gif_alt: Hang Power Clean
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Clean/0.jpg
+    type: gif
+  coaching_focus: Drop into the hang by pushing the hips back, not by bending the
+    knees down — the first movement is a hip hinge, not a squat.
+  common_errors:
+  - Hanging the bar too low — going below the knee turns it into a power clean from
+    the floor
+  - 'Squatting into the hang rather than hinging: the hips must be the loading mechanism'
+  - 'Slow turnover into the front rack: the speed of elbow rotation limits the weight
+    that can be caught safely'
+  cue_points:
+  - Lower the bar to the hang by hinging the hips back with a slight knee bend — bar
+    finishes just above the knee
+  - Hips are loaded (back) and knees are slightly bent at the start of every rep
+  - Snap the hips forward explosively as in the full clean; the range is shorter but
+    the speed must be identical
+  - High elbows immediately after hip extension; pull yourself under to the front
+    rack
+  - 'Cycle the bar efficiently: lower with control to hang, reload, snap — rhythm
+    matters'
+  description: The hang power clean initiates from above the knee in the hang position,
+    removing the first pull from the floor and isolating the hip snap and bar turnover.
+    It is frequently used in conditioning complexes because it is faster to cycle
+    than the full clean and builds rate of force development in the second pull.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - deltoids
+    - core
+    - quadriceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  muscles_secondary:
+  - deltoids
+  - core
+  - quadriceps
+hang_power_snatch:
+  animation:
+    external_id: Hang_Snatch
+    gif_alt: Hang Power Snatch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Snatch/0.jpg
+    type: gif
+  coaching_focus: The range is short, so the overhead punch must be violent — if you
+    think about it, you are already late.
+  common_errors:
+  - 'Pressing out: the overhead position must be achieved ballistically — arms should
+    lock before the descent ends'
+  - 'Bar crashing onto locked arms from above: the catch is not a drop-and-press;
+    arms must be moving up to meet the bar'
+  - 'Over-gripping: tension in the forearms stiffens the turnover; grip firm but upper
+    arm relaxed'
+  cue_points:
+  - 'Hang position: hips loaded, bar just above the knee — identical to hang power
+    clean but with snatch grip'
+  - 'Hip snap and immediate high pull: elbows up and out before punching hands overhead'
+  - Punch both hands up simultaneously — any asymmetry under load is a mobility or
+    stability flag
+  - Receive locked out above parallel; do not receive with soft elbows and then press
+    out
+  - Lower to the hang with control — the eccentric has value in conditioning contexts
+  description: The hang power snatch initiates from above the knee and catches the
+    bar overhead above parallel — primarily used as a teaching tool for the snatch
+    overhead position and as a high-speed conditioning component. The shorter pull
+    demands maximum speed in the turnover and teaches athletes to get under the bar
+    quickly.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - deltoids
+    highlight_secondary:
+    - core
+    - quadriceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - deltoids
+  muscles_secondary:
+  - core
+  - quadriceps
+kb_farmer_carry:
+  animation:
+    type: none
+  coaching_focus: Stand tall and do not lean — the moment the torso tilts toward the
+    bell, you are carrying with the spine instead of the core.
+  common_errors:
+  - 'Lateral trunk tilt: the torso leans toward the bell — this is the spine compensating,
+    not the core working'
+  - 'Shoulder elevation: the bell pulls the shoulder up; pack it actively with the
+    lat'
+  - 'Walking with too wide a gait: the bell swings and destabilizes the carry; maintain
+    normal walking mechanics'
+  cue_points:
+  - Grip the bell firmly; it should hang at arm length at the side — not swinging
+    forward and back
+  - 'Pack the shoulder: the lat is engaged, the scapula is not elevated'
+  - Walk with a controlled gait; do not let the bell pull the shoulder down or the
+    hip out
+  - Opposite side of the trunk is working hard to resist lateral flexion — feel it
+    actively
+  - Switch hands at the turnaround; total distance is split between sides or done
+    in separate sets
+  description: The single-arm kettlebell farmer carry holds one bell at the side and
+    walks for distance or time — the asymmetric load demands lateral core stability
+    and resisting lateral trunk flexion toward the weighted side. It is the entry-point
+    for all loaded carry variations and develops grip, trapezius endurance, and quadratus
+    lumborum strength.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    - forearms
+    highlight_secondary:
+    - quadriceps
+    - glutes
+    - adductors
+  muscles_primary:
+  - core
+  - upper_back
+  - forearms
+  muscles_secondary:
+  - quadriceps
+  - glutes
+  - adductors
+kb_farmer_carry_double:
+  animation:
+    type: none
+  coaching_focus: Identical mechanics to the single but bilaterally — your spine should
+    be under compression, not lateral flexion; stand tall and walk smooth.
+  common_errors:
+  - 'Forward lean: the combined anterior weight pulls the torso into flexion; actively
+    drive the hips forward'
+  - 'Bells swinging during walking: reduce pace or weight until a stable carry is
+    achieved'
+  - 'Shoulders rounding forward under load: the upper back must actively resist the
+    forward pull of the bells'
+  cue_points:
+  - 'Equal bells: the bilateral load is symmetric, so technique errors are symmetric
+    too'
+  - 'Both shoulders packed: neither should elevate or round forward'
+  - Upright torso; do not let the combined weight compress you into a forward lean
+  - Controlled pace — speed increases grip demand without increasing useful training
+    stimulus proportionally
+  - Set bells down cleanly at the end of the set; do not drop them
+  description: The double kettlebell farmer carry holds two bells, one at each side,
+    and walks for distance. It removes the anti-lateral-flexion challenge of the single-arm
+    version and replaces it with pure bilateral systemic loading — grip, trapezius,
+    and trunk endurance under a compressive bilateral load. Used in Horsemen and Gym
+    Jones loaded carry circuits.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - forearms
+    - core
+    highlight_secondary:
+    - quadriceps
+    - glutes
+    - calves
+  muscles_primary:
+  - upper_back
+  - forearms
+  - core
+  muscles_secondary:
+  - quadriceps
+  - glutes
+  - calves
+kb_row_single:
+  animation:
+    external_id: One-Arm_Kettlebell_Row
+    gif_alt: Kettlebell Row (Single-Arm)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Row/0.jpg
+    type: gif
+  coaching_focus: Pull the elbow to the hip, not the bell to the shoulder — the elbow
+    drives the row, and the forearm is just along for the ride.
+  common_errors:
+  - 'Torso rotating to help the pull: the working shoulder should rise slightly at
+    the top, but the torso should not twist'
+  - 'Short range of motion: elbow not passing the torso; the scapula never fully retracts'
+  - 'Bell pulled to the armpit instead of the hip: shifts emphasis from the lat to
+    the upper back; both have value but know which you are training'
+  cue_points:
+  - Brace the free hand on the working-side knee or a bench — not on the opposite
+    side, which would reduce core demand
+  - Hinge to roughly 45 degrees; back is flat and parallel to the floor
+  - Pull the bell toward the hip — the elbow passes the torso and the scapula retracts
+    at the top
+  - Lower under control through the full range — the stretch at the bottom is part
+    of the exercise
+  - 'Resist twisting: the non-working side wants to rotate open as fatigue accumulates'
+  description: The single-arm kettlebell row is performed hip-hinged with the opposite
+    hand braced on the knee or a bench, pulling the bell to the hip. It develops unilateral
+    upper-back and lat strength while the hip hinge position demands core and erector
+    engagement. The anti-rotation requirement is greater than bilateral barbell rowing.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - erector_spinae
+    - forearms
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - erector_spinae
+  - forearms
+kb_squat_goblet:
+  animation:
+    external_id: Goblet_Squat
+    gif_alt: Kettlebell Goblet Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg
+    type: gif
+  coaching_focus: Use the bell as a counterbalance — allow the torso to stay upright
+    by letting the weight in front pull you into depth, not fight you out of it.
+  common_errors:
+  - 'Forward lean of the torso: usually holding the bell away from the body rather
+    than tight to the chest'
+  - 'Heels rising: ankle dorsiflexion limitation — elevate the heels temporarily while
+    working ankle mobility'
+  - 'Knee cave: the elbows-to-knees cue helps; add a band above the knees as tactile
+    feedback'
+  cue_points:
+  - Hold the bell by the horns at chest height; elbows point down and are tucked inside
+    the knees at depth
+  - Feet shoulder-width or slightly wider; toes turned out 30–45 degrees
+  - Sink into depth — elbows track inside the knees and push them outward as a coaching
+    cue
+  - Upright torso throughout; the counterbalance should make this easier than a bodyweight
+    squat
+  - 'At the bottom: pause, reach the elbows into the knees, and feel the hip stretch
+    before standing'
+  description: The goblet squat holds the kettlebell at chest height by the horns
+    and squats to full depth — the anterior load counterbalances the hips and teaches
+    an upright torso, making it one of the most effective squat teaching tools available.
+    Gym Jones uses it (25 lb) in the warm-up 2×5 before strength sessions. It is the
+    appropriate first squat loaded with an implement.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - adductors
+    - core
+    - erector_spinae
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - adductors
+  - core
+  - erector_spinae
+kb_step_up:
+  animation:
+    type: none
+  coaching_focus: The trailing leg does nothing — if it pushes, you are using it;
+    test yourself by holding the trailing foot an inch off the ground.
+  common_errors:
+  - 'Trailing foot push-off: the most common fault; hold the foot slightly elevated
+    to enforce the single-leg demand'
+  - 'Toes-only placement on the box: reduces stability and shifts load to the ankle
+    rather than the hip and knee'
+  - 'Forward lean: the torso should be vertical; any lean forward means the hip is
+    not extending through the top'
+  cue_points:
+  - Place the entire foot on the box — heel and ball of the foot, not just the toes
+  - Drive through the heel of the working leg; the trailing knee can swing through
+    but the foot must not push
+  - Torso stays upright — the bell can be held in rack position or at the side
+  - 'Descend with control on the working leg: the eccentric is as valuable as the
+    concentric'
+  - Complete all reps on one side before switching
+  description: The kettlebell step-up is a single-leg strength movement where the
+    athlete steps up to a box holding one kettlebell, driving through the heel of
+    the working leg with no assistance from the trailing leg. It approximates the
+    Gym Jones loaded step-up protocol when a barbell is not available and builds the
+    unilateral leg strength essential for field work.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+kb_suitcase_carry:
+  animation:
+    type: none
+  coaching_focus: 'The name is the cue: you are carrying a suitcase, not a farmer
+    — your spine stays vertical as if a wall is on your opposite side.'
+  common_errors:
+  - 'Leaning toward the bell: the lateral flexion is the error the exercise is designed
+    to prevent — cue aggressively'
+  - 'Hip hike on the unloaded side: the pelvis tilts to unload the carry; the hips
+    must stay level'
+  - 'Too much load before the pattern is established: start lighter than feels necessary'
+  cue_points:
+  - Same grip and shoulder mechanics as the farmer carry
+  - Actively resist the bell pulling the torso sideways — the contralateral obliques
+    and QL are the primary workers
+  - Walk a straight line; any lateral drift in your path indicates trunk compensation
+  - Keep the arm straight at the side — do not flex the elbow, which would shift the
+    load to the biceps
+  - Breathe normally — do not hold the breath during the carry
+  description: The kettlebell suitcase carry is mechanically identical to the single-arm
+    farmer carry but the coaching emphasis is explicitly on resisting lateral trunk
+    flexion — the athlete must not lean toward the bell. It trains the quadratus lumborum
+    and lateral core in a walking pattern that directly transfers to any unilateral
+    loaded task.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    highlight_secondary:
+    - forearms
+    - glutes
+    - adductors
+  muscles_primary:
+  - core
+  - upper_back
+  muscles_secondary:
+  - forearms
+  - glutes
+  - adductors
+kb_swing_breathing_ladder:
+  animation:
+    type: none
+  coaching_focus: The breath count is the rest — do not rush the breathing, do not
+    skip breaths; if the breathing is not complete, neither is the recovery.
+  common_errors:
+  - 'Rushing the breathing rest: the ladder becomes a straight continuous set and
+    the self-regulatory benefit disappears'
+  - 'Technique degrading in the large middle sets: quality must be maintained regardless
+    of rep count — these are the sets that build or break the pattern'
+  - 'Wrong weight: too heavy and the ladder fails at the top; too light and there
+    is no adaptation stimulus — 24 kg is the established standard for trained athletes'
+  cue_points:
+  - 'Every rep of every set must be perfect: the ladder is designed to be performed
+    at full quality, not race pace'
+  - Count breaths deliberately and out loud if necessary — rushing shortchanges the
+    rest and compounds fatigue early
+  - The peak (set of 20) is the most demanding; identify your limiting factor before
+    the ladder — grip, hip, or breath
+  - 'At high rep sets, break large sets into smaller clusters if needed: 10+10 counts
+    as 20 if both are perfect'
+  - The descent is psychologically easier; maintain pace and do not rush the breaths
+    just because it is going down
+  description: 'The Gym Jones breathing ladder assigns rest by breath count — swing
+    once, breathe once; swing twice, breathe twice — climbing from 1 to 20 and descending
+    back to 1 for approximately 400 total swings. The breathing is the rest period:
+    the count enforces complete oxygen recovery between sets and makes the workout
+    self-regulating. Mark Twight programmed it at 53 lb (24 kg).'
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - deltoids
+    - forearms
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - deltoids
+  - forearms
+kb_swing_two_hand:
+  animation:
+    type: none
+  coaching_focus: The arms are ropes attached to the bell — they do not lift it; the
+    hips snap and the bell floats.
+  common_errors:
+  - 'Squatting the swing: hips drop and the torso stays upright — the bell lifts rather
+    than floats; this is a quad exercise, not a ballistic'
+  - 'Arms lifting the bell: early shoulder elevation kills the hip drive connection'
+  - 'Lower back rounding on the backswing: the hinge must be maintained through the
+    entire downswing'
+  - 'Soft glutes at the top: the lockout should be aggressive — squeezed glutes are
+    the braking force'
+  cue_points:
+  - 'Hike the bell back aggressively between the legs: the hinge happens first, not
+    a squat'
+  - Snap the hips forward explosively — glutes fire hard at the top, not the lower
+    back
+  - 'At the top the body is a rigid plank: glutes, abs, and quads all contracted simultaneously'
+  - Let the bell float to shoulder height; do not muscle it up with the arms
+  - 'On the backswing: hinge back and let the bell pull you into the next rep — catch
+    the load with the hamstrings'
+  - 'Breath: exhale sharply at the top of the swing with a hiss — the exhale protects
+    the spine'
+  description: The two-hand kettlebell swing is the foundational ballistic — a hip-hinge-driven
+    movement where the bell is projected to shoulder height by explosive hip extension,
+    not a squat-and-lift. It simultaneously develops posterior-chain power, aerobic
+    capacity, and trunk stiffness under load. Horsemen include it in every warm-up;
+    Gym Jones programs the breathing ladder format with 24 kg.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - quadriceps
+    - deltoids
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - quadriceps
+  - deltoids
+kb_tgu:
+  animation:
+    external_id: Kettlebell_Turkish_Get-Up_Lunge_style
+    gif_alt: Kettlebell Turkish Get-Up
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Lunge_style/0.jpg
+    type: gif
+  coaching_focus: The bell does not move — your body moves underneath it; every fault
+    in position is revealed by the bell shifting.
+  common_errors:
+  - 'Losing the overhead lockout: the shoulder dips or the elbow bends at any transition
+    — stop and rebuild from that position'
+  - 'Eyes leaving the bell: looking away correlates with losing the overhead position'
+  - 'Rushing the transitions: each position must be stable before moving to the next
+    — the TGU rewards patience'
+  - 'Hip not fully bridged before the leg sweep: the lunge is impossible to achieve
+    cleanly without full hip extension first'
+  cue_points:
+  - Lie on your back, bell in the right hand, right elbow bent — roll to load the
+    wrist before pressing
+  - Press to full lockout; eyes stay on the bell for the entire get-up
+  - Roll to the left elbow, then to the left hand — the right shoulder stays packed
+    throughout
+  - 'High bridge: drive the right hip up while supporting on the left hand and right
+    heel'
+  - Sweep the left leg under to the lunge position; stand up maintaining the overhead
+    lockout
+  - Reverse every step identically — the descent is as demanding as the ascent; rush
+    it and you will catch the floor
+  description: The Turkish get-up takes an athlete from lying on the floor to standing
+    and back with a kettlebell locked overhead throughout — a sequence of seven positions
+    each requiring shoulder stability, hip mobility, and integrated trunk control.
+    Gym Jones programs 100 TGUs at 15 lb as a recovery modality; Horsemen use it as
+    a benchmark (100 reps at 35 lb). It is foundational to all overhead carry work.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - glutes
+    highlight_secondary:
+    - quadriceps
+    - hamstrings
+    - adductors
+    - erector_spinae
+  muscles_primary:
+  - deltoids
+  - core
+  - glutes
+  muscles_secondary:
+  - quadriceps
+  - hamstrings
+  - adductors
+  - erector_spinae
+lunge_jumping:
+  animation:
+    external_id: Split_Jump
+    gif_alt: Split Jump Lunge
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jump/0.jpg
+    type: gif
+  coaching_focus: Land in a full lunge position -- if you are landing with feet close
+    together or on stiff legs, the power output was too high for the current landing
+    skill; reduce height and land with control.
+  common_errors:
+  - 'Landing with feet together: the split should be maintained in the air and re-established
+    cleanly on landing'
+  - 'Short split at landing: the landing lunge position is too shallow -- same depth
+    standard as the walking lunge'
+  - 'Torso crumbling forward on landing: the trunk must stay upright; forward collapse
+    is a hip stability issue'
+  cue_points:
+  - Start in a full lunge split stance with the back knee close to the floor
+  - Drive off both legs simultaneously -- the back foot pushes off the toe, the front
+    foot pushes through the heel
+  - 'Switch legs during flight: the back leg swings forward, the front leg swings
+    back'
+  - Land in a full lunge on the opposite side with the same descent control as the
+    walking lunge
+  - Maintain a tall torso throughout -- hunching forward on the landing means the
+    hips are absorbing less
+  description: The split jump lunge (plyometric lunge) starts in a split stance, jumps
+    vertically, switches legs mid-air, and lands in the opposite split stance. It
+    is a high-power, high-impact lower-body plyometric. Gym Jones programs it as a
+    power-endurance tool in circuits. The demand on the hip flexors, glutes, and quad
+    of each leg alternates rapidly, creating a significant metabolic and neuromuscular
+    stimulus.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - core
+overhead_carry_barbell:
+  animation:
+    type: none
+  coaching_focus: The barbell reveals asymmetry immediately -- if one end dips, that
+    shoulder is failing; correct in real time or set the bar down.
+  common_errors:
+  - 'Bar drifting forward: the most common pattern as the shoulders fatigue -- the
+    bar travels in front of the body and the carry fails'
+  - 'Hyperextending the lumbar: the overhead load encourages arching; brace hard and
+    keep the ribs down'
+  - 'Not returning the bar to a rack safely: always walk the bar back to a rack rather
+    than attempting to lower it overhead to the floor'
+  cue_points:
+  - Press or jerk the barbell to overhead lockout from a rack before beginning the
+    walk
+  - 'Active shoulders: push the bar into the ceiling, pack both scapulae, engage the
+    lats bilaterally'
+  - Bar stays directly over the midfoot throughout -- any forward or backward drift
+    signals trunk or shoulder failure
+  - Walk with deliberate, controlled steps; the barbell amplifies any gait asymmetry
+  - Keep a spotter near when learning -- a missed overhead carry is dangerous without
+    one
+  description: The barbell overhead carry holds a barbell at full lockout overhead
+    and walks for distance -- the maximum shoulder and core demand in the barbell
+    carry family. Gym Jones programs a 300-second accumulated overhead hold as a static
+    shoulder endurance standard; the carry is the ambulatory progression. Requires
+    solid overhead squat mechanics and shoulder mobility before loading.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - upper_back
+    highlight_secondary:
+    - triceps
+    - erector_spinae
+    - glutes
+  muscles_primary:
+  - deltoids
+  - core
+  - upper_back
+  muscles_secondary:
+  - triceps
+  - erector_spinae
+  - glutes
+overhead_squat:
+  animation:
+    external_id: Overhead_Squat
+    gif_alt: Overhead Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Overhead_Squat/0.jpg
+    type: gif
+  coaching_focus: The bar must stay over the midfoot — if it drifts forward or backward,
+    the movement is not yet available to you.
+  common_errors:
+  - Bar drifting forward — usually shoulder mobility or thoracic extension restriction
+  - Forward lean of torso — ankle dorsiflexion is the most common root cause
+  - Arms bending during the squat — scapular instability or insufficient shoulder
+    external rotation
+  - Knees caving — the bar overhead amplifies every lower-body alignment fault
+  cue_points:
+  - Wide snatch grip — narrower grips require extraordinary shoulder mobility and
+    will fail first
+  - 'External rotation: bend the bar into a horseshoe, elbows pointing out and slightly
+    back'
+  - 'Active shoulders: push the bar up into the ceiling continuously — do not just
+    hold it'
+  - Torso as upright as possible; weight on heels, not mid-foot
+  - Initiate with a hip hinge back before sitting into depth
+  - If depth cannot be achieved with bar overhead, ankle, hip, or thoracic mobility
+    is the limiter
+  description: The overhead squat holds the barbell at lockout above the head while
+    squatting to depth — the most demanding test of total-body mobility, stability,
+    and positional strength in the barbell system. Gym Jones programs it as a primary
+    strength movement and tests 1RM. It exposes every restriction in the kinetic chain
+    simultaneously.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - core
+    - deltoids
+    highlight_secondary:
+    - glutes
+    - erector_spinae
+    - adductors
+  muscles_primary:
+  - quadriceps
+  - core
+  - deltoids
+  muscles_secondary:
+  - glutes
+  - erector_spinae
+  - adductors
+power_clean:
+  animation:
+    external_id: Power_Clean
+    gif_alt: Power Clean
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Clean/0.jpg
+    type: gif
+  coaching_focus: The hips extend violently at the hip crease and the bar is pulled
+    in close — any early arm bend kills the pull.
+  common_errors:
+  - 'Early arm bend: bending the elbows before full hip extension — disconnects hip
+    power from the bar'
+  - 'Bar swinging away from the body on the first pull: creates a longer lever arm;
+    drag it up the thighs'
+  - 'Not completing the hip extension: cutting the second pull short means less power
+    transferred to the bar'
+  - 'Soft elbows in the catch: the front rack must be locked in place before receiving
+    the bar'
+  cue_points:
+  - 'First pull: identical to deadlift setup — bar over mid-foot, back arched, chest
+    up'
+  - The bar must pass the knee before the second pull begins — patience on the first
+    pull
+  - At hip contact, extend the hips and shrug explosively; elbows drive high and outside
+  - Pull yourself under the bar immediately — do not wait at the top
+  - 'Receive in a partial squat: front rack with elbows high, hips above parallel'
+  - Stand to full extension before lowering the bar
+  description: The power clean pulls the bar from the floor to the front rack in one
+    explosive hip-extension-driven movement, receiving it in a partial squat above
+    parallel. It is the primary power development movement in the barbell system and
+    a direct training stimulus for athletic explosiveness. Starting Strength programs
+    1x5; Horsemen Olympic Day uses wave loading at 80–90%.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - quadriceps
+    - deltoids
+    - core
+    - calves
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - deltoids
+  - core
+  - calves
+power_snatch:
+  animation:
+    external_id: Power_Snatch
+    gif_alt: Power Snatch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Snatch/0.jpg
+    type: gif
+  coaching_focus: A wide grip and a high pull — if the grip is too narrow or the pull
+    too slow, the bar cannot get high enough to catch overhead.
+  common_errors:
+  - 'Bar drifting forward on the first pull: same fault as the clean, amplified by
+    the wider grip'
+  - 'Pressing out at the catch: arms are not fast enough; drill the high pull and
+    turnover speed separately'
+  - 'Catching with a forward lean: shoulder mobility or thoracic restriction — address
+    before loading'
+  cue_points:
+  - 'Grip: snatch width — outside the knurling, wide enough that bar hangs at the
+    hip crease when standing'
+  - 'First pull identical to the clean: bar over mid-foot, back arched'
+  - 'High pull: extend hips explosively and pull elbows up and out — bar should reach
+    chin height before the catch'
+  - Punch hands overhead and drop into a partial squat to receive — the bar should
+    be moving upward as you meet it
+  - Lock out with straight arms; the catch is not a press — arms and bar arrive locked
+    simultaneously
+  description: The power snatch pulls the bar from the floor to full overhead lockout
+    in one movement, receiving it above parallel with a wide snatch grip. The receiving
+    position is a partial overhead squat rather than a full squat, making it more
+    accessible than the full snatch while building the same overhead pathway. Horsemen
+    program it in wave patterns at 80–90%.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - deltoids
+    highlight_secondary:
+    - erector_spinae
+    - core
+    - quadriceps
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - deltoids
+  muscles_secondary:
+  - erector_spinae
+  - core
+  - quadriceps
+pull_up_weighted:
+  animation:
+    type: none
+  coaching_focus: Treat it as a barbell lift, not a gym exercise -- set the shoulder
+    pack, engage the lats fully before pulling, and control the entire range as if
+    it were a heavy barbell movement.
+  common_errors:
+  - Using a kipping motion to complete reps -- weighted pull-ups are strict only;
+    any kip removes the strength stimulus
+  - Partial range of motion -- start from dead hang and pull to chest level; short
+    range shortcuts the lats
+  - Ego loading -- too much weight causes incomplete reps and compensatory movement;
+    reduce load to achieve full range
+  cue_points:
+  - Use a belt and weight plates or a dumbbell between the knees -- vest loading is
+    acceptable for lighter increments
+  - Dead hang start -- full elbow extension, shoulders packed (not shrugging), before
+    each rep
+  - Initiate with the lats, not the biceps -- cue "pull the elbows toward the floor"
+    to feel the lat engagement
+  - Pull the chest to the bar -- chin-over-bar is the minimum; chest-to-bar is the
+    standard
+  - Lower slowly to a full dead hang -- eccentric weighted pull-ups build strength
+    faster than concentric-only sets
+  description: Weighted pull-ups add external load (belt, vest, or dumbbell between
+    the knees) to the standard pull-up, making it the primary strength developer for
+    the vertical pull pattern. Gym Jones uses weighted pull-ups as the main pull strength
+    exercise, with adding load as the primary progression and reducing rest as the
+    secondary. Sets of 3-5 reps at heavy load develop max strength; sets of 5-8 develop
+    strength-endurance.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - biceps
+    highlight_secondary:
+    - rhomboids
+    - core
+  muscles_primary:
+  - lats
+  - biceps
+  - middle_trapezius
+  muscles_secondary:
+  - rhomboids
+  - forearms
+  - core
+push_jerk:
+  animation:
+    type: none
+  coaching_focus: 'Two dips, one movement: the second dip is a punch down under the
+    bar — aggressive and fast, not a slow descent.'
+  common_errors:
+  - 'Pressing out to lockout rather than punching under: this is a push press, not
+    a jerk'
+  - 'Receiving with soft elbows and pressing out: dangerous under heavy load; build
+    punching speed'
+  - 'Receiving feet too wide: makes standing up out of the catch very difficult'
+  cue_points:
+  - 'Dip and drive identical to push press: vertical torso, explosive leg extension'
+  - As the bar separates from the shoulders, punch down with the arms and rebend the
+    knees simultaneously
+  - Receive with arms locked out and feet in a slightly wider stance than the drive
+  - Stand to full extension to complete the rep — the catch position does not count
+    until you stand
+  - The bar should be moving upward as you punch under it — do not wait for it to
+    stop rising
+  description: The push jerk extends the push press by catching the bar in a quarter-squat
+    re-dip rather than pressing through to lockout — the athlete punches under the
+    bar. This allows heavier loading than the push press. Horsemen program it in wave
+    patterns (3/2/1) at 80–90% on Olympic Day and test 1RM.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - core
+    - pec
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - core
+  - pec
+push_press:
+  animation:
+    external_id: Push_Press
+    gif_alt: Push Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Press/0.jpg
+    type: gif
+  coaching_focus: The dip must be vertical — any forward lean during the dip makes
+    the bar drift forward and the press fails.
+  common_errors:
+  - 'Dipping forward: torso tilts during the dip, sending the bar path forward — drill
+    vertical dip'
+  - 'Soft dip with no explosion: using the legs only minimally, leaving the press
+    mostly to the arms'
+  - 'Arms pressing before legs are fully extended: legs first, then arms'
+  cue_points:
+  - 'Dip: short, quick — torso stays vertical, knees push out, 4–6 inch range'
+  - Drive explosively through the heels immediately after the dip — no pause at the
+    bottom
+  - The leg drive ends the moment the hips are fully extended; the arms take over
+    from there
+  - 'Lock out overhead with the same position as the strict press: bar over midfoot,
+    arms straight'
+  - The bar should feel light in the hands at the catch — if you are pressing hard
+    through the whole range, leg drive was insufficient
+  description: The push press uses a sharp hip-and-knee dip followed by explosive
+    leg drive to generate momentum that the arms carry to lockout overhead. It allows
+    significantly more load overhead than the strict press and develops power transfer
+    from the lower to upper body. Gym Jones features it in the Six-Way Barbell Complex;
+    Horsemen use it in power-endurance formats.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - core
+    - pec
+  muscles_primary:
+  - deltoids
+  - triceps
+  - quadriceps
+  muscles_secondary:
+  - glutes
+  - core
+  - pec
+ring_support_hold:
+  animation:
+    type: none
+  coaching_focus: Rings fully turned out (pronated) -- if the rings are neutral or
+    internal, the rotator cuff demand is minimal and the exercise is just a bar support
+    hold on unstable equipment.
+  common_errors:
+  - 'Rings not turned out: the RTO is the entire point of the exercise on rings; without
+    it this is a bar support hold'
+  - 'Elbows bent: even slightly bent elbows shift the load away from the isometric
+    shoulder demand'
+  - 'Body swinging: any movement amplifies the ring instability and turns a strength
+    hold into a balance challenge'
+  cue_points:
+  - Press up to full arm extension with rings in neutral grip, then actively rotate
+    them to full pronation (RTO)
+  - 'Scapulae depressed: shoulders away from ears, chest tall'
+  - 'Body in a hollow or tight position: glutes squeezed, core braced, feet together'
+  - Hold the RTO position -- the rings should look like they are pointing straight
+    out to the sides
+  - Breathe during the hold -- a held breath will cut the set short prematurely
+  description: The ring support hold (FLR on rings) suspends the body at the top of
+    the dip position on gymnastic rings with arms straight and rings turned out (RTO).
+    The ring instability dramatically increases rotator cuff and serratus anterior
+    demand compared to the bar support hold. Gym Jones programs accumulated ring support
+    holds on accumulation days. It is the foundational gymnastics shoulder conditioning
+    exercise.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - rotator_cuff
+    - serratus
+    highlight_secondary:
+    - triceps
+    - core
+    - upper_back
+  muscles_primary:
+  - deltoids
+  - rotator_cuff
+  - serratus
+  muscles_secondary:
+  - triceps
+  - core
+  - upper_back
+romanian_deadlift:
+  animation:
+    external_id: Romanian_Deadlift
+    gif_alt: Romanian Deadlift
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg
+    type: gif
+  coaching_focus: The bar should graze your legs all the way down — if it swings away
+    from you, you have lost the hip hinge.
+  common_errors:
+  - Rounding the lower back on descent — almost always a hamstring flexibility limitation;
+    limit range until mobility improves
+  - Bar swinging away from the legs — losing the hip hinge; bar should stay within
+    2 inches of your legs
+  - Bending the knees too much — turns it into a conventional deadlift with a short
+    range; keep the knee angle constant once set
+  cue_points:
+  - Start from standing with a proud chest and packed shoulders
+  - Initiate by pushing your hips back — not by bending the knees or rounding forward
+  - Soft bend in the knees throughout, but they do not drive the movement
+  - Descend until you feel a strong hamstring stretch — typically just below the knee
+  - Bar tracks close to the legs; think of shaving your shins on the way down
+  - Return by driving hips forward to standing, not by lifting the chest
+  description: The Romanian deadlift initiates from standing and descends with a soft-knee
+    hip hinge until the hamstrings reach end-range, then returns to full hip extension
+    — the bar never touches the floor. It builds hamstring length under load and posterior-chain
+    resilience. Gym Jones programs 3x10 as an accumulation staple.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - adductors
+    - core
+    - forearms
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - adductors
+  - core
+  - forearms
+row_interval:
+  animation:
+    type: none
+  coaching_focus: Max effort from the first stroke to the last -- interval rowing
+    is an all-out effort every rep; holding back for later reps is training the wrong
+    adaptation.
+  common_errors:
+  - Pacing the interval -- there is no benefit to pacing a 30-second effort; all-out
+    is the correct approach
+  - Breaking technique at high rate -- even at 30+ SPM, drive sequence must remain
+    legs-back-arms; lurching is not rowing
+  - Programming too frequently -- interval rowing is high CNS load; more than twice
+    per week overreaches most athletes
+  cue_points:
+  - Set target distance or split before starting -- do not adjust goals after the
+    set begins
+  - Drive as hard as possible from the first stroke -- the 30-second duration allows
+    near-maximal power throughout
+  - 'Stroke rate at max effort: 28-34 SPM -- technique must not completely break down
+    at high rate'
+  - 'During the 90-second rest: stay on the rower and row very easily -- do not step
+    off'
+  - If the distance target cannot be met, rest is too short or intensity is too high
+    -- adjust the protocol, not the effort
+  description: High-intensity rowing intervals at Zone 4-5 develop anaerobic capacity
+    and maximal aerobic power. Gym Jones uses 15 x 30-second rows with 90-second rest,
+    with target distance incrementing 1m per set (150m ascending to 165m). Tabata
+    format (20 seconds on / 10 seconds off) is an alternative. High CNS demand limits
+    programming to a maximum of twice per week.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - lats
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  - lats
+  muscles_secondary:
+  - quadriceps
+  - core
+  - biceps
+ruck:
+  animation:
+    type: none
+  coaching_focus: The ruck is aerobic training, not a strength test -- keep the pace
+    slow enough to breathe through the nose; if you are mouth-breathing, slow down
+    or reduce load.
+  common_errors:
+  - 'Too much load too soon: the Fan Dance standard takes months of progressive loading
+    to prepare the joints and connective tissue'
+  - 'Waist belt not used: without the waist belt, all 30 kg rides on the shoulders
+    and the upper back fails long before the legs'
+  - 'Pace too fast: rucking at a pace that requires mouth-breathing is not Zone 2
+    aerobic training -- slow down'
+  cue_points:
+  - 'Pack fit: waist belt takes 70-80% of the load; shoulder straps are stabilizers,
+    not load-bearers'
+  - 'Posture: the pack pulls backward; drive the hips forward and maintain an upright
+    torso'
+  - 'Pace: conversational effort (Zone 2) for most ruck training -- sustainable for
+    the full duration'
+  - 'Progress load conservatively: add no more than 10% load per week; the feet, ankles,
+    and knees adapt slowly'
+  - 'Footwear: stiff-soled boots or trail shoes prevent foot fatigue at distances
+    over 10 km'
+  description: 'The ruck (loaded walk or run) carries a weighted pack for distance
+    and time as an aerobic conditioning modality. Horsemen program the Fan Dance standard
+    (22 km, +1000m elevation, 30 kg pack, under 4 hours) as the peak ruck benchmark.
+    Uphill Athlete uses rucking at 10-20% bodyweight for aerobic base development.
+    Gym Jones programs 90-120 minute recovery hikes with 20-30 lb packs. Pack load
+    progression: distance first, then load, then speed.'
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    highlight_secondary:
+    - core
+    - upper_back
+    - calves
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - core
+  - upper_back
+  - calves
+single_leg_squat_box:
+  animation:
+    external_id: Single-Leg_High_Box_Squat
+    gif_alt: Single-Leg Squat (Box)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single-Leg_High_Box_Squat/0.jpg
+    type: gif
+  coaching_focus: The heel touch is a target, not a rest -- the movement must maintain
+    eccentric control all the way to the touch; no dropping and rebounding off the
+    floor.
+  common_errors:
+  - 'Sitting down onto the ground: the non-working foot should only tap the ground,
+    not accept weight'
+  - 'Forward torso lean: the more upright the torso, the more the glute is working
+    and the less the lower back is compensating'
+  - 'Box too high for current strength: if the eccentric cannot be controlled, reduce
+    box height'
+  cue_points:
+  - Stand at the edge of the box on one leg; the non-working leg hangs off the edge
+  - Descend on the working leg, controlling the movement all the way until the non-working
+    heel touches the ground below
+  - The eccentric is the primary training stimulus -- take 2-3 seconds to descend
+  - Touch the ground and return to standing immediately without pausing or pushing
+    off the ground
+  - Keep the torso as upright as possible; forward lean shifts the work from the glute
+    to the lower back
+  description: The Gym Jones single-leg squat from a box has the athlete standing
+    on a raised surface (18-20 inches) and lowering on one leg until the non-working
+    heel touches the ground, then returning to standing. It is a primary single-leg
+    strength exercise in the Gym Jones Operator Fitness I and II protocols. The box
+    creates a longer eccentric range of motion than a pistol squat from the floor.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - core
+    - adductors
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
+  - adductors
+snatch:
+  animation:
+    external_id: Snatch
+    gif_alt: Snatch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Snatch/0.jpg
+    type: gif
+  coaching_focus: Speed through the middle is everything — slow down at the hip and
+    the bar can only go so high; the snatch lives and dies at the second pull.
+  common_errors:
+  - 'Early arm pull: bending elbows before full hip extension — the single most common
+    snatch error at every level'
+  - 'Bar drifting from the body: reduces mechanical advantage dramatically; drag the
+    bar up the thighs'
+  - 'Missing the overhead squat: receiving above parallel means load is too heavy
+    or drop speed too slow'
+  - 'Forward lean in the overhead squat catch: shoulder mobility and thoracic extension
+    restriction'
+  cue_points:
+  - 'Setup: wider grip, lower hip than the clean — a nearly horizontal back angle
+    allows a longer pulling range'
+  - 'First pull: maintain the back angle — hips and shoulders rise together until
+    the bar passes the knee'
+  - 'Transition (scoop): hips come through under the bar as the knee rebends — the
+    most technically demanding moment'
+  - 'Second pull: violent hip extension and shrug, elbows immediately high and wide'
+  - Drop under aggressively into an overhead squat to receive the bar
+  - Stand with bar locked overhead to complete the lift
+  description: The full Olympic snatch takes the bar from the floor to overhead lockout
+    in one movement, receiving it in a full overhead squat — the most demanding single
+    athletic movement in the barbell canon. It is an integrated test of hip power,
+    mobility, coordination, and overhead stability. Horsemen program at 80–90% in
+    wave patterns and test 1RM.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    - deltoids
+    highlight_secondary:
+    - quadriceps
+    - core
+    - calves
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  - deltoids
+  muscles_secondary:
+  - quadriceps
+  - core
+  - calves
+squat_clean:
+  animation:
+    external_id: Clean
+    gif_alt: Squat Clean
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean/0.jpg
+    type: gif
+  coaching_focus: The squat is received, not descended into — you drop under the bar,
+    not after it.
+  common_errors:
+  - 'Catching high and squatting down: arms are not fast enough and timing is off
+    — drill fast elbows'
+  - 'Elbows dropping in the catch squat: bar rolls forward off the shoulders'
+  - 'Feet landing too wide in the catch: makes standing up very difficult'
+  cue_points:
+  - The first and second pull are identical to the power clean — the difference is
+    in the catch
+  - As the bar reaches full hip extension, pull your elbows up and around aggressively
+    while simultaneously dropping into a full front squat
+  - The squat receives the bar; the bar does not pull you into the squat
+  - Feet transition from pulling stance to squat stance during the transition — practice
+    this footwork
+  - 'Stand out of the catch as a front squat: elbows high throughout'
+  description: The squat clean is the full Olympic clean — the bar is pulled from
+    the floor and received in a full-depth front squat, maximizing load by dropping
+    under the bar rather than meeting it high. It demands front-rack mobility, squat
+    depth, and fast footwork simultaneously, and is the competition standard for the
+    clean.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - quadriceps
+    highlight_secondary:
+    - erector_spinae
+    - deltoids
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - erector_spinae
+  - deltoids
+  - core
+suitcase_carry:
+  animation:
+    type: none
+  coaching_focus: The spine stays vertical as if a wall is pressed against your unloaded
+    side -- any tilt toward the bell means the carry is loading the spine laterally
+    rather than training the core.
+  common_errors:
+  - 'Leaning toward the bell: the lateral flexion is the error the exercise is designed
+    to prevent -- cue aggressively'
+  - 'Hip hike on the unloaded side: the pelvis tilts to unload the carry; the hips
+    must stay level'
+  - 'Too much load before the pattern is established: start lighter than feels necessary;
+    the carry will be harder than expected'
+  cue_points:
+  - Single bell or dumbbell held at arm length on one side; arm straight, shoulder
+    packed
+  - Actively resist the bell pulling the torso sideways -- the contralateral obliques
+    and QL are the intended workers
+  - Walk a straight line; any lateral drift in the path indicates trunk compensation
+  - Keep the arm straight at the side -- no elbow flexion, which would shift load
+    to the biceps
+  - Breathe normally and alternate sides each set or at the midpoint
+  description: The suitcase carry holds a single implement (kettlebell, dumbbell,
+    or heavy object) on one side and walks with an explicitly vertical torso -- the
+    coaching emphasis is on resisting the lateral pull of the asymmetric load. The
+    contralateral quadratus lumborum and obliques are the primary workers. Gym Jones
+    and Horsemen program it in loaded carry circuits alongside farmer and rack variants.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    highlight_secondary:
+    - forearms
+    - glutes
+    - adductors
+  muscles_primary:
+  - core
+  - upper_back
+  muscles_secondary:
+  - forearms
+  - glutes
+  - adductors
+swim_easy:
+  animation:
+    type: none
+  coaching_focus: Long stroke over high turnover -- each arm pull should generate
+    maximum distance per stroke; a high stroke rate with short pulls is less efficient
+    and more tiring.
+  common_errors:
+  - Head up during the pull -- the head must be neutral in the water; looking forward
+    increases drag and reduces propulsion
+  - Short pull that ends at the chest -- pull all the way to the hip; stopping early
+    wastes the most powerful part of the stroke
+  - High knee kick -- the kick should be compact; excessive knee bend creates drag
+    that exceeds the propulsion produced
+  cue_points:
+  - Focus on bilateral breathing (every 3 strokes) for symmetry and relaxed aerobic
+    output
+  - Enter the hand in line with the shoulder, not crossing the centerline -- crossing
+    causes fishtailing
+  - Pull through a full s-curve path under the body, finishing past the hip
+  - Kick from the hip, not the knee -- a high knee-bend kick creates drag; the flutter
+    should come from hip extension
+  - Exhale continuously underwater -- do not hold breath; exhale fully before the
+    turn to breathe
+  description: Easy swimming at Zone 1-2 is a zero-impact aerobic modality used for
+    recovery and aerobic base building when lower-limb injuries preclude running or
+    cycling. Gym Jones includes easy swimming as a recovery day format. Freestyle
+    (front crawl) is the most efficient stroke for conditioning. Technique is the
+    primary limiting factor -- poor freestyle mechanics significantly increase energy
+    cost per distance.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - shoulders
+    highlight_secondary:
+    - core
+    - glutes
+  muscles_primary:
+  - lats
+  - shoulders
+  - core
+  muscles_secondary:
+  - glutes
+  - hamstrings
+  - triceps
+thruster:
+  animation:
+    type: none
+  coaching_focus: The squat drives the press — if you hit the front squat and then
+    press as a separate movement, you are doing two movements, not one.
+  common_errors:
+  - 'Two-movement thruster: stopping at the top of the squat before pressing — the
+    hip drive is lost'
+  - 'Elbows dropping in the front rack during the squat: bar rolls off the shoulders'
+  - 'Receiving the bar back from overhead with soft elbows: bar crashes into the front
+    rack and breaks the rhythm'
+  - 'Leaning forward under fatigue: the front rack collapses and the bar path worsens
+    with every rep'
+  cue_points:
+  - 'Front rack identical to the front squat: elbows high and forward throughout the
+    descent'
+  - 'Drive out of the squat with aggression: the upward momentum carries through the
+    torso into the press'
+  - 'No pause between the squat and press: the hips extend and the press begins before
+    you are standing'
+  - Lock out overhead with straight arms and stand tall — do not lean forward at the
+    top
+  - On the way down, absorb the bar back into the front rack and descend immediately
+    — efficient cycling requires no pause at the top
+  description: The thruster is a front squat driven continuously into a push press
+    — the bar leaves the shoulders as the hips extend and is pressed to lockout in
+    one unbroken movement. It is one of the most metabolically demanding barbell movements,
+    combining lower-body power with overhead pressing in a cyclical pattern. Featured
+    in CrossFit benchmark Fran (21-15-9) and Horsemen breathing ladder formats.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - hamstrings
+wall_squat:
+  animation:
+    type: none
+  coaching_focus: Touch the wall with the toes at all times -- if the toes have to
+    move away from the wall to reach depth, the ankle and hip mobility that are limiting
+    the squat have been found.
+  common_errors:
+  - 'Moving the toes away from the wall to achieve depth: this accommodates the restriction
+    rather than revealing it'
+  - 'Using the hands on the wall to pull into depth: the drill is self-assessed; using
+    the wall as an assist changes the test'
+  - 'Feet too wide: a very wide stance bypasses the ankle dorsiflexion requirement
+    and allows depth without addressing the restriction'
+  cue_points:
+  - Stand with toes touching the wall, feet hip-width, toes angled out slightly
+  - Squat to full depth with the knees tracking over the toes and touching the wall
+  - Hands on the wall for balance as needed
+  - The torso must stay relatively upright -- the wall prevents the forward lean that
+    compensates for mobility deficits
+  - 5 reps; use the feedback to direct the mobility work for that session
+  description: 'The wall squat (Gym Jones) is a squat mobility drill with the toes
+    touching a wall -- the wall enforces a vertical shin position and upright torso,
+    simultaneously testing ankle dorsiflexion, hip flexor mobility, and thoracic extension.
+    Gym Jones programs 2-3 sets of 5 before every lower-body strength or circuit session.
+    The wall is the diagnostic: touching the wall with the toes while achieving full
+    depth reveals the actual mobility requirement, not the athlete compensating with
+    a forward lean.'
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+weighted_step_up:
+  animation:
+    type: none
+  coaching_focus: The trailing leg is dead weight — if it contributes at all, you
+    are doing an assisted step-up, not a weighted step-up.
+  common_errors:
+  - 'Pushing off the trailing foot: the most common cheat; trailing leg touches only
+    as a balance point'
+  - 'Foot not fully on the box: stepping with the ball of the foot reduces stability'
+  - 'Forward lean: loses the upright torso and reduces the quad demand'
+  cue_points:
+  - Place the entire foot on the box before beginning the drive — not just the toes
+  - Drive through the heel of the working leg; the trailing knee brushes past the
+    box without pushing off
+  - Torso stays upright — do not lean forward to use momentum
+  - 'Work each side independently: complete all reps on one leg then the other'
+  - 'The step-down is also unilateral: lower with control on the working leg'
+  description: The weighted step-up places the barbell on the back and has the athlete
+    step up to a 20-inch box relying exclusively on the leading leg — no push from
+    the trailing leg. Gym Jones programs it as a heavy single-leg strength movement
+    with 5x2 each side at near-maximal load, building the unilateral deployment strength
+    critical for field performance.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" fill="none">
+  <!-- Anterior (front) view body silhouette with named muscle regions -->
+
+  <!-- Head -->
+  <ellipse id="head" cx="100" cy="30" rx="20" ry="24" fill="currentColor" opacity="0.15"/>
+
+  <!-- Neck -->
+  <rect id="neck" x="92" y="52" width="16" height="14" rx="4" fill="currentColor" opacity="0.15"/>
+
+  <!-- Left shoulder / deltoid -->
+  <ellipse id="delt_left" cx="68" cy="78" rx="16" ry="12" fill="currentColor" opacity="0.15"/>
+  <!-- Right shoulder / deltoid -->
+  <ellipse id="delt_right" cx="132" cy="78" rx="16" ry="12" fill="currentColor" opacity="0.15"/>
+
+  <!-- Pectorals -->
+  <path id="pec" d="M78 70 Q100 78 122 70 L126 100 Q100 110 74 100 Z" fill="currentColor" opacity="0.15"/>
+
+  <!-- Upper abs / core -->
+  <rect id="core" x="84" y="102" width="32" height="36" rx="6" fill="currentColor" opacity="0.15"/>
+
+  <!-- Lower abs -->
+  <rect id="lower_abs" x="86" y="138" width="28" height="20" rx="4" fill="currentColor" opacity="0.15"/>
+
+  <!-- Left bicep -->
+  <ellipse id="bicep_left" cx="62" cy="108" rx="10" ry="18" fill="currentColor" opacity="0.15"/>
+  <!-- Right bicep -->
+  <ellipse id="bicep_right" cx="138" cy="108" rx="10" ry="18" fill="currentColor" opacity="0.15"/>
+
+  <!-- Left forearm -->
+  <rect id="forearm_left" x="53" y="128" width="14" height="30" rx="6" fill="currentColor" opacity="0.15"/>
+  <!-- Right forearm -->
+  <rect id="forearm_right" x="133" y="128" width="14" height="30" rx="6" fill="currentColor" opacity="0.15"/>
+
+  <!-- Hip / adductor area -->
+  <path id="adductor" d="M82 158 L118 158 L122 180 Q100 188 78 180 Z" fill="currentColor" opacity="0.15"/>
+
+  <!-- Left quad -->
+  <ellipse id="quad_left" cx="87" cy="220" rx="16" ry="34" fill="currentColor" opacity="0.15"/>
+  <!-- Right quad -->
+  <ellipse id="quad_right" cx="113" cy="220" rx="16" ry="34" fill="currentColor" opacity="0.15"/>
+
+  <!-- Left knee -->
+  <ellipse id="knee_left" cx="86" cy="258" rx="12" ry="10" fill="currentColor" opacity="0.12"/>
+  <!-- Right knee -->
+  <ellipse id="knee_right" cx="114" cy="258" rx="12" ry="10" fill="currentColor" opacity="0.12"/>
+
+  <!-- Left calf -->
+  <ellipse id="calf_left" cx="86" cy="302" rx="11" ry="26" fill="currentColor" opacity="0.15"/>
+  <!-- Right calf -->
+  <ellipse id="calf_right" cx="114" cy="302" rx="11" ry="26" fill="currentColor" opacity="0.15"/>
+
+  <!-- Body outline -->
+  <path d="M80 66 C70 66 52 70 52 80 L42 130 L46 168 L54 190 L72 188 L74 160 L100 165 L126 160 L128 188 L146 190 L154 168 L158 130 L148 80 C148 70 130 66 120 66 Q115 54 100 54 Q85 54 80 66Z"
+        stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
+
+  <!-- Legs outline -->
+  <path d="M72 188 L70 250 L76 280 L80 340 L92 340 L96 280 L100 260 L104 280 L108 340 L120 340 L124 280 L130 250 L128 188"
+        stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
+
+  <!-- Arms outline -->
+  <path d="M52 80 L44 140 L50 170 L64 170 L68 140 L68 80"
+        stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <path d="M148 80 L156 140 L150 170 L136 170 L132 140 L132 80"
+        stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
+</svg>

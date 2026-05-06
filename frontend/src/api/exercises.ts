@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
-import type { Exercise, ExerciseFilters } from './types'
+import type { Exercise, ExerciseFilters, ExerciseMedia } from './types'
 
 function applyFilters(exercises: Exercise[], filters?: ExerciseFilters): Exercise[] {
   if (!filters) return exercises
@@ -46,6 +46,15 @@ export function useCreateExercise() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.exercises.all })
     },
+  })
+}
+
+export function useExerciseMedia(exerciseId: string | null) {
+  return useQuery({
+    queryKey: exerciseId ? queryKeys.exercises.media(exerciseId) : ([] as unknown as readonly string[]),
+    queryFn: () => apiClient.get<ExerciseMedia>(`/exercises/${exerciseId}/media`) as unknown as Promise<ExerciseMedia>,
+    enabled: !!exerciseId,
+    staleTime: Infinity,
   })
 }
 

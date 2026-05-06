@@ -1,0 +1,218 @@
+box_squat:
+  animation:
+    external_id: Box_Squat
+    gif_alt: Box Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Box_Squat/0.jpg
+    type: gif
+  coaching_focus: Sit back to the box — if your shins angle forward, you are squatting
+    to the box rather than sitting back to it.
+  common_errors:
+  - Rocking forward off the box using momentum — defeats the purpose; complete stop
+    required
+  - Sitting straight down rather than back — turns it into a back squat with a box
+    as a depth marker
+  - Losing trunk tension during the pause — leads to spinal flexion under load on
+    the ascent
+  cue_points:
+  - Actively sit back, not down — shin angle should be close to vertical or even past
+    vertical
+  - Pause completely on the box with full hip relaxation before driving; no bouncing
+  - Keep tension through the trunk during the pause — only the hips relax, not the
+    brace
+  - Drive through the heels and push the floor away on ascent
+  - Keep knees tracking over toes throughout; they will want to collapse if you sit
+    back properly
+  description: The box squat is a posterior-chain emphasis variant where the athlete
+    sits back to a box and pauses before rising, removing the stretch reflex and demanding
+    deliberate hip-extensor recruitment. The pause eliminates elastic energy and exposes
+    any reliance on bounce, making it an excellent diagnostic and developer of starting
+    strength from the bottom.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - quadriceps
+    - adductors
+    - core
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - quadriceps
+  - adductors
+  - core
+close_grip_bench:
+  animation:
+    external_id: Close-Grip_Barbell_Bench_Press
+    gif_alt: Close-Grip Bench Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Barbell_Bench_Press/0.jpg
+    type: gif
+  coaching_focus: Grip inside shoulder width — but not so narrow that your wrists
+    deviate; wrists should stack directly over elbows at the bottom.
+  common_errors:
+  - 'Grip too narrow: causes wrist deviation and medial elbow stress; do not go narrower
+    than fist-width'
+  - 'Elbows flaring wide: negates the close-grip stimulus and strains the shoulder'
+  - Wrists bent backward under the bar — use wrist wraps or reduce load until wrist
+    strength improves
+  cue_points:
+  - 'Grip: index fingers on the smooth ring of a standard bar, or about 6–8 inches
+    apart'
+  - Elbows tuck tight to the torso throughout — they should brush your ribcage on
+    the way down
+  - Same upper-back tightness and foot drive as conventional bench press
+  - Bar touches lower chest to sternum; the path is more vertical than wide-grip due
+    to tucked elbows
+  - Lockout achieved by tricep extension, not shoulder elevation
+  description: The close-grip bench press narrows the grip to just inside shoulder
+    width, tucking the elbows and shifting primary load from the pectorals to the
+    triceps and medial deltoid. It serves as a tricep-dominant pressing accessory
+    and an elbow-friendly pressing variant for athletes managing shoulder issues.
+  muscle_diagram:
+    highlight_primary:
+    - triceps
+    - pec
+    highlight_secondary:
+    - deltoids
+    - core
+  muscles_primary:
+  - triceps
+  - pec
+  muscles_secondary:
+  - deltoids
+  - core
+good_morning:
+  animation:
+    external_id: Good_Morning
+    gif_alt: Good Morning
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Good_Morning/0.jpg
+    type: gif
+  coaching_focus: This is a hip hinge with the bar on your back — the same neutral
+    spine rules as the deadlift apply, but now the weight is behind you, not in your
+    hands.
+  common_errors:
+  - 'Rounding the lower back: never acceptable here — reduce load or range of motion
+    immediately'
+  - 'Bar on the neck: causes cervical compression; it must rest on the muscle of the
+    upper traps'
+  - 'Squatting rather than hinging: knees bend too much and the exercise becomes something
+    else entirely'
+  - 'Loading too heavy: the spinal erectors are under tremendous load in the lengthened
+    position'
+  cue_points:
+  - 'Bar position: upper traps, not the neck — a high bar squat position'
+  - Soft bend in the knees throughout; the movement is driven by pushing the hips
+    back, not bending the knees
+  - Hinge until the torso is parallel to the floor or until hamstring tension stops
+    you with a neutral spine
+  - Return by pushing the hips forward — do not raise the chest first
+  - Use moderate loads for higher reps — this is not a max-effort movement
+  description: The good morning places the bar on the upper traps and uses a hip hinge
+    to bring the torso toward horizontal before returning to standing — loading the
+    hamstrings and spinal erectors in a lengthened position under compressive load.
+    Starting Strength programs it as a posterior-chain accessory; it develops the
+    exact position that fails in a heavy deadlift.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - glutes
+    - core
+    - adductors
+  muscles_primary:
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - glutes
+  - core
+  - adductors
+pendlay_row:
+  animation:
+    type: none
+  coaching_focus: Parallel to the floor, not 45 degrees — if your torso rises at all
+    during the set, the load is too heavy.
+  common_errors:
+  - Torso not parallel to the floor — most common fault; reduces the movement to a
+    standard row
+  - 'No dead stop: using elastic energy from the floor removes the power demand'
+  - 'Jerking the bar: the reset is supposed to eliminate momentum, not transfer it
+    from a bounce'
+  cue_points:
+  - Torso parallel to the floor throughout — harder than it sounds; most athletes
+    cheat by lifting the torso
+  - Dead stop on the floor between every rep — reset the position and brace before
+    each pull
+  - 'Explosive pull: the bar should accelerate toward the chest, not grind up slowly'
+  - Elbows drive up and back past the torso; wrists do not curl the bar up
+  - Lower under control — do not drop the bar from the top
+  description: The Pendlay row is a strict variation where the bar returns to the
+    floor dead-stop between every rep with the torso parallel to the floor, demanding
+    explosive pulling power and eliminating any momentum advantage. Named for strength
+    coach Glenn Pendlay, it rewards technique and punishes any torso rise.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - erector_spinae
+    highlight_secondary:
+    - biceps
+    - core
+    - hamstrings
+  muscles_primary:
+  - upper_back
+  - lats
+  - erector_spinae
+  muscles_secondary:
+  - biceps
+  - core
+  - hamstrings
+sumo_deadlift:
+  animation:
+    external_id: Sumo_Deadlift
+    gif_alt: Sumo Deadlift
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/0.jpg
+    type: gif
+  coaching_focus: Push the floor apart — actively spreading your feet against the
+    ground engages the adductors and abductors that make this stance efficient.
+  common_errors:
+  - Stance too narrow — defeats the leverage advantage; most athletes go wider than
+    feels natural initially
+  - Knees caving in on the pull — must cue outward knee drive aggressively
+  - Hips rising before the bar leaves the floor — same hip-shooting fault as conventional;
+    set the back and leg-press
+  cue_points:
+  - 'Stance: toes 45 degrees out, feet wide enough that shins are nearly vertical
+    at setup'
+  - Hips drop lower than in conventional — the torso is more upright
+  - Push knees out over toes throughout; they will collapse inward under fatigue
+  - Bar stays close to the inner leg on the way up
+  - Lock out by squeezing glutes — do not hyperextend
+  description: The sumo deadlift uses a wide stance with toes turned out and the grip
+    inside the knees, shifting load from the posterior chain toward the hip abductors
+    and quadriceps while reducing bar travel distance. It suits athletes with longer
+    torsos, limited hip mobility in conventional stance, or strong hip abduction patterns.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - adductors
+    - quadriceps
+    highlight_secondary:
+    - hamstrings
+    - erector_spinae
+    - core
+  muscles_primary:
+  - glutes
+  - adductors
+  - quadriceps
+  muscles_secondary:
+  - hamstrings
+  - erector_spinae
+  - core

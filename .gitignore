@@ -38,6 +38,9 @@ Thumbs.db
 .pdflibs/
 .claude/
 
+# Exercise media cache (local downloads, not committed)
+data/external_db_cache/
+
 # Personal health data & local databases
 data/apple_health_export/
 data/*.db

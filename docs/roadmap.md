@@ -636,6 +636,58 @@ Add `--event-date` flag so the system computes phase and week automatically from
 
 ---
 
+### Phase 9: Custom Exercise Animations (Lottie + SVG CSS) ⬜ TODO
+
+**Context:** Phases 1–5 of the exercise media system are complete — `data/exercise_media.yaml` has descriptions, cue points, and muscle diagrams for all 295 exercises. Phase 3 GIF matching sourced image URLs for 79 exercises from free-exercise-db. The remaining ~216 exercises have `animation.type: none`. This phase adds actual animations for the highest-value specialized exercises.
+
+**Frontend infrastructure is already in place** (`ExerciseAnimationPanel` handles `gif | lottie | svg_css | none`). Only content work and one package install remain.
+
+#### Step 1 — Install Lottie renderer
+
+```bash
+cd frontend && npm install @lottiefiles/dotlottie-react
+```
+
+Then swap the placeholder in `ExerciseAnimationPanel.tsx` for `<DotLottieReact src={animation.lottie_path} loop autoplay />`.
+
+#### Step 2 — Lottie sourcing (priority order)
+
+| Priority | Category | Target exercises | Source |
+|----------|----------|-----------------|--------|
+| 1 | Kelly Starrett mobility (top 20) | `hip_flexor_stretch`, `thoracic_extension`, `pigeon_pose`, `t_spine_rotation`, `ankle_mob`, `couch_stretch`, `banded_hip_distraction` | LottieFiles free fitness library |
+| 2 | Wildman KB ballistics | `kb_snatch`, `kb_jerk_single`, `kb_breathing_ladder`, `kb_swing_heavy`, `kb_clean_single` | LottieFiles or custom |
+| 3 | Ido Portal locomotion | `duck_walk`, `lizard_walk`, `horse_walk`, `role_basic`, `forward_roll`, `cartwheel` | Custom (After Effects / Rive) |
+
+Lottie files go in `frontend/public/animations/lottie/{exercise_id}.lottie`.
+
+Update `data/exercise_media.yaml` for each completed exercise:
+```yaml
+hip_flexor_stretch:
+  animation:
+    type: lottie
+    lottie_path: /animations/lottie/hip_flexor_stretch.lottie
+    lottie_source: lottiefiles
+```
+
+#### Step 3 — SVG CSS animations (~25 exercises)
+
+For remaining Ido Portal skill work (bridge progressions, handstand progressions) and rehab exercises with no Lottie match:
+
+- Files go in `frontend/public/animations/svg/{exercise_id}.svg`
+- Add CSS class `animate-exercise` to the SVG root
+- Define `@keyframes exercise-loop` in `frontend/src/index.css` (simple `transform: translateY` or `rotate` appropriate per movement)
+- Set `animation.type: svg_css` and `animation.svg_path: /animations/svg/{exercise_id}.svg` in manifest
+
+#### Acceptance criteria
+
+- [ ] `@lottiefiles/dotlottie-react` installed; `ExerciseAnimationPanel` renders Lottie animations
+- [ ] Kelly Starrett top 10 mobility exercises have working Lottie animations in the drawer
+- [ ] Wildman KB core ballistics (kb_snatch, kb_swing_heavy) have animations
+- [ ] SVG CSS fallback renders for at least 5 Ido Portal locomotion exercises
+- [ ] No regressions: exercises with `type: none` still render the category icon placeholder cleanly
+
+---
+
 ## Priority Order (If Starting Today)
 
 1. **Extract The Cell Standards PDF** — highest-leverage extraction; defines the benchmark layer that anchors everything else

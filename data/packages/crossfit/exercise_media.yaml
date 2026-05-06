@@ -1,0 +1,2029 @@
+bike_easy:
+  animation:
+    type: none
+  coaching_focus: Cadence over resistance -- maintain 85-100 RPM at low resistance
+    rather than grinding at 60 RPM in a high gear; higher cadence trains the cardiovascular
+    system more than the legs.
+  common_errors:
+  - Too much resistance -- grinding a heavy gear elevates HR above Z2 and shifts the
+    demand from aerobic to muscular
+  - Low cadence -- pedaling at 60 RPM is inefficient for aerobic training; aim for
+    85-100 RPM
+  - Using cycling as training rather than recovery -- Z2 bike should feel easy; if
+    it feels like work, reduce the intensity
+  cue_points:
+  - Maintain 85-100 RPM cadence -- use a cadence sensor or count strokes for 15 seconds
+    and multiply by 4
+  - Resistance should allow easy conversation throughout -- Zone 1-2 intensity only
+  - Heart rate should remain at or below AeT -- if HR climbs despite low resistance,
+    reduce cadence
+  - 'Seat height: hip fully extended at the bottom of the pedal stroke with a slight
+    knee bend -- not fully locked'
+  - 'In rehabilitation context: start with 10-15 minutes and build to 45-60 minutes
+    as tolerance increases'
+  description: Easy cycling at Zone 1-2 is the preferred aerobic rehabilitation modality
+    when running is contraindicated -- it provides aerobic stimulus with minimal joint
+    impact, making it the standard for post-surgical aerobic maintenance. Uphill Athlete
+    uses it for aerobic base building when impact is unavailable. Stationary or outdoor
+    formats are equivalent for metabolic adaptation.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - hamstrings
+    highlight_secondary:
+    - calves
+    - glutes
+  muscles_primary:
+  - quadriceps
+  - hamstrings
+  - calves
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - core
+bike_interval:
+  animation:
+    type: none
+  coaching_focus: Upper and lower body together -- the Assault bike demands arm drive
+    equal to leg drive; the mistake is to leg-press and ignore the arms, which loses
+    30-40% of the power output.
+  common_errors:
+  - Only using legs on the Assault bike -- the handles are powered by arm push-pull;
+    ignoring them wastes available output
+  - Pacing the Tabata working interval -- 20 seconds is short enough to go all out;
+    pacing means the correct intensity was not reached
+  - Seat height too low -- a low seat forces deep knee flexion and reduces power;
+    seat should allow near-full leg extension at the bottom
+  cue_points:
+  - 'On Assault/Echo bike: drive arms and legs simultaneously -- push arms down as
+    legs push forward'
+  - 'For Tabata format: max effort for 20 seconds, minimal movement for 10 seconds,
+    repeat 8 rounds'
+  - 'Cadence targets: push for maximum RPM on the working interval without sacrificing
+    smooth mechanics'
+  - 'For threshold intervals (5-8 min): find a sustained hard effort you can maintain
+    for the duration'
+  - 'Resistance on stationary bikes: set high enough that the legs have to push, not
+    spin freely'
+  description: High-intensity bike intervals at Zone 4-5 use Tabata protocol (20 seconds
+    on / 10 seconds off) or longer threshold efforts. The Assault bike (Echo bike)
+    is commonly used in mixed-modal conditioning for calorie or time targets. Cycling
+    intervals have lower injury risk than running intervals, making them useful when
+    running is contraindicated while maintaining anaerobic capacity.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - calves
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - calves
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - shoulders
+  - core
+box_jump:
+  animation:
+    external_id: Front_Box_Jump
+    gif_alt: Box Jump
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/0.jpg
+    type: gif
+  coaching_focus: Step down, do not jump down -- under fatigue, athletes jump down
+    from the box repeatedly, which accumulates Achilles tendon stress far beyond what
+    the workout itself intends.
+  common_errors:
+  - 'Jumping down from the box repeatedly: under fatigue this accumulates landing
+    impact load on the Achilles and patella that the workout design did not account
+    for'
+  - 'Landing with locked knees on the box: the entire lower extremity absorbs the
+    load when the knees are bent; locked-knee landing concentrates it at the joint'
+  - 'Scraping the shins on the box: the jump height is insufficient for the box height;
+    reduce box height or improve power'
+  cue_points:
+  - Approach the box at a comfortable distance; use a brief dip (arm swing optional)
+    to load the legs
+  - 'Explode through the entire foot: heels through to the balls of the feet as the
+    jump progresses'
+  - Land in a partial squat on top of the box with soft knees -- the landing should
+    be quiet
+  - Stand to full extension on top of the box before stepping or jumping off
+  - Step off the box -- one foot at a time; do not jump off under fatigue
+  description: The box jump is a standard plyometric -- an explosive two-leg jump
+    from the floor onto a box (24 inches for men, 20 for women in CrossFit standards).
+    Gym Jones programs it in conditioning circuits at 20-24 inch heights. It develops
+    lower-body explosive power and the reactive strength required for athletic movements.
+    The landing mechanics and the step-down are as important as the jump height for
+    long-term Achilles and patellar tendon health.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - core
+burpee:
+  animation:
+    type: none
+  coaching_focus: The quality of each component does not degrade because the exercise
+    is hard -- the push-up at the bottom must have chest contact and full lockout
+    at the top, regardless of pace.
+  common_errors:
+  - 'Omitting the push-up chest contact: the chest-to-floor push-up is half the exercise;
+    hovering an inch above and calling it a push-up is not a burpee'
+  - 'Worm-style from plank (snaking up): the feet should jump back under the hips
+    in one movement, not worming through the hips'
+  - 'No full extension at the jump: the jump must reach full hip and knee extension;
+    a half-jump does not complete the movement'
+  cue_points:
+  - Start standing; descend to a squat and place the hands on the floor
+  - Jump or step the feet back to a plank position; do not collapse into the plank
+  - 'Perform a push-up: chest to floor, full lockout -- this is a standard push-up
+    embedded in a burpee'
+  - Jump or step the feet back to squat position
+  - Jump vertically with arms overhead -- full extension at the top; clap overhead
+    as the standard
+  description: The burpee is a compound movement combining a squat thrust, push-up,
+    and vertical jump -- demanding coordinated transition through four distinct positions
+    in each rep. Marcus Filly programs controlled-pace burpees as an aerobic capacity
+    builder; Gym Jones uses them as the final punishing element in circuits. The burpee
+    simultaneously taxes the upper and lower body and cardiovascular system, making
+    it one of the most metabolically demanding bodyweight exercises.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - pec
+    highlight_secondary:
+    - core
+    - deltoids
+    - triceps
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - pec
+  muscles_secondary:
+  - core
+  - deltoids
+  - triceps
+chin_up:
+  animation:
+    external_id: Chin-Up
+    gif_alt: Chin-Up (Supinated)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Chin-Up/0.jpg
+    type: gif
+  coaching_focus: The supinated grip is not a cheat -- use it deliberately to train
+    the bicep-to-lat chain and to manage elbow loading, not to avoid the hard reps.
+  common_errors:
+  - 'Using chin-up exclusively to avoid the harder pronated pull-up: program both
+    to develop complete vertical pulling strength'
+  - 'Grip too wide: a wide supinated grip reduces the mechanical advantage of the
+    supination and loads the elbow awkwardly'
+  - 'Partial range of motion: same standards as the pull-up -- full extension at the
+    bottom, chin over bar at the top'
+  cue_points:
+  - Grip shoulder-width or slightly narrower with palms facing toward you
+  - Dead hang start -- identical to the pull-up; do not skip the full bottom position
+  - Drive the elbows back and feel the biceps engage early in the pull
+  - The chin clears the bar and the elbows reach full extension at the bottom -- same
+    standards apply
+  - Elbows should track in line with the forearms throughout; avoid flaring them wide
+  description: The chin-up is the supinated-grip pull-up variant where the palms face
+    toward the athlete throughout the movement. Greater bicep activation and a slightly
+    shorter effective lever make it modestly easier for most athletes than the pronated
+    pull-up at the same bodyweight. Marcus Filly programs it as a useful substitute
+    when pronated-grip volume is high and elbow fatigue accumulates.
+  muscle_diagram:
+    highlight_primary:
+    - biceps
+    - lats
+    - upper_back
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - biceps
+  - lats
+  - upper_back
+  muscles_secondary:
+  - core
+  - forearms
+dead_hang:
+  animation:
+    type: none
+  coaching_focus: Practice both passive and active versions deliberately -- passive
+    develops shoulder range of motion; active develops scapular depression strength.
+  common_errors:
+  - 'Only ever hanging actively: the passive hang is the one that decompresses the
+    spine and lengthens the shoulder capsule'
+  - 'Bending the elbows during active hang: scapular depression should happen with
+    straight arms -- elbow bend shifts the load to the biceps'
+  - 'Gripping too hard during long holds: a relaxed grip with active scapula is more
+    sustainable than a white-knuckle hang'
+  cue_points:
+  - 'Passive hang: allow the shoulders to fully elevate into the ears -- this is a
+    shoulder mobility exercise'
+  - 'Active hang: from the passive position, depress the scapulae (pull shoulders
+    away from ears) without bending the elbows'
+  - Switch between passive and active every 10-15 seconds within a single set to train
+    the full shoulder range
+  - 'Grip: alternate between overhand and neutral grip across sets to reduce forearm
+    fatigue'
+  - For timed sets, breathe slowly and deliberately -- tension in the hang comes from
+    breathing, not from gripping harder
+  description: The dead hang suspends the body from a bar or rings with arms fully
+    extended and no active movement. Gym Jones programs 300-second accumulated dead
+    hang as a shoulder health and grip endurance component on accumulation days. Both
+    passive (shoulders shrugged) and active (scapular depression) variants are useful
+    and train different aspects of shoulder stability. Spinal decompression and shoulder
+    passive range of motion are consistent benefits.
+  muscle_diagram:
+    highlight_primary:
+    - forearms
+    - upper_back
+    highlight_secondary:
+    - lats
+    - core
+  muscles_primary:
+  - forearms
+  - upper_back
+  muscles_secondary:
+  - lats
+  - core
+dip:
+  animation:
+    external_id: Parallel_Bar_Dip
+    gif_alt: Dip (Bar / Parallel Bars)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Parallel_Bar_Dip/0.jpg
+    type: gif
+  coaching_focus: At the bottom, the upper arms must reach parallel -- any shallower
+    and you are training a fraction of the movement and missing the strength stimulus.
+  common_errors:
+  - 'Shallow dips: upper arms never reach parallel -- build false strength that fails
+    when the full range is tested'
+  - 'Excessive forward lean: leaning too far forward shifts too much load to the anterior
+    shoulder capsule; moderate lean is correct'
+  - 'Swinging the body: initiating with a hip kick or torso swing; dips should be
+    initiated from the shoulder, not the hips'
+  cue_points:
+  - Mount the bars with arms straight, scapulae depressed and retracted -- establish
+    the support position before descending
+  - Bend the knees slightly and cross the feet to reduce swinging
+  - Descend with elbows tracking back -- not flaring excessively wide
+  - Reach the bottom with upper arms parallel to the floor; a slight forward lean
+    increases the pec demand
+  - Press to full lockout, not 95% -- the last 5% of extension is where the triceps
+    and lockout strength develop
+  description: The parallel bar dip is a fundamental vertical pressing movement --
+    lowering the body between two bars until the upper arms are parallel to the floor,
+    then pressing to full lockout. A slight forward lean shifts emphasis to the pectorals;
+    a more upright torso emphasizes the triceps. Marcus Filly treats dips as one of
+    the two primary bodyweight push movements alongside push-up variants. Full range
+    of motion requires significant shoulder mobility.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+dip_ring:
+  animation:
+    type: none
+  coaching_focus: Turn the rings out at the top -- the rings-turned-out (RTO) position
+    is the expression of full shoulder engagement and is the goal of every rep.
+  common_errors:
+  - Rings flaring wide on the descent -- actively squeeze the rings inward throughout
+    the range
+  - No RTO at lockout -- the rings must turn out; no partial RTO qualifies as a completed
+    ring dip
+  - Short depth -- the upper arm must clear below the ring level on every rep; partial
+    range does not train the chest through full length
+  cue_points:
+  - Mount the rings in a support hold (RTO) and establish a locked, stable position
+    before beginning
+  - Lower with full control -- rings tend to drift apart as the elbows bend; actively
+    keep them tight
+  - Descend until the upper arms are below the rings (full depth, shoulder below elbow)
+  - Press back to lockout and rotate the rings outward actively as the arms straighten
+  - Maintain core tension throughout -- do not arch the lower back to compensate for
+    weak pressing
+  description: The ring dip is a vertical push on gymnastic rings with significantly
+    greater pectoralis minor, serratus anterior, and rotator cuff demand than the
+    bar dip -- the free rotation of the rings requires active shoulder stabilization
+    throughout the full range. Turning the rings out at lockout (RTO) is mandatory
+    for the complete movement. CrossFit benchmark Elizabeth programs ring dips as
+    a primary movement.
+  muscle_diagram:
+    highlight_primary:
+    - chest
+    - triceps
+    - shoulders
+    highlight_secondary:
+    - serratus_anterior
+    - core
+  muscles_primary:
+  - chest
+  - triceps
+  - shoulders
+  muscles_secondary:
+  - serratus_anterior
+  - pec_minor
+  - core
+farmer_carry_db:
+  animation:
+    type: none
+  coaching_focus: Treat this as a skill practice for the farmer carry pattern -- the
+    load is less important than the positional integrity; build the pattern here before
+    adding load.
+  common_errors:
+  - 'Using too light a load and losing the postural challenge: farmer carries require
+    sufficient load to challenge the grip and trunk'
+  - 'Allowing the dumbbells to rotate and swing: grip them firmly and maintain a neutral
+    wrist throughout'
+  - 'Walking too fast: a faster pace does not increase the carry stimulus; it reduces
+    it by allowing the bells to pendulum'
+  cue_points:
+  - Dumbbells held at the sides in a neutral grip; arms straight, shoulders packed
+  - Upright torso with active core throughout the walk
+  - Controlled gait; dumbbells should not sway or rotate during the walk
+  - Complete all prescribed distance before setting them down
+  - Progress to kettlebells once the dumbbell carry can be performed with perfect
+    posture for the target distance
+  description: The dumbbell farmer carry is the entry-level farmer carry -- accessible
+    with standard gym equipment and appropriate for athletes learning the mechanics
+    before progressing to kettlebells or barbells. Gym Jones uses dumbbell carries
+    in circuit and accumulation days. The mechanics, coaching cues, and standards
+    are identical to the kettlebell variant.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - forearms
+    - core
+    highlight_secondary:
+    - quadriceps
+    - glutes
+    - calves
+  muscles_primary:
+  - upper_back
+  - forearms
+  - core
+  muscles_secondary:
+  - quadriceps
+  - glutes
+  - calves
+farmer_carry_kb:
+  animation:
+    type: none
+  coaching_focus: Stand tall and do not lean -- any torso tilt toward either side
+    means the core is not managing the bilateral load; reduce weight or distance.
+  common_errors:
+  - 'Forward lean under load: the combined weight pulls the trunk into flexion; drive
+    the hips forward and keep the chest tall'
+  - 'Shoulder elevation: the bells pull the shoulders up; pack them actively with
+    the lats'
+  - 'Too-fast walking pace: speed increases bell swing and reduces the anti-sway stability
+    demand'
+  cue_points:
+  - Both bells hang at arm length at the sides; arms straight, no elbow bend
+  - 'Pack both shoulders: lats engaged, scapulae neither elevated nor rolled forward'
+  - Upright torso throughout -- the combined load should not pull the trunk into forward
+    lean
+  - Walk with a normal, controlled gait; the bells should not swing forward and back
+  - Set them down cleanly at the end of the set
+  description: The kettlebell farmer carry holds two kettlebells at the sides and
+    walks for distance or time -- the standard double-bell farmer carry. It develops
+    bilateral grip endurance, trapezius anti-elevation strength, and the postural
+    integrity to carry significant load without lateral trunk flexion or forward lean.
+    Horsemen and Gym Jones use it as a foundational GPP carry.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - forearms
+    - core
+    highlight_secondary:
+    - quadriceps
+    - glutes
+    - calves
+  muscles_primary:
+  - upper_back
+  - forearms
+  - core
+  muscles_secondary:
+  - quadriceps
+  - glutes
+  - calves
+handstand_hold:
+  animation:
+    type: none
+  coaching_focus: Push the floor away actively -- if you are just resting on your
+    arms, the shoulders are passive and this is a balance exercise, not a strength
+    one.
+  common_errors:
+  - 'Banana shape: the lower back hyperextends because the glutes are not engaged
+    -- squeeze them throughout'
+  - 'Head looking forward: the head should be neutral, not craning forward to look
+    at the room'
+  - 'Not pushing the floor: passive arms make this a balance drill; the push develops
+    the overhead strength needed for HSPU'
+  cue_points:
+  - Kick up to the wall carefully; establish the position before beginning the timed
+    hold
+  - 'Push the floor away: active shoulder depression and protraction -- hands push
+    down, shoulders push up'
+  - 'Body should be as straight as possible: engage the glutes and core to prevent
+    the arch that naturally appears in the chest-to-wall position'
+  - Eyes look at the floor between the hands -- not at the wall
+  - Breathe normally; a held breath will end the set prematurely and elevates blood
+    pressure unnecessarily
+  description: 'The handstand hold against the wall builds inverted shoulder stability
+    and overhead compression tolerance. Chest-to-wall and back-to-wall variants train
+    different alignment patterns: chest-to-wall creates a slight arch that must be
+    actively corrected; back-to-wall enforces a straighter body line. Ido Portal treats
+    daily inversion practice as a fundamental movement habit. CrossFit programs it
+    as the base position before HSPU.'
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - serratus
+    - upper_back
+  muscles_primary:
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - serratus
+  - upper_back
+handstand_push_up:
+  animation:
+    type: none
+  coaching_focus: Head touches the floor, not the wall -- if the head drifts to the
+    wall, the press has become horizontal; the path must be vertical with the head
+    going straight down between the hands.
+  common_errors:
+  - 'Head drifting toward the wall: turns a vertical press into a pike push-up --
+    the head must go between the hands, not toward the wall'
+  - 'Elbows flaring excessively: some flare is normal in HSPU; extreme flare shifts
+    load to the anterior shoulder capsule'
+  - 'Partial ROM: head hovering an inch above the floor; the floor contact is the
+    standard and there are no partial HSPU in competition'
+  cue_points:
+  - Kick up to chest-to-wall, hands shoulder-width, fingers spread for stability
+  - 'Lower with control: the head descends straight down between the hands, not forward
+    toward the wall'
+  - Touch the floor (or parallettes) -- any contact point short of this is a partial
+    rep
+  - Press in a straight line back to lockout; the path should be identical on the
+    way up
+  - 'At lockout: push the floor, protract the scapulae, body in a tight line against
+    the wall'
+  description: The wall handstand push-up (HSPU) lowers the head to the floor from
+    a handstand position against the wall and presses back to lockout -- the maximal
+    vertical pressing movement available with only bodyweight. CrossFit and Gym Jones
+    program it as the primary overhead pressing bodyweight standard. The deficit variant
+    (hands on parallettes) increases range of motion and difficulty. Strict HSPU is
+    the strength standard; kipping HSPU is a separate met-con skill.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - upper_back
+    - serratus
+  muscles_primary:
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - upper_back
+  - serratus
+jump_rope_double_under:
+  animation:
+    type: none
+  coaching_focus: Jump higher and flick the wrists faster -- the double under is a
+    jump with the same footwork as a single under but with two wrist rotations during
+    the airborne phase.
+  common_errors:
+  - Piking the hips (butt kick) -- the double under requires a straight body in the
+    air, not a pike; hip flexion slows the jump and creates timing errors
+  - Arms swinging forward -- the rope spins from the wrists with arms beside the body;
+    forward arm swing changes the rope arc and causes misses
+  - Rushing from single to double without wrist speed -- practice the wrist acceleration
+    in the air before attempting full doubles
+  cue_points:
+  - Jump height increases to 3-4 inches off the ground -- enough air time for two
+    rope passes
+  - Wrist rotation accelerates -- the rope must pass twice while airborne; practice
+    wrist speed before adding the jump
+  - Single-under cadence first, then convert to doubles -- the footwork pattern is
+    identical
+  - 'Rope length: the handles should reach the armpits when the rope is under the
+    feet; too long a rope slows it'
+  - Relax the shoulders -- tension in the upper body breaks wrist mechanics and disrupts
+    the timing
+  description: Double unders require the rope to pass twice under the feet per jump
+    -- demanding a higher jump, faster wrist rotation, and precise timing. They are
+    a CrossFit benchmark skill appearing in Annie (50-40-30-20-10 double unders and
+    sit-ups) and many other workouts. Rope length and wrist mechanics are the primary
+    limiting factors for beginners. The cardiovascular demand is significantly higher
+    than single unders.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    highlight_secondary:
+    - core
+    - wrist_extensors
+  muscles_primary:
+  - calves
+  - wrist_extensors
+  muscles_secondary:
+  - core
+  - shoulders
+  - tibialis_anterior
+jump_rope_single_under:
+  animation:
+    type: none
+  coaching_focus: Small jumps and wrist mechanics -- the rope should be turned by
+    the wrists, not the arms; and the jump should be just high enough to clear the
+    rope, not a full-height jump.
+  common_errors:
+  - Swinging the arms wide -- rope turning comes from the wrists; wide arms create
+    an inconsistent arc
+  - Jumping too high -- excessive jump height wastes energy and disrupts timing; match
+    jump height to rope clearance only
+  - Looking down -- keep eyes forward; looking at the rope disrupts posture and rhythm
+  cue_points:
+  - Hold the handles at hip height with elbows near the body -- handles too high forces
+    the rope to shorten
+  - Turn the rope with the wrists, not with the whole arm -- wrist circles generate
+    rope speed efficiently
+  - Jump just high enough for the rope to pass -- 1-2 inches off the ground is sufficient
+  - Land softly on the balls of the feet -- heavy landings fatigue the calves and
+    disrupt rhythm
+  - Maintain a consistent cadence -- smooth rhythm matters more than speed for skill
+    development
+  description: Single-under jump rope is the foundation skill -- the rope passes once
+    per jump at a pace accessible to beginners while still providing a light aerobic
+    stimulus. It builds the coordination and timing prerequisite for double unders.
+    In CrossFit programming, single unders substitute for double unders at a 3:1 ratio
+    in most scaling schemes.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    highlight_secondary:
+    - core
+    - shoulders
+  muscles_primary:
+  - calves
+  - tibialis_anterior
+  muscles_secondary:
+  - core
+  - shoulders
+  - wrist_extensors
+l_sit:
+  animation:
+    type: none
+  coaching_focus: The legs must be horizontal, not drooping -- if the legs drop below
+    parallel, the hip flexors have been exceeded for that duration; start shorter
+    and build.
+  common_errors:
+  - 'Legs drooping below horizontal: the hip flexors cannot sustain the position --
+    start with tuck-sit and progress'
+  - 'Elbows bending: scapular depression strength is the limiter -- dip support holds
+    build this prerequisite'
+  - 'Using momentum to get the legs up: the L-sit begins from a controlled leg raise,
+    not a kick'
+  cue_points:
+  - 'On parallettes: support position first -- arms straight, scapulae depressed,
+    hands just outside hips'
+  - Bring the knees up (tuck) first, then extend the legs to horizontal
+  - Hips press into slight flexion (beyond 90 degrees) to get the legs horizontal
+  - 'Arms remain straight throughout: any elbow bend indicates the scapular depression
+    strength has been exceeded'
+  - Hold for time -- progress from tuck (knees up) to extended (legs horizontal) as
+    strength develops
+  description: The L-sit holds the body supported on parallettes or the floor with
+    legs extended horizontally -- requiring hip flexor strength, scapular depression
+    strength, and integrated core control simultaneously. It is a milestone movement
+    in the Marcus Filly relative strength standards and Ido Portal gymnastics work.
+    The floor L-sit is harder than the parallette version (no clearance); both test
+    the same qualities.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - hip_flexors
+    highlight_secondary:
+    - deltoids
+    - triceps
+    - upper_back
+  muscles_primary:
+  - core
+  - hip_flexors
+  muscles_secondary:
+  - deltoids
+  - triceps
+  - upper_back
+lunge:
+  animation:
+    external_id: Barbell_Walking_Lunge
+    gif_alt: Walking Lunge
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Walking_Lunge/0.jpg
+    type: gif
+  coaching_focus: The front shin stays near-vertical at the bottom -- if the knee
+    shoots forward past the toes, the quad is overloading and the hip is not working.
+  common_errors:
+  - 'Knee-forward position: the front knee tracking over or past the toes means the
+    stride was too short and the front heel is lifting'
+  - 'Torso pitching forward: either a balance issue or a hip flexor tightness issue
+    on the trailing side -- address both'
+  - 'Back knee slamming the floor: the eccentric descent of the back knee should be
+    controlled throughout'
+  cue_points:
+  - Step forward with enough stride length that the front shin can stay vertical at
+    the bottom
+  - Back knee descends toward but does not slam the floor -- controlled descent, soft
+    tap if any contact
+  - 'Torso upright throughout: no forward lean; the chest stays tall'
+  - Drive through the front heel to stand and step through into the next lunge
+  - Arms can swing naturally for balance or be held at sides; add load by holding
+    dumbbells at the sides
+  description: The walking lunge is an alternating-leg unilateral lower-body movement
+    stepping forward into a lunge position with the back knee approaching the floor.
+    Gym Jones programs 2x20m walking lunges as single-leg accessory work. It develops
+    unilateral hip extension strength, single-leg stability, and the hip flexor length
+    required for efficient bipedal locomotion. It transfers directly to trail running,
+    step-ups, and split jerks.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+lunge_overhead:
+  animation:
+    type: none
+  coaching_focus: The overhead position enforces good lunge mechanics -- if the torso
+    pitches forward, the load falls forward; use the overhead constraint to find the
+    correct lunge posture.
+  common_errors:
+  - 'Elbows bending under fatigue: the overhead lockout must be maintained; a bent-elbow
+    overhead lunge loads the shoulder in an unstable position'
+  - 'Leaning forward: the overhead load should make forward lean impossible -- if
+    it is happening, reduce the load'
+  - 'Short stride length: the overhead constraint should not reduce stride length;
+    take a full step'
+  cue_points:
+  - Press or clean the load overhead before stepping -- establish the overhead position
+    with full lockout before the first step
+  - 'Arms locked overhead throughout: any elbow bend under fatigue must be addressed
+    before continuing'
+  - The overhead load forces the torso upright; lean into this constraint rather than
+    fighting it
+  - 'Stride length: the overhead load makes it tempting to shorten the stride -- maintain
+    full lunge depth'
+  - 'Look forward, not up: the eyes stay level; looking up at the bar destabilizes
+    the cervical spine'
+  description: The overhead lunge adds an overhead load (barbell, plate, or simply
+    arms extended) to the walking lunge movement, dramatically increasing the core
+    and shoulder stability demand. Gym Jones programs a 45 lb barbell overhead lunge
+    across 400 meters as a signature power-endurance challenge. The overhead position
+    forces a more vertical torso, making overhead lunges technically more demanding
+    than front-loaded variants.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - deltoids
+    highlight_secondary:
+    - hamstrings
+    - core
+    - triceps
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - deltoids
+  muscles_secondary:
+  - hamstrings
+  - core
+  - triceps
+man_maker:
+  animation:
+    type: none
+  coaching_focus: The plank must stay rigid during the renegade rows -- any hip rotation
+    during the row removes the anti-rotation demand and turns it into a standard bent-over
+    row from a plank position.
+  common_errors:
+  - 'Hip rotation during the row: the hips must stay square -- if one hip rises, reduce
+    the load or reduce the row height'
+  - 'Rushing the transition from plank to squat: the feet should land under the hips,
+    not in front; take the time to set up the squat'
+  - 'Dropping the dumbbells between movements: the dumbbells stay in the hands throughout
+    each rep'
+  cue_points:
+  - Start in a plank gripping both dumbbells; set the plank before the first push-up
+  - Push-up first; then row the right dumbbell to the hip while the left arm supports
+  - Row the left dumbbell to the hip; then jump or step the feet to the squat position
+  - Clean the dumbbells to the shoulders in the stand-up; then press both overhead
+  - 'Scale load: each component has a different strength limiter -- the row is typically
+    the limiting factor'
+  description: 'The man maker is a single-dumbbell compound complex: plank on the
+    dumbbells, push-up, renegade row (each arm), stand up into a squat, then press
+    overhead. Each rep combines a horizontal push, horizontal pull, squat, and overhead
+    press in one sequence. CrossFit and Gym Jones program it as a full-body conditioning
+    tool. The renegade row demands significant anti-rotation core control under a
+    loaded and fatigued state.'
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - upper_back
+    - quadriceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - triceps
+    - biceps
+  muscles_primary:
+  - pec
+  - upper_back
+  - quadriceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - triceps
+  - biceps
+muscle_up_bar:
+  animation:
+    external_id: Muscle_Up
+    gif_alt: Muscle-Up (Bar)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Muscle_Up/0.jpg
+    type: gif
+  coaching_focus: Pull as high as possible before the transition -- the higher the
+    hips travel in the pull phase, the easier the transition above the bar becomes.
+  common_errors:
+  - Attempting before sufficient pull-up and dip strength -- the muscle-up is a product
+    of those two skills; build them first
+  - Not using false grip on the bar -- false grip positions the wrist above the bar
+    and makes the transition achievable
+  - Short pull -- the transition above the bar requires the hips to travel high; insufficient
+    pull height means the movement stalls at the bar
+  cue_points:
+  - 'Prerequisite: 15+ strict pull-ups and 15+ strict dips with full ROM before attempting
+    muscle-ups'
+  - Use a false grip (wrist over the bar, not under it) to reduce the transition wrist
+    rotation required
+  - Pull explosively and high -- the chest must reach the bar before the transition
+    begins
+  - As the body rises above the bar, press the hands down and lean forward into the
+    dip
+  - Lockout the arms completely at the top -- a partial lockout is not a complete
+    muscle-up
+  description: The bar muscle-up is an explosive vertical pull that transitions directly
+    into a dip lockout above the bar -- a pulling and pushing movement combined in
+    a single explosive effort. Strict bar muscle-ups require significant lat, bicep,
+    and tricep power to pull the body above the bar and press to lockout. High injury
+    risk if kipping variants are attempted without an established strict strength
+    base.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - biceps
+    - triceps
+    highlight_secondary:
+    - shoulders
+    - core
+  muscles_primary:
+  - lats
+  - biceps
+  - triceps
+  - shoulders
+  muscles_secondary:
+  - core
+  - chest
+  - forearms
+muscle_up_ring:
+  animation:
+    external_id: Muscle_Up
+    gif_alt: Muscle-Up (Rings)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Muscle_Up/0.jpg
+    type: gif
+  coaching_focus: The false grip is the foundation of the ring muscle-up -- without
+    it, the wrist transition above the rings requires brute force that makes the movement
+    near-impossible; establish the false grip before the first attempt.
+  common_errors:
+  - No false grip -- attempting a ring muscle-up without false grip is an exercise
+    in futility; the wrist must be over the ring
+  - Losing the false grip at the pull peak -- the grip must be maintained; strengthening
+    the wrist flexors addresses this
+  - Missing the RTO lockout -- the movement is incomplete without full shoulder engagement
+    at the top
+  cue_points:
+  - 'False grip: wrap the wrist over the ring so the ring sits in the crease of the
+    wrist -- not in the palm'
+  - Maintain the false grip throughout the entire movement -- releasing it means the
+    transition cannot happen
+  - Pull explosively -- the hips rise, the elbows flare out, and the body transitions
+    above the rings
+  - At the transition, lean forward and press to lockout -- the rings-turned-out (RTO)
+    position is the finish
+  - Lower under complete control with the false grip maintained to return to the starting
+    position
+  description: The ring muscle-up transitions from below the rings to a support position
+    above them in a single pull-press movement. The false grip on the rings is the
+    critical setup skill -- it positions the wrists above the rings for a smooth pull-to-press
+    transition. The free rotation of the rings adds significant shoulder stability
+    demand compared to the bar variant. CrossFit benchmark movement.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - biceps
+    - triceps
+    highlight_secondary:
+    - shoulders
+    - serratus_anterior
+  muscles_primary:
+  - lats
+  - biceps
+  - triceps
+  - shoulders
+  muscles_secondary:
+  - core
+  - serratus_anterior
+  - pec_minor
+overhead_carry_kb:
+  animation:
+    type: none
+  coaching_focus: Push the bell into the ceiling actively throughout the walk -- a
+    passive arm will drift inward and forward under fatigue; the shoulder is working,
+    not resting.
+  common_errors:
+  - 'Shoulder dropping forward under fatigue: the lat loses engagement and the joint
+    is unsupported'
+  - 'Elbow bending during the walk: the arm must stay locked; a bent elbow shifts
+    this to a waiter carry'
+  - 'Lateral trunk lean: amplified by the overhead load; this is a limiter to respect,
+    not to push through'
+  cue_points:
+  - Press to full lockout before stepping; the arm must be fully extended with a packed
+    shoulder before the walk begins
+  - Eyes forward -- do not look up at the bell; trust the position
+  - 'Active lat: pull the shoulder into the socket while pushing the bell up -- both
+    happen simultaneously'
+  - The trunk resists both lateral flexion (as in farmer carry) and the rotational
+    demand of the asymmetric overhead load
+  - Set the bell down cleanly by reversing the press -- do not drop it from overhead
+  description: The kettlebell overhead carry holds one or two bells at full lockout
+    overhead and walks for distance -- the highest shoulder stability demand in the
+    carry progression. It requires a packed shoulder, active lat engagement, and sustained
+    scapular upward rotation under locomotion. Horsemen include it in loaded carry
+    circuits as the final progression after farmer and rack variants are established.
+  muscle_diagram:
+    highlight_primary:
+    - deltoids
+    - core
+    - upper_back
+    highlight_secondary:
+    - triceps
+    - erector_spinae
+    - glutes
+  muscles_primary:
+  - deltoids
+  - core
+  - upper_back
+  muscles_secondary:
+  - triceps
+  - erector_spinae
+  - glutes
+pistol_squat:
+  animation:
+    type: none
+  coaching_focus: The non-working leg drives forward as a counterbalance -- if it
+    drops or bends, the athlete is losing control of the descent; the leg position
+    is part of the standard.
+  common_errors:
+  - 'Non-working leg dropping to the floor at depth: losing the leg position removes
+    the balance demand and is a technique failure'
+  - 'Working heel rising: the single most common limiter -- ankle dorsiflexion is
+    the gating factor for most athletes'
+  - 'Excessive forward lean of the torso: usually combined with heel rise; improving
+    ankle dorsiflexion typically resolves both'
+  cue_points:
+  - Start standing on one leg; extend the other leg forward at hip height or higher
+  - Begin the descent by sitting the hips back and down while the non-working leg
+    stays extended forward
+  - 'Reach full depth: hip crease well below parallel, non-working heel close to but
+    not touching the floor'
+  - The extended leg stays horizontal or above throughout -- it counterbalances the
+    hips moving rearward
+  - Stand back up by driving through the working heel -- do not pull up with the hip
+    flexors of the non-working leg
+  description: The pistol squat is the free single-leg squat to full depth with the
+    non-working leg extended forward -- it requires simultaneous hip, ankle, and thoracic
+    mobility, single-leg strength, and balance. Marcus Filly uses it as a milestone
+    movement (5 clean reps per side as a functional strength standard). CrossFit programs
+    it in gymnastics skills workouts. Ido Portal treats it as a fundamental unilateral
+    movement pattern.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - core
+    - adductors
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
+  - adductors
+plank_hold:
+  animation:
+    type: none
+  coaching_focus: The spine must be neutral -- no sagging hips and no piked hips;
+    a hip pike is cheating the core and a hip sag is loading the lumbar.
+  common_errors:
+  - 'Hip sag: the lower back hyperextends; squeeze the glutes and brace harder or
+    reduce the set time'
+  - 'Hip pike: the athlete has shifted forward to relieve the lower-back demand; reset
+    to level hips'
+  - 'Elbows not under the shoulders: too far forward reduces the shoulder stability
+    component that makes this also a shoulder exercise'
+  cue_points:
+  - Elbows directly under the shoulders; forearms parallel or slightly angled inward
+  - Body in a rigid plank from heels to crown -- neutral spine, no sag and no pike
+  - 'Squeeze the glutes and brace the core throughout: these co-contractions maintain
+    the neutral spine passively'
+  - Breathe with shallow, controlled breaths -- do not hold the breath, but do not
+    breathe so freely that the core disengages
+  - 'For 300-second accumulation: break into 4-5 rests before retrying the position;
+    total time is what matters'
+  description: The front plank hold (FLR -- Front Leaning Rest in Gym Jones terminology)
+    is the anti-extension isometric core position held for time on forearms or hands.
+    Gym Jones programs 300-second accumulated FLR as a core and shoulder endurance
+    standard. It is the simplest test of anti-extension core endurance and the most
+    common assessment of core holding capacity. The FLR position is also the top of
+    the push-up and the foundation for all ground-based pressing work.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - deltoids
+    - glutes
+    - upper_back
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - deltoids
+  - glutes
+  - upper_back
+pull_up:
+  animation:
+    type: none
+  coaching_focus: Dead hang fully at the bottom -- if you do not reach full elbow
+    extension, you are doing a partial ROM exercise, not a pull-up.
+  common_errors:
+  - 'Half reps: not reaching full extension at the bottom caps strength development
+    and creates poor movement habits'
+  - 'Kipping under a strict prescription: kipping is a separate skill; mixing them
+    unknowingly trains neither'
+  - 'Chin in front of, not over, the bar: the standard is chin over -- partial top-range
+    reps do not count'
+  cue_points:
+  - 'Start from a dead hang: shoulders fully elevated (passive) or actively depressed
+    before initiating'
+  - Drive the elbows down and back -- think of pulling the bar to the sternum, not
+    the hands up
+  - Chin clears the bar at the top; do not tuck the chin or crane the neck forward
+  - Return to full dead hang at the bottom -- partial descents reduce the strength
+    stimulus and build a false ceiling
+  - Squeeze glutes and brace the core throughout -- no swinging or kipping in the
+    strict variant
+  description: The strict pull-up is the foundational upper-body vertical pulling
+    test -- a dead-hang start with full elbow extension at the bottom, chin clearing
+    the bar at the top. Marcus Filly treats it as the primary pulling strength metric;
+    Gym Jones programs it at high volume in Murph-style sessions. Relative strength
+    in this movement reliably predicts overall athletic capacity.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - deltoids
+pull_up_ring:
+  animation:
+    type: none
+  coaching_focus: Let the rings find their angle -- the correct path is the one where
+    the shoulder feels stable, not the one that feels strong; those are not always
+    the same.
+  common_errors:
+  - 'Loose body: swinging rings amplify any lack of core tension -- squeeze and hold
+    before the first rep'
+  - 'Not reaching the turn-out at the top: the ring turn-out trains the external rotators
+    that protect the shoulder under loaded positions'
+  - 'Starting too wide: a wider grip than shoulder-width on rings loads the shoulder
+    capsule in an unfavorable position'
+  cue_points:
+  - Use a neutral grip at the bottom; let the arms rotate freely as you pull
+  - Rings turn out to fully pronated at lockout -- this is active, not passive
+  - 'Maintain lat engagement throughout: the lats keep the rings from drifting wide
+    at the bottom of each rep'
+  - 'Body tension: hollow body position with feet together, no swing'
+  - Progress to ring muscle-up by practicing the transition from pull to dip at the
+    top of the ring pull-up
+  description: The ring pull-up (Ido Portal and CrossFit variant) emphasizes the free
+    rotation of the rings to develop shoulder joint proprioception and scapular stability
+    through the full vertical pull arc. Ido Portal programs rings as the primary pull-up
+    implement in his upper-body strength work, viewing the fixed bar as a training
+    aid rather than the final destination.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - rotator_cuff
+  - core
+  - forearms
+push_up:
+  animation:
+    type: none
+  coaching_focus: The push-up is a moving plank -- if the hips sag or pike at any
+    point in the set, the rep does not count and the set is over.
+  common_errors:
+  - 'Hip sag: the most common fault; the core gives out before the chest does -- when
+    hips drop, the set ends'
+  - 'Elbow flare: elbows at 90 degrees loads the anterior shoulder capsule in a stressful
+    position -- keep them at 45 degrees'
+  - 'Partial ROM at the bottom: hovering above the floor eliminates the pec stretch
+    and reduces the training stimulus significantly'
+  cue_points:
+  - Hands slightly wider than shoulder-width; elbows track at 45 degrees from the
+    torso -- not 90 degrees out
+  - Body forms a rigid plank from heel to crown; squeeze glutes and brace the core
+    before the first rep
+  - Chest touches the floor at the bottom -- no hovering an inch above; this is a
+    full ROM exercise
+  - Full lockout at the top; the arms extend completely and the scapulae protract
+    at lockout
+  - 'Breathe: inhale on the way down, exhale at the top -- do not hold the breath
+    across reps'
+  description: The push-up is the foundational horizontal pressing movement -- a full
+    plank position pressing from chest-to-floor to full lockout. Gym Jones programs
+    200+ reps in Murph-style sessions; CrossFit uses it as a primary conditioning
+    tool. It simultaneously trains the horizontal press, scapular stability, and anti-extension
+    core. The push-up is the most scalable pressing exercise and the foundation for
+    all ring and parallette progressions.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+push_up_clapping:
+  animation:
+    type: none
+  coaching_focus: The landing absorbs the fall -- the hands catch you, not the face;
+    absorb the landing with bent elbows and immediately reset to a full plank before
+    the next rep.
+  common_errors:
+  - 'Narrow landing: hands coming together instead of shoulder-width on landing creates
+    a dangerous elbow-flare catch position'
+  - 'No full plank before exploding: a loose core makes the push-up a noodle push
+    -- the energy leak prevents airtime'
+  - 'Continuing reps as the plank breaks: stop and reset -- a plyometric push-up with
+    a sagging hip is an injury looking for a place to happen'
+  cue_points:
+  - Start in a full push-up plank; a sloppy plank makes the explosive phase dangerous
+  - Push explosively through the floor -- the goal is maximum concentric force, not
+    just getting hands off the ground
+  - Clap quickly and open the hands before landing; hands should be shoulder-width
+    when they make contact
+  - Land with soft elbows -- absorb the landing by allowing the arms to bend to approximately
+    90 degrees before the next rep
+  - 'Quality over speed: 5 perfect reps are worth more than 20 sloppy ones; the exercise
+    degrades rapidly under fatigue'
+  description: The clapping push-up is a plyometric push-up variant that requires
+    an explosive concentric phase to generate enough airtime to bring the hands together
+    before landing. It develops rate of force development in the horizontal push pattern.
+    CrossFit programs it in conditioning circuits; Gym Jones uses tuck jumps and split-jump
+    analogues in the same plyometric power-endurance tier.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+push_up_ring:
+  animation:
+    type: none
+  coaching_focus: Turn the rings out at lockout -- RTO (rings turned out) is not an
+    optional finish; it trains the external rotators that protect the shoulder under
+    all overhead loading.
+  common_errors:
+  - 'Not turning the rings out: the ring turn-out is the exercise -- without it, this
+    is just a harder push-up'
+  - 'Rings too wide: places the shoulder in an impingement-prone position; rings should
+    be roughly shoulder-width at the bottom'
+  - 'Rushing through the instability: slow down the movement to actually feel and
+    control the shoulder stabilizers'
+  cue_points:
+  - Set rings to allow full chest contact at the bottom without the hands touching
+    the floor
+  - Begin with rings neutral (parallel) at the top; descend to chest contact
+  - At lockout, actively rotate the rings to fully pronated (RTO) -- this is the defining
+    movement of the exercise
+  - Body stays in a rigid plank throughout -- no hip sag or pike; the instability
+    of rings amplifies any core weakness
+  - 'Scale difficulty: raise the rings higher for less horizontal body angle; lower
+    for full horizontal'
+  description: The ring push-up performs the push-up on gymnastic rings set close
+    to the floor. The rings rotate freely, demanding active stabilization from the
+    rotator cuff, serratus anterior, and pec minor throughout the movement. Rings
+    turned out at lockout (RTO) is the fully expressed position. Ido Portal programs
+    ring push-ups as a prerequisite for ring dips and as a daily shoulder conditioning
+    tool.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - rotator_cuff
+    - serratus
+    - core
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - rotator_cuff
+  - serratus
+  - core
+rack_carry_barbell:
+  animation:
+    type: none
+  coaching_focus: Elbows must stay high throughout -- the moment they drop, the bar
+    rolls onto the wrists and the rack collapses; this is a mobility exercise disguised
+    as a carry.
+  common_errors:
+  - 'Elbows dropping: the single critical fault -- the bar slides off the shoulders
+    onto the wrists immediately when elbows drop'
+  - 'Excessive forward lean: the anterior load encourages forward lean; resist actively
+    with the thoracic erectors'
+  - 'Short sets due to wrist discomfort: this is a wrist and forearm flexibility limitation
+    -- work front rack stretches before progressing load'
+  cue_points:
+  - 'Set up the front rack from a squat or with a rack: three to four fingers on the
+    bar, elbows driven high and forward'
+  - Stand tall; the bar should rest on the shoulders, not on the wrists
+  - Walk with controlled steps; any gait irregularity causes the bar to bounce and
+    destabilize the rack
+  - Breathe through the nose; a compressed chest under the barbell makes mouth breathing
+    difficult
+  - 'The elbow height is the tell: if elbows are dropping, reset or reduce load'
+  description: The barbell front-rack carry holds a barbell in the front-rack position
+    (fingertips on bar, elbows high and forward) and walks for distance. Horsemen
+    program it in loaded carry circuits. The front-rack carry demands significant
+    wrist mobility, thoracic extension, and the ability to breathe while braced under
+    a compressive anterior load -- exactly the demands of heavy barbell front squats
+    and cleans transferred to a locomotive pattern.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    - deltoids
+    highlight_secondary:
+    - quadriceps
+    - erector_spinae
+    - forearms
+  muscles_primary:
+  - core
+  - upper_back
+  - deltoids
+  muscles_secondary:
+  - quadriceps
+  - erector_spinae
+  - forearms
+rack_carry_kb:
+  animation:
+    type: none
+  coaching_focus: The rack position must look the same at the end of the walk as it
+    did at the start -- if the elbow drifts away or the wrist deviates, the carry
+    is done.
+  common_errors:
+  - 'Elbow drifting forward or outward: the rack collapses and the mechanics shift
+    to a waiter carry'
+  - 'Forward lean under the anterior load: the abs must resist the flexion pull; a
+    lean means the load has won'
+  - 'Wrist deviation under fatigue: the bell tips and the forearm takes an awkward
+    share of the load'
+  cue_points:
+  - Clean the bell(s) to rack before beginning; reset the rack position after the
+    clean
+  - Elbow tight to the body, wrist neutral, bell resting on the forearm -- active,
+    not passive
+  - The anterior load pulls the torso into flexion; brace the core to resist this
+    actively
+  - Walk with a normal gait -- the loaded side hip should not hike or drop
+  - Unilateral rack carry adds a significant anti-lateral-flexion demand on the contralateral
+    side
+  description: The kettlebell rack carry holds one or two bells in the clean rack
+    position -- elbow tight, bell resting on the forearm at the shoulder -- and walks
+    for distance. It adds an anterior load and anti-flexion demand beyond the farmer
+    carry and serves as the intermediate in the Horsemen carry progression (farmer
+    to rack to overhead). The rack position must be actively maintained, not passively
+    endured.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - deltoids
+    - upper_back
+    highlight_secondary:
+    - forearms
+    - biceps
+    - glutes
+  muscles_primary:
+  - core
+  - deltoids
+  - upper_back
+  muscles_secondary:
+  - forearms
+  - biceps
+  - glutes
+rope_climb:
+  animation:
+    external_id: Rope_Climb
+    gif_alt: Rope Climb
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Climb/0.jpg
+    type: gif
+  coaching_focus: Lock the rope with the feet to rest between pulls -- the foot lock
+    is a skill, and athletes who cannot rest on the rope will fail due to grip before
+    upper body.
+  common_errors:
+  - 'No foot lock: athletes without a reliable foot lock will fail every time due
+    to grip fatigue long before upper body'
+  - 'Too much space between pulls: every inch the rope is away from the body adds
+    exponential difficulty -- keep it close'
+  - 'Not descending under control: uncontrolled descents damage the hands and will
+    prevent training the following day'
+  cue_points:
+  - 'Foot lock technique: wrap the rope around one foot and step on it with the other
+    foot to create a secure hold'
+  - 'Pull in a smooth S-curve: pull to chin, then lock the feet, then stand in the
+    foot lock to rest the grip'
+  - Keep the rope close to the body throughout -- a rope that hangs away from the
+    body creates a long moment arm
+  - 'Legless variant: drive the hips up with each pull using hip flexion; the legs
+    counterbalance but do not assist the pull'
+  - Descend under control using the foot lock -- sliding down burns the hands and
+    is a safety risk
+  description: The rope climb pulls the athlete to the top of a 15-foot rope using
+    upper-body strength and a leg assist. The legless variant removes the lower-body
+    contribution entirely, making it one of the most demanding upper-body pulling
+    exercises available -- comparable in lat and bicep activation to a weighted pull-up
+    at significant load. CrossFit programs it regularly; Gym Jones uses the legless
+    variant as a benchmark.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - grip
+row_500m_test:
+  animation:
+    type: none
+  coaching_focus: Even-split pacing with a strong finish -- the most common error
+    is going out too fast in the first 100m and dying; the goal is to maintain pace
+    until the final sprint at 100m to go.
+  common_errors:
+  - Going out at full sprint from stroke 1 -- the first 100m should feel controlled;
+    dying at 300m is the consequence of an all-out first 100m
+  - Testing too frequently -- 500m test results improve with training, not repeated
+    testing; test at the start and end of blocks only
+  - Not recording the exact split -- the test is only valuable if the data is used
+    to set future training paces
+  cue_points:
+  - 'Full warm-up required: 10+ minutes easy rowing, then build intensity in the final
+    3 minutes'
+  - 'Target: all-out maximal effort; nothing held in reserve'
+  - 'Pacing strategy: first 100m at controlled sprint, hold that pace, final 100m
+    all out'
+  - Stroke rate will be 34-40+ SPM at true 500m effort
+  - Record the exact split and use it to calculate all threshold and interval rowing
+    paces going forward
+  description: The 500m row time trial is the Gym Jones benchmark for establishing
+    all interval training paces -- the PR pace from this test anchors every subsequent
+    rowing workout. It is a maximal all-out effort of approximately 90-120 seconds.
+    CrossFit benchmark Jackie includes a 1000m row as the opening element. Use as
+    a test 1-2 times per training block, not as a regular conditioning stimulus.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - lats
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  - lats
+  muscles_secondary:
+  - quadriceps
+  - core
+  - biceps
+row_easy:
+  animation:
+    type: none
+  coaching_focus: Ratio over rate -- a slow, powerful stroke at 18-20 SPM with a long
+    drive is more efficient and aerobically beneficial than a high-rate choppy stroke.
+  common_errors:
+  - Too high a damper setting -- a damper above 7 increases strain without proportional
+    aerobic benefit; use 4-6 for most work
+  - Arm pull at the start of the drive -- arms must remain straight until legs are
+    nearly extended; early arm pull breaks the power chain
+  - Short slides -- not reaching full compression (shin vertical) at the catch wastes
+    power per stroke
+  cue_points:
+  - Set damper to 4-6 for recovery rowing -- higher damper settings do not increase
+    benefit and increase fatigue
+  - Maintain 18-22 strokes per minute -- lower rate forces more power per stroke and
+    better technique
+  - 'Drive sequence: legs first, then lean back, then arms -- not all at once'
+  - 'Recovery sequence: arms first, then forward lean, then knees bend -- exact reverse
+    of the drive'
+  - Keep heart rate at or below AeT -- if HR climbs, reduce stroke rate, not just
+    power
+  description: Easy rowing at Zone 1-2 is a Gym Jones recovery day standard -- 60-120
+    minutes at conversational pace on the Concept II rower. The Concept II is rated
+    the highest metabolic conditioning tool by CrossFit Journal for its full-body
+    demand and zero-impact nature. Damper setting 4-6 suits most athletes at recovery
+    pace; stroke rate is 18-22 SPM.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - lats
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  - lats
+  muscles_secondary:
+  - quadriceps
+  - core
+  - biceps
+  - upper_trapezius
+row_threshold:
+  animation:
+    type: none
+  coaching_focus: Split consistency is the quality metric -- every piece should be
+    within 2 seconds of the same 500m split; a fading split means the threshold was
+    started too fast.
+  common_errors:
+  - Starting the first piece too fast -- target split should feel controlled at rep
+    1; fading pieces mean the start was too fast
+  - Increasing rate instead of power when the split slips -- cue a more powerful drive,
+    not a higher stroke rate
+  - Rest (not active recovery) between pieces -- easy rowing maintains blood flow
+    and clears lactate; standing rest does not
+  cue_points:
+  - 'Target split: 15-20 sec per 500m slower than your personal record 500m pace'
+  - Stroke rate increases to 24-28 SPM at threshold -- the drive remains powerful,
+    not rushed
+  - 'Active recovery between pieces: row easy (not rest) at 18-20 SPM'
+  - Maintain drive sequence even at elevated rate -- legs-back-arms; do not let the
+    rate break the technique
+  - Monitor split consistently throughout each piece -- adjust rate before the split
+    drifts
+  description: Threshold rowing at Zone 3-4 develops aerobic capacity at the lactate
+    threshold -- the intensity sustained in competition or maximal aerobic efforts.
+    Gym Jones programs 6 x 500m at approximately 15 seconds per 500m slower than PR
+    pace with 3-minute active rest between pieces. CrossFit Endurance mirrors the
+    run threshold protocol. Stroke rate increases to 24-28 SPM at threshold.
+  muscle_diagram:
+    highlight_primary:
+    - hamstrings
+    - glutes
+    - lats
+    highlight_secondary:
+    - erector_spinae
+    - core
+  muscles_primary:
+  - hamstrings
+  - glutes
+  - erector_spinae
+  - lats
+  muscles_secondary:
+  - quadriceps
+  - core
+  - biceps
+run_easy:
+  animation:
+    type: none
+  coaching_focus: Slower than you think -- the majority of runners run their easy
+    days too fast; the correct pace is embarrassingly slow until aerobic capacity
+    catches up to ego.
+  common_errors:
+  - Running too fast -- cardiac drift will push HR above Z2; slow the pace 30-60 seconds
+    per mile from what feels comfortable
+  - Skipping the HR monitor -- perceived effort does not accurately reflect metabolic
+    zone; use objective data
+  - Turning easy runs into moderate runs -- the base-building benefit comes from zone
+    compliance, not perceived effort
+  cue_points:
+  - Nasal breathing throughout -- if you must open your mouth, slow down
+  - 'Conversational pace: you can speak in complete sentences, not just short phrases'
+  - Heart rate at or below AeT -- typically 125-135 bpm; use HR monitor, not perceived
+    effort
+  - Walk uphills if necessary to keep HR in zone -- pace is secondary to metabolic
+    zone
+  - 'Maffetone formula: 180 - age = max HR for easy runs (adjust for fitness level)'
+  description: The easy run is the primary aerobic base building stimulus -- a conversational
+    pace at or below aerobic threshold (AeT), typically below 135 bpm or Maffetone
+    pace (180 minus age). Uphill Athlete programming places 80% of all aerobic volume
+    at this intensity. Nasal breathing serves as an effective intensity governor.
+    Gym Jones uses 60-120 minute easy runs on recovery days.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - core
+run_interval:
+  animation:
+    type: none
+  coaching_focus: Each rep must be run at the same pace as the first -- if later reps
+    slow by more than 5%, either reduce the number of reps or increase the rest period.
+  common_errors:
+  - Sprinting rep 1 and surviving the rest -- the goal is consistent pace across all
+    reps, not a fast first rep
+  - Shortening the rest -- the rest period is part of the workout; cutting it turns
+    intervals into a tempo run
+  - Skipping the warm-up and cool-down -- intervals without warm-up significantly
+    increase injury risk and reduce performance
+  cue_points:
+  - Warm up with at least 10-15 minutes of easy running before the first interval
+  - Begin each rep at the prescribed pace -- do not go out faster on rep 1
+  - Active recovery (easy jogging or walking) between reps -- do not stand still
+  - 'Use the final rep as a quality check: if you ran it the same as rep 1, pacing
+    was correct'
+  - Cool down with 10+ minutes of easy running after the last rep
+  description: Run intervals are Zone 4-5 efforts of 400m to 1 mile with structured
+    rest periods. Gym Jones uses 5 x 1-minute all-out with 4-minute active recovery,
+    or 4 x 800 yards at 10% faster than 2-mile PR pace. CrossFit Endurance uses pyramid
+    intervals (1-2-3-4-3-2-1 minutes at Zone 3-4). The work-to-rest ratio of 1:2 to
+    1:4 allows high-quality efforts to be repeated across the full session.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - core
+run_sprint:
+  animation:
+    type: none
+  coaching_focus: Accelerate progressively through the first 20m before reaching maximal
+    velocity -- sprinting is a skill requiring controlled acceleration, not an immediate
+    all-out first step.
+  common_errors:
+  - Sprinting without adequate warm-up -- the highest-frequency sprint injury is hamstring
+    strain at the first rep; warm up completely
+  - Overstriding at max velocity -- foot must strike close to the center of mass;
+    reaching for extra distance causes deceleration
+  - Too short a rest between reps -- incomplete recovery means the next rep is not
+    a sprint; it is a fast run
+  cue_points:
+  - 'Warm up fully: 10-15 min easy running, dynamic drills, strides -- sprinting cold
+    causes hamstring pulls'
+  - Accelerate progressively over the first 15-20m before reaching top speed
+  - Drive the arms hard -- elbow at 90 degrees, driving back, hands relaxed; arm speed
+    generates leg speed
+  - Foot strike lands beneath the hips, not in front -- overstriding creates a braking
+    force at max velocity
+  - 'Full recovery between reps: 3-5 minutes rest between sprint efforts to allow
+    complete phosphocreatine resynthesis'
+  description: Sprint runs are maximal-effort efforts of 50-200m or 10-60 seconds.
+    They develop top-end running speed, anaerobic alactic capacity, and neuromuscular
+    power. Gym Jones uses sprint work as power development; the 3-mile time trial
+    is the primary performance benchmark. A thorough warm-up is mandatory and sprinting
+    should not be programmed immediately after high lower-body strength volume.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - hip_flexors
+    - core
+  muscles_primary:
+  - calves
+  - quadriceps
+  - glutes
+  - hamstrings
+  muscles_secondary:
+  - hip_flexors
+  - core
+  - tibialis_anterior
+run_tempo:
+  animation:
+    type: none
+  coaching_focus: Sustain the effort from the first minute to the last -- tempo runs
+    done correctly feel controlled in the first half and demanding in the second;
+    not the opposite.
+  common_errors:
+  - Starting too fast -- the first mile of a tempo run should feel easy; the effort
+    settles in at mile 2
+  - Going too hard -- tempo is not a race effort; if you cannot maintain the pace
+    for the full duration, it was too fast
+  - Neglecting the warm-up -- at least 10-15 minutes of easy running before threshold
+    work; cold tissue at threshold effort is an injury risk
+  cue_points:
+  - 'Target pace: approximately 25-40 seconds per mile faster than easy run pace'
+  - The effort is "comfortably hard" -- you can speak in short phrases but not complete
+    sentences
+  - 'Heart rate: Zone 3-4, typically 155-170 bpm depending on fitness level'
+  - 'For interval tempo format: 3-5 repeats of 6-10 minutes with 2-3 minutes easy
+    between reps'
+  - 'Continuous tempo runs: 20-40 minutes at steady threshold effort'
+  description: The tempo run is a sustained effort at or near lactate threshold 2
+    (LT2) -- comfortably hard, where short sentences are possible but a conversation
+    is not. It develops the ability to sustain higher fractions of VO2max before lactate
+    accumulates. CrossFit Endurance uses 3-5 x 8-minute intervals at Zone 4; Uphill
+    Athlete increases tempo run proportion from 10% to 20% of weekly volume in the
+    build phase.
+  muscle_diagram:
+    highlight_primary:
+    - calves
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - hamstrings
+  muscles_primary:
+  - calves
+  - quadriceps
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - core
+side_plank:
+  animation:
+    type: none
+  coaching_focus: The hips must stay elevated throughout -- if the hips sag, the side
+    plank has become a hip flexor hold; the alignment is the exercise, not just the
+    time.
+  common_errors:
+  - 'Hip sag: the most common error; set a timer and check alignment in a mirror if
+    possible'
+  - 'Shoulder rolling forward: the supporting shoulder should be packed back; forward
+    roll indicates fatigue or lack of engagement'
+  - 'Head dropping: the neck should stay neutral, not straining up or drooping down'
+  cue_points:
+  - Bottom elbow directly under the shoulder -- not forward or back
+  - Body in a perfectly straight line from feet to head -- no hip sag and no hip pike
+  - Top arm can rest on the hip or extend toward the ceiling for more difficulty
+  - Stack the feet (one on top of the other) for maximum hip abductor demand, or stagger
+    them for a wider base
+  - Breathe normally -- the tendency is to hold the breath which caps the hold time
+    artificially
+  description: The side plank is an anti-lateral-flexion isometric hold with the body
+    in a straight line from feet to crown, supported on one forearm and the outside
+    of the foot. Marcus Filly uses it as the baseline lateral core assessment. CrossFit
+    and Gym Jones program it in core circuits. It directly develops the quadratus
+    lumborum, obliques, and hip abductors that resist lateral spinal loading in all
+    unilateral lower-body and carry movements.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - upper_back
+    highlight_secondary:
+    - glutes
+    - adductors
+    - deltoids
+  muscles_primary:
+  - core
+  - upper_back
+  muscles_secondary:
+  - glutes
+  - adductors
+  - deltoids
+sit_up:
+  animation:
+    external_id: Sit-Up
+    gif_alt: Sit-Up (Abmat)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sit-Up/0.jpg
+    type: gif
+  coaching_focus: Touch the floor behind the head at the bottom -- the abmat allows
+    the lower back to extend fully; this is the range of motion that makes the abmat
+    sit-up different from a crunch.
+  common_errors:
+  - 'Not touching the floor at the bottom: using a partial range of motion turns sit-ups
+    into crunches -- the abmat is specifically to enable the full bottom position'
+  - 'Jerking through the motion: explosive, bouncy sit-ups generate momentum that
+    replaces core contraction; control the movement'
+  - 'Neck strain at the top: reaching the head forward rather than the chest up; the
+    chest should lead the rise, not the head'
+  cue_points:
+  - Place the abmat under the lower back for lumbar support at the bottom -- this
+    allows the chest to reach the floor
+  - Feet can be anchored (increases hip flexor demand) or unanchored (more abdominal
+    demand)
+  - Descend until the back of the hands touch the floor overhead
+  - Rise by contracting the core and reaching the arms forward; touch the feet or
+    floor in front at the top
+  - 'Breathe: exhale as you rise, inhale as you lower'
+  description: The abmat sit-up is the CrossFit standard core movement used in benchmark
+    workouts -- full range of motion from a lying position to upright with an abmat
+    under the lower back to allow lumbar extension at the bottom. CrossFit benchmark
+    Annie (50-40-30-20-10 sit-ups with double-unders) is the signature test. Gym Jones
+    programs high-rep sit-ups as core accumulation work. Anchored feet increase hip
+    flexor contribution.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - hip_flexors
+    highlight_secondary:
+    - quadriceps
+  muscles_primary:
+  - core
+  - hip_flexors
+  muscles_secondary:
+  - quadriceps
+ski_erg_easy:
+  animation:
+    type: none
+  coaching_focus: Initiate each stroke with the core -- the pull begins from hip flexion
+    and trunk flexion, then the arms extend the motion; pulling with the arms first
+    disconnects the power chain.
+  common_errors:
+  - Pulling with arms only -- the core and hip hinge are primary power generators;
+    arm-only skiing fatigues the triceps rapidly
+  - Stopping the stroke before the handles reach the hips -- full extension of the
+    pull is required for maximum power per stroke
+  - Too high a stroke rate -- high rate at Z1-2 reduces power per stroke; keep rate
+    low and drive harder per stroke
+  cue_points:
+  - Begin each stroke with the arms extended overhead, body slightly extended
+  - Pull the handles down by initiating with hip flexion and trunk engagement first
+  - Arms extend the stroke, finishing beside the hips -- not stopping in front of
+    the body
+  - Allow the handles to return slowly to the top -- the return is the recovery phase,
+    not a rest
+  - 'Stroke rate at Z1-2: 18-24 SPM -- slow and powerful for the aerobic base goal'
+  description: The Concept II SkiErg at Zone 1-2 provides a predominantly upper-body
+    and core aerobic stimulus through a double-pole pulling motion. Hip hinge contributes
+    to the drive at low to moderate intensities. It is useful for aerobic base building
+    when lower-limb injuries prevent running or cycling, and is effective for athletes
+    building upper-body aerobic capacity for ski mountaineering.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - core
+    highlight_secondary:
+    - triceps
+    - shoulders
+  muscles_primary:
+  - lats
+  - core
+  - triceps
+  muscles_secondary:
+  - glutes
+  - shoulders
+  - upper_trapezius
+ski_erg_interval:
+  animation:
+    type: none
+  coaching_focus: Let the legs help at high intensity -- at Zone 4-5, the hip hinge
+    contribution becomes critical; athletes who ski-erg with arms only will fatigue
+    in under 30 seconds.
+  common_errors:
+  - Using only upper body at high intensity -- the fatigue will be premature; the
+    legs must contribute
+  - Reducing stroke length at high intensity -- full extension is required even at
+    30+ SPM
+  - Pairing with heavy upper-body days -- SkiErg intervals place significant demand
+    on the lats and triceps; pair thoughtfully
+  cue_points:
+  - At high intensity, increase the hip hinge contribution significantly to access
+    leg power
+  - Drive the handles down with trunk and hip extension simultaneously -- the legs
+    help, even on the Ski Erg
+  - Stroke rate increases to 26-34 SPM at interval intensity
+  - 'Tabata format: 8 rounds of 20 seconds all-out / 10 seconds minimal movement'
+  - Track meters per interval as the performance metric -- consistency across reps
+    indicates correct pacing
+  description: High-intensity SkiErg intervals at Zone 4-5 use Tabata (20/10) or 30/15-second
+    formats. Upper-body fatigue accumulates rapidly at high intensities, making SkiErg
+    intervals a useful variation when rowing and running are both programmed in the
+    same week. The upper-body limitation provides a different training stimulus than
+    the lower-body emphasis of running and rowing intervals.
+  muscle_diagram:
+    highlight_primary:
+    - lats
+    - core
+    highlight_secondary:
+    - glutes
+    - triceps
+  muscles_primary:
+  - lats
+  - core
+  - glutes
+  muscles_secondary:
+  - triceps
+  - shoulders
+  - hamstrings
+sled_push:
+  animation:
+    external_id: Sled_Push
+    gif_alt: Sled Push
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sled_Push/0.jpg
+    type: gif
+  coaching_focus: Drive through the floor with every step -- the push comes from the
+    legs driving down and back, not the arms pushing the sled forward; arms transfer
+    leg force to the sled.
+  common_errors:
+  - 'Arms doing the pushing: the arms are levers connecting the legs to the sled;
+    if the arms are burning, the leg drive is insufficient'
+  - 'Shuffling without full hip extension: each step should reach full hip extension
+    at push-off; short, choppy steps do not develop power'
+  - 'Too much load for conditioning sets: heavy sled with conditioning intent produces
+    a slow shuffle with no cardiovascular demand'
+  cue_points:
+  - 'Low handle: body angled forward at roughly 45 degrees, arms relatively straight,
+    drive from the legs'
+  - 'High handle: more upright torso, faster pace, conditioning emphasis rather than
+    strength'
+  - Drive each step through the full hip extension -- do not shuffle; fully extend
+    each push-off
+  - 'Controlled acceleration: do not sprint from the start; build into the pace over
+    the first 5 meters'
+  - Adjust load for the intended stimulus -- heavy load for strength-endurance, lighter
+    load for anaerobic conditioning
+  description: The sled push drives a loaded sled forward by pushing the handles while
+    walking or running. The low handle position (body angled forward, near-horizontal)
+    builds strength-endurance and posterior chain drive; the upright handle position
+    is used for lighter, faster conditioning work. Sled pushing has no eccentric component,
+    producing minimal DOMS and allowing high-frequency programming. Horsemen GPP uses
+    it as a primary conditioning tool.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - core
+    - upper_back
+    - deltoids
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - core
+  - upper_back
+  - deltoids
+squat_air:
+  animation:
+    type: none
+  coaching_focus: Below parallel is the standard -- the hip crease must drop below
+    the top of the knee; if this is not happening, the air squat is not yet proficient
+    regardless of how easy it feels.
+  common_errors:
+  - 'Stopping above parallel: the most common error; the air squat is not a squat
+    unless the hip crease passes the knee'
+  - 'Heels rising: ankle mobility limitation -- fix the mobility, do not accommodate
+    the fault by allowing toes-only squatting'
+  - 'Chest falling forward at depth: usually a combination of hip tightness and weak
+    anterior core; use goblet squat as a teaching tool'
+  cue_points:
+  - Stance shoulder-width or slightly wider; toes turned out 30-45 degrees
+  - Brace the core and begin by sending the hips back and down simultaneously -- not
+    just sitting the hips down
+  - Knees track over the toes throughout -- push them out; do not let them cave inward
+  - Hip crease descends below the top of the knee -- this is below parallel and non-negotiable
+  - Heels flat throughout; if heels rise, ankle dorsiflexion is the limiter -- elevate
+    temporarily and work on ankle mobility
+  description: The air squat is the CrossFit foundational movement -- bodyweight squat
+    to below parallel with a neutral spine and heels flat. Gym Jones warms up with
+    2x5 wall squats followed by 2x10 air squats before all strength sessions. The
+    air squat establishes the squatting motor pattern used in every loaded squat variant
+    and in all conditioning movements that include a squat component.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+squat_jump:
+  animation:
+    external_id: Freehand_Jump_Squat
+    gif_alt: Jump Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/0.jpg
+    type: gif
+  coaching_focus: The landing absorbs the energy -- land with soft knees in a partial
+    squat position; a stiff landing is an injury, not just poor technique.
+  common_errors:
+  - 'Stiff-legged landing: the knees and hips must absorb the landing; a straight-leg
+    landing sends all the force into the knees and spine'
+  - 'Not reaching full squat depth before jumping: the elastic energy storage happens
+    at depth -- a half-squat jump is a less effective movement'
+  - 'Landing with feet together or crossed: the landing stance should match the take-off
+    stance'
+  cue_points:
+  - Begin from a full squat (hip crease below parallel) for maximum elastic energy
+    storage
+  - Drive through the entire foot -- heels stay down as long as possible before the
+    push-off
+  - 'At peak height, the body should be fully extended: hips, knees, and ankles all
+    locked'
+  - Land on the balls of the feet first, then heels, absorbing through the ankles,
+    knees, and hips in sequence
+  - Land in the same stance you jumped from -- narrow landings with wide take-offs
+    indicate leg strength asymmetry
+  description: The jump squat descends to a full squat depth and explodes vertically,
+    landing softly and reabsorbing through the hip-knee-ankle triple flexion. It develops
+    lower-body power output and rate of force development in the squat pattern. Gym
+    Jones programs tuck jumps and split jumps as power-endurance variants in conditioning
+    circuits. The landing mechanics are as important as the jump height for long-term
+    joint health.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - core
+tire_drag_forward:
+  animation:
+    type: none
+  coaching_focus: Lean into the harness and drive from the hips -- the forward lean
+    is intentional; a too-upright stance means the rope angle is pulling the athlete
+    backward rather than the athlete pulling the tire forward.
+  common_errors:
+  - 'Too upright a stance: the rope pulls up and back rather than forward -- lean
+    into the harness'
+  - 'Short choppy steps: full hip extension is the force producer; shuffling reduces
+    the stimulus to a walking drag'
+  - 'Tire too light for the intended stimulus: a tire that offers no real resistance
+    is just a walk with an accessory'
+  cue_points:
+  - Harness sits across the chest or hips; rope attaches to the tire at the rear
+  - Lean forward into the harness at roughly 45-60 degrees -- the lean transfers leg
+    drive into the rope
+  - Drive through the full hip extension with each step; the push-off creates the
+    pulling force
+  - Arms can swing naturally for balance or hold the rope directly for variation
+  - 'Pace: walking drag is strength-endurance; jogging drag is conditioning; adjust
+    load accordingly'
+  description: The forward tire drag attaches a harness or rope to a tire and has
+    the athlete walk or run forward dragging the resistance. It develops hip extension
+    power, posterior chain endurance, and grip in an impact-free locomotion pattern.
+    Horsemen GPP uses it as a staple conditioning tool, adjusting tire weight by placing
+    plates inside. It is well-tolerated on high running volume weeks because the ground
+    contact forces are lower than running.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - calves
+    highlight_secondary:
+    - quadriceps
+    - core
+    - upper_back
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - calves
+  muscles_secondary:
+  - quadriceps
+  - core
+  - upper_back

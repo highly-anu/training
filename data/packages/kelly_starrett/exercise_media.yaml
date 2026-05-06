@@ -1,0 +1,1492 @@
+ankle_circles_ks:
+  animation:
+    external_id: Ankle_Circles
+    gif_alt: Ankle Circles
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Ankle_Circles/0.jpg
+    type: gif
+  coaching_focus: Slow and large -- if the circle is small or jerky, the ankle has
+    restriction that needs to be addressed before loading.
+  common_errors:
+  - 'Circles too small: a small circle stays within the pain-free range and misses
+    the restriction entirely'
+  - 'Only one direction: the clockwise arc loads the supination range; counterclockwise
+    loads the pronation range -- both are needed'
+  - 'Rushing: fast circles use momentum to pass through the restricted arc; slow circles
+    reveal it'
+  cue_points:
+  - 'Non-weight-bearing: seated or standing with one foot lifted'
+  - Draw the largest possible circle with the toes -- lead with the heel on the inversion
+    arc
+  - Complete 10 circles clockwise, then 10 counterclockwise before switching feet
+  - Note any grinding or clicking -- these indicate articular surface irregularities
+    worth monitoring
+  - 'Perform both directions: many athletes have good plantar flexion range but restricted
+    dorsiflexion arc'
+  description: Ankle circles perform slow, full circumduction of the ankle joint in
+    both directions to distribute synovial fluid and assess joint range of motion
+    before lower-body loading. Kelly Starrett includes ankle circles in every joint
+    prep sequence preceding squat, hinge, or locomotive work. The quality of the circle
+    -- smoothness, symmetry, and end range -- is more informative than the speed.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+atg_split_squat_bw:
+  animation:
+    type: none
+  coaching_focus: Let the knee travel -- the further the knee travels forward, the
+    more the quad and knee joint are being trained through the full range that protects
+    them under athletic load.
+  common_errors:
+  - 'Limiting knee travel to conventional range: the entire ATG principle is that
+    the knee traveling further is safe and beneficial -- lean into it'
+  - 'Heel rising: the ankle must dorsiflex to allow the knee to travel; if the heel
+    rises, the ankle is the limiter'
+  - 'Rushing: fast reps use momentum to pass through the restricted range and miss
+    the mobility benefit entirely'
+  cue_points:
+  - Split stance with back knee close to the floor; front foot flat on the floor
+  - Drive the front knee forward over and past the toes -- as far as the ankle can
+    support
+  - Keep the heel flat; if it rises, address the ankle dorsiflexion deficit before
+    progressing depth
+  - Upright torso; the forward knee travel does not require a forward lean
+  - 'Move slowly: this is a ROM drill, not a strength exercise -- 3 seconds down,
+    3 seconds up'
+  description: The ATG (Knees Over Toes) bodyweight split squat prioritizes full range
+    of motion over load -- the front knee drives far forward past the toes to build
+    the quad-to-knee-joint angle that ATG training targets. Ben Patrick and Kelly
+    Starrett converge on this pattern as a rehabilitation and prehabilitation tool
+    that restores knee and ankle mobility simultaneously. The emphasis is ROM, not
+    load.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - calves
+  muscles_primary:
+  - quadriceps
+  muscles_secondary:
+  - glutes
+  - calves
+band_pull_apart_ks:
+  animation:
+    external_id: Band_Pull_Apart
+    gif_alt: Band Pull-Apart (Scapular Focus)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/0.jpg
+    type: gif
+  coaching_focus: Depress the scapulae at end range -- the shoulder blades should
+    move down and together, not just together; the lower trap contraction is the therapeutic
+    stimulus.
+  common_errors:
+  - 'Shrugging at end range: the scapulae should depress, not elevate -- if the shoulders
+    rise, the band is too heavy'
+  - 'Elbows bending during the pull: straight arms throughout; bent elbows shift the
+    load from the posterior shoulder to the biceps and triceps'
+  - 'Too heavy a band: a band that is too stiff prevents full range and trains a partial
+    pull-apart'
+  cue_points:
+  - Hold the band at shoulder width with both arms straight in front at shoulder height
+  - Pull apart by retracting the shoulder blades -- the band stretches across the
+    chest
+  - 'At full extension, depress the scapulae: shoulder blades down and back simultaneously'
+  - Hold 1-2 seconds at end range before returning
+  - 15-20 reps; band resistance should allow full range without shrug compensation
+  description: The band pull-apart (Kelly Starrett) holds a resistance band at shoulder
+    width and pulls it apart to full horizontal extension, retracting and depressing
+    the scapulae at end range. Starrett cues "lock the shoulder blades in your back
+    pockets" at the end of each rep. It targets the posterior rotator cuff and lower
+    trapezius -- two structures chronically underloaded in pressing-dominant athletes.
+    Can be performed daily as a prehab standard without recovery cost.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+banded_ankle_distraction_ks:
+  animation:
+    type: none
+  coaching_focus: The band must loop around the talus bone, not the mid-foot or the
+    Achilles -- the traction point must be as close to the ankle joint line as possible
+    to affect the anterior capsule.
+  common_errors:
+  - 'Band looped around the mid-foot: does not traction the ankle capsule; must be
+    at the talus level'
+  - 'Not enough traction distance: step further back from the anchor to increase the
+    band tension and the capsular distraction effect'
+  - 'Calf stretching instead: if calf stretching is not resolving the dorsiflexion
+    deficit, the capsule is the limiter -- switch to distraction work'
+  cue_points:
+  - Anchor a heavy band at ground level; loop it around the front of the ankle (around
+    the talus)
+  - Step back to create traction -- the band pulls the talus forward while the athlete
+    steps back, decompressing the anterior capsule
+  - From the tractioned position, drive the knee forward into dorsiflexion repeatedly
+  - Both oscillating reps (10 reps) and a sustained hold (30 seconds) are appropriate
+  - 60 seconds per side of active dorsiflexion work under traction
+  description: Banded ankle distraction addresses anterior ankle capsule restriction
+    as the primary dorsiflexion limiter -- a band anchored low at floor level, looped
+    around the talus (front of the ankle), creating traction while the athlete moves
+    into dorsiflexion. Kelly Starrett identifies anterior capsular tightness (not
+    calf tightness) as the most common cause of dorsiflexion restriction that does
+    not respond to calf stretching. 60 seconds per side.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+banded_external_rotation_ks:
+  animation:
+    external_id: External_Rotation
+    gif_alt: Banded External Rotation (Standing)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/External_Rotation/0.jpg
+    type: gif
+  coaching_focus: Keep the elbow tucked to the body throughout -- if the elbow drifts
+    away from the body during the rotation, the exercise has become a shoulder abduction,
+    not a pure external rotation.
+  common_errors:
+  - 'Elbow drifting away from the body: immediately changes the exercise to shoulder
+    abduction-rotation; use a small rolled towel under the elbow to maintain contact'
+  - 'Too much band tension: the band resists the return, not just the rotation --
+    too heavy reduces the range achieved'
+  - 'Wrist deviating: keep the wrist neutral throughout; wrist deviation means the
+    forearm muscles are fatiguing before the rotator cuff'
+  cue_points:
+  - Band anchored at waist height to the side; stand perpendicular to the anchor
+  - Inside elbow tucked against the side of the body; forearm points toward the anchor
+  - Rotate the forearm away from the body (external rotation) while the elbow stays
+    tucked
+  - 'Full range: forearm parallel to the floor at the end range of external rotation'
+  - 12 reps, controlled pace; 2-second hold at end range each rep
+  description: Banded external rotation (standing) is the primary isolated external
+    rotation strengthener in the Kelly Starrett system -- a band anchored at waist
+    height, elbow at 90 degrees tucked to the body, rotating the forearm away from
+    the body through full external rotation. 12 reps per side. External rotation strength
+    is the primary active stabilizer of the glenohumeral joint and the main protection
+    against anterior shoulder instability under pressing load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+banded_hip_distraction_ks:
+  animation:
+    type: none
+  coaching_focus: The band must be at the proximal thigh (as close to the hip joint
+    as possible) -- if it is around the knee, it is tractioning the knee, not the
+    hip capsule.
+  common_errors:
+  - 'Band too low (at the knee or thigh mid-point): tractioning below the joint does
+    not affect the capsule -- the band must be at the most proximal point of the thigh'
+  - 'Static position under traction instead of active movement: the traction facilitates
+    the range; move through it actively'
+  - 'Band too light: the traction effect requires a heavy band -- a thin light band
+    does not provide sufficient distraction force'
+  cue_points:
+  - Loop a heavy band around the proximal thigh (close to the hip); anchor it low
+    behind the athlete
+  - Step forward into a lunge; the band tracts the femoral head backward and laterally
+    in the acetabulum
+  - While tractioned, move through hip circles, deep flexion, internal and external
+    rotation -- all range-of-motion work is amplified by the traction
+  - 60 seconds per side of continuous movement while under traction
+  - If no band is available, use a low-handled cable machine as a substitute
+  description: 'Banded hip distraction uses a heavy band looped around the proximal
+    thigh to tract the femoral head laterally and posteriorly while the athlete moves
+    through hip circles, hinges, and flexion patterns. Kelly Starrett distinguishes
+    this from stretching: distraction addresses joint capsule restriction (the capsular
+    tissues that no stretch can reach), while stretching only addresses the muscular
+    component. 60 seconds per side. Many hip mobility failures that do not respond
+    to stretching are capsular in origin.'
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+banded_shoulder_distraction_ks:
+  animation:
+    type: none
+  coaching_focus: The band tracts the humeral head away from the joint -- feel for
+    a sense of decompression or increased range as the traction takes effect; if nothing
+    changes under traction, the limiter is muscular, not capsular.
+  common_errors:
+  - 'Band at the wrist instead of the humerus: the wrist is being distracted, not
+    the shoulder joint'
+  - 'Static position under traction: move through the full range while tractioned;
+    the traction is a tool, not a stretch position'
+  - 'Band too light: insufficient traction force does not decompress the capsule --
+    use the heaviest band that allows the movement'
+  cue_points:
+  - Anchor a heavy band overhead; loop it around the humerus (not the wrist) as high
+    as possible
+  - Allow the band to traction the arm upward and laterally -- the humeral head is
+    pulled away from the glenoid
+  - Under traction, move the arm through flexion, internal rotation, external rotation,
+    and adduction
+  - Spend extra time in positions that feel restricted -- traction amplifies the range
+    at the restricted arc
+  - 60 seconds of active movement under traction per side
+  description: Banded shoulder distraction loops a band around the humerus and moves
+    the arm through flexion, rotation, and abduction while the band tracts the humeral
+    head inferiorly and posteriorly. Kelly Starrett uses it to address the inferior
+    and posterior shoulder capsule -- tissues that stretching alone cannot reach.
+    60 seconds per side. Inferior capsule tightness is the primary cause of shoulder
+    flexion and overhead range restriction that does not respond to stretching.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+behind_back_reach_ks:
+  animation:
+    type: none
+  coaching_focus: The reaching arm should go up behind the back -- if the elbow is
+    pointing down and the hand is reaching toward the waist, the shoulder internal
+    rotation is the limiter, not the triceps flexibility.
+  common_errors:
+  - 'Shoulder hiking up during the reach: the shoulder should stay depressed; elevation
+    is a compensation that reduces the internal rotation demand'
+  - 'Forcing range with the free hand: gentle assistance is appropriate; forced range
+    creates impingement'
+  - 'Comparing the two sides on the first day: establish both baselines first, then
+    address the asymmetry systematically'
+  cue_points:
+  - Start with the arm at the side; bend the elbow and bring the hand behind the small
+    of the back
+  - Walk the hand upward toward the opposite shoulder blade as far as possible
+  - The free hand can assist by gently holding the fingers and helping the reach ascend
+  - 'Target: hand reaches the midpoint of the thoracic spine (T6 level) or higher'
+  - 5 reps with a 3-second hold at end range; progress by tracking the spinal level
+    reached
+  description: The behind-back reach tests and trains shoulder internal rotation by
+    reaching one arm behind the back as high as possible toward the opposite shoulder
+    blade. Kelly Starrett uses it as the primary shoulder internal rotation test --
+    reaching T6 (midpoint of the shoulder blades) or higher indicates normal internal
+    rotation range. 5 reps per arm. Internal rotation deficit is a common finding
+    in overhead athletes and swimmers.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+calf_stretch_wall:
+  animation:
+    type: none
+  coaching_focus: Press the heel into the floor -- if the heel lifts even slightly,
+    the stretch has ended; all the work happens at the heel-to-floor interface.
+  common_errors:
+  - 'Heel lifting off the floor: the stretch disappears immediately -- maintain heel
+    contact throughout'
+  - 'Foot turned out: rotating the foot externally moves the stretch away from the
+    gastrocnemius into the peroneals'
+  - 'Bouncing the stretch: the gastrocnemius responds to sustained tension, not ballistic
+    loading -- hold still'
+  cue_points:
+  - Hands on the wall, rear leg straight, front leg bent for support
+  - Press the heel of the rear leg firmly into the floor -- this creates the gastrocnemius
+    stretch
+  - Lean gently into the wall to increase the stretch as the muscle yields
+  - Keep the rear foot pointing straight forward -- a turned-out foot reduces the
+    stretch
+  - 60 seconds minimum per side; breathe slowly and let the muscle relax into the
+    position
+  description: The wall calf stretch (straight-leg) targets the gastrocnemius by pressing
+    the heel into the floor with the knee extended while the hands brace on the wall.
+    Kelly Starrett prescribes 60 seconds per side as a daily baseline for athletes
+    with ankle dorsiflexion restriction. Gastrocnemius tightness is the most common
+    mechanical driver of ankle dorsiflexion deficit, which limits squat depth, heel
+    contact, and uphill walking efficiency.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+cat_cow_ks:
+  animation:
+    type: none
+  coaching_focus: The movement starts at the tailbone and travels upward through the
+    spine -- sequence from the pelvis, then the lumbar, then the thoracic, then the
+    cervical; do not initiate from the head.
+  common_errors:
+  - 'Only moving the lumbar: the thoracic spine should also flex and extend significantly
+    -- feel the ribs spreading and compressing'
+  - 'Rushing through: fast cat-cows miss the end range of both positions and become
+    a rocking exercise'
+  - 'Head leading the movement: the head should be the last segment to flex or extend,
+    not the initiator'
+  cue_points:
+  - 'Quadruped: hands under shoulders, knees under hips'
+  - 'Cat (flexion): tuck the tailbone, round the lumbar, then the thoracic, then the
+    cervical -- maximum spinal flexion'
+  - 'Cow (extension): untuck the tailbone, extend the lumbar, then the thoracic, then
+    lift the head -- maximum spinal extension'
+  - 'Slow and deliberate: 3 seconds per transition, pausing at end range of each position'
+  - 10 full cycles; breathe out on the cat, breathe in on the cow
+  description: Cat-cow alternates between full spinal flexion and full spinal extension
+    in a quadruped position -- 10 repetitions to segment the entire spine and establish
+    the full sagittal range before adding rotation or load. Kelly Starrett programs
+    it as standard spinal prep at the start of any session. The combined flexion-extension
+    sequence mobilizes all spinal levels simultaneously, from the cervical through
+    the lumbar.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+cat_cow_lateral_ks:
+  animation:
+    type: none
+  coaching_focus: The movement is from the spine, not the shoulder -- if the shoulder
+    drops toward the hip rather than the spine bending, the lateral flexion range
+    is absent.
+  common_errors:
+  - 'Shoulder dropping rather than spine bending: the scapula drops toward the pelvis
+    instead of the spine curving laterally'
+  - 'Hip hiking rather than spine bending: the hip elevates toward the shoulder instead
+    of the spine bending toward the hip'
+  - 'Skipping this in favor of only standard cat-cow: the lateral plane is the most
+    commonly restricted and the most commonly neglected'
+  cue_points:
+  - Quadruped starting position as per cat-cow
+  - Laterally flex the spine to bring the right hip and right shoulder toward each
+    other
+  - Hold 2 seconds at end range, then return to neutral and lateral flex the other
+    direction
+  - 10 reps each side; the range should be similar left to right
+  - Pair with standard cat-cow for a complete sagittal-frontal spinal prep sequence
+  description: The lateral cat-cow adds the frontal plane to the standard sagittal
+    cat-cow -- in a quadruped position, the spine laterally flexes to bring the hip
+    and shoulder on the same side toward each other. Kelly Starrett includes it to
+    address the lateral spinal range missing from the standard cat-cow. The lateral
+    movement is often the first plane of motion to become restricted in desk workers.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+couch_stretch_ks:
+  animation:
+    type: none
+  coaching_focus: Tuck the tailbone before driving the hip forward -- without the
+    posterior pelvic tilt, the lower back hyperextends and the hip flexors are never
+    actually loaded in their restricted range.
+  common_errors:
+  - 'Not achieving posterior pelvic tilt: the lower back arches and the hip flexors
+    are never stretched at their actual short range'
+  - 'Front foot too close to the wall: creates a compressed position; step the front
+    foot further forward'
+  - 'Rushing: 30 seconds is not sufficient -- 90 seconds is the minimum for meaningful
+    hip flexor change'
+  cue_points:
+  - Rear foot pressed against the wall, knee directly below the hip, shin vertical
+    against the wall
+  - Step the front foot forward into a lunge position
+  - Tuck the tailbone under (posterior pelvic tilt) before driving the hip toward
+    the wall
+  - Drive the hip forward while maintaining the posterior tilt -- feel the deep stretch
+    in the front of the rear-leg hip
+  - 90 seconds per side; use a folded mat under the rear knee if needed
+  description: 'The couch stretch (Kelly Starrett) is the primary hip flexor and rectus
+    femoris test -- rear foot elevated against a wall, knee on the floor, hip driven
+    forward toward the wall. The posterior pelvic tilt cue is the critical intervention:
+    flattening the lower back before driving the hip forward changes the target from
+    the superficial hip flexor to the deep iliopsoas and rectus femoris. 90 seconds
+    per side. Athletes who sit extensively develop couch stretch deficits that directly
+    predict squat position problems.'
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+cross_body_shoulder_stretch_ks:
+  animation:
+    external_id: Shoulder_Stretch
+    gif_alt: Cross-Body Shoulder Stretch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Shoulder_Stretch/0.jpg
+    type: gif
+  coaching_focus: Pull the elbow toward the opposite shoulder, not the wrist -- pressure
+    at the elbow targets the posterior capsule; pressure at the wrist only stretches
+    the forearm.
+  common_errors:
+  - 'Shoulder elevating (shrugging) during the stretch: the shoulder must stay depressed
+    to maintain tension on the posterior capsule'
+  - 'Pulling the wrist instead of the elbow: wrist pressure stretches the elbow and
+    forearm, not the posterior shoulder'
+  - 'Insufficient hold time: 15 seconds is not enough -- the posterior capsule requires
+    sustained pressure to respond'
+  cue_points:
+  - Bring one arm across the chest at shoulder height
+  - Use the opposite hand to hold the arm at the elbow and draw it toward the opposite
+    shoulder
+  - Keep the shoulder of the stretching arm down and away from the ear -- do not shrug
+  - 45 seconds per side; breathe slowly into the posterior shoulder
+  - Perform before any overhead pressing or after any heavy bench press session
+  description: The cross-body shoulder stretch presses the arm across the chest with
+    the opposite hand applying gentle overpressure at the elbow, targeting the posterior
+    deltoid and posterior shoulder capsule. Kelly Starrett prescribes 45 seconds per
+    side. Posterior shoulder tightness is common in athletes with high pressing volumes
+    -- it drives internal rotation restriction and anterior shoulder tipping (impingement
+    position) when the arm is raised overhead.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+deep_lunge_reach_ks:
+  animation:
+    type: none
+  coaching_focus: The reach overhead must come from the thorax rotating, not just
+    the arm reaching -- feel the ribs rotate and the spine follow before the arm goes
+    overhead.
+  common_errors:
+  - 'Arm reaching without thorax rotating: just an overhead arm raise from a lunge,
+    not a thoracic mobilization'
+  - 'Front knee collapsing inward: maintain knee alignment throughout the lunge and
+    the reach'
+  - 'Rushing through the reps: the 3-second hold at end range is the entire point
+    -- without it, this is just a dynamic lunge'
+  cue_points:
+  - Lunge forward into a deep lunge with the rear knee on or close to the floor
+  - Drop the elbow of the front-leg side toward the floor inside the front foot first
+  - Then rotate the thorax and reach the same-side arm overhead -- the arm follows
+    the rib cage rotation
+  - Hold 3 seconds at end range of the overhead reach
+  - 5 reps per side; alternate the reaching arm each rep
+  description: The deep lunge with thoracic reach combines a hip flexor stretch with
+    a thoracic rotation by lunging forward, dropping the rear knee, and then rotating
+    the thorax and reaching the ipsilateral arm overhead. Kelly Starrett programs
+    5 reps per side with a 3-second hold at end range. Combined hip-thorax mobilizations
+    reflect athletic movement patterns more closely than isolated stretches and are
+    more time-efficient than performing each in isolation.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+deep_squat_hold_ks:
+  animation:
+    type: none
+  coaching_focus: 'Press the elbows into the knees from inside: this cue uses the
+    arms to push the knees into external rotation, which opens the hips and allows
+    the torso to rise into an upright position.'
+  common_errors:
+  - 'Heels rising: ankle dorsiflexion is the primary limiter -- use a heel elevation
+    until ankle mobility improves'
+  - 'Torso collapsing forward: insufficient hip mobility, thoracic extension, or core
+    control -- the elbow-to-knee cue helps significantly'
+  - 'Rushing the accumulation: 30 seconds a day does not build squat mobility; 10
+    minutes is the daily target for meaningful adaptation'
+  cue_points:
+  - Feet shoulder-width or slightly wider, toes turned out 30 degrees
+  - 'Descend to full depth: hip crease well below the top of the knee, heels flat'
+  - Hands in prayer position, elbows inside the knees pressing them outward
+  - 'Chest tall: the elbows-to-knees cue lifts the torso automatically when done correctly'
+  - 'Accumulate time: start with 2-3 minutes per day and build toward 10 minutes over
+    months'
+  description: The deep squat hold is Kelly Starrett primary squat mobility test and
+    baseline practice -- feet shoulder-width, heels flat, descending to full depth
+    and holding. The standard is 10 minutes of accumulated deep squat per day as a
+    mobility baseline. A healthy human should be able to sit in a deep squat comfortably;
+    inability to do so indicates hip, ankle, or thoracic restriction. The hold simultaneously
+    tests all three lower-body mobility requirements.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+diaphragmatic_breathing_360_ks:
+  animation:
+    type: none
+  coaching_focus: The brace is not a breath hold -- create maximum trunk stiffness
+    while still being able to take a shallow breath; if breathing stops completely
+    during the brace, the diaphragm is not functioning as a stabilizer.
+  common_errors:
+  - 'Chest-only breathing: the shoulders rise during inhalation rather than the ribs
+    expanding -- the diaphragm is not being fully recruited'
+  - 'Breath-holding as the brace: the Valsalva maneuver (complete breath hold) is
+    different from the braced-breath technique; both have their place but the 360
+    expansion teaches the latter'
+  - 'Not practicing outside the gym: diaphragmatic bracing is an automatic pattern
+    that requires daily repetition to become unconscious -- it does not transfer from
+    practice to loading automatically'
+  cue_points:
+  - Lying on back with knees bent, hands on the lower rib cage
+  - 'Inhale through the nose: feel the ribs expand forward, sideways (laterally),
+    and backward into the floor simultaneously'
+  - Not just chest breathing -- the rib cage should expand in all three planes
+  - 'After 5 breaths: inhale, expand the ribs, then brace (contract the trunk) without
+    exhaling -- hold 5 seconds, exhale'
+  - 'Practice transferring this brace pattern to squats, deadlifts, and carries: breathe
+    in, brace, perform the rep, exhale at the top'
+  description: Diaphragmatic breathing with 360-degree rib cage expansion trains the
+    breathing pattern required for safe spinal loading under heavy work. Kelly Starrett
+    teaches 5 slow breaths expanding the rib cage forward, sideways, and backward
+    simultaneously, followed by bracing without holding the breath -- creating intra-abdominal
+    pressure while continuing to breathe. Athletes who cannot brace with a neutral
+    spine substitute with lumbar flexion or breath-holding, both of which are injury
+    mechanisms. This is a daily practice skill.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    highlight_secondary:
+    - erector_spinae
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - erector_spinae
+foam_roll_it_band_ks:
+  animation:
+    type: none
+  coaching_focus: Work the muscle tissue under and around the IT band (the vastus
+    lateralis and the TFL), not just the IT band itself -- the IT band is connective
+    tissue and does not release under foam rolling.
+  common_errors:
+  - 'Expecting the IT band to "release": the IT band is a dense fascial band that
+    does not stretch or release -- focus on the adjacent musculature'
+  - 'Rolling the knee joint itself: the roller should stop above the knee; rolling
+    over a joint is not productive'
+  - 'Too much upper-body weight on the supporting arm: the roller pressure should
+    come from the body weight on the thigh, not from the arm pushing'
+  cue_points:
+  - Side-lying on the roller, lateral thigh from just below the hip to just above
+    the knee
+  - Roll slowly; pause at any tender areas for 2 seconds
+  - Adjust body position (slightly forward or backward) to reach the vastus lateralis
+    and TFL rather than the IT band proper
+  - 120 seconds per side
+  - Follow with hip circle and hip 90/90 work to consolidate the range gained
+  description: Side-lying foam rolling of the IT band (lateral thigh from hip to knee)
+    reduces lateral thigh tone before hip mobility work. Kelly Starrett programs it
+    because IT band tightness restricts hip internal rotation and knee flexion range
+    -- two ranges commonly needed in squat mechanics. 120 seconds per side. The IT
+    band itself does not stretch, but the associated myofascial tissue and the underlying
+    vastus lateralis respond to foam rolling pressure.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+foam_roll_quads_ks:
+  animation:
+    type: none
+  coaching_focus: Pause at the hot spots and breathe -- the tender area is where the
+    tone is highest and where the intervention is needed most; rolling past it provides
+    less benefit than sitting in it.
+  common_errors:
+  - 'Rolling too fast: rapid rolling provides superficial pressure without affecting
+    the myofascial tone'
+  - 'Rolling both legs simultaneously: the bodyweight is spread across two legs and
+    the pressure per quad is halved -- roll one leg at a time'
+  - 'Skipping the pause at tender points: the hot spots are the intervention targets;
+    passing through them defeats the purpose'
+  cue_points:
+  - Prone on the floor, foam roller under one quad; support on forearms
+  - Roll slowly from the hip crease toward the knee and back; full quad length
+  - When a tender point is found, stop and breathe into it for 2 full seconds before
+    continuing
+  - 120 seconds per leg; use one leg at a time for adequate pressure
+  - Follow with a quad stretch or couch stretch to consolidate the tone reduction
+  description: Prone foam rolling of the quadriceps reduces quadriceps tone before
+    knee mobility or squat work. Kelly Starrett prescribes 120 seconds per leg with
+    slow rolling and 2-second pauses at tender points -- the "find the hot spot and
+    breathe into it" approach. High quadriceps tone (from previous training, sitting,
+    or compensatory patterns) restricts knee flexion range and loads the patellar
+    tendon more aggressively under squat depth.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+foam_roll_thoracic_ks:
+  animation:
+    type: none
+  coaching_focus: Extend over each segment sequentially -- move the roller one hand-width
+    at a time; rolling quickly back and forth misses the segmental extension work.
+  common_errors:
+  - 'Rolling onto the lumbar spine: the lumbar facets do not tolerate extension-over-roller
+    positioning -- stay strictly in the thoracic region'
+  - 'Rolling quickly along the entire spine: the segmental extension work requires
+    dwell time at each level'
+  - 'Not extending over the roller: some athletes just sit on the roller without allowing
+    thoracic extension -- let the spine extend toward the floor'
+  cue_points:
+  - Roller perpendicular to the spine; position it at the mid-thoracic level first
+    (T6-T8)
+  - Hands interlaced behind the head; allow the thoracic spine to extend over the
+    roller
+  - Hold 5-10 seconds at each level, then move the roller one segment up or down
+  - Cover T4 through T10; do not roll onto the lumbar spine or the cervical spine
+  - 'Active extension: some athletes can actively extend into the roller rather than
+    just resting over it -- both approaches are valid'
+  description: Thoracic foam rolling places the roller perpendicular to the spine
+    at mid-back and allows the thoracic spine to extend over it segment by segment
+    -- hands behind the head, gently extending the thorax over each spinal level.
+    Kelly Starrett prescribes 5-10 seconds at each segment from T4 to T10. This is
+    one of the most effective interventions for the thoracic kyphosis that develops
+    from sitting, pressing, and rucking.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+hip_90_90_ks:
+  animation:
+    type: none
+  coaching_focus: Switch actively -- lift the hip off the floor and rotate using the
+    hip muscles, not by pushing with the hands; active rotation trains the range,
+    passive rotation just visits it.
+  common_errors:
+  - 'Passive switch using hands: the hands should only guide, not lift and move the
+    hips -- the hip muscles must do the rotation'
+  - 'Pain in the knee: usually from forcing external rotation beyond current hip range
+    -- use hands to support the shin and reduce the lever arm'
+  - 'Not pausing in position: the switch itself trains the range, but the hold in
+    position develops end-range strength'
+  cue_points:
+  - Sit with one leg in front at 90 degrees (external rotation), one behind at 90
+    degrees (internal rotation)
+  - Both shins should form an L-shape; the knee of each leg is at 90 degrees
+  - 'Switch: lift the hips slightly and rotate to the opposite position -- front leg
+    becomes back leg'
+  - 10 switches total; pause for 5 seconds in each position before switching
+  - Add an active torso lean toward the front shin to deepen the hip external rotation
+    component
+  description: The hip 90/90 with active switches places both legs in 90-degree angles
+    (one leg externally rotated in front, one internally rotated behind) and actively
+    rotates between positions. Kelly Starrett uses 10 active switches as both the
+    primary hip rotation test and the primary trainer -- the switch requires internal
+    and external rotation on opposite sides simultaneously, and doing it actively
+    (not passively assisted) develops the rotational range that passive stretching
+    cannot.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+hip_circles_standing_ks:
+  animation:
+    external_id: Standing_Hip_Circles
+    gif_alt: Hip Circles (Standing)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Hip_Circles/0.jpg
+    type: gif
+  coaching_focus: Make the circle as large as possible -- a small, safe circle does
+    not reach the restricted arc; the whole point is to move into the range that feels
+    stiff.
+  common_errors:
+  - 'Small circles: staying within the comfortable range misses the restricted arc'
+  - 'Using trunk rotation to compensate for restricted hip range: keep the pelvis
+    stable and let the hip do the work'
+  - 'Holding the breath: breathing normally allows the range to open; breath-holding
+    increases protective muscle tone'
+  cue_points:
+  - Stand on one leg; the other leg draws the largest possible circle from hip flexion
+    through abduction through extension
+  - 10 circles forward (flexion-abduction-extension), 10 backward (extension-abduction-flexion)
+    on each side
+  - Smooth and slow; do not use momentum to push past the restricted arc
+  - The standing hip should stay stable -- wobbling reveals single-leg balance and
+    hip stability deficits
+  - Note asymmetry between left and right -- this is common and should be addressed
+    specifically
+  description: Standing hip circles draw large circumductions of the hip joint while
+    balanced on one leg, in both directions. Kelly Starrett programs them as the primary
+    hip joint prep and functional assessment tool -- the quality of the circle (smooth,
+    full range, symmetric left-to-right) is the diagnostic, and the exercise simultaneously
+    trains the range it reveals. A jerky or restricted arc identifies where joint
+    prep focus is needed.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+hip_flexor_stretch_kneeling_ks:
+  animation:
+    external_id: Kneeling_Hip_Flexor
+    gif_alt: Hip Flexor Stretch (Kneeling)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Hip_Flexor/0.jpg
+    type: gif
+  coaching_focus: Tuck the tailbone before driving the hip forward -- without the
+    pelvic tilt, the stretch moves to the lumbar spine, not the hip flexors.
+  common_errors:
+  - 'Anterior pelvic tilt: the lower back arches and the hip flexors are not stretched
+    -- the tilt cue is non-negotiable'
+  - 'Rear knee too close to front foot: insufficient range for the hip to drive forward;
+    move the rear knee back'
+  - 'Leaning the torso forward: the torso should stay upright or lean slightly back;
+    leaning forward brings the hip toward the front foot rather than stretching the
+    rear hip'
+  cue_points:
+  - 'Half-kneeling: rear knee on floor, front foot flat, both legs at 90 degrees'
+  - 'Posterior pelvic tilt first: tuck the tailbone under to flatten the lower back'
+  - Keeping the tilt, drive the rear-leg hip forward toward the front heel
+  - Reach the opposite arm overhead to add a lateral component to the stretch
+  - 60 seconds per side; use a folded mat under the rear knee
+  description: The kneeling hip flexor stretch positions the athlete in a half-kneeling
+    lunge and drives the front hip forward with a posterior pelvic tilt cue. Kelly
+    Starrett prescribes 60 seconds per side as a standard hip flexor intervention.
+    Hip flexor tightness in the half-kneeling position is a reliable predictor of
+    lumbar dysfunction under load -- the hip flexors attach to the lumbar vertebrae
+    and pull the spine into extension when shortened.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+knee_circles_ks:
+  animation:
+    external_id: Knee_Circles
+    gif_alt: Knee Circles
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Knee_Circles/0.jpg
+    type: gif
+  coaching_focus: Large circles, both directions -- the restriction in the arc tells
+    you where to focus additional knee mobility work before loading.
+  common_errors:
+  - 'Circles too small: staying in the comfortable range misses the stiff arcs entirely'
+  - 'Skipping after a knee injury: the post-injury period is exactly when gentle joint
+    circles are most important for synovial circulation'
+  - 'Standing upright: slight knee bend is required to allow the circular path; a
+    locked knee cannot circle'
+  cue_points:
+  - Stand with feet shoulder-width, knees slightly bent; hands rest on the knees
+  - Draw large circles with both knees simultaneously in the same direction
+  - 10 circles clockwise, 10 counterclockwise
+  - Note any catching or pain -- particularly at inner or outer range of the arc
+  - Progress to single-knee circles if asymmetry is found
+  description: Knee circles are a quadruped joint prep movement -- hands on knees,
+    feet shoulder-width, drawing circles with both knees simultaneously in both directions.
+    Kelly Starrett includes them before any loaded squat pattern to distribute synovial
+    fluid through the knee joint and assess joint quality. The quality of the circular
+    path (smooth vs. catching) provides immediate feedback on joint health.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+lacrosse_ball_pec_minor_ks:
+  animation:
+    type: none
+  coaching_focus: The ball must be medial to the armpit at the rib level -- many athletes
+    place it on the pec major (the bulk of the chest); the pec minor is lateral to
+    the sternum and deep to the pec major.
+  common_errors:
+  - 'Ball on the pec major belly: the pec major is not the impingement driver; the
+    pec minor is smaller, deeper, and more lateral toward the rib cage'
+  - 'Rolling the ball: sustained pressure is more effective than rolling for the pec
+    minor'
+  - 'Not moving the arm during compression: the combination of pressure and movement
+    produces more change than static compression alone'
+  cue_points:
+  - Place the ball against the wall; lean the upper chest into the ball at the coracoid
+    attachment (lateral clavicle level, medial to the armpit)
+  - Apply sustained pressure -- move the arm slowly through shoulder flexion and horizontal
+    abduction while compressed
+  - 90 seconds per side; the release sensation in the anterior shoulder is the target
+  - 'Identify the ball position by finding the coracoid process first: it is just
+    below the lateral clavicle, medial to the shoulder joint'
+  - Follow with a wall slide to immediately test the shoulder range of motion gained
+  description: Lacrosse ball work on the pec minor (a small muscle lateral to the
+    sternal border at the T3-T5 rib level, attaching to the coracoid process) is the
+    primary intervention for anterior shoulder tipping -- the most common cause of
+    shoulder impingement in pressing athletes. Kelly Starrett prescribes 90 seconds
+    per side with the ball against a wall. Pec minor tightness pulls the coracoid
+    anteriorly and inferiorly, tipping the scapula forward and closing the subacromial
+    space.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+lacrosse_ball_piriformis_ks:
+  animation:
+    type: none
+  coaching_focus: Find the spot that creates a deep referral down the back of the
+    leg or into the hip -- that is the piriformis, not just the superficial glute;
+    sit in it and breathe.
+  common_errors:
+  - 'Sitting on the superficial gluteus maximus instead of the piriformis: the piriformis
+    is much deeper; lean toward the affected side and probe with the ball until the
+    referral sensation is found'
+  - 'Rolling rather than sustained pressure: the piriformis responds to sustained
+    compression, not rolling'
+  - 'Insufficient time: 30 seconds does not produce meaningful tone reduction in the
+    piriformis'
+  cue_points:
+  - Seated on the ball placed under the piriformis (midpoint between the sitting bone
+    and the greater trochanter)
+  - Cross the ipsilateral ankle over the opposite knee to put the piriformis on a
+    slight stretch under the ball
+  - Find the most sensitive spot and sit into it; 120 seconds of sustained compression
+  - Breathe slowly -- the tension in the piriformis releases with the exhale
+  - Do not roll; stay at the target point and let the pressure accumulate
+  description: Lacrosse ball work on the piriformis (deep external hip rotator, deep
+    to the gluteus maximus) reduces piriformis and short external rotator tone --
+    the primary driver of hip internal rotation restriction in most athletes. Kelly
+    Starrett prescribes 120 seconds per side seated with the ipsilateral ankle crossed
+    over the opposite knee to put the piriformis on slight stretch while the ball
+    compresses it. Sustained point pressure is more effective than rolling for this
+    deep muscle.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+lying_hip_rotation_ks:
+  animation:
+    type: none
+  coaching_focus: Let gravity do the work on the passive descent -- do not use the
+    opposite hand to push the knee; pure passive range is what is being measured.
+  common_errors:
+  - 'Pelvis rotating: the hip rotation range has been exceeded and the lumbar spine
+    is compensating -- the relevant range is only what can be achieved before the
+    pelvis moves'
+  - 'Using hands to force the range: passive assessment requires passive descend only'
+  - 'Not comparing sides: the clinical value of this test is the asymmetry -- always
+    test both sides back to back'
+  cue_points:
+  - Lying on back, one knee bent to 90 degrees, foot flat on the floor
+  - 'External rotation: let the knee fall outward toward the floor -- how far does
+    it go before the pelvis rotates?'
+  - 'Internal rotation: let the knee fall inward toward the floor -- same question'
+  - 10 reps each direction, both sides; compare left to right
+  - 'Note: the pelvis should stay flat on the floor throughout -- pelvic rotation
+    is compensation, not hip rotation'
+  description: Lying hip rotation in internal and external rotation assesses and trains
+    passive hip rotation range by lying on the back, bending one knee to 90 degrees,
+    and rotating the leg inward and outward through its full range. Kelly Starrett
+    uses it to identify side-to-side rotation asymmetries -- the restricted side predicts
+    compensatory lumbar loading during squats, deadlifts, and single-leg movements.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+neck_lateral_flexion_ks:
+  animation:
+    type: none
+  coaching_focus: The ear moves toward the shoulder -- not the shoulder toward the
+    ear; the shoulder must stay depressed and square throughout the movement.
+  common_errors:
+  - 'Shoulder elevating toward the ear: the movement becomes a bilateral approximation
+    rather than a lateral cervical stretch'
+  - 'Hand overpressure on the head: contraindicated for the same reason as neck rotation
+    -- gravity only'
+  - 'Skipping the depress cue: without shoulder depression, the scalenes are not at
+    full stretch length'
+  cue_points:
+  - Seated or standing, tall spine; actively depress the shoulder of the same side
+    before lateral flexing
+  - Let the ear drop toward the shoulder under gravity -- no hand pressure
+  - Hold 2 seconds at end range; return to center
+  - 10 reps each side; compare range side to side
+  - Pair with the opposite shoulder depression cue to increase the lateral stretch
+  description: Slow ear-to-shoulder neck lateral flexion assesses and maintains lateral
+    cervical range of motion -- a movement plane that reflects scalene and SCM tightness
+    commonly associated with desk work, forward head posture, and high trap tension.
+    Kelly Starrett programs it as a complement to cervical rotation in the joint prep
+    sequence. Gravity only, no overpressure. Contraindicated with cervical instability.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+neck_rotation_controlled_ks:
+  animation:
+    type: none
+  coaching_focus: Slow and deliberate -- the goal is to feel the end range of rotation
+    on each side, not to swing the head quickly from side to side.
+  common_errors:
+  - 'Forcing range with the hands: gravity only -- no overpressure on the cervical
+    spine'
+  - 'Fast rotation: speed makes this a ballistic movement that can trigger protective
+    muscle guarding'
+  - 'Ignoring asymmetry: if one direction is more restricted, it is the signal, not
+    the norm to accommodate'
+  cue_points:
+  - Seated or standing with a tall spine; shoulders relaxed and depressed
+  - Rotate the head slowly to one side until end range is reached -- hold 2 seconds
+  - Return to center, then rotate to the opposite side
+  - 10 reps each direction; note any asymmetry in range or quality
+  - Pair with thoracic rotation work if cervical rotation is consistently restricted
+  description: Slow, controlled cervical rotation to each side assesses and maintains
+    full cervical rotation range of motion before any upper-body loading session.
+    Kelly Starrett programs it as a standard joint prep -- loss of cervical rotation
+    range predicts upper thoracic restriction, and the two are addressed together.
+    Gravity only, no overpressure. Contraindicated with cervical instability.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+open_books_ks:
+  animation:
+    type: none
+  coaching_focus: The arm follows the chest -- the rotation comes from the thoracic
+    spine and the arm hangs passively following it; if the arm leads, the thorax stays
+    still and only the shoulder moves.
+  common_errors:
+  - 'Hips rotating with the thorax: the knees must stay stacked -- hip rotation substitutes
+    for thoracic rotation and is not the intended movement'
+  - 'Arm leading the movement instead of following the chest: the rib cage must rotate
+    and the arm follows; leading with the arm isolates the shoulder without moving
+    the thorax'
+  - 'End range forced by the arm: only go as far as the thorax can rotate; the arm
+    settles where the thorax takes it'
+  cue_points:
+  - Side-lying, hips and knees stacked at 90 degrees; bottom arm extended forward
+    at shoulder height
+  - Top arm starts stacked on the bottom arm; sweep it overhead following the rib
+    cage rotation
+  - Let the top arm reach toward the floor on the other side of the body -- only as
+    far as the thorax rotates, not forced by the arm
+  - 'Knees stay stacked throughout: do not allow the hips to rotate as the thorax
+    rotates'
+  - 10 reps per side; 3-second hold at end range of each rep
+  description: Open books are a lying thoracic rotation drill performed on the side
+    -- knees stacked at 90 degrees, the top arm sweeps overhead following the rib
+    cage rotation while the knees stay stacked. Kelly Starrett prescribes 10 reps
+    per side. Thoracic rotation is the mobility most commonly lost in athletes and
+    desk workers, and its loss forces the lumbar spine to substitute rotational load
+    it is not designed to bear.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+pigeon_pose_ks:
+  animation:
+    type: none
+  coaching_focus: Posterior tilt before sinking -- flatten the lower back by tucking
+    the tailbone, then lower toward the floor; this changes the target from the TFL
+    to the deep external rotators.
+  common_errors:
+  - 'Hips not squared: if the hip of the rear leg is lifting off the mat, the position
+    is not achieving the intended target'
+  - 'Anterior pelvic tilt (arching lower back): brings the TFL and IT band into the
+    stretch and takes the external rotators out of it'
+  - 'Collapsing immediately to the floor: descend slowly and with control; the first
+    30 seconds are when the range is being negotiated'
+  cue_points:
+  - Front shin horizontal across the mat (or angled, depending on current range);
+    rear leg extended straight
+  - Square the hips to the front before descending
+  - Tuck the tailbone (posterior pelvic tilt) before applying any downward pressure
+  - Lower the torso over the front shin only after the posterior tilt is established
+  - 60-90 seconds -- use a yoga block under the front hip if the pelvis cannot square
+    without excessive tilt
+  description: The pigeon pose (Kelly Starrett version) stretches the hip external
+    rotators -- primarily the piriformis and short external rotators -- with the front
+    leg horizontal and the rear leg extended. Starrett adds a posterior pelvic tilt
+    cue (flatten the lower back) that deepens the piriformis stretch compared to the
+    passive yoga version. 60-90 seconds each side. Piriformis and external rotator
+    restriction drives hip internal rotation deficit, which predicts lumbar compensation
+    under load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+push_up_plus_ks:
+  animation:
+    type: none
+  coaching_focus: The plus is a separate action on top of the push-up -- fully extend
+    the arms first, then push further and feel the shoulder blades separate; it is
+    not just a full lockout.
+  common_errors:
+  - 'Not protracting far enough: the shoulder blades should visibly separate; a subtle
+    protraction does not challenge the serratus'
+  - 'Losing the plank during the plus: the hips must stay level; a hip hike or sag
+    indicates core disengagement'
+  - 'Treating as a standard push-up: the plus is an entirely separate phase from the
+    push-up -- the two movements are different exercises combined into one'
+  cue_points:
+  - Perform a standard push-up to full lockout
+  - 'At lockout, push the floor away further: round the upper back, separate the shoulder
+    blades, protract the scapulae'
+  - Feel the serratus (the serrated muscle along the rib cage, below the armpits)
+    contracting
+  - Hold the protracted position 2 seconds; return to lockout; lower into the next
+    rep
+  - 10-15 reps; this exercise fatigues the serratus quickly if it is genuinely weak
+  description: The push-up plus adds a scapular protraction (serratus anterior contraction)
+    at the top of the standard push-up -- from full lockout, the athlete pushes the
+    floor away to round the upper back and separate the shoulder blades. Kelly Starrett
+    programs it to target serratus anterior, which is responsible for scapular upward
+    rotation. Serratus weakness causes scapular winging and is the primary driver
+    of shoulder impingement in pressing athletes.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+shoulder_90_90_rotation_ks:
+  animation:
+    type: none
+  coaching_focus: The elbow stays at 90 degrees of abduction throughout -- if the
+    elbow drops to the side or the shoulder hikes, the rotation demand has exceeded
+    the current range and the body is compensating.
+  common_errors:
+  - 'Elbow dropping during external rotation: indicates the range has been exceeded
+    -- do not force past the point where the elbow drops'
+  - 'Shoulder hiking during internal rotation: the scapula is compensating; depress
+    the shoulder actively before rotating'
+  - 'Not holding at end range: the hold is what trains the range; without it this
+    is just a rotation repetition'
+  cue_points:
+  - Arm abducted to 90 degrees at the side; elbow bent to 90 degrees pointing toward
+    the ceiling
+  - 'Internal rotation: rotate the forearm forward toward the floor, keeping the elbow
+    at 90 degrees'
+  - 'External rotation: rotate the forearm backward toward the wall behind you'
+  - 10 reps per direction per side; 2-second hold at end range of each rep
+  - 'Normal range: external rotation to 90 degrees (forearm parallel to floor behind),
+    internal rotation to 70-80 degrees (forearm parallel to floor in front)'
+  description: Shoulder 90/90 rotation tests and trains internal and external rotation
+    at 90 degrees of shoulder abduction -- the arm held at 90 degrees abduction with
+    the elbow bent to 90 degrees, rotating the forearm forward (internal) and backward
+    (external) through full range. Kelly Starrett prescribes 10 reps each direction
+    per side. This is the most clinically relevant shoulder rotation range for overhead
+    athletic positions.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+shoulder_circles_ks:
+  animation:
+    external_id: Arm_Circles
+    gif_alt: Shoulder Circles (Arm Circles)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arm_Circles/0.jpg
+    type: gif
+  coaching_focus: Make the circle as large as possible -- a small circle stays within
+    the comfortable range and does not mobilize the full shoulder arc.
+  common_errors:
+  - 'Small circles: missing the restricted arc entirely -- reach for maximum circumduction'
+  - 'Only forward circles: the backward arc is where posterior capsule restriction
+    is revealed and trained'
+  - 'Rushing: 10 fast circles is not a shoulder prep -- slow, deliberate circumduction
+    is the stimulus'
+  cue_points:
+  - Arms straight, draw the largest possible circles in the forward direction -- 10
+    reps
+  - Reverse direction -- 10 reps backward; the backward arc typically reveals restriction
+    earlier than the forward arc
+  - 'Speed: slow enough to feel the quality of each arc; fast circles use momentum'
+  - Both arms simultaneously or alternating; simultaneous circles are more time-efficient
+  - 'Follow with more specific shoulder work: cross-body stretch, 90/90 rotation,
+    or banded distraction'
+  description: Arm circles perform full shoulder circumduction in both forward and
+    backward directions before any upper-body or overhead session. Kelly Starrett
+    includes them as the entry shoulder joint prep in every upper-body sequence. The
+    forward arc loads the anterior capsule and subscapularis range; the backward arc
+    loads the posterior capsule and the range needed for behind-the-neck positions.
+    Both directions are required.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+soleus_stretch_bent_knee:
+  animation:
+    type: none
+  coaching_focus: The knee must stay bent -- the moment it straightens, the gastrocnemius
+    takes over and the soleus is released from tension.
+  common_errors:
+  - 'Knee straightening partway through: unconscious return to straight knee removes
+    the soleus isolation'
+  - 'Insufficient time: 30 seconds is not enough -- the soleus requires sustained
+    load to yield'
+  - 'Skipping this stretch after addressing the gastrocnemius: the two-step calf stretch
+    sequence is incomplete without both'
+  cue_points:
+  - Same wall position as the straight-leg calf stretch, but bend the rear knee deliberately
+  - Sink the rear knee forward over the foot while pressing the heel into the floor
+  - The stretch sensation should be deep in the lower calf, closer to the heel than
+    the belly
+  - 60 seconds per side; the soleus responds more slowly than the gastrocnemius --
+    do not rush
+  - Perform after the straight-leg stretch in a complete calf mobility sequence
+  description: The soleus stretch (bent-knee wall variant) isolates the soleus by
+    bending the knee during a calf wall stretch, taking the gastrocnemius off tension.
+    Kelly Starrett identifies the soleus as often the primary dorsiflexion limiter
+    once gastrocnemius restriction has been addressed. 60 seconds per side. Soleus
+    tightness limits the depth available in the bottom of the squat and the forward
+    lean possible during uphill locomotion.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+spinal_rotation_squat_ks:
+  animation:
+    type: none
+  coaching_focus: The squat locks the pelvis; the rotation comes only from the thorax
+    -- if the hips shift to allow rotation, the pelvic lock is lost and the drill
+    stops targeting thoracic mobility.
+  common_errors:
+  - Hips shifting as the arm reaches -- the squat depth must be maintained without
+    lateral drift; reduce rotation range if the hips shift
+  - Rotation from the lumbar spine -- the lumbar must stay neutral; all rotation should
+    be felt in the mid-back
+  - Attempting before the deep squat hold is established -- the drill cannot be performed
+    without adequate squat depth
+  cue_points:
+  - Establish the deep squat hold position fully before adding any rotation
+  - Place one hand on the inside of the knee for support and reach the other arm upward
+    toward the ceiling
+  - Rotate the thorax as far as possible while the hips stay squared and the squat
+    position holds
+  - Hold the end range 2-3 seconds -- breathe into the rotation to increase range
+    over time
+  - 'Alternate sides: 10 reps per side, 2 sets'
+  description: Spinal rotation in the deep squat position is the most demanding Kelly
+    Starrett thoracic rotation drill -- the deep squat locks the pelvis, forcing all
+    rotation exclusively through the thoracic spine. It is a progression from the
+    deep squat hold, requiring established squat mobility before the rotation demand
+    is added. Contraindicated with lumbar disc pathology.
+  muscle_diagram:
+    highlight_primary:
+    - obliques
+    - quadriceps
+    highlight_secondary:
+    - glutes
+    - hip_flexors
+  muscles_primary:
+  - thoracic_extensors
+  - obliques
+  - quadriceps
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - calves
+thoracic_extension_floor_ks:
+  animation:
+    type: none
+  coaching_focus: The movement comes from the thoracic spine, not the lumbar -- if
+    the lower back arches, the thoracic extensors are not working; the lumbar stays
+    neutral while the thorax extends.
+  common_errors:
+  - 'Lumbar extension instead of thoracic extension: the lower back arches off the
+    floor; keep the lumbar pressed down'
+  - 'Neck flexion: the head should stay neutral, not flex forward off the floor'
+  - 'Rushing: fast reps use momentum -- slow, deliberate extension is what mobilizes
+    the thoracic segments'
+  cue_points:
+  - Lying on back, hands interlaced behind the head, feet flat on the floor
+  - Curl the upper back off the floor -- thoracic extension -- not a sit-up or neck
+    lift
+  - The lumbar spine stays in contact with the floor
+  - Hold 2 seconds at end range; lower slowly
+  - 10-15 reps; the thoracic extensors fatigue quickly if range is genuine
+  description: Thoracic extension on the floor targets segmental extension mobility
+    from T1 to T12 -- lying on the back with hands behind the head, lifting the upper
+    back into thoracic extension with a 2-second hold at end range. Kelly Starrett
+    uses it to address the thoracic kyphosis that develops under load and prolonged
+    sitting. Active thoracic extension (lifting against gravity) develops both range
+    and the erector spinae strength to maintain it.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+thoracic_rotation_90_90_ks:
+  animation:
+    type: none
+  coaching_focus: Both the hip and the thorax must contribute -- if only the thorax
+    is working while the hips are square, it is just seated rotation; let the hip
+    be in the 90/90 position and feel both demands simultaneously.
+  common_errors:
+  - 'Using the hip to generate the rotation: the hip should be passive in its 90/90
+    position while the thorax does the rotating'
+  - 'Too much hip rotation in the 90/90 setup: if the hip cannot reach 90/90, address
+    the hip rotation first'
+  - 'Skipping this for the easier seated version: the 90/90 position makes this more
+    demanding and more sport-specific'
+  cue_points:
+  - 'Hip 90/90 position: front leg external rotation, rear leg internal rotation'
+  - Rotate the thorax over the front leg -- the rotation is in the thorax, not the
+    hip
+  - Hands behind the head as in the seated rotation drill
+  - The hip is positioned at the limit of its rotation range; the thorax then rotates
+    from there
+  - 10 reps each direction; switch hip 90/90 position between sides
+  description: Thoracic rotation over the hip 90/90 position combines hip and thoracic
+    rotation simultaneously -- the most sport-specific thoracic rotation pattern because
+    it requires both hip and spinal mobility at the same time. Kelly Starrett programs
+    it as the advanced thoracic rotation drill after the seated variant. The 90/90
+    hip position removes the pelvis-locking from the seated drill and requires the
+    thorax to rotate independently while the hip is simultaneously loaded in rotation.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+thoracic_rotation_seated_ks:
+  animation:
+    type: none
+  coaching_focus: The pelvis does not move -- all of the rotation comes from the thorax;
+    if the hip rotates, it is compensating for restricted thoracic range.
+  common_errors:
+  - 'Hip rotating with the thorax: the pelvis must stay fixed -- sit against a wall
+    if hip rotation is uncontrolled'
+  - 'Forcing rotation with the arms: the hands should not pull the head into rotation;
+    the thorax rotates and the arms ride along'
+  - 'Only working the comfortable direction: the restricted direction is the training
+    target'
+  cue_points:
+  - Sit cross-legged or in 90/90; hands interlaced behind the head, elbows wide
+  - 'Fix the pelvis and rotate only the thorax: the rib cage turns while the hips
+    stay square'
+  - Lead the rotation with the elbow -- this cue tends to produce more thoracic range
+    than cueing the shoulder
+  - 10 reps each direction; pause 2 seconds at end range
+  - Compare range left to right -- asymmetry of more than 20 degrees warrants specific
+    attention
+  description: Seated thoracic rotation with hands behind the head trains the thorax
+    independent of the hip -- cross-legged or 90/90 seated, rotating the rib cage
+    fully left and right while the pelvis stays fixed. Kelly Starrett prescribes 10
+    reps per side. Isolated thoracic rotation training builds the specific mobility
+    needed for throwing, swimming, and all rotational sport patterns while preventing
+    lumbar substitution.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+tibialis_raise_wall_ks:
+  animation:
+    type: none
+  coaching_focus: Maximum toe elevation on every rep -- the tibialis is only trained
+    through its full concentric range if the toes lift as high as possible.
+  common_errors:
+  - 'Partial toe elevation: only the toes lift but not the forefoot -- the full front
+    of the foot must rise'
+  - 'Not leaning against the wall: the wall provides the balance that allows full
+    attention to the tibialis contraction'
+  - 'Rushing the eccentric: the 3-second lower is when the tibialis does its most
+    important work as a decelerator'
+  cue_points:
+  - Stand with heels 2-3 inches from a wall, lean back until shoulders contact the
+    wall
+  - Lift both toes and forefeet as high as possible -- hold for 1 second at the top
+  - Lower slowly (3 seconds) back to the floor
+  - 20-30 reps per set; the tibialis anterior fatigues quickly if the range is complete
+  - Progress by adding a weighted vest or standing on one leg for an advanced challenge
+  description: The wall tibialis raise strengthens the tibialis anterior by standing
+    with heels close to a wall and lifting the toes and forefoot as high as possible
+    against gravity. Kelly Starrett and the ATG system converge on tibialis anterior
+    strength as a critical modulator of dorsiflexion quality and pronation control.
+    A strong tibialis anterior decelerates pronation and controls dorsiflexion rate,
+    protecting the Achilles and plantar fascia under load.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wall_ankle_dorsiflexion:
+  animation:
+    type: none
+  coaching_focus: The heel must stay flat -- if the heel rises, the test is over;
+    record the maximum foot distance at which heel contact can be maintained as the
+    baseline.
+  common_errors:
+  - 'Heel lifting: immediately invalidates the test and the training stimulus; reduce
+    foot-to-wall distance until heel contact is maintained'
+  - 'Knee caving inward: the knee tracks over the second toe -- valgus collapse is
+    a separate problem that should not be accommodated during this drill'
+  - 'Testing only, not training: the drill is both the test and the intervention --
+    perform 10-15 reps per side every session'
+  cue_points:
+  - Start with the foot 5 cm from the wall; drive the knee toward the wall over the
+    second toe
+  - Heel stays flat on the floor throughout -- this is non-negotiable
+  - Gradually increase foot-to-wall distance each session as range improves
+  - 'The test standard: foot 10 cm from wall, knee touches the wall, heel flat --
+    this is normal dorsiflexion'
+  - Use band distraction at the ankle simultaneously to address capsular restriction
+    alongside muscular restriction
+  description: 'The knee-to-wall ankle dorsiflexion drill tests and trains ankle dorsiflexion
+    range by driving the knee forward toward the wall with the foot a set distance
+    from the wall. Kelly Starrett uses it as the primary ankle dorsiflexion test:
+    can the knee reach the wall with the foot 10 cm from the wall and the heel flat?
+    Failure indicates the primary limiter of squat depth, step-up mechanics, and downhill
+    running capacity.'
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wall_slide_ks:
+  animation:
+    type: none
+  coaching_focus: The forearms must stay in contact with the wall throughout -- any
+    gap between the forearm and wall means the scapula is not upwardly rotating and
+    the compensatory shoulder impingement position is occurring.
+  common_errors:
+  - 'Forearms losing wall contact partway up: the range has been exceeded -- go only
+    as high as wall contact can be maintained'
+  - 'Arching the lower back to reach overhead: a lumbar extension compensation for
+    restricted shoulder/thoracic mobility'
+  - 'Elbows bending as the arms rise: the elbows should stay at roughly 90 degrees
+    throughout the slide'
+  cue_points:
+  - Stand with the back against the wall; press the forearms against the wall at shoulder
+    height, elbows at 90 degrees
+  - Slide the forearms upward toward overhead, maintaining full forearm-wall contact
+  - As the arms rise, the shoulder blades should upwardly rotate -- feel the lower
+    traps working
+  - Stop when the forearms can no longer maintain wall contact -- that is the current
+    ceiling of pain-free range
+  - 10 reps; progress by increasing the overhead range achieved without losing wall
+    contact
+  description: The wall slide trains shoulder flexion with scapular upward rotation
+    by pressing the forearms against a wall and sliding the hands overhead while maintaining
+    forearm contact. Kelly Starrett programs it to develop the coupled motion of shoulder
+    flexion plus scapular upward rotation -- the inability to achieve this pattern
+    without compensating is one of the primary causes of shoulder impingement during
+    overhead pressing.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+worlds_greatest_stretch_ks:
+  animation:
+    external_id: Worlds_Greatest_Stretch
+    gif_alt: World''s Greatest Stretch
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Worlds_Greatest_Stretch/0.jpg
+    type: gif
+  coaching_focus: The elbow must reach the floor inside the front foot -- if it cannot,
+    the hip is not in a full lunge position; step the front foot forward more before
+    the elbow reaches down.
+  common_errors:
+  - 'Elbow cannot reach the floor: the front foot is not far enough forward or the
+    hip mobility is insufficient -- step further forward'
+  - 'Arm reaching without thorax rotating: this becomes an overhead lunge, not a thoracic
+    rotation drill -- feel the ribs rotate before the arm goes overhead'
+  - 'Skipping the 3-second hold: the hold is what creates the mobility stimulus; moving
+    through quickly makes this just a dynamic lunge'
+  cue_points:
+  - Step into a deep lunge with the rear knee close to the floor
+  - Drop the elbow of the front-leg side to the floor inside the front foot
+  - Rotate the same-side arm and reach it overhead, following the rib cage rotation
+  - Hold 3 seconds at the overhead reach end range
+  - 5 reps per side; alternate which arm reaches overhead
+  description: The world greatest stretch (Kelly Starrett version) combines a lunge,
+    elbow-to-floor hip flexor stretch, and overhead thoracic rotation in one movement
+    -- making it one of the most time-efficient full-body mobility exercises available.
+    Starrett prescribes 5 reps per side with a 3-second pause at end range of each
+    position. It simultaneously addresses hip flexor length, ankle dorsiflexion, and
+    thoracic rotation -- the three mobility requirements that drive most squat and
+    sprint mechanic deficits.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wrist_circles_ks:
+  animation:
+    external_id: Wrist_Circles
+    gif_alt: Wrist Circles
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wrist_Circles/0.jpg
+    type: gif
+  coaching_focus: Full circles, both directions -- the restricted arc in one direction
+    is the target; do not circle only in the comfortable direction.
+  common_errors:
+  - 'Only small range circles: the restricted arc is where the prep is needed'
+  - 'Skipping the wrist prep before loaded press work: the wrist is the first joint
+    to fail under load if unprepared'
+  - 'One direction only: radial and ulnar deviation are loaded differently in each
+    direction -- both arcs must be trained'
+  cue_points:
+  - Both hands simultaneously or one at a time
+  - 'Draw the largest possible circles: full flexion, radial deviation, full extension,
+    ulnar deviation in sequence'
+  - 10 circles clockwise, 10 counterclockwise per hand
+  - Slow enough to feel each arc -- fast circles use momentum to bypass restricted
+    positions
+  - Follow with wrist extension stretch and loaded wrist work for complete prep
+  description: Wrist circles perform full circumduction of the wrist joint in both
+    directions before any pressing, carrying, or Olympic lifting session. Kelly Starrett
+    includes them as standard wrist joint prep -- slow circumduction distributes synovial
+    fluid through the radiocarpal joint and assesses restriction in the flexion-radial
+    deviation-extension-ulnar deviation arc. Both directions are required for complete
+    preparation.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wrist_extension_stretch_ks:
+  animation:
+    type: none
+  coaching_focus: Fingers point toward the knees, not to the sides -- the direction
+    of the fingers determines the direction of the wrist extension loading; toward
+    the knees is the correct front-rack prep position.
+  common_errors:
+  - 'Fingers pointing to the sides: changes the extension vector and makes this a
+    radial deviation stretch rather than a front-rack prep'
+  - 'Pain rather than discomfort: some discomfort is expected; sharp pain is a stop
+    signal -- reduce the load'
+  - 'Insufficient time: 30 seconds minimum; wrist capsular tissue responds slowly
+    to extension loading'
+  cue_points:
+  - Quadruped or seated; place hands palm-down with fingers pointing toward the knees
+  - Shift the bodyweight backward to load the wrist into extension
+  - 30 seconds of sustained pressure; oscillate gently if the static hold is too intense
+  - Progress by increasing the weight shifted backward or by adding a quadruped position
+    with full bodyweight
+  - Pair with wrist circles and flexion stretch for a complete wrist prep
+  description: The wrist extension stretch loads the wrist extensors and dorsal capsule
+    by placing the hands palm-down on the floor with fingers pointing toward the knees
+    and shifting weight backward to load the wrist into extension. Kelly Starrett
+    prescribes 30 seconds. Wrist extension deficit is the primary driver of front-rack
+    position failure and front-squat compensations -- if the wrist cannot extend to
+    90 degrees, the front rack collapses.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []
+wrist_flexion_compression_ks:
+  animation:
+    type: none
+  coaching_focus: The fists bear the bodyweight -- this is a loaded wrist flexor strengthening
+    exercise, not just a stretch; the compression is the stimulus.
+  common_errors:
+  - 'Not shifting weight forward: the fists must actually bear meaningful bodyweight
+    -- this is not a rest position'
+  - 'Treating this as a substitute for the open-palm push-up prep: the fist position
+    trains a different wrist angle; include both'
+  - 'Skipping this when wrists are sore from pressing: this is exactly the time it
+    is most needed for tendon health'
+  cue_points:
+  - Quadruped position on the fists rather than the open palms
+  - Wrists are in a neutral-to-flexed position inside the fist -- the knuckles bear
+    the load
+  - Weight shifts forward to load the wrists; experiment with tilting the fist for
+    internal and external rotation variations
+  - 30-60 seconds of loaded compression per set
+  - Progress by raising one hand to shift more load to the other wrist
+  description: Wrist flexion compression in a quadruped-on-fists position loads the
+    wrist flexor tendons through compression -- an important counterbalance to the
+    extension-dominant wrist loading of push-ups and pressing exercises. Kelly Starrett
+    programs it to strengthen the wrist flexor tendons alongside the wrist extension
+    work. All extension-focused wrist mobility must be balanced with flexion-direction
+    loading to prevent tendon imbalance.
+  muscle_diagram:
+    highlight_primary: []
+    highlight_secondary: []
+  muscles_primary: []
+  muscles_secondary: []

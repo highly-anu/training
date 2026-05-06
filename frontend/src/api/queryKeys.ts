@@ -8,6 +8,7 @@ export const queryKeys = {
   exercises: {
     all: ['exercises'] as const,
     filtered: (filters: ExerciseFilters) => ['exercises', 'filtered', filters] as const,
+    media: (id: string) => ['exercises', 'media', id] as const,
   },
   modalities: {
     all: ['modalities'] as const,

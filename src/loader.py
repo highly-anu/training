@@ -201,6 +201,25 @@ def load_philosophy(philosophy_id: str) -> dict:
     raise FileNotFoundError(f'Philosophy not found: {philosophy_id}')
 
 
+_media_cache: dict | None = None
+
+
+def load_exercise_media() -> dict:
+    """Return dict of exercise_id -> media descriptor, merged from all packages/*/exercise_media.yaml.
+
+    Never called by the training engine — only by the API layer.
+    """
+    global _media_cache
+    if _media_cache is None:
+        merged: dict = {}
+        for path in glob.glob(os.path.join(_PACKAGES_DIR, '*/exercise_media.yaml')):
+            data = _load_yaml(path)
+            if data:
+                merged.update(data)
+        _media_cache = merged
+    return _media_cache
+
+
 def load_all_data() -> dict:
     """Load all library data in one call."""
     exercises, exercises_by_package = load_all_exercises()
