@@ -1569,11 +1569,39 @@ def update_profile():
 @require_auth
 def get_user_program_endpoint():
     try:
-        from src.db import get_user_program
+        from src.db import get_user_program, save_user_program
         user_id = g.user_id
         program = get_user_program(user_id)
         if isinstance(program, dict):
             program = _normalize_program_keys(program)
+            # Heal programs saved by iOS (missing goal/volume_summary) by
+            # reconstructing goal from sourceGoalIds and recomputing volume.
+            current = program.get('currentProgram') or {}
+            if current and 'goal' not in current:
+                source_ids = program.get('sourceGoalIds') or []
+                try:
+                    all_frameworks = list(loader.load_all_frameworks().values())
+                    if len(source_ids) == 1:
+                        goal = _philosophy_to_goal(source_ids[0], all_frameworks)
+                    elif len(source_ids) > 1:
+                        weights = program.get('sourceGoalWeights') or {}
+                        goal = _blend_philosophy_goals(source_ids, weights, all_frameworks)
+                    else:
+                        goal = None
+                    if goal:
+                        current['goal'] = goal
+                    if 'volume_summary' not in current:
+                        current['volume_summary'] = [
+                            _week_volume(w) for w in current.get('weeks', [])
+                        ]
+                    program['currentProgram'] = current
+                    # Persist the healed copy so next load is instant
+                    try:
+                        save_user_program(user_id, program)
+                    except Exception:
+                        pass
+                except Exception as heal_err:
+                    app.logger.warning('program heal error: %s', heal_err)
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
