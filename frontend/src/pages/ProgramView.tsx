@@ -53,7 +53,7 @@ export function ProgramView() {
       return names.length > 0 ? names.join(' + ') : 'Blended Program'
     }
     if (sourceMode === 'custom') return 'Custom Program'
-    return program?.goal.name ?? 'Training Program'
+    return program?.goal?.name ?? 'Training Program'
   })()
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)

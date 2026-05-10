@@ -108,7 +108,7 @@ export function ReplaceSessionSheet({
   ).length
 
   const baseParams = {
-    goalId: program.goal.id,
+    goalId: program.goal?.id,
     modality: session.modality,
     phase: weekData.phase,
     weekInPhase: weekData.week_in_phase,
