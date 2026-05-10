@@ -128,6 +128,16 @@ struct AnyCodable: Codable {
     let stringValue: String?
     let intValue: Int?
 
+    init(intValue: Int) {
+        self.intValue = intValue
+        self.stringValue = "\(intValue)"
+    }
+
+    init(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = Int(stringValue)
+    }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.singleValueContainer()
         if let i = try? c.decode(Int.self) {
@@ -180,19 +190,15 @@ struct GenerateSessionRequest: Encodable {
 
 // MARK: - Save program payload (PUT /api/user/program)
 
+// Top-level keys must be camelCase to match the web frontend's ServerProgram format.
+// The server stores and returns exactly what was PUT, so mismatched case causes
+// ServerProgram (which has no CodingKeys, expects camelCase) to decode as nil.
 struct UserProgramSavePayload: Encodable {
     let currentProgram: GeneratedProgram?
     let programStartDate: String?
     let eventDate: String?
     let sourceGoalIds: [String]
     let sourceGoalWeights: [String: Double]
-    enum CodingKeys: String, CodingKey {
-        case currentProgram    = "current_program"
-        case programStartDate  = "program_start_date"
-        case eventDate         = "event_date"
-        case sourceGoalIds     = "source_goal_ids"
-        case sourceGoalWeights = "source_goal_weights"
-    }
 }
 
 // MARK: - Watch payload (sent from iPhone to Watch via WCSession)
