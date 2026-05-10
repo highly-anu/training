@@ -65,11 +65,20 @@ export function DevelopmentWidget() {
     for (const week of program.weeks) {
       const weekInsights: SessionInsight[] = []
       for (const [day, sessions] of Object.entries(week.schedule)) {
-        const sessionKey = `${week.week_number}-${day}`
-        const matched = getMatchedWorkout(sessionKey)
+        const dayKey = `${week.week_number}-${day}`
+        // Web matches use "weekNum-Day"; iOS matches use "weekNum-Day-sessionIndex"
+        let matched = getMatchedWorkout(dayKey)
+        let effectiveKey = dayKey
+        if (!matched) {
+          for (let si = 0; si < sessions.length; si++) {
+            const indexedKey = `${dayKey}-${si}`
+            const m = getMatchedWorkout(indexedKey)
+            if (m) { matched = m; effectiveKey = indexedKey; break }
+          }
+        }
         if (!matched) continue
-        const perfLog = perfLogs[sessionKey]
-        const insight = computeSessionInsight(sessions, matched, perfLog, maxHR, sessionKey)
+        const perfLog = perfLogs[effectiveKey] ?? perfLogs[dayKey]
+        const insight = computeSessionInsight(sessions, matched, perfLog, maxHR, effectiveKey)
         weekInsights.push(insight)
         allInsights.push(insight)
       }
@@ -131,9 +140,12 @@ export function DevelopmentWidget() {
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Development
         </h2>
-        <span className="text-[10px] text-muted-foreground">
-          {matchedCount} session{matchedCount !== 1 ? 's' : ''} tracked
-        </span>
+        <Link
+          to="/import?tab=history"
+          className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+        >
+          {matchedCount} session{matchedCount !== 1 ? 's' : ''} tracked →
+        </Link>
       </div>
 
       {/* Score + status */}

@@ -341,7 +341,9 @@ export function WorkoutImport() {
   const [searchParams] = useSearchParams()
   const linkToSession = searchParams.get('linkTo')
 
-  const [activeTab, setActiveTab] = useState<SubTab>('import')
+  const [activeTab, setActiveTab] = useState<SubTab>(
+    searchParams.get('tab') === 'history' ? 'history' : 'import'
+  )
   const [status, setStatus] = useState<ParseStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [parsed, setParsed] = useState<ImportedWorkout[]>([])
