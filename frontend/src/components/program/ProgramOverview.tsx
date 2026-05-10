@@ -273,7 +273,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
         <div>
           <h2 className="text-sm font-semibold mb-2">About this Program</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
-          {goal.primary_sources.length > 0 && (
+          {(goal.primary_sources?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
               {goal.primary_sources.map((src) => (
                 <Badge key={src} variant="secondary" className="text-xs">{src}</Badge>

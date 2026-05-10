@@ -71,7 +71,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       philosophyId: sourceGoalIds.length === 1 ? sourceGoalIds[0] : undefined,
       philosophyIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
       philosophyWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
-      constraints: program.constraints,
+      constraints: program.constraints ?? {},
       numWeeks: weeksRemainingFromTomorrow,
     })
     setRebuildDialogOpen(false)
@@ -82,7 +82,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     loadFromProgram({
       goalIds: sourceGoalIds,
       goalWeights: sourceGoalWeights,
-      constraints: program.constraints,
+      constraints: program.constraints ?? {},
       numWeeks: program.weeks.length,
       eventDate,
     })
