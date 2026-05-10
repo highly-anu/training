@@ -208,6 +208,21 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
     minimum_prerequisites?: Record<string, number>
   }
 
+  // Programs saved from iOS after a replace/move only contain `weeks` — goal and
+  // volume_summary are absent. Show a graceful empty state rather than crashing.
+  if (!goal) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12 flex flex-col items-center gap-3 text-center">
+        <p className="text-sm font-medium text-foreground">Phase overview unavailable</p>
+        <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
+          This program was last saved from the iOS app, which doesn&apos;t persist phase metadata.
+          Regenerate from the builder to restore phase analysis and volume charts — your workout
+          changes are still saved.
+        </p>
+      </div>
+    )
+  }
+
   const prerequisites = (goal.minimum_prerequisites ?? {}) as Record<string, number>
 
   const chartData = (volume_summary ?? []).map((s) => ({
