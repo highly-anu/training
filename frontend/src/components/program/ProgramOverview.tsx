@@ -208,6 +208,17 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
     minimum_prerequisites?: Record<string, number>
   }
 
+  if (!goal && segments.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          Overview not available for programs saved from the iOS app.
+          Rebuild your program from the builder to see phase analysis and volume charts.
+        </p>
+      </div>
+    )
+  }
+
   const prerequisites = (goal?.minimum_prerequisites ?? {}) as Record<string, number>
 
   const chartData = (volume_summary ?? []).map((s) => ({
