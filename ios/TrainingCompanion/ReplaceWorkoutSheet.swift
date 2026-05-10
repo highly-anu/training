@@ -7,7 +7,7 @@ struct ReplaceWorkoutSheet: View {
     let sessionIndex: Int
     let session: ProgramSession
 
-    @EnvironmentObject var programStore: ProgramStore
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedTab: Tab = .browse
@@ -259,9 +259,8 @@ struct ReplaceWorkoutSheet: View {
                     .buttonStyle(.bordered)
 
                     Button {
-                        programStore.replaceSession(weekIndex: weekIndex, day: dayName,
-                                                    sessionIndex: sessionIndex,
-                                                    session: p, api: api)
+                        appState.replaceSession(weekIndex: weekIndex, day: dayName,
+                                                sessionIndex: sessionIndex, session: p)
                         dismiss()
                     } label: {
                         Text("Confirm Replace")
@@ -290,7 +289,7 @@ struct ReplaceWorkoutSheet: View {
     private func generateWithArchetype(_ arch: AppArchetype) async {
         isGenerating = true
         defer { isGenerating = false }
-        let week = programStore.serverProgram?.currentProgram?.weeks[safe: weekIndex]
+        let week = appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]
         let request = GenerateSessionRequest(
             primarySources: [],
             modality: arch.modality,
@@ -314,7 +313,7 @@ struct ReplaceWorkoutSheet: View {
     private func generateSession() async {
         isGenerating = true
         defer { isGenerating = false }
-        let week = programStore.serverProgram?.currentProgram?.weeks[safe: weekIndex]
+        let week = appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]
         let request = GenerateSessionRequest(
             primarySources: [],
             modality: session.modality,

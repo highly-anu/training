@@ -71,7 +71,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       philosophyId: sourceGoalIds.length === 1 ? sourceGoalIds[0] : undefined,
       philosophyIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
       philosophyWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
-      constraints: program.constraints,
+      constraints: program.constraints ?? {},
       numWeeks: weeksRemainingFromTomorrow,
     })
     setRebuildDialogOpen(false)
@@ -82,7 +82,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     loadFromProgram({
       goalIds: sourceGoalIds,
       goalWeights: sourceGoalWeights,
-      constraints: program.constraints,
+      constraints: program.constraints ?? {},
       numWeeks: program.weeks.length,
       eventDate,
     })
@@ -120,10 +120,10 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Current Program
           </p>
-          <p className="text-sm font-semibold">{program.goal.name}</p>
+          <p className="text-sm font-semibold">{program.goal?.name ?? 'Training Program'}</p>
           <p className="text-xs text-muted-foreground">
-            {program.weeks.length} weeks · {program.constraints.days_per_week ?? 4} days/week ·{' '}
-            {program.constraints.session_time_minutes ?? 60} min sessions
+            {program.weeks.length} weeks · {program.constraints?.days_per_week ?? 4} days/week ·{' '}
+            {program.constraints?.session_time_minutes ?? 60} min sessions
           </p>
         </div>
 

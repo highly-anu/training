@@ -53,7 +53,7 @@ export function ProgramView() {
       return names.length > 0 ? names.join(' + ') : 'Blended Program'
     }
     if (sourceMode === 'custom') return 'Custom Program'
-    return program?.goal.name ?? 'Training Program'
+    return program?.goal?.name ?? 'Training Program'
   })()
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
@@ -75,13 +75,13 @@ export function ProgramView() {
   // Initialise draft state when sheet opens
   useEffect(() => {
     if (injurySheetOpen && program) {
-      setLocalFlags([...(program.constraints.injury_flags ?? [])] as InjuryFlagId[])
+      setLocalFlags([...(program.constraints?.injury_flags ?? [])] as InjuryFlagId[])
       setLocalCustom([...customInjuryFlags])
     }
   }, [injurySheetOpen])
 
   const activeInjuryCount =
-    (program?.constraints.injury_flags?.length ?? 0) + customInjuryFlags.length
+    (program?.constraints?.injury_flags?.length ?? 0) + customInjuryFlags.length
 
   function handleRegenerate() {
     if (!program || !currentWeekData) return
@@ -93,7 +93,7 @@ export function ProgramView() {
         philosophyIds: sourceIds.length > 1 ? sourceIds : undefined,
         philosophyWeights: sourceIds.length > 1 ? useProgramStore.getState().sourceGoalWeights : undefined,
         constraints: {
-          ...program.constraints,
+          ...program.constraints ?? {},
           injury_flags: localFlags,
           periodization_week: currentWeekData.week_in_phase,
         },

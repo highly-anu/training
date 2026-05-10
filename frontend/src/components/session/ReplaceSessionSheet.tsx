@@ -96,11 +96,11 @@ export function ReplaceSessionSheet({
   }, [archetypes, searchQuery, sameModalityOnly, session.modality])
 
   const effectiveConstraints = {
-    session_time_minutes: timeOverride ?? program.constraints.session_time_minutes ?? 60,
-    equipment: equipOverride ?? program.constraints.equipment ?? [],
-    injury_flags: injuryOverride ?? program.constraints.injury_flags ?? [],
-    training_level: program.constraints.training_level ?? 'intermediate',
-    fatigue_state: fatigueOverride ?? program.constraints.fatigue_state ?? 'normal',
+    session_time_minutes: timeOverride ?? program.constraints?.session_time_minutes ?? 60,
+    equipment: equipOverride ?? program.constraints?.equipment ?? [],
+    injury_flags: injuryOverride ?? program.constraints?.injury_flags ?? [],
+    training_level: program.constraints?.training_level ?? 'intermediate',
+    fatigue_state: fatigueOverride ?? program.constraints?.fatigue_state ?? 'normal',
   }
 
   const overrideCount = [timeOverride, equipOverride, injuryOverride, fatigueOverride].filter(
@@ -108,7 +108,7 @@ export function ReplaceSessionSheet({
   ).length
 
   const baseParams = {
-    goalId: program.goal.id,
+    goalId: program.goal?.id,
     modality: session.modality,
     phase: weekData.phase,
     weekInPhase: weekData.week_in_phase,

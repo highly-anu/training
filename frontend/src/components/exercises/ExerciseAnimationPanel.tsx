@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dumbbell, Wind, Footprints, Heart, Flame, Layers } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ExerciseAnimation } from '@/api/types'
 
@@ -12,7 +13,7 @@ interface ExerciseAnimationPanelProps {
   variant?: 'drawer' | 'card' | 'row'
 }
 
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
   barbell: Dumbbell,
   kettlebell: Dumbbell,
   aerobic: Wind,
@@ -56,7 +57,7 @@ export function ExerciseAnimationPanel({
 
   // Placeholder icon when no animation or on error
   if (!showGif && !showLottie && !showSvg) {
-    const Icon = (category && CATEGORY_ICONS[category]) ?? Layers
+    const Icon = (category ? CATEGORY_ICONS[category] ?? Layers : Layers)
     return (
       <div className={cn(wrapperCn, 'flex items-center justify-center')}>
         <Icon className={cn('text-muted-foreground/30', isCard ? 'size-4' : 'size-8')} />
