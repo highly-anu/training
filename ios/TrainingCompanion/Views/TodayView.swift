@@ -71,7 +71,10 @@ struct TodayView: View {
                 }
             }
             .task {
-                if appState.serverProgram == nil {
+                // Guard against duplicate loads: if a load is already in flight
+                // (started by ContentView.onAppear), don't pile on a second one.
+                // serverProgram == nil && !isLoadingProgram means no load has run yet.
+                if appState.serverProgram == nil && !appState.isLoadingProgram {
                     await appState.loadAll()
                 }
             }

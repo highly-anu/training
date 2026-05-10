@@ -87,6 +87,7 @@ final class AppState: ObservableObject {
         do {
             importedWorkouts = try await api.fetchWorkouts()
         } catch {
+            if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
     }
