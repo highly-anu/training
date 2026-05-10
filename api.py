@@ -1601,9 +1601,23 @@ def _normalize_program_keys(program: dict) -> dict:
 @require_auth
 def save_user_program_endpoint():
     try:
-        from src.db import save_user_program
+        from src.db import get_user_program, save_user_program
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
+
+        # When the iOS app saves after move/replace, GeneratedProgram only contains
+        # `weeks` (Swift Codable strips unknown fields on re-encode). Preserve the
+        # goal, constraints, validation, and volume_summary from the existing stored
+        # program so the web overview stays functional.
+        current = body.get('currentProgram') or {}
+        if current and 'goal' not in current:
+            existing = get_user_program(user_id)
+            if existing:
+                existing_cp = existing.get('currentProgram') or {}
+                for field in ('goal', 'constraints', 'validation', 'volume_summary'):
+                    if field in existing_cp and field not in current:
+                        current[field] = existing_cp[field]
+                body['currentProgram'] = current
 
         save_user_program(user_id, body)
         return jsonify({'saved': True})
