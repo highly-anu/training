@@ -20,6 +20,15 @@ struct SessionDetailView: View {
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
+    /// Live session read from the store (updated after replace/move).
+    /// Falls back to the prop value when index params are unavailable.
+    private var currentSession: ProgramSession {
+        guard let wi = weekIndex, let dn = dayName, let si = sessionIndex,
+              let live = appState.serverProgram?.currentProgram?.weeks[safe: wi]?.schedule[dn]?[safe: si]
+        else { return session }
+        return live
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -28,7 +37,7 @@ struct SessionDetailView: View {
                 if canEditProgram { actionsSection }
                 if isDone { notesSection }
             }
-            .navigationTitle(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
+            .navigationTitle(currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -42,19 +51,18 @@ struct SessionDetailView: View {
             }
             .sheet(isPresented: $showMove) {
                 if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
-                   let api = appState.api,
-                   let week = programStore.serverProgram?.currentProgram?.weeks[safe: wi] {
-                    MoveWorkoutSheet(api: api, weekIndex: wi, fromDay: dn,
+                   let week = appState.serverProgram?.currentProgram?.weeks[safe: wi] {
+                    MoveWorkoutSheet(weekIndex: wi, fromDay: dn,
                                     sessionIndex: si, weekSchedule: week.schedule)
-                        .environmentObject(programStore)
+                        .environmentObject(appState)
                 }
             }
             .sheet(isPresented: $showReplace) {
                 if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
                    let api = appState.api {
                     ReplaceWorkoutSheet(api: api, weekIndex: wi, dayName: dn,
-                                       sessionIndex: si, session: session)
-                        .environmentObject(programStore)
+                                       sessionIndex: si, session: currentSession)
+                        .environmentObject(appState)
                 }
             }
             .task {
@@ -87,21 +95,21 @@ struct SessionDetailView: View {
     private var headerSection: some View {
         Section {
             HStack(spacing: 12) {
-                Image(systemName: ModalityStyle.icon(for: session.modality))
-                    .foregroundStyle(ModalityStyle.color(for: session.modality))
+                Image(systemName: ModalityStyle.icon(for: currentSession.modality))
+                    .foregroundStyle(ModalityStyle.color(for: currentSession.modality))
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(ModalityStyle.label(for: session.modality))
+                    Text(ModalityStyle.label(for: currentSession.modality))
                         .font(.caption)
-                        .foregroundStyle(ModalityStyle.color(for: session.modality))
-                    if let arch = session.archetype {
+                        .foregroundStyle(ModalityStyle.color(for: currentSession.modality))
+                    if let arch = currentSession.archetype {
                         Text(arch.name)
                             .font(.headline)
                         HStack(spacing: 8) {
                             if let mins = arch.durationEstimateMinutes {
                                 Label("\(mins) min", systemImage: "clock")
                             }
-                            if session.isDeload {
+                            if currentSession.isDeload {
                                 Label("Deload", systemImage: "arrow.down.circle")
                                     .foregroundStyle(.orange)
                             }
@@ -129,7 +137,7 @@ struct SessionDetailView: View {
     // MARK: - Exercises
 
     private var exercisesSection: some View {
-        let exercises = session.exercises.filter { !$0.injurySkip && $0.exercise != nil }
+        let exercises = currentSession.exercises.filter { !$0.injurySkip && $0.exercise != nil }
         return Section("Exercises") {
             if exercises.isEmpty {
                 Text("No exercises").foregroundStyle(.secondary)

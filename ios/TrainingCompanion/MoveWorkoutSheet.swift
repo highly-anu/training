@@ -3,13 +3,12 @@ import SwiftUI
 private let orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 struct MoveWorkoutSheet: View {
-    let api: APIClient
     let weekIndex: Int
     let fromDay: String
     let sessionIndex: Int
     let weekSchedule: [String: [ProgramSession]]
 
-    @EnvironmentObject var programStore: ProgramStore
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedDay: String = ""
@@ -49,13 +48,8 @@ struct MoveWorkoutSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Move") {
-                        programStore.moveSession(
-                            weekIndex: weekIndex,
-                            fromDay: fromDay,
-                            toDay: selectedDay,
-                            sessionIndex: sessionIndex,
-                            api: api
-                        )
+                        appState.moveSession(weekIndex: weekIndex, fromDay: fromDay,
+                                             toDay: selectedDay, sessionIndex: sessionIndex)
                         dismiss()
                     }
                     .disabled(selectedDay.isEmpty)
