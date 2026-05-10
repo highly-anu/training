@@ -57,7 +57,7 @@ export function ExerciseAnimationPanel({
 
   // Placeholder icon when no animation or on error
   if (!showGif && !showLottie && !showSvg) {
-    const Icon = (category && CATEGORY_ICONS[category]) ?? Layers
+    const Icon = (category ? CATEGORY_ICONS[category] ?? Layers : Layers)
     return (
       <div className={cn(wrapperCn, 'flex items-center justify-center')}>
         <Icon className={cn('text-muted-foreground/30', isCard ? 'size-4' : 'size-8')} />
