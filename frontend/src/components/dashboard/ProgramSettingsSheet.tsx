@@ -120,10 +120,10 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Current Program
           </p>
-          <p className="text-sm font-semibold">{program.goal.name}</p>
+          <p className="text-sm font-semibold">{program.goal?.name ?? 'Training Program'}</p>
           <p className="text-xs text-muted-foreground">
-            {program.weeks.length} weeks · {program.constraints.days_per_week ?? 4} days/week ·{' '}
-            {program.constraints.session_time_minutes ?? 60} min sessions
+            {program.weeks.length} weeks · {program.constraints?.days_per_week ?? 4} days/week ·{' '}
+            {program.constraints?.session_time_minutes ?? 60} min sessions
           </p>
         </div>
 
