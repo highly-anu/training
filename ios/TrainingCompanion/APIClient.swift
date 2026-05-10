@@ -54,7 +54,13 @@ final class APIClient {
 
     func fetchProgram() async throws -> ServerProgram? {
         let data = try await get("/user/program")
-        return try? JSONDecoder().decode(ServerProgram.self, from: data)
+        if let program = try? JSONDecoder().decode(ServerProgram.self, from: data) {
+            return program
+        }
+        // Decode failed — log a snippet so we can diagnose key-casing mismatches
+        let snippet = String(data: data.prefix(300), encoding: .utf8) ?? "(unreadable)"
+        AppLogger.shared.logFromBackground("program: decode failed — raw: \(snippet)")
+        return nil
     }
 
     func fetchArchetypes() async throws -> [AppArchetype] {

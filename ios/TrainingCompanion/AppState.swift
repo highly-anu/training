@@ -215,6 +215,8 @@ final class AppState: ObservableObject {
         do {
             recentBioLogs = try await api.fetchRecentBioLogs()
         } catch {
+            // Ignore task cancellation (expected when SwiftUI .task cancels on view disappear)
+            if (error as? URLError)?.code == .cancelled { return }
             AppLogger.shared.logFromBackground("bio: HTTP error — \(error.localizedDescription)")
         }
     }
@@ -251,7 +253,7 @@ final class AppState: ObservableObject {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let start = calendar.startOfDay(for: startDate)
-        let days = calendar.dateComponents([.day], from: start, to: today).day ?? 0
+        let days = max(0, calendar.dateComponents([.day], from: start, to: today).day ?? 0)
         let idx = days / 7
         return idx < program.weeks.count ? idx : nil
     }

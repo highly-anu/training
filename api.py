@@ -1572,10 +1572,29 @@ def get_user_program_endpoint():
         from src.db import get_user_program
         user_id = g.user_id
         program = get_user_program(user_id)
+        if isinstance(program, dict):
+            program = _normalize_program_keys(program)
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
         return jsonify(None)
+
+
+def _normalize_program_keys(program: dict) -> dict:
+    """Remap legacy snake_case top-level program keys to camelCase.
+
+    Old iOS clients saved with snake_case CodingKeys, corrupting the stored
+    payload. Both web (reads .currentProgram) and iOS (no CodingKeys on
+    ServerProgram → expects camelCase) fail silently without this fix.
+    """
+    key_map = {
+        'current_program':    'currentProgram',
+        'program_start_date': 'programStartDate',
+        'event_date':         'eventDate',
+        'source_goal_ids':    'sourceGoalIds',
+        'source_goal_weights': 'sourceGoalWeights',
+    }
+    return {key_map.get(k, k): v for k, v in program.items()}
 
 
 @app.put('/api/user/program')
