@@ -298,6 +298,67 @@ final class AppState: ObservableObject {
         sessionLogs[key]?.completedAt != nil
     }
 
+    // MARK: - Program Mutations
+
+    func replaceSession(weekIndex: Int, day: String, sessionIndex: Int, session: ProgramSession) {
+        guard var sp = serverProgram,
+              var program = sp.currentProgram else { return }
+        var weeks = program.weeks
+        guard weekIndex < weeks.count else { return }
+        var week = weeks[weekIndex]
+        var sessions = week.schedule[day] ?? []
+        guard sessionIndex < sessions.count else { return }
+        sessions[sessionIndex] = session
+        var schedule = week.schedule
+        schedule[day] = sessions
+        week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+        weeks[weekIndex] = week
+        program = GeneratedProgram(weeks: weeks)
+        sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
+                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds)
+        serverProgram = sp
+        writeWidgetData()
+        Task { try? await saveProgramToServer() }
+    }
+
+    func moveSession(weekIndex: Int, fromDay: String, toDay: String, sessionIndex: Int) {
+        guard var sp = serverProgram,
+              var program = sp.currentProgram else { return }
+        var weeks = program.weeks
+        guard weekIndex < weeks.count else { return }
+        var week = weeks[weekIndex]
+        var fromSessions = week.schedule[fromDay] ?? []
+        guard sessionIndex < fromSessions.count else { return }
+        let session = fromSessions.remove(at: sessionIndex)
+        var toSessions = week.schedule[toDay] ?? []
+        toSessions.append(session)
+        var schedule = week.schedule
+        schedule[fromDay] = fromSessions
+        schedule[toDay] = toSessions
+        week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+        weeks[weekIndex] = week
+        program = GeneratedProgram(weeks: weeks)
+        sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
+                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds)
+        serverProgram = sp
+        writeWidgetData()
+        Task { try? await saveProgramToServer() }
+    }
+
+    private func saveProgramToServer() async throws {
+        guard let api, let sp = serverProgram else { return }
+        let payload = UserProgramSavePayload(
+            currentProgram: sp.currentProgram,
+            programStartDate: sp.programStartDate,
+            eventDate: sp.eventDate,
+            sourceGoalIds: sp.sourceGoalIds,
+            sourceGoalWeights: [:]
+        )
+        try await api.saveProgram(payload)
+    }
+
     /// Computed readiness from most recent bio log: green/yellow/red based on HRV + resting HR.
     func readinessInfo(from bioLogs: [DailyBioLog]) -> ReadinessInfo? {
         guard let latest = bioLogs.first else { return nil }

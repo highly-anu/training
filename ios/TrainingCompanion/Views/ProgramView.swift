@@ -49,7 +49,7 @@ struct ProgramView: View {
                 ProgramSettingsSheet().environmentObject(appState)
             }
             .sheet(item: $selectedDay) { sel in
-                DaySessionsSheet(week: appState.allWeeks[sel.weekIndex], weekIndex: sel.weekIndex, dayName: sel.dayName)
+                DaySessionsSheet(weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
                     .environmentObject(programStore)
             }
@@ -394,7 +394,6 @@ struct ProgramView: View {
 // MARK: - Day Sessions Sheet
 
 private struct DaySessionsSheet: View {
-    let week: ProgramWeek
     let weekIndex: Int
     let dayName: String
 
@@ -403,14 +402,16 @@ private struct DaySessionsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedSession: SessionWithKey? = nil
 
+    private var liveWeek: ProgramWeek? { appState.allWeeks[safe: weekIndex] }
+
     var body: some View {
         NavigationStack {
             List {
-                let sessions = week.schedule[dayName] ?? []
+                let sessions = liveWeek?.schedule[dayName] ?? []
+                let weekNumber = liveWeek?.weekNumber ?? 0
                 ForEach(sessions.indices, id: \.self) { i in
                     let session = sessions[i]
-                    let key = appState.makeSessionKey(
-                        weekNumber: week.weekNumber, dayName: dayName, index: i)
+                    let key = appState.makeSessionKey(weekNumber: weekNumber, dayName: dayName, index: i)
                     Button {
                         selectedSession = SessionWithKey(session: session, key: key, sessionIndex: i)
                     } label: {
