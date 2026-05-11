@@ -1565,6 +1565,18 @@ def update_profile():
         return jsonify({'saved': False, 'detail': str(e)}), 503
 
 
+@app.get('/api/userdata/profile')
+@require_auth
+def get_userdata_profile():
+    return get_profile()
+
+
+@app.put('/api/userdata/profile')
+@require_auth
+def update_userdata_profile():
+    return update_profile()
+
+
 @app.get('/api/user/program')
 @require_auth
 def get_user_program_endpoint():

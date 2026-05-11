@@ -446,7 +446,7 @@ def upsert_match(user_id: str, match: dict) -> None:
                     workout_id,
                     user_id,
                     session_key,
-                    match.get('matchConfidence', 1.0),
+                    match.get('matchConfidence', 'auto'),
                     match.get('matchedAt') or _dt.utcnow().isoformat(),
                 ))
             conn.commit()

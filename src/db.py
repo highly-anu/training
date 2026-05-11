@@ -62,10 +62,11 @@ _local_storage_dir = Path(__file__).parent.parent / 'data' / 'user_profiles'
 
 
 def get_conn():
-    """Get the database connection. Raises exception if not connected to PostgreSQL."""
-    if not _pg_conn:
+    """Get the database connection, reconnecting if the link is broken."""
+    conn = _get_pg_conn()
+    if conn is None:
         raise Exception("No database connection available. Set DATABASE_URL to connect to PostgreSQL.")
-    return _pg_conn
+    return conn
 
 
 def _ensure_local_storage():
