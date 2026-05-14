@@ -1888,6 +1888,119 @@ def handle_error(e):
     return jsonify({'detail': str(e)}), 500
 
 
+# ---------------------------------------------------------------------------
+# Progression endpoints
+# ---------------------------------------------------------------------------
+
+from src import progression_tracker as _pt
+from src import db as _db
+
+
+@app.get('/api/progression/review')
+@require_auth
+def progression_review():
+    period = request.args.get('period', 'weekly')
+    if period not in ('weekly', 'biweekly'):
+        period = 'weekly'
+
+    session_logs = _health.get_session_logs(g.user_id)
+    bio_logs     = _health.get_recent_bio_logs(g.user_id, days=42)
+    program_data = _db.get_user_program(g.user_id)
+
+    if not program_data:
+        return jsonify({
+            'period_key':        _pt._current_period_key(period),
+            'period_type':       period,
+            'generated_at':      None,
+            'overall_score':     None,
+            'readiness_trend':   'stable',
+            'avg_readiness':     None,
+            'compliance_pct':    0,
+            'exercise_findings': [],
+            'flags':             ['no_program'],
+            'recommendations':   ['Generate a training program first.'],
+            'adjustments':       [],
+        })
+
+    # Check snapshot cache
+    period_key   = _pt._current_period_key(period)
+    session_hash = _pt.compute_session_hash(session_logs)
+    cached = _health.get_progression_snapshot(g.user_id, period_key, period)
+    if cached and cached.get('session_hash') == session_hash:
+        return jsonify(cached['data'])
+
+    # Compute fresh
+    # program_data may be the full GeneratedProgram or wrapped {currentProgram: ...}
+    program = program_data.get('currentProgram') or program_data
+    review = _pt.compute_progression_review(
+        user_id=g.user_id,
+        program=program,
+        bio_logs=bio_logs,
+        session_logs=session_logs,
+        period=period,
+    )
+
+    _health.save_progression_snapshot(g.user_id, period_key, period, session_hash, review)
+    return jsonify(review)
+
+
+@app.get('/api/progression/exercises')
+@require_auth
+def progression_exercises():
+    program_data = _db.get_user_program(g.user_id)
+    if not program_data:
+        return jsonify({'exercises': []})
+
+    program      = program_data.get('currentProgram') or program_data
+    session_logs = _health.get_session_logs(g.user_id)
+    ex_filter    = request.args.get('exercise_id')
+
+    constraints = program.get('constraints', {})
+    level       = constraints.get('training_level', 'intermediate')
+    prog_model  = _pt._infer_progression_model(program)
+    weeks       = program.get('weeks', [])
+
+    history = _pt.compute_exercise_history(session_logs, program)
+
+    # Build index: exerciseId → (exercise dict, slot dict)
+    ex_index: dict = {}
+    for w in weeks:
+        for day_sessions in w.get('schedule', {}).values():
+            for session in day_sessions:
+                for ea in session.get('exercises', []):
+                    if ea.get('meta') or ea.get('injury_skip'):
+                        continue
+                    ex = ea.get('exercise') or {}
+                    ex_id = ex.get('id', '')
+                    if ex_id and ex_id not in ex_index:
+                        ex_index[ex_id] = (ex, ea.get('slot') or {})
+
+    result = []
+    for ex_id, (ex, slot) in ex_index.items():
+        if ex_filter and ex_id != ex_filter:
+            continue
+        trajectory = _pt.compute_expected_trajectory(
+            exercise=ex, slot=slot, progression_model=prog_model,
+            philosophy_weights=program.get('philosophy_weights') or {},
+            weeks=weeks, level=level,
+        )
+        result.append({
+            'exerciseId': ex_id,
+            'name':       ex.get('name', ex_id),
+            'history':    history.get(ex_id, []),
+            'expected':   trajectory,
+        })
+
+    return jsonify({'exercises': result})
+
+
+@app.get('/api/progression/history')
+@require_auth
+def progression_history():
+    snapshots = _health.list_progression_snapshots(g.user_id)
+    return jsonify(snapshots)
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     print(f'Training API running on http://localhost:{port}/api')

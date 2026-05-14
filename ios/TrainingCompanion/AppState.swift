@@ -36,6 +36,10 @@ final class AppState: ObservableObject {
     @Published var recentBioLogs: [DailyBioLog] = []
     @Published var readinessResult: ReadinessResult? = nil
 
+    // MARK: - Progression
+
+    @Published var progressionReview: ProgressionReview? = nil
+
     // MARK: - Catalog (lazy-loaded)
 
     @Published var goals: [GoalProfile] = []
@@ -68,6 +72,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
             group.addTask { await self.loadWorkouts() }
+            group.addTask { await self.loadProgressionReview() }
         }
     }
 
@@ -80,6 +85,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
+            group.addTask { await self.loadProgressionReview() }
         }
     }
 
@@ -232,6 +238,16 @@ final class AppState: ObservableObject {
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             AppLogger.shared.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
+        }
+    }
+
+    func loadProgressionReview() async {
+        guard let api else { return }
+        do {
+            progressionReview = try await api.fetchProgressionReview()
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            AppLogger.shared.logFromBackground("progression: fetch failed — \(error.localizedDescription)")
         }
     }
 

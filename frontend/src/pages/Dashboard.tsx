@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { DevelopmentWidget } from '@/components/dashboard/DevelopmentWidget'
+import { ProgressionTab } from '@/components/progression/ProgressionTab'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
@@ -24,11 +25,12 @@ import type { GeneratedProgram } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'week' | 'analytics'
+type SubTab = 'week' | 'analytics' | 'progress'
 
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'week',      label: 'Week'      },
   { id: 'analytics', label: 'Analytics' },
+  { id: 'progress',  label: 'Progress'  },
 ]
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -365,6 +367,11 @@ export function Dashboard() {
               program={program}
               weekIndex={weekIndex}
             />
+          )}
+          {activeTab === 'progress' && (
+            <div className="space-y-4">
+              <ProgressionTab />
+            </div>
           )}
         </div>
 
