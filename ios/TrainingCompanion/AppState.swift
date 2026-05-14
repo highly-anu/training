@@ -34,6 +34,7 @@ final class AppState: ObservableObject {
     // MARK: - Bio Logs (last 30 days)
 
     @Published var recentBioLogs: [DailyBioLog] = []
+    @Published var readinessResult: ReadinessResult? = nil
 
     // MARK: - Catalog (lazy-loaded)
 
@@ -65,6 +66,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProfile() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
+            group.addTask { await self.loadReadiness() }
             group.addTask { await self.loadWorkouts() }
         }
     }
@@ -77,6 +79,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProfile() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
+            group.addTask { await self.loadReadiness() }
         }
     }
 
@@ -219,6 +222,16 @@ final class AppState: ObservableObject {
             // Ignore task cancellation (expected when SwiftUI .task cancels on view disappear)
             if (error as? URLError)?.code == .cancelled { return }
             AppLogger.shared.logFromBackground("bio: HTTP error — \(error.localizedDescription)")
+        }
+    }
+
+    func loadReadiness() async {
+        guard let api else { return }
+        do {
+            readinessResult = try await api.fetchReadiness()
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            AppLogger.shared.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
         }
     }
 

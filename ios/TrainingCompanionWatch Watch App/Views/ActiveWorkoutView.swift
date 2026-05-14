@@ -13,6 +13,13 @@ struct ActiveWorkoutView: View {
     @State private var workoutStartDate = Date()
     @State private var showStopConfirm = false
 
+    private var overtimeInfo: (index: Int, name: String, targetSeconds: Int)? {
+        guard case let .timedWork(ei, _) = sessionState.phase,
+              ei < session.exercises.count,
+              let dur = session.exercises[ei].durationMinutes else { return nil }
+        return (index: ei, name: session.exercises[ei].name, targetSeconds: dur * 60)
+    }
+
     var body: some View {
         Group {
             if !isStarted {
@@ -63,6 +70,29 @@ struct ActiveWorkoutView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 timerStatusIndicator
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { sessionState.showOvertimePrompt },
+            set: { sessionState.showOvertimePrompt = $0 }
+        )) {
+            if let info = overtimeInfo {
+                OvertimePromptView(
+                    exerciseName: info.name,
+                    targetSeconds: info.targetSeconds,
+                    onContinue: {
+                        sessionState.showOvertimePrompt = false
+                    },
+                    onFinish: {
+                        sessionState.showOvertimePrompt = false
+                        sessionState.completeTimedWork(
+                            exerciseIndex: info.index,
+                            exerciseId: session.exercises[info.index].exerciseId
+                        )
+                        sessionState.completeSession()
+                        Task { await workoutManager.endWorkout() }
+                    }
+                )
             }
         }
     }

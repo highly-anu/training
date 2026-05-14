@@ -255,12 +255,9 @@ final class WorkoutManager: NSObject, ObservableObject {
                         )
                     }
                 } else {
-                    self.sessionState.completeTimedWork(
-                        exerciseIndex: ei,
-                        exerciseId: session.exercises[ei].exerciseId
-                    )
-                    self.sessionState.completeSession()
-                    await self.endWorkout()
+                    // Last timed exercise — prompt instead of auto-completing so
+                    // the user can keep going past the prescribed duration.
+                    self.sessionState.showOvertimePrompt = true
                 }
             }
 

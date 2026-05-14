@@ -185,6 +185,11 @@ final class APIClient {
         }
     }
 
+    func fetchReadiness() async throws -> ReadinessResult {
+        let data = try await get("/health/readiness")
+        return try JSONDecoder().decode(ReadinessResult.self, from: data)
+    }
+
     // MARK: - Program Generation
 
     /// POSTs to /programs/generate. On success the server stores the program;

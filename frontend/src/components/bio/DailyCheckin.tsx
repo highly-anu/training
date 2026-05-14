@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useBioStore } from '@/store/bioStore'
 
 export function DailyCheckin() {
+  const queryClient = useQueryClient()
   const today = format(new Date(), 'yyyy-MM-dd')
   const existing = useBioStore((s) => s.dailyBioLogs[today])
   const upsertDailyBio = useBioStore((s) => s.upsertDailyBio)
@@ -34,6 +36,7 @@ export function DailyCheckin() {
       sleepDurationMin,
       source: 'manual',
     })
+    void queryClient.invalidateQueries({ queryKey: ['readiness'] })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }

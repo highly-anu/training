@@ -5,6 +5,7 @@ import type {
   DailyBioLog,
   WorkoutMatch,
 } from '@/api/types'
+import type { ReadinessResult } from '@/lib/readiness'
 
 export interface HealthSnapshot {
   workouts: ImportedWorkout[]
@@ -50,4 +51,8 @@ export function savePerformanceEntry(
 
 export function deletePerformanceLog(benchmarkId: string): void {
   void apiClient.delete(`${BASE}/performance/${encodeURIComponent(benchmarkId)}`)
+}
+
+export async function fetchReadiness(): Promise<ReadinessResult> {
+  return apiClient.get(`${BASE}/readiness`) as unknown as Promise<ReadinessResult>
 }

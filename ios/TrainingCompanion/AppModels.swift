@@ -239,6 +239,22 @@ struct DailyBioLog: Codable, Identifiable {
     }
 }
 
+// MARK: - Readiness (API-computed)
+
+struct ReadinessResult: Codable {
+    let score: Int
+    let status: String   // "green" | "yellow" | "red"
+    let flags: [String]
+    let components: ReadinessComponents
+}
+
+struct ReadinessComponents: Codable {
+    let rhr: Int
+    let hrv: Int
+    let sleep: Int
+    let fatigue: Int
+}
+
 // MARK: - Constraint Definitions
 
 struct EquipmentProfileDef: Codable, Identifiable {

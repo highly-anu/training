@@ -1767,6 +1767,116 @@ def health_delete_performance(benchmark_id: str):
     return jsonify({'deleted': benchmark_id})
 
 
+# ---------------------------------------------------------------------------
+# Readiness computation
+# ---------------------------------------------------------------------------
+
+def _recent_bio(bio_list: list[dict], days: int) -> list[dict]:
+    cutoff = _date.today() - _timedelta(days=days)
+    return [b for b in bio_list if _date.fromisoformat(b['date']) > cutoff]
+
+
+def _rolling_mean(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+
+def _score_rhr(bio_list: list[dict], flags: list[str]) -> int:
+    logs = [b for b in _recent_bio(bio_list, 14) if b.get('resting_hr') is not None]
+    if len(logs) < 3:
+        flags.append('insufficient_data')
+        return 17
+    logs = sorted(logs, key=lambda b: b['date'])
+    baseline = _rolling_mean([b['resting_hr'] for b in logs[:-1]])
+    today_val = logs[-1]['resting_hr']
+    delta = today_val - baseline
+    last5 = logs[-5:]
+    if sum(1 for b in last5 if b['resting_hr'] - baseline > 5) >= 3:
+        flags.append('elevated_rhr_3d')
+    if delta <= 0: return 35
+    if delta <= 3: return round(35 - (delta / 3) * 9)
+    if delta <= 7: return round(26 - ((delta - 3) / 4) * 13)
+    return max(0, round(13 - (delta - 7) * 2))
+
+
+def _score_hrv(bio_list: list[dict], flags: list[str]) -> int:
+    logs = [b for b in _recent_bio(bio_list, 14) if b.get('hrv') is not None]
+    if len(logs) < 3:
+        if 'insufficient_data' not in flags:
+            flags.append('insufficient_data')
+        return 17
+    logs = sorted(logs, key=lambda b: b['date'])
+    baseline = _rolling_mean([b['hrv'] for b in logs[:-1]])
+    today_val = logs[-1]['hrv']
+    pct = ((today_val - baseline) / baseline * 100) if baseline > 0 else 0
+    last5 = logs[-5:]
+    if sum(1 for b in last5 if b['hrv'] < baseline * 0.85) >= 3:
+        flags.append('suppressed_hrv_3d')
+    if pct >= 5:  return 35
+    if pct >= -5: return 30
+    if pct >= -10: return 21
+    if pct >= -20: return 13
+    return 4
+
+
+def _score_sleep(bio_list: list[dict], flags: list[str]) -> int:
+    logs = [b for b in _recent_bio(bio_list, 7) if b.get('sleep_duration_min') is not None]
+    if not logs:
+        return 8
+    logs = sorted(logs, key=lambda b: b['date'])
+    hours = logs[-1]['sleep_duration_min'] / 60
+    if sum(1 for b in logs[-3:] if b['sleep_duration_min'] / 60 < 6) >= 3:
+        flags.append('poor_sleep_3d')
+    if hours < 5:
+        flags.append('insufficient_sleep')
+        return 0
+    if hours < 6: return 5
+    if hours < 7: return 10
+    if hours <= 9: return 15
+    return 12
+
+
+def _score_fatigue(session_dict: dict, flags: list[str]) -> int:
+    logs = sorted(
+        [v for v in session_dict.values()
+         if v.get('completedAt') and v.get('fatigueRating') is not None],
+        key=lambda l: l['completedAt'],
+    )[-3:]
+    if not logs:
+        return 8
+    avg = _rolling_mean([l['fatigueRating'] for l in logs])
+    if avg > 4.5:
+        flags.append('high_accumulated_fatigue')
+        return 1
+    if avg > 3.5: return 4
+    if avg > 2.5: return 8
+    if avg > 1.5: return 12
+    return 15
+
+
+def _compute_readiness(bio_list: list[dict], session_dict: dict) -> dict:
+    flags: list[str] = []
+    rhr     = _score_rhr(bio_list, flags)
+    hrv     = _score_hrv(bio_list, flags)
+    sleep   = _score_sleep(bio_list, flags)
+    fatigue = _score_fatigue(session_dict, flags)
+    score = min(100, max(0, rhr + hrv + sleep + fatigue))
+    status = 'green' if score >= 70 else 'yellow' if score >= 45 else 'red'
+    return {
+        'score':      score,
+        'status':     status,
+        'flags':      flags,
+        'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue},
+    }
+
+
+@app.get('/api/health/readiness')
+@require_auth
+def health_readiness():
+    bio_list     = _health.get_recent_bio_logs(g.user_id, days=14)
+    session_dict = _health.get_session_logs(g.user_id)
+    return jsonify(_compute_readiness(bio_list, session_dict))
+
+
 @app.errorhandler(Exception)
 def handle_error(e):
     import traceback as _tb

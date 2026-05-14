@@ -347,21 +347,21 @@ struct TodayView: View {
 
     @ViewBuilder
     private var readinessCard: some View {
-        if let info = appState.readinessInfo(from: appState.recentBioLogs),
-           let latest = appState.recentBioLogs.first {
-            let color = info.signalColor
+        if let result = appState.readinessResult {
+            let color = result.statusColor
+            let latest = appState.recentBioLogs.first
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text("\(Int(info.score * 100))")
+                            Text("\(result.score)")
                                 .font(.system(size: 42, weight: .bold, design: .rounded))
                                 .foregroundStyle(color)
                             Text("/ 100")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
-                        Text(readinessLabel(info.signal))
+                        Text(result.statusLabel)
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundStyle(color)
@@ -370,36 +370,43 @@ struct TodayView: View {
                             .clipShape(Capsule())
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 6) {
-                        if let hrv = latest.hrv {
-                            readinessStat(label: "HRV", value: "\(Int(hrv)) ms")
-                        }
-                        if let hr = latest.restingHR {
-                            readinessStat(label: "RHR", value: "\(Int(hr)) bpm")
-                        }
-                        if let sleep = latest.sleepDurationMin, sleep > 0 {
-                            let h = sleep / 60; let m = sleep % 60
-                            readinessStat(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
+                    if let latest {
+                        VStack(alignment: .trailing, spacing: 6) {
+                            if let hrv = latest.hrv {
+                                readinessStat(label: "HRV", value: "\(Int(hrv)) ms")
+                            }
+                            if let hr = latest.restingHR {
+                                readinessStat(label: "RHR", value: "\(Int(hr)) bpm")
+                            }
+                            if let sleep = latest.sleepDurationMin, sleep > 0 {
+                                let h = sleep / 60; let m = sleep % 60
+                                readinessStat(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
+                            }
                         }
                     }
                 }
 
-                // Flags
-                let flags = readinessFlags(info, latest: latest)
-                if !flags.isEmpty {
+                // Flags from API (exclude insufficient_data from actionable list)
+                let actionableFlags = result.flags.filter { $0 != "insufficient_data" }
+                if !actionableFlags.isEmpty {
                     Divider()
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(flags, id: \.self) { flag in
+                        ForEach(actionableFlags, id: \.self) { flag in
                             HStack(spacing: 6) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .font(.caption2)
                                     .foregroundStyle(.orange)
-                                Text(flag)
+                                Text(readinessFlagLabel(flag))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
                     }
+                } else if result.flags.contains("insufficient_data") {
+                    Text("Add daily resting HR + HRV check-ins for accurate readiness scores.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .italic()
                 }
             }
             .padding(14)
@@ -431,34 +438,15 @@ struct TodayView: View {
         }
     }
 
-    private func readinessLabel(_ signal: String) -> String {
-        switch signal {
-        case "green":  return "Ready"
-        case "yellow": return "Moderate"
-        default:       return "Low"
+    private func readinessFlagLabel(_ key: String) -> String {
+        switch key {
+        case "elevated_rhr_3d":          return "Elevated resting HR (3+ days)"
+        case "suppressed_hrv_3d":        return "Suppressed HRV (3+ days)"
+        case "high_accumulated_fatigue": return "High accumulated fatigue"
+        case "insufficient_sleep":       return "Less than 5h sleep last night"
+        case "poor_sleep_3d":            return "Poor sleep 3+ nights in a row"
+        default:                         return key
         }
-    }
-
-    private func readinessFlags(_ info: ReadinessInfo, latest: DailyBioLog) -> [String] {
-        var flags: [String] = []
-        let logs = appState.recentBioLogs
-        if logs.count >= 3 {
-            let recentHR = logs.prefix(3).compactMap { $0.restingHR }
-            if let baseline = logs.dropFirst(3).compactMap({ $0.restingHR }).average,
-               recentHR.count == 3, (recentHR.average ?? 0) > baseline * 1.05 {
-                flags.append("Elevated resting HR (3+ days)")
-            }
-            let recentHRV = logs.prefix(3).compactMap { $0.hrv }
-            if let baseline = logs.dropFirst(3).compactMap({ $0.hrv }).average,
-               recentHRV.count == 3, (recentHRV.average ?? 0) < baseline * 0.9 {
-                flags.append("Suppressed HRV (3+ days)")
-            }
-        }
-        if let sleep = latest.sleepDurationMin, sleep < 300 {
-            flags.append("Less than 5h sleep last night")
-        }
-        if logs.count < 3 { flags.append("Limited bio data") }
-        return flags
     }
 
     // MARK: - Development Section
