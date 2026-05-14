@@ -22,6 +22,10 @@ final class WorkoutSessionState: ObservableObject {
     // Timer control
     @Published var isTimerPaused: Bool = false
 
+    // Shown when a long timed exercise hits its prescribed duration —
+    // user can dismiss to keep going or tap Finish to end the session.
+    @Published var showOvertimePrompt: Bool = false
+
     // HR
     @Published var currentHR: Int = 0
     @Published var peakHR: Int = 0
@@ -88,6 +92,7 @@ final class WorkoutSessionState: ObservableObject {
         hrOutOfZoneCounter = 0; hrAlertCooldown = 0
         distanceMeters = 0; currentCadence = 0; currentSpeedMps = 0; floorsAscended = 0
         currentSetStartOffset = nil
+        showOvertimePrompt = false
     }
 
     // MARK: - Sets / reps

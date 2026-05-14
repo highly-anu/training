@@ -74,6 +74,7 @@ struct SyncStatusView: View {
                 Task {
                     await sync.syncAll()
                     await appState.loadRecentBioLogs()
+                    await appState.loadReadiness()
                     await appState.loadWorkouts()
                 }
             } label: {

@@ -244,6 +244,7 @@ struct LogView: View {
         .refreshable {
             AppHaptics.light()
             await appState.loadRecentBioLogs()
+            await appState.loadReadiness()
             AppHaptics.success()
         }
     }
@@ -744,11 +745,12 @@ struct BioCheckInView: View {
 
         try? await appState.api?.pushBio(date: today, payload: payload)
         await appState.loadRecentBioLogs()
+        await appState.loadReadiness()
         dismiss()
     }
 }
 
-// MARK: - ReadinessInfo color helpers
+// MARK: - ReadinessInfo color helpers (used by Watch connectivity display)
 
 extension ReadinessInfo {
     var signalColor: Color {
@@ -763,6 +765,25 @@ extension ReadinessInfo {
         case "green":  return "bolt.heart.fill"
         case "yellow": return "exclamationmark.heart.fill"
         default:       return "heart.slash.fill"
+        }
+    }
+}
+
+// MARK: - ReadinessResult display helpers (API-computed score)
+
+extension ReadinessResult {
+    var statusColor: Color {
+        switch status {
+        case "green":  return .green
+        case "yellow": return .yellow
+        default:       return .red
+        }
+    }
+    var statusLabel: String {
+        switch status {
+        case "green":  return "Ready"
+        case "yellow": return "Moderate"
+        default:       return "Low"
         }
     }
 }

@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { computeReadiness, type ReadinessFlag } from '@/lib/readiness'
+import type { ReadinessFlag } from '@/lib/readiness'
+import { fetchReadiness } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
 
 const FLAG_LABELS: Record<ReadinessFlag, string> = {
@@ -39,12 +41,12 @@ const STATUS_STYLES = {
 
 export function ReadinessWidget() {
   const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
-  const sessionPerformanceLogs = useBioStore((s) => s.sessionPerformanceLogs)
 
-  const result = useMemo(
-    () => computeReadiness(Object.values(dailyBioLogs), sessionPerformanceLogs),
-    [dailyBioLogs, sessionPerformanceLogs]
-  )
+  const { data: result } = useQuery({
+    queryKey: ['readiness'],
+    queryFn: fetchReadiness,
+    staleTime: 5 * 60 * 1000,
+  })
 
   // Sparkline data — last 7 days
   const sparkData = useMemo(() => {
@@ -55,8 +57,9 @@ export function ReadinessWidget() {
       .map((l) => ({ date: format(parseISO(l.date), 'M/d'), rhr: l.restingHR }))
   }, [dailyBioLogs])
 
-  const styles = STATUS_STYLES[result.status]
-  const actionableFlags = result.flags.filter((f) => f !== 'insufficient_data')
+  const status = result?.status ?? 'green'
+  const styles = STATUS_STYLES[status]
+  const actionableFlags = (result?.flags ?? []).filter((f) => f !== 'insufficient_data')
 
   return (
     <div className={cn('h-full rounded-xl border bg-card p-4 space-y-3 ring-1', styles.ring)}>
@@ -73,7 +76,7 @@ export function ReadinessWidget() {
       {/* Score + status */}
       <div className="flex items-end gap-3">
         <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>
-          {result.score}
+          {result?.score ?? '—'}
         </span>
         <div className="mb-0.5 space-y-0.5">
           <span
@@ -104,7 +107,7 @@ export function ReadinessWidget() {
                 <Line
                   type="monotone"
                   dataKey="rhr"
-                  stroke={result.status === 'green' ? '#10b981' : result.status === 'yellow' ? '#f59e0b' : '#ef4444'}
+                  stroke={status === 'green' ? '#10b981' : status === 'yellow' ? '#f59e0b' : '#ef4444'}
                   strokeWidth={1.5}
                   dot={false}
                   connectNulls
@@ -121,13 +124,13 @@ export function ReadinessWidget() {
           {actionableFlags.map((f) => (
             <div key={f} className="flex items-start gap-1.5 text-[11px] text-orange-400">
               <AlertTriangle className="size-3 mt-0.5 shrink-0" />
-              {FLAG_LABELS[f]}
+              {FLAG_LABELS[f as ReadinessFlag] ?? f}
             </div>
           ))}
         </div>
       )}
 
-      {result.flags.includes('insufficient_data') && actionableFlags.length === 0 && (
+      {result?.flags.includes('insufficient_data') && actionableFlags.length === 0 && (
         <p className="text-[10px] text-muted-foreground/70 italic">
           Add daily resting HR + HRV check-ins to get accurate readiness scores.
         </p>
