@@ -90,6 +90,7 @@ struct TodayView: View {
                 todaySection
                 readinessSection
                 developmentSection
+                progressionSection
                 Spacer(minLength: 40)
             }
             .padding()
@@ -592,6 +593,116 @@ struct TodayView: View {
         if pct >= 70 { return "On Track" }
         if pct >= 45 { return "Mixed" }
         return "Off Track"
+    }
+
+    // MARK: - Progression Section
+
+    private var progressionSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionLabel("Progression")
+            if let review = appState.progressionReview {
+                progressionCard(review: review)
+            } else {
+                Text("Log sessions to track progression.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
+            }
+        }
+    }
+
+    private func progressionCard(review: ProgressionReview) -> some View {
+        let score = review.overallScore
+        let color: Color = score.map { complianceColor($0) } ?? .secondary
+
+        return NavigationLink(destination: ProgressionView().environmentObject(appState)) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let s = score {
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text("\(s)")
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .foregroundStyle(color)
+                                Text("/ 100")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(complianceLabel(s))
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(color)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(color.opacity(0.12))
+                                .clipShape(Capsule())
+                        } else {
+                            Text("Insufficient data")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+
+                if !review.exerciseFindings.isEmpty {
+                    Divider()
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(review.exerciseFindings.prefix(3)) { finding in
+                            HStack(spacing: 6) {
+                                Text(progressionStatusIcon(finding.status))
+                                    .font(.caption2)
+                                    .foregroundStyle(progressionStatusColor(finding.status))
+                                    .frame(width: 12, alignment: .center)
+                                Text(finding.name)
+                                    .font(.caption2)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(finding.changeSummary)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                if let rec = review.recommendations.first {
+                    Text("· \(rec)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+            .padding(14)
+            .background(.background.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(color.opacity(0.4), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func progressionStatusIcon(_ status: String) -> String {
+        switch status {
+        case "ahead":            return "↑"
+        case "on_track":         return "✓"
+        case "behind":           return "↓"
+        case "stalled":          return "⚠"
+        default:                 return "–"
+        }
+    }
+
+    private func progressionStatusColor(_ status: String) -> Color {
+        switch status {
+        case "ahead", "on_track": return .green
+        case "behind":            return .yellow
+        case "stalled":           return .red
+        default:                  return .secondary
+        }
     }
 
     // MARK: - Shared Helpers

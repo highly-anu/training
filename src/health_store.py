@@ -526,3 +526,107 @@ def get_performance_logs(user_id: str) -> dict:
         return result
     except Exception:
         return {}
+
+
+# ── Progression snapshots ─────────────────────────────────────────────────────
+
+_SNAPSHOT_TABLE_CREATED = False
+
+def _ensure_snapshot_table(cur) -> None:
+    global _SNAPSHOT_TABLE_CREATED
+    if _SNAPSHOT_TABLE_CREATED:
+        return
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS progression_snapshots (
+            id            SERIAL PRIMARY KEY,
+            user_id       TEXT NOT NULL,
+            period_key    TEXT NOT NULL,
+            period_type   TEXT NOT NULL,
+            generated_at  TIMESTAMP NOT NULL,
+            session_hash  TEXT NOT NULL,
+            data          JSONB NOT NULL
+        )
+    ''')
+    cur.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS progression_snapshots_user_period
+        ON progression_snapshots (user_id, period_key, period_type)
+    ''')
+    _SNAPSHOT_TABLE_CREATED = True
+
+
+def get_progression_snapshot(user_id: str, period_key: str, period_type: str) -> dict | None:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_snapshot_table(cur)
+                cur.execute(
+                    'SELECT data, session_hash, generated_at FROM progression_snapshots '
+                    'WHERE user_id = %s AND period_key = %s AND period_type = %s',
+                    (user_id, period_key, period_type),
+                )
+                row = cur.fetchone()
+        if not row:
+            return None
+        data = row['data'] if isinstance(row['data'], dict) else json.loads(row['data'])
+        return {
+            'data':         data,
+            'session_hash': row['session_hash'],
+            'generated_at': str(row['generated_at']),
+        }
+    except Exception:
+        return None
+
+
+def save_progression_snapshot(user_id: str, period_key: str, period_type: str,
+                               session_hash: str, data: dict) -> None:
+    from src.db import get_conn
+    from datetime import datetime as _dt
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_snapshot_table(cur)
+                cur.execute('''
+                    INSERT INTO progression_snapshots
+                        (user_id, period_key, period_type, generated_at, session_hash, data)
+                    VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                    ON CONFLICT (user_id, period_key, period_type) DO UPDATE SET
+                        generated_at = EXCLUDED.generated_at,
+                        session_hash = EXCLUDED.session_hash,
+                        data         = EXCLUDED.data
+                ''', (
+                    user_id, period_key, period_type,
+                    _dt.utcnow().isoformat(),
+                    session_hash,
+                    json.dumps(data),
+                ))
+            conn.commit()
+    except Exception:
+        pass
+
+
+def list_progression_snapshots(user_id: str) -> list[dict]:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_snapshot_table(cur)
+                cur.execute(
+                    'SELECT period_key, period_type, generated_at, '
+                    '(data->>\'overall_score\')::int AS overall_score '
+                    'FROM progression_snapshots WHERE user_id = %s '
+                    'ORDER BY generated_at DESC',
+                    (user_id,),
+                )
+                rows = cur.fetchall()
+        return [
+            {
+                'period_key':    row['period_key'],
+                'period_type':   row['period_type'],
+                'generated_at':  str(row['generated_at']),
+                'overall_score': row['overall_score'],
+            }
+            for row in rows
+        ]
+    except Exception:
+        return []

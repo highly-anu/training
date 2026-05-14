@@ -754,3 +754,82 @@ export interface DevelopmentTrend {
   direction: 'improving' | 'stable' | 'declining'
   detail: string
 }
+
+// ── Progression review types ──────────────────────────────────────────────────
+
+export type ProgressionStatus = 'ahead' | 'on_track' | 'behind' | 'stalled' | 'insufficient_data'
+export type ProgressionMetricType = 'weight' | 'volume' | 'time' | 'distance' | 'rounds' | 'complexity' | 'reps'
+export type TrendDirection = 'improving' | 'stable' | 'declining'
+
+export interface ExerciseFinding {
+  exercise_id: string
+  name: string
+  metric_type: ProgressionMetricType
+  expected_value: number | null
+  actual_value: number | null
+  unit: string
+  status: ProgressionStatus
+  trend: TrendDirection
+  change_summary: string
+}
+
+export interface ProgressionAdjustment {
+  type: string
+  target: string
+  direction: string
+  reason: string
+  magnitude: string | null
+}
+
+export interface ProgressionReview {
+  period_key: string
+  period_type: 'weekly' | 'biweekly'
+  generated_at: string | null
+  overall_score: number | null
+  readiness_trend: TrendDirection
+  avg_readiness: number | null
+  compliance_pct: number
+  exercise_findings: ExerciseFinding[]
+  flags: string[]
+  recommendations: string[]
+  adjustments: ProgressionAdjustment[]
+}
+
+export interface ExerciseHistoryPoint {
+  date: string
+  week_number: number
+  session_key: string
+  best_weight_kg: number | null
+  total_volume: number | null
+  est_1rm: number | null
+  best_reps: number | null
+  rpe: number | null
+  duration_sec: number | null
+  distance_km: number | null
+  rounds_completed: number | null
+}
+
+export interface ExerciseExpectedPoint {
+  week_number: number
+  expected_value: number | null
+  unit: string
+  metric_type: ProgressionMetricType
+}
+
+export interface ExerciseHistoryItem {
+  exerciseId: string
+  name: string
+  history: ExerciseHistoryPoint[]
+  expected: ExerciseExpectedPoint[]
+}
+
+export interface ExerciseHistoryResponse {
+  exercises: ExerciseHistoryItem[]
+}
+
+export interface ProgressionReviewSummary {
+  period_key: string
+  period_type: string
+  generated_at: string
+  overall_score: number | null
+}

@@ -190,6 +190,13 @@ final class APIClient {
         return try JSONDecoder().decode(ReadinessResult.self, from: data)
     }
 
+    // MARK: - Progression
+
+    func fetchProgressionReview(period: String = "weekly") async throws -> ProgressionReview? {
+        let data = try await get("/progression/review?period=\(period)")
+        return try? JSONDecoder().decode(ProgressionReview.self, from: data)
+    }
+
     // MARK: - Program Generation
 
     /// POSTs to /programs/generate. On success the server stores the program;

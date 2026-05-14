@@ -347,3 +347,66 @@ extension Array {
         indices.contains(index) ? self[index] : nil
     }
 }
+
+
+// MARK: - Progression Review
+
+struct ProgressionReview: Codable {
+    let periodKey: String
+    let periodType: String
+    let generatedAt: String?
+    let overallScore: Int?
+    let readinessTrend: String
+    let avgReadiness: Int?
+    let compliancePct: Int
+    let exerciseFindings: [ExerciseFinding]
+    let flags: [String]
+    let recommendations: [String]
+    let adjustments: [ProgressionAdjustment]
+
+    enum CodingKeys: String, CodingKey {
+        case periodKey       = "period_key"
+        case periodType      = "period_type"
+        case generatedAt     = "generated_at"
+        case overallScore    = "overall_score"
+        case readinessTrend  = "readiness_trend"
+        case avgReadiness    = "avg_readiness"
+        case compliancePct   = "compliance_pct"
+        case exerciseFindings = "exercise_findings"
+        case flags, recommendations, adjustments
+    }
+}
+
+struct ExerciseFinding: Codable, Identifiable {
+    let exerciseId: String
+    let name: String
+    let metricType: String
+    let expectedValue: Double?
+    let actualValue: Double?
+    let unit: String
+    let status: String   // "ahead" | "on_track" | "behind" | "stalled" | "insufficient_data"
+    let trend: String    // "improving" | "stable" | "declining"
+    let changeSummary: String
+
+    var id: String { exerciseId }
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseId    = "exercise_id"
+        case name
+        case metricType    = "metric_type"
+        case expectedValue = "expected_value"
+        case actualValue   = "actual_value"
+        case unit, status, trend
+        case changeSummary = "change_summary"
+    }
+}
+
+struct ProgressionAdjustment: Codable, Identifiable {
+    let type: String
+    let target: String
+    let direction: String
+    let reason: String
+    let magnitude: String?
+
+    var id: String { "\(type)-\(target)" }
+}
