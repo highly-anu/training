@@ -10,7 +10,7 @@ type Period = 'weekly' | 'biweekly'
 export function ProgressionTab() {
   const [period, setPeriod] = useState<Period>('weekly')
 
-  const { data: review, isLoading: reviewLoading } = useQuery({
+  const { data: review, isLoading: reviewLoading, isError: reviewError } = useQuery({
     queryKey: ['progression', 'review', period],
     queryFn:  () => fetchProgressionReview(period),
     staleTime: 5 * 60 * 1000,
@@ -51,6 +51,12 @@ export function ProgressionTab() {
         <div className="rounded-xl border bg-card p-4 ring-1 ring-border">
           <p className="text-[11px] text-muted-foreground animate-pulse">
             Computing progression review…
+          </p>
+        </div>
+      ) : reviewError ? (
+        <div className="rounded-xl border border-destructive/30 bg-card p-4 ring-1 ring-destructive/20">
+          <p className="text-[11px] text-destructive">
+            Could not load progression data — make sure the backend is running.
           </p>
         </div>
       ) : review ? (

@@ -172,15 +172,13 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                      avg_hr, peak_hr, exercise_timeline)
                     VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb)
                     ON CONFLICT (session_key, user_id) DO UPDATE SET
-                        exercises         = CASE
-                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
-                            THEN EXCLUDED.exercises
-                            ELSE session_logs.exercises
-                        END,
+                        exercises         = session_logs.exercises || EXCLUDED.exercises,
                         notes             = CASE
-                            WHEN EXCLUDED.completed_at >= session_logs.completed_at
+                            WHEN EXCLUDED.completed_at IS NOT NULL
+                                 AND (session_logs.completed_at IS NULL
+                                      OR EXCLUDED.completed_at >= session_logs.completed_at)
                             THEN EXCLUDED.notes
-                            ELSE session_logs.notes
+                            ELSE COALESCE(NULLIF(EXCLUDED.notes, ''), session_logs.notes)
                         END,
                         fatigue_rating    = COALESCE(EXCLUDED.fatigue_rating, session_logs.fatigue_rating),
                         completed_at      = GREATEST(EXCLUDED.completed_at, session_logs.completed_at),
