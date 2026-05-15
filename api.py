@@ -1960,7 +1960,17 @@ def progression_exercises():
     prog_model  = _pt._infer_progression_model(program)
     weeks       = program.get('weeks', [])
 
-    history = _pt.compute_exercise_history(session_logs, program)
+    # Build matched-workout list for endurance exercise auto-population
+    matches    = _health.get_matches(g.user_id)
+    workouts   = _health.get_workouts(g.user_id)
+    wo_map     = {wo['id']: wo for wo in workouts}
+    matched_wos = [
+        {'sessionKey': m['sessionKey'], 'workout': wo_map[m['importedWorkoutId']]}
+        for m in matches
+        if m['matchConfidence'] != 'rejected' and m['importedWorkoutId'] in wo_map
+    ]
+
+    history = _pt.compute_exercise_history(session_logs, program, matched_workouts=matched_wos)
 
     # Build index: exerciseId → (exercise dict, slot dict)
     ex_index: dict = {}

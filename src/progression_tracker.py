@@ -12,6 +12,9 @@ from src.progression import calculate_load
 # Philosophy-level rules
 # ---------------------------------------------------------------------------
 
+# Slot types whose primary metric comes from workout duration or distance
+_ENDURANCE_SLOT_TYPES = frozenset({'time_domain', 'distance', 'for_time', 'skill_practice'})
+
 # Maps progression_model → stall detection: (sessions_without_increase, metric_type, unit)
 _STALL_RULES: dict[str, tuple[int, str, str]] = {
     'linear_load':       (2, 'weight',   'kg'),
@@ -52,88 +55,173 @@ def compute_session_hash(session_logs: dict) -> str:
 # Exercise history extraction
 # ---------------------------------------------------------------------------
 
-def compute_exercise_history(session_logs: dict, program: dict) -> dict:
+def _primary_endurance_exercise(session: dict) -> tuple[str, dict, dict] | None:
+    """Return (ex_id, exercise, slot) for the dominant endurance exercise in the session.
+
+    Picks the exercise with the highest prescribed duration among time/distance slots.
+    Returns None if the session has no endurance exercises.
+    """
+    candidates: list[tuple[float, str, dict, dict]] = []
+    for ea in session.get('exercises', []):
+        if ea.get('meta') or ea.get('injury_skip'):
+            continue
+        ex = ea.get('exercise') or {}
+        ex_id = ex.get('id', '')
+        if not ex_id:
+            continue
+        slot = ea.get('slot') or {}
+        if slot.get('slot_type') not in _ENDURANCE_SLOT_TYPES:
+            continue
+        loads = ea.get('loads') or {}
+        prescribed_sec = (
+            loads.get('duration_sec')
+            or loads.get('time_to_task_sec')
+            or loads.get('work_duration_sec')
+            or 0
+        )
+        candidates.append((prescribed_sec, ex_id, ex, slot))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    _, ex_id, ex, slot = candidates[0]
+    return ex_id, ex, slot
+
+
+def _workout_to_history_point(workout: dict, week_num: int, session_key: str) -> dict:
+    """Build a history point from an imported workout (no set-level data)."""
+    duration_min = workout.get('durationMinutes') or 0
+    dist_raw = workout.get('distance')
+    dist_km: float | None = None
+    if dist_raw:
+        val = dist_raw.get('value') or 0
+        unit = dist_raw.get('unit', 'km')
+        dist_km = round(val if unit == 'km' else val / 1000, 3) if val else None
+
+    return {
+        'date':             workout.get('date', ''),
+        'week_number':      week_num,
+        'session_key':      session_key,
+        'best_weight_kg':   None,
+        'total_volume':     None,
+        'est_1rm':          None,
+        'best_reps':        None,
+        'rpe':              None,
+        'duration_sec':     int(duration_min * 60) if duration_min else None,
+        'distance_km':      dist_km,
+        'rounds_completed': None,
+        'source':           'matched_workout',
+    }
+
+
+def compute_exercise_history(
+    session_logs: dict,
+    program: dict,
+    matched_workouts: list[dict] | None = None,
+) -> dict:
     """
     Returns {exerciseId: [HistoryPoint, ...]} sorted by week_number.
 
     HistoryPoint: {
         date, week_number, session_key,
         best_weight_kg, total_volume, est_1rm,
-        best_reps, rpe, duration_sec, distance_km, rounds_completed
+        best_reps, rpe, duration_sec, distance_km, rounds_completed,
+        source?  # 'matched_workout' when synthesized from an import
     }
+
+    When a session has no manual log but a matched workout exists, the primary
+    endurance exercise in that session gets a history point derived from the
+    workout's duration/distance (time_domain, distance, for_time, skill_practice
+    slot types only).  Manual logs always take priority over matched workouts.
     """
     history: dict[str, list[dict]] = {}
+
+    # Index matched workouts by session key (rejected matches excluded by caller)
+    match_by_key: dict[str, dict] = {}
+    for mw in (matched_workouts or []):
+        key = mw.get('sessionKey', '')
+        wo  = mw.get('workout')
+        if key and wo:
+            match_by_key[key] = wo
 
     for week in program.get('weeks', []):
         week_num = week.get('week_number', 1)
         for day_name, sessions in week.get('schedule', {}).items():
             for s_idx, session in enumerate(sessions):
-                # Session key is "weekNum-DayName" or "weekNum-DayName-idx"
                 key_base = f"{week_num}-{day_name}"
-                log = session_logs.get(key_base) or session_logs.get(f"{key_base}-{s_idx}")
-                if not log:
-                    continue
+                key_idx  = f"{key_base}-{s_idx}"
+                log = session_logs.get(key_base) or session_logs.get(key_idx)
 
-                completed_at = log.get('completedAt') or ''
-                log_exercises: dict = log.get('exercises') or {}
+                if log:
+                    # ── Manual log path ──────────────────────────────────────
+                    completed_at  = log.get('completedAt') or ''
+                    log_exercises = log.get('exercises') or {}
 
-                for ea in session.get('exercises', []):
-                    if ea.get('meta') or ea.get('injury_skip'):
+                    for ea in session.get('exercises', []):
+                        if ea.get('meta') or ea.get('injury_skip'):
+                            continue
+                        ex    = ea.get('exercise') or {}
+                        ex_id = ex.get('id', '')
+                        if not ex_id:
+                            continue
+
+                        ex_log = log_exercises.get(ex_id)
+                        if not ex_log:
+                            continue
+
+                        sets_data      = ex_log.get('sets') or []
+                        completed_sets = [s for s in sets_data if s.get('completed')]
+
+                        point: dict = {
+                            'date':             completed_at,
+                            'week_number':      week_num,
+                            'session_key':      key_base,
+                            'best_weight_kg':   None,
+                            'total_volume':     None,
+                            'est_1rm':          None,
+                            'best_reps':        None,
+                            'rpe':              ex_log.get('rpe'),
+                            'duration_sec':     None,
+                            'distance_km':      None,
+                            'rounds_completed': None,
+                        }
+
+                        weights   = [s['weightKg']   for s in completed_sets if s.get('weightKg')]
+                        reps_list = [s['repsActual']  for s in completed_sets if s.get('repsActual')]
+
+                        if weights:
+                            point['best_weight_kg'] = max(weights)
+                        if reps_list:
+                            point['best_reps'] = max(reps_list)
+                        if weights and reps_list:
+                            best_idx = weights.index(max(weights))
+                            w = weights[best_idx]
+                            r = reps_list[min(best_idx, len(reps_list) - 1)]
+                            point['est_1rm'] = round(w * (1 + 0.0333 * r), 1)
+                            point['total_volume'] = round(
+                                sum(w2 * r2 for w2, r2 in zip(weights, reps_list)), 1
+                            )
+
+                        if ex_log.get('durationSec'):
+                            point['duration_sec'] = ex_log['durationSec']
+                        if ex_log.get('distanceKm'):
+                            point['distance_km'] = ex_log['distanceKm']
+                        if ex_log.get('rounds'):
+                            point['rounds_completed'] = ex_log['rounds']
+
+                        history.setdefault(ex_id, []).append(point)
+
+                else:
+                    # ── Matched workout fallback ──────────────────────────────
+                    workout = match_by_key.get(key_base) or match_by_key.get(key_idx)
+                    if not workout:
                         continue
-                    ex = ea.get('exercise') or {}
-                    ex_id = ex.get('id', '')
-                    if not ex_id:
+                    result = _primary_endurance_exercise(session)
+                    if not result:
                         continue
-
-                    ex_log = log_exercises.get(ex_id)
-                    if not ex_log:
-                        continue
-
-                    sets_data = ex_log.get('sets') or []
-                    completed_sets = [s for s in sets_data if s.get('completed')]
-
-                    point: dict = {
-                        'date':         completed_at,
-                        'week_number':  week_num,
-                        'session_key':  key_base,
-                        'best_weight_kg': None,
-                        'total_volume':   None,
-                        'est_1rm':        None,
-                        'best_reps':      None,
-                        'rpe':            ex_log.get('rpe'),
-                        'duration_sec':   None,
-                        'distance_km':    None,
-                        'rounds_completed': None,
-                    }
-
-                    weights = [s['weightKg'] for s in completed_sets if s.get('weightKg')]
-                    reps_list = [s['repsActual'] for s in completed_sets if s.get('repsActual')]
-
-                    if weights:
-                        point['best_weight_kg'] = max(weights)
-                    if reps_list:
-                        point['best_reps'] = max(reps_list)
-                    if weights and reps_list:
-                        # Epley: weight * (1 + 0.0333 * reps)
-                        best_idx = weights.index(max(weights))
-                        w = weights[best_idx]
-                        r = reps_list[min(best_idx, len(reps_list) - 1)]
-                        point['est_1rm'] = round(w * (1 + 0.0333 * r), 1)
-                        point['total_volume'] = round(
-                            sum(w2 * r2 for w2, r2 in zip(weights, reps_list)), 1
-                        )
-
-                    # Time/distance from log extras
-                    if ex_log.get('durationSec'):
-                        point['duration_sec'] = ex_log['durationSec']
-                    if ex_log.get('distanceKm'):
-                        point['distance_km'] = ex_log['distanceKm']
-                    if ex_log.get('rounds'):
-                        point['rounds_completed'] = ex_log['rounds']
-
+                    ex_id, _ex, _slot = result
+                    point = _workout_to_history_point(workout, week_num, key_base)
                     history.setdefault(ex_id, []).append(point)
 
-    # Sort each exercise history by week_number
     for ex_id in history:
         history[ex_id].sort(key=lambda p: (p['week_number'], p['date']))
 

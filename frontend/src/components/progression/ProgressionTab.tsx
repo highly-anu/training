@@ -38,7 +38,8 @@ export function ProgressionTab() {
 
   const allExercises = historyData?.exercises ?? []
   const trackedExercises = allExercises.filter((e) => e.history.length >= 1)
-  const visibleExercises = showAll ? allExercises : trackedExercises
+  const noneTracked = trackedExercises.length === 0
+  const visibleExercises = (showAll || noneTracked) ? allExercises : trackedExercises
   const hiddenCount = allExercises.length - trackedExercises.length
 
   const isLoading = reviewLoading || exercisesLoading
@@ -92,22 +93,12 @@ export function ProgressionTab() {
             Could not load progression data — make sure the backend is running.
           </p>
         </div>
-      ) : visibleExercises.length === 0 && !showAll ? (
+      ) : visibleExercises.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 text-center space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">No exercises logged yet</p>
+          <p className="text-sm font-medium text-muted-foreground">No program exercises found</p>
           <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-xs mx-auto">
-            Open a session, expand each exercise, and log your sets (reps + weight) to see
-            progression here.
+            Generate a program to start tracking your progression here.
           </p>
-          {hiddenCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowAll(true)}
-              className="mt-2 text-xs text-primary underline-offset-2 hover:underline"
-            >
-              Show all {allExercises.length} program exercises
-            </button>
-          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -121,8 +112,8 @@ export function ProgressionTab() {
         </div>
       )}
 
-      {/* Show-all / show-tracked toggle */}
-      {hiddenCount > 0 && visibleExercises.length > 0 && (
+      {/* Show-all / show-tracked toggle — only relevant once some exercises are tracked */}
+      {hiddenCount > 0 && trackedExercises.length > 0 && (
         <div className="flex justify-center">
           <button
             type="button"
