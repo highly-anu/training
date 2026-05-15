@@ -113,6 +113,10 @@ export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProp
   const hasData = latestActual !== null
   const fromImport = item.history.length > 0 && item.history.every((p) => p.source === 'matched_workout')
 
+  const latestPoint = item.history[item.history.length - 1] ?? null
+  const hrAvg = latestPoint?.hr_avg ?? null
+  const hrMax = latestPoint?.hr_max ?? null
+
   // Hint for exercises not yet logged
   const logHint = `Log ${METRIC_LABELS[metricType]} to track`
 
@@ -169,6 +173,15 @@ export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProp
           <Sparkline values={sparkValues} color={sparkColor} />
         )}
       </div>
+
+      {/* HR from matched workouts */}
+      {(hrAvg != null || hrMax != null) && (
+        <p className="text-[11px] text-muted-foreground">
+          ♥ {hrAvg != null ? `${hrAvg} avg` : ''}
+          {hrAvg != null && hrMax != null ? ' · ' : ''}
+          {hrMax != null ? `${hrMax} max` : ''} bpm
+        </p>
+      )}
 
       {/* Change summary */}
       {finding?.change_summary && status !== 'insufficient_data' && (

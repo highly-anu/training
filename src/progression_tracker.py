@@ -97,6 +97,10 @@ def _workout_to_history_point(workout: dict, week_num: int, session_key: str) ->
         unit = dist_raw.get('unit', 'km')
         dist_km = round(val if unit == 'km' else val / 1000, 3) if val else None
 
+    hr = workout.get('heartRate') or {}
+    hr_avg = hr.get('avg')
+    hr_max = hr.get('max')
+
     return {
         'date':             workout.get('date', ''),
         'week_number':      week_num,
@@ -109,6 +113,8 @@ def _workout_to_history_point(workout: dict, week_num: int, session_key: str) ->
         'duration_sec':     int(duration_min * 60) if duration_min else None,
         'distance_km':      dist_km,
         'rounds_completed': None,
+        'hr_avg':           int(hr_avg) if hr_avg else None,
+        'hr_max':           int(hr_max) if hr_max else None,
         'source':           'matched_workout',
     }
 
@@ -183,6 +189,8 @@ def compute_exercise_history(
                             'duration_sec':     None,
                             'distance_km':      None,
                             'rounds_completed': None,
+                            'hr_avg':           None,
+                            'hr_max':           None,
                         }
 
                         weights   = [s['weightKg']   for s in completed_sets if s.get('weightKg')]
