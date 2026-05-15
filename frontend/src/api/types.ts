@@ -807,6 +807,9 @@ export interface ExerciseHistoryPoint {
   duration_sec: number | null
   distance_km: number | null
   rounds_completed: number | null
+  hr_avg: number | null
+  hr_max: number | null
+  source?: 'matched_workout'
 }
 
 export interface ExerciseExpectedPoint {

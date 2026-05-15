@@ -111,6 +111,11 @@ export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProp
   const target = finding?.expected_value ?? item.expected.find((e) => e.expected_value != null)?.expected_value ?? null
 
   const hasData = latestActual !== null
+  const fromImport = item.history.length > 0 && item.history.every((p) => p.source === 'matched_workout')
+
+  const latestPoint = item.history[item.history.length - 1] ?? null
+  const hrAvg = latestPoint?.hr_avg ?? null
+  const hrMax = latestPoint?.hr_max ?? null
 
   // Hint for exercises not yet logged
   const logHint = `Log ${METRIC_LABELS[metricType]} to track`
@@ -126,7 +131,14 @@ export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProp
     >
       {/* Header: name + badge */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-foreground leading-tight">{item.name}</p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p className="text-sm font-medium text-foreground leading-tight truncate">{item.name}</p>
+          {fromImport && (
+            <span title="From imported workout" className="shrink-0 text-[9px] text-muted-foreground/60 border border-border/40 rounded px-1 py-px leading-none">
+              GPS
+            </span>
+          )}
+        </div>
         <span
           className={cn(
             'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold',
@@ -161,6 +173,15 @@ export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProp
           <Sparkline values={sparkValues} color={sparkColor} />
         )}
       </div>
+
+      {/* HR from matched workouts */}
+      {(hrAvg != null || hrMax != null) && (
+        <p className="text-[11px] text-muted-foreground">
+          ♥ {hrAvg != null ? `${hrAvg} avg` : ''}
+          {hrAvg != null && hrMax != null ? ' · ' : ''}
+          {hrMax != null ? `${hrMax} max` : ''} bpm
+        </p>
+      )}
 
       {/* Change summary */}
       {finding?.change_summary && status !== 'insufficient_data' && (
