@@ -53,9 +53,20 @@ export function ProgressionReviewCard({ review }: { review: ProgressionReview })
       </div>
 
       {isInsufficient ? (
-        <p className="text-[11px] text-muted-foreground/70 italic">
-          {review.recommendations[0] ?? 'Log more sessions to see progression analysis.'}
-        </p>
+        <div className="space-y-2">
+          {review.compliance_pct > 0 ? (
+            <p className="text-sm font-medium text-muted-foreground">
+              {review.compliance_pct}% sessions completed
+            </p>
+          ) : (
+            <p className="text-sm font-medium text-muted-foreground">No sessions logged yet</p>
+          )}
+          <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+            {review.flags.includes('no_program')
+              ? 'Generate a training program first.'
+              : 'Open a session, expand each exercise, and log your sets (reps + weight). Matched workouts mark sessions complete but don\'t provide set data for progression tracking.'}
+          </p>
+        </div>
       ) : (
         <>
           {/* Score row */}

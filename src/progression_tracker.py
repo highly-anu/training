@@ -39,9 +39,10 @@ _SLOT_METRIC: dict[str, tuple[str, str]] = {
 # ---------------------------------------------------------------------------
 
 def compute_session_hash(session_logs: dict) -> str:
-    """Stable hash of all session keys + completedAt timestamps."""
+    """Stable hash of session keys + completedAt + exercise count so cache
+    invalidates when set data is added to an existing session."""
     parts = sorted(
-        f"{k}:{v.get('completedAt','')}"
+        f"{k}:{v.get('completedAt','')}/{len(v.get('exercises') or {})}"
         for k, v in session_logs.items()
     )
     return hashlib.md5('\n'.join(parts).encode()).hexdigest()
@@ -465,10 +466,10 @@ def compute_progression_review(
     total_completed = sum(
         1
         for w in weeks
-        for day_sessions in w.get('schedule', {}).values()
+        for day_name, day_sessions in w.get('schedule', {}).items()
         for s_idx, _ in enumerate(day_sessions)
-        if _session_completed(session_logs, w['week_number'],
-                              list(w['schedule'].keys()), day_sessions, s_idx)
+        if (f"{w['week_number']}-{day_name}" in session_logs
+            or f"{w['week_number']}-{day_name}-{s_idx}" in session_logs)
     )
     compliance_pct = round(total_completed / total_scheduled * 100) if total_scheduled else 0
 
