@@ -1,85 +1,66 @@
-import { useEffect, useId, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-// Lucide "Dumbbell" icon — v1.7.0, 24×24 viewBox
-const PATHS = [
-  'M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z',
-  'm2.5 21.5 1.4-1.4',
-  'm20.1 3.9 1.4-1.4',
-  'M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z',
-  'm9.6 14.4 4.8-4.8',
-]
+/**
+ * Single closed path tracing the outer contour of the Lucide Dumbbell icon.
+ *
+ * Construction: the Lucide icon has two separate weight paths (paths 1 & 4).
+ * Each weight's inner junction points are:
+ *   right weight: (11.232, 6.404) and (17.596, 12.768)
+ *   left weight:  (6.404, 11.232) and (12.768, 17.596)
+ *
+ * The full outline traces the outer arc of the right weight, then a diagonal
+ * line along the bar's top edge to the left weight, the outer arc of the left
+ * weight, and closes back via the bar's bottom edge — one unbroken loop.
+ */
+const PATH = [
+  'M 17.596 12.768',         // inner bottom-right of right weight (bar bottom edge start)
+  'a 2 2 0 1 0 2.829 -2.829',  // outer arc → (20.425, 9.939)
+  'l -1.768 -1.767',            //             → (18.657, 8.172)
+  'a 2 2 0 0 0 2.828 -2.829',  //             → (21.485, 5.343) top-right tip
+  'l -2.828 -2.828',            //             → (18.657, 2.515)
+  'a 2 2 0 0 0 -2.829 2.828',  //             → (15.828, 5.343)
+  'l -1.767 -1.768',            //             → (14.061, 3.575)
+  'a 2 2 0 1 0 -2.829 2.829',  // outer arc → (11.232, 6.404) inner top-left of right weight
+  'L 6.404 11.232',             // bar top edge → inner top-right of left weight
+  'a 2 2 0 1 0 -2.829 2.829',  // outer arc → (3.575, 14.061)
+  'l 1.768 1.767',              //             → (5.343, 15.828)
+  'a 2 2 0 0 0 -2.828 2.829',  //             → (2.515, 18.657)
+  'L 5.343 21.485',             // replaces implicit Z of left weight → bottom-left tip
+  'a 2 2 0 1 0 2.829 -2.828',  // outer arc → (8.172, 18.657)
+  'l 1.767 1.768',              //             → (9.939, 20.425)
+  'a 2 2 0 1 0 2.829 -2.829',  // outer arc → (12.768, 17.596) inner bottom-right of left weight
+  'Z',                          // bar bottom edge closes back to (17.596, 12.768)
+].join(' ')
 
 interface DumbbellLoaderProps {
   className?: string
   label?: string
 }
 
-/**
- * Animated Lucide Dumbbell icon where a bright highlight sweeps along
- * the icon's strokes from bottom-left to top-right (following the
- * dumbbell's diagonal axis). Uses SVG mask (icon shape) + clipPath
- * (moving diagonal strip) so no Framer Motion dep is needed here.
- */
 export function DumbbellLoader({ className, label = 'Loading...' }: DumbbellLoaderProps) {
-  const uid   = useId().replace(/\W/g, '')
-  const mId   = `dbm-${uid}`   // mask id
-  const cId   = `dbc-${uid}`   // clipPath id
-  const strip = useRef<SVGRectElement>(null)
-
-  useEffect(() => {
-    const el = strip.current
-    if (!el) return
-
-    // Animate the strip's x from −20 to 44 (user-space units, before rotation).
-    // After rotate(−45 12 12) this moves the strip from the bottom-left of the
-    // icon to the top-right, along the dumbbell's diagonal axis.
-    const FROM = -20, TO = 44, DURATION = 1800
-    let start: number | null = null
-    let raf: number
-
-    const tick = (ts: number) => {
-      if (start === null) start = ts
-      const t = ((ts - start) % DURATION) / DURATION
-      el.setAttribute('x', String(FROM + (TO - FROM) * t))
-      raf = requestAnimationFrame(tick)
-    }
-
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
   return (
     <div className={cn('flex flex-col items-center gap-3 text-muted-foreground', className)}>
       <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none" aria-hidden>
-        <defs>
-          {/* White strokes define the icon shape — white = opaque in SVG mask */}
-          <mask id={mId}>
-            <g stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
-              {PATHS.map((d, i) => <path key={i} d={d} />)}
-            </g>
-          </mask>
-
-          {/* Diagonal strip perpendicular to the dumbbell's 45° axis */}
-          <clipPath id={cId}>
-            <rect
-              ref={strip}
-              x={-20} y={-50}
-              width={9} height={124}
-              transform="rotate(-45 12 12)"
-            />
-          </clipPath>
-        </defs>
-
-        {/* Dim track — full icon at low opacity */}
-        <rect width="24" height="24" fill="currentColor" opacity={0.18} mask={`url(#${mId})`} />
-
-        {/* Bright highlight — intersection of icon strokes and moving strip */}
-        <rect
-          width="24" height="24"
-          fill="currentColor"
-          mask={`url(#${mId})`}
-          clipPath={`url(#${cId})`}
+        {/* Dim track — full outline at low opacity */}
+        <path
+          d={PATH}
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.18}
+        />
+        {/* Traveling highlight — 14 % of path length visible */}
+        <motion.path
+          d={PATH}
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0.14, pathOffset: 0 }}
+          animate={{ pathOffset: 1 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         />
       </svg>
       {label && <p className="text-sm">{label}</p>}
