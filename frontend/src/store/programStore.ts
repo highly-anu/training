@@ -4,6 +4,7 @@ import { fetchUserProgram, saveUserProgram } from '@/api/userdata'
 
 interface ProgramStore {
   currentProgram: GeneratedProgram | null
+  programLoadState: 'idle' | 'loading' | 'loaded'
   programStartDate: string | null // YYYY-MM-DD
   eventDate: string | null        // YYYY-MM-DD — the race/event/goal date
   sourceGoalIds: string[]
@@ -30,6 +31,7 @@ interface ProgramStore {
 
 export const useProgramStore = create<ProgramStore>()((set, get) => ({
   currentProgram: null,
+  programLoadState: 'idle',
   programStartDate: null,
   eventDate: null,
   sourceGoalIds: [],
@@ -50,6 +52,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   setFullProgram: (program, eventDate, startDate, sourceGoalIds, sourceGoalWeights) => {
     set({
       currentProgram:     program,
+      programLoadState:   'loaded',
       eventDate,
       programStartDate:   startDate,
       sourceGoalIds,
@@ -121,16 +124,26 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   },
 
   loadFromServer: async () => {
-    // Clear immediately so stale data from a previous user is never shown
-    set({ currentProgram: null, programStartDate: null, eventDate: null, sourceGoalIds: [], sourceGoalWeights: {} })
-    const data = await fetchUserProgram()
-    if (!data) return
     set({
-      currentProgram:   data.currentProgram ?? null,
-      programStartDate: data.programStartDate ?? null,
-      eventDate:        data.eventDate ?? null,
-      sourceGoalIds:    data.sourceGoalIds ?? [],
-      sourceGoalWeights: data.sourceGoalWeights ?? {},
+      programLoadState: 'loading',
+      currentProgram: null,
+      programStartDate: null,
+      eventDate: null,
+      sourceGoalIds: [],
+      sourceGoalWeights: {},
     })
+    try {
+      const data = await fetchUserProgram()
+      set({
+        programLoadState:  'loaded',
+        currentProgram:    data?.currentProgram ?? null,
+        programStartDate:  data?.programStartDate ?? null,
+        eventDate:         data?.eventDate ?? null,
+        sourceGoalIds:     data?.sourceGoalIds ?? [],
+        sourceGoalWeights: data?.sourceGoalWeights ?? {},
+      })
+    } catch {
+      set({ programLoadState: 'loaded' })
+    }
   },
 }))

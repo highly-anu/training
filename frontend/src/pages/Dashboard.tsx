@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Wand2, ChevronRight, Flag } from 'lucide-react'
+import { LayoutDashboard, Wand2, ChevronRight, Flag, Loader2 } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -264,6 +264,7 @@ function AnalyticsTab({
 export function Dashboard() {
   const navigate = useNavigate()
   const program = useCurrentProgram()
+  const programLoadState = useProgramStore((s) => s.programLoadState)
   const { selectedWeekIndex: weekIndex, setSelectedWeekIndex } = useUiStore()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const eventDate = useProgramStore((s) => s.eventDate)
@@ -293,6 +294,23 @@ export function Dashboard() {
       return sessions.every((_, i) => sessionLogs[`${currentWeek.week_number}-${day}`]?.[i] === true)
     })
   }, [currentWeek, sessionLogs])
+
+  if (programLoadState !== 'loaded') {
+    return (
+      <motion.div
+        key="dashboard-loading"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.2 } }}
+        exit={{ opacity: 0 }}
+        className="flex h-full items-center justify-center p-6"
+      >
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loader2 className="size-8 animate-spin" />
+          <p className="text-sm">Retrieving your program...</p>
+        </div>
+      </motion.div>
+    )
+  }
 
   if (!program) {
     return (
