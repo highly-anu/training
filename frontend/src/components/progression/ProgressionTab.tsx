@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
-import { fetchProgressionReview, fetchExerciseHistory } from '@/api/progression'
+import { fetchProgressionReview, fetchExerciseHistory, fetchMatchedSessions } from '@/api/progression'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
+import { MatchedSessionCard } from './MatchedSessionCard'
 import type { ExerciseFinding } from '@/api/types'
 
 type Period = 'weekly' | 'biweekly'
@@ -10,6 +11,7 @@ type Period = 'weekly' | 'biweekly'
 export function ProgressionTab() {
   const [period, setPeriod] = useState<Period>('weekly')
   const [showAll, setShowAll] = useState(false)
+  const [showAllSessions, setShowAllSessions] = useState(false)
 
   const {
     data: review,
@@ -27,6 +29,12 @@ export function ProgressionTab() {
   } = useQuery({
     queryKey: ['progression', 'exercises'],
     queryFn:  () => fetchExerciseHistory(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: sessions } = useQuery({
+    queryKey: ['progression', 'sessions'],
+    queryFn:  fetchMatchedSessions,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -124,6 +132,31 @@ export function ProgressionTab() {
               ? 'Show tracked only'
               : `Show all ${allExercises.length} program exercises`}
           </button>
+        </div>
+      )}
+
+      {/* Session log — all matched workouts regardless of slot type */}
+      {sessions && sessions.length > 0 && (
+        <div className="space-y-2 border-t border-border/40 pt-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Session Log · {sessions.length} matched
+          </p>
+          <div className="space-y-2">
+            {(showAllSessions ? sessions : sessions.slice(0, 5)).map((s) => (
+              <MatchedSessionCard key={`${s.sessionKey}-${s.date}`} item={s} />
+            ))}
+          </div>
+          {sessions.length > 5 && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllSessions((v) => !v)}
+                className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+              >
+                {showAllSessions ? 'Show less' : `Show all ${sessions.length} sessions`}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
