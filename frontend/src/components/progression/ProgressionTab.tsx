@@ -10,7 +10,7 @@ type Period = 'weekly' | 'biweekly'
 
 export function ProgressionTab() {
   const [period, setPeriod] = useState<Period>('weekly')
-  const [showAll, setShowAll] = useState(false)
+  const [showAll, setShowAll] = useState(true)
   const [showAllSessions, setShowAllSessions] = useState(false)
 
   const {
@@ -47,7 +47,7 @@ export function ProgressionTab() {
   const allExercises = historyData?.exercises ?? []
   const trackedExercises = allExercises.filter((e) => e.history.length >= 1)
   const hiddenCount = allExercises.length - trackedExercises.length
-  const visibleExercises = (showAll || trackedExercises.length === 0) ? allExercises : trackedExercises
+  const visibleExercises = showAll ? allExercises : trackedExercises
 
   const isLoading = reviewLoading || exercisesLoading
   const isInsufficient =
@@ -122,11 +122,18 @@ export function ProgressionTab() {
             Could not load progression data — make sure the backend is running.
           </p>
         </div>
-      ) : visibleExercises.length === 0 ? (
+      ) : visibleExercises.length === 0 && allExercises.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 text-center space-y-2">
           <p className="text-sm font-medium text-muted-foreground">No program exercises found</p>
           <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-xs mx-auto">
             Generate a program to start tracking your progression here.
+          </p>
+        </div>
+      ) : visibleExercises.length === 0 ? (
+        <div className="rounded-xl border bg-card p-6 text-center space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">No exercises logged yet</p>
+          <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-xs mx-auto">
+            Switch to <button type="button" onClick={() => setShowAll(true)} className="text-primary underline-offset-2 hover:underline">All</button> to see your full program, or log sets inside a session to track progression.
           </p>
         </div>
       ) : (
