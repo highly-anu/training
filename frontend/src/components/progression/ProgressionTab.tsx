@@ -46,9 +46,8 @@ export function ProgressionTab() {
 
   const allExercises = historyData?.exercises ?? []
   const trackedExercises = allExercises.filter((e) => e.history.length >= 1)
-  const noneTracked = trackedExercises.length === 0
-  const visibleExercises = (showAll || noneTracked) ? allExercises : trackedExercises
   const hiddenCount = allExercises.length - trackedExercises.length
+  const visibleExercises = (showAll || trackedExercises.length === 0) ? allExercises : trackedExercises
 
   const isLoading = reviewLoading || exercisesLoading
   const isInsufficient =
@@ -58,24 +57,46 @@ export function ProgressionTab() {
   return (
     <div className="space-y-6">
 
-      {/* Period toggle + compliance */}
+      {/* Controls row: period toggle · exercise filter · compliance */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-1">
-          {(['weekly', 'biweekly'] as Period[]).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPeriod(p)}
-              className={cn(
-                'px-3 py-1 text-xs rounded border transition-colors capitalize',
-                p === period
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'border-border text-muted-foreground hover:bg-muted',
-              )}
-            >
-              {p === 'biweekly' ? 'Bi-weekly' : 'Weekly'}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {(['weekly', 'biweekly'] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={cn(
+                  'px-3 py-1 text-xs rounded border transition-colors capitalize',
+                  p === period
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'border-border text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {p === 'biweekly' ? 'Bi-weekly' : 'Weekly'}
+              </button>
+            ))}
+          </div>
+
+          {hiddenCount > 0 && (
+            <div className="flex items-center gap-1">
+              {(['tracked', 'all'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setShowAll(v === 'all')}
+                  className={cn(
+                    'px-3 py-1 text-xs rounded border transition-colors capitalize',
+                    (v === 'all') === showAll
+                      ? 'bg-primary/15 border-primary/40 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted',
+                  )}
+                >
+                  {v === 'tracked' ? `Tracked (${trackedExercises.length})` : `All (${allExercises.length})`}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {review && (
@@ -120,20 +141,6 @@ export function ProgressionTab() {
         </div>
       )}
 
-      {/* Show-all / show-tracked toggle — only relevant once some exercises are tracked */}
-      {hiddenCount > 0 && trackedExercises.length > 0 && (
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
-          >
-            {showAll
-              ? 'Show tracked only'
-              : `Show all ${allExercises.length} program exercises`}
-          </button>
-        </div>
-      )}
 
       {/* Session log — all matched workouts regardless of slot type */}
       {sessions && sessions.length > 0 && (
