@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Wand2, ChevronRight, Flag, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Wand2, ChevronRight, Flag } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -13,6 +13,7 @@ import { ModalityDonut } from '@/components/dashboard/ModalityDonut'
 import { PhaseTimeline } from '@/components/dashboard/PhaseTimeline'
 import { VolumeBar } from '@/components/dashboard/VolumeBar'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { DumbbellLoader } from '@/components/shared/DumbbellLoader'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { DevelopmentWidget } from '@/components/dashboard/DevelopmentWidget'
@@ -304,10 +305,7 @@ export function Dashboard() {
         exit={{ opacity: 0 }}
         className="flex h-full items-center justify-center p-6"
       >
-        <div className="flex flex-col items-center gap-3 text-muted-foreground">
-          <Loader2 className="size-8 animate-spin" />
-          <p className="text-sm">Retrieving your program...</p>
-        </div>
+        <DumbbellLoader label="Retrieving your program..." />
       </motion.div>
     )
   }
