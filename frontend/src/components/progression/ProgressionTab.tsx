@@ -10,7 +10,7 @@ type Period = 'weekly' | 'biweekly'
 
 export function ProgressionTab() {
   const [period, setPeriod] = useState<Period>('weekly')
-  const [showAll, setShowAll] = useState(true)
+  const [showAll, setShowAll] = useState(false)
   const [showAllSessions, setShowAllSessions] = useState(false)
 
   const {
