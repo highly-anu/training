@@ -830,6 +830,35 @@ export interface ExerciseHistoryResponse {
   exercises: ExerciseHistoryItem[]
 }
 
+export interface MatchedSessionArchetype {
+  name: string
+  modality: string
+  prescribedMinutes: number
+}
+
+export interface MatchedSessionWorkout {
+  durationMinutes: number
+  distanceKm: number | null
+  hrAvg: number | null
+  hrMax: number | null
+  activityType: string
+  source: string
+  elevationGainM: number | null
+}
+
+export interface MatchedSessionSummary {
+  sessionKey: string
+  weekNumber: number
+  dayName: string
+  date: string
+  archetype: MatchedSessionArchetype
+  workout: MatchedSessionWorkout
+  matchConfidence: 'auto' | 'manual'
+  durationDeltaPct: number | null
+  modalityMatch: 'exact' | 'family' | 'other'
+  relevantMetrics: string[]
+}
+
 export interface ProgressionReviewSummary {
   period_key: string
   period_type: string

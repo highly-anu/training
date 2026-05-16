@@ -3,6 +3,7 @@ import type {
   ProgressionReview,
   ExerciseHistoryResponse,
   ProgressionReviewSummary,
+  MatchedSessionSummary,
 } from '@/api/types'
 
 const BASE = '/progression'
@@ -22,4 +23,8 @@ export async function fetchExerciseHistory(
 
 export async function fetchProgressionHistory(): Promise<ProgressionReviewSummary[]> {
   return apiClient.get(`${BASE}/history`) as unknown as Promise<ProgressionReviewSummary[]>
+}
+
+export async function fetchMatchedSessions(): Promise<MatchedSessionSummary[]> {
+  return apiClient.get(`${BASE}/sessions`) as unknown as Promise<MatchedSessionSummary[]>
 }

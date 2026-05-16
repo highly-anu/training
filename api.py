@@ -2011,6 +2011,19 @@ def progression_history():
     return jsonify(snapshots)
 
 
+@app.get('/api/progression/sessions')
+@require_auth
+def progression_sessions():
+    program_data = _db.get_user_program(g.user_id)
+    if not program_data:
+        return jsonify([])
+    program  = program_data.get('currentProgram') or program_data
+    matches  = [m for m in _health.get_matches(g.user_id) if m['matchConfidence'] != 'rejected']
+    workouts = _health.get_workouts(g.user_id)
+    wo_map   = {wo['id']: wo for wo in workouts}
+    return jsonify(_pt.compute_matched_sessions(matches, wo_map, program))
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     print(f'Training API running on http://localhost:{port}/api')

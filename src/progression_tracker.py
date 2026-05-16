@@ -87,16 +87,157 @@ def _primary_endurance_exercise(session: dict) -> tuple[str, dict, dict] | None:
     return ex_id, ex, slot
 
 
+def _to_km(distance_field: dict | None) -> float | None:
+    """Convert a {value, unit} distance dict to kilometres."""
+    if not distance_field:
+        return None
+    val = distance_field.get('value') or 0
+    if not val:
+        return None
+    unit = distance_field.get('unit', 'km')
+    return round(val if unit == 'km' else val / 1000, 3)
+
+
+# Modality family groupings for match-quality computation
+_MODALITY_FAMILIES: dict[str, str] = {
+    'aerobic_base':               'aerobic',
+    'long_zone_2':                'aerobic',
+    'threshold_intervals':        'aerobic',
+    'durability':                 'aerobic',
+    'max_strength':               'strength',
+    'strength_endurance':         'strength',
+    'power':                      'strength',
+    'olympic_lifting':            'strength',
+    'mixed_modal_conditioning':   'conditioning',
+    'mixed_modal':                'conditioning',
+    'metabolic_conditioning':     'conditioning',
+    'mobility':                   'mobility',
+    'rehab':                      'mobility',
+    'skill':                      'mobility',
+    'kettlebell_strength':        'kettlebell',
+    'kettlebell_conditioning':    'kettlebell',
+}
+
+# Ordered metric keys per dominant philosophy priority
+_PHILOSOPHY_METRICS: dict[str, list[str]] = {
+    'aerobic_base':    ['distance', 'duration', 'hr', 'elevation'],
+    'durability':      ['distance', 'duration', 'elevation', 'hr'],
+    'rehab':           ['duration', 'hr', 'distance'],
+    'mobility':        ['duration', 'hr', 'distance'],
+    'max_strength':    ['duration', 'hr'],
+    'power':           ['duration', 'hr'],
+    'mixed_modal':     ['duration', 'hr', 'distance'],
+    'kettlebell':      ['duration', 'hr'],
+    'skill':           ['duration', 'hr'],
+}
+
+
+def _relevant_metrics(priorities: dict) -> list[str]:
+    """Return ordered metric keys for the dominant philosophy priority."""
+    if not priorities:
+        return ['duration', 'hr']
+    dominant = max(priorities, key=lambda k: priorities[k])
+    return _PHILOSOPHY_METRICS.get(dominant, ['duration', 'hr', 'distance'])
+
+
+def compute_matched_sessions(
+    matches: list[dict],
+    workout_map: dict,
+    program: dict,
+) -> list[dict]:
+    """
+    Return a session-level summary for every non-rejected matched workout.
+
+    Each summary joins the imported workout to its program session context
+    (archetype name, modality, prescribed duration) and computes compliance
+    signals (duration delta, modality match quality).  Results are sorted
+    by date descending so the most recent session appears first.
+    """
+    # Build session index: key → (week_num, day_name, session_dict)
+    session_index: dict[str, tuple[int, str, dict]] = {}
+    for week in program.get('weeks', []):
+        week_num = week.get('week_number', 1)
+        for day_name, sessions in week.get('schedule', {}).items():
+            for s_idx, session in enumerate(sessions):
+                key_base = f"{week_num}-{day_name}"
+                key_idx  = f"{key_base}-{s_idx}"
+                entry    = (week_num, day_name, session)
+                session_index.setdefault(key_base, entry)
+                session_index[key_idx] = entry
+
+    priorities     = (program.get('goal') or {}).get('priorities') or {}
+    relevant_mets  = _relevant_metrics(priorities)
+
+    summaries: list[dict] = []
+    for match in matches:
+        session_key = match.get('sessionKey', '')
+        workout     = workout_map.get(match.get('importedWorkoutId', ''))
+        if not workout:
+            continue
+
+        session_entry = session_index.get(session_key)
+        if not session_entry:
+            continue
+        week_num, day_name, session = session_entry
+
+        archetype       = session.get('archetype') or {}
+        modality        = session.get('modality') or session.get('primary_modality') or ''
+        prescribed_min  = (
+            archetype.get('duration_estimate_minutes')
+            or archetype.get('duration_minutes')
+            or 60
+        )
+        archetype_name  = archetype.get('name') or archetype.get('id') or 'Session'
+
+        actual_min   = workout.get('durationMinutes') or 0
+        delta_pct: int | None = None
+        if prescribed_min and actual_min:
+            delta_pct = round(((actual_min - prescribed_min) / prescribed_min) * 100)
+
+        # Modality match quality
+        inferred = workout.get('inferredModalityId') or ''
+        if inferred == modality:
+            modality_match = 'exact'
+        elif _MODALITY_FAMILIES.get(inferred) == _MODALITY_FAMILIES.get(modality):
+            modality_match = 'family'
+        else:
+            modality_match = 'other'
+
+        hr = workout.get('heartRate') or {}
+        elev = workout.get('elevation') or {}
+
+        summaries.append({
+            'sessionKey':      session_key,
+            'weekNumber':      week_num,
+            'dayName':         day_name,
+            'date':            workout.get('date', ''),
+            'archetype': {
+                'name':              archetype_name,
+                'modality':          modality,
+                'prescribedMinutes': int(prescribed_min),
+            },
+            'workout': {
+                'durationMinutes': actual_min,
+                'distanceKm':      _to_km(workout.get('distance')),
+                'hrAvg':           int(hr['avg']) if hr.get('avg') else None,
+                'hrMax':           int(hr['max']) if hr.get('max') else None,
+                'activityType':    workout.get('activityType', ''),
+                'source':          workout.get('source', ''),
+                'elevationGainM':  elev.get('gain'),
+            },
+            'matchConfidence':  match.get('matchConfidence', 'auto'),
+            'durationDeltaPct': delta_pct,
+            'modalityMatch':    modality_match,
+            'relevantMetrics':  relevant_mets,
+        })
+
+    summaries.sort(key=lambda s: s['date'], reverse=True)
+    return summaries
+
+
 def _workout_to_history_point(workout: dict, week_num: int, session_key: str) -> dict:
     """Build a history point from an imported workout (no set-level data)."""
     duration_min = workout.get('durationMinutes') or 0
-    dist_raw = workout.get('distance')
-    dist_km: float | None = None
-    if dist_raw:
-        val = dist_raw.get('value') or 0
-        unit = dist_raw.get('unit', 'km')
-        dist_km = round(val if unit == 'km' else val / 1000, 3) if val else None
-
     hr = workout.get('heartRate') or {}
     hr_avg = hr.get('avg')
     hr_max = hr.get('max')
@@ -111,7 +252,7 @@ def _workout_to_history_point(workout: dict, week_num: int, session_key: str) ->
         'best_reps':        None,
         'rpe':              None,
         'duration_sec':     int(duration_min * 60) if duration_min else None,
-        'distance_km':      dist_km,
+        'distance_km':      _to_km(workout.get('distance')),
         'rounds_completed': None,
         'hr_avg':           int(hr_avg) if hr_avg else None,
         'hr_max':           int(hr_max) if hr_max else None,
