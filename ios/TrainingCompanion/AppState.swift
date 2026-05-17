@@ -17,8 +17,9 @@ final class AppState: ObservableObject {
 
     @Published var profile: UserProfile = .default
     @Published var isLoadingProfile = false
-    @Published var profileSyncLog: [String] = []
     @Published var lastProfileSyncAt: Date? = nil
+
+    private let logger = AppLogger.shared
 
     // MARK: - Session Logs (completion tracking)
 
@@ -168,10 +169,9 @@ final class AppState: ObservableObject {
         guard let api else { return }
         isLoadingProfile = true
         defer { isLoadingProfile = false }
-        let ts = { Date().formatted(date: .omitted, time: .standard) }
         do {
             let raw = try await api.fetchUserProfileRaw()
-            appendSyncLog("[\(ts())] GET /profile — raw: \(raw.prefix(300))")
+            logger.log("profile: GET /profile — raw: \(raw.prefix(200))")
             let p = try api.decodeUserProfile(from: raw)
             profile.trainingLevel  = p.trainingLevel
             profile.equipment      = p.equipment
@@ -180,31 +180,25 @@ final class AppState: ObservableObject {
             profile.dateOfBirth    = p.dateOfBirth
             profile.weeklySchedule = p.weeklySchedule
             lastProfileSyncAt = Date()
-            appendSyncLog("[\(ts())] loaded — level:\(p.trainingLevel) equip:\(p.equipment.count) injuries:\(p.injuryFlags.count)")
+            logger.log("profile: loaded — level:\(p.trainingLevel) equip:\(p.equipment.count) injuries:\(p.injuryFlags.count)")
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
             }
         } catch {
-            appendSyncLog("[\(ts())] ERROR: \(error)")
+            logger.log("profile: ERROR — \(error)")
         }
     }
 
     func loadPerformanceLogs() async {
         guard let api else { return }
-        let ts = { Date().formatted(date: .omitted, time: .standard) }
         do {
             let logs = try await api.fetchPerformanceLogs()
             profile.performanceLogs = logs
-            appendSyncLog("[\(ts())] performance logs: \(logs.count) benchmarks")
+            logger.log("profile: performance logs \(logs.count) benchmarks")
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
-            appendSyncLog("[\(ts())] performance logs ERROR: \(error)")
+            logger.log("profile: performance logs ERROR — \(error)")
         }
-    }
-
-    private func appendSyncLog(_ msg: String) {
-        profileSyncLog.append(msg)
-        if profileSyncLog.count > 50 { profileSyncLog.removeFirst() }
     }
 
     func saveProfile() async {

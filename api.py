@@ -1525,6 +1525,10 @@ def get_profile():
                 'dateOfBirth': None,
                 'weeklySchedule': None,
             })
+        # Sanitize array fields — stored value may be null if client sent null
+        profile['equipment'] = profile.get('equipment') or []
+        profile['injuryFlags'] = profile.get('injuryFlags') or []
+        profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
         return jsonify(profile)
     except Exception as e:
         app.logger.warning('get_profile error: %s', e)
@@ -1547,12 +1551,12 @@ def update_profile():
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
 
-        # Build profile data dict
+        # Build profile data dict; use `or []` so a null body field never overwrites stored data with null
         profile_data = {
-            'trainingLevel': body.get('trainingLevel', 'intermediate'),
-            'equipment': body.get('equipment', []),
-            'injuryFlags': body.get('injuryFlags', []),
-            'customInjuryFlags': body.get('customInjuryFlags', []),
+            'trainingLevel': body.get('trainingLevel') or 'intermediate',
+            'equipment': body.get('equipment') or [],
+            'injuryFlags': body.get('injuryFlags') or [],
+            'customInjuryFlags': body.get('customInjuryFlags') or [],
             'activeGoalId': body.get('activeGoalId'),
             'dateOfBirth': body.get('dateOfBirth'),
             'weeklySchedule': body.get('weeklySchedule'),

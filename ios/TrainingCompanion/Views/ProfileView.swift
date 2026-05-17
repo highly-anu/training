@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Tab definition
 
 private enum ProfileTab: Int, CaseIterable {
-    case equipment, injuries, benchmarks, schedule, sync
+    case equipment, injuries, benchmarks, schedule
 
     var label: String {
         switch self {
@@ -11,7 +11,6 @@ private enum ProfileTab: Int, CaseIterable {
         case .injuries:   return "Injuries"
         case .benchmarks: return "Benchmarks"
         case .schedule:   return "Schedule"
-        case .sync:       return "Sync"
         }
     }
 
@@ -21,7 +20,6 @@ private enum ProfileTab: Int, CaseIterable {
         case .injuries:   return "bandage"
         case .benchmarks: return "trophy"
         case .schedule:   return "calendar"
-        case .sync:       return "arrow.triangle.2.circlepath"
         }
     }
 }
@@ -604,85 +602,6 @@ private struct ScheduleTab: View {
     }
 }
 
-// MARK: - Sync Tab
-
-private struct SyncTab: View {
-    @EnvironmentObject var appState: AppState
-
-    var body: some View {
-        List {
-            // Profile section — what is currently loaded from server
-            Section("Profile") {
-                LabeledContent("Training level", value: appState.profile.trainingLevel.capitalized)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    LabeledContent("Equipment", value: "\(appState.profile.equipment.count) items")
-                    if !appState.profile.equipment.isEmpty {
-                        Text(appState.profile.equipment.sorted().joined(separator: ", "))
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    LabeledContent("Injury flags", value: "\(appState.profile.injuryFlags.count) active")
-                    if !appState.profile.injuryFlags.isEmpty {
-                        Text(appState.profile.injuryFlags.sorted().joined(separator: ", "))
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                LabeledContent("Custom injuries",  value: "\(appState.profile.customInjuryFlags.count)")
-                LabeledContent("Weekly schedule",  value: appState.profile.weeklySchedule != nil ? "Set" : "Not set")
-                LabeledContent("Date of birth",    value: appState.profile.dateOfBirth ?? "Not set")
-                LabeledContent("Performance logs", value: "\(appState.profile.performanceLogs?.count ?? 0) benchmarks")
-            }
-
-            // Sync status + manual trigger
-            Section("Sync") {
-                if let date = appState.lastProfileSyncAt {
-                    LabeledContent("Last synced", value: date.formatted(date: .abbreviated, time: .shortened))
-                } else {
-                    Text("Not yet synced this session")
-                        .foregroundStyle(.secondary)
-                }
-
-                Button {
-                    Task {
-                        await appState.loadProfile()
-                        await appState.loadPerformanceLogs()
-                    }
-                } label: {
-                    Label(
-                        appState.isLoadingProfile ? "Syncing…" : "Pull from server",
-                        systemImage: "arrow.down.circle"
-                    )
-                }
-                .disabled(appState.isLoadingProfile)
-            }
-
-            // Debug log
-            if !appState.profileSyncLog.isEmpty {
-                Section(header: HStack {
-                    Text("Debug Log")
-                    Spacer()
-                    Button("Clear") { appState.profileSyncLog.removeAll() }
-                        .font(.caption)
-                }) {
-                    ForEach(appState.profileSyncLog.reversed(), id: \.self) { msg in
-                        Text(msg)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-    }
-}
-
 // MARK: - ProfileView
 
 struct ProfileView: View {
@@ -702,7 +621,6 @@ struct ProfileView: View {
                 case .injuries:   InjuriesTab()
                 case .benchmarks: BenchmarksTab()
                 case .schedule:   ScheduleTab()
-                case .sync:       SyncTab()
                 }
             }
             .navigationTitle("Profile")

@@ -73,6 +73,8 @@ struct SyncStatusView: View {
             Button {
                 Task {
                     await sync.syncAll()
+                    await appState.loadProfile()
+                    await appState.loadPerformanceLogs()
                     await appState.loadRecentBioLogs()
                     await appState.loadReadiness()
                     await appState.loadWorkouts()
@@ -98,6 +100,14 @@ struct SyncStatusView: View {
 
     private var syncCategoriesSection: some View {
         Section("Sync Details") {
+            syncRow(
+                icon: "person.crop.circle",
+                label: "Profile Sync",
+                date: appState.lastProfileSyncAt,
+                detail: "Equipment, schedule, injuries",
+                logKeyword: "profile:"
+            )
+
             syncRow(
                 icon: "calendar.badge.clock",
                 label: "Program Sync",
