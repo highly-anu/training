@@ -108,24 +108,20 @@ struct DaySchedule: Codable {
 
 typealias WeeklySchedule = [String: DaySchedule]
 
+// Top-level keys must be camelCase to match the server's GET /api/profile response.
+// Do NOT add CodingKeys here — Swift encodes camelCase by default, which is what
+// the server expects on PUT and returns on GET.
+//
+// performanceLogs is NOT part of the server profile payload; it is loaded separately
+// from GET /api/health/snapshot and stored locally.
 struct UserProfile: Codable {
     var trainingLevel: String
     var equipment: [String]
     var injuryFlags: [String]
     var customInjuryFlags: [CustomInjuryFlag]
     var dateOfBirth: String?
-    var performanceLogs: [String: [PerformanceEntry]]
+    var performanceLogs: [String: [PerformanceEntry]]?
     var weeklySchedule: WeeklySchedule?
-
-    enum CodingKeys: String, CodingKey {
-        case trainingLevel = "training_level"
-        case equipment
-        case injuryFlags = "injury_flags"
-        case customInjuryFlags = "custom_injury_flags"
-        case dateOfBirth = "date_of_birth"
-        case performanceLogs = "performance_logs"
-        case weeklySchedule = "weekly_schedule"
-    }
 
     static let `default` = UserProfile(
         trainingLevel: "intermediate",
@@ -133,7 +129,7 @@ struct UserProfile: Codable {
         injuryFlags: [],
         customInjuryFlags: [],
         dateOfBirth: nil,
-        performanceLogs: [:],
+        performanceLogs: nil,
         weeklySchedule: nil
     )
 }

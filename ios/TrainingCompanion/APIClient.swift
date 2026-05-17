@@ -95,6 +95,13 @@ final class APIClient {
         _ = try await put("/userdata/profile", body: profile)
     }
 
+    func fetchPerformanceLogs() async throws -> [String: [PerformanceEntry]] {
+        let data = try await get("/health/snapshot")
+        struct Snapshot: Decodable { let performanceLogs: [String: [PerformanceEntry]]? }
+        let snapshot = try JSONDecoder().decode(Snapshot.self, from: data)
+        return snapshot.performanceLogs ?? [:]
+    }
+
     // MARK: - Goals / Catalog
 
     func fetchGoals() async throws -> [GoalProfile] {

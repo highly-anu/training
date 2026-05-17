@@ -68,6 +68,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -82,6 +83,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -172,6 +174,16 @@ final class AppState: ObservableObject {
             }
         } catch {
             // Keep default — user may not have a profile yet
+        }
+    }
+
+    func loadPerformanceLogs() async {
+        guard let api else { return }
+        do {
+            let logs = try await api.fetchPerformanceLogs()
+            profile.performanceLogs = logs
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
         }
     }
 

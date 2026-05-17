@@ -310,10 +310,11 @@ private struct BenchmarksTab: View {
                let benchmark = appState.benchmarks.first(where: { $0.id == id }) {
                 BenchmarkEditSheet(
                     benchmark: benchmark,
-                    currentValue: appState.profile.performanceLogs[id]?.last?.value,
+                    currentValue: appState.profile.performanceLogs?[id]?.last?.value,
                     onSave: { value in
                         let entry = PerformanceEntry(value: value, date: todayString())
-                        appState.profile.performanceLogs[id, default: []].append(entry)
+                        if appState.profile.performanceLogs == nil { appState.profile.performanceLogs = [:] }
+                        appState.profile.performanceLogs![id, default: []].append(entry)
                         Task { await appState.saveProfile() }
                         editingBenchmarkId = nil
                     }
@@ -323,7 +324,7 @@ private struct BenchmarksTab: View {
     }
 
     private func benchmarkRow(_ benchmark: AppBenchmark) -> some View {
-        let entries = appState.profile.performanceLogs[benchmark.id] ?? []
+        let entries = appState.profile.performanceLogs?[benchmark.id] ?? []
         let current = entries.last?.value
         return HStack {
             VStack(alignment: .leading, spacing: 3) {
