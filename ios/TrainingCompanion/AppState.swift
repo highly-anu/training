@@ -17,6 +17,9 @@ final class AppState: ObservableObject {
 
     @Published var profile: UserProfile = .default
     @Published var isLoadingProfile = false
+    @Published var lastProfileSyncAt: Date? = nil
+
+    private let logger = AppLogger.shared
 
     // MARK: - Session Logs (completion tracking)
 
@@ -68,6 +71,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -82,6 +86,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
+            group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -165,13 +170,34 @@ final class AppState: ObservableObject {
         isLoadingProfile = true
         defer { isLoadingProfile = false }
         do {
-            let p = try await api.fetchUserProfile()
-            profile = p
+            let raw = try await api.fetchUserProfileRaw()
+            logger.log("profile: GET /profile — raw: \(raw.prefix(200))")
+            let p = try api.decodeUserProfile(from: raw)
+            profile.trainingLevel  = p.trainingLevel
+            profile.equipment      = p.equipment
+            profile.injuryFlags    = p.injuryFlags
+            profile.customInjuryFlags = p.customInjuryFlags
+            profile.dateOfBirth    = p.dateOfBirth
+            profile.weeklySchedule = p.weeklySchedule
+            lastProfileSyncAt = Date()
+            logger.log("profile: loaded — level:\(p.trainingLevel) equip:\(p.equipment.count) injuries:\(p.injuryFlags.count)")
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
             }
         } catch {
-            // Keep default — user may not have a profile yet
+            logger.log("profile: ERROR — \(error)")
+        }
+    }
+
+    func loadPerformanceLogs() async {
+        guard let api else { return }
+        do {
+            let logs = try await api.fetchPerformanceLogs()
+            profile.performanceLogs = logs
+            logger.log("profile: performance logs \(logs.count) benchmarks")
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            logger.log("profile: performance logs ERROR — \(error)")
         }
     }
 

@@ -87,12 +87,29 @@ final class APIClient {
 
     func fetchUserProfile() async throws -> UserProfile {
         let data = try await get("/userdata/profile")
-        let decoder = JSONDecoder()
-        return try decoder.decode(UserProfile.self, from: data)
+        return try JSONDecoder().decode(UserProfile.self, from: data)
+    }
+
+    /// Returns the raw JSON string for debug logging, then the caller decodes separately.
+    func fetchUserProfileRaw() async throws -> String {
+        let data = try await get("/userdata/profile")
+        return String(data: data, encoding: .utf8) ?? "(unreadable)"
+    }
+
+    func decodeUserProfile(from raw: String) throws -> UserProfile {
+        guard let data = raw.data(using: .utf8) else { throw URLError(.cannotDecodeContentData) }
+        return try JSONDecoder().decode(UserProfile.self, from: data)
     }
 
     func saveUserProfile(_ profile: UserProfile) async throws {
         _ = try await put("/userdata/profile", body: profile)
+    }
+
+    func fetchPerformanceLogs() async throws -> [String: [PerformanceEntry]] {
+        let data = try await get("/health/snapshot")
+        struct Snapshot: Decodable { let performanceLogs: [String: [PerformanceEntry]]? }
+        let snapshot = try JSONDecoder().decode(Snapshot.self, from: data)
+        return snapshot.performanceLogs ?? [:]
     }
 
     // MARK: - Goals / Catalog

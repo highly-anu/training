@@ -95,22 +95,33 @@ struct PerformanceEntry: Codable {
     let date: String  // "YYYY-MM-DD"
 }
 
+enum SessionType: String, Codable, CaseIterable {
+    case rest, short, long, mobility
+}
+
+struct DaySchedule: Codable {
+    var session1: SessionType
+    var session2: SessionType
+    var session3: SessionType
+    var session4: SessionType
+}
+
+typealias WeeklySchedule = [String: DaySchedule]
+
+// Top-level keys must be camelCase to match the server's GET /api/profile response.
+// Do NOT add CodingKeys here — Swift encodes camelCase by default, which is what
+// the server expects on PUT and returns on GET.
+//
+// performanceLogs is NOT part of the server profile payload; it is loaded separately
+// from GET /api/health/snapshot and stored locally.
 struct UserProfile: Codable {
     var trainingLevel: String
     var equipment: [String]
     var injuryFlags: [String]
     var customInjuryFlags: [CustomInjuryFlag]
     var dateOfBirth: String?
-    var performanceLogs: [String: [PerformanceEntry]]
-
-    enum CodingKeys: String, CodingKey {
-        case trainingLevel = "training_level"
-        case equipment
-        case injuryFlags = "injury_flags"
-        case customInjuryFlags = "custom_injury_flags"
-        case dateOfBirth = "date_of_birth"
-        case performanceLogs = "performance_logs"
-    }
+    var performanceLogs: [String: [PerformanceEntry]]?
+    var weeklySchedule: WeeklySchedule?
 
     static let `default` = UserProfile(
         trainingLevel: "intermediate",
@@ -118,7 +129,8 @@ struct UserProfile: Codable {
         injuryFlags: [],
         customInjuryFlags: [],
         dateOfBirth: nil,
-        performanceLogs: [:]
+        performanceLogs: nil,
+        weeklySchedule: nil
     )
 }
 
@@ -268,9 +280,11 @@ struct InjuryFlagDef: Codable, Identifiable {
     let id: String
     let name: String
     let description: String?
+    let excludedMovementPatterns: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id, name, description
+        case excludedMovementPatterns = "excluded_movement_patterns"
     }
 }
 
@@ -321,21 +335,39 @@ struct EquipmentItem: Identifiable {
 }
 
 extension EquipmentItem {
+    // IDs and group names must exactly match ConstraintsForm.tsx (frontend/src/components/builder/ConstraintsForm.tsx)
     static let all: [EquipmentItem] = [
+        // Strength
         EquipmentItem(id: "barbell", label: "Barbell", group: "Strength"),
-        EquipmentItem(id: "dumbbell", label: "Dumbbells", group: "Strength"),
-        EquipmentItem(id: "kettlebell", label: "Kettlebells", group: "Strength"),
-        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight"),
-        EquipmentItem(id: "rings", label: "Gymnastic Rings", group: "Bodyweight"),
-        EquipmentItem(id: "resistance_bands", label: "Resistance Bands", group: "Bodyweight"),
-        EquipmentItem(id: "sandbag", label: "Sandbag", group: "GPP"),
-        EquipmentItem(id: "sled", label: "Sled", group: "GPP"),
-        EquipmentItem(id: "rower", label: "Rowing Machine", group: "Aerobic"),
-        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic"),
-        EquipmentItem(id: "treadmill", label: "Treadmill", group: "Aerobic"),
-        EquipmentItem(id: "jump_rope", label: "Jump Rope", group: "Aerobic"),
-        EquipmentItem(id: "cable_machine", label: "Cable Machine", group: "Strength"),
-        EquipmentItem(id: "box", label: "Plyo Box", group: "GPP"),
+        EquipmentItem(id: "rack",    label: "Rack",    group: "Strength"),
+        EquipmentItem(id: "plates",  label: "Plates",  group: "Strength"),
+        // Power & Kettlebell
+        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Power & Kettlebell"),
+        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Power & Kettlebell"),
+        // Bodyweight & Gymnastics
+        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "rings",       label: "Rings",       group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "parallettes", label: "Parallettes", group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "dip_bar",     label: "Dip Bar",     group: "Bodyweight & Gymnastics"),
+        // Aerobic & Conditioning
+        EquipmentItem(id: "rower",        label: "Rower",        group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "ski_erg",      label: "Ski Erg",      group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "jump_rope",    label: "Jump Rope",    group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "pool",         label: "Pool",         group: "Aerobic & Conditioning"),
+        // GPP & Durability
+        EquipmentItem(id: "ruck_pack",     label: "Ruck Pack",     group: "GPP & Durability"),
+        EquipmentItem(id: "sandbag",       label: "Sandbag",       group: "GPP & Durability"),
+        EquipmentItem(id: "sled",          label: "Sled",          group: "GPP & Durability"),
+        EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "GPP & Durability"),
+        EquipmentItem(id: "box",           label: "Box",           group: "GPP & Durability"),
+        // Mobility & Prehab
+        EquipmentItem(id: "resistance_band", label: "Resistance Band", group: "Mobility & Prehab"),
+        EquipmentItem(id: "foam_roller",     label: "Foam Roller",     group: "Mobility & Prehab"),
+        EquipmentItem(id: "ghd",             label: "GHD",             group: "Mobility & Prehab"),
+        // General
+        EquipmentItem(id: "rope",       label: "Rope",       group: "General"),
+        EquipmentItem(id: "open_space", label: "Open Space", group: "General"),
     ]
 }
 
