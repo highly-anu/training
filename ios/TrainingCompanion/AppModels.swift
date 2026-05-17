@@ -335,21 +335,35 @@ struct EquipmentItem: Identifiable {
 }
 
 extension EquipmentItem {
+    // IDs must exactly match the web EquipmentId union type in frontend/src/api/types.ts
     static let all: [EquipmentItem] = [
-        EquipmentItem(id: "barbell", label: "Barbell", group: "Strength"),
-        EquipmentItem(id: "dumbbell", label: "Dumbbells", group: "Strength"),
-        EquipmentItem(id: "kettlebell", label: "Kettlebells", group: "Strength"),
-        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight"),
-        EquipmentItem(id: "rings", label: "Gymnastic Rings", group: "Bodyweight"),
-        EquipmentItem(id: "resistance_bands", label: "Resistance Bands", group: "Bodyweight"),
-        EquipmentItem(id: "sandbag", label: "Sandbag", group: "GPP"),
-        EquipmentItem(id: "sled", label: "Sled", group: "GPP"),
-        EquipmentItem(id: "rower", label: "Rowing Machine", group: "Aerobic"),
-        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic"),
-        EquipmentItem(id: "treadmill", label: "Treadmill", group: "Aerobic"),
-        EquipmentItem(id: "jump_rope", label: "Jump Rope", group: "Aerobic"),
-        EquipmentItem(id: "cable_machine", label: "Cable Machine", group: "Strength"),
-        EquipmentItem(id: "box", label: "Plyo Box", group: "GPP"),
+        // Strength
+        EquipmentItem(id: "barbell",    label: "Barbell",    group: "Strength"),
+        EquipmentItem(id: "rack",       label: "Rack",       group: "Strength"),
+        EquipmentItem(id: "plates",     label: "Plates",     group: "Strength"),
+        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Strength"),
+        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Strength"),
+        // Bodyweight
+        EquipmentItem(id: "pull_up_bar",  label: "Pull-up Bar",     group: "Bodyweight"),
+        EquipmentItem(id: "rings",        label: "Gymnastic Rings",  group: "Bodyweight"),
+        EquipmentItem(id: "parallettes",  label: "Parallettes",      group: "Bodyweight"),
+        EquipmentItem(id: "rope",         label: "Rope Climb",       group: "Bodyweight"),
+        EquipmentItem(id: "box",          label: "Plyo Box",         group: "Bodyweight"),
+        // Aerobic
+        EquipmentItem(id: "rower",   label: "Rowing Machine", group: "Aerobic"),
+        EquipmentItem(id: "bike",    label: "Assault Bike",   group: "Aerobic"),
+        EquipmentItem(id: "ski_erg", label: "Ski Erg",        group: "Aerobic"),
+        EquipmentItem(id: "pool",    label: "Pool / Swim",    group: "Aerobic"),
+        // GPP
+        EquipmentItem(id: "ruck_pack",       label: "Ruck Pack",        group: "GPP"),
+        EquipmentItem(id: "sandbag",         label: "Sandbag",          group: "GPP"),
+        EquipmentItem(id: "sled",            label: "Sled",             group: "GPP"),
+        EquipmentItem(id: "tire",            label: "Tire",             group: "GPP"),
+        EquipmentItem(id: "medicine_ball",   label: "Medicine Ball",    group: "GPP"),
+        EquipmentItem(id: "resistance_band", label: "Resistance Band",  group: "GPP"),
+        EquipmentItem(id: "ghd",             label: "GHD",              group: "GPP"),
+        EquipmentItem(id: "jump_rope",       label: "Jump Rope",        group: "GPP"),
+        EquipmentItem(id: "open_space",      label: "Open Space",       group: "GPP"),
     ]
 }
 

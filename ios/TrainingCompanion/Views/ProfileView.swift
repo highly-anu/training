@@ -35,8 +35,8 @@ private struct EquipmentCategory {
 private let equipmentCategories: [EquipmentCategory] = [
     EquipmentCategory(name: "Strength",   modalityId: "max_strength",      group: "Strength"),
     EquipmentCategory(name: "Bodyweight", modalityId: "relative_strength", group: "Bodyweight"),
-    EquipmentCategory(name: "GPP",        modalityId: "durability",        group: "GPP"),
     EquipmentCategory(name: "Aerobic",    modalityId: "aerobic_base",      group: "Aerobic"),
+    EquipmentCategory(name: "GPP",        modalityId: "durability",        group: "GPP"),
 ]
 
 // MARK: - Shared selection card
