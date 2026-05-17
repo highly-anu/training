@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Tab definition
 
 private enum ProfileTab: Int, CaseIterable {
-    case equipment, injuries, benchmarks, schedule
+    case equipment, injuries, benchmarks, schedule, sync
 
     var label: String {
         switch self {
@@ -11,6 +11,7 @@ private enum ProfileTab: Int, CaseIterable {
         case .injuries:   return "Injuries"
         case .benchmarks: return "Benchmarks"
         case .schedule:   return "Schedule"
+        case .sync:       return "Sync"
         }
     }
 
@@ -20,6 +21,7 @@ private enum ProfileTab: Int, CaseIterable {
         case .injuries:   return "bandage"
         case .benchmarks: return "trophy"
         case .schedule:   return "calendar"
+        case .sync:       return "arrow.triangle.2.circlepath"
         }
     }
 }
@@ -27,16 +29,17 @@ private enum ProfileTab: Int, CaseIterable {
 // MARK: - Equipment categories (mirrors web EQUIPMENT_CATEGORIES)
 
 private struct EquipmentCategory {
-    let name: String
-    let modalityId: String
-    let group: String
+    let name: String       // matches EquipmentItem.group exactly
+    let modalityId: String // for accent color only
 }
 
+// Group names and order match the web EquipmentPicker exactly.
 private let equipmentCategories: [EquipmentCategory] = [
-    EquipmentCategory(name: "Strength",   modalityId: "max_strength",      group: "Strength"),
-    EquipmentCategory(name: "Bodyweight", modalityId: "relative_strength", group: "Bodyweight"),
-    EquipmentCategory(name: "Aerobic",    modalityId: "aerobic_base",      group: "Aerobic"),
-    EquipmentCategory(name: "GPP",        modalityId: "durability",        group: "GPP"),
+    EquipmentCategory(name: "Free Weights",            modalityId: "max_strength"),
+    EquipmentCategory(name: "Gymnastics / Bodyweight", modalityId: "relative_strength"),
+    EquipmentCategory(name: "Cardio Machines",         modalityId: "aerobic_base"),
+    EquipmentCategory(name: "Field / Load",            modalityId: "durability"),
+    EquipmentCategory(name: "Specialty",               modalityId: "conditioning"),
 ]
 
 // MARK: - Shared selection card
@@ -134,8 +137,8 @@ private struct EquipmentTab: View {
                 .padding(.vertical, 4)
             }
 
-            ForEach(equipmentCategories, id: \.group) { category in
-                let items = EquipmentItem.all.filter { $0.group == category.group }
+            ForEach(equipmentCategories, id: \.name) { category in
+                let items = EquipmentItem.all.filter { $0.group == category.name }
                 if !items.isEmpty {
                     Section(category.name) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -599,6 +602,73 @@ private struct ScheduleTab: View {
     }
 }
 
+// MARK: - Sync Tab
+
+private struct SyncTab: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        List {
+            // Current loaded state
+            Section("Loaded Profile") {
+                LabeledContent("Training level", value: appState.profile.trainingLevel.capitalized)
+                LabeledContent("Equipment", value: "\(appState.profile.equipment.count) items")
+                if !appState.profile.equipment.isEmpty {
+                    Text(appState.profile.equipment.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Injury flags", value: "\(appState.profile.injuryFlags.count) active")
+                LabeledContent("Custom injuries", value: "\(appState.profile.customInjuryFlags.count)")
+                LabeledContent("Weekly schedule", value: appState.profile.weeklySchedule != nil ? "Set" : "Not set")
+                LabeledContent("Date of birth", value: appState.profile.dateOfBirth ?? "Not set")
+                LabeledContent("Performance logs", value: "\(appState.profile.performanceLogs?.count ?? 0) benchmarks")
+            }
+
+            // Last sync time
+            Section("Sync Status") {
+                if let date = appState.lastProfileSyncAt {
+                    LabeledContent("Last synced", value: date.formatted(date: .abbreviated, time: .shortened))
+                } else {
+                    Text("Not yet synced this session")
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    Task {
+                        await appState.loadProfile()
+                        await appState.loadPerformanceLogs()
+                    }
+                } label: {
+                    Label(
+                        appState.isLoadingProfile ? "Syncing…" : "Sync Now",
+                        systemImage: "arrow.triangle.2.circlepath"
+                    )
+                }
+                .disabled(appState.isLoadingProfile)
+            }
+
+            // Debug log
+            if !appState.profileSyncLog.isEmpty {
+                Section(header: HStack {
+                    Text("Debug Log")
+                    Spacer()
+                    Button("Clear") { appState.profileSyncLog.removeAll() }
+                        .font(.caption)
+                }) {
+                    ForEach(appState.profileSyncLog.reversed(), id: \.self) { msg in
+                        Text(msg)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+}
+
 // MARK: - ProfileView
 
 struct ProfileView: View {
@@ -618,6 +688,7 @@ struct ProfileView: View {
                 case .injuries:   InjuriesTab()
                 case .benchmarks: BenchmarksTab()
                 case .schedule:   ScheduleTab()
+                case .sync:       SyncTab()
                 }
             }
             .navigationTitle("Profile")
