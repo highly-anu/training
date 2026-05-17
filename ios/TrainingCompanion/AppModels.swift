@@ -335,36 +335,39 @@ struct EquipmentItem: Identifiable {
 }
 
 extension EquipmentItem {
-    // IDs and group names must exactly match the web EquipmentPicker (frontend/src/components/builder/EquipmentPicker.tsx)
-    // open_space is a sentinel on web (always included silently) — shown here for transparency.
+    // IDs and group names must exactly match ConstraintsForm.tsx (frontend/src/components/builder/ConstraintsForm.tsx)
     static let all: [EquipmentItem] = [
-        // Free Weights
-        EquipmentItem(id: "barbell",    label: "Barbell",    group: "Free Weights"),
-        EquipmentItem(id: "rack",       label: "Rack",       group: "Free Weights"),
-        EquipmentItem(id: "plates",     label: "Plates",     group: "Free Weights"),
-        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Free Weights"),
-        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Free Weights"),
-        // Gymnastics / Bodyweight
-        EquipmentItem(id: "pull_up_bar",  label: "Pull-up Bar",  group: "Gymnastics / Bodyweight"),
-        EquipmentItem(id: "rings",        label: "Rings",        group: "Gymnastics / Bodyweight"),
-        EquipmentItem(id: "parallettes",  label: "Parallettes",  group: "Gymnastics / Bodyweight"),
-        EquipmentItem(id: "rope",         label: "Rope Climb",   group: "Gymnastics / Bodyweight"),
-        EquipmentItem(id: "box",          label: "Box",          group: "Gymnastics / Bodyweight"),
-        // Cardio Machines
-        EquipmentItem(id: "rower",   label: "Rower",          group: "Cardio Machines"),
-        EquipmentItem(id: "bike",    label: "Assault Bike",   group: "Cardio Machines"),
-        EquipmentItem(id: "ski_erg", label: "Ski Erg",        group: "Cardio Machines"),
-        EquipmentItem(id: "pool",    label: "Pool (Swimming)", group: "Cardio Machines"),
-        // Field / Load
-        EquipmentItem(id: "ruck_pack",       label: "Ruck Pack",       group: "Field / Load"),
-        EquipmentItem(id: "sandbag",         label: "Sandbag",         group: "Field / Load"),
-        EquipmentItem(id: "jump_rope",       label: "Jump Rope",       group: "Field / Load"),
-        EquipmentItem(id: "resistance_band", label: "Resistance Band", group: "Field / Load"),
-        // Specialty
-        EquipmentItem(id: "ghd",           label: "GHD",           group: "Specialty"),
-        EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "Specialty"),
-        EquipmentItem(id: "sled",          label: "Sled",          group: "Specialty"),
-        EquipmentItem(id: "tire",          label: "Tire",          group: "Specialty"),
+        // Strength
+        EquipmentItem(id: "barbell", label: "Barbell", group: "Strength"),
+        EquipmentItem(id: "rack",    label: "Rack",    group: "Strength"),
+        EquipmentItem(id: "plates",  label: "Plates",  group: "Strength"),
+        // Power & Kettlebell
+        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Power & Kettlebell"),
+        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Power & Kettlebell"),
+        // Bodyweight & Gymnastics
+        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "rings",       label: "Rings",       group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "parallettes", label: "Parallettes", group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "dip_bar",     label: "Dip Bar",     group: "Bodyweight & Gymnastics"),
+        // Aerobic & Conditioning
+        EquipmentItem(id: "rower",        label: "Rower",        group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "ski_erg",      label: "Ski Erg",      group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "jump_rope",    label: "Jump Rope",    group: "Aerobic & Conditioning"),
+        EquipmentItem(id: "pool",         label: "Pool",         group: "Aerobic & Conditioning"),
+        // GPP & Durability
+        EquipmentItem(id: "ruck_pack",     label: "Ruck Pack",     group: "GPP & Durability"),
+        EquipmentItem(id: "sandbag",       label: "Sandbag",       group: "GPP & Durability"),
+        EquipmentItem(id: "sled",          label: "Sled",          group: "GPP & Durability"),
+        EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "GPP & Durability"),
+        EquipmentItem(id: "box",           label: "Box",           group: "GPP & Durability"),
+        // Mobility & Prehab
+        EquipmentItem(id: "resistance_band", label: "Resistance Band", group: "Mobility & Prehab"),
+        EquipmentItem(id: "foam_roller",     label: "Foam Roller",     group: "Mobility & Prehab"),
+        EquipmentItem(id: "ghd",             label: "GHD",             group: "Mobility & Prehab"),
+        // General
+        EquipmentItem(id: "rope",       label: "Rope",       group: "General"),
+        EquipmentItem(id: "open_space", label: "Open Space", group: "General"),
     ]
 }
 

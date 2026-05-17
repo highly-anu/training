@@ -33,13 +33,15 @@ private struct EquipmentCategory {
     let modalityId: String // for accent color only
 }
 
-// Group names and order match the web EquipmentPicker exactly.
+// Group names and order match ConstraintsForm.tsx exactly.
 private let equipmentCategories: [EquipmentCategory] = [
-    EquipmentCategory(name: "Free Weights",            modalityId: "max_strength"),
-    EquipmentCategory(name: "Gymnastics / Bodyweight", modalityId: "relative_strength"),
-    EquipmentCategory(name: "Cardio Machines",         modalityId: "aerobic_base"),
-    EquipmentCategory(name: "Field / Load",            modalityId: "durability"),
-    EquipmentCategory(name: "Specialty",               modalityId: "conditioning"),
+    EquipmentCategory(name: "Strength",               modalityId: "max_strength"),
+    EquipmentCategory(name: "Power & Kettlebell",     modalityId: "power"),
+    EquipmentCategory(name: "Bodyweight & Gymnastics",modalityId: "relative_strength"),
+    EquipmentCategory(name: "Aerobic & Conditioning", modalityId: "aerobic_base"),
+    EquipmentCategory(name: "GPP & Durability",       modalityId: "durability"),
+    EquipmentCategory(name: "Mobility & Prehab",      modalityId: "rehab"),
+    EquipmentCategory(name: "General",                modalityId: "movement_skill"),
 ]
 
 // MARK: - Shared selection card
@@ -609,24 +611,36 @@ private struct SyncTab: View {
 
     var body: some View {
         List {
-            // Current loaded state
-            Section("Loaded Profile") {
+            // Profile section — what is currently loaded from server
+            Section("Profile") {
                 LabeledContent("Training level", value: appState.profile.trainingLevel.capitalized)
-                LabeledContent("Equipment", value: "\(appState.profile.equipment.count) items")
-                if !appState.profile.equipment.isEmpty {
-                    Text(appState.profile.equipment.joined(separator: ", "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    LabeledContent("Equipment", value: "\(appState.profile.equipment.count) items")
+                    if !appState.profile.equipment.isEmpty {
+                        Text(appState.profile.equipment.sorted().joined(separator: ", "))
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                LabeledContent("Injury flags", value: "\(appState.profile.injuryFlags.count) active")
-                LabeledContent("Custom injuries", value: "\(appState.profile.customInjuryFlags.count)")
-                LabeledContent("Weekly schedule", value: appState.profile.weeklySchedule != nil ? "Set" : "Not set")
-                LabeledContent("Date of birth", value: appState.profile.dateOfBirth ?? "Not set")
+
+                VStack(alignment: .leading, spacing: 4) {
+                    LabeledContent("Injury flags", value: "\(appState.profile.injuryFlags.count) active")
+                    if !appState.profile.injuryFlags.isEmpty {
+                        Text(appState.profile.injuryFlags.sorted().joined(separator: ", "))
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                LabeledContent("Custom injuries",  value: "\(appState.profile.customInjuryFlags.count)")
+                LabeledContent("Weekly schedule",  value: appState.profile.weeklySchedule != nil ? "Set" : "Not set")
+                LabeledContent("Date of birth",    value: appState.profile.dateOfBirth ?? "Not set")
                 LabeledContent("Performance logs", value: "\(appState.profile.performanceLogs?.count ?? 0) benchmarks")
             }
 
-            // Last sync time
-            Section("Sync Status") {
+            // Sync status + manual trigger
+            Section("Sync") {
                 if let date = appState.lastProfileSyncAt {
                     LabeledContent("Last synced", value: date.formatted(date: .abbreviated, time: .shortened))
                 } else {
@@ -641,8 +655,8 @@ private struct SyncTab: View {
                     }
                 } label: {
                     Label(
-                        appState.isLoadingProfile ? "Syncing…" : "Sync Now",
-                        systemImage: "arrow.triangle.2.circlepath"
+                        appState.isLoadingProfile ? "Syncing…" : "Pull from server",
+                        systemImage: "arrow.down.circle"
                     )
                 }
                 .disabled(appState.isLoadingProfile)
