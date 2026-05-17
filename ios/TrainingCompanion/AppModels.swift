@@ -95,6 +95,19 @@ struct PerformanceEntry: Codable {
     let date: String  // "YYYY-MM-DD"
 }
 
+enum SessionType: String, Codable, CaseIterable {
+    case rest, short, long, mobility
+}
+
+struct DaySchedule: Codable {
+    var session1: SessionType
+    var session2: SessionType
+    var session3: SessionType
+    var session4: SessionType
+}
+
+typealias WeeklySchedule = [String: DaySchedule]
+
 struct UserProfile: Codable {
     var trainingLevel: String
     var equipment: [String]
@@ -102,6 +115,7 @@ struct UserProfile: Codable {
     var customInjuryFlags: [CustomInjuryFlag]
     var dateOfBirth: String?
     var performanceLogs: [String: [PerformanceEntry]]
+    var weeklySchedule: WeeklySchedule?
 
     enum CodingKeys: String, CodingKey {
         case trainingLevel = "training_level"
@@ -110,6 +124,7 @@ struct UserProfile: Codable {
         case customInjuryFlags = "custom_injury_flags"
         case dateOfBirth = "date_of_birth"
         case performanceLogs = "performance_logs"
+        case weeklySchedule = "weekly_schedule"
     }
 
     static let `default` = UserProfile(
@@ -118,7 +133,8 @@ struct UserProfile: Codable {
         injuryFlags: [],
         customInjuryFlags: [],
         dateOfBirth: nil,
-        performanceLogs: [:]
+        performanceLogs: [:],
+        weeklySchedule: nil
     )
 }
 
@@ -268,9 +284,11 @@ struct InjuryFlagDef: Codable, Identifiable {
     let id: String
     let name: String
     let description: String?
+    let excludedMovementPatterns: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id, name, description
+        case excludedMovementPatterns = "excluded_movement_patterns"
     }
 }
 
