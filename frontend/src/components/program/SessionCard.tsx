@@ -19,7 +19,9 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
   const navigate = useNavigate()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const isComplete = sessionLogs[`${weekNumber}-${day}`]?.[sessionIndex] === true
-  const hasWorkout = !!useBioStore((s) => s.getMatchedWorkout(`${weekNumber}-${day}`))
+  const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const sessionKey = `${weekNumber}-${day}`
+  const hasWorkout = workoutMatches.some((m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected')
 
   return (
     <motion.button

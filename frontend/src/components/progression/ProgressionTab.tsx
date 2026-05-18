@@ -27,7 +27,8 @@ export function ProgressionTab() {
 
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const currentProgram = useProgramStore((s) => s.currentProgram)
-  const getMatchedWorkout = useBioStore((s) => s.getMatchedWorkout)
+  const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
 
   const {
     data: review,
@@ -80,14 +81,15 @@ export function ProgressionTab() {
           daySessions[0]?.archetype?.name ??
           daySessions[0]?.modality.replace(/_/g, ' ') ??
           'Session'
-        const matched = getMatchedWorkout(key)
+        const matchEntry = workoutMatches.find((m) => m.sessionKey === key && m.matchConfidence !== 'rejected')
+        const matched = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
         return { sessionKey: key, weekNumber, dayName, archetypeName, matchedWorkout: matched }
       })
       .sort((a, b) => {
         if (a.weekNumber !== b.weekNumber) return b.weekNumber - a.weekNumber
         return (DAY_ORDER[b.dayName] ?? 0) - (DAY_ORDER[a.dayName] ?? 0)
       })
-  }, [sessionLogs, currentProgram, getMatchedWorkout])
+  }, [sessionLogs, currentProgram, workoutMatches, importedWorkouts])
 
   const linkedCount = allCompleted.filter((s) => s.matchedWorkout).length
 
