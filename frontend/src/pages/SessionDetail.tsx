@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Wand2, CheckCircle2, Circle, RefreshCw } from 'lucide-react'
+import { ChevronLeft, Wand2, CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SessionHeader } from '@/components/session/SessionHeader'
@@ -42,6 +42,7 @@ export function SessionDetail() {
   const { sessionLogs, setSessionLog } = useProfileStore()
   const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
+  const matchedWorkout = useBioStore((s) => s.getMatchedWorkout(sessionKey))
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   const weekNumber = parseInt(week ?? '1', 10)
@@ -94,10 +95,19 @@ export function SessionDetail() {
       className="flex h-full flex-col"
     >
       {/* Back nav */}
-      <div className="border-b bg-card/50 px-6 py-3">
+      <div className="border-b bg-card/50 px-6 py-3 flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link to="/program"><ChevronLeft className="size-4" /> Program</Link>
         </Button>
+        {matchedWorkout && (
+          <Link
+            to={`/import/${matchedWorkout.id}`}
+            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+          >
+            <Activity className="size-3.5" />
+            Workout data
+          </Link>
+        )}
       </div>
 
       {/* Content */}

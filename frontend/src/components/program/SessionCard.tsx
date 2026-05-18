@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Clock, CheckCircle2 } from 'lucide-react'
+import { Clock, CheckCircle2, Activity } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
+import { useBioStore } from '@/store/bioStore'
 import type { Session } from '@/api/types'
 
 interface SessionCardProps {
@@ -18,6 +19,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
   const navigate = useNavigate()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const isComplete = sessionLogs[`${weekNumber}-${day}`]?.[sessionIndex] === true
+  const hasWorkout = !!useBioStore((s) => s.getMatchedWorkout(`${weekNumber}-${day}`))
 
   return (
     <motion.button
@@ -37,10 +39,13 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
           <p className="text-xs font-semibold text-foreground truncate">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</p>
           <ModalityBadge modality={session.modality} size="sm" className="mt-1" />
         </div>
-        {isComplete
-          ? <CheckCircle2 className="size-3.5 mt-0.5 text-emerald-500 shrink-0" />
-          : <span className="size-3.5 mt-0.5 shrink-0" />
-        }
+        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+          {hasWorkout && <Activity className="size-3.5 text-blue-400" />}
+          {isComplete
+            ? <CheckCircle2 className="size-3.5 text-emerald-500" />
+            : <span className="size-3.5" />
+          }
+        </div>
       </div>
       {session.duration_min && (
         <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">

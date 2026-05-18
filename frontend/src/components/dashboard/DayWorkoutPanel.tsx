@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { X, CheckCircle2, Circle, RefreshCw } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { X, CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SessionHeader } from '@/components/session/SessionHeader'
 import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
@@ -25,6 +26,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const setSessionLog = useProfileStore((s) => s.setSessionLog)
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
+  const matchedWorkout = useBioStore((s) => s.getMatchedWorkout(sessionKey))
   const currentProgram = useProgramStore((s) => s.currentProgram)
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
@@ -51,14 +53,25 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-card/95 px-5 py-3 backdrop-blur-sm">
         <div>
           <p className="text-sm font-semibold">{day}</p>
-          <p className="text-[11px] text-muted-foreground">
-            Week {weekData.week_number}
-            {sessions.length > 0 && (
-              <span className="ml-1 capitalize">
-                · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
-              </span>
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] text-muted-foreground">
+              Week {weekData.week_number}
+              {sessions.length > 0 && (
+                <span className="ml-1 capitalize">
+                  · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
+                </span>
+              )}
+            </p>
+            {matchedWorkout && (
+              <Link
+                to={`/import/${matchedWorkout.id}`}
+                className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                <Activity className="size-3" />
+                View workout
+              </Link>
             )}
-          </p>
+          </div>
         </div>
         <button
           type="button"

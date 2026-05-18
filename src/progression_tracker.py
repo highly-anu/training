@@ -207,10 +207,11 @@ def compute_matched_sessions(
         elev = workout.get('elevation') or {}
 
         summaries.append({
-            'sessionKey':      session_key,
-            'weekNumber':      week_num,
-            'dayName':         day_name,
-            'date':            workout.get('date', ''),
+            'sessionKey':        session_key,
+            'weekNumber':        week_num,
+            'dayName':           day_name,
+            'date':              workout.get('date', ''),
+            'importedWorkoutId': match.get('importedWorkoutId', ''),
             'archetype': {
                 'name':              archetype_name,
                 'modality':          modality,

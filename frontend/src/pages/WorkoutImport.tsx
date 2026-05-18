@@ -12,17 +12,12 @@ import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
-import type { ImportedWorkout, PendingMatch } from '@/api/types'
+import type { ImportedWorkout, PendingMatch, GeneratedProgram } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'import' | 'history'
+type SubTab = 'import' | 'history' | 'matched'
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
-
-const SUB_TABS: { id: SubTab; label: string }[] = [
-  { id: 'import',  label: 'Import'  },
-  { id: 'history', label: 'History' },
-]
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -46,13 +41,15 @@ function formatActivityType(raw: string): string {
 function TabSelector({
   active,
   onChange,
+  tabs,
 }: {
   active: SubTab
   onChange: (t: SubTab) => void
+  tabs: { id: SubTab; label: string }[]
 }) {
   return (
     <div className="flex items-center gap-1">
-      {SUB_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <button
           key={tab.id}
           type="button"
@@ -334,6 +331,123 @@ function HistoryTab({
   )
 }
 
+// ── Matched Tab ────────────────────────────────────────────────────────────────
+
+function MatchedTab({
+  workoutMatches,
+  importedWorkouts,
+  currentProgram,
+  navigate,
+}: {
+  workoutMatches: { importedWorkoutId: string; sessionKey: string; matchConfidence: string }[]
+  importedWorkouts: ImportedWorkout[]
+  currentProgram: GeneratedProgram | null
+  navigate: (to: string) => void
+}) {
+  const confirmed = workoutMatches.filter((m) => m.matchConfidence !== 'rejected')
+
+  const workoutMap = new Map(importedWorkouts.map((w) => [w.id, w]))
+
+  const sessionLookup = new Map<string, { archetypeName: string; modality: string }>()
+  for (const week of currentProgram?.weeks ?? []) {
+    for (const [dayName, daySessions] of Object.entries(week.schedule)) {
+      const key = `${week.week_number}-${dayName}`
+      const first = daySessions[0]
+      if (first) {
+        sessionLookup.set(key, {
+          archetypeName: first.archetype?.name ?? first.modality.replace(/_/g, ' '),
+          modality: first.modality,
+        })
+      }
+    }
+  }
+
+  const rows = confirmed
+    .map((m) => ({ match: m, workout: workoutMap.get(m.importedWorkoutId) }))
+    .filter((r): r is { match: typeof m; workout: ImportedWorkout } => !!r.workout)
+    .sort((a, b) => b.workout.date.localeCompare(a.workout.date))
+
+  if (rows.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <div className="rounded-xl border border-dashed border-border p-12 flex flex-col items-center gap-3 text-center text-muted-foreground">
+          <Link2 className="size-8 opacity-40" />
+          <p className="text-sm">No matched workouts yet.</p>
+          <p className="text-xs">Import a file on the Import tab and link it to a session.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Matched Workouts ({rows.length})
+        </h2>
+        <div className="space-y-2">
+          {rows.map(({ match, workout }) => {
+            const session = sessionLookup.get(match.sessionKey)
+            const dashIdx = match.sessionKey.indexOf('-')
+            const weekNum = match.sessionKey.slice(0, dashIdx)
+            const dayName = match.sessionKey.slice(dashIdx + 1)
+            const sourceLabel =
+              workout.source === 'fit_file' ? 'FIT'
+              : workout.source === 'strava' ? 'Strava'
+              : workout.source === 'apple_health' || workout.source === 'apple_watch_live' ? 'Apple Health'
+              : 'GPS'
+            return (
+              <div
+                key={workout.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/import/${workout.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${workout.id}`)}
+                className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
+              >
+                <FileText className="size-4 shrink-0 text-muted-foreground" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">
+                      {formatActivityType(workout.activityType)}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-emerald-500/40 text-emerald-500 shrink-0"
+                    >
+                      matched
+                    </Badge>
+                    <span className="text-[9px] text-muted-foreground/60 border border-border/40 rounded px-1 py-px shrink-0">
+                      {sourceLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                    <span>
+                      {(() => {
+                        try { return format(parseISO(workout.startTime), 'EEE, MMM d') }
+                        catch { return workout.date }
+                      })()}
+                    </span>
+                    <span>·</span>
+                    <span>{workout.durationMinutes} min</span>
+                    {workout.heartRate.avg != null && (
+                      <><span>·</span><span>{Math.round(workout.heartRate.avg)} bpm</span></>
+                    )}
+                    {session && (
+                      <><span>·</span><span className="text-muted-foreground/70">Wk {weekNum} {dayName} — {session.archetypeName}</span></>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function WorkoutImport() {
@@ -465,6 +579,13 @@ export function WorkoutImport() {
   }
 
   const allImported = importedWorkouts.slice().sort((a, b) => b.date.localeCompare(a.date))
+  const matchedCount = workoutMatches.filter((m) => m.matchConfidence !== 'rejected').length
+
+  const subTabs: { id: SubTab; label: string }[] = [
+    { id: 'import',  label: 'Import' },
+    { id: 'history', label: 'History' },
+    { id: 'matched', label: matchedCount > 0 ? `Matched (${matchedCount})` : 'Matched' },
+  ]
 
   return (
     <motion.div
@@ -480,7 +601,7 @@ export function WorkoutImport() {
         <h1 className="text-lg font-semibold">Import Workouts</h1>
         <div className="ml-4 flex items-center gap-2">
           <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} />
+          <TabSelector active={activeTab} onChange={setActiveTab} tabs={subTabs} />
         </div>
       </div>
 
@@ -511,6 +632,14 @@ export function WorkoutImport() {
             activePending={activePending}
             setActivePending={setActivePending}
             removeImportedWorkout={removeImportedWorkout}
+            navigate={navigate}
+          />
+        )}
+        {activeTab === 'matched' && (
+          <MatchedTab
+            workoutMatches={workoutMatches}
+            importedWorkouts={importedWorkouts}
+            currentProgram={program ?? null}
             navigate={navigate}
           />
         )}
