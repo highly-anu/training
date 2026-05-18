@@ -263,8 +263,8 @@ function HistoryTab({
                 key={w.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => navigate(`/import/${w.id}`)}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${w.id}`)}
+                onClick={() => navigate(`/import/${encodeURIComponent(w.id)}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${encodeURIComponent(w.id)}`)}
                 className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" />
@@ -402,8 +402,8 @@ function MatchedTab({
                 key={workout.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => navigate(`/import/${workout.id}`)}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${workout.id}`)}
+                onClick={() => navigate(`/import/${encodeURIComponent(workout.id)}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${encodeURIComponent(workout.id)}`)}
                 className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" />

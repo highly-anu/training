@@ -111,7 +111,8 @@ function formatPace(dist: { value: number; unit: 'km' | 'm' }, durationMinutes: 
 }
 
 export function WorkoutDetail() {
-  const { workoutId } = useParams<{ workoutId: string }>()
+  const { workoutId: rawWorkoutId } = useParams<{ workoutId: string }>()
+  const workoutId = rawWorkoutId ? decodeURIComponent(rawWorkoutId) : undefined
   const navigate = useNavigate()
   const workout = useBioStore((s) =>
     s.importedWorkouts.find((w) => w.id === workoutId)

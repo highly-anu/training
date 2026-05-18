@@ -73,8 +73,8 @@ export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
     <div
       role="button"
       tabIndex={0}
-      onClick={() => item.importedWorkoutId && navigate(`/import/${item.importedWorkoutId}`)}
-      onKeyDown={(e) => e.key === 'Enter' && item.importedWorkoutId && navigate(`/import/${item.importedWorkoutId}`)}
+      onClick={() => item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`)}
+      onKeyDown={(e) => e.key === 'Enter' && item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`)}
       className={cn(
         'rounded-xl border border-border/60 bg-card px-4 py-3 space-y-1.5',
         item.importedWorkoutId && 'cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',

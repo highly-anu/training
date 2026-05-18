@@ -26,8 +26,11 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const setSessionLog = useProfileStore((s) => s.setSessionLog)
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
-  const matchedWorkout = useBioStore((s) => s.getMatchedWorkout(sessionKey))
+  const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const currentProgram = useProgramStore((s) => s.currentProgram)
+  const matchEntry = workoutMatches.find((m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected')
+  const matchedWorkout = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   function toggleComplete(si: number) {
@@ -64,7 +67,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
             </p>
             {matchedWorkout && (
               <Link
-                to={`/import/${matchedWorkout.id}`}
+                to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
                 className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
               >
                 <Activity className="size-3" />
