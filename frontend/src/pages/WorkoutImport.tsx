@@ -362,9 +362,10 @@ function MatchedTab({
     }
   }
 
-  const rows = confirmed
+  type MatchRow = { match: { importedWorkoutId: string; sessionKey: string; matchConfidence: string }; workout: ImportedWorkout }
+  const rows: MatchRow[] = confirmed
     .map((m) => ({ match: m, workout: workoutMap.get(m.importedWorkoutId) }))
-    .filter((r): r is { match: typeof m; workout: ImportedWorkout } => !!r.workout)
+    .filter((r): r is MatchRow => !!r.workout)
     .sort((a, b) => b.workout.date.localeCompare(a.workout.date))
 
   if (rows.length === 0) {
