@@ -161,12 +161,33 @@ struct WorkoutDetailSheet: View {
 
     private func routeSection(gps: [GPSPoint]) -> some View {
         Section("Route") {
-            WorkoutRouteMapView(points: gps)
-                .frame(height: 220)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+            if isInSwitzerland(gps) {
+                Picker("View", selection: $mapMode) {
+                    Label("Map", systemImage: "map").tag(MapMode.flat)
+                    Label("3D", systemImage: "cube").tag(MapMode.swiss3d)
+                }
+                .pickerStyle(.segmented)
+                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 0, trailing: 8))
+            }
+
+            Group {
+                if mapMode == .swiss3d && isInSwitzerland(gps) {
+                    Swiss3DMapView(points: gps)
+                        .frame(height: 300)
+                } else {
+                    WorkoutRouteMapView(points: gps)
+                        .frame(height: 220)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
         }
     }
+
+    // MARK: - Map mode
+
+    private enum MapMode { case flat, swiss3d }
+    @State private var mapMode: MapMode = .swiss3d
 
     // MARK: - Timeseries
 
