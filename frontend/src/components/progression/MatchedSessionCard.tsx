@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { MatchedSessionSummary } from '@/api/types'
 
@@ -44,6 +46,7 @@ interface MatchedSessionCardProps {
 }
 
 export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
+  const navigate = useNavigate()
   const { archetype, workout, durationDeltaPct, relevantMetrics } = item
   const dayAbbr = item.dayName.slice(0, 3)
 
@@ -67,8 +70,17 @@ export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card px-4 py-3 space-y-1.5">
-      {/* Row 1: week/day label · archetype name · source badge */}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => item.importedWorkoutId && navigate(`/import/${item.importedWorkoutId}`)}
+      onKeyDown={(e) => e.key === 'Enter' && item.importedWorkoutId && navigate(`/import/${item.importedWorkoutId}`)}
+      className={cn(
+        'rounded-xl border border-border/60 bg-card px-4 py-3 space-y-1.5',
+        item.importedWorkoutId && 'cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',
+      )}
+    >
+      {/* Row 1: week/day label · archetype name · source badge · chevron */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="shrink-0 text-[10px] text-muted-foreground/70 tabular-nums">
@@ -78,7 +90,10 @@ export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
             {archetype.name}
           </p>
         </div>
-        <SourceBadge source={workout.source} confidence={item.matchConfidence} />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <SourceBadge source={workout.source} confidence={item.matchConfidence} />
+          {item.importedWorkoutId && <ChevronRight className="size-3.5 text-muted-foreground/50" />}
+        </div>
       </div>
 
       {/* Row 2: metrics + duration delta */}

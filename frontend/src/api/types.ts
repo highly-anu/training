@@ -851,6 +851,7 @@ export interface MatchedSessionSummary {
   weekNumber: number
   dayName: string
   date: string
+  importedWorkoutId: string
   archetype: MatchedSessionArchetype
   workout: MatchedSessionWorkout
   matchConfidence: 'auto' | 'manual'
