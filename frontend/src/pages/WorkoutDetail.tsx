@@ -1,5 +1,6 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft,
@@ -29,6 +30,7 @@ import { computeHRZones, maxHRFromDOB } from '@/lib/hrZones'
 import { computeSessionInsight } from '@/lib/sessionAnalysis'
 import { scoreMatch, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useCurrentProgram } from '@/api/programs'
+import { apiClient } from '@/api/client'
 import type { ImportedWorkout, InsightItem, PendingMatch } from '@/api/types'
 
 // Lazy-load Leaflet map (heavy dependency)
@@ -114,9 +116,26 @@ export function WorkoutDetail() {
   const { workoutId: rawWorkoutId } = useParams<{ workoutId: string }>()
   const workoutId = rawWorkoutId ? decodeURIComponent(rawWorkoutId) : undefined
   const navigate = useNavigate()
-  const workout = useBioStore((s) =>
-    s.importedWorkouts.find((w) => w.id === workoutId)
+  const localWorkout = useBioStore((s) =>
+    workoutId ? s.importedWorkouts.find((w) => w.id === workoutId) : undefined
   ) as ImportedWorkout | undefined
+
+  // Fallback: fetch from backend if not yet in local store (e.g. direct URL load)
+  const { data: fetchedWorkout, isLoading: fetchLoading } = useQuery<ImportedWorkout | null>({
+    queryKey: ['workout', workoutId],
+    queryFn: async () => {
+      if (!workoutId) return null
+      try {
+        return await apiClient.get(`/health/workouts/${encodeURIComponent(workoutId)}`) as ImportedWorkout
+      } catch {
+        return null
+      }
+    },
+    enabled: !localWorkout && !!workoutId,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const workout = localWorkout ?? fetchedWorkout ?? undefined
 
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
@@ -131,11 +150,18 @@ export function WorkoutDetail() {
   const maxHR = maxHRFromDOB(dob) ?? 190
 
   // Resolve matched session from program
+  // Session keys are "weekNum-DayName-sessionIdx" (per-session) or legacy "weekNum-DayName"
   const matchedSessions = useMemo(() => {
     if (!match || !program) return null
-    const [weekStr, ...dayParts] = match.sessionKey.split('-')
-    const weekNum = parseInt(weekStr, 10)
-    const dayName = dayParts.join('-')
+    const key = match.sessionKey
+    // Check if last segment is a pure integer (per-session key)
+    const lastDash = key.lastIndexOf('-')
+    const tail = key.slice(lastDash + 1)
+    const isPerSession = lastDash > 0 && !isNaN(parseInt(tail, 10)) && String(parseInt(tail, 10)) === tail
+    const dayKey = isPerSession ? key.slice(0, lastDash) : key
+    const firstDash = dayKey.indexOf('-')
+    const weekNum = parseInt(dayKey.slice(0, firstDash), 10)
+    const dayName = dayKey.slice(firstDash + 1)
     const week = program.weeks.find((w) => w.week_number === weekNum)
     return week?.schedule[dayName] ?? null
   }, [match, program])
@@ -190,7 +216,14 @@ export function WorkoutDetail() {
           <ChevronLeft className="size-4 mr-1" />
           Back
         </Button>
-        <p className="text-sm text-muted-foreground mt-4">Workout not found.</p>
+        {fetchLoading ? (
+          <div className="flex items-center gap-2 mt-4">
+            <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">Loading workout…</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground mt-4">Workout not found.</p>
+        )}
       </motion.div>
     )
   }

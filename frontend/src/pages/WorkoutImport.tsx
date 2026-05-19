@@ -348,18 +348,27 @@ function MatchedTab({
 
   const workoutMap = new Map(importedWorkouts.map((w) => [w.id, w]))
 
+  // Build lookup by both day-level ("weekNum-Day") and per-session ("weekNum-Day-si") keys
   const sessionLookup = new Map<string, { archetypeName: string; modality: string }>()
   for (const week of currentProgram?.weeks ?? []) {
     for (const [dayName, daySessions] of Object.entries(week.schedule)) {
-      const key = `${week.week_number}-${dayName}`
-      const first = daySessions[0]
-      if (first) {
-        sessionLookup.set(key, {
-          archetypeName: first.archetype?.name ?? first.modality.replace(/_/g, ' '),
-          modality: first.modality,
-        })
-      }
+      const dayKey = `${week.week_number}-${dayName}`
+      daySessions.forEach((s, si) => {
+        const label = { archetypeName: s.archetype?.name ?? s.modality.replace(/_/g, ' '), modality: s.modality }
+        sessionLookup.set(`${dayKey}-${si}`, label)
+        if (si === 0) sessionLookup.set(dayKey, label) // fallback for legacy day-level keys
+      })
     }
+  }
+
+  // Parse "weekNum-DayName[-sessionIdx]" → { weekNum, dayName }
+  function parseSessionKey(key: string): { weekNum: string; dayName: string } {
+    const lastDash = key.lastIndexOf('-')
+    const tail = key.slice(lastDash + 1)
+    const isPerSession = !isNaN(parseInt(tail, 10)) && String(parseInt(tail, 10)) === tail
+    const dayKey = isPerSession ? key.slice(0, lastDash) : key
+    const firstDash = dayKey.indexOf('-')
+    return { weekNum: dayKey.slice(0, firstDash), dayName: dayKey.slice(firstDash + 1) }
   }
 
   type MatchRow = { match: { importedWorkoutId: string; sessionKey: string; matchConfidence: string }; workout: ImportedWorkout }
@@ -389,9 +398,7 @@ function MatchedTab({
         <div className="space-y-2">
           {rows.map(({ match, workout }) => {
             const session = sessionLookup.get(match.sessionKey)
-            const dashIdx = match.sessionKey.indexOf('-')
-            const weekNum = match.sessionKey.slice(0, dashIdx)
-            const dayName = match.sessionKey.slice(dashIdx + 1)
+            const { weekNum, dayName } = parseSessionKey(match.sessionKey)
             const sourceLabel =
               workout.source === 'fit_file' ? 'FIT'
               : workout.source === 'strava' ? 'Strava'
