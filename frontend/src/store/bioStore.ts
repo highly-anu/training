@@ -64,6 +64,17 @@ function emptyLog(sessionKey: string): SessionPerformanceLog {
   return { sessionKey, exercises: {}, notes: '', completedAt: '' }
 }
 
+// Parse "weekNum-DayName-sessionIdx" → { dayKey: "weekNum-DayName", sessionIdx: N }
+// Returns null for legacy day-level keys like "weekNum-DayName"
+function parsePerSessionKey(key: string): { dayKey: string; sessionIdx: number } | null {
+  const lastDash = key.lastIndexOf('-')
+  if (lastDash < 0) return null
+  const tail = key.slice(lastDash + 1)
+  const idx = parseInt(tail, 10)
+  if (isNaN(idx) || String(idx) !== tail) return null
+  return { dayKey: key.slice(0, lastDash), sessionIdx: idx }
+}
+
 export const useBioStore = create<BioStore>()((set, get) => ({
   importedWorkouts: [],
   sessionPerformanceLogs: {},
@@ -107,7 +118,16 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       matchedAt: new Date().toISOString(),
     }
     healthApi.saveMatch(match)
-    useProfileStore.getState().setSessionLog(sessionKey, [true])
+    // Per-session key "weekNum-Day-si": mark that specific index in the day-level log
+    const parsed = parsePerSessionKey(sessionKey)
+    if (parsed) {
+      const { dayKey, sessionIdx } = parsed
+      const current = useProfileStore.getState().sessionLogs[dayKey] ?? []
+      const next = [...current]; next[sessionIdx] = true
+      useProfileStore.getState().setSessionLog(dayKey, next)
+    } else {
+      useProfileStore.getState().setSessionLog(sessionKey, [true])
+    }
     set((s) => {
       const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
       const updated = existing.completedAt ? existing : { ...existing, completedAt: new Date().toISOString() }
@@ -127,7 +147,15 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       matchedAt: new Date().toISOString(),
     }
     healthApi.saveMatch(match)
-    useProfileStore.getState().setSessionLog(sessionKey, [true])
+    const parsed = parsePerSessionKey(sessionKey)
+    if (parsed) {
+      const { dayKey, sessionIdx } = parsed
+      const current = useProfileStore.getState().sessionLogs[dayKey] ?? []
+      const next = [...current]; next[sessionIdx] = true
+      useProfileStore.getState().setSessionLog(dayKey, next)
+    } else {
+      useProfileStore.getState().setSessionLog(sessionKey, [true])
+    }
     set((s) => {
       const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
       const updated = existing.completedAt ? existing : { ...existing, completedAt: new Date().toISOString() }
@@ -206,11 +234,18 @@ export const useBioStore = create<BioStore>()((set, get) => ({
 
   getMatchedWorkout: (sessionKey) => {
     const { workoutMatches, importedWorkouts } = get()
-    const match = workoutMatches.find(
+    // Exact match (per-session "weekNum-Day-si" or legacy day-level "weekNum-Day")
+    let match = workoutMatches.find(
       (m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected'
     )
+    // Fallback: if given a day-level key, find the first per-session variant
+    if (!match) {
+      match = workoutMatches.find(
+        (m) => m.sessionKey.startsWith(`${sessionKey}-`) && m.matchConfidence !== 'rejected'
+      )
+    }
     if (!match) return undefined
-    return importedWorkouts.find((w) => w.id === match.importedWorkoutId)
+    return importedWorkouts.find((w) => w.id === match!.importedWorkoutId)
   },
 
   getPerformanceLog: (sessionKey) => get().sessionPerformanceLogs[sessionKey],

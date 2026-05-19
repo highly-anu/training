@@ -44,9 +44,15 @@ export function SessionDetail() {
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
-  const matchEntry = workoutMatches.find((m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected')
-  const matchedWorkout = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
+
+  function getSessionMatch(si: number) {
+    const perKey = `${sessionKey}-${si}`
+    const entry = workoutMatches.find(
+      m => (m.sessionKey === perKey || m.sessionKey === sessionKey) && m.matchConfidence !== 'rejected'
+    )
+    return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
+  }
 
   const weekNumber = parseInt(week ?? '1', 10)
   const weekIdx = program.weeks.findIndex((w) => w.week_number === weekNumber)
@@ -98,19 +104,10 @@ export function SessionDetail() {
       className="flex h-full flex-col"
     >
       {/* Back nav */}
-      <div className="border-b bg-card/50 px-6 py-3 flex items-center justify-between">
+      <div className="border-b bg-card/50 px-6 py-3">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link to="/program"><ChevronLeft className="size-4" /> Program</Link>
         </Button>
-        {matchedWorkout && (
-          <Link
-            to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
-            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
-          >
-            <Activity className="size-3.5" />
-            Workout data
-          </Link>
-        )}
       </div>
 
       {/* Content */}
@@ -119,6 +116,7 @@ export function SessionDetail() {
           const isComplete = sessionLogs[sessionKey]?.[sessionIdx] === true
             || !!getPerformanceLog(sessionKey)?.completedAt
             || !!getPerformanceLog(`${sessionKey}-${sessionIdx}`)?.completedAt
+          const sessionMatchedWorkout = getSessionMatch(sessionIdx)
           return (
             <div key={sessionIdx} className="space-y-4">
               {sessionIdx > 0 && <Separator />}
@@ -133,15 +131,25 @@ export function SessionDetail() {
                     phase={weekData.phase}
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 mt-1"
-                  onClick={() => setReplaceTarget({ idx: sessionIdx })}
-                >
-                  <RefreshCw className="size-3.5 mr-1.5" />
-                  Replace
-                </Button>
+                <div className="flex items-center gap-2 shrink-0 mt-1">
+                  {sessionMatchedWorkout && (
+                    <Link
+                      to={`/import/${encodeURIComponent(sessionMatchedWorkout.id)}`}
+                      className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                    >
+                      <Activity className="size-3.5" />
+                      Workout
+                    </Link>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReplaceTarget({ idx: sessionIdx })}
+                  >
+                    <RefreshCw className="size-3.5 mr-1.5" />
+                    Replace
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -45,14 +45,14 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
   const allSessionsByWeek = useMemo(() => {
     if (!program) return []
     return program.weeks.map((week) => {
-      const sessions: { key: string; dayName: string; modalities: string }[] = []
+      const sessions: { key: string; dayName: string; label: string }[] = []
       for (const [dayName, daySessions] of Object.entries(week.schedule)) {
-        if (daySessions.length === 0) continue
-        const key = `${week.week_number}-${dayName}`
-        sessions.push({
-          key,
-          dayName,
-          modalities: daySessions.map((s) => s.modality.replace(/_/g, ' ')).join(', '),
+        daySessions.forEach((s, si) => {
+          sessions.push({
+            key: `${week.week_number}-${dayName}-${si}`,
+            dayName,
+            label: s.archetype?.name ?? s.modality.replace(/_/g, ' '),
+          })
         })
       }
       return { weekNumber: week.week_number, sessions }
@@ -152,7 +152,7 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
                     Week {weekNumber}
                   </p>
                   <div className="space-y-1">
-                    {sessions.map(({ key, dayName, modalities }) => (
+                    {sessions.map(({ key, dayName, label }) => (
                       <button
                         key={key}
                         type="button"
@@ -161,7 +161,7 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
                       >
                         <div>
                           <span className="font-medium">{dayName}</span>
-                          <span className="text-muted-foreground ml-2 capitalize">{modalities}</span>
+                          <span className="text-muted-foreground ml-2">{label}</span>
                         </div>
                         <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100">Select</span>
                       </button>

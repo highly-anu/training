@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
-import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging } from 'lucide-react'
+import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging, Activity } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -15,7 +15,7 @@ import { formatLoad } from '@/lib/formatLoad'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
-import type { Session, WeekData } from '@/api/types'
+import type { Session, WeekData, WorkoutMatch } from '@/api/types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const DAY_ABB = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -39,6 +39,7 @@ interface SessionCardProps {
   weekNumber: number
   day: string
   isComplete: boolean
+  hasWorkout: boolean
   isDragging?: boolean
   dragHandleListeners?: Record<string, unknown>
   dragHandleRef?: (el: HTMLElement | null) => void
@@ -51,6 +52,7 @@ function SessionCard({
   weekNumber: _weekNumber,
   day: _day,
   isComplete,
+  hasWorkout,
   isDragging,
   dragHandleListeners,
   dragHandleRef,
@@ -83,7 +85,7 @@ function SessionCard({
       />
 
       <div className="p-2 space-y-1.5 flex-1 flex flex-col">
-        {/* Modality + duration row */}
+        {/* Modality + workout indicator row */}
         <div className="flex items-start justify-between gap-1">
           <p
             className="text-[10px] font-semibold uppercase tracking-wide leading-tight"
@@ -91,6 +93,7 @@ function SessionCard({
           >
             {session.modality.replace(/_/g, ' ')}
           </p>
+          {hasWorkout && <Activity className="size-3 text-blue-400 shrink-0 mt-0.5" />}
         </div>
 
         {/* Archetype name */}
@@ -167,6 +170,7 @@ interface DraggableSessionProps {
   weekNumber: number
   day: string
   isComplete: boolean
+  hasWorkout: boolean
   onCardClick: () => void
   onToggleComplete: () => void
 }
@@ -177,6 +181,7 @@ function DraggableSession({
   weekNumber,
   day,
   isComplete,
+  hasWorkout,
   onCardClick,
   onToggleComplete,
 }: DraggableSessionProps) {
@@ -200,6 +205,7 @@ function DraggableSession({
         weekNumber={weekNumber}
         day={day}
         isComplete={isComplete}
+        hasWorkout={hasWorkout}
         isDragging={false}
         dragHandleListeners={listeners as Record<string, unknown>}
         onClick={onCardClick}
@@ -326,7 +332,17 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
   const sessionLogs = useProfileStore(s => s.sessionLogs)
   const setSessionLog = useProfileStore(s => s.setSessionLog)
   const upsertSessionPerformance = useBioStore(s => s.upsertSessionPerformance)
+  const workoutMatches = useBioStore(s => s.workoutMatches)
   const moveSession = useProgramStore(s => s.moveSession)
+
+  function hasLinkedWorkout(weekNum: number, day: string, si: number, matches: WorkoutMatch[]): boolean {
+    const perSessionKey = `${weekNum}-${day}-${si}`
+    const dayKey = `${weekNum}-${day}`
+    return matches.some(m =>
+      (m.sessionKey === perSessionKey || m.sessionKey === dayKey) &&
+      m.matchConfidence !== 'rejected'
+    )
+  }
 
   // Which program week index contains today? Only that week shows the "today" chip.
   const todayDayName = useMemo(() => format(new Date(), 'EEEE'), [])
@@ -391,6 +407,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
             >
               {sessions.map((session, si) => {
                 const sessionIsComplete = dayLogs?.[si] === true
+                const sessionHasWorkout = hasLinkedWorkout(weekData?.week_number ?? 1, day, si, workoutMatches)
                 return (
                   <DraggableSession
                     key={si}
@@ -399,6 +416,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
                     weekNumber={weekData?.week_number ?? 1}
                     day={day}
                     isComplete={sessionIsComplete}
+                    hasWorkout={sessionHasWorkout}
                     onCardClick={() => onDaySelect?.(isSelected ? null : day)}
                     onToggleComplete={() => {
                       const current = sessionLogs[dayKey] ?? []

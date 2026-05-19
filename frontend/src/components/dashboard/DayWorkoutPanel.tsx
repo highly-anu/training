@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { X, CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { SessionHeader } from '@/components/session/SessionHeader'
 import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
@@ -29,9 +30,15 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const currentProgram = useProgramStore((s) => s.currentProgram)
-  const matchEntry = workoutMatches.find((m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected')
-  const matchedWorkout = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
+
+  function getSessionMatch(si: number) {
+    const perKey = `${sessionKey}-${si}`
+    const entry = workoutMatches.find(
+      m => (m.sessionKey === perKey || m.sessionKey === sessionKey) && m.matchConfidence !== 'rejected'
+    )
+    return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
+  }
 
   function toggleComplete(si: number) {
     const current = sessionLogs[sessionKey] ?? []
@@ -56,25 +63,14 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-card/95 px-5 py-3 backdrop-blur-sm">
         <div>
           <p className="text-sm font-semibold">{day}</p>
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] text-muted-foreground">
-              Week {weekData.week_number}
-              {sessions.length > 0 && (
-                <span className="ml-1 capitalize">
-                  · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
-                </span>
-              )}
-            </p>
-            {matchedWorkout && (
-              <Link
-                to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
-                className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                <Activity className="size-3" />
-                View workout
-              </Link>
+          <p className="text-[11px] text-muted-foreground">
+            Week {weekData.week_number}
+            {sessions.length > 0 && (
+              <span className="ml-1 capitalize">
+                · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
+              </span>
             )}
-          </div>
+          </p>
         </div>
         <button
           type="button"
@@ -106,6 +102,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
             </div>
           )
           const isComplete = sessionLogs[sessionKey]?.[si] === true
+          const matchedWorkout = getSessionMatch(si)
           return (
             <div key={si} className={cn('space-y-4', si > 0 && 'border-t border-border pt-6')}>
               <div className="flex items-start justify-between gap-2">
@@ -118,14 +115,25 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
                     phase={weekData.phase}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setReplaceTarget({ idx: si })}
-                  className="shrink-0 mt-1 flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
-                >
-                  <RefreshCw className="size-3" />
-                  Replace
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                  {matchedWorkout && (
+                    <Link
+                      to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
+                      className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      <Activity className="size-3" />
+                      Workout
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setReplaceTarget({ idx: si })}
+                    className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+                  >
+                    <RefreshCw className="size-3" />
+                    Replace
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 {session.exercises.map((assignment, i) => (

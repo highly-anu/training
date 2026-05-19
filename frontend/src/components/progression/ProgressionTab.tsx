@@ -81,7 +81,10 @@ export function ProgressionTab() {
           daySessions[0]?.archetype?.name ??
           daySessions[0]?.modality.replace(/_/g, ' ') ??
           'Session'
-        const matchEntry = workoutMatches.find((m) => m.sessionKey === key && m.matchConfidence !== 'rejected')
+        // Check per-session keys ("weekNum-Day-si") and legacy day-level keys
+        const matchEntry = workoutMatches.find(
+          (m) => (m.sessionKey === key || m.sessionKey.startsWith(`${key}-`)) && m.matchConfidence !== 'rejected'
+        )
         const matched = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
         return { sessionKey: key, weekNumber, dayName, archetypeName, matchedWorkout: matched }
       })

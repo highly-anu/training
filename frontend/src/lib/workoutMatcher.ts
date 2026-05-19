@@ -79,8 +79,8 @@ export function autoMatchWorkouts(
     for (const [dayName, sessions] of Object.entries(week.schedule)) {
       const calDate = sessionCalendarDate(programStartDate, weekIndex, dayName)
       if (!calDate) continue
-      const sessionKey = `${week.week_number}-${dayName}`
-      for (const session of sessions) {
+      sessions.forEach((session, si) => {
+        const sessionKey = `${week.week_number}-${dayName}-${si}`
         const entry = {
           sessionKey,
           modality: session.modality,
@@ -89,7 +89,7 @@ export function autoMatchWorkouts(
         const existing = dateIndex.get(calDate) ?? []
         existing.push(entry)
         dateIndex.set(calDate, existing)
-      }
+      })
     }
   }
 

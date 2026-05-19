@@ -159,13 +159,13 @@ export function WorkoutDetail() {
     for (let weekIdx = 0; weekIdx < program.weeks.length; weekIdx++) {
       const week = program.weeks[weekIdx]
       for (const [dayName, sessions] of Object.entries(week.schedule)) {
-        const key = `${week.week_number}-${dayName}`
-        for (const s of sessions) {
+        const calDate = sessionCalendarDate(programStartDate, weekIdx, dayName)
+        const dateBonus = calDate === workout.date ? 5 : 0
+        sessions.forEach((s, si) => {
+          const key = `${week.week_number}-${dayName}-${si}`
           const sc = scoreMatch(workout, s.modality, s.archetype?.duration_estimate_minutes ?? 60)
-          const calDate = sessionCalendarDate(programStartDate, weekIdx, dayName)
-          const dateBonus = calDate === workout.date ? 5 : 0
           candidates.push({ sessionKey: key, score: sc + dateBonus })
-        }
+        })
       }
     }
     const sorted = candidates.sort((a, b) => b.score - a.score)
