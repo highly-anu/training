@@ -460,12 +460,24 @@ function MatchedTab({
 
 export function WorkoutImport() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const linkToSession = searchParams.get('linkTo')
 
-  const [activeTab, setActiveTab] = useState<SubTab>(
-    searchParams.get('tab') === 'history' ? 'history' : 'import'
-  )
+  const tabParam = searchParams.get('tab')
+  const activeTab: SubTab =
+    tabParam === 'history' ? 'history' : tabParam === 'matched' ? 'matched' : 'import'
+
+  function setActiveTab(tab: SubTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab === 'import') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true }
+    )
+  }
   const [status, setStatus] = useState<ParseStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [parsed, setParsed] = useState<ImportedWorkout[]>([])
