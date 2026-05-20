@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Upload, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fetchProgressionReview, fetchExerciseHistory, fetchMatchedSessions } from '@/api/progression'
+import { fetchHealthSnapshot } from '@/api/health'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
 import { MatchedSessionCard } from './MatchedSessionCard'
 import { useProfileStore } from '@/store/profileStore'
@@ -29,6 +30,7 @@ export function ProgressionTab() {
   const currentProgram = useProgramStore((s) => s.currentProgram)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
+  const initBio = useBioStore((s) => s.init)
 
   const {
     data: review,
@@ -54,6 +56,17 @@ export function ProgressionTab() {
     queryFn:  fetchMatchedSessions,
     staleTime: 5 * 60 * 1000,
   })
+
+  // If sessions references workout IDs not yet in the local store (watch workouts saved
+  // after the initial hydration), re-fetch the health snapshot to sync the store.
+  useEffect(() => {
+    if (!sessions || sessions.length === 0) return
+    const storeIds = new Set(importedWorkouts.map((w) => w.id))
+    const missing = sessions.some((s) => s.importedWorkoutId && !storeIds.has(s.importedWorkoutId))
+    if (missing) {
+      fetchHealthSnapshot().then(initBio).catch(() => {})
+    }
+  }, [sessions, importedWorkouts, initBio])
 
   const findingMap = useMemo(() => {
     const m = new Map<string, ExerciseFinding>()
