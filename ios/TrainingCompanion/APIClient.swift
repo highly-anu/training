@@ -379,7 +379,7 @@ final class APIClient {
             "imported_workout_id": workoutId,
             "user_id":             uid,
             "session_key":         sessionKey,
-            "match_confidence":    1.0,
+            "match_confidence":    "manual",
             "matched_at":          now,
         ]
         try await supabaseUpsert(table: "workout_matches",

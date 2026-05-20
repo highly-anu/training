@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useBioStore } from '@/store/bioStore'
 import type { MatchedSessionSummary } from '@/api/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -49,6 +50,11 @@ export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
   const navigate = useNavigate()
   const { archetype, workout, durationDeltaPct, relevantMetrics } = item
   const dayAbbr = item.dayName.slice(0, 3)
+  const importedWorkout = useBioStore((s) =>
+    item.importedWorkoutId
+      ? s.importedWorkouts.find((w) => w.id === item.importedWorkoutId)
+      : undefined
+  )
 
   // Build metric chips in relevantMetrics order (max 3)
   const chips: { label: string; value: string }[] = []
@@ -73,8 +79,8 @@ export function MatchedSessionCard({ item }: MatchedSessionCardProps) {
     <div
       role="button"
       tabIndex={0}
-      onClick={() => item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`)}
-      onKeyDown={(e) => e.key === 'Enter' && item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`)}
+      onClick={() => item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`, importedWorkout ? { state: { workout: importedWorkout } } : undefined)}
+      onKeyDown={(e) => e.key === 'Enter' && item.importedWorkoutId && navigate(`/import/${encodeURIComponent(item.importedWorkoutId)}`, importedWorkout ? { state: { workout: importedWorkout } } : undefined)}
       className={cn(
         'rounded-xl border border-border/60 bg-card px-4 py-3 space-y-1.5',
         item.importedWorkoutId && 'cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',

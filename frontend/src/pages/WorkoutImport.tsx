@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, type NavigateFunction } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Upload, FileText, CheckCircle2, AlertCircle, X, Link2, ChevronRight, ArrowDownToLine } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -97,7 +97,7 @@ function ImportTab({
   onDrop: (e: React.DragEvent) => void
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   setActivePending: (p: PendingMatch | null) => void
-  navigate: (to: string) => void
+  navigate: NavigateFunction
 }) {
   return (
     <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
@@ -235,7 +235,7 @@ function HistoryTab({
   activePending: PendingMatch | null
   setActivePending: (p: PendingMatch | null) => void
   removeImportedWorkout: (id: string) => void
-  navigate: (to: string) => void
+  navigate: NavigateFunction
 }) {
   if (allImported.length === 0) {
     return (
@@ -342,7 +342,7 @@ function MatchedTab({
   workoutMatches: { importedWorkoutId: string; sessionKey: string; matchConfidence: string }[]
   importedWorkouts: ImportedWorkout[]
   currentProgram: GeneratedProgram | null
-  navigate: (to: string) => void
+  navigate: NavigateFunction
 }) {
   const confirmed = workoutMatches.filter((m) => m.matchConfidence !== 'rejected')
 

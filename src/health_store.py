@@ -95,9 +95,19 @@ def get_workout(user_id: str, workout_id: str) -> dict | None:
                     (workout_id, user_id),
                 )
                 row = cur.fetchone()
-        return _row_to_workout(row) if row else None
-    except RuntimeError:
-        return None
+        if row:
+            return _row_to_workout(row)
+    except Exception:
+        pass
+    # Fallback: linear scan of all user workouts — handles cases where the exact
+    # id = %s comparison silently fails (observed with apple_watch_live IDs in prod).
+    try:
+        for w in get_workouts(user_id):
+            if w.get('id') == workout_id:
+                return w
+    except Exception:
+        pass
+    return None
 
 
 def get_workouts(user_id: str) -> list[dict]:
