@@ -96,7 +96,7 @@ def get_workout(user_id: str, workout_id: str) -> dict | None:
                 )
                 row = cur.fetchone()
         return _row_to_workout(row) if row else None
-    except RuntimeError:
+    except Exception:
         return None
 
 
