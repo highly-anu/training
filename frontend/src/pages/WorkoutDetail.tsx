@@ -210,20 +210,25 @@ export function WorkoutDetail() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
         exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-        className="p-6"
+        className="flex h-full flex-col"
       >
-        <Button variant="ghost" size="sm" onClick={() => navigate('/import')}>
-          <ChevronLeft className="size-4 mr-1" />
-          Back
-        </Button>
-        {fetchLoading ? (
-          <div className="flex items-center gap-2 mt-4">
-            <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm text-muted-foreground">Loading workout…</p>
+        <div className="border-b bg-card/50 px-6 py-3">
+          <Button variant="ghost" size="sm" className="-ml-2" onClick={() => navigate(-1)}>
+            <ChevronLeft className="size-4" /> Back
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl mx-auto w-full px-6 py-6">
+            {fetchLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground">Loading workout…</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Workout not found.</p>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground mt-4">Workout not found.</p>
-        )}
+        </div>
       </motion.div>
     )
   }
@@ -263,13 +268,18 @@ export function WorkoutDetail() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-      className="h-full overflow-y-auto p-6 space-y-6 max-w-2xl"
+      className="flex h-full flex-col"
     >
-      {/* Back button */}
-      <Button variant="ghost" size="sm" onClick={() => navigate('/import')}>
-        <ChevronLeft className="size-4 mr-1" />
-        Back to Import
-      </Button>
+      {/* Sticky nav bar */}
+      <div className="border-b bg-card/50 px-6 py-3 shrink-0">
+        <Button variant="ghost" size="sm" className="-ml-2" onClick={() => navigate(-1)}>
+          <ChevronLeft className="size-4" /> Back
+        </Button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto w-full px-6 py-6 space-y-6">
 
       {/* Header */}
       <div className="space-y-2">
@@ -472,6 +482,9 @@ export function WorkoutDetail() {
 
       {/* Manual link dialog */}
       <MatchConfirmDialog match={linkPending} onClose={() => setLinkPending(null)} />
+
+        </div>{/* max-w-2xl */}
+      </div>{/* overflow-y-auto */}
     </motion.div>
   )
 }
