@@ -119,6 +119,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
                   {matchedWorkout && (
                     <Link
                       to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
+                      state={{ workout: matchedWorkout }}
                       className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
                     >
                       <Activity className="size-3" />

@@ -135,6 +135,7 @@ export function SessionDetail() {
                   {sessionMatchedWorkout && (
                     <Link
                       to={`/import/${encodeURIComponent(sessionMatchedWorkout.id)}`}
+                      state={{ workout: sessionMatchedWorkout }}
                       className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
                     >
                       <Activity className="size-3.5" />

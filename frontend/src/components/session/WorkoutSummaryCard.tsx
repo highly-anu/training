@@ -250,6 +250,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
           </Badge>
           <Link
             to={`/import/${encodeURIComponent(matched.id)}`}
+            state={{ workout: matched }}
             className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5"
           >
             <ExternalLink className="size-3" />

@@ -1,5 +1,5 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -116,11 +116,16 @@ export function WorkoutDetail() {
   const { workoutId: rawWorkoutId } = useParams<{ workoutId: string }>()
   const workoutId = rawWorkoutId ? decodeURIComponent(rawWorkoutId) : undefined
   const navigate = useNavigate()
+  const location = useLocation()
+  // Navigation state carries the full object when coming from an in-app link,
+  // avoiding any store hydration race or backend-save failure for client-parsed workouts.
+  const stateWorkout = (location.state as { workout?: ImportedWorkout } | null)?.workout
+
   const localWorkout = useBioStore((s) =>
-    workoutId ? s.importedWorkouts.find((w) => w.id === workoutId) : undefined
+    workoutId && !stateWorkout ? s.importedWorkouts.find((w) => w.id === workoutId) : undefined
   ) as ImportedWorkout | undefined
 
-  // Fallback: fetch from backend if not yet in local store (e.g. direct URL load)
+  // Fallback: fetch from backend only when neither state nor local store has the workout
   const { data: fetchedWorkout, isLoading: fetchLoading } = useQuery<ImportedWorkout | null>({
     queryKey: ['workout', workoutId],
     queryFn: async () => {
@@ -131,11 +136,11 @@ export function WorkoutDetail() {
         return null
       }
     },
-    enabled: !localWorkout && !!workoutId,
+    enabled: !stateWorkout && !localWorkout && !!workoutId,
     staleTime: 5 * 60 * 1000,
   })
 
-  const workout = localWorkout ?? fetchedWorkout ?? undefined
+  const workout = stateWorkout ?? localWorkout ?? fetchedWorkout ?? undefined
 
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
