@@ -268,6 +268,22 @@ export function WorkoutDetail() {
   const hasSamples = (workout.heartRate.samples?.length ?? 0) > 1
   const hasAltitude = workout.gpsTrack?.some(p => p.altitude != null) ?? false
 
+  const gpsElevation = useMemo(() => {
+    if (!hasAltitude) return null
+    let gain = 0, loss = 0, prev: number | null = null
+    for (const p of workout.gpsTrack!) {
+      const alt = p.altitude
+      if (alt == null) continue
+      if (prev !== null) {
+        const diff = alt - prev
+        if (diff >= 1) gain += diff
+        else if (diff <= -1) loss += Math.abs(diff)
+      }
+      prev = alt
+    }
+    return { gain: Math.round(gain), loss: Math.round(loss) }
+  }, [hasAltitude, workout.gpsTrack])
+
   const rawEntries = Object.entries(workout.rawData).filter(
     ([, v]) => v != null && v !== '' && v !== 0
   )
@@ -391,19 +407,24 @@ export function WorkoutDetail() {
             sub={pace ?? undefined}
           />
         )}
-        {(workout.elevation?.gain ?? 0) > 0 && (
-          <StatCard
-            icon={TrendingUp}
-            label="Climbed"
-            value={`+${workout.elevation!.gain} m`}
-          />
-        )}
-        {(workout.elevation?.loss ?? 0) > 0 && (
-          <StatCard
-            icon={TrendingDown}
-            label="Descended"
-            value={`-${workout.elevation!.loss} m`}
-          />
+        {gpsElevation ? (
+          <>
+            {gpsElevation.gain > 0 && (
+              <StatCard icon={TrendingUp} label="Ascended" value={`${gpsElevation.gain} m`} />
+            )}
+            {gpsElevation.loss > 0 && (
+              <StatCard icon={TrendingDown} label="Descended" value={`${gpsElevation.loss} m`} />
+            )}
+          </>
+        ) : (
+          <>
+            {(workout.elevation?.gain ?? 0) > 0 && (
+              <StatCard icon={TrendingUp} label="Ascended" value={`${workout.elevation!.gain} m`} />
+            )}
+            {(workout.elevation?.loss ?? 0) > 0 && (
+              <StatCard icon={TrendingDown} label="Descended" value={`${workout.elevation!.loss} m`} />
+            )}
+          </>
         )}
         {workout.heartRate.max != null && workout.heartRate.avg == null && (
           <StatCard
