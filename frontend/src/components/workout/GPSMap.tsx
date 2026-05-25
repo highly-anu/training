@@ -84,7 +84,7 @@ export function GPSMap({ track, maxHR = 190, className }: GPSMapProps) {
   const end = track[track.length - 1]
 
   return (
-    <div className={`rounded-lg overflow-hidden border border-border ${className ?? ''}`} style={className ? undefined : { height: 360 }}>
+    <div className={`rounded-lg overflow-hidden border border-border isolate ${className ?? ''}`} style={className ? undefined : { height: 360 }}>
       <MapContainer
         center={[start.lat, start.lng]}
         zoom={13}
