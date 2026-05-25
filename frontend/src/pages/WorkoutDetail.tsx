@@ -9,7 +9,8 @@ import {
   Heart,
   MapPin,
   Activity,
-  Mountain,
+  TrendingUp,
+  TrendingDown,
   CheckCircle2,
   Info,
   AlertTriangle,
@@ -36,6 +37,9 @@ import type { ImportedWorkout, InsightItem, PendingMatch } from '@/api/types'
 // Lazy-load Leaflet map (heavy dependency)
 const GPSMap = lazy(() =>
   import('@/components/workout/GPSMap').then((m) => ({ default: m.GPSMap }))
+)
+const ElevationChart = lazy(() =>
+  import('@/components/workout/ElevationChart').then((m) => ({ default: m.ElevationChart }))
 )
 
 const SEVERITY_STYLES = {
@@ -262,6 +266,7 @@ export function WorkoutDetail() {
 
   const hasGPS = workout.gpsTrack && workout.gpsTrack.length > 1
   const hasSamples = (workout.heartRate.samples?.length ?? 0) > 1
+  const hasAltitude = workout.gpsTrack?.some(p => p.altitude != null) ?? false
 
   const rawEntries = Object.entries(workout.rawData).filter(
     ([, v]) => v != null && v !== '' && v !== 0
@@ -386,12 +391,18 @@ export function WorkoutDetail() {
             sub={pace ?? undefined}
           />
         )}
-        {workout.elevation && (
+        {(workout.elevation?.gain ?? 0) > 0 && (
           <StatCard
-            icon={Mountain}
-            label="Elevation"
-            value={`+${workout.elevation.gain} m`}
-            sub={`-${workout.elevation.loss} m`}
+            icon={TrendingUp}
+            label="Climbed"
+            value={`+${workout.elevation!.gain} m`}
+          />
+        )}
+        {(workout.elevation?.loss ?? 0) > 0 && (
+          <StatCard
+            icon={TrendingDown}
+            label="Descended"
+            value={`-${workout.elevation!.loss} m`}
           />
         )}
         {workout.heartRate.max != null && workout.heartRate.avg == null && (
@@ -440,6 +451,21 @@ export function WorkoutDetail() {
               avgHR={workout.heartRate.avg}
               maxHR={maxHR}
             />
+          </div>
+        </>
+      )}
+
+      {/* Elevation Profile */}
+      {hasAltitude && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Elevation Profile
+            </h2>
+            <Suspense fallback={<div className="h-[120px] rounded-lg bg-muted/20" />}>
+              <ElevationChart track={workout.gpsTrack!} />
+            </Suspense>
           </div>
         </>
       )}

@@ -1095,6 +1095,23 @@ def strava_sync():
     return jsonify({'activities': activities, 'count': len(activities)})
 
 
+def _calc_elevation(points: list, noise_floor: float = 1.0) -> tuple[float, float]:
+    gain = loss = 0.0
+    prev = None
+    for p in points:
+        alt = p.get('altitude')
+        if alt is None:
+            continue
+        if prev is not None:
+            diff = alt - prev
+            if diff >= noise_floor:
+                gain += diff
+            elif diff <= -noise_floor:
+                loss += abs(diff)
+        prev = alt
+    return gain, loss
+
+
 def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> list:
     """Remove sensor lock-on artifacts and smooth outliers from HR sample lists.
 
@@ -1323,6 +1340,8 @@ def parse_workout_file():
                 },
                 'calories': round(kj * 0.239) if kj else None,
                 'distance': {'value': round(dist / 1000, 3), 'unit': 'km'} if dist else None,
+                'elevation': {'gain': round(float(a['total_elevation_gain'])), 'loss': 0}
+                             if a.get('total_elevation_gain') else None,
                 'rawData': {},
             })
         return jsonify(results)
@@ -1429,19 +1448,15 @@ def parse_workout_file():
                 calories = session.get_value('total_calories')
                 dist_m   = session.get_value('total_distance')  # meters
 
-                # Elevation gain/loss from records
-                elev_gain = 0.0
-                elev_loss = 0.0
-                prev_alt = None
-                for pt in gps_track:
-                    if pt['altitude'] is not None:
-                        if prev_alt is not None:
-                            diff = pt['altitude'] - prev_alt
-                            if diff > 0:
-                                elev_gain += diff
-                            else:
-                                elev_loss += abs(diff)
-                        prev_alt = pt['altitude']
+                # Elevation: prefer device-computed session totals (barometric altimeter),
+                # fall back to cumulative point-to-point over all altitude records.
+                total_ascent  = session.get_value('total_ascent')
+                total_descent = session.get_value('total_descent')
+                if total_ascent is not None or total_descent is not None:
+                    elev_gain = float(total_ascent  or 0)
+                    elev_loss = float(total_descent or 0)
+                else:
+                    elev_gain, elev_loss = _calc_elevation(records)
 
                 # Use sub_sport for display when it adds meaning
                 display_type = (
@@ -1696,6 +1711,15 @@ def health_upsert_workouts():
     workouts = body.get('workouts', [])
     if not isinstance(workouts, list):
         return jsonify({'detail': 'workouts must be an array'}), 400
+    # Enrich elevation from GPS track altitude when the client only sent gain (loss=0).
+    # Apple Watch live workouts always arrive with loss=0; recalculate from track altitude.
+    for workout in workouts:
+        gps = workout.get('gpsTrack') or []
+        elev = workout.get('elevation') or {}
+        if any(p.get('altitude') is not None for p in gps) and elev.get('loss', 0) == 0:
+            gain, loss = _calc_elevation(gps)
+            if gain or loss:
+                workout['elevation'] = {'gain': round(gain), 'loss': round(loss)}
     _health.upsert_workouts(g.user_id, workouts)
     return jsonify({'saved': len(workouts)})
 
