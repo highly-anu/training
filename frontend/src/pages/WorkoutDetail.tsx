@@ -34,12 +34,15 @@ import { useCurrentProgram } from '@/api/programs'
 import { apiClient } from '@/api/client'
 import type { ImportedWorkout, InsightItem, PendingMatch } from '@/api/types'
 
-// Lazy-load Leaflet map (heavy dependency)
+// Lazy-load map dependencies (Leaflet + CesiumJS are heavy)
 const GPSMap = lazy(() =>
   import('@/components/workout/GPSMap').then((m) => ({ default: m.GPSMap }))
 )
 const ElevationChart = lazy(() =>
   import('@/components/workout/ElevationChart').then((m) => ({ default: m.ElevationChart }))
+)
+const Swiss3DMap = lazy(() =>
+  import('@/components/workout/Swiss3DMap').then((m) => ({ default: m.Swiss3DMap }))
 )
 
 const SEVERITY_STYLES = {
@@ -150,6 +153,7 @@ export function WorkoutDetail() {
   const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
 
   const [linkPending, setLinkPending] = useState<PendingMatch | null>(null)
+  const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d')
   const programStartDate = useProgramStore((s) => s.programStartDate)
 
   const perfLogs = useBioStore((s) => s.sessionPerformanceLogs)
@@ -268,6 +272,11 @@ export function WorkoutDetail() {
   const hasSamples = (workout.heartRate.samples?.length ?? 0) > 1
   const hasAltitude = workout.gpsTrack?.some(p => p.altitude != null) ?? false
 
+  // Swiss bounding box — mirrors iOS isInSwitzerland check
+  const isSwiss = hasGPS
+    && workout.gpsTrack![0].lat >= 45.8 && workout.gpsTrack![0].lat <= 47.8
+    && workout.gpsTrack![0].lng >= 5.9   && workout.gpsTrack![0].lng <= 10.5
+
   const gpsElevation = useMemo(() => {
     if (!hasAltitude) return null
     let gain = 0, loss = 0, prev: number | null = null
@@ -348,9 +357,27 @@ export function WorkoutDetail() {
       {/* GPS Map */}
       {hasGPS && (
         <div className="space-y-2">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Route
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Route
+            </h2>
+            {isSwiss && (
+              <div className="flex items-center gap-1 rounded-md bg-muted p-0.5">
+                <button
+                  onClick={() => setMapMode('2d')}
+                  className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${mapMode === '2d' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  2D
+                </button>
+                <button
+                  onClick={() => setMapMode('3d')}
+                  className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${mapMode === '3d' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  3D
+                </button>
+              </div>
+            )}
+          </div>
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-[360px] rounded-lg border border-border bg-muted/20">
@@ -358,15 +385,18 @@ export function WorkoutDetail() {
               </div>
             }
           >
-            <GPSMap
-              track={workout.gpsTrack!}
-              maxHR={maxHR}
-            />
+            {isSwiss && mapMode === '3d' ? (
+              <Swiss3DMap track={workout.gpsTrack!} />
+            ) : (
+              <GPSMap track={workout.gpsTrack!} maxHR={maxHR} />
+            )}
           </Suspense>
           <div className="flex gap-4 text-[10px] text-muted-foreground">
             <span><span className="inline-block w-3 h-0.5 rounded bg-[#22c55e] align-middle mr-1" />Start</span>
             <span><span className="inline-block w-3 h-0.5 rounded bg-[#ef4444] align-middle mr-1" />End</span>
-            <span className="ml-auto">Track colored by HR zone</span>
+            <span className="ml-auto">
+              {isSwiss && mapMode === '3d' ? 'swisstopo 3D terrain · © OpenStreetMap' : 'Track colored by HR zone'}
+            </span>
           </div>
         </div>
       )}
