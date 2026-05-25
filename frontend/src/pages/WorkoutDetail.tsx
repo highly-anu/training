@@ -395,7 +395,7 @@ export function WorkoutDetail() {
             <span><span className="inline-block w-3 h-0.5 rounded bg-[#22c55e] align-middle mr-1" />Start</span>
             <span><span className="inline-block w-3 h-0.5 rounded bg-[#ef4444] align-middle mr-1" />End</span>
             <span className="ml-auto">
-              {isSwiss && mapMode === '3d' ? 'swisstopo 3D terrain · © OpenStreetMap' : 'Track colored by HR zone'}
+              {isSwiss && mapMode === '3d' ? '3D terrain · © OpenStreetMap' : 'Track colored by HR zone'}
             </span>
           </div>
         </div>

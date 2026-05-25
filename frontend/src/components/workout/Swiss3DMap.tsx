@@ -97,11 +97,12 @@ export function Swiss3DMap({ track, className }: Swiss3DMapProps) {
           )
         )
 
-        // Load swisstopo quantized-mesh terrain with fallback to ellipsoid
+        // ArcGIS World Elevation — CORS-enabled, no API key, good Swiss coverage.
+        // swisstopo's own terrain endpoint (3d.geo.admin.ch) blocks browser requests
+        // with 403 due to cross-origin policy; the iOS app bypasses CORS as a native client.
         try {
-          const terrain = await Cesium.CesiumTerrainProvider.fromUrl(
-            'https://3d.geo.admin.ch/1.0.0/ch.swisstopo.terrain.3d/default/20200520/4326/',
-            { requestVertexNormals: true }
+          const terrain = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+            'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer'
           )
           if (!destroyed) viewer.terrainProvider = terrain
         } catch {
