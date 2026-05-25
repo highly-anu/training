@@ -738,5 +738,34 @@ export function computeDevelopmentTrends(
     }
   }
 
+  // 4. Weekly vertical meters (elevation gain across all imported workouts with GPS)
+  const elevWorkouts = allWorkouts.filter(w => (w.elevation?.gain ?? 0) > 0)
+  if (elevWorkouts.length > 0) {
+    // Group by Monday-anchored calendar week using epoch days (no date-fns needed)
+    const byWeek = new Map<number, number>()
+    for (const w of elevWorkouts) {
+      const epochDay = Math.floor(new Date(w.date).getTime() / 86400000)
+      const weekKey = Math.floor((epochDay + 3) / 7) // epoch weeks start ~Thursday; +3 shifts to Monday
+      byWeek.set(weekKey, (byWeek.get(weekKey) ?? 0) + w.elevation!.gain)
+    }
+    const sortedWeeks = [...byWeek.entries()].sort(([a], [b]) => a - b)
+    if (sortedWeeks.length >= 2) {
+      const dataPoints = sortedWeeks.map(([, value], i) => ({ weekNumber: i + 1, value }))
+      const dir = trendDirection(dataPoints.map(p => p.value))
+      trends.push({
+        metric: 'vertical',
+        label: 'Weekly Vertical',
+        dataPoints,
+        direction: dir,
+        detail:
+          dir === 'improving'
+            ? 'Weekly elevation gain is increasing — more vertical load each week.'
+            : dir === 'declining'
+              ? 'Weekly elevation gain is decreasing.'
+              : 'Weekly vertical load has been consistent.',
+      })
+    }
+  }
+
   return trends
 }

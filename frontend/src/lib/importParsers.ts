@@ -242,6 +242,9 @@ export function parseStravaJson(json: unknown): ImportedWorkout[] {
         },
         calories: a.kilojoules ? Math.round(a.kilojoules * 0.239) : undefined,
         distance,
+        elevation: a.total_elevation_gain != null
+          ? { gain: Math.round(a.total_elevation_gain), loss: 0 }
+          : undefined,
         rawData: {},
       }
     })

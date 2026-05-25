@@ -347,6 +347,8 @@ export interface WeekVolumeSummary {
   dur_minutes: number
   mob_minutes: number
   total_minutes: number
+  elevation_gain_m?: number
+  elevation_loss_m?: number
 }
 
 export interface WeekData {
