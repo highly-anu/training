@@ -9,7 +9,6 @@ import {
   YAxis,
   Tooltip,
   ReferenceLine,
-  Legend,
 } from 'recharts'
 import { parseISO, format } from 'date-fns'
 import { fetchPMC } from '@/api/userdata'

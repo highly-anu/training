@@ -99,6 +99,7 @@ function TabSelector({
 
 function ImportTab({
   status,
+  parseProgress,
   errorMsg,
   parsed,
   duplicateCount,
@@ -113,6 +114,7 @@ function ImportTab({
   navigate,
 }: {
   status: ParseStatus
+  parseProgress: { progress: number; stage: string } | null
   errorMsg: string
   parsed: ImportedWorkout[]
   duplicateCount: number
@@ -678,6 +680,7 @@ export function WorkoutImport() {
         {activeTab === 'import' && (
           <ImportTab
             status={status}
+            parseProgress={parseProgress}
             errorMsg={errorMsg}
             parsed={parsed}
             duplicateCount={duplicateCount}

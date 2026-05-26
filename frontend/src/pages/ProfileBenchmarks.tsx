@@ -14,7 +14,7 @@ import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import type { Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
+import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -556,7 +556,7 @@ function HRSettingsOverview() {
   const formulaMax = maxHRFromDOB(dob)
   const effectiveMax = getEffectiveMaxHR(dob, hrConfig.maxHROverride ?? undefined)
   const boundaries = hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES
-  const bpmBounds = zoneBoundariesToBpm(effectiveMax, boundaries)
+  void boundaries // used via localBoundaries below
 
   // Observed max from workout history
   const observedMax = importedWorkouts.reduce((best, w) => {

@@ -10,7 +10,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts'
-import { parseISO, startOfISOWeek, format, addDays } from 'date-fns'
+import { startOfISOWeek, format, addDays } from 'date-fns'
 import { fetchWeeklyLoad } from '@/api/userdata'
 import type { WeeklyLoad } from '@/api/types'
 
