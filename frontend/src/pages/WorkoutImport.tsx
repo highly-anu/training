@@ -12,7 +12,34 @@ import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
+import { supabase } from '@/lib/supabase'
 import type { ImportedWorkout, PendingMatch, GeneratedProgram } from '@/api/types'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api'
+
+async function getAuthHeader(): Promise<Record<string, string>> {
+  if (!supabase) return {}
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+}
+
+async function pollParseJob(
+  jobId: string,
+  onProgress: (progress: number, stage: string) => void,
+  authHeader: Record<string, string>
+): Promise<ImportedWorkout[]> {
+  const MAX_POLLS = 600  // 10 minutes at 1s intervals
+  for (let i = 0; i < MAX_POLLS; i++) {
+    await new Promise<void>((r) => setTimeout(r, 1000))
+    const res = await fetch(`${API_BASE}/workouts/parse/status/${jobId}`, { headers: authHeader })
+    if (!res.ok) throw new Error('Failed to check parse status')
+    const status = await res.json()
+    onProgress(status.progress ?? 0, status.stage ?? 'Processing…')
+    if (status.status === 'done') return status.result ?? []
+    if (status.status === 'error') throw new Error(status.error ?? 'Parse failed')
+  }
+  throw new Error('Import timed out after 10 minutes')
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -132,9 +159,19 @@ function ImportTab({
 
       {/* Parse status */}
       {status === 'parsing' && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          Parsing file…
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+            <span>{parseProgress?.stage ?? 'Parsing file…'}</span>
+          </div>
+          {parseProgress && parseProgress.progress > 0 && (
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${Math.round(parseProgress.progress * 100)}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
       {status === 'done' && (
@@ -481,6 +518,7 @@ export function WorkoutImport() {
   const [status, setStatus] = useState<ParseStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [parsed, setParsed] = useState<ImportedWorkout[]>([])
+  const [parseProgress, setParseProgress] = useState<{ progress: number; stage: string } | null>(null)
   const [activePending, setActivePending] = useState<PendingMatch | null>(null)
   const [linkedSuccess, setLinkedSuccess] = useState<string | null>(null)
   const [duplicateCount, setDuplicateCount] = useState(0)
@@ -507,16 +545,26 @@ export function WorkoutImport() {
   async function processFile(file: File) {
     setStatus('parsing')
     setErrorMsg('')
+    setParseProgress(null)
     try {
       let workouts: ImportedWorkout[] = []
 
       if (file.name.endsWith('.xml')) {
         if (file.size > 50 * 1024 * 1024) {
+          const authHeader = await getAuthHeader()
           const fd = new FormData()
           fd.append('workout_file', file)
-          const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
-          if (!res.ok) throw new Error('Server parse failed')
-          workouts = await res.json()
+          setParseProgress({ progress: 0, stage: 'Uploading file…' })
+          const submitRes = await fetch(`${API_BASE}/workouts/parse/async`, {
+            method: 'POST',
+            body: fd,
+            headers: authHeader,
+          })
+          if (!submitRes.ok) throw new Error('Server parse failed')
+          const { jobId } = await submitRes.json()
+          workouts = await pollParseJob(jobId, (progress, stage) => {
+            setParseProgress({ progress, stage })
+          }, authHeader)
         } else {
           const text = await file.text()
           workouts = parseAppleHealthXml(text)

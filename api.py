@@ -1142,6 +1142,12 @@ def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> lis
     if not parsed:
         return samples
 
+    # Filter physiologically impossible readings (sensor dropout or overflow artifacts)
+    parsed = [(ts, bpm, iso) for ts, bpm, iso in parsed if 30 <= bpm <= 250]
+
+    if not parsed:
+        return samples
+
     # 1 — Startup trim: drop all leading readings below threshold until HR first
     #     stabilises at exercise level. Handles cold-start lag of any duration
     #     (Apple Watch can take 3-5 min to lock on). Guard: never trim > 5 min.
@@ -1497,6 +1503,178 @@ def parse_workout_file():
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
 
 
+# ---------------------------------------------------------------------------
+# Async parse endpoints (for large Apple Health XML exports > 50 MB)
+# ---------------------------------------------------------------------------
+
+import threading as _threading
+import time as _time
+
+_parse_jobs: dict[str, dict] = {}
+_parse_jobs_lock = _threading.Lock()
+
+_JOB_TTL_SECONDS = 3600  # prune jobs older than 1 hour
+
+
+def _prune_parse_jobs():
+    now = _time.time()
+    with _parse_jobs_lock:
+        expired = [jid for jid, j in _parse_jobs.items() if now - j['created_at'] > _JOB_TTL_SECONDS]
+        for jid in expired:
+            del _parse_jobs[jid]
+
+
+def _set_job(job_id: str, **kwargs):
+    with _parse_jobs_lock:
+        _parse_jobs[job_id].update(kwargs)
+
+
+@app.post('/api/workouts/parse/async')
+@require_auth
+def parse_workout_file_async():
+    """Submit a large workout file for background parsing.
+    Returns {jobId} immediately; poll /api/workouts/parse/status/<jobId> for progress.
+    NOTE: _parse_jobs is per-process. On multi-worker deployments a poll may hit a
+    different worker. Acceptable trade-off for large-file imports.
+    """
+    import uuid as _uuid
+
+    _prune_parse_jobs()
+
+    f = request.files.get('workout_file')
+    if not f:
+        return jsonify({'detail': 'workout_file field required'}), 400
+
+    # Read file bytes and metadata in the request thread (not safe after request ends)
+    file_bytes = f.read()
+    filename = (f.filename or '').lower()
+    user_id = g.user_id   # capture — g is not available in the background thread
+
+    job_id = str(_uuid.uuid4())
+    with _parse_jobs_lock:
+        _parse_jobs[job_id] = {
+            'status': 'queued',
+            'progress': 0.0,
+            'stage': 'Queued',
+            'result': None,
+            'error': None,
+            'created_at': _time.time(),
+        }
+
+    def _run():
+        import xml.etree.ElementTree as ET
+        try:
+            _set_job(job_id, status='parsing', stage='Reading file…', progress=0.02)
+
+            if filename.endswith('.xml'):
+                # ── Apple Health XML parse ────────────────────────────────────
+                _set_job(job_id, stage='Parsing XML…', progress=0.05)
+                root = ET.fromstring(file_bytes.decode('utf-8', errors='replace'))
+                workouts_xml = root.findall('Workout')
+                total = len(workouts_xml)
+
+                results = []
+                for idx, wo in enumerate(workouts_xml):
+                    if idx % 500 == 0 and total > 0:
+                        pct = 0.10 + (idx / total) * 0.65
+                        _set_job(job_id, progress=round(pct, 3),
+                                 stage=f'Parsing workouts… ({idx}/{total})')
+
+                    # Minimal re-use of the sync parser logic (inline to avoid import complexity)
+                    import re as _re
+                    act_type = wo.get('workoutActivityType', '')
+                    start_str = wo.get('startDate', '')
+                    end_str = wo.get('endDate', '')
+                    if not start_str or not end_str:
+                        continue
+                    from datetime import datetime, timezone as _tz
+                    try:
+                        start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
+                        end_dt = datetime.fromisoformat(end_str.replace('Z', '+00:00'))
+                    except Exception:
+                        continue
+                    duration_min = round((end_dt - start_dt).total_seconds() / 60, 1)
+                    import hashlib as _hashlib
+                    wo_id = 'ah_' + _hashlib.md5(f'{start_str}{act_type}'.encode()).hexdigest()[:12]
+
+                    # HR stats
+                    hr_avg = hr_max = hr_min = None
+                    hr_samples_raw = []
+                    for stat in wo.findall('WorkoutStatistics'):
+                        if stat.get('type') == 'HKQuantityTypeIdentifierHeartRate':
+                            try:
+                                hr_avg  = float(stat.get('average', 0)) or None
+                                hr_max  = float(stat.get('maximum', 0)) or None
+                                hr_min  = float(stat.get('minimum', 0)) or None
+                            except Exception:
+                                pass
+                    for rec in wo.findall('WorkoutEvent'):
+                        pass  # events don't carry HR samples; HR samples live in root records
+
+                    calories = None
+                    distance_m = None
+                    for stat in wo.findall('WorkoutStatistics'):
+                        t = stat.get('type', '')
+                        try:
+                            if 'ActiveEnergyBurned' in t:
+                                calories = float(stat.get('sum', 0)) or None
+                            elif 'DistanceWalkingRunning' in t or 'DistanceCycling' in t or 'DistanceSwimming' in t:
+                                distance_m = (float(stat.get('sum', 0)) or 0) * 1000  # km → m
+                        except Exception:
+                            pass
+
+                    results.append({
+                        'id':                 wo_id,
+                        'source':             'apple_health',
+                        'date':               start_dt.strftime('%Y-%m-%d'),
+                        'startTime':          start_dt.isoformat(),
+                        'endTime':            end_dt.isoformat(),
+                        'durationMinutes':    duration_min,
+                        'activityType':       act_type,
+                        'inferredModalityId': None,
+                        'heartRate':          {'avg': hr_avg, 'max': hr_max, 'min': hr_min, 'samples': []},
+                        'calories':           calories,
+                        'distance':           {'value': round(distance_m / 1000, 3), 'unit': 'km'} if distance_m else None,
+                        'gpsTrack':           None,
+                        'elevation':          None,
+                        'rawData':            {},
+                    })
+
+                _set_job(job_id, stage='Saving to database…', progress=0.90)
+                if results:
+                    _health.upsert_workouts(user_id, results)
+                _set_job(job_id, status='done', progress=1.0, stage='Done', result=results)
+
+            else:
+                # Unsupported for async path — caller should use sync endpoint
+                _set_job(job_id, status='error', error='Only .xml files support async parsing')
+
+        except Exception as exc:
+            _set_job(job_id, status='error', error=str(exc))
+
+    t = _threading.Thread(target=_run, daemon=True)
+    t.start()
+
+    return jsonify({'jobId': job_id}), 202
+
+
+@app.get('/api/workouts/parse/status/<job_id>')
+@require_auth
+def parse_status(job_id: str):
+    with _parse_jobs_lock:
+        job = _parse_jobs.get(job_id)
+    if job is None:
+        return jsonify({'detail': 'Job not found'}), 404
+    return jsonify({
+        'jobId':    job_id,
+        'status':   job['status'],
+        'progress': job['progress'],
+        'stage':    job['stage'],
+        'error':    job['error'],
+        'result':   job['result'] if job['status'] == 'done' else None,
+    })
+
+
 @app.get('/api/health/workouts/<workout_id>')
 @require_auth
 def health_get_workout(workout_id: str):
@@ -1539,11 +1717,13 @@ def get_profile():
                 'activeGoalId': None,
                 'dateOfBirth': None,
                 'weeklySchedule': None,
+                'hrConfig': {},
             })
         # Sanitize array fields — stored value may be null if client sent null
         profile['equipment'] = profile.get('equipment') or []
         profile['injuryFlags'] = profile.get('injuryFlags') or []
         profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
+        profile.setdefault('hrConfig', {})
         return jsonify(profile)
     except Exception as e:
         app.logger.warning('get_profile error: %s', e)
@@ -1555,6 +1735,7 @@ def get_profile():
             'activeGoalId': None,
             'dateOfBirth': None,
             'weeklySchedule': None,
+            'hrConfig': {},
         })
 
 
@@ -1575,6 +1756,7 @@ def update_profile():
             'activeGoalId': body.get('activeGoalId'),
             'dateOfBirth': body.get('dateOfBirth'),
             'weeklySchedule': body.get('weeklySchedule'),
+            'hrConfig': body.get('hrConfig') or {},
         }
 
         save_user_profile(user_id, profile_data)
@@ -1881,19 +2063,24 @@ def _score_fatigue(session_dict: dict, flags: list[str]) -> int:
     return 15
 
 
-def _compute_readiness(bio_list: list[dict], session_dict: dict) -> dict:
+def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | None = None) -> dict:
     flags: list[str] = []
     rhr     = _score_rhr(bio_list, flags)
     hrv     = _score_hrv(bio_list, flags)
-    sleep   = _score_sleep(bio_list, flags)
-    fatigue = _score_fatigue(session_dict, flags)
-    score = min(100, max(0, rhr + hrv + sleep + fatigue))
+    sleep   = _score_sleep(bio_list, flags)      # capped at 10 (was 15)
+    fatigue = _score_fatigue(session_dict, flags)  # capped at 10 (was 15)
+    tsb     = _score_tsb(user_id, flags) if user_id else 5
+    # Rebalance sleep and fatigue to cap at 10 each (original scoring goes to 15/15;
+    # clamp here so total remains 100: rhr(35) + hrv(35) + sleep(10) + fatigue(10) + tsb(10)
+    sleep   = min(sleep, 10)
+    fatigue = min(fatigue, 10)
+    score = min(100, max(0, rhr + hrv + sleep + fatigue + tsb))
     status = 'green' if score >= 70 else 'yellow' if score >= 45 else 'red'
     return {
         'score':      score,
         'status':     status,
         'flags':      flags,
-        'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue},
+        'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue, 'tsb': tsb},
     }
 
 
@@ -1902,7 +2089,198 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict) -> dict:
 def health_readiness():
     bio_list     = _health.get_recent_bio_logs(g.user_id, days=14)
     session_dict = _health.get_session_logs(g.user_id)
-    return jsonify(_compute_readiness(bio_list, session_dict))
+    return jsonify(_compute_readiness(bio_list, session_dict, user_id=g.user_id))
+
+
+# ---------------------------------------------------------------------------
+# Training Load helpers (shared by /load/weekly and /load/pmc)
+# ---------------------------------------------------------------------------
+
+_BANISTER_WEIGHTS = [1.0, 1.5, 2.0, 3.0, 4.5]
+_DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
+
+
+def _get_user_max_hr(user_id: str) -> int:
+    """Return user's max HR from hrConfig override, or 190 as default."""
+    try:
+        from src.db import get_user_profile
+        profile = get_user_profile(user_id) or {}
+        hr_config = profile.get('hrConfig') or {}
+        override = hr_config.get('maxHROverride')
+        if override and int(override) > 0:
+            return int(override)
+    except Exception:
+        pass
+    return 190
+
+
+def _calc_workout_trimp(workout: dict, max_hr: int = 190) -> float:
+    """Compute TRIMP for a single workout using Banister zone-minute weights."""
+    from statistics import median as _median
+
+    duration_min = workout.get('durationMinutes') or 0
+    if duration_min <= 0:
+        return 0.0
+
+    hr_data = workout.get('heartRate') or {}
+    samples = hr_data.get('samples') or []
+    boundaries = _DEFAULT_ZONE_BOUNDARIES
+
+    def _assign_zone(bpm: float) -> int:
+        pct = bpm / max_hr
+        for i, b in enumerate(boundaries):
+            if pct < b:
+                return i
+        return 4
+
+    if len(samples) >= 2:
+        try:
+            sorted_samples = sorted(samples, key=lambda s: s['timestamp'])
+            zone_times = [0.0] * 5
+            total = 0.0
+            for i in range(len(sorted_samples) - 1):
+                from datetime import datetime, timezone as _tz
+                tA = datetime.fromisoformat(sorted_samples[i]['timestamp'].replace('Z', '+00:00')).timestamp()
+                tB = datetime.fromisoformat(sorted_samples[i + 1]['timestamp'].replace('Z', '+00:00')).timestamp()
+                interval = min((tB - tA), 60.0)
+                if interval <= 0:
+                    continue
+                z = _assign_zone(sorted_samples[i]['bpm'])
+                zone_times[z] += interval
+                total += interval
+            if total > 0:
+                zone_pcts = [t / total for t in zone_times]
+                return sum(pct * duration_min * _BANISTER_WEIGHTS[i] for i, pct in enumerate(zone_pcts))
+        except Exception:
+            pass
+
+    # Fallback: normal distribution estimate from avg/max HR
+    avg_hr = hr_data.get('avg')
+    max_hr_sample = hr_data.get('max')
+    if avg_hr:
+        import math as _math
+        std = max((max_hr_sample or max_hr) - avg_hr, 1) / 2.5
+
+        def _norm_cdf(x: float, mean: float, sigma: float) -> float:
+            return 0.5 * (1.0 + _math.erf((x - mean) / (sigma * _math.sqrt(2))))
+
+        bpm_bounds = [0.0] + [b * max_hr for b in boundaries] + [float('inf')]
+        zone_pcts = []
+        for i in range(5):
+            lo, hi = bpm_bounds[i], bpm_bounds[i + 1]
+            p_lo = 0.0 if lo == 0 else _norm_cdf(lo, avg_hr, std)
+            p_hi = 1.0 if hi == float('inf') else _norm_cdf(hi, avg_hr, std)
+            zone_pcts.append(max(0.0, p_hi - p_lo))
+        total = sum(zone_pcts) or 1.0
+        zone_pcts = [p / total for p in zone_pcts]
+        return sum(pct * duration_min * _BANISTER_WEIGHTS[i] for i, pct in enumerate(zone_pcts))
+
+    return 0.0
+
+
+def _compute_pmc(workouts: list, max_hr: int, days: int = 90) -> list[dict]:
+    """Compute CTL/ATL/TSB Performance Management Chart data."""
+    import math as _math
+    from datetime import date as _date, timedelta as _td
+
+    k_atl = 1 - _math.exp(-1 / 7)
+    k_ctl = 1 - _math.exp(-1 / 42)
+
+    # Build daily TRIMP totals
+    daily_trimp: dict[str, float] = {}
+    for w in workouts:
+        d = str(w.get('date', ''))[:10]
+        if d:
+            daily_trimp[d] = daily_trimp.get(d, 0.0) + _calc_workout_trimp(w, max_hr)
+
+    today = _date.today()
+    start = today - _td(days=days - 1)
+
+    ctl = 0.0
+    atl = 0.0
+    result = []
+    for i in range(days):
+        d = start + _td(days=i)
+        d_str = d.isoformat()
+        tsb = round(ctl - atl, 1)  # form entering today = yesterday's CTL - ATL
+        trimp = daily_trimp.get(d_str, 0.0)
+        atl = atl + (trimp - atl) * k_atl
+        ctl = ctl + (trimp - ctl) * k_ctl
+        result.append({
+            'date':  d_str,
+            'ctl':   round(ctl, 1),
+            'atl':   round(atl, 1),
+            'tsb':   tsb,
+            'trimp': round(trimp, 1),
+        })
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Training Load endpoints
+# ---------------------------------------------------------------------------
+
+@app.get('/api/health/load/weekly')
+@require_auth
+def health_load_weekly():
+    from collections import defaultdict
+    from datetime import date as _date, timedelta as _td
+
+    workouts = _health.get_workouts(g.user_id)
+    max_hr = _get_user_max_hr(g.user_id)
+    cutoff = _date.today() - _td(weeks=12)
+
+    weeks: dict = defaultdict(lambda: {'trimp': 0.0, 'sessions': 0})
+    for w in workouts:
+        try:
+            wo_date = _date.fromisoformat(str(w['date'])[:10])
+        except Exception:
+            continue
+        if wo_date < cutoff:
+            continue
+        iso_cal = wo_date.isocalendar()
+        week_key = f'{iso_cal[0]}-W{iso_cal[1]:02d}'
+        weeks[week_key]['trimp'] += _calc_workout_trimp(w, max_hr)
+        weeks[week_key]['sessions'] += 1
+
+    result = [
+        {'week': k, 'trimp': round(v['trimp']), 'sessions': v['sessions']}
+        for k, v in sorted(weeks.items())
+    ]
+    return jsonify(result)
+
+
+@app.get('/api/health/load/pmc')
+@require_auth
+def health_load_pmc():
+    workouts = _health.get_workouts(g.user_id)
+    max_hr = _get_user_max_hr(g.user_id)
+    return jsonify(_compute_pmc(workouts, max_hr, days=90))
+
+
+# ---------------------------------------------------------------------------
+# TSB component for readiness score
+# ---------------------------------------------------------------------------
+
+def _score_tsb(user_id: str, flags: list[str]) -> int:
+    """Score Training Stress Balance (form) as a readiness component (0–10 pts)."""
+    try:
+        workouts = _health.get_workouts(user_id)
+        max_hr = _get_user_max_hr(user_id)
+        pmc = _compute_pmc(workouts, max_hr, days=14)
+        if not pmc:
+            return 5
+        latest = pmc[-1]
+        tsb = latest['tsb']
+        if tsb < -20:
+            flags.append('overreached')
+            return 0
+        if tsb < -10: return 4
+        if tsb < 0:   return 7
+        if tsb <= 10: return 10
+        return 8  # very positive TSB → fresh but possibly detrained
+    except Exception:
+        return 5
 
 
 @app.errorhandler(Exception)

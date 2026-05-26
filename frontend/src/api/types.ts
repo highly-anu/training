@@ -626,6 +626,7 @@ export interface GPSPoint {
   altitude?: number | null
   timestamp: string // ISO
   bpm?: number | null
+  speed?: number | null // m/s — present in FIT files and Apple Watch live workouts
 }
 
 export interface HRZoneDistribution {
@@ -635,6 +636,11 @@ export interface HRZoneDistribution {
   z4: number
   z5: number
   method: 'samples' | 'summary_estimate'
+}
+
+export interface HRConfig {
+  maxHROverride?: number | null     // user-measured max HR; null/undefined = use 220-age
+  zoneBoundaries?: number[] | null  // 4 upper-boundary fractions [0.60, 0.70, 0.80, 0.90]; null = Friel defaults
 }
 
 export interface ImportedWorkout {
@@ -867,4 +873,30 @@ export interface ProgressionReviewSummary {
   period_type: string
   generated_at: string
   overall_score: number | null
+}
+
+// ─── Training Load ────────────────────────────────────────────────────────────
+
+export interface WeeklyLoad {
+  week: string     // ISO week "2026-W20"
+  trimp: number
+  sessions: number
+}
+
+export interface PMCEntry {
+  date: string     // YYYY-MM-DD
+  ctl: number      // Chronic Training Load (τ = 42 days)
+  atl: number      // Acute Training Load (τ = 7 days)
+  tsb: number      // Training Stress Balance = CTL(yesterday) - ATL(yesterday)
+  trimp: number    // daily TRIMP input
+}
+
+// ─── Async Parse Job ──────────────────────────────────────────────────────────
+
+export interface ParseJobStatus {
+  jobId: string
+  status: 'queued' | 'parsing' | 'done' | 'error'
+  progress: number   // 0.0 – 1.0
+  stage: string
+  error: string | null
 }

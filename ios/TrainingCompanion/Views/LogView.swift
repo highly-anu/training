@@ -488,7 +488,8 @@ struct SessionLogDetailView: View {
                         if !hrSamples.isEmpty {
                             HRTimelineView(samples: hrSamples,
                                            avgHR: matchedWorkout?.heartRate?.avg,
-                                           maxHR: matchedWorkout?.heartRate?.max)
+                                           maxHR: matchedWorkout?.heartRate?.max,
+                                           hrConfig: appState.profile.hrConfig)
                         }
                     case 1:
                         if hasElevation {

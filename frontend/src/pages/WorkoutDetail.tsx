@@ -27,7 +27,7 @@ import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { computeHRZones, maxHRFromDOB } from '@/lib/hrZones'
+import { computeHRZones, computeTRIMP, computeAerobicDecoupling, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import { computeSessionInsight } from '@/lib/sessionAnalysis'
 import { scoreMatch, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useCurrentProgram } from '@/api/programs'
@@ -59,13 +59,30 @@ const SCORE_RING = {
 
 function InsightRow({ item }: { item: InsightItem }) {
   const { icon: Icon, color } = SEVERITY_STYLES[item.severity]
+  const isZoneCompliance = item.key === 'zone_compliance' && item.metric
+  const zoneActualPct = isZoneCompliance ? Math.min(100, parseInt(item.metric!.actual)) : 0
   return (
     <div className="flex gap-2 py-1.5">
       <Icon className={`size-3.5 shrink-0 mt-0.5 ${color}`} />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className={`text-xs font-medium ${color}`}>{item.label}</p>
         <p className="text-[11px] text-muted-foreground">{item.detail}</p>
-        {item.metric && (
+        {isZoneCompliance ? (
+          <div className="mt-1.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>Target: {item.metric!.prescribed}</span>
+              <span className={item.severity === 'positive' ? 'text-emerald-400' : 'text-amber-400'}>
+                {item.metric!.actual} achieved
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${item.severity === 'positive' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                style={{ width: `${zoneActualPct}%` }}
+              />
+            </div>
+          </div>
+        ) : item.metric && (
           <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-mono">
             {item.metric.prescribed} &rarr; {item.metric.actual} {item.metric.unit}
           </p>
@@ -160,7 +177,9 @@ export function WorkoutDetail() {
   const program = useCurrentProgram()
 
   const dob = useProfileStore((s) => s.dateOfBirth ?? null)
-  const maxHR = maxHRFromDOB(dob) ?? 190
+  const hrConfig = useProfileStore((s) => s.hrConfig)
+  const maxHR = getEffectiveMaxHR(dob, hrConfig.maxHROverride ?? undefined)
+  const zoneBoundaries = hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES
 
   // Resolve matched session from program
   // Session keys are "weekNum-DayName-sessionIdx" (per-session) or legacy "weekNum-DayName"
@@ -189,8 +208,18 @@ export function WorkoutDetail() {
     if (!workout) return null
     const samples = workout.heartRate.samples ?? []
     if (samples.length === 0 && workout.heartRate.avg == null) return null
-    return computeHRZones(maxHR, samples, workout.heartRate.avg ?? undefined)
-  }, [workout, maxHR])
+    return computeHRZones(maxHR, samples, workout.heartRate.avg ?? undefined, zoneBoundaries)
+  }, [workout, maxHR, zoneBoundaries])
+
+  const trimp = useMemo(() => {
+    if (!hrZones || !workout) return null
+    return computeTRIMP(hrZones, workout.durationMinutes)
+  }, [hrZones, workout])
+
+  const decoupling = useMemo(() => {
+    if (!workout?.gpsTrack?.length || !workout?.heartRate?.samples?.length) return null
+    return computeAerobicDecoupling(workout.gpsTrack, workout.heartRate.samples)
+  }, [workout])
 
   function handleManualLink() {
     if (!workout || !program || !programStartDate) return
@@ -388,7 +417,7 @@ export function WorkoutDetail() {
             {isSwiss && mapMode === '3d' ? (
               <Swiss3DMap track={workout.gpsTrack!} />
             ) : (
-              <GPSMap track={workout.gpsTrack!} maxHR={maxHR} />
+              <GPSMap track={workout.gpsTrack!} maxHR={maxHR} zoneBoundaries={zoneBoundaries} />
             )}
           </Suspense>
           <div className="flex gap-4 text-[10px] text-muted-foreground">
@@ -463,6 +492,14 @@ export function WorkoutDetail() {
             value={`${Math.round(workout.heartRate.max)} bpm`}
           />
         )}
+        {trimp != null && (
+          <StatCard
+            icon={Activity}
+            label="Training Load"
+            value={String(trimp)}
+            sub="TRIMP score"
+          />
+        )}
       </div>
 
       {/* Prescribed vs Actual */}
@@ -501,6 +538,7 @@ export function WorkoutDetail() {
               samples={workout.heartRate.samples!}
               avgHR={workout.heartRate.avg}
               maxHR={maxHR}
+              zoneBoundaries={zoneBoundaries}
             />
           </div>
         </>
@@ -530,6 +568,41 @@ export function WorkoutDetail() {
               HR Zone Distribution
             </h2>
             <HRZoneChart zones={hrZones} />
+          </div>
+        </>
+      )}
+
+      {/* Aerobic Decoupling */}
+      {decoupling && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Aerobic Decoupling
+            </h2>
+            <div className="flex items-center gap-3">
+              <span className={`text-sm font-semibold ${
+                decoupling.color === 'green' ? 'text-emerald-400' :
+                decoupling.color === 'amber' ? 'text-amber-400' : 'text-red-400'
+              }`}>
+                {decoupling.pct.toFixed(1)}% Pa:HR drift
+              </span>
+              <Badge variant="outline" className={`text-xs ${
+                decoupling.color === 'green' ? 'border-emerald-500/40 text-emerald-500' :
+                decoupling.color === 'amber' ? 'border-amber-500/40 text-amber-500' :
+                'border-red-500/40 text-red-500'
+              }`}>
+                {decoupling.label === 'efficient' ? 'Efficient' :
+                 decoupling.label === 'moderate' ? 'Moderate Drift' : 'High Drift'}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {decoupling.label === 'efficient'
+                ? 'Cardiac output stayed stable — strong aerobic base at this intensity.'
+                : decoupling.label === 'moderate'
+                ? 'Some cardiac drift — normal for long efforts or hot conditions.'
+                : 'Significant cardiac drift — consider more Zone 2 base work or shorter intervals.'}
+            </p>
           </div>
         </>
       )}

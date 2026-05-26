@@ -114,6 +114,11 @@ typealias WeeklySchedule = [String: DaySchedule]
 //
 // performanceLogs is NOT part of the server profile payload; it is loaded separately
 // from GET /api/health/snapshot and stored locally.
+struct HRConfig: Codable {
+    var maxHROverride: Int?
+    var zoneBoundaries: [Double]?  // 4 upper-boundary fractions, e.g. [0.60, 0.70, 0.80, 0.90]
+}
+
 struct UserProfile: Codable {
     var trainingLevel: String
     var equipment: [String]
@@ -122,6 +127,7 @@ struct UserProfile: Codable {
     var dateOfBirth: String?
     var performanceLogs: [String: [PerformanceEntry]]?
     var weeklySchedule: WeeklySchedule?
+    var hrConfig: HRConfig?
 
     static let `default` = UserProfile(
         trainingLevel: "intermediate",
@@ -130,7 +136,8 @@ struct UserProfile: Codable {
         customInjuryFlags: [],
         dateOfBirth: nil,
         performanceLogs: nil,
-        weeklySchedule: nil
+        weeklySchedule: nil,
+        hrConfig: nil
     )
 }
 

@@ -4,9 +4,13 @@ import { format, parseISO } from 'date-fns'
 import { Activity, Watch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DailyCheckin } from '@/components/bio/DailyCheckin'
-import { HRTrendChart } from '@/components/bio/HRTrendChart'
+import { RHRTrendChart } from '@/components/bio/RHRTrendChart'
+import { HRVTrendChart } from '@/components/bio/HRVTrendChart'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { SleepStageChart } from '@/components/bio/SleepStageChart'
+import { WeeklyZoneSummary } from '@/components/bio/WeeklyZoneSummary'
+import { WeeklyLoadChart } from '@/components/bio/WeeklyLoadChart'
+import { PMCChart } from '@/components/bio/PMCChart'
 import { useBioStore } from '@/store/bioStore'
 import type { DailyBioLog } from '@/api/types'
 
@@ -25,6 +29,7 @@ const SUB_TABS: { id: SubTab; label: string }[] = [
 function fmtDuration(minutes: number): string {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
+  if (h === 0) return `${m}m`
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
@@ -172,10 +177,46 @@ function TrendsTab({ dailyBioLogs, hasSleepData }: {
 
       <div>
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          30-Day HR / HRV Trend
+          Weekly Zone Distribution
         </h2>
         <div className="rounded-xl border bg-card p-4">
-          <HRTrendChart bioLogs={dailyBioLogs} days={30} />
+          <WeeklyZoneSummary />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          30-Day Resting HR
+        </h2>
+        <div className="rounded-xl border bg-card p-4">
+          <RHRTrendChart bioLogs={dailyBioLogs} days={30} />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          30-Day HRV
+        </h2>
+        <div className="rounded-xl border bg-card p-4">
+          <HRVTrendChart bioLogs={dailyBioLogs} days={30} />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Weekly Training Load
+        </h2>
+        <div className="rounded-xl border bg-card p-4">
+          <WeeklyLoadChart />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Performance Management Chart
+        </h2>
+        <div className="rounded-xl border bg-card p-4">
+          <PMCChart />
         </div>
       </div>
 
