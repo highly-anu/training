@@ -3,7 +3,7 @@
  * These endpoints are protected by JWT auth on the Flask backend.
  */
 import { apiClient } from './client'
-import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, InjuryFlagId, TrainingLevel, GeneratedProgram } from './types'
+import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, TrainingLevel, GeneratedProgram, WeeklyLoad, PMCEntry } from './types'
 
 export interface ServerProfile {
   trainingLevel: TrainingLevel
@@ -13,6 +13,7 @@ export interface ServerProfile {
   activeGoalId: string | null
   dateOfBirth: string | null
   weeklySchedule?: Record<Day, DaySchedule> | null
+  hrConfig?: HRConfig | null
 }
 
 export interface ServerProgram {
@@ -52,5 +53,21 @@ export async function saveUserProgram(program: ServerProgram): Promise<void> {
     await apiClient.put('/user/program', program)
   } catch {
     // best-effort fire-and-forget
+  }
+}
+
+export async function fetchWeeklyLoad(): Promise<WeeklyLoad[]> {
+  try {
+    return await (apiClient.get('/health/load/weekly') as unknown as Promise<WeeklyLoad[]>)
+  } catch {
+    return []
+  }
+}
+
+export async function fetchPMC(): Promise<PMCEntry[]> {
+  try {
+    return await (apiClient.get('/health/load/pmc') as unknown as Promise<PMCEntry[]>)
+  } catch {
+    return []
   }
 }

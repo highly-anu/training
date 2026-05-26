@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, InjuryFlagId, TrainingLevel } from '@/api/types'
+import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, TrainingLevel } from '@/api/types'
 import * as healthApi from '@/api/health'
 import { fetchProfile, saveProfile } from '@/api/userdata'
 
@@ -18,6 +18,7 @@ interface ProfileStore {
   activeGoalId: string | null
   dateOfBirth: string | null // YYYY-MM-DD, used for max HR estimation
   weeklySchedule: Record<Day, DaySchedule> | null
+  hrConfig: HRConfig
 
   setTrainingLevel: (level: TrainingLevel) => void
   setEquipment: (equipment: EquipmentId[]) => void
@@ -30,6 +31,7 @@ interface ProfileStore {
   setSessionLog: (key: string, completed: boolean[]) => void
   setDateOfBirth: (dob: string | null) => void
   setWeeklySchedule: (schedule: Record<Day, DaySchedule>) => void
+  setHRConfig: (config: HRConfig) => void
   // Hydrate performance logs from server health snapshot
   initPerformanceLogs: (logs: Record<string, PerformanceEntry[]>) => void
   // Hydrate session completion from server health snapshot
@@ -47,6 +49,7 @@ function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; initPe
     activeGoalId:       state.activeGoalId,
     dateOfBirth:        state.dateOfBirth,
     weeklySchedule:     state.weeklySchedule,
+    hrConfig:           state.hrConfig,
   })
 }
 
@@ -60,6 +63,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   activeGoalId: null,
   dateOfBirth: null,
   weeklySchedule: null,
+  hrConfig: {},
 
   setTrainingLevel: (trainingLevel) => {
     set({ trainingLevel })
@@ -118,6 +122,10 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     set({ weeklySchedule })
     _sync({ ...get(), weeklySchedule })
   },
+  setHRConfig: (hrConfig) => {
+    set({ hrConfig })
+    _sync({ ...get(), hrConfig })
+  },
   initPerformanceLogs: (logs) => set({ performanceLogs: logs }),
   initSessionLogs: (logs) => set({ sessionLogs: logs }),
 
@@ -132,6 +140,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
       activeGoalId:      data.activeGoalId ?? null,
       dateOfBirth:       data.dateOfBirth ?? null,
       weeklySchedule:    data.weeklySchedule ?? null,
+      hrConfig:          data.hrConfig ?? {},
     })
   },
 }))

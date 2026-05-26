@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut } from 'lucide-react'
+import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut, Heart, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LevelBar } from '@/components/benchmarks/LevelBar'
 import { useProfileStore } from '@/store/profileStore'
 import { useAuthStore } from '@/store/authStore'
+import { useBioStore } from '@/store/bioStore'
 import { useBenchmarks } from '@/api/benchmarks'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
+import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import type { Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'equipment' | 'injuries' | 'benchmarks' | 'schedule'
+type SubTab = 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate'
 
 interface SubTabItem {
   id: SubTab
@@ -25,10 +27,11 @@ interface SubTabItem {
 }
 
 const SUB_TABS: SubTabItem[] = [
-  { id: 'equipment', label: 'Equipment', Icon: Dumbbell },
-  { id: 'injuries', label: 'Injuries', Icon: AlertTriangle },
-  { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy },
-  { id: 'schedule', label: 'Schedule', Icon: Calendar },
+  { id: 'equipment',  label: 'Equipment',  Icon: Dumbbell      },
+  { id: 'injuries',   label: 'Injuries',   Icon: AlertTriangle },
+  { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
+  { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
+  { id: 'heartrate',  label: 'Heart Rate', Icon: Heart         },
 ]
 
 // ── Equipment by category ──────────────────────────────────────────────────────
@@ -539,6 +542,213 @@ function ScheduleOverview() {
   )
 }
 
+// ── HR Settings ───────────────────────────────────────────────────────────────
+
+const ZONE_COLORS = ['#94a3b8', '#38bdf8', '#fbbf24', '#f97316', '#ef4444']
+const ZONE_LABELS = ['Recovery', 'Aerobic', 'Tempo', 'Threshold', 'Max']
+
+function HRSettingsOverview() {
+  const dob = useProfileStore((s) => s.dateOfBirth ?? null)
+  const hrConfig = useProfileStore((s) => s.hrConfig)
+  const setHRConfig = useProfileStore((s) => s.setHRConfig)
+  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
+
+  const formulaMax = maxHRFromDOB(dob)
+  const effectiveMax = getEffectiveMaxHR(dob, hrConfig.maxHROverride ?? undefined)
+  const boundaries = hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES
+  const bpmBounds = zoneBoundariesToBpm(effectiveMax, boundaries)
+
+  // Observed max from workout history
+  const observedMax = importedWorkouts.reduce((best, w) => {
+    const m = w.heartRate.max
+    return m != null && m > best ? m : best
+  }, 0) || null
+
+  const [overrideInput, setOverrideInput] = useState(
+    hrConfig.maxHROverride != null ? String(hrConfig.maxHROverride) : ''
+  )
+  const [localBoundaries, setLocalBoundaries] = useState<number[]>(boundaries)
+
+  // Keep localBoundaries in sync when hrConfig changes from outside
+  useEffect(() => {
+    setLocalBoundaries(hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES)
+  }, [hrConfig.zoneBoundaries])
+
+  const localMax = overrideInput !== '' && !isNaN(Number(overrideInput))
+    ? Number(overrideInput)
+    : effectiveMax
+  const localBpmBounds = zoneBoundariesToBpm(localMax, localBoundaries)
+
+  function saveOverride() {
+    const val = Number(overrideInput)
+    if (!overrideInput || isNaN(val) || val < 100 || val > 250) return
+    setHRConfig({ ...hrConfig, maxHROverride: val })
+  }
+
+  function clearOverride() {
+    setOverrideInput('')
+    setHRConfig({ ...hrConfig, maxHROverride: null })
+  }
+
+  function updateBoundary(idx: number, pct: number) {
+    const next = [...localBoundaries]
+    // Enforce minimum 3% gap between adjacent boundaries
+    const min = idx === 0 ? 0.40 : localBoundaries[idx - 1] + 0.03
+    const max = idx === localBoundaries.length - 1 ? 0.97 : localBoundaries[idx + 1] - 0.03
+    next[idx] = Math.min(max, Math.max(min, pct))
+    setLocalBoundaries(next)
+    setHRConfig({ ...hrConfig, zoneBoundaries: next })
+  }
+
+  function resetToDefaults() {
+    setLocalBoundaries(DEFAULT_ZONE_BOUNDARIES)
+    setOverrideInput('')
+    setHRConfig({})
+  }
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+
+        <div className="space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+            Profile settings
+          </p>
+          <h2 className="text-2xl font-semibold leading-snug">Heart rate zones.</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+            Set your real max HR and adjust zone boundaries to match your physiology.
+            Both the web app and iOS read from this configuration.
+          </p>
+        </div>
+
+        {/* Max HR */}
+        <div className="space-y-4">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
+            Max Heart Rate
+          </h3>
+
+          <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  {effectiveMax} bpm
+                  {hrConfig.maxHROverride != null
+                    ? ' (manual override)'
+                    : formulaMax
+                      ? ` (formula: 220 − ${new Date().getFullYear() - new Date(dob!).getFullYear()})`
+                      : ' (default fallback)'}
+                </p>
+                {observedMax && (
+                  <p className="text-xs text-muted-foreground">
+                    Observed max from workouts:&nbsp;
+                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-amber-400' : 'text-foreground')}>
+                      {observedMax} bpm
+                    </span>
+                    {observedMax > effectiveMax && (
+                      <span className="ml-1 text-amber-400/70">— consider updating</span>
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={100}
+                max={250}
+                placeholder="e.g. 187"
+                value={overrideInput}
+                onChange={(e) => setOverrideInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && saveOverride()}
+                className="w-28 h-8 rounded-md border border-border bg-background px-3 text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <Button size="sm" onClick={saveOverride} disabled={!overrideInput}>
+                Save
+              </Button>
+              {hrConfig.maxHROverride != null && (
+                <Button size="sm" variant="ghost" onClick={clearOverride} className="text-muted-foreground">
+                  Clear override
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Zone boundaries */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
+              Zone Boundaries
+            </h3>
+            <Button size="sm" variant="ghost" onClick={resetToDefaults} className="text-muted-foreground gap-1.5 h-7 text-xs">
+              <RotateCcw className="size-3" /> Reset to defaults
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {localBoundaries.map((boundary, idx) => {
+              const zoneAbove = idx + 1
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block size-2 rounded-sm" style={{ background: ZONE_COLORS[zoneAbove] }} />
+                      <span className="text-muted-foreground">Z{zoneAbove}/Z{zoneAbove + 1} boundary</span>
+                    </span>
+                    <span className="tabular-nums font-medium">
+                      {Math.round(boundary * 100)}% · {localBpmBounds[idx]} bpm
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={40}
+                    max={97}
+                    step={1}
+                    value={Math.round(boundary * 100)}
+                    onChange={(e) => updateBoundary(idx, Number(e.target.value) / 100)}
+                    className="w-full accent-primary h-1.5"
+                  />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Live zone preview */}
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
+            Zone Preview
+          </h3>
+          <div className="rounded-lg border border-border overflow-hidden">
+            {ZONE_LABELS.map((label, i) => {
+              const lo = i === 0 ? 0 : localBpmBounds[i - 1]
+              const hi = i === 4 ? '∞' : localBpmBounds[i]
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-4 py-2.5 border-b border-border last:border-0"
+                >
+                  <span
+                    className="inline-block size-3 rounded-sm shrink-0"
+                    style={{ background: ZONE_COLORS[i] }}
+                  />
+                  <span className="text-xs font-medium w-4">Z{i + 1}</span>
+                  <span className="text-xs text-muted-foreground flex-1">{label}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {lo} – {hi} bpm
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── Tab Selector (like Explore) ───────────────────────────────────────────────
 
 function TabSelector({
@@ -665,10 +875,11 @@ export function ProfileBenchmarks() {
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'equipment' && <EquipmentOverview />}
-        {activeTab === 'injuries' && <InjuriesOverview />}
+        {activeTab === 'equipment'  && <EquipmentOverview />}
+        {activeTab === 'injuries'   && <InjuriesOverview />}
         {activeTab === 'benchmarks' && <BenchmarksOverview />}
-        {activeTab === 'schedule' && <ScheduleOverview />}
+        {activeTab === 'schedule'   && <ScheduleOverview />}
+        {activeTab === 'heartrate'  && <HRSettingsOverview />}
       </div>
     </motion.div>
   )

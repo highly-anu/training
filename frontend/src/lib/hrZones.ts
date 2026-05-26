@@ -1,12 +1,17 @@
-import type { HRSample, HRZoneDistribution } from '@/api/types'
+import type { GPSPoint, HRSample, HRZoneDistribution } from '@/api/types'
 
-// Friel/Coggan zone boundaries (% of max HR)
-const ZONE_UPPER = [0.60, 0.70, 0.80, 0.90, Infinity]
+// Friel/Coggan zone upper boundaries as fraction of max HR
+// Z1: <60%, Z2: 60-70%, Z3: 70-80%, Z4: 80-90%, Z5: 90%+
+export const DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
 
-function assignZone(bpm: number, maxHR: number): 0 | 1 | 2 | 3 | 4 {
+function assignZone(
+  bpm: number,
+  maxHR: number,
+  boundaries: number[] = DEFAULT_ZONE_BOUNDARIES
+): 0 | 1 | 2 | 3 | 4 {
   const pct = bpm / maxHR
-  for (let i = 0; i < ZONE_UPPER.length; i++) {
-    if (pct < ZONE_UPPER[i]) return i as 0 | 1 | 2 | 3 | 4
+  for (let i = 0; i < boundaries.length; i++) {
+    if (pct < boundaries[i]) return i as 0 | 1 | 2 | 3 | 4
   }
   return 4
 }
@@ -24,6 +29,43 @@ export function isZoneCompliant(zones: HRZoneDistribution, prescribedZone: numbe
   return typeof val === 'number' && val >= 50
 }
 
+/**
+ * Banister zone-minute weights for the 5-zone Friel model.
+ * Non-linear: higher zones impose disproportionately more physiological stress.
+ */
+export const BANISTER_ZONE_WEIGHTS = [1.0, 1.5, 2.0, 3.0, 4.5] as const
+
+/**
+ * Compute TRIMP (Training Impulse) using Banister zone-minute weighting.
+ * Formula: Σ(minutes_in_zone_i × weight_i)
+ */
+export function computeTRIMP(zones: HRZoneDistribution, durationMin: number): number {
+  const pcts = [zones.z1, zones.z2, zones.z3, zones.z4, zones.z5]
+  return Math.round(
+    pcts.reduce((sum, pct, i) => sum + (pct / 100) * durationMin * BANISTER_ZONE_WEIGHTS[i], 0)
+  )
+}
+
+/**
+ * Resolve effective max HR.
+ * Priority: manual override → 220-age from DOB → 190 default.
+ */
+export function getEffectiveMaxHR(dob: string | null, override?: number | null): number {
+  if (override != null && override > 0) return override
+  return maxHRFromDOB(dob) ?? 190
+}
+
+/**
+ * Convert zone boundary fractions to absolute bpm values.
+ * Returns 4 bpm values (the upper edge of Z1, Z2, Z3, Z4).
+ */
+export function zoneBoundariesToBpm(
+  maxHR: number,
+  boundaries: number[] = DEFAULT_ZONE_BOUNDARIES
+): number[] {
+  return boundaries.map((b) => Math.round(b * maxHR))
+}
+
 // ── Normal CDF approximation (Abramowitz and Stegun) ──────────────────────────
 
 function normalCDF(x: number, mean: number, std: number): number {
@@ -37,20 +79,24 @@ function normalCDF(x: number, mean: number, std: number): number {
   return z >= 0 ? p : 1 - p
 }
 
-function estimateZonesFromSummary(maxHR: number, avg: number, max: number): HRZoneDistribution {
+function estimateZonesFromSummary(
+  maxHR: number,
+  avg: number,
+  max: number,
+  boundaries: number[]
+): HRZoneDistribution {
   const std = Math.max((max - avg) / 2.5, 1)
-  const boundaries = [0, ...ZONE_UPPER.slice(0, -1).map((f) => f * maxHR), Infinity]
+  const bpmBounds = [0, ...boundaries.map((f) => f * maxHR), Infinity]
   const raw: number[] = []
   for (let i = 0; i < 5; i++) {
-    const lo = boundaries[i]
-    const hi = boundaries[i + 1]
+    const lo = bpmBounds[i]
+    const hi = bpmBounds[i + 1]
     const pLo = lo === 0 ? 0 : normalCDF(lo, avg, std)
     const pHi = hi === Infinity ? 1 : normalCDF(hi, avg, std)
     raw.push(Math.max(0, pHi - pLo))
   }
   const total = raw.reduce((a, b) => a + b, 0) || 1
   const pct = raw.map((v) => Math.round((v / total) * 100))
-  // Fix rounding so sum is exactly 100
   const diff = 100 - pct.reduce((a, b) => a + b, 0)
   pct[pct.indexOf(Math.max(...pct))] += diff
   return { z1: pct[0], z2: pct[1], z3: pct[2], z4: pct[3], z5: pct[4], method: 'summary_estimate' }
@@ -58,14 +104,16 @@ function estimateZonesFromSummary(maxHR: number, avg: number, max: number): HRZo
 
 /**
  * Compute HR zone distribution.
- * @param maxHR  Maximum heart rate in bpm
- * @param samples  Time-series HR samples (may be empty)
- * @param avgHR  Fallback average HR when samples are unavailable
+ * @param maxHR        Maximum heart rate in bpm
+ * @param samples      Time-series HR samples (may be empty)
+ * @param avgHR        Fallback average HR when samples are unavailable
+ * @param boundaries   Zone upper boundaries as fractions of maxHR (default: Friel 60/70/80/90%)
  */
 export function computeHRZones(
   maxHR: number,
   samples: HRSample[],
-  avgHR?: number
+  avgHR?: number,
+  boundaries: number[] = DEFAULT_ZONE_BOUNDARIES
 ): HRZoneDistribution {
   if (samples.length >= 2) {
     const sorted = [...samples].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
@@ -76,7 +124,7 @@ export function computeHRZones(
       const tB = new Date(sorted[i + 1].timestamp).getTime()
       const interval = Math.min((tB - tA) / 1000, 60) // seconds, cap gaps at 60 s
       if (interval <= 0) continue
-      const z = assignZone(sorted[i].bpm, maxHR)
+      const z = assignZone(sorted[i].bpm, maxHR, boundaries)
       zoneTimes[z] += interval
       total += interval
     }
@@ -88,16 +136,94 @@ export function computeHRZones(
     }
   }
 
-  // Fall back to summary estimate
   const avg = avgHR ?? maxHR * 0.72
   const max = samples[0]?.bpm ?? maxHR
-  return estimateZonesFromSummary(maxHR, avg, max)
+  return estimateZonesFromSummary(maxHR, avg, max, boundaries)
 }
 
-/** Derive max HR from date of birth. Returns undefined if dob is null. */
+/** Derive max HR from date of birth using 220-age formula. Returns undefined if dob is null. */
 export function maxHRFromDOB(dob: string | null): number | undefined {
   if (!dob) return undefined
   const birthYear = new Date(dob).getFullYear()
   const age = new Date().getFullYear() - birthYear
   return 220 - age
+}
+
+// ── Aerobic Decoupling ────────────────────────────────────────────────────────
+
+export interface DecouplingResult {
+  pct: number
+  label: 'efficient' | 'moderate' | 'high'
+  color: 'green' | 'amber' | 'red'
+}
+
+/**
+ * Compute Aerobic Decoupling (Pa:HR — Pace:Heart Rate ratio drift).
+ * Splits the workout into two halves by time, computes (avg pace / avg HR)
+ * for each half, then measures the % drift between halves.
+ *
+ * Thresholds: <5% = efficient aerobic base, 5–10% = moderate drift, >10% = high drift.
+ * Returns null when GPS speed data or HR samples are insufficient (<20 matched pairs).
+ */
+export function computeAerobicDecoupling(
+  gpsTrack: GPSPoint[],
+  hrSamples: HRSample[]
+): DecouplingResult | null {
+  const MIN_PAIRS_PER_HALF = 10
+  const SPEED_THRESHOLD_MPS = 0.3   // ignore GPS points at near-standstill
+  const HR_MATCH_WINDOW_S  = 10     // max seconds between GPS and HR sample timestamps
+
+  // Build sorted timestamp index for HR samples (unix ms)
+  const hrSorted = [...hrSamples]
+    .map((s) => ({ ts: new Date(s.timestamp).getTime(), bpm: s.bpm }))
+    .filter((s) => !isNaN(s.ts))
+    .sort((a, b) => a.ts - b.ts)
+
+  if (hrSorted.length === 0) return null
+
+  // For each GPS point with valid speed, find the nearest HR sample within the window
+  const pairs: { pace: number; hr: number }[] = []
+  for (const pt of gpsTrack) {
+    const speed = pt.speed ?? null
+    if (speed === null || speed < SPEED_THRESHOLD_MPS) continue
+    const ptTs = new Date(pt.timestamp).getTime()
+    if (isNaN(ptTs)) continue
+
+    // Binary-search for the closest HR sample
+    let lo = 0
+    let hi = hrSorted.length - 1
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (hrSorted[mid].ts < ptTs) lo = mid + 1
+      else hi = mid
+    }
+    const candidates = [hrSorted[lo], lo > 0 ? hrSorted[lo - 1] : null].filter(Boolean) as typeof hrSorted
+    const nearest = candidates.reduce((best, c) =>
+      Math.abs(c.ts - ptTs) < Math.abs(best.ts - ptTs) ? c : best
+    )
+    if (Math.abs(nearest.ts - ptTs) > HR_MATCH_WINDOW_S * 1000) continue
+
+    pairs.push({ pace: 1000 / speed, hr: nearest.bpm })
+  }
+
+  if (pairs.length < MIN_PAIRS_PER_HALF * 2) return null
+
+  const mid = Math.floor(pairs.length / 2)
+  const h1 = pairs.slice(0, mid)
+  const h2 = pairs.slice(mid)
+
+  const mean = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length
+
+  const ratio1 = mean(h1.map((p) => p.pace)) / mean(h1.map((p) => p.hr))
+  const ratio2 = mean(h2.map((p) => p.pace)) / mean(h2.map((p) => p.hr))
+
+  if (ratio2 === 0) return null
+
+  const pct = Math.abs((ratio1 / ratio2 - 1) * 100)
+
+  return {
+    pct,
+    label: pct < 5 ? 'efficient' : pct < 10 ? 'moderate' : 'high',
+    color: pct < 5 ? 'green' : pct < 10 ? 'amber' : 'red',
+  }
 }

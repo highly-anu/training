@@ -11,21 +11,19 @@ import {
 } from 'recharts'
 import { parseISO } from 'date-fns'
 import type { HRSample } from '@/api/types'
+import { DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 
 interface HRTimelineProps {
   samples: HRSample[]
   avgHR?: number | null
   maxHR?: number
+  zoneBoundaries?: number[]
 }
 
 interface DataPoint {
   elapsed: number // minutes from start
   bpm: number
 }
-
-// Zone boundaries as fractions of maxHR (upper bounds)
-// Z1: <60%, Z2: 60-70%, Z3: 70-80%, Z4: 80-90%, Z5: 90%+
-const ZONE_THRESHOLDS = [0.60, 0.70, 0.80, 0.90]
 
 // Must match HRZoneChart ZONE_META colors
 const ZONE_COLORS = [
@@ -44,10 +42,10 @@ const ZONE_BG = [
   'rgba(239,68,68,0.06)',   // Z5
 ]
 
-function zoneForBpm(bpm: number, maxHR: number): number {
+function zoneForBpm(bpm: number, maxHR: number, thresholds: number[]): number {
   const pct = bpm / maxHR
-  for (let i = 0; i < ZONE_THRESHOLDS.length; i++) {
-    if (pct < ZONE_THRESHOLDS[i]) return i
+  for (let i = 0; i < thresholds.length; i++) {
+    if (pct < thresholds[i]) return i
   }
   return 4
 }
@@ -67,7 +65,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 
 let instanceCounter = 0
 
-export function HRTimeline({ samples, avgHR, maxHR = 190 }: HRTimelineProps) {
+export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAULT_ZONE_BOUNDARIES }: HRTimelineProps) {
   const [gradientId] = useState(() => `hrZone-${++instanceCounter}`)
 
   const data = useMemo(() => {
@@ -105,43 +103,38 @@ export function HRTimeline({ samples, avgHR, maxHR = 190 }: HRTimelineProps) {
     const max = Math.max(...bpms) + 10
 
     // Zone boundaries in bpm
-    const boundaries = ZONE_THRESHOLDS.map((t) => t * maxHR)
+    const bpmBoundaries = zoneBoundaries.map((t) => t * maxHR)
 
-    // Build gradient stops from top (high bpm) to bottom (low bpm)
-    // In SVG y1=0 is top (high bpm), y2=1 is bottom (low bpm)
     const range = max - min
     const stops: { offset: string; color: string }[] = []
 
-    // For each zone boundary, add two stops (one for each side of the boundary)
-    // to create sharp color transitions
-    const allBoundaries = [min, ...boundaries.filter((b) => b > min && b < max), max]
+    const allBoundaries = [min, ...bpmBoundaries.filter((b) => b > min && b < max), max]
 
     for (let i = allBoundaries.length - 1; i >= 0; i--) {
       const bpm = allBoundaries[i]
       const offset = 1 - (bpm - min) / range // flip: top=0, bottom=1
-      const zone = zoneForBpm(bpm, maxHR)
-      const belowZone = i > 0 ? zoneForBpm(allBoundaries[i] - 0.1, maxHR) : zone
+      const zone = zoneForBpm(bpm, maxHR, zoneBoundaries)
+      const belowZone = i > 0 ? zoneForBpm(allBoundaries[i] - 0.1, maxHR, zoneBoundaries) : zone
 
       if (i === allBoundaries.length - 1) {
         stops.push({ offset: `${(offset * 100).toFixed(1)}%`, color: ZONE_COLORS[zone] })
       } else if (i === 0) {
         stops.push({ offset: `${(offset * 100).toFixed(1)}%`, color: ZONE_COLORS[belowZone] })
       } else {
-        // Sharp transition: end previous zone color, start new zone color
         stops.push({ offset: `${(offset * 100).toFixed(1)}%`, color: ZONE_COLORS[zone] })
         stops.push({ offset: `${(offset * 100).toFixed(1)}%`, color: ZONE_COLORS[belowZone] })
       }
     }
 
     return { gradientStops: stops, yMin: min, yMax: max }
-  }, [data, maxHR])
+  }, [data, maxHR, zoneBoundaries])
 
   if (data.length === 0) return null
 
   const maxElapsed = data[data.length - 1].elapsed
 
   // Zone boundaries that fall within the visible range
-  const visibleZoneBounds = ZONE_THRESHOLDS
+  const visibleZoneBounds = zoneBoundaries
     .map((t) => Math.round(t * maxHR))
     .filter((b) => b > yMin && b < yMax)
 
@@ -152,7 +145,7 @@ export function HRTimeline({ samples, avgHR, maxHR = 190 }: HRTimelineProps) {
     zoneBands.push({
       y1: allBounds[i],
       y2: allBounds[i + 1],
-      zone: zoneForBpm((allBounds[i] + allBounds[i + 1]) / 2, maxHR),
+      zone: zoneForBpm((allBounds[i] + allBounds[i + 1]) / 2, maxHR, zoneBoundaries),
     })
   }
 
@@ -187,7 +180,7 @@ export function HRTimeline({ samples, avgHR, maxHR = 190 }: HRTimelineProps) {
 
           {/* Zone boundary lines with labels */}
           {visibleZoneBounds.map((bpm) => {
-            const zone = zoneForBpm(bpm + 0.1, maxHR) + 1
+            const zone = zoneForBpm(bpm + 0.1, maxHR, zoneBoundaries) + 1
             return (
               <ReferenceLine
                 key={bpm}

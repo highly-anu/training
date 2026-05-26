@@ -5,6 +5,7 @@ struct HRTimelineView: View {
     let samples: [HRSample]
     let avgHR: Int?
     var maxHR: Int? = nil
+    var hrConfig: HRConfig? = nil
 
     struct HRPoint {
         let elapsed: Double
@@ -15,23 +16,39 @@ struct HRTimelineView: View {
     @State private var yLo: Int = 60
     @State private var yHi: Int = 180
 
-    // Zone bands: fraction of maxHR → color
-    private static let zoneFractions: [(lo: Double, hi: Double, color: Color)] = [
-        (0.50, 0.60, .gray),
-        (0.60, 0.70, .blue),
-        (0.70, 0.80, .green),
-        (0.80, 0.90, .orange),
-        (0.90, 1.00, .red),
+    // Default Friel zone fractions (lo..hi), includes sub-60% band as Z1 floor
+    private static let defaultBoundaries: [Double] = [0.60, 0.70, 0.80, 0.90]
+    private static let zoneColors: [Color] = [
+        Color(hex: "#94a3b8"),  // Z1 slate-400
+        Color(hex: "#38bdf8"),  // Z2 sky-400
+        Color(hex: "#fbbf24"),  // Z3 amber-400
+        Color(hex: "#f97316"),  // Z4 orange-500
+        Color(hex: "#ef4444"),  // Z5 red-500
     ]
+
+    // Build zone bands from hrConfig boundaries (or defaults)
+    private var zoneFractions: [(lo: Double, hi: Double, color: Color)] {
+        let bounds = hrConfig?.zoneBoundaries ?? Self.defaultBoundaries
+        // Prepend 0.0 and append 1.0 to form 5 bands
+        let edges = [0.0] + bounds + [1.0]
+        return (0..<5).map { i in
+            (lo: edges[i], hi: edges[i + 1], color: Self.zoneColors[i])
+        }
+    }
+
+    private var effectiveMaxHR: Int? {
+        if let override = hrConfig?.maxHROverride { return override }
+        return maxHR
+    }
 
     var body: some View {
         let lo = yLo
         let hi = yHi
         Chart {
-            // Zone bands
-            if let maxHRValue = maxHR {
-                ForEach(0..<Self.zoneFractions.count, id: \.self) { i in
-                    let zone = Self.zoneFractions[i]
+            // Zone bands derived from hrConfig
+            if let maxHRValue = effectiveMaxHR {
+                ForEach(0..<zoneFractions.count, id: \.self) { i in
+                    let zone = zoneFractions[i]
                     let zoneLo = Int(Double(maxHRValue) * zone.lo)
                     let zoneHi = Int(Double(maxHRValue) * zone.hi)
                     let clampedLo = Swift.max(zoneLo, lo)

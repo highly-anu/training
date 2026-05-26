@@ -76,6 +76,7 @@ struct WorkoutDetailSheet: View {
                 Text("This will remove the workout data and unlink it from any session.")
             }
         }
+        .onChange(of: workout.id) { _ in mapMode = .flat }
     }
 
     // MARK: - Viewing
@@ -187,7 +188,7 @@ struct WorkoutDetailSheet: View {
     // MARK: - Map mode
 
     private enum MapMode { case flat, swiss3d }
-    @State private var mapMode: MapMode = .swiss3d
+    @State private var mapMode: MapMode = .flat
 
     // MARK: - Timeseries
 
@@ -228,7 +229,8 @@ struct WorkoutDetailSheet: View {
                         if let samples = detail.heartRate?.samples, !samples.isEmpty {
                             HRTimelineView(samples: samples,
                                            avgHR: detail.heartRate?.avg,
-                                           maxHR: detail.heartRate?.max)
+                                           maxHR: detail.heartRate?.max,
+                                           hrConfig: appState.profile.hrConfig)
                         }
                     case 1:
                         if let gps = detail.gpsTrack {
