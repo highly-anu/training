@@ -32,6 +32,17 @@ app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
 _raw_origins = os.environ.get('FRONTEND_URL') or ''
 _allowed_origins = set(o.strip() for o in _raw_origins.split(',') if o.strip()) or {'*'}
 
+# Cloudflare Pages preview deployments use *.pages.dev subdomains that change per-commit.
+# Allow any pages.dev origin so preview URLs work without Fly.io config changes.
+_ALLOWED_ORIGIN_SUFFIXES = ('.pages.dev', '.pages.dev/')
+
+def _origin_allowed(origin: str) -> bool:
+    if not origin:
+        return True
+    if '*' in _allowed_origins or origin in _allowed_origins:
+        return True
+    return any(origin.endswith(s) for s in _ALLOWED_ORIGIN_SUFFIXES)
+
 @app.before_request
 def _handle_options():
     if request.method == 'OPTIONS':
@@ -40,7 +51,7 @@ def _handle_options():
 @app.after_request
 def _cors(response):
     origin = request.headers.get('Origin', '')
-    if '*' in _allowed_origins or origin in _allowed_origins:
+    if _origin_allowed(origin):
         response.headers['Access-Control-Allow-Origin'] = origin or '*'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PATCH'
         response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
