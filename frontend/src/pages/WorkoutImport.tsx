@@ -577,7 +577,8 @@ export function WorkoutImport() {
       } else if (file.name.endsWith('.fit')) {
         const fd = new FormData()
         fd.append('workout_file', file)
-        const res = await fetch('/api/workouts/parse', { method: 'POST', body: fd })
+        const authHeader = await getAuthHeader()
+        const res = await fetch(`${API_BASE}/workouts/parse`, { method: 'POST', body: fd, headers: authHeader })
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
           throw new Error(body.detail ?? 'FIT parse failed')
