@@ -120,25 +120,30 @@ def get_workouts(user_id: str) -> list[dict]:
                     (user_id,),
                 )
                 rows = cur.fetchall()
-        return [_row_to_workout(row) for row in rows]
+        return [_row_to_workout(row, summary_only=True) for row in rows]
     except Exception:
         return []
 
 
-def _row_to_workout(row) -> dict:
+def _row_to_workout(row, summary_only: bool = False) -> dict:
     dist = None
     if row['distance_value'] is not None:
         dist = {'value': row['distance_value'], 'unit': row['distance_unit']}
     elev = None
     if row['elevation_gain'] is not None or row['elevation_loss'] is not None:
         elev = {'gain': row['elevation_gain'] or 0, 'loss': row['elevation_loss'] or 0}
-    gps = row['gps_track'] if isinstance(row['gps_track'], list) else (
-        json.loads(row['gps_track']) if row['gps_track'] else None
-    )
-    hr_raw = row['hr_samples']
-    hr_samples = hr_raw if isinstance(hr_raw, list) else (json.loads(hr_raw) if hr_raw else [])
-    raw_raw = row['raw_data']
-    raw_data = raw_raw if isinstance(raw_raw, dict) else (json.loads(raw_raw or '{}'))
+    if summary_only:
+        gps = None
+        hr_samples = []
+        raw_data = {}
+    else:
+        gps = row['gps_track'] if isinstance(row['gps_track'], list) else (
+            json.loads(row['gps_track']) if row['gps_track'] else None
+        )
+        hr_raw = row['hr_samples']
+        hr_samples = hr_raw if isinstance(hr_raw, list) else (json.loads(hr_raw) if hr_raw else [])
+        raw_raw = row['raw_data']
+        raw_data = raw_raw if isinstance(raw_raw, dict) else (json.loads(raw_raw or '{}'))
     return {
         'id':                 row['id'],
         'source':             row['source'],

@@ -149,7 +149,9 @@ export function WorkoutDetail() {
     workoutId && !stateWorkout ? s.importedWorkouts.find((w) => w.id === workoutId) : undefined
   ) as ImportedWorkout | undefined
 
-  // Fallback: fetch from backend only when neither state nor local store has the workout
+  // Always fetch full workout from API — snapshot workouts omit gpsTrack and hr_samples
+  // to keep the snapshot response small. State workout (from navigation) may also lack
+  // these fields if it came from the list. Fetch unconditionally when workoutId is known.
   const { data: fetchedWorkout, isLoading: fetchLoading } = useQuery<ImportedWorkout | null>({
     queryKey: ['workout', workoutId],
     queryFn: async () => {
@@ -160,11 +162,12 @@ export function WorkoutDetail() {
         return null
       }
     },
-    enabled: !stateWorkout && !localWorkout && !!workoutId,
+    enabled: !!workoutId,
     staleTime: 5 * 60 * 1000,
   })
 
-  const workout = stateWorkout ?? localWorkout ?? fetchedWorkout ?? undefined
+  // fetchedWorkout takes priority so GPS/HR samples are always present
+  const workout = fetchedWorkout ?? stateWorkout ?? localWorkout ?? undefined
 
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const match = workoutMatches.find((m) => m.importedWorkoutId === workoutId)
