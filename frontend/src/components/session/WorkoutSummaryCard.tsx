@@ -1,6 +1,6 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload, Heart, Clock, Flame, MapPin, Mountain, CheckCircle2, Info, AlertTriangle, Zap, Link2, ExternalLink } from 'lucide-react'
+import { Upload, Heart, Clock, Flame, MapPin, Mountain, CheckCircle2, Info, AlertTriangle, Zap, Link2, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -291,10 +291,16 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
             {pace && <span className="text-xs text-muted-foreground">{pace}</span>}
           </div>
         )}
-        {matched.elevation && (matched.elevation.gain > 0 || matched.elevation.loss > 0) && (
+        {matched.elevation?.gain != null && matched.elevation.gain > 0 && (
           <div className="flex items-center gap-1.5">
-            <Mountain className="size-3.5 text-emerald-400" />
-            <span className="text-sm">+{matched.elevation.gain}m / -{matched.elevation.loss}m</span>
+            <TrendingUp className="size-3.5 text-emerald-400" />
+            <span className="text-sm">Ascended {matched.elevation.gain}m</span>
+          </div>
+        )}
+        {matched.elevation?.loss != null && matched.elevation.loss > 0 && (
+          <div className="flex items-center gap-1.5">
+            <TrendingDown className="size-3.5 text-rose-400" />
+            <span className="text-sm">Descended {matched.elevation.loss}m</span>
           </div>
         )}
       </div>

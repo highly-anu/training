@@ -280,7 +280,7 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
           <KpiCard label="Sessions"  value={stats.sessions > 0 ? String(stats.sessions) : null} icon={Activity}     color="text-primary"        />
           <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color="text-sky-400"        />
           <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color="text-emerald-400"    />
-          <KpiCard label="Elevation" value={stats.elevation}     icon={MountainSnow} color="text-amber-400"      />
+          <KpiCard label="Ascended"  value={stats.elevation}     icon={MountainSnow} color="text-amber-400"      />
           <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color="text-orange-400"     />
         </div>
       </div>
