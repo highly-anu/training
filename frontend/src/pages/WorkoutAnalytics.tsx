@@ -12,7 +12,7 @@ import {
   FileText,
   ChevronRight,
 } from 'lucide-react'
-import { format, parseISO, subDays } from 'date-fns'
+import { format, parseISO, subDays, startOfWeek, endOfWeek } from 'date-fns'
 import {
   ResponsiveContainer,
   BarChart,
@@ -236,9 +236,11 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
   const weeklyConsistency = useMemo(() => {
     const now = new Date()
     const weeks: { label: string; count: number }[] = []
+    const weekOpts = { weekStartsOn: 1 } as const  // Monday-anchored weeks
     for (let i = 11; i >= 0; i--) {
-      const weekStart = subDays(now, i * 7 + now.getDay())
-      const weekEnd = subDays(now, i * 7 + now.getDay() - 6)
+      const anchor = subDays(now, i * 7)
+      const weekStart = startOfWeek(anchor, weekOpts)
+      const weekEnd = endOfWeek(anchor, weekOpts)
       const count = allWorkouts.filter((w) => {
         try {
           const d = parseISO(w.date)
@@ -460,9 +462,8 @@ function LoadTab({ period }: { period: Period }) {
     let covered = 0
     for (const w of filtered) {
       const avg = w.heartRate.avg
-      const max = w.heartRate.max
       if (avg == null) continue
-      const zones = computeHRZones(maxHR, [], avg, DEFAULT_ZONE_BOUNDARIES)
+      const zones = computeHRZones(maxHR, [], avg, DEFAULT_ZONE_BOUNDARIES, w.heartRate.max ?? undefined)
       const dur = w.durationMinutes
       totals.z1 += (zones.z1 / 100) * dur
       totals.z2 += (zones.z2 / 100) * dur
@@ -470,7 +471,6 @@ function LoadTab({ period }: { period: Period }) {
       totals.z4 += (zones.z4 / 100) * dur
       totals.z5 += (zones.z5 / 100) * dur
       covered += dur
-      void max
     }
     if (covered === 0) return null
     return [
@@ -569,6 +569,7 @@ function ActivityTab({ period }: { period: Period }) {
   const navigate = useNavigate()
   const filtered = useFilteredWorkouts(period)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const pendingMatches = useBioStore((s) => s.pendingMatches)
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('date')
@@ -596,15 +597,20 @@ function ActivityTab({ period }: { period: Period }) {
     return [...list].sort((a, b) => {
       if (sortKey === 'date')     return b.date.localeCompare(a.date)
       if (sortKey === 'duration') return b.durationMinutes - a.durationMinutes
-      if (sortKey === 'distance') return (b.distance?.value ?? 0) - (a.distance?.value ?? 0)
+      if (sortKey === 'distance') {
+        const toKm = (w: ImportedWorkout) => w.distance ? (w.distance.unit === 'm' ? w.distance.value / 1000 : w.distance.value) : 0
+        return toKm(b) - toKm(a)
+      }
       if (sortKey === 'hr')       return (b.heartRate.avg ?? 0) - (a.heartRate.avg ?? 0)
       return 0
     })
   }, [filtered, typeFilter, sourceFilter, sortKey])
 
-  function matchStatus(id: string): 'matched' | 'unmatched' {
+  function matchStatus(id: string): 'matched' | 'pending' | 'unmatched' {
     const m = workoutMatches.find((m) => m.importedWorkoutId === id)
-    return m && m.matchConfidence !== 'rejected' ? 'matched' : 'unmatched'
+    if (m && m.matchConfidence !== 'rejected') return 'matched'
+    if (pendingMatches.some((p) => p.importedWorkout.id === id)) return 'pending'
+    return 'unmatched'
   }
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -720,6 +726,11 @@ function ActivityTab({ period }: { period: Period }) {
                     {ms === 'matched' && (
                       <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 shrink-0">
                         matched
+                      </Badge>
+                    )}
+                    {ms === 'pending' && (
+                      <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500 shrink-0">
+                        pending
                       </Badge>
                     )}
                   </div>
