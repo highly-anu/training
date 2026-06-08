@@ -8,6 +8,7 @@ import {
   Compass,
   Upload,
   HeartPulse,
+  BarChart3,
   Terminal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/import', label: 'Import Workouts', icon: Upload },
   { to: '/bio', label: 'Bio Log', icon: HeartPulse },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/dev', label: 'Dev Lab', icon: Terminal },
 ]
 

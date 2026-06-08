@@ -15,6 +15,7 @@ import { Explore } from '@/pages/Explore'
 import { WorkoutImport } from '@/pages/WorkoutImport'
 import { WorkoutDetail } from '@/pages/WorkoutDetail'
 import { BioLog } from '@/pages/BioLog'
+import { WorkoutAnalytics } from '@/pages/WorkoutAnalytics'
 import { DevLab } from '@/pages/DevLab'
 import { LoginPage } from '@/pages/LoginPage'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
@@ -64,6 +65,7 @@ export default function App() {
                   <Route path="import" element={<WorkoutImport />} />
                   <Route path="import/:workoutId" element={<WorkoutDetail />} />
                   <Route path="bio" element={<BioLog />} />
+                  <Route path="analytics" element={<WorkoutAnalytics />} />
                   <Route path="dev" element={<DevLab />} />
                 </Route>
               </Routes>
