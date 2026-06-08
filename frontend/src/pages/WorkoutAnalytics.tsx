@@ -11,6 +11,8 @@ import {
   ArrowDownToLine,
   FileText,
   ChevronRight,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react'
 import { format, parseISO, subDays, startOfWeek, endOfWeek } from 'date-fns'
 import {
@@ -180,7 +182,8 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
       const unit = w.distance?.unit ?? 'km'
       return s + (unit === 'm' ? v / 1000 : v)
     }, 0)
-    const elevationM = filtered.reduce((s, w) => s + (w.elevation?.gain ?? 0), 0)
+    const elevationGainM = filtered.reduce((s, w) => s + (w.elevation?.gain ?? 0), 0)
+    const elevationLossM = filtered.reduce((s, w) => s + (w.elevation?.loss ?? 0), 0)
     const calories = filtered.reduce((s, w) => s + (w.calories ?? 0), 0)
     const hasDistance = filtered.some((w) => w.distance != null)
     const hasElevation = filtered.some((w) => w.elevation != null)
@@ -189,7 +192,8 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
       sessions: filtered.length,
       hours: totalMin > 0 ? fmtHours(totalMin) : null,
       distance: hasDistance && distanceKm > 0 ? fmtDist(distanceKm) : null,
-      elevation: hasElevation && elevationM > 0 ? fmtElev(elevationM) : null,
+      ascended: hasElevation && elevationGainM > 0 ? fmtElev(elevationGainM) : null,
+      descended: hasElevation && elevationLossM > 0 ? fmtElev(elevationLossM) : null,
       calories: hasCals && calories > 0 ? `${Math.round(calories).toLocaleString()} kcal` : null,
     }
   }, [filtered])
@@ -276,11 +280,12 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
       {/* KPI row */}
       <div>
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Totals</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard label="Sessions"  value={stats.sessions > 0 ? String(stats.sessions) : null} icon={Activity}     color="text-primary"        />
           <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color="text-sky-400"        />
           <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color="text-emerald-400"    />
-          <KpiCard label="Ascended"  value={stats.elevation}     icon={MountainSnow} color="text-amber-400"      />
+          <KpiCard label="Ascended"  value={stats.ascended}      icon={TrendingUp}   color="text-amber-400"      />
+          <KpiCard label="Descended" value={stats.descended}     icon={TrendingDown} color="text-rose-400"       />
           <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color="text-orange-400"     />
         </div>
       </div>
@@ -740,6 +745,7 @@ function ActivityTab({ period }: { period: Period }) {
                     {distText && ` · ${distText}`}
                     {w.heartRate.avg != null && ` · ${Math.round(w.heartRate.avg)} bpm`}
                     {w.elevation?.gain ? ` · ↑${Math.round(w.elevation.gain)}m` : ''}
+                    {w.elevation?.loss ? ` ↓${Math.round(w.elevation.loss)}m` : ''}
                   </p>
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
