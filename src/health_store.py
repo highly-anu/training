@@ -102,15 +102,22 @@ def get_workout(user_id: str, workout_id: str) -> dict | None:
     # Fallback: linear scan of all user workouts — handles cases where the exact
     # id = %s comparison silently fails (observed with apple_watch_live IDs in prod).
     try:
-        for w in get_workouts(user_id):
-            if w.get('id') == workout_id:
-                return w
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute(
+                    'SELECT * FROM workouts WHERE user_id = %s',
+                    (user_id,),
+                )
+                rows = cur.fetchall()
+        for row in rows:
+            if row.get('id') == workout_id:
+                return _row_to_workout(row)
     except Exception:
         pass
     return None
 
 
-def get_workouts(user_id: str) -> list[dict]:
+def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
@@ -120,7 +127,7 @@ def get_workouts(user_id: str) -> list[dict]:
                     (user_id,),
                 )
                 rows = cur.fetchall()
-        return [_row_to_workout(row, summary_only=True) for row in rows]
+        return [_row_to_workout(row, summary_only=summary_only) for row in rows]
     except Exception:
         return []
 

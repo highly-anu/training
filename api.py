@@ -1889,7 +1889,7 @@ from src import health_store as _health
 @require_auth
 def health_snapshot():
     return jsonify({
-        'workouts':        _health.get_workouts(g.user_id),
+        'workouts':        _health.get_workouts(g.user_id, summary_only=True),
         'sessionLogs':     _health.get_session_logs(g.user_id),
         'dailyBio':        _health.get_daily_bio(g.user_id),
         'matches':         _health.get_matches(g.user_id),

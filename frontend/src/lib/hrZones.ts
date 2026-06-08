@@ -104,16 +104,19 @@ function estimateZonesFromSummary(
 
 /**
  * Compute HR zone distribution.
- * @param maxHR        Maximum heart rate in bpm
- * @param samples      Time-series HR samples (may be empty)
- * @param avgHR        Fallback average HR when samples are unavailable
- * @param boundaries   Zone upper boundaries as fractions of maxHR (default: Friel 60/70/80/90%)
+ * @param maxHR            Maximum heart rate in bpm
+ * @param samples          Time-series HR samples (may be empty)
+ * @param avgHR            Fallback average HR when samples are unavailable
+ * @param boundaries       Zone upper boundaries as fractions of maxHR (default: Friel 60/70/80/90%)
+ * @param observedMaxHR    Workout peak HR (used as spread parameter in summary estimation instead of
+ *                         the athlete ceiling, which would over-inflate Z4/Z5 for easy sessions)
  */
 export function computeHRZones(
   maxHR: number,
   samples: HRSample[],
   avgHR?: number,
-  boundaries: number[] = DEFAULT_ZONE_BOUNDARIES
+  boundaries: number[] = DEFAULT_ZONE_BOUNDARIES,
+  observedMaxHR?: number
 ): HRZoneDistribution {
   if (samples.length >= 2) {
     const sorted = [...samples].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
@@ -137,7 +140,7 @@ export function computeHRZones(
   }
 
   const avg = avgHR ?? maxHR * 0.72
-  const max = samples[0]?.bpm ?? maxHR
+  const max = observedMaxHR ?? samples[0]?.bpm ?? maxHR
   return estimateZonesFromSummary(maxHR, avg, max, boundaries)
 }
 
