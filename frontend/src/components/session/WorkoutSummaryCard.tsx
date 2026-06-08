@@ -1,6 +1,6 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload, Heart, Clock, Flame, MapPin, Mountain, CheckCircle2, Info, AlertTriangle, Zap, Link2, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
+import { Upload, Heart, Clock, Flame, MapPin, CheckCircle2, Info, AlertTriangle, Zap, Link2, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
