@@ -6,7 +6,6 @@ import {
   Activity,
   Timer,
   Footprints,
-  MountainSnow,
   Flame,
   ArrowDownToLine,
   FileText,
