@@ -1465,15 +1465,20 @@ def parse_workout_file():
                 calories = session.get_value('total_calories')
                 dist_m   = session.get_value('total_distance')  # meters
 
-                # Elevation: prefer device-computed session totals (barometric altimeter),
-                # fall back to cumulative point-to-point over all altitude records.
-                total_ascent  = session.get_value('total_ascent')
-                total_descent = session.get_value('total_descent')
-                if total_ascent is not None or total_descent is not None:
+                # Prefer GPS-computed cumulative gain/loss (same algorithm as
+                # WorkoutDetail frontend) so all views agree.  Fall back to the
+                # device barometric session total only when no GPS altitude data
+                # is present at all (e.g. treadmill, indoor cycling).
+                # Check presence of altitude data explicitly — don't use a zero
+                # result as a proxy, or genuinely flat runs fall back to barometric.
+                has_gps_altitude = any(r.get('altitude') is not None for r in records)
+                if has_gps_altitude:
+                    elev_gain, elev_loss = _calc_elevation(records)
+                else:
+                    total_ascent  = session.get_value('total_ascent')
+                    total_descent = session.get_value('total_descent')
                     elev_gain = float(total_ascent  or 0)
                     elev_loss = float(total_descent or 0)
-                else:
-                    elev_gain, elev_loss = _calc_elevation(records)
 
                 # Use sub_sport for display when it adds meaning
                 display_type = (
@@ -1693,6 +1698,16 @@ def health_get_workout(workout_id: str):
     if workout is None:
         return jsonify({'detail': 'Not found'}), 404
     return jsonify(workout)
+
+
+@app.post('/api/health/workouts/recalculate-elevation')
+@require_auth
+def health_recalculate_elevation():
+    """Re-compute elevation_gain/loss from stored GPS tracks for all user workouts."""
+    result = _health.recalculate_workouts_elevation(g.user_id, _calc_elevation)
+    if result.get('error'):
+        return jsonify(result), 500
+    return jsonify(result)
 
 
 # ---------------------------------------------------------------------------

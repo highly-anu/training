@@ -75,6 +75,10 @@ function parsePerSessionKey(key: string): { dayKey: string; sessionIdx: number }
   return { dayKey: key.slice(0, lastDash), sessionIdx: idx }
 }
 
+// Prevents concurrent recalculation calls if init() fires multiple times
+// (re-auth, token refresh) before the first round-trip completes.
+let _elevationRecalcInFlight = false
+
 export const useBioStore = create<BioStore>()((set, get) => ({
   importedWorkouts: [],
   sessionPerformanceLogs: {},
@@ -82,13 +86,39 @@ export const useBioStore = create<BioStore>()((set, get) => ({
   workoutMatches: [],
   pendingMatches: [],
 
-  init: (snapshot) =>
+  init: (snapshot) => {
     set({
       importedWorkouts:       snapshot.workouts,
       sessionPerformanceLogs: snapshot.sessionLogs,
       dailyBioLogs:           snapshot.dailyBio,
       workoutMatches:         snapshot.matches,
-    }),
+    })
+    // One-time migration: recalculate stored elevation from GPS tracks so
+    // sidebar/analytics values match what WorkoutDetail computes.
+    if (!_elevationRecalcInFlight &&
+        typeof localStorage !== 'undefined' &&
+        !localStorage.getItem('elevationRecalcV1')) {
+      _elevationRecalcInFlight = true
+      healthApi.recalculateElevation().then(({ updated }) => {
+        localStorage.setItem('elevationRecalcV1', '1')
+        if (updated > 0) {
+          // Refresh snapshot so corrected values populate the store
+          healthApi.fetchHealthSnapshot().then((fresh) => {
+            set({
+              importedWorkouts:       fresh.workouts,
+              sessionPerformanceLogs: fresh.sessionLogs,
+              dailyBioLogs:           fresh.dailyBio,
+              workoutMatches:         fresh.matches,
+            })
+          }).catch(() => {})
+        }
+      }).catch(() => {
+        // Server error → flag not set → will retry next session
+      }).finally(() => {
+        _elevationRecalcInFlight = false
+      })
+    }
+  },
 
   addImportedWorkouts: (workouts) => {
     set((s) => {

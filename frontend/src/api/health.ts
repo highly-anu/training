@@ -56,3 +56,10 @@ export function deletePerformanceLog(benchmarkId: string): void {
 export async function fetchReadiness(): Promise<ReadinessResult> {
   return apiClient.get(`${BASE}/readiness`) as unknown as Promise<ReadinessResult>
 }
+
+export async function recalculateElevation(): Promise<{ updated: number; skipped: number }> {
+  return apiClient.post(`${BASE}/workouts/recalculate-elevation`, {}) as unknown as Promise<{
+    updated: number
+    skipped: number
+  }>
+}
