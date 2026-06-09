@@ -67,6 +67,37 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
         pass
 
 
+def update_workout_elevation(user_id: str, workout_id: str, gain: float, loss: float) -> None:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    'UPDATE workouts SET elevation_gain=%s, elevation_loss=%s WHERE id=%s AND user_id=%s',
+                    (round(gain), round(loss), workout_id, user_id),
+                )
+            conn.commit()
+    except Exception:
+        pass
+
+
+def get_workouts_with_gps(user_id: str) -> list[dict]:
+    """Return id + gps_track + stored elevation for elevation recalculation."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute(
+                    '''SELECT id, gps_track, elevation_gain, elevation_loss
+                       FROM workouts
+                       WHERE user_id = %s AND gps_track IS NOT NULL''',
+                    (user_id,),
+                )
+                return cur.fetchall()
+    except Exception:
+        return []
+
+
 def delete_workout(user_id: str, workout_id: str) -> None:
     from src.db import get_conn
     try:

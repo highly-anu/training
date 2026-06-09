@@ -1465,15 +1465,16 @@ def parse_workout_file():
                 calories = session.get_value('total_calories')
                 dist_m   = session.get_value('total_distance')  # meters
 
-                # Elevation: prefer device-computed session totals (barometric altimeter),
-                # fall back to cumulative point-to-point over all altitude records.
-                total_ascent  = session.get_value('total_ascent')
-                total_descent = session.get_value('total_descent')
-                if total_ascent is not None or total_descent is not None:
+                # Prefer GPS-computed cumulative gain/loss (same algorithm as
+                # WorkoutDetail frontend) so all views agree.  Fall back to the
+                # device barometric session total only when no GPS altitude data
+                # is present (e.g. treadmill, indoor cycling).
+                elev_gain, elev_loss = _calc_elevation(records)
+                if elev_gain == 0 and elev_loss == 0:
+                    total_ascent  = session.get_value('total_ascent')
+                    total_descent = session.get_value('total_descent')
                     elev_gain = float(total_ascent  or 0)
                     elev_loss = float(total_descent or 0)
-                else:
-                    elev_gain, elev_loss = _calc_elevation(records)
 
                 # Use sub_sport for display when it adds meaning
                 display_type = (
@@ -1693,6 +1694,38 @@ def health_get_workout(workout_id: str):
     if workout is None:
         return jsonify({'detail': 'Not found'}), 404
     return jsonify(workout)
+
+
+@app.post('/api/health/workouts/recalculate-elevation')
+@require_auth
+def health_recalculate_elevation():
+    """Re-compute elevation_gain/loss from stored GPS tracks for all user workouts."""
+    rows = _health.get_workouts_with_gps(g.user_id)
+    updated = skipped = 0
+    for row in rows:
+        gps = row['gps_track']
+        if isinstance(gps, str):
+            import json as _json
+            try:
+                gps = _json.loads(gps)
+            except Exception:
+                skipped += 1
+                continue
+        if not gps:
+            skipped += 1
+            continue
+        gain, loss = _calc_elevation(gps)
+        if gain == 0 and loss == 0:
+            skipped += 1
+            continue
+        stored_gain = row['elevation_gain'] or 0
+        stored_loss = row['elevation_loss'] or 0
+        if round(gain) != stored_gain or round(loss) != stored_loss:
+            _health.update_workout_elevation(g.user_id, row['id'], gain, loss)
+            updated += 1
+        else:
+            skipped += 1
+    return jsonify({'updated': updated, 'skipped': skipped})
 
 
 # ---------------------------------------------------------------------------

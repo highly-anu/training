@@ -82,13 +82,34 @@ export const useBioStore = create<BioStore>()((set, get) => ({
   workoutMatches: [],
   pendingMatches: [],
 
-  init: (snapshot) =>
+  init: (snapshot) => {
     set({
       importedWorkouts:       snapshot.workouts,
       sessionPerformanceLogs: snapshot.sessionLogs,
       dailyBioLogs:           snapshot.dailyBio,
       workoutMatches:         snapshot.matches,
-    }),
+    })
+    // One-time migration: recalculate stored elevation from GPS tracks so
+    // sidebar/analytics values match what WorkoutDetail computes.
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem('elevationRecalcV1')) {
+      healthApi.recalculateElevation().then(({ updated }) => {
+        localStorage.setItem('elevationRecalcV1', '1')
+        if (updated > 0) {
+          // Refresh snapshot so corrected values populate the store
+          healthApi.fetchHealthSnapshot().then((fresh) => {
+            set({
+              importedWorkouts:       fresh.workouts,
+              sessionPerformanceLogs: fresh.sessionLogs,
+              dailyBioLogs:           fresh.dailyBio,
+              workoutMatches:         fresh.matches,
+            })
+          }).catch(() => {})
+        }
+      }).catch(() => {
+        // Silently ignore — will retry next session
+      })
+    }
+  },
 
   addImportedWorkouts: (workouts) => {
     set((s) => {
