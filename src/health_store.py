@@ -67,35 +67,52 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
         pass
 
 
-def update_workout_elevation(user_id: str, workout_id: str, gain: float, loss: float) -> None:
+def recalculate_workouts_elevation(user_id: str, calc_elevation_fn) -> dict:
+    """Recompute elevation_gain/loss from stored GPS tracks using a server-side cursor
+    so GPS blobs are streamed one at a time rather than all loaded into memory at once."""
+    import json as _json
     from src.db import get_conn
+    updated = skipped = 0
     try:
         with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    'UPDATE workouts SET elevation_gain=%s, elevation_loss=%s WHERE id=%s AND user_id=%s',
-                    (round(gain), round(loss), workout_id, user_id),
-                )
-            conn.commit()
-    except Exception:
-        pass
-
-
-def get_workouts_with_gps(user_id: str) -> list[dict]:
-    """Return id + gps_track + stored elevation for elevation recalculation."""
-    from src.db import get_conn
-    try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute(
-                    '''SELECT id, gps_track, elevation_gain, elevation_loss
-                       FROM workouts
-                       WHERE user_id = %s AND gps_track IS NOT NULL''',
+            with conn.cursor(name='elev_recalc', cursor_factory=_pg_extras.RealDictCursor) as read_cur:
+                read_cur.itersize = 5
+                read_cur.execute(
+                    'SELECT id, gps_track, elevation_gain, elevation_loss '
+                    'FROM workouts WHERE user_id = %s AND gps_track IS NOT NULL',
                     (user_id,),
                 )
-                return cur.fetchall()
+                for row in read_cur:
+                    gps = row['gps_track']
+                    if isinstance(gps, str):
+                        try:
+                            gps = _json.loads(gps)
+                        except Exception:
+                            skipped += 1
+                            continue
+                    if not gps:
+                        skipped += 1
+                        continue
+                    # Skip workouts with no altitude data at all (treadmill, indoor)
+                    if not any(p.get('altitude') is not None for p in gps):
+                        skipped += 1
+                        continue
+                    gain, loss = calc_elevation_fn(gps)
+                    if round(gain) == (row['elevation_gain'] or 0) and \
+                       round(loss) == (row['elevation_loss'] or 0):
+                        skipped += 1
+                        continue
+                    with conn.cursor() as write_cur:
+                        write_cur.execute(
+                            'UPDATE workouts SET elevation_gain=%s, elevation_loss=%s '
+                            'WHERE id=%s AND user_id=%s',
+                            (round(gain), round(loss), row['id'], user_id),
+                        )
+                    updated += 1
+            conn.commit()
     except Exception:
-        return []
+        return {'updated': updated, 'skipped': skipped, 'error': True}
+    return {'updated': updated, 'skipped': skipped}
 
 
 def delete_workout(user_id: str, workout_id: str) -> None:

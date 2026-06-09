@@ -1468,9 +1468,13 @@ def parse_workout_file():
                 # Prefer GPS-computed cumulative gain/loss (same algorithm as
                 # WorkoutDetail frontend) so all views agree.  Fall back to the
                 # device barometric session total only when no GPS altitude data
-                # is present (e.g. treadmill, indoor cycling).
-                elev_gain, elev_loss = _calc_elevation(records)
-                if elev_gain == 0 and elev_loss == 0:
+                # is present at all (e.g. treadmill, indoor cycling).
+                # Check presence of altitude data explicitly — don't use a zero
+                # result as a proxy, or genuinely flat runs fall back to barometric.
+                has_gps_altitude = any(r.get('altitude') is not None for r in records)
+                if has_gps_altitude:
+                    elev_gain, elev_loss = _calc_elevation(records)
+                else:
                     total_ascent  = session.get_value('total_ascent')
                     total_descent = session.get_value('total_descent')
                     elev_gain = float(total_ascent  or 0)
@@ -1700,32 +1704,10 @@ def health_get_workout(workout_id: str):
 @require_auth
 def health_recalculate_elevation():
     """Re-compute elevation_gain/loss from stored GPS tracks for all user workouts."""
-    rows = _health.get_workouts_with_gps(g.user_id)
-    updated = skipped = 0
-    for row in rows:
-        gps = row['gps_track']
-        if isinstance(gps, str):
-            import json as _json
-            try:
-                gps = _json.loads(gps)
-            except Exception:
-                skipped += 1
-                continue
-        if not gps:
-            skipped += 1
-            continue
-        gain, loss = _calc_elevation(gps)
-        if gain == 0 and loss == 0:
-            skipped += 1
-            continue
-        stored_gain = row['elevation_gain'] or 0
-        stored_loss = row['elevation_loss'] or 0
-        if round(gain) != stored_gain or round(loss) != stored_loss:
-            _health.update_workout_elevation(g.user_id, row['id'], gain, loss)
-            updated += 1
-        else:
-            skipped += 1
-    return jsonify({'updated': updated, 'skipped': skipped})
+    result = _health.recalculate_workouts_elevation(g.user_id, _calc_elevation)
+    if result.get('error'):
+        return jsonify(result), 500
+    return jsonify(result)
 
 
 # ---------------------------------------------------------------------------

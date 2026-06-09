@@ -75,6 +75,10 @@ function parsePerSessionKey(key: string): { dayKey: string; sessionIdx: number }
   return { dayKey: key.slice(0, lastDash), sessionIdx: idx }
 }
 
+// Prevents concurrent recalculation calls if init() fires multiple times
+// (re-auth, token refresh) before the first round-trip completes.
+let _elevationRecalcInFlight = false
+
 export const useBioStore = create<BioStore>()((set, get) => ({
   importedWorkouts: [],
   sessionPerformanceLogs: {},
@@ -91,7 +95,10 @@ export const useBioStore = create<BioStore>()((set, get) => ({
     })
     // One-time migration: recalculate stored elevation from GPS tracks so
     // sidebar/analytics values match what WorkoutDetail computes.
-    if (typeof localStorage !== 'undefined' && !localStorage.getItem('elevationRecalcV1')) {
+    if (!_elevationRecalcInFlight &&
+        typeof localStorage !== 'undefined' &&
+        !localStorage.getItem('elevationRecalcV1')) {
+      _elevationRecalcInFlight = true
       healthApi.recalculateElevation().then(({ updated }) => {
         localStorage.setItem('elevationRecalcV1', '1')
         if (updated > 0) {
@@ -106,7 +113,9 @@ export const useBioStore = create<BioStore>()((set, get) => ({
           }).catch(() => {})
         }
       }).catch(() => {
-        // Silently ignore — will retry next session
+        // Server error → flag not set → will retry next session
+      }).finally(() => {
+        _elevationRecalcInFlight = false
       })
     }
   },
