@@ -28,6 +28,14 @@ struct WorkoutDetailSheet: View {
     @State private var fullWorkout: ImportedWorkout? = nil
     @State private var isLoadingDetail = false
 
+    // Analytics sections (computed after fullWorkout loads)
+    @State private var trimpScore: Int? = nil
+    @State private var hrZones: HRZoneDistribution? = nil
+    @State private var decoupling: DecouplingResult? = nil
+    @State private var trainingEffect: TrainingEffect? = nil
+    @State private var bestEffortsResult: [BestEffort] = []
+    @State private var recoveryTimeHours: Int? = nil
+
     private var detail: ImportedWorkout { fullWorkout ?? workout }
 
     // Linked session key (from existing session logs)
@@ -97,6 +105,12 @@ struct WorkoutDetailSheet: View {
                 if let gps = detail.gpsTrack, !gps.isEmpty { routeSection(gps: gps) }
                 if hasAnyTimeseries { timeseriesSection }
             }
+            // Analytics sections (Garmin/Apple/Strava-inspired)
+            if let effect = trainingEffect { trainingEffectSection(effect) }
+            if trimpScore != nil || recoveryTimeHours != nil { trimpSection }
+            if let zones = hrZones { hrZoneSection(zones) }
+            if let dc = decoupling { decouplingSection(dc) }
+            if !bestEffortsResult.isEmpty { bestEffortsSection }
             metricsSection
             actionsSection
         }
@@ -104,8 +118,40 @@ struct WorkoutDetailSheet: View {
         .task {
             guard fullWorkout == nil, let api = appState.api else { return }
             isLoadingDetail = true
-            fullWorkout = try? await api.fetchWorkout(id: workout.id)
+            let loaded = try? await api.fetchWorkout(id: workout.id)
+            fullWorkout = loaded
             isLoadingDetail = false
+
+            // Compute analytics after detail loads
+            let w = loaded ?? workout
+            let hrConfig = appState.profile.hrConfig
+            let dob = appState.profile.dateOfBirth
+            let all = appState.importedWorkouts
+            let (zones, trimp, dc, effect, efforts, recovery) = await Task.detached(priority: .userInitiated) {
+                let zones = AnalyticsEngine.computeHRZoneDistribution(
+                    samples: w.heartRate?.samples ?? [],
+                    avgHR: w.heartRate?.avg, maxHR: w.heartRate?.max,
+                    hrConfig: hrConfig, dateOfBirth: dob
+                )
+                let dur = w.durationMinutes ?? 0
+                let trimp = zones.map { AnalyticsEngine.computeTRIMP(zones: $0, durationMinutes: dur) }
+                let dc = AnalyticsEngine.computeAerobicDecoupling(
+                    gpsTrack: w.gpsTrack ?? [], hrSamples: w.heartRate?.samples ?? []
+                )
+                let effect: TrainingEffect? = {
+                    guard let z = zones, let t = trimp else { return nil }
+                    return AnalyticsEngine.trainingEffect(trimp: t, zones: z)
+                }()
+                let efforts = AnalyticsEngine.bestEfforts(gpsTrack: w.gpsTrack ?? [], allWorkouts: all)
+                let recovery = trimp.map { AnalyticsEngine.recoveryTimeHours(trimp: $0) }
+                return (zones, trimp, dc, effect, efforts, recovery)
+            }.value
+            hrZones = zones
+            trimpScore = trimp
+            decoupling = dc
+            trainingEffect = effect
+            bestEffortsResult = efforts
+            recoveryTimeHours = recovery
         }
     }
 
@@ -340,6 +386,117 @@ struct WorkoutDetailSheet: View {
                 }
             }
             .disabled(isDeleting)
+        }
+    }
+
+    // MARK: - Analytics Sections
+
+    private func trainingEffectSection(_ effect: TrainingEffect) -> some View {
+        Section("Training Effect") {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(effect.rawValue).font(.headline)
+                    Text("Based on HR zones + training load")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(effect.color.gradient)
+                    .frame(width: 44, height: 44)
+                    .overlay(
+                        Image(systemName: effect.icon)
+                            .foregroundStyle(.white).font(.body)
+                    )
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private var trimpSection: some View {
+        Section("Training Load") {
+            if let score = trimpScore {
+                LabeledContent("Impulse Score") {
+                    HStack(spacing: 6) {
+                        Text("\(score)").fontWeight(.semibold)
+                        Text(trimpLabel(score))
+                            .font(.caption)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(trimpColor(score))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            if let hours = recoveryTimeHours {
+                LabeledContent("Est. Recovery Time") {
+                    Label("\(hours)h", systemImage: "clock.arrow.circlepath")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func trimpLabel(_ trimp: Int) -> String {
+        switch trimp {
+        case ..<40:   return "Low"
+        case 40..<70: return "Moderate"
+        case 70..<100: return "High"
+        default:       return "Very High"
+        }
+    }
+
+    private func trimpColor(_ trimp: Int) -> Color {
+        switch trimp {
+        case ..<40:   return .secondary
+        case 40..<70: return .blue
+        case 70..<100: return .orange
+        default:       return .red
+        }
+    }
+
+    private func hrZoneSection(_ zones: HRZoneDistribution) -> some View {
+        Section("Heart Rate Zones") {
+            HRZoneDistributionView(zones: zones)
+                .frame(height: 120)
+                .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        }
+    }
+
+    private func decouplingSection(_ dc: DecouplingResult) -> some View {
+        Section("Aerobic Efficiency") {
+            LabeledContent("Pa:HR Drift") {
+                HStack(spacing: 6) {
+                    Text(String(format: "%.1f%%", dc.pct)).fontWeight(.medium)
+                    Text(dc.label.capitalized)
+                        .font(.caption).foregroundStyle(dc.color)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(dc.color.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+            }
+        }
+    }
+
+    private var bestEffortsSection: some View {
+        Section("Best Efforts") {
+            ForEach(bestEffortsResult) { effort in
+                HStack {
+                    Text(effort.label).font(.body)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(effort.paceStr).font(.body).fontWeight(.medium)
+                        if effort.isPersonalRecord {
+                            Text("Personal Record")
+                                .font(.caption2)
+                                .foregroundStyle(.yellow)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color.yellow.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .padding(.vertical, 2)
+            }
         }
     }
 
