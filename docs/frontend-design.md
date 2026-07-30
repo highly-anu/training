@@ -915,13 +915,27 @@ Two things worth copying from this component:
 
 > **Code diverges — doc is correct.** The `-500` family used here is *better* than the `-400` of §8.1 but still does not clear WCAG AA on a `/10` tint over white. Measured: `text-amber-500` **2.00:1**, `text-emerald-500` **2.33:1**, `text-red-500` **3.29:1** — floor is 4.5:1. Rolled into FIX-1.
 
-**The corrected rule, measured across the whole `/10`–`/15`-tint-over-white family:** no shade lighter than **-600** clears 4.5:1, and **-700** clears it with margin (`text-emerald-700` on a `/10` emerald tint = **5.05:1**). So the target pairing throughout is:
+**The corrected rule.** The pairing shape is always:
 
 ```
-text-{color}-700 dark:text-{color}-300
+text-{color}-{700|800} dark:text-{color}-300
 ```
 
-This applies to every semantic system in §8 — modality, phase, completion, fatigue, zone, readiness. The `-400`/`-500` shades are correct *only* as the dark-mode half.
+The dark half is settled — `-300` clears every dark surface. **The light half is per-entry, and there is no single shade that works.** `-600` and lighter never clear 4.5:1. `-700` clears it for the darker hues (red, sky, violet, purple, slate, zinc). The *bright* hues — orange, amber, yellow, lime, green, emerald, teal, cyan, pink, rose — still fail at `-700` on a `/15` tint and need `-800`:
+
+| | `-700` result | Shipped |
+|---|---|---|
+| `red`, `sky`, `violet`, `purple`, `slate`, `zinc` | passes | `-700` |
+| `orange`, `amber`, `yellow`, `lime`, `green`, `emerald`, `teal`, `cyan`, `pink`, `rose` | **2.25–4.49:1** | `-800` |
+
+Two things make this unintuitive, and both are why it must be measured rather than reasoned about:
+
+1. **The tint strength matters.** `emerald-700` passes on completion's `/10` tint (5.05:1) but fails on modality's `/15` tint (4.31:1) — the heavier tint is more saturated, so it sits closer to the text. The same hue can legitimately need different shades in different systems.
+2. **Zen is the binding constraint, not light.** Zen's `oklch(0.97 0.012 90)` background is a warm off-white slightly darker than pure white, so every tint composites darker over it. Several entries pass in Light and fail only in Zen.
+
+**Do not hand-pick these.** `test/semanticContrast.test.ts` checks every entry of every system against all four themes, resolving classes against Tailwind's own palette and the app's own theme tokens. Add an entry, run `npm test`, and it will tell you the shade you need — see §8.10.
+
+This applies to every semantic system in §8 — modality, phase, completion, fatigue, zone, status. The `-400`/`-500` shades are correct *only* as the dark-mode half.
 
 ### 8.9 Cross-Platform Color Parity
 
@@ -933,6 +947,29 @@ The `hex` values in §8.1 and §8.2 are **not web-only**. They are mirrored by h
 Both Swift files carry the web hex in a trailing comment on every line (`// #ef4444`) so a mismatch is visible in review.
 
 **Rule:** changing a modality or phase hex is a three-file change. Update the web map and both Swift files in the same commit, or the platforms drift silently — nothing enforces this at build time.
+
+### 8.10 The Contrast Guard
+
+`test/semanticContrast.test.ts` is the only thing keeping §8 honest. Run by `npm test` and by CI on every frontend PR.
+
+**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
+
+1. **Contrast ≥ 4.5:1** — composites the `/N` tint over that theme's `--background`, picks the light or dark half of the pair depending on the theme, and measures.
+2. **Both halves declared** — a bare `text-*` and a `dark:text-*`. This is the structural half of the rule: a single mid-shade cannot serve both themes, so an entry missing one half is wrong even if it happens to pass numerically today.
+
+**Why it reads from source rather than a table.** The palette comes from `node_modules/tailwindcss/theme.css` and the backgrounds from `src/styles/globals.css`. A hardcoded hex table would drift the moment Tailwind updated a shade or a theme changed its background — and drift silently, since the test would keep passing against stale values. Two self-checks assert the parsers actually matched something, so a regex that silently matches nothing fails loudly instead of passing everything.
+
+**Adding a colour.** Add the entry, run `npm test`. A failure prints the measured ratio, the theme, and the exact class strings:
+
+```
+modality/power in "zen": 4.25:1 (need 4.5:1)
+  text: text-yellow-700 dark:text-yellow-300
+  bg:   bg-yellow-500/15
+```
+
+Bump the light half one step and re-run. Do not lower the threshold, and do not exempt a theme.
+
+**Why this exists at all.** This bug class is invisible to every other gate — `tsc`, `vite build`, and `eslint` all pass on a badge at 2.3:1, and Tailwind emits no error for a nonsense variant chain like `dark:hover:text-x-700 dark:hover:text-x-300`. It only shows in a theme most development never opens. When the guard was first written it immediately found **14 entries** that a careful manual sweep had missed.
 
 ---
 

@@ -27,3 +27,10 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+
+      # Semantic-colour contrast guard. Runs after the build so a compile error
+      # is reported first, but it must run on every frontend PR: the class of bug
+      # it catches is invisible to tsc, vite and eslint. See docs/frontend-fix-plan.md.
+      - name: Test
+        run: npm test
+        working-directory: frontend

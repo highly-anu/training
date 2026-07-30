@@ -16,7 +16,7 @@ Implemented 2026-07-30: FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8. Verified with 
 
 | ID | Item | Severity | Status |
 |---|---|---|---|
-| FIX-1 | Light-mode semantic text fails WCAG AA | **High** | ✅ **Done** — all semantic systems paired; 2 new modules extracted |
+| FIX-1 | Light-mode semantic text fails WCAG AA | **High** | ✅ **Done** — all systems paired, 2 modules extracted, regression guard in CI |
 | FIX-2 | No reduced-motion support | **High** | ✅ **Done** |
 | FIX-3 | GPS map pinned to dark basemap | Medium | ✅ **Done** |
 | FIX-4 | HR zone colors triplicated | Medium | ✅ **Done** |
@@ -26,7 +26,7 @@ Implemented 2026-07-30: FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8. Verified with 
 | FIX-8 | Icon-only buttons have no accessible name | Medium | ✅ **Done** |
 | FIX-9 | Theme web fonts load unconditionally | Low | ✅ **Closed** — decided to leave; rationale below |
 
-**What's left:** the FIX-1 contrast regression test (below) — without it this bug returns silently. Then FIX-5 and FIX-6 opportunistically.
+**What's left:** FIX-5 and FIX-6, both opportunistic cleanup. The contrast guard is in place, so FIX-1 cannot silently regress.
 
 **Not covered:** `pages/WorkoutImport.tsx` and `components/bio/BulkImportReview.tsx` were skipped throughout — they hold uncommitted bulk-import work in progress, and editing them would interleave with those changes. They contain the only remaining unpaired semantic text in the app (9 occurrences). Worth a pass once that feature lands.
 
@@ -113,9 +113,25 @@ export const COMPLETION = {
 
 Sample one badge per system per theme against a contrast checker. Then consider the guard below — this class of bug is invisible in review and will recur.
 
-### Follow-on: contrast regression guard
+### Follow-on: contrast regression guard — ✅ done
 
-A unit test over `MODALITY_COLORS`, `PHASE_COLORS`, and `COMPLETION` that resolves each `text-*` class to its hex, composites the paired `bg-*` tint over each theme's `--background`, and asserts ≥4.5:1. ~40 lines with a small contrast helper. Cheap, and the only thing that will keep this fixed.
+`test/semanticContrast.test.ts` + `test/contrastUtils.ts`. Runs via `npm test` and in CI on every frontend PR (added to `.github/workflows/frontend-build.yml`, which previously ran only the build).
+
+Required adding a test runner — the frontend had none. Chose **vitest**: Vite-native, one dev dependency, and it picks up TS and the `@` alias without extra config.
+
+**It found 14 entries the manual sweep missed**, all near-misses in the 4.25–4.49 range, so all invisible to review. That corrected the rule recorded in the design doc: `-700` is *not* universally sufficient. The bright hues (orange, amber, yellow, lime, green, emerald, teal, cyan, pink, rose) need `-800` on a `/15` tint. Two non-obvious causes:
+
+- **Tint strength matters.** `emerald-700` passes on completion's `/10` tint (5.05:1) but fails on modality's `/15` (4.31:1). Same hue, different system, different required shade.
+- **Zen is the binding constraint**, not light. Its warm off-white background composites every tint darker, so several entries pass in Light and fail only in Zen.
+
+**Both failure modes are verified to actually fail**, which matters more than the passing run — a guard that cannot fail is decoration:
+
+| Injected regression | Caught as |
+|---|---|
+| `text-red-700` → `text-red-400` (the original bug) | `modality/max_strength in "light": 2.33:1` |
+| dropped the `dark:` half | `phase/base in "dark": 2.84:1` + `no dark:text-* shade` |
+
+**Design choice worth keeping:** the palette is read from `node_modules/tailwindcss/theme.css` and the backgrounds from `src/styles/globals.css`, not hardcoded. A hex table would drift silently the moment Tailwind or a theme changed. Two self-check assertions ensure the parsers matched something, so a regex that matches nothing fails loudly rather than passing everything.
 
 ---
 

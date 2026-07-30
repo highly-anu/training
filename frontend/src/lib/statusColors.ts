@@ -33,8 +33,8 @@ export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
   },
   yellow: {
     ring: 'ring-amber-500/30',
-    score: 'text-amber-700 dark:text-amber-300',
-    badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
+    score: 'text-amber-800 dark:text-amber-300',
+    badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30',
   },
   red: {
     ring: 'ring-red-500/30',
@@ -46,6 +46,6 @@ export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
 /** Bare text colour for a status, when only the text is being tinted. */
 export const STATUS_TEXT: Record<StatusLevel, string> = {
   green: 'text-emerald-700 dark:text-emerald-300',
-  yellow: 'text-amber-700 dark:text-amber-300',
+  yellow: 'text-amber-800 dark:text-amber-300',
   red: 'text-red-700 dark:text-red-300',
 }
