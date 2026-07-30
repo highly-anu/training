@@ -53,6 +53,7 @@ export function HeatmapControls({
           size="icon"
           className="h-7 w-7 shrink-0"
           onClick={() => setPlaying(!playing)}
+          aria-label={playing ? 'Pause week animation' : 'Play week animation'}
         >
           {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>
@@ -61,6 +62,7 @@ export function HeatmapControls({
           size="icon"
           className="h-7 w-7 shrink-0"
           onClick={() => { setPlaying(false); onWeekRangeChange([1, totalWeeks]) }}
+          aria-label="Reset week range"
         >
           <RotateCcw className="h-3.5 w-3.5" />
         </Button>

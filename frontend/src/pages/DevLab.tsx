@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Terminal, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -251,7 +252,13 @@ export function DevLab() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <motion.div
+      key="devlab"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
+      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+      className="flex flex-col h-full min-h-0"
+    >
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
         <Terminal className="size-5 text-primary" />
@@ -590,6 +597,6 @@ export function DevLab() {
           )}
         </div>
       </div>}
-    </div>
+    </motion.div>
   )
 }

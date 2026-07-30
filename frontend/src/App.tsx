@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ThemeProvider } from 'next-themes'
+import { MotionConfig } from 'framer-motion'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { ProgramBuilder } from '@/pages/ProgramBuilder'
@@ -43,37 +44,43 @@ function AuthInit({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} themes={['light', 'dark', 'military', 'zen']}>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthInit>
-            <HealthDataProvider>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route element={
-                  <ProtectedRoute>
-                    <RootLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="builder" element={<ProgramBuilder />} />
-                  <Route path="program" element={<ProgramView />} />
-                  <Route path="program/:week/:day" element={<SessionDetail />} />
-                  <Route path="exercises" element={<ExerciseCatalog />} />
-                  <Route path="profile" element={<ProfileBenchmarks />} />
-                  <Route path="philosophies" element={<Philosophies />} />
-                  <Route path="explore" element={<Explore />} />
-                  <Route path="import" element={<WorkoutImport />} />
-                  <Route path="import/:workoutId" element={<WorkoutDetail />} />
-                  <Route path="bio" element={<BioLog />} />
-                  <Route path="analytics" element={<WorkoutAnalytics />} />
-                  <Route path="dev" element={<DevLab />} />
-                </Route>
-              </Routes>
-            </HealthDataProvider>
-          </AuthInit>
-        </BrowserRouter>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      {/* reducedMotion="user" honours prefers-reduced-motion: transform/layout
+          animations (x, y, scale, rotate, height) are dropped, while opacity and
+          colour transitions still play. Page transitions degrade to clean
+          cross-fades and feedback survives. See docs/frontend-design.md §9.10. */}
+      <MotionConfig reducedMotion="user">
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthInit>
+              <HealthDataProvider>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route element={
+                    <ProtectedRoute>
+                      <RootLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    <Route path="builder" element={<ProgramBuilder />} />
+                    <Route path="program" element={<ProgramView />} />
+                    <Route path="program/:week/:day" element={<SessionDetail />} />
+                    <Route path="exercises" element={<ExerciseCatalog />} />
+                    <Route path="profile" element={<ProfileBenchmarks />} />
+                    <Route path="philosophies" element={<Philosophies />} />
+                    <Route path="explore" element={<Explore />} />
+                    <Route path="import" element={<WorkoutImport />} />
+                    <Route path="import/:workoutId" element={<WorkoutDetail />} />
+                    <Route path="bio" element={<BioLog />} />
+                    <Route path="analytics" element={<WorkoutAnalytics />} />
+                    <Route path="dev" element={<DevLab />} />
+                  </Route>
+                </Routes>
+              </HealthDataProvider>
+            </AuthInit>
+          </BrowserRouter>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </MotionConfig>
     </ThemeProvider>
   )
 }

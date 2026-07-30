@@ -3,23 +3,22 @@ import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { GPSPoint } from '@/api/types'
-import { DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS } from '@/lib/hrZones'
+import { useTheme } from 'next-themes'
 
-const ZONE_PALETTE = [
-  '#94a3b8', // Z1 — Recovery
-  '#38bdf8', // Z2 — Aerobic
-  '#fbbf24', // Z3 — Tempo
-  '#f97316', // Z4 — Threshold
-  '#ef4444', // Z5 — Max
-]
+// CartoDB serves both basemaps at an identical URL shape. Military is a dark
+// surface so it groups with dark; Zen is warm off-white so it groups with light.
+const DARK_THEMES = new Set(['dark', 'military'])
+const basemapUrl = (isDark: boolean) =>
+  `https://{s}.basemaps.cartocdn.com/${isDark ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`
 
 function hrColor(bpm: number | null | undefined, maxHR: number, boundaries: number[]): string {
-  if (bpm == null) return ZONE_PALETTE[0]
+  if (bpm == null) return ZONE_COLORS[0]
   const pct = bpm / maxHR
   for (let i = 0; i < boundaries.length; i++) {
-    if (pct < boundaries[i]) return ZONE_PALETTE[i]
+    if (pct < boundaries[i]) return ZONE_COLORS[i]
   }
-  return ZONE_PALETTE[4]
+  return ZONE_COLORS[4]
 }
 
 // Fit bounds to track
@@ -78,6 +77,9 @@ export function GPSMap({ track, maxHR = 190, zoneBoundaries = DEFAULT_ZONE_BOUND
   const start = track[0]
   const end = track[track.length - 1]
 
+  const { resolvedTheme } = useTheme()
+  const tileUrl = basemapUrl(DARK_THEMES.has(resolvedTheme ?? 'dark'))
+
   return (
     <div className={`rounded-lg overflow-hidden border border-border isolate ${className ?? ''}`} style={className ? undefined : { height: 360 }}>
       <MapContainer
@@ -87,7 +89,8 @@ export function GPSMap({ track, maxHR = 190, zoneBoundaries = DEFAULT_ZONE_BOUND
         style={{ height: '100%', width: '100%' }}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        {/* key forces Leaflet to swap tiles cleanly when the theme changes */}
+        <TileLayer key={tileUrl} url={tileUrl} />
         <FitBounds points={allPoints} />
         {segments.map((seg, i) => (
           <Polyline

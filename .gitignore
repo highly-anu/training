@@ -50,3 +50,6 @@ data/*.fit
 data/*.zip
 data/api_errors.txt
 data/create_fit.py
+
+# Local workout files for import testing (.wkt tracks + .png previews)
+Workouts/

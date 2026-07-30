@@ -2,6 +2,18 @@
 
 A complete record of the visual language, interaction patterns, component architecture, and implementation details used in this project. Written to be portable — everything here can be used to establish the same design system in a new project from scratch.
 
+**Scope:** the web app (`frontend/`) only. iOS and watchOS have their own design docs at `ios/docs/design-system.md` and `ios/docs/ios-interactive-design.md`. Modality and phase hex values are shared across all three platforms — see §8.9 before changing any of them.
+
+### Reading the divergence callouts
+
+Where this document and the code disagree, the divergence is marked inline at the rule it affects, in one of two forms:
+
+> **Code diverges — code is correct.** The rule below has been rewritten to describe what the code does. No code change needed.
+
+> **Code diverges — doc is correct.** The rule below is the target. The code has drifted and should be brought back. Tracked in `docs/frontend-fix-plan.md`.
+
+Anything not marked is believed to match the code as of 2026-07-30.
+
 ---
 
 ## Table of Contents
@@ -23,6 +35,8 @@ A complete record of the visual language, interaction patterns, component archit
 15. [Icon System](#15-icon-system)
 16. [Implementation Checklist](#16-implementation-checklist)
 17. [Tab Header Pattern](#17-tab-header-pattern)
+
+**Companion doc:** `docs/frontend-fix-plan.md` — the prioritized work list for every **"doc is correct"** divergence flagged below, i.e. the places where the code should change to meet this spec.
 
 ---
 
@@ -72,21 +86,49 @@ Animation never serves as flair. Durations are kept short (150–300ms). Nothing
 
 Radix UI primitives handle ARIA roles, keyboard navigation, and focus management. The design builds on top of this — it does not override it. Focus rings are always visible. Color is never the sole conveyor of meaning (icons and text labels accompany color).
 
+> **Partially resolved 2026-07-30.** This was the least-honored principle in the document. Radix carries roles, keyboard, and focus for free, which made the first 80% feel solved; the remaining 20% — the parts Radix cannot infer — had never been done.
+>
+> | Gap | Status |
+> |---|---|
+> | Reduced motion unimplemented (FIX-2) | ✅ `MotionConfig` at the app root + `DumbbellLoader` gated |
+> | Light-mode semantic text at ~2.3:1 (FIX-1) | ✅ modality + phase maps on `-700`/`-300`; ⚠️ ~64 inline completion-state usages still open |
+> | Icon-only buttons unnamed (FIX-8) | ✅ all 7 `size="icon"` buttons labeled |
+>
+> Remaining: the inline `text-emerald-500` completion states (§8.3) and the readiness palette (§8.8). Tracked in `docs/frontend-fix-plan.md`.
+
+**What "foundation" obliges, concretely.** A component is not finished until:
+
+- Every interactive element has an accessible name — visible text, or `aria-label` when the control is icon-only
+- Every animation over a few pixels of travel has a reduced-motion answer (§9.10)
+- Every color-carried meaning is duplicated in text or icon
+- Every text/background pair clears 4.5:1 **in all four themes**, not just the one being developed in
+- Focus is visible on every focusable element (Radix gives this; do not remove it with `outline-none` unless a `focus-visible:ring` replaces it)
+
 ---
 
 ## 2. Technology Stack
 
 ```
-React 19 + Vite 8 + TypeScript
-Tailwind CSS v4
+React 19 + Vite 8 + TypeScript 5.9
+Tailwind CSS v4 (@tailwindcss/vite)
 shadcn/ui (Radix UI primitives + custom styling)
 Framer Motion v12
-@dnd-kit/core v6 (drag-and-drop)
-Recharts v3 (data visualization)
-Lucide React (icons)
+next-themes v0.4          (theme class switching — see §3.1)
+tw-animate-css v1.4       (keyframe utilities)
+@dnd-kit/core v6          (drag-and-drop)
+Recharts v3               (data visualization — see §12)
+react-leaflet v5 + leaflet v1.9   (GPS route maps)
+CesiumJS (runtime CDN load, no npm dep)  (Swiss 3D terrain)
+date-fns v4               (all date math — never hand-rolled)
+react-day-picker v9       (calendar primitive behind ui/calendar.tsx)
+Lucide React v1.7 (icons)
 class-variance-authority (CVA, component variants)
 clsx + tailwind-merge (cn() utility)
 ```
+
+**Data / infra deps** (not design-system concerns, listed so the stack reads complete): `@tanstack/react-query` v5, `zustand` v5, `@supabase/supabase-js` v2, `axios`, `msw` v2, `react-router-dom` v7.
+
+**Radix primitives in use:** alert-dialog, checkbox, dialog, label, popover, progress, scroll-area, select, separator, slider, slot, switch, tabs, toggle, tooltip.
 
 ### The `cn()` Utility
 
@@ -117,46 +159,101 @@ className={cn(
 
 ### 3.1 CSS Custom Properties
 
-All colors are defined as CSS custom properties on `:root` (light) and `.dark`, `.military`, `.zen` theme classes. Components reference tokens, never raw values.
+> **Code diverges — code is correct.** An earlier revision of this section showed `:root` holding the *dark* palette and a `.light` class overriding it. That is backwards. `:root` holds the **light** palette and `.dark` overrides it — the conventional cascade, and the one `next-themes` expects. Section rewritten to match `src/styles/globals.css`.
 
-**Dark theme (default):**
+All colors live in `src/styles/globals.css` as CSS custom properties. Components reference tokens, never raw values.
+
+**How themes are applied.** `next-themes` writes a single class onto `<html>`. `:root` is the light baseline; `.dark`, `.military`, and `.zen` override it. Configured in `src/App.tsx:45`:
+
+```tsx
+<ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}
+               themes={['light', 'dark', 'military', 'zen']}>
+```
+
+**"Dark-first" means dark is the default theme, not that dark is the base cascade layer.** `defaultTheme="dark"` and `enableSystem={false}` — a first-time visitor gets dark regardless of OS preference. Light is a deliberate opt-in, not a fallback.
+
+**Tailwind v4 token bridge.** Tailwind v4 has no JS config; utilities are generated from an `@theme inline` block that maps each custom property to a `--color-*` name. This block is load-bearing — a token with no entry here produces no utility class:
+
+```css
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card:       var(--card);
+  /* … popover, primary, secondary, muted, accent, destructive, border, input, ring */
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-sans-family);
+  --font-mono: var(--font-mono-family);
+}
+```
+
+Radius utilities derive from a single `--radius` token, so a theme can reshape the whole app by setting one value (Military uses `0.25rem`, Zen `0.75rem`).
+
+**Light theme (`:root` — the base cascade):**
 ```css
 :root {
+  --background:        oklch(1 0 0);
+  --foreground:        oklch(0.141 0.005 285.823);
+  --card:              oklch(1 0 0);
+  --card-foreground:   oklch(0.141 0.005 285.823);
+  --primary:           oklch(0.769 0.188 70.08);     /* amber-500 */
+  --primary-foreground: oklch(0.282 0.065 51.617);
+  --secondary:         oklch(0.967 0.001 286.375);
+  --muted:             oklch(0.967 0.001 286.375);
+  --muted-foreground:  oklch(0.552 0.016 285.938);
+  --destructive:       oklch(0.577 0.245 27.325);
+  --border:            oklch(0.92 0.004 286.32);
+  --input:             oklch(0.92 0.004 286.32);
+  --ring:              oklch(0.769 0.188 70.08);
+  --radius:            0.5rem;
+  --font-sans-family:  ui-sans-serif, system-ui, sans-serif;
+  --font-mono-family:  ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+}
+```
+
+**Dark theme (`.dark` — the default):**
+```css
+.dark {
   --background:        oklch(0.141 0.005 285.823);  /* dark navy */
   --foreground:        oklch(0.985 0 0);             /* near-white */
   --card:              oklch(0.21 0.006 285.885);    /* slightly lighter navy */
   --card-foreground:   oklch(0.985 0 0);
-  --primary:           oklch(0.769 0.188 70.08);     /* amber-500 */
-  --primary-foreground: oklch(0.282 0.065 51.617);   /* dark brown */
-  --secondary:         oklch(0.274 0.006 286.033);   /* dark gray */
-  --secondary-foreground: oklch(0.985 0 0);
+  --primary:           oklch(0.769 0.188 70.08);     /* amber — unchanged */
+  --primary-foreground: oklch(0.282 0.065 51.617);
+  --secondary:         oklch(0.274 0.006 286.033);
   --muted:             oklch(0.274 0.006 286.033);
-  --muted-foreground:  oklch(0.552 0.016 285.938);   /* medium gray */
-  --accent:            oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive:       oklch(0.704 0.191 22.216);    /* red */
+  --muted-foreground:  oklch(0.705 0.015 286.067);   /* NOT 0.552 — brighter than light */
+  --destructive:       oklch(0.704 0.191 22.216);
   --border:            oklch(1 0 0 / 10%);           /* white 10% */
   --input:             oklch(1 0 0 / 15%);           /* white 15% */
-  --ring:              oklch(0.769 0.188 70.08);     /* amber (focus) */
-  --radius:            0.5rem;
+  --ring:              oklch(0.769 0.188 70.08);
 }
 ```
 
-**Light theme:**
-```css
-.light {
-  --background:        oklch(1 0 0);
-  --foreground:        oklch(0.141 0.005 285.823);
-  --card:              oklch(1 0 0);
-  --primary:           oklch(0.769 0.188 70.08);     /* amber — same as dark */
-  --border:            oklch(0.92 0.004 286.32);
-  --input:             oklch(0.92 0.004 286.32);
-  --muted:             oklch(0.967 0.001 286.375);
-  --muted-foreground:  oklch(0.552 0.016 285.938);
-}
-```
+Note `--muted-foreground` is *lighter* in dark mode (0.705) than in light mode (0.552). Both are pulling away from their own background — the token is "recede by roughly this much," not a fixed gray.
 
-**Key principle:** `--primary` (amber) is identical in all themes. Brand color is consistent.
+**Key principle:** `--primary` (amber) is identical in light and dark. Brand color is consistent. Military and Zen deliberately break this — they are character themes, not light/dark variants of one identity.
+
+### 3.1.1 Character Themes (Military, Zen)
+
+Military and Zen go beyond token swaps. They are the only places in the app where a theme owns typography, texture, and scrollbar chrome:
+
+| | Military | Zen |
+|---|---|---|
+| `--primary` | olive `oklch(0.58 0.13 130)` | sage `oklch(0.55 0.1 155)` |
+| `--radius` | `0.25rem` (hard corners) | `0.75rem` (soft) |
+| Font | `"IBM Plex Mono"` — sans *and* mono slots | `"Lora", Georgia, serif` |
+| Body texture | 20px radial dot-grid in primary @ 14% | two soft radial gradient washes (sage NW, stone SE) |
+| Letter-spacing | `-0.01em` (tightened) | `0.012em` + `line-height: 1.65` |
+| Scrollbar | 4px, square thumb | 6px, pill thumb |
+
+**Rule for new themes:** override tokens in a class block, and only reach for `body` background-image / letter-spacing if the theme is a *character* theme. Light and dark must stay texture-free.
+
+**Web fonts:** `IBM Plex Mono` and `Lora` are loaded from Google Fonts in `index.html:9-11` (`preconnect` ×2 + one stylesheet `<link>`, `display=swap`). This is the only external font dependency in the app. Note it loads **unconditionally**, so light and dark users pay for two fonts they never render — see `docs/frontend-fix-plan.md` for the deferred-load option.
 
 ### 3.2 Tailwind Token Mapping
 
@@ -216,10 +313,10 @@ font-family: "IBM Plex Mono", ui-monospace, monospace;
 
 **Zen theme override:**
 ```css
-font-family: "Lora", Georgia, serif;
+font-family: "Lora", Georgia, serif;   /* sans slot only — mono stays system */
 ```
 
-No web fonts are loaded by default — system fonts provide zero-cost performance. Theme variants that load web fonts (Zen, Military) do so optionally.
+Light and dark render entirely in system fonts — zero layout cost, no FOUT. Military and Zen use web fonts served from Google Fonts, declared once in `index.html` (see §3.1.1). Military overrides *both* the sans and mono slots with IBM Plex Mono; Zen overrides only the sans slot, so load prescriptions stay in the system mono face and remain scannable.
 
 ### 4.2 Scale
 
@@ -577,28 +674,48 @@ Use instead of `overflow-y-auto` when you need styled scrollbars or need to avoi
 
 ## 8. Semantic Color Systems
 
-Three domain-specific color vocabularies sit on top of the base token system. These use raw Tailwind color classes (not tokens) because the specific color is intentional information.
+Domain-specific color vocabularies sit on top of the base token system. These use raw Tailwind color classes (not tokens) because the specific color is intentional information.
+
+There are now **six** of them, each owning one axis of meaning. Two colors may look alike across two systems and still mean unrelated things — that is fine, because they never appear on the same axis:
+
+| System | Lives in | Axis it encodes |
+|---|---|---|
+| Modality (§8.1) | `lib/modalityColors.ts` | *what kind of training* |
+| Phase (§8.2) | `lib/phaseColors.ts` | *where in the program* |
+| Completion (§8.3) | inline `emerald-500` | *done or not done* |
+| Fatigue (§8.4) | `SessionNotes` | *how hard it felt* (subjective, 1–5) |
+| HR zone (§8.7) | duplicated ×3 — see note | *measured intensity* |
+| Readiness (§8.8) | `ReadinessWidget` | *should you train today* |
 
 ### 8.1 Modality Colors
 
 Training modalities are color-coded consistently everywhere: badges, session card top bars, chart series, drag ghost indicators.
 
+The `hex` field is the source of truth for anything that isn't a Tailwind class — chart fills, SVG strokes, inline `style` color bars — and is mirrored into the iOS and watchOS apps (§8.9).
+
 ```typescript
-const MODALITY_COLORS = {
-  max_strength:            { hex: '#ef4444', bg: 'bg-red-500/15',    text: 'text-red-400',    border: 'border-red-500/40'    },
-  strength_endurance:      { hex: '#f97316', bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/40' },
-  relative_strength:       { hex: '#f43f5e', bg: 'bg-rose-500/15',   text: 'text-rose-400',   border: 'border-rose-500/40'   },
-  aerobic_base:            { hex: '#0ea5e9', bg: 'bg-sky-500/15',    text: 'text-sky-400',    border: 'border-sky-500/40'    },
-  anaerobic_intervals:     { hex: '#06b6d4', bg: 'bg-cyan-500/15',   text: 'text-cyan-400',   border: 'border-cyan-500/40'   },
-  mixed_modal_conditioning:{ hex: '#8b5cf6', bg: 'bg-violet-500/15', text: 'text-violet-400', border: 'border-violet-500/40' },
-  power:                   { hex: '#eab308', bg: 'bg-yellow-500/15', text: 'text-yellow-500', border: 'border-yellow-500/40' },
-  mobility:                { hex: '#10b981', bg: 'bg-emerald-500/15',text: 'text-emerald-400',border: 'border-emerald-500/40'},
-  movement_skill:          { hex: '#14b8a6', bg: 'bg-teal-500/15',   text: 'text-teal-400',   border: 'border-teal-500/40'   },
-  durability:              { hex: '#f59e0b', bg: 'bg-amber-500/15',  text: 'text-amber-500',  border: 'border-amber-500/40'  },
-  combat_sport:            { hex: '#ec4899', bg: 'bg-pink-500/15',   text: 'text-pink-400',   border: 'border-pink-500/40'   },
-  rehab:                   { hex: '#84cc16', bg: 'bg-lime-500/15',   text: 'text-lime-400',   border: 'border-lime-500/40'   },
+// lib/modalityColors.ts
+const MODALITY_COLORS: Record<ModalityId, ModalityColor> = {
+  max_strength:            { hex: '#ef4444', bg: 'bg-red-500/15',    text: 'text-red-700 dark:text-red-300',       border: 'border-red-500/40',    label: 'Max Strength' },
+  strength_endurance:      { hex: '#f97316', bg: 'bg-orange-500/15', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-500/40', label: 'Strength Endurance' },
+  relative_strength:       { hex: '#f43f5e', bg: 'bg-rose-500/15',   text: 'text-rose-700 dark:text-rose-300',     border: 'border-rose-500/40',   label: 'Relative Strength' },
+  aerobic_base:            { hex: '#0ea5e9', bg: 'bg-sky-500/15',    text: 'text-sky-700 dark:text-sky-300',       border: 'border-sky-500/40',    label: 'Aerobic Base' },
+  anaerobic_intervals:     { hex: '#06b6d4', bg: 'bg-cyan-500/15',   text: 'text-cyan-700 dark:text-cyan-300',     border: 'border-cyan-500/40',   label: 'Anaerobic Intervals' },
+  mixed_modal_conditioning:{ hex: '#8b5cf6', bg: 'bg-violet-500/15', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-500/40', label: 'Mixed Modal' },
+  power:                   { hex: '#eab308', bg: 'bg-yellow-500/15', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-500/40', label: 'Power' },
+  mobility:                { hex: '#10b981', bg: 'bg-emerald-500/15',text: 'text-emerald-700 dark:text-emerald-300',border:'border-emerald-500/40',label: 'Mobility' },
+  movement_skill:          { hex: '#14b8a6', bg: 'bg-teal-500/15',   text: 'text-teal-700 dark:text-teal-300',     border: 'border-teal-500/40',   label: 'Movement Skill' },
+  durability:              { hex: '#f59e0b', bg: 'bg-amber-500/15',  text: 'text-amber-700 dark:text-amber-300',   border: 'border-amber-500/40',  label: 'Durability' },
+  combat_sport:            { hex: '#ec4899', bg: 'bg-pink-500/15',   text: 'text-pink-700 dark:text-pink-300',     border: 'border-pink-500/40',   label: 'Combat Sport' },
+  rehab:                   { hex: '#84cc16', bg: 'bg-lime-500/15',   text: 'text-lime-700 dark:text-lime-300',     border: 'border-lime-500/40',   label: 'Rehab' },
 }
 ```
+
+Each entry carries a `label` — the badge component reads it, so modality display names are never re-derived from the ID at the call site.
+
+> **Resolved 2026-07-30 (was FIX-1).** This map previously shipped `text-{c}-400 dark:text-{c}-300`, which was **inverted**: because `:root` is light (§3.1), the bare `-400` shade was what light mode rendered, on a `/15`-tinted white background — `text-red-400` (#f87171) on ≈#fce3e3 measures **2.27:1** against a WCAG AA floor of 4.5:1, at `text-[10px]`. The `dark:` half was brightening an already-passing dark mode while light mode went unaddressed. All 12 entries now use the `-700`/`-300` pairing shown above.
+
+**The rule this encodes:** in a two-theme system, a semantic color needs a *pair* of shades pulling in opposite directions from their backgrounds — dark text on light, light text on dark. A single mid-shade cannot serve both, and no single shade in the `-400`/`-500` band clears AA on the light end (measurements in §8.8).
 
 **Semantic grouping behind the colors:**
 - Warm (red → orange → rose): strength modalities
@@ -632,19 +749,29 @@ export function ModalityBadge({ modality, size = 'default' }) {
 ### 8.2 Training Phase Colors
 
 ```typescript
+// lib/phaseColors.ts — 11 entries keyed by TrainingPhase
 const PHASE_COLORS = {
-  base:        { hex: '#0ea5e9', bg: 'bg-sky-500/15',    text: 'text-sky-400',    label: 'Base'        },
-  build:       { hex: '#f59e0b', bg: 'bg-amber-500/15',  text: 'text-amber-500',  label: 'Build'       },
-  peak:        { hex: '#ef4444', bg: 'bg-red-500/15',    text: 'text-red-400',    label: 'Peak'        },
-  taper:       { hex: '#22c55e', bg: 'bg-green-500/15',  text: 'text-green-400',  label: 'Taper'       },
-  deload:      { hex: '#94a3b8', bg: 'bg-slate-500/15',  text: 'text-slate-400',  label: 'Deload'      },
-  maintenance: { hex: '#a1a1aa', bg: 'bg-zinc-500/15',   text: 'text-zinc-400',   label: 'Maintenance' },
-  rehab:       { hex: '#84cc16', bg: 'bg-lime-500/15',   text: 'text-lime-400',   label: 'Rehab'       },
-  post_op:     { hex: '#a855f7', bg: 'bg-purple-500/15', text: 'text-purple-400', label: 'Post-Op'     },
+  base:        { hex: '#0ea5e9', bg: 'bg-sky-500/15',    text: 'text-sky-700 dark:text-sky-300',       label: 'Base'        },
+  build:       { hex: '#f59e0b', bg: 'bg-amber-500/15',  text: 'text-amber-700 dark:text-amber-300',   label: 'Build'       },
+  peak:        { hex: '#ef4444', bg: 'bg-red-500/15',    text: 'text-red-700 dark:text-red-300',       label: 'Peak'        },
+  taper:       { hex: '#22c55e', bg: 'bg-green-500/15',  text: 'text-green-700 dark:text-green-300',   label: 'Taper'       },
+  deload:      { hex: '#94a3b8', bg: 'bg-slate-500/15',  text: 'text-slate-700 dark:text-slate-300',   label: 'Deload'      },
+  maintenance: { hex: '#a1a1aa', bg: 'bg-zinc-500/15',   text: 'text-zinc-700 dark:text-zinc-300',     label: 'Maintenance' },
+  rehab:       { hex: '#84cc16', bg: 'bg-lime-500/15',   text: 'text-lime-700 dark:text-lime-300',     label: 'Rehab'       },
+  post_op:     { hex: '#a855f7', bg: 'bg-purple-500/15', text: 'text-purple-700 dark:text-purple-300', label: 'Post-Op'     },
+  active:      { hex: '#94a3b8', bg: 'bg-slate-500/15',  text: 'text-slate-700 dark:text-slate-300',   label: 'Active'      },
+  transition:  { hex: '#8b5cf6', bg: 'bg-violet-500/15', text: 'text-violet-700 dark:text-violet-300', label: 'Transition'  },
+  specific:    { hex: '#f97316', bg: 'bg-orange-500/15', text: 'text-orange-700 dark:text-orange-300', label: 'Specific'    },
 }
 ```
 
+`transition` and `specific` belong to Uphill Athlete's four-phase sequence (transition → base → specific → taper). They reuse the violet and orange hexes from `mixed_modal_conditioning` and `strength_endurance` — acceptable because phase and modality never render on the same mark.
+
+> **Resolved 2026-07-30 (was FIX-1).** Same inverted pattern as §8.1, fixed the same way across all 11 entries.
+
 **Intuitive mapping:** Blue = foundation, Amber = building heat, Red = peak intensity, Green = tapering down, Gray = recovery/maintenance.
+
+`active` and `deload` intentionally share the same slate hex. `active` is a non-periodized fallback for programs with no phase structure; it should read as "no phase signal," which is exactly what neutral slate says.
 
 ### 8.3 Completion State (Emerald)
 
@@ -662,6 +789,10 @@ const completeStyles = {
 ```
 
 Applied to: session cards, day headers, completion buttons, "all done" state of TodaySession, week-complete banners.
+
+> **Code diverges — doc is correct.** Unlike modality and phase, completion styles are written inline at ~64 call sites rather than read from a shared map, and none carry a `dark:` variant — so `text-emerald-500` measures **2.33:1** in light mode (§8.8). Because it is scattered, this is the most tedious third of FIX-1.
+>
+> **Secondary recommendation:** extract these into `lib/completionColors.ts` alongside the other systems while fixing them. One color owning one meaning across the whole app is exactly the case a shared module exists for, and 64 inline copies is how the next inconsistency gets introduced.
 
 ### 8.4 Fatigue Gradient
 
@@ -706,6 +837,80 @@ const EFFORT_DOT = {
 ```
 
 Used as small `size-2 rounded-full` indicators on exercise cards.
+
+### 8.7 Heart-Rate Zone Colors
+
+The five-zone Friel/Coggan model. Unlike modality and phase colors, these encode a *measured* quantity, so the ramp must read as ordered — cool at rest, hot at max — not as a set of categories:
+
+```typescript
+const ZONE_COLORS = [
+  '#94a3b8', // Z1 — slate  · Recovery   (<60% max HR)
+  '#38bdf8', // Z2 — sky    · Aerobic    (60–70%)
+  '#fbbf24', // Z3 — amber  · Tempo      (70–80%)
+  '#f97316', // Z4 — orange · Threshold  (80–90%)
+  '#ef4444', // Z5 — red    · Max        (90%+)
+]
+```
+
+Boundaries live in `lib/hrZones.ts` as `DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]`.
+
+**Why these differ from modality colors:** Z2 is `#38bdf8` (sky-400) where `aerobic_base` is `#0ea5e9` (sky-500), and Z5 shares red with `max_strength`. Deliberate — a zone ramp needs even perceptual spacing across five steps, which a categorical palette does not provide. The two systems never co-occur on the same mark.
+
+`lib/hrZones.ts` also owns the non-color half of the zone model: `parseZoneTarget()` (reads "Zone 2 — HR < 135 bpm" off a prescription), `isZoneCompliant()` (≥50% of session time in the prescribed zone), and `BANISTER_ZONE_WEIGHTS = [1.0, 1.5, 2.0, 3.0, 4.5]` for TRIMP.
+
+> **Resolved 2026-07-30 (was FIX-4).** This ramp was previously triplicated verbatim across `HRTimeline`, `HRZoneChart`, and `GPSMap` — one copy even carried the comment "Must match HRZoneChart ZONE_META colors," which is the duplication admitting itself. It now lives once in `lib/hrZones.ts`.
+
+**Canonical shape** — `ZONES` carries color *and* naming, with `ZONE_COLORS` / `ZONE_BG` derived from it:
+
+```typescript
+export const ZONES = [
+  { key: 'z1', label: 'Z1', description: 'Recovery',  color: '#94a3b8', bg: 'rgba(148,163,184,0.06)' },
+  // … z2–z5
+] as const
+
+export const ZONE_COLORS: readonly string[] = ZONES.map((z) => z.color)
+export const ZONE_BG:     readonly string[] = ZONES.map((z) => z.bg)
+```
+
+`bg` is the faint band fill painted behind `HRTimeline`'s plot. Zone labels and descriptions are no longer re-derived per consumer.
+
+### 8.8 Readiness Status
+
+`lib/readiness.ts` computes a 0–100 score from four weighted components (resting HR, HRV, accumulated fatigue, sleep) and resolves it to one of three statuses. `ReadinessWidget` maps status → style set:
+
+```typescript
+const READINESS_STYLES = {
+  green:  { ring: 'ring-emerald-500/30', score: 'text-emerald-500', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' },
+  yellow: { ring: 'ring-amber-500/30',   score: 'text-amber-500',   badge: 'bg-amber-500/10 text-amber-500 border-amber-500/30'       },
+  red:    { ring: 'ring-red-500/30',     score: 'text-red-500',     badge: 'bg-red-500/10 text-red-500 border-red-500/30'             },
+}
+```
+
+Two things worth copying from this component:
+
+1. **The score renders `text-4xl font-bold tabular-nums`.** `tabular-nums` is mandatory on any number that updates in place — without it the score jitters horizontally as digits change.
+2. **The status is never color-only.** A text badge sits beside the number, and `ReadinessFlag` values (`elevated_rhr_3d`, `suppressed_hrv_3d`, `insufficient_sleep`, …) surface as written reasons. This is §1.6 done properly.
+
+> **Code diverges — doc is correct.** The `-500` family used here is *better* than the `-400` of §8.1 but still does not clear WCAG AA on a `/10` tint over white. Measured: `text-amber-500` **2.00:1**, `text-emerald-500` **2.33:1**, `text-red-500` **3.29:1** — floor is 4.5:1. Rolled into FIX-1.
+
+**The corrected rule, measured across the whole `/10`–`/15`-tint-over-white family:** no shade lighter than **-600** clears 4.5:1, and **-700** clears it with margin (`text-emerald-700` on a `/10` emerald tint = **5.05:1**). So the target pairing throughout is:
+
+```
+text-{color}-700 dark:text-{color}-300
+```
+
+This applies to every semantic system in §8 — modality, phase, completion, fatigue, zone, readiness. The `-400`/`-500` shades are correct *only* as the dark-mode half.
+
+### 8.9 Cross-Platform Color Parity
+
+The `hex` values in §8.1 and §8.2 are **not web-only**. They are mirrored by hand into:
+
+- `ios/TrainingCompanion/ModalityStyle.swift` (iPhone)
+- `ios/TrainingCompanionWatch Watch App/ModalityStyle.swift` (watchOS)
+
+Both Swift files carry the web hex in a trailing comment on every line (`// #ef4444`) so a mismatch is visible in review.
+
+**Rule:** changing a modality or phase hex is a three-file change. Update the web map and both Swift files in the same commit, or the platforms drift silently — nothing enforces this at build time.
 
 ---
 
@@ -901,6 +1106,42 @@ Scale 1.3 on tap gives strong tactile feedback. 0.15s color transition is fast e
 
 Skeleton widths (2/3, full, 1/2) simulate text line lengths. Multiple lines at different widths look more natural than identical widths.
 
+**Branded loader — `components/shared/DumbbellLoader.tsx`.** For full-page waits where a generic spinner feels cheap (currently the Dashboard's program load), the app draws the Lucide `Dumbbell` glyph at rest and animates a highlight tracing its outline. Construction:
+
+- The five real Lucide paths render dim as a static base, so the icon is pixel-identical to the icon used everywhere else.
+- A separate single **closed** contour path carries the traveling highlight — one continuous path is required because `pathOffset` cannot animate across a multi-path shape.
+
+**When to reach for it:** one per view, on waits over ~400ms, where the user has nothing else to look at. Everywhere else use skeletons — a skeleton communicates *what is coming*, a loader only communicates *that something is coming*. Do not add a second branded loader; if a new one seems necessary, the wait is probably a skeleton case.
+
+### 9.10 Reduced Motion
+
+> **Resolved 2026-07-30 (was FIX-2).** The app previously had no reduced-motion handling at all — every animation in §9 played at full amplitude for users who had asked their OS to stop them. `MotionConfig` now wraps the tree in `src/App.tsx`, and `DumbbellLoader` gates its loop explicitly.
+
+**One provider at the app root covers the Framer Motion surface** (`src/App.tsx`):
+
+```tsx
+import { MotionConfig } from 'framer-motion'
+
+<MotionConfig reducedMotion="user">
+  {/* app */}
+</MotionConfig>
+```
+
+`reducedMotion="user"` reads `prefers-reduced-motion` and disables *transform and layout* animations — `x`, `y`, `scale`, `rotate`, `height` — while letting `opacity` and `backgroundColor` through. That is the correct split for this design system: §9.1 page transitions degrade to clean cross-fades, §9.7's set-completion still flashes its color confirmation, and §9.6's expand/collapse snaps instead of sliding. Orientation and feedback survive; only the movement stops.
+
+**What the provider does not cover** — handle these individually:
+
+| Not covered | Why | Handling |
+|---|---|---|
+| `animate-pulse` skeletons | Tailwind CSS keyframes, not Framer | acceptable to leave — low-amplitude opacity only |
+| `animate-spin` spinners | Tailwind CSS keyframes | acceptable — conveys liveness, no translation |
+| `DumbbellLoader` | `pathOffset` is an SVG *attribute* animation, not a transform | ✅ done — gated on `useReducedMotion()`, falls back to the static glyph at `opacity 0.6` |
+| Recharts entry animations | library-internal | still open — set `isAnimationActive={false}` when reduced |
+
+The `DumbbellLoader` case is the general lesson: **`reducedMotion="user"` only suppresses transform and layout values.** Anything animating an SVG attribute, a gradient stop, or a CSS keyframe needs its own `useReducedMotion()` gate.
+
+**Rule for new motion:** if an animation moves an element more than a few pixels, it must have a reduced-motion answer. "It's subtle" is not an exemption — vestibular triggers are not proportional to how subtle the author thinks the motion is.
+
 ### 9.9 Timing Reference
 
 | Use case | Duration | Easing |
@@ -1064,6 +1305,10 @@ function EmptyState({ title, description, action, icon, className }) {
 
 Always provide a `action` CTA that resolves the empty state (e.g., "Build a Program"). The dashed border (`border-dashed`) visually distinguishes empty slots from loaded content.
 
+> **Code diverges — doc is correct.** `components/shared/EmptyState.tsx` is imported by **6** files, while **25** hand-rolled `border-dashed` empty states exist across the app. The *pattern* was adopted; the *component* was not. The cost is not visual — most copies look right — it is that the `action` CTA is optional in a hand-rolled block and consistently gets dropped, so a good share of the app's zero-data states are dead ends with no path forward. That is a direct §1.4 violation. Tracked as FIX-5.
+
+**Rule:** a zero-data view uses `<EmptyState>`. If it needs something the component cannot express, extend the component — do not fork it inline. The one legitimate exception is a *slot-sized* empty cell (an unscheduled day in the week grid), which is too small for a title/description/CTA and correctly uses a bare dashed cell.
+
 ### 11.3 Loading Card Pattern
 
 ```tsx
@@ -1109,7 +1354,7 @@ These are intentionally distinct:
 
 ### 12.1 Chart Library: Recharts
 
-All charts use Recharts with minimal configuration. Custom components handle wrapper sizing and tooltips.
+All charts use Recharts with minimal configuration. Custom components handle wrapper sizing and tooltips. Geospatial views are the exception — see §12.9.
 
 **Responsive container pattern:**
 ```tsx
@@ -1119,6 +1364,58 @@ All charts use Recharts with minimal configuration. Custom components handle wra
   </BarChart>
 </ResponsiveContainer>
 ```
+
+### 12.1.1 Chart Inventory
+
+Visualization is now the largest single surface in the app — **18 files** render Recharts, plus two map components. This section previously documented four of them. Full inventory:
+
+| Component | Form | Color source |
+|---|---|---|
+| `dashboard/ModalityDonut` | donut (§12.2) | modality hex |
+| `dashboard/VolumeBar` | stacked bar (§12.3) | modality hex |
+| `dashboard/DevelopmentWidget` | bar | modality hex |
+| `program/ProgramOverview` | phase timeline (§12.5) | phase hex |
+| `progression/ExerciseTrendChart` | line + trend | primary token |
+| `bio/PMCChart` | dual-axis line + bar (§12.7) | fixed 3-series |
+| `bio/SleepStageChart` | stacked bar (§12.6) | sleep-stage set |
+| `bio/HRZoneChart` | horizontal bar | zone ramp (§8.7) |
+| `bio/HRTrendChart`, `RHRTrendChart`, `HRVTrendChart` | sparkline-ish line (§12.4) | primary token |
+| `bio/WeeklyLoadChart`, `WeeklyZoneSummary` | bar / stacked bar | zone ramp |
+| `bio/ReadinessWidget` | radial + score (§8.8) | readiness set |
+| `workout/HRTimeline` | gradient-stroke line (§12.8) | zone ramp |
+| `workout/ElevationChart` | gradient area (§12.8) | teal `#14b8a6` |
+| `workout/GPSMap` | Leaflet polyline (§12.9) | zone ramp |
+| `workout/Swiss3DMap` | CesiumJS terrain (§12.9) | — |
+| `devlab/PhilosophyExplorerPanel` | bar | modality hex |
+| `pages/WorkoutAnalytics` | multiple, inline | mixed |
+
+**Rule this inventory implies:** a chart's colors come from a *named system* (§8), not from the author's judgement at the call site. `WorkoutAnalytics` defines series colors inline and is the one place that breaks this — noted in the fix plan (FIX-6) as low priority, since the values it picks are correct today.
+
+### 12.1.2 Chart Theme-Awareness
+
+Charts split their colors into two categories, and the split is the thing to get right:
+
+| Category | Source | Why |
+|---|---|---|
+| **Semantic marks** — bars, lines, cells that *mean* something | hardcoded hex from §8 | The color is the information. Amber must stay amber in Zen. |
+| **Chart chrome** — axes, ticks, grid, cursor, tooltip surface | `var(--color-*)` tokens | Chrome must recede against whatever background the theme sets. |
+
+Currently ~30 hardcoded hex values vs ~32 `var(--color-*)` references across the chart files — roughly the right ratio, but not cleanly split. Some axis and reference-line colors are still hardcoded and will read wrong in Military and Zen (FIX-6).
+
+**Tooltip surface — always tokens, no exceptions:**
+```tsx
+<Tooltip
+  cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
+  contentStyle={{
+    background: 'var(--color-card)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '0.5rem',
+    fontSize: '11px',
+  }}
+/>
+```
+
+Several components go further and render a fully custom tooltip node — `rounded border border-border bg-card px-2 py-1 text-[10px]` — with each series' label tinted to its own series color via inline `style={{ color: p.color }}`. Prefer this when a tooltip shows more than two series; the color tie-back is faster to read than a label list.
 
 ### 12.2 Donut Chart (Modality Distribution)
 
@@ -1231,6 +1528,104 @@ Current week marker:
   style={{ left: `${currentPct}%` }}
 />
 ```
+
+### 12.6 Stacked Bar (Composition Over Time)
+
+For "what was this made of" across a time axis — sleep stages per night, zone minutes per week:
+
+```tsx
+<Bar dataKey="Deep"  stackId="sleep" fill="#1d4ed8" radius={[0, 0, 0, 0]} />
+<Bar dataKey="REM"   stackId="sleep" fill="#7c3aed" radius={[0, 0, 0, 0]} />
+<Bar dataKey="Light" stackId="sleep" fill="#38bdf8" radius={[0, 0, 0, 0]} />
+<Bar dataKey="Awake" stackId="sleep" fill="#6b7280" radius={[4, 4, 0, 0]} />
+```
+
+**Two rules that make stacks read correctly:**
+
+1. **Only the topmost segment gets a radius.** Every lower segment is `[0,0,0,0]`; the last one declared is `[4,4,0,0]`. Rounding an interior segment carves a visible notch into the stack.
+2. **Stack order is semantic, not arbitrary.** Deep → REM → Light → Awake runs deepest-at-the-bottom, so the stack reads as a depth profile. Reordering for visual balance destroys the meaning.
+
+The sleep palette is its own ordered ramp (indigo → violet → sky → gray) — depth encoded as saturation, with wakefulness the only desaturated band so gaps in sleep are the thing the eye catches first.
+
+### 12.7 Dual-Axis Composed Chart (PMC)
+
+The Performance Management Chart plots three quantities with different units on one canvas — the densest chart in the app:
+
+```tsx
+<Cell fill={entry.tsb >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.7} />  {/* Form: bars, signed */}
+<Line stroke="#f97316" ... />   {/* Fatigue (ATL) */}
+<Line stroke="#3b82f6" ... />   {/* Fitness (CTL) */}
+```
+
+**Patterns worth reusing:**
+
+- **Signed values get per-`Cell` conditional fill**, not two series. Form above zero is emerald, below is red — one dataset, colored by sign. This is the general answer for any diverging metric.
+- **`fillOpacity={0.7}` on the bars** pushes them behind the lines without a z-index fight. Bars are context; lines are the trend.
+- **Mixed forms encode mixed roles.** Bars = discrete daily state, lines = smoothed accumulation. Using three lines would make them look like three of the same thing.
+
+**When to allow a second Y axis:** only when both series are genuinely watched together *and* their units cannot be normalized. Two axes double the reader's work — a second chart is usually the better answer.
+
+### 12.8 Gradient Encoding (Continuous Data)
+
+Two workout charts encode a continuous variable into a gradient rather than a discrete color.
+
+**Gradient area — `ElevationChart`.** A single teal hue fading to near-transparent, giving the profile visual mass without competing with the line:
+
+```tsx
+<linearGradient id="elevGradient" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%"   stopColor="#14b8a6" stopOpacity={0.4} />
+  <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.05} />
+</linearGradient>
+```
+
+**Gradient stroke — `HRTimeline`.** The more interesting technique: the *line itself* is painted with a horizontal gradient whose stops are computed per-sample from HR zone, so a single continuous stroke shows zone drift over the session:
+
+```tsx
+stops.push({ offset: `${(offset * 100).toFixed(1)}%`, color: ZONE_COLORS[zone] })
+```
+
+Paired with faint zone bands behind the line (`rgba(148,163,184,0.06)` and siblings) so absolute zone position stays readable while the stroke shows the transitions.
+
+**Rule:** reach for a gradient when the underlying variable is genuinely continuous. For categorical data a gradient invents an ordering that isn't there.
+
+### 12.9 Maps (Leaflet + CesiumJS)
+
+Two non-Recharts geospatial views:
+
+**`GPSMap`** — `react-leaflet`, route drawn as `Polyline` segments colored by HR zone (§8.7), start/end marked with `#22c55e` / `#ef4444` dot icons. Container: `rounded-lg overflow-hidden border border-border isolate`.
+
+`isolate` is required. Leaflet sets high z-indexes on its panes; without a new stacking context the map paints over sheets and dialogs.
+
+> **Resolved 2026-07-30 (was FIX-3).** The tile layer was pinned to CartoDB's `dark_all` basemap, which dropped a ~360px dark slab into Light and Zen — the most visible theme break in the app. The basemap is now selected from the active theme:
+>
+> ```tsx
+> const DARK_THEMES = new Set(['dark', 'military'])
+> const { resolvedTheme } = useTheme()
+> const tileUrl = basemapUrl(DARK_THEMES.has(resolvedTheme ?? 'dark'))
+> …
+> <TileLayer key={tileUrl} url={tileUrl} />   // key forces a clean tile swap
+> ```
+
+**Theme lightness grouping.** Military is a dark surface and groups with `dark`; Zen is warm off-white and groups with `light`. Any component branching on lightness rather than theme identity should use this same grouping — if a third such component appears, lift `DARK_THEMES` into a `useIsDarkTheme()` hook.
+
+**`Swiss3DMap`** — CesiumJS over swisstopo terrain, loaded from CDN at runtime (`loadCesium()` injects the script, resolves once `window.Cesium` exists) rather than bundled. Keeps a very large 3D dependency out of the main bundle for a view most sessions never open.
+
+**Rule for heavy visualization deps:** load at runtime behind an interaction, show the standard loading state while it resolves, and fail to a real error state — `Swiss3DMap` rejects with `Failed to load CesiumJS` rather than hanging.
+
+### 12.10 Choosing a Chart Form
+
+| The question | Form | Example |
+|---|---|---|
+| What is this made of, right now? | donut (§12.2) | modality distribution |
+| What was this made of, over time? | stacked bar (§12.6) | sleep stages, weekly zones |
+| How much, per period? | bar (§12.3) | weekly volume |
+| Which direction is this trending? | line / sparkline (§12.4) | HRV, RHR, e1RM |
+| Two accumulations plus a signed balance? | dual-axis composed (§12.7) | PMC |
+| How did a continuous value vary along a path? | gradient stroke/area (§12.8) | HR timeline, elevation |
+| Where did this happen? | map (§12.9) | GPS route |
+| How are fixed spans laid out in sequence? | flex timeline, no library (§12.5) | phase bar |
+
+**Before adding a new chart:** find its row here first. If nothing fits, the new form needs a subsection in this section, not a one-off in a page component.
 
 ---
 
@@ -1569,11 +1964,27 @@ Use this to set up the design system in a new project.
 
 ### Motion
 
+- [ ] Wrap the app in `<MotionConfig reducedMotion="user">` — **do this before writing any animation**, not after (§9.10)
 - [ ] Set up `AnimatePresence mode="wait"` in the router
 - [ ] Apply the standard page transition to every page component
 - [ ] Add staggered entry to any list/grid with > 3 items
 - [ ] Use `whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}` on interactive cards
 - [ ] Use the expand/collapse pattern for any collapsible section
+- [ ] Gate any continuous/looping animation behind `useReducedMotion()`
+
+### Accessibility
+
+- [ ] `aria-label` on every icon-only button (§17.7 headers are the usual offenders)
+- [ ] Verify every semantic color pair clears 4.5:1 in **all** themes, not just the default one
+- [ ] Confirm no meaning is carried by color alone — text or icon accompanies it
+- [ ] Test one full flow with reduced motion enabled at the OS level
+- [ ] Test one full flow by keyboard only
+
+### Data Visualization
+
+- [ ] Semantic marks read hex from a named system (§8); chrome reads `var(--color-*)` tokens
+- [ ] Tooltip surface uses tokens so it inverts with the theme
+- [ ] Check every chart in the non-default themes before shipping it
 
 ### Patterns
 
@@ -1812,44 +2223,93 @@ Action buttons live at the far right, separated from navigation with `ml-auto` (
 
 ### 17.8 Per-Page Reference
 
-| Page | Icon | Title | Inline subtitle | Sub-tabs | Actions | Notes |
+Status as of 2026-07-30. ✅ = matches the spec in code; ⚠️ = documented divergence.
+
+| Page | Icon | Title | Inline subtitle | Sub-tabs | Actions | Status |
 |---|---|---|---|---|---|---|
-| **Bio Log** | `Activity` | "Bio Log" | "Readiness · Sleep · HRV" | None | None | Condense long current subtitle |
-| **Philosophies** | `BookOpen` | "Philosophies" | None | None | None | Long current subtitle → drop |
-| **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | Wizard variant |
-| **Program View** | `CalendarDays` | Program goal name | "{N}-week program" | Overview · Calendar | Injury flags | Week nav + phase bar go *below* header |
-| **Profile** | `User` | "Profile" | None | Setup · Benchmarks | None | Drop "Benchmarks" from header label |
-| **Exercises** | `Dumbbell` | "Exercises" | "{count} exercises" | None | None | Dynamic count is informative |
-| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology | None | **Reference implementation — do not change** |
-| **Import Workouts** | `ArrowDownToLine` | "Import Workouts" | None | None | None | Long subtitle → drop |
+| **Dashboard** | `LayoutDashboard` | "Dashboard" | None | Week · Overview (`TabSelector`) | Program settings sheet | ✅ — see §17.9 |
+| **Bio Log** | `Activity` | "Bio Log" | "Readiness · Sleep · HRV" | None | None | ✅ |
+| **Philosophies** | `BookOpen` | "Philosophies" | None | None | None | ✅ |
+| **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant |
+| **Program View** | `CalendarDays` | Program name | "{N}-week program" | Overview · Calendar | Injury flags | ⚠️ two-row (`space-y-3`) — see §17.2 |
+| **Profile** | `User` | "Profile" | None | Setup · Benchmarks | None | ✅ |
+| **Exercises** | `Dumbbell` | "Exercises" | "{count} exercises" | None | None | ⚠️ two-row (`space-y-3`) — search row below |
+| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector (two tiers) | None | ✅ two-tier variant — see below |
+| **Analytics** | `BarChart3` | "Analytics" | None | None | None | ✅ |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology | None | ✅ |
+| **Import Workouts** | `ArrowDownToLine` | "Import Workouts" | None | None | None | ✅ |
+| **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
 | **Workout Detail** | Back-nav | Workout type | — | — | — | Back-nav pattern, not tab header |
 
-### 17.9 Dashboard Exception: Program View Header
+**On the two-row headers (Program View, Exercises).** §17.2 says a primary header is always one row. Both of these break it to host a secondary control strip — a search input, a week selector. The rule holds for the *identity row*; what these pages actually demonstrate is a legitimate second pattern:
 
-**Dashboard does not use the standard tab header.** This is intentional and correct.
-
-The standard tab header answers: *"What page am I on?"* Dashboard's header answers: *"What week am I looking at, and where am I in the program?"* These are different questions that require different controls.
-
-Reasons Dashboard is exempt:
-
-1. **The meaningful title is the program goal name** ("Alpine Climbing", "SOF Operator") — a dynamic content value, not a page label. Prepending a "Dashboard" label would add noise with no information.
-2. **The sidebar already identifies the page.** The active sidebar item provides location context. A redundant "Dashboard" h1 serves no user need.
-3. **The header area's real job is temporal navigation.** Week selector, phase bar, and program progress are primary wayfinding for a time-structured program — they earn their position in the top row.
-
-**What Dashboard's header should contain:**
-
-```
-┌─ border-b px-6 py-3 ──────────────────────────────────────────────────────┐
-│ [Program goal name — h1 text-xl]        [← Week N →]   [Phase badge]      │
-│ [Phase bar / timeline]                                                      │
-└─────────────────────────────────────────────────────────────────────────────┘
+```tsx
+<div className="border-b px-6 py-4 space-y-3 shrink-0">
+  <div className="flex items-center gap-2">{/* identity row — §17.2 exactly */}</div>
+  <div>{/* control strip: search, week nav, filters */}</div>
+</div>
 ```
 
-- Program name as `h1 text-xl font-semibold` — the program is the content
-- Week navigation controls right-aligned
-- Phase bar below (or integrated into) the header row
-- **No page-identity icon or "Dashboard" label**
-- If no program is loaded: show an empty state within the content area, not in the header
+The identity row keeps its contract; the strip below is content-scoped chrome. **Use it only for controls that filter or navigate the page's own content.** Page-level actions still belong in the identity row per §17.7.
 
-This pattern — where the header communicates *instance context* rather than *page identity* — is called the **Program View Header**. It applies anywhere the entire page is dedicated to viewing one specific program instance. If the app gains additional instance-view pages in the future (e.g., a full-screen program export view), they should follow this same variant.
+Exercises is the clean example: identity row, then `<ExerciseSearch>`, then `<ExerciseFilters>`, all inside one `space-y-3` header block.
+
+**Two-tier navigation (Explore).** Explore carries *two* levels of sub-tab — section pills (Explorer / Ontology / …), then a topic selector within the Explorer section — and stays on one row using `gap-3 flex-wrap` with `shrink-0` on each group:
+
+```tsx
+<div className="flex items-center gap-3 border-b px-6 py-4 shrink-0 flex-wrap">
+  <Compass className="size-5 text-primary shrink-0" />
+  <h1 className="text-lg font-semibold shrink-0">Explore</h1>
+  <div className="flex gap-1 shrink-0">{/* tier 1: section pills */}</div>
+  {section === 'explorer' && (
+    <>
+      <div className="w-px h-4 bg-border/60 shrink-0" />   {/* tier separator */}
+      <TopicSelector active={topic} onChange={handleTopicChange} />
+    </>
+  )}
+</div>
+```
+
+This is a legitimate third variant, not a violation. The rules it follows: `gap-3` (not `gap-2`) because two tab groups need more air between them than an icon needs from its title; `shrink-0` on every group so tabs never compress into illegibility; `flex-wrap` as the overflow behavior of last resort; and the second tier appears **conditionally**, only when its parent section is active — never two permanent tab rows.
+
+**The `w-px h-4 bg-border/60` hairline is the established tier separator.** It appears in both Explore and Dashboard. Use it wherever a header holds two distinct control groups.
+
+**On Dev Lab.** It remains the reference implementation for the header pattern, and now also carries the standard §9.1 page transition — so it is a valid whole-page reference again.
+
+**Login is exempt.** It renders pre-auth, outside `RootLayout` and outside the router's `AnimatePresence`, so it has no sibling to transition against. It uses a centered card rather than a tab header. Intentional, not a gap.
+
+### 17.9 Dashboard: Standard Header (revised)
+
+> **Code diverges — code is correct.** This section previously declared Dashboard *exempt* from the tab header and prohibited a page-identity icon or "Dashboard" label. `Dashboard.tsx:351-353` now uses the standard header, with a `LayoutDashboard` icon and an h1 reading "Dashboard". **The code made the better call and the rule below is rewritten to match.**
+>
+> The exemption was written when Dashboard was a single view whose only meaningful title was the program name. It has since gained a Week/Overview sub-tab switcher. Once a page has sub-tabs, §17.5 governs where they live — immediately right of the identity block — and an identity block is exactly what the old rule forbade. The alternative would have been sub-tabs floating with no anchor, which reads as a detached control rather than page navigation.
+>
+> The old rule also over-weighted redundancy with the sidebar. The sidebar is hidden on mobile (§14.2), so on the layout where wayfinding is *most* fragile the h1 is the only page identity present. "Redundant on desktop" was the wrong axis to optimize.
+
+**Dashboard uses the standard tab header.** As shipped:
+
+```tsx
+<div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
+  <LayoutDashboard className="size-5 text-primary" />
+  <h1 className="text-lg font-semibold">Dashboard</h1>
+  <div className="ml-4 flex items-center gap-2">
+    <div className="w-px h-4 bg-border/60 shrink-0" />   {/* vertical rule before sub-tabs */}
+    <TabSelector active={activeTab} onChange={setActiveTab} />
+  </div>
+  <div className="ml-auto">
+    <ProgramSettingsSheet program={program} />
+  </div>
+</div>
+```
+
+One refinement here is worth promoting to a general rule: **a `w-px h-4 bg-border/60` vertical rule between the identity block and the sub-tabs.** §17.5 specifies `ml-4` alone; the hairline reads more clearly when a page has both sub-tabs and right-aligned actions, because `ml-4` on its own is ambiguous against the `ml-auto` gap. Optional, but preferred on pages carrying both.
+
+**Program identity moves into the content area.** The program name renders as `h1 text-2xl font-bold tracking-tight` at the top of the Week tab (`Dashboard.tsx:100`), with the week selector and phase bar beneath it. This is a better split than the old rule produced:
+
+- **Header = page identity + page navigation.** Stable, always in the same place, matches every other tab.
+- **Content = instance context.** The program name, week nav, and phase bar all describe *the program*, and they scroll with the program they describe.
+
+The old design put instance context in fixed page chrome, which meant a user on the Overview tab still had week-navigation controls pinned above them that did nothing for that view.
+
+**The "Program View Header" variant is retired.** Pages dedicated to one instance (Program View, Session Detail, Workout Detail) use either the standard header with the instance name as title, or the back-nav pattern (§13). There is no third variant.
