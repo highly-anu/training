@@ -690,7 +690,7 @@ export function ProgramTuner() {
 
         {eventDate && eventIsTight ? (
           <>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-600 dark:text-amber-400">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
               Your event is in <span className="font-semibold">{weeksUntilEvent}w</span>, but a full program is{' '}
               <span className="font-semibold">{defaultNumWeeks}w</span>. Choose how to handle this:
             </div>

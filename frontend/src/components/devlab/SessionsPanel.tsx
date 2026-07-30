@@ -56,10 +56,10 @@ function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }
                   {c.name || c.id}
                 </td>
                 <td className="py-1 pr-3 text-right font-mono font-bold">{c.score}</td>
-                <td className="py-1 pr-3 text-right font-mono text-sky-400">{c.breakdown.equipment ?? 0}</td>
-                <td className="py-1 pr-3 text-right font-mono text-emerald-400">{c.breakdown.source ?? 0}</td>
-                <td className="py-1 pr-3 text-right font-mono text-amber-400">{c.breakdown.recency ?? 0}</td>
-                <td className="py-1 text-right font-mono text-rose-400">{c.breakdown.injury_penalty ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-sky-700 dark:text-sky-300">{c.breakdown.equipment ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-emerald-700 dark:text-emerald-300">{c.breakdown.source ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-amber-700 dark:text-amber-300">{c.breakdown.recency ?? 0}</td>
+                <td className="py-1 text-right font-mono text-rose-700 dark:text-rose-300">{c.breakdown.injury_penalty ?? 0}</td>
               </tr>
             ))}
           </tbody>
@@ -99,7 +99,7 @@ function SlotRow({ slot }: { slot: SlotTrace }) {
             <Badge variant="destructive" className="text-[10px]">injury skip</Badge>
           )}
           {slot.selected_id ? (
-            <span className="text-green-400 font-mono text-[10px]">{slot.selected_id}</span>
+            <span className="text-green-700 dark:text-green-300 font-mono text-[10px]">{slot.selected_id}</span>
           ) : (
             <span className="text-destructive text-[10px]">no match</span>
           )}
@@ -143,19 +143,19 @@ function SlotRow({ slot }: { slot: SlotTrace }) {
                       </td>
                       <td className="py-0.5 pr-3">
                         {c.package && (
-                          <Badge variant="outline" className="text-[9px] border-violet-500/30 bg-violet-500/10 text-violet-400">
+                          <Badge variant="outline" className="text-[9px] border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300">
                             {c.package}
                           </Badge>
                         )}
                       </td>
                       <td className="py-0.5 pr-3 text-right font-mono font-bold">{c.score}</td>
-                      <td className="py-0.5 pr-3 text-right font-mono text-amber-400">
+                      <td className="py-0.5 pr-3 text-right font-mono text-amber-700 dark:text-amber-300">
                         {c.breakdown.recency_penalty ?? 0}
                       </td>
-                      <td className="py-0.5 pr-3 text-right font-mono text-emerald-400">
+                      <td className="py-0.5 pr-3 text-right font-mono text-emerald-700 dark:text-emerald-300">
                         {c.breakdown.unlocks_bonus ?? 0}
                       </td>
-                      <td className="py-0.5 text-right font-mono text-sky-400">
+                      <td className="py-0.5 text-right font-mono text-sky-700 dark:text-sky-300">
                         {c.breakdown.pattern_bonus ?? 0}
                       </td>
                     </tr>

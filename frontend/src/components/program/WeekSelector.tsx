@@ -28,7 +28,7 @@ export function WeekSelector({ week, totalWeeks, phase, isDeload, onPrev, onNext
         </span>
         <PhaseBadge phase={phase} />
         {isDeload && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-400 border border-slate-500/30">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30">
             Deload
           </span>
         )}

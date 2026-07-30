@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { useProfileStore } from '@/store/profileStore'
 import type { GeneratedProgram } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
+import { cn } from '@/lib/utils'
 
 interface TodaySessionProps {
   program: GeneratedProgram
@@ -38,9 +40,12 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
   if (!session) {
     // All sessions for today are complete
     return (
-      <div className="h-full rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 flex flex-col items-center justify-center text-center">
-        <Dumbbell className="size-8 text-emerald-500/60 mb-2" />
-        <p className="text-sm font-medium text-emerald-500">All Done Today</p>
+      <div className={cn(
+        'h-full rounded-xl border p-6 flex flex-col items-center justify-center text-center',
+        COMPLETION.border, COMPLETION.bg
+      )}>
+        <Dumbbell className={cn('size-8 mb-2 opacity-60', COMPLETION.text)} />
+        <p className={cn('text-sm font-medium', COMPLETION.text)}>All Done Today</p>
         <p className="text-xs text-muted-foreground/60 mt-1">
           {format(new Date(), 'EEEE, MMMM d')}
         </p>

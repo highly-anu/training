@@ -158,7 +158,7 @@ export function FrameworkDetailModal({ framework, open, onClose }: FrameworkDeta
                     <p className="text-muted-foreground leading-relaxed pl-1">{entry.reason.trim()}</p>
                   )}
                   {entry.mitigation && (
-                    <p className="text-emerald-600 dark:text-emerald-400 leading-relaxed pl-1">
+                    <p className="text-emerald-700 dark:text-emerald-300 leading-relaxed pl-1">
                       <span className="font-medium">Mitigation: </span>{entry.mitigation.trim()}
                     </p>
                   )}

@@ -341,9 +341,9 @@ const DAYS: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sa
 function SessionButton({ type, onClick, label }: { type: SessionType; onClick: () => void; label: string }) {
   const config = {
     rest: { text: 'Rest', color: 'bg-muted/40 text-muted-foreground/50 border-muted-foreground/20' },
-    short: { text: 'Short', color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
-    long: { text: 'Long', color: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
-    mobility: { text: 'Mobility', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+    short: { text: 'Short', color: 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' },
+    long: { text: 'Long', color: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30' },
+    mobility: { text: 'Mobility', color: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30' },
   }
 
   const { text, color } = config[type]
@@ -641,11 +641,11 @@ function HRSettingsOverview() {
                 {observedMax && (
                   <p className="text-xs text-muted-foreground">
                     Observed max from workouts:&nbsp;
-                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-amber-400' : 'text-foreground')}>
+                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-amber-700 dark:text-amber-300' : 'text-foreground')}>
                       {observedMax} bpm
                     </span>
                     {observedMax > effectiveMax && (
-                      <span className="ml-1 text-amber-400/70">— consider updating</span>
+                      <span className="ml-1 text-amber-700/70 dark:text-amber-300/70">— consider updating</span>
                     )}
                   </p>
                 )}

@@ -46,15 +46,15 @@ const Swiss3DMap = lazy(() =>
 )
 
 const SEVERITY_STYLES = {
-  positive: { icon: CheckCircle2, color: 'text-emerald-500' },
+  positive: { icon: CheckCircle2, color: 'text-emerald-700 dark:text-emerald-300' },
   neutral: { icon: Info, color: 'text-muted-foreground' },
-  warning: { icon: AlertTriangle, color: 'text-amber-500' },
+  warning: { icon: AlertTriangle, color: 'text-amber-700 dark:text-amber-300' },
 } as const
 
 const SCORE_RING = {
-  green: 'ring-emerald-500/40 text-emerald-500',
-  yellow: 'ring-amber-500/40 text-amber-500',
-  red: 'ring-red-500/40 text-red-500',
+  green: 'ring-emerald-500/40 text-emerald-700 dark:text-emerald-300',
+  yellow: 'ring-amber-500/40 text-amber-700 dark:text-amber-300',
+  red: 'ring-red-500/40 text-red-700 dark:text-red-300',
 } as const
 
 function InsightRow({ item }: { item: InsightItem }) {
@@ -71,7 +71,7 @@ function InsightRow({ item }: { item: InsightItem }) {
           <div className="mt-1.5 space-y-1">
             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
               <span>Target: {item.metric!.prescribed}</span>
-              <span className={item.severity === 'positive' ? 'text-emerald-400' : 'text-amber-400'}>
+              <span className={item.severity === 'positive' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
                 {item.metric!.actual} achieved
               </span>
             </div>
@@ -366,7 +366,7 @@ export function WorkoutDetail() {
           {match && match.matchConfidence !== 'rejected' && (
             <Badge
               variant="outline"
-              className="text-xs border-emerald-500/40 text-emerald-500"
+              className="text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
             >
               matched &rarr; {match.sessionKey}
             </Badge>
@@ -585,15 +585,15 @@ export function WorkoutDetail() {
             </h2>
             <div className="flex items-center gap-3">
               <span className={`text-sm font-semibold ${
-                decoupling.color === 'green' ? 'text-emerald-400' :
-                decoupling.color === 'amber' ? 'text-amber-400' : 'text-red-400'
+                decoupling.color === 'green' ? 'text-emerald-700 dark:text-emerald-300' :
+                decoupling.color === 'amber' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'
               }`}>
                 {decoupling.pct.toFixed(1)}% Pa:HR drift
               </span>
               <Badge variant="outline" className={`text-xs ${
-                decoupling.color === 'green' ? 'border-emerald-500/40 text-emerald-500' :
-                decoupling.color === 'amber' ? 'border-amber-500/40 text-amber-500' :
-                'border-red-500/40 text-red-500'
+                decoupling.color === 'green' ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300' :
+                decoupling.color === 'amber' ? 'border-amber-500/40 text-amber-700 dark:text-amber-300' :
+                'border-red-500/40 text-red-700 dark:text-red-300'
               }`}>
                 {decoupling.label === 'efficient' ? 'Efficient' :
                  decoupling.label === 'moderate' ? 'Moderate Drift' : 'High Drift'}

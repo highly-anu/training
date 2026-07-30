@@ -228,7 +228,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
           <div className="flex flex-wrap gap-1 mt-1">
             <Label>sources:</Label>
             {goal.primary_sources.map(s => (
-              <span key={s} className="px-1.5 py-0.5 rounded bg-violet-500/10 text-[10px] font-mono text-violet-400">{s}</span>
+              <span key={s} className="px-1.5 py-0.5 rounded bg-violet-500/10 text-[10px] font-mono text-violet-700 dark:text-violet-300">{s}</span>
             ))}
           </div>
         )}
@@ -248,7 +248,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
             <div className="flex items-center gap-2">
               <Mono>{fw.selected_id}</Mono>
               {fw.forced_override && (
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-400">forced override</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-700 dark:text-amber-300">forced override</span>
               )}
             </div>
             <p className="text-[10px] text-muted-foreground">{fw.selection_reason}</p>
@@ -304,7 +304,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
               <Label>phase:</Label>
               <Mono>{weekTrace.phase}</Mono>
               {weekTrace.is_deload && (
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-400">deload</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-700 dark:text-amber-300">deload</span>
               )}
             </div>
             <div className="overflow-x-auto">
@@ -403,9 +403,9 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                       </span>
                       {modalityDef && (
                         <span className={`px-1.5 py-0.5 rounded text-[9px] ${
-                          modalityDef.recovery_cost === 'high' ? 'bg-red-500/15 text-red-400' :
-                          modalityDef.recovery_cost === 'medium' ? 'bg-amber-500/15 text-amber-400' :
-                          'bg-emerald-500/15 text-emerald-400'
+                          modalityDef.recovery_cost === 'high' ? 'bg-red-500/15 text-red-700 dark:text-red-300' :
+                          modalityDef.recovery_cost === 'medium' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' :
+                          'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                         }`}>
                           {modalityDef.recovery_cost}
                         </span>

@@ -19,6 +19,7 @@ import { useGenerateSession } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import { cn } from '@/lib/utils'
 import type { Archetype, EquipmentId, FatigueState, GeneratedProgram, InjuryFlagId, Session, WeekData } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 interface ReplaceSessionSheetProps {
   open: boolean
@@ -362,7 +363,7 @@ export function ReplaceSessionSheet({
             <div className="border-t shrink-0">
               <div className="px-5 py-4 space-y-3">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="size-4 text-emerald-500 mt-0.5 shrink-0" />
+                  <CheckCircle2 className={cn('size-4 mt-0.5 shrink-0', COMPLETION.text)} />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold truncate">
                       {pendingSession.archetype?.name}

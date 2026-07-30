@@ -117,7 +117,7 @@ export function StravaConnect() {
         </div>
 
         {stravaParam === 'error' && (
-          <p className="mt-2 text-xs text-red-400">
+          <p className="mt-2 text-xs text-red-700 dark:text-red-300">
             Authorization failed: {searchParams.get('reason') ?? 'unknown error'}
           </p>
         )}
@@ -141,7 +141,7 @@ export function StravaConnect() {
                 <p className="text-sm font-medium">{status.athlete?.name ?? 'Strava'}</p>
                 <Badge
                   variant="outline"
-                  className="text-[10px] border-emerald-500/40 text-emerald-500"
+                  className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
                 >
                   Connected
                 </Badge>
@@ -162,12 +162,12 @@ export function StravaConnect() {
 
         {/* Sync result feedback */}
         {sync.isSuccess && (
-          <p className="text-xs text-emerald-500">
+          <p className="text-xs text-emerald-700 dark:text-emerald-300">
             Synced {sync.data.count} activit{sync.data.count === 1 ? 'y' : 'ies'}.
           </p>
         )}
         {sync.isError && (
-          <p className="text-xs text-red-400">{sync.error.message}</p>
+          <p className="text-xs text-red-700 dark:text-red-300">{sync.error.message}</p>
         )}
 
         <div className="flex gap-2">

@@ -12,6 +12,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import type { WeekData } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 interface DayWorkoutPanelProps {
   weekData: WeekData
@@ -120,7 +121,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
                     <Link
                       to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
                       state={{ workout: matchedWorkout }}
-                      className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+                      className="flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                     >
                       <Activity className="size-3" />
                       Workout
@@ -152,7 +153,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
                 className={cn(
                   'w-full flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all',
                   isComplete
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                    ? cn('border-emerald-500/40', COMPLETION.bgStrong, COMPLETION.text, COMPLETION.hover)
                     : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground'
                 )}
               >

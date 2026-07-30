@@ -104,8 +104,8 @@ export function RHRTrendChart({ bioLogs, days = 30 }: Props) {
     <div className="space-y-1">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <span className={`font-medium ${
-          trend === 'falling' ? 'text-emerald-400' :
-          trend === 'rising'  ? 'text-red-400'     : 'text-amber-400'
+          trend === 'falling' ? 'text-emerald-700 dark:text-emerald-300' :
+          trend === 'rising'  ? 'text-red-700 dark:text-red-300'     : 'text-amber-700 dark:text-amber-300'
         }`}>
           {trend === 'falling' ? 'Trending down' :
            trend === 'rising'  ? 'Trending up'   : 'Stable'}

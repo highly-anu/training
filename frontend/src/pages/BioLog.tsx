@@ -110,17 +110,17 @@ function TodayTab({ lastSleepLog }: { lastSleepLog: DailyBioLog | undefined }) {
             {(lastSleepLog.deepSleepMin != null || lastSleepLog.remSleepMin != null) && (
               <div className="flex flex-wrap gap-2">
                 {lastSleepLog.deepSleepMin != null && (
-                  <span className="rounded-full bg-blue-900/30 text-blue-400 border border-blue-800/40 px-2.5 py-0.5 text-xs font-medium">
+                  <span className="rounded-full bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-800/40 px-2.5 py-0.5 text-xs font-medium">
                     Deep {fmtDuration(lastSleepLog.deepSleepMin)}
                   </span>
                 )}
                 {lastSleepLog.remSleepMin != null && (
-                  <span className="rounded-full bg-violet-900/30 text-violet-400 border border-violet-800/40 px-2.5 py-0.5 text-xs font-medium">
+                  <span className="rounded-full bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-800/40 px-2.5 py-0.5 text-xs font-medium">
                     REM {fmtDuration(lastSleepLog.remSleepMin)}
                   </span>
                 )}
                 {lastSleepLog.lightSleepMin != null && (
-                  <span className="rounded-full bg-sky-900/30 text-sky-400 border border-sky-800/40 px-2.5 py-0.5 text-xs font-medium">
+                  <span className="rounded-full bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-800/40 px-2.5 py-0.5 text-xs font-medium">
                     Light {fmtDuration(lastSleepLog.lightSleepMin)}
                   </span>
                 )}
@@ -263,21 +263,21 @@ function HistoryTab({ recentLogs }: {
                     </td>
                     <td className="px-4 py-2.5 text-center text-sm tabular-nums">
                       {log.restingHR != null ? (
-                        <span className="text-red-400 font-medium">{log.restingHR}</span>
+                        <span className="text-red-700 dark:text-red-300 font-medium">{log.restingHR}</span>
                       ) : (
                         <span className="text-muted-foreground/40">—</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-center text-sm tabular-nums">
                       {log.hrv != null ? (
-                        <span className="text-sky-400 font-medium">{log.hrv}</span>
+                        <span className="text-sky-700 dark:text-sky-300 font-medium">{log.hrv}</span>
                       ) : (
                         <span className="text-muted-foreground/40">—</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-center text-sm tabular-nums">
                       {log.sleepDurationMin != null ? (
-                        <span className="text-violet-400 font-medium">{fmtDuration(log.sleepDurationMin)}</span>
+                        <span className="text-violet-700 dark:text-violet-300 font-medium">{fmtDuration(log.sleepDurationMin)}</span>
                       ) : (
                         <span className="text-muted-foreground/40">—</span>
                       )}

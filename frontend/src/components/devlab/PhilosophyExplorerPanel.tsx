@@ -238,7 +238,7 @@ function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
                 {ex.movement_patterns.map(p => (
                   <span
                     key={p}
-                    className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
+                    className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-300"
                   >
                     {p.replace(/_/g, ' ')}
                   </span>
@@ -318,7 +318,7 @@ function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
                   <p className="text-[9px] text-muted-foreground/50 mb-0.5">Unlocks</p>
                   <div className="flex flex-wrap gap-1">
                     {ex.unlocks.map(u => (
-                      <span key={u} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                      <span key={u} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
                         {u.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -330,7 +330,7 @@ function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
                   <p className="text-[9px] text-muted-foreground/50 mb-0.5">Contraindicated with</p>
                   <div className="flex flex-wrap gap-1">
                     {ex.contraindicated_with.map(f => (
-                      <span key={f} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-400">
+                      <span key={f} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-700 dark:text-orange-300">
                         {f.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -422,7 +422,7 @@ function SlotRow({ slot, allExercises }: { slot: ArchetypeSlot; allExercises: Ex
           {/* Row 2: pattern chip + resolved aliases + exercise count */}
           {patternLabel && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-indigo-500/10 border-indigo-500/30 text-indigo-400">
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-300">
                 {patternLabel}
               </span>
               {resolvedPatterns && (
@@ -742,7 +742,7 @@ function ModalitySection({
                   <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 mb-1">Incompatible With</p>
                   <div className="flex flex-wrap gap-1">
                     {modality.incompatible_in_session_with.map(id => (
-                      <span key={id} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-orange-500/30 text-orange-400 bg-orange-500/10">
+                      <span key={id} className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-orange-500/30 text-orange-700 dark:text-orange-300 bg-orange-500/10">
                         {id.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -819,14 +819,14 @@ function FrameworkSection({
         className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/10 transition-colors"
       >
         {open
-          ? <ChevronDown className="size-4 text-blue-400 mt-0.5 shrink-0" />
-          : <ChevronRight className="size-4 text-blue-400 mt-0.5 shrink-0" />
+          ? <ChevronDown className="size-4 text-blue-700 dark:text-blue-300 mt-0.5 shrink-0" />
+          : <ChevronRight className="size-4 text-blue-700 dark:text-blue-300 mt-0.5 shrink-0" />
         }
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-blue-300">{framework.name}</span>
+            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{framework.name}</span>
             {framework.progression_model && (
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
                 {framework.progression_model.replace(/_/g, ' ')}
               </span>
             )}
@@ -1040,7 +1040,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
               className={[
                 'px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider transition-colors',
                 viewMode === key
-                  ? 'bg-violet-500/20 text-violet-300'
+                  ? 'bg-violet-500/20 text-violet-700 dark:text-violet-300'
                   : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/20',
               ].join(' ')}
             >
@@ -1177,15 +1177,15 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
         <div className="flex-1 min-w-0 pr-5 space-y-3">
           {/* Name + model badges */}
           <div className="flex items-start justify-between gap-3 flex-wrap">
-            <h2 className="text-base font-semibold text-violet-300 leading-tight">{phil.name}</h2>
+            <h2 className="text-base font-semibold text-violet-700 dark:text-violet-300 leading-tight">{phil.name}</h2>
             <div className="flex gap-1.5 flex-wrap shrink-0">
               {phil.intensity_model && (
-                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/30 text-violet-400">
+                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/30 text-violet-700 dark:text-violet-300">
                   {phil.intensity_model.replace(/_/g, ' ')}
                 </Badge>
               )}
               {phil.progression_philosophy && (
-                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/20 text-violet-500/70">
+                <Badge variant="outline" className="text-[10px] font-mono border-violet-500/20 text-violet-700/70 dark:text-violet-300/70">
                   {phil.progression_philosophy.replace(/_/g, ' ')}
                 </Badge>
               )}
@@ -1217,7 +1217,7 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
               <ul className="space-y-0.5">
                 {phil.core_principles.map((p, i) => (
                   <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground/80">
-                    <span className="text-violet-500/60 mt-0.5 shrink-0">·</span>
+                    <span className="text-violet-700/60 dark:text-violet-300/60 mt-0.5 shrink-0">·</span>
                     {p.replace(/_/g, ' ')}
                   </li>
                 ))}
@@ -1299,7 +1299,7 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {phil.system_connections.frameworks.map(fw => (
-                      <span key={fw} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <span key={fw} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
                         {fw.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -1313,7 +1313,7 @@ function PhilosophyHeader({ phil, frameworks, allFrameworks, philosophies, onSel
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {phil.system_connections.goals.map(g => (
-                      <span key={g} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span key={g} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                         {g.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -1442,7 +1442,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
     <div className="flex flex-col h-full min-h-0">
       {/* ── Selector bar — hidden when parent controls the selection ── */}
       {controlledId === undefined && <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/10 shrink-0">
-        <BookOpen className="size-4 text-violet-400 shrink-0" />
+        <BookOpen className="size-4 text-violet-700 dark:text-violet-300 shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Philosophy</span>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger className="h-8 text-xs w-72">

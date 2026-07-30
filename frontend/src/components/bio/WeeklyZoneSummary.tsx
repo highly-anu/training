@@ -65,7 +65,7 @@ export function WeeklyZoneSummary() {
         <p className="text-xs text-muted-foreground">Rolling 7-day zone distribution</p>
         <span className="text-xs font-medium">
           <span
-            className={aerobicPct >= 80 ? 'text-emerald-400' : aerobicPct >= 60 ? 'text-amber-400' : 'text-red-400'}
+            className={aerobicPct >= 80 ? 'text-emerald-700 dark:text-emerald-300' : aerobicPct >= 60 ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'}
           >
             {aerobicPct}% aerobic
           </span>

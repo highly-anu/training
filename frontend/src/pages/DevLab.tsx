@@ -87,7 +87,7 @@ function InputsPanel({ program }: { program: TracedProgram }) {
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm">Philosophy Sources</CardTitle>
               {isPhilosophyMode && (
-                <Badge className="text-[10px] bg-violet-500/20 text-violet-400 border-violet-500/40">
+                <Badge className="text-[10px] bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/40">
                   {trace?.philosophy_mode === 'synthetic_goal' ? 'Synthetic Goal' : 'Direct'}
                 </Badge>
               )}
@@ -96,7 +96,7 @@ function InputsPanel({ program }: { program: TracedProgram }) {
           <CardContent>
             <div className="flex flex-wrap gap-1">
               {primarySources.map(s => (
-                <Badge key={s} variant="outline" className="text-xs border-violet-500/40 bg-violet-500/10 text-violet-400 font-mono">
+                <Badge key={s} variant="outline" className="text-xs border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-300 font-mono">
                   {s}
                 </Badge>
               ))}

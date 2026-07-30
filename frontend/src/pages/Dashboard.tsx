@@ -23,6 +23,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import type { GeneratedProgram } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -100,8 +101,8 @@ function WeekTab({
         <h1 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h1>
         {daysToEvent !== null && daysToEvent >= 0 && (
           <div className="flex items-center gap-1.5 mt-1">
-            <Flag className="size-3 text-amber-500" />
-            <p className="text-xs font-medium text-amber-500">
+            <Flag className="size-3 text-amber-700 dark:text-amber-300" />
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
               {weeksToEvent}w {daysToEvent % 7}d until event
               {eventDate && (
                 <span className="text-muted-foreground font-normal ml-1">
@@ -137,15 +138,15 @@ function WeekTab({
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+          className={cn('flex items-center justify-between gap-3 rounded-xl border px-4 py-3', COMPLETION.border, COMPLETION.bgStrong)}
         >
-          <p className="text-sm font-medium text-emerald-500">
+          <p className={cn('text-sm font-medium', COMPLETION.text)}>
             Week {weekIndex + 1} complete
           </p>
           <button
             type="button"
             onClick={() => handleWeekChange(1)}
-            className="flex items-center gap-1 text-xs font-semibold text-emerald-500 hover:text-emerald-400 transition-colors"
+            className={cn('flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80', COMPLETION.text)}
           >
             Week {weekIndex + 2} <ChevronRight className="size-3.5" />
           </button>
@@ -195,7 +196,7 @@ function WeekTab({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Next Up — Week {weekIndex + 2}
             {program.weeks[weekIndex + 1].is_deload && (
-              <span className="ml-2 text-amber-500 normal-case font-medium">deload</span>
+              <span className="ml-2 text-amber-700 dark:text-amber-300 normal-case font-medium">deload</span>
             )}
           </h2>
           <div className="rounded-xl border bg-card/60 p-4 opacity-80">

@@ -12,11 +12,11 @@ Nothing here is speculative polish. Each item is either a measured standards fai
 
 ## Status summary
 
-Implemented 2026-07-30: FIX-2, FIX-3, FIX-4, FIX-7, FIX-8, and the shared-map half of FIX-1. Verified with `tsc --noEmit` (clean) and `npm run build` (clean). `npm run lint` reports 69 pre-existing problems in untouched files; the touched files add none.
+Implemented 2026-07-30: FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8. Verified with `tsc --noEmit` (clean) and `npm run build` (clean). `npm run lint` reports 69 problems — byte-identical to the pre-work baseline, so zero regressions.
 
 | ID | Item | Severity | Status |
 |---|---|---|---|
-| FIX-1 | Light-mode semantic text fails WCAG AA | **High** | 🟡 **Partial** — `modalityColors.ts` + `phaseColors.ts` done; ~64 inline completion states remain |
+| FIX-1 | Light-mode semantic text fails WCAG AA | **High** | ✅ **Done** — all semantic systems paired; 2 new modules extracted |
 | FIX-2 | No reduced-motion support | **High** | ✅ **Done** |
 | FIX-3 | GPS map pinned to dark basemap | Medium | ✅ **Done** |
 | FIX-4 | HR zone colors triplicated | Medium | ✅ **Done** |
@@ -26,17 +26,44 @@ Implemented 2026-07-30: FIX-2, FIX-3, FIX-4, FIX-7, FIX-8, and the shared-map ha
 | FIX-8 | Icon-only buttons have no accessible name | Medium | ✅ **Done** |
 | FIX-9 | Theme web fonts load unconditionally | Low | ✅ **Closed** — decided to leave; rationale below |
 
-**What's left, in order:** finish FIX-1 (the completion-state extraction — the one remaining correctness item), then the FIX-1 regression test, then FIX-5 and FIX-6 opportunistically.
+**What's left:** the FIX-1 contrast regression test (below) — without it this bug returns silently. Then FIX-5 and FIX-6 opportunistically.
+
+**Not covered:** `pages/WorkoutImport.tsx` and `components/bio/BulkImportReview.tsx` were skipped throughout — they hold uncommitted bulk-import work in progress, and editing them would interleave with those changes. They contain the only remaining unpaired semantic text in the app (9 occurrences). Worth a pass once that feature lands.
 
 ---
 
 ## FIX-1 — Light-mode semantic text fails WCAG AA
 
-**Severity: High. Status: 🟡 partial.**
+**Severity: High. Status: ✅ done.**
 
-**Done:** `src/lib/modalityColors.ts` (12 entries) and `src/lib/phaseColors.ts` (11 entries — note there are 11, not the 9 originally counted; `transition` and `specific` belong to Uphill Athlete's phase sequence) now use `text-{color}-700 dark:text-{color}-300`. Both files carry a comment explaining the pairing so it doesn't get "simplified" back.
+Final state: **165 paired `text-{c}-700` / `dark:text-{c}-300`** class pairs across the app, perfectly balanced, with two new shared modules. The only unpaired semantic text left is in the two skipped WIP files.
 
-**Remaining:** the ~64 inline completion-state usages described below. That is the tedious third and is still open.
+### What the "64 usages" actually turned out to be
+
+The original count came from grepping `text-emerald-500|text-emerald-400`, which conflated several unrelated systems. Classifying them properly found:
+
+| Bucket | Disposition |
+|---|---|
+| True completion states (~20) | → `lib/completionColors.ts` |
+| Score-widget status triplet | → `lib/statusColors.ts` (was duplicated ×3) |
+| Chart marks, legend swatches, `bg-` fills | left alone — the colour is the data |
+| Category / effort / fatigue text (§8.4–8.6) | re-paired in place |
+
+Fixing only the emerald cases left style maps visibly half-converted — paired emerald sitting beside unpaired amber and red in the same object. So the pairing was extended to every semantic text colour (red, orange, amber, yellow, lime, green, teal, cyan, sky, blue, indigo, violet, purple, pink, rose, slate, zinc), which is what §8.8's corrected rule always implied.
+
+### Second duplication found
+
+`STATUS_STYLES` — the green/amber/red `ring`/`score`/`badge` triplet — was duplicated **verbatim** in `ReadinessWidget`, `DevelopmentWidget` and `ProgressionReviewCard`, differing only in `label`. Extracted to `lib/statusColors.ts`; `label` deliberately stayed local, since the same green reads "Ready" / "On Track" / "Ahead" depending on the question.
+
+### A caution for anyone repeating this
+
+The bulk sweep was regex-driven and produced three malformed classes that a build will *not* catch, because Tailwind emits no error for a nonsense variant chain:
+
+- `\b` matched inside `dark:hover:`, yielding `dark:hover:text-x-700 dark:hover:text-x-300` on one element
+- non-adjacent pairs (`text-x-600 … border-x/20 dark:text-x-400`) left a stray `dark:` class that `tailwind-merge` would resolve to the *wrong* shade
+- an opacity-suffixed hover lost its `hover:` on the dark side
+
+All three were caught by tallying class shapes (`text-X-700` count must equal `dark:text-X-300` count) rather than by tsc, build, or lint. **Do that tally after any bulk class edit** — none of the normal gates see these.
 
 ### The problem
 
@@ -60,11 +87,11 @@ Not cosmetic: modality and phase are how a user tells a strength day from a cond
 
 Target pairing everywhere: **`text-{color}-700 dark:text-{color}-300`**. No shade lighter than `-600` clears the floor; `-700` clears it with margin.
 
-Three sites, in ascending tedium:
+Three sites, all complete:
 
-1. ✅ **`src/lib/phaseColors.ts`** — 11 entries, mechanical.
-2. ✅ **`src/lib/modalityColors.ts`** — 12 entries, mechanical.
-3. ⬜ **Completion states** — ~64 inline `text-emerald-500` / `text-emerald-400` occurrences, no shared module.
+1. ✅ **`src/lib/phaseColors.ts`** — 11 entries.
+2. ✅ **`src/lib/modalityColors.ts`** — 12 entries.
+3. ✅ **Completion states** — extracted to `lib/completionColors.ts`, plus `lib/statusColors.ts` for the status triplet.
 
 For (3), **extract to `src/lib/completionColors.ts`** while fixing rather than patching in place. One color owning one meaning across the whole app is the case a shared module exists for, and 64 hand-maintained copies is how the next drift starts. Mirror the shape of the existing maps:
 

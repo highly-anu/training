@@ -297,16 +297,16 @@ function getNodes(counts: NodeCounts) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusIcon({ status }: { status: ExtStatus }) {
-  if (status === 'yes') return <CheckCircle2 className="size-4 text-emerald-500" />
-  if (status === 'partial') return <AlertCircle className="size-4 text-amber-500" />
-  if (status === 'no') return <MinusCircle className="size-4 text-red-500" />
+  if (status === 'yes') return <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-300" />
+  if (status === 'partial') return <AlertCircle className="size-4 text-amber-700 dark:text-amber-300" />
+  if (status === 'no') return <MinusCircle className="size-4 text-red-700 dark:text-red-300" />
   return <span className="text-xs text-muted-foreground">—</span>
 }
 
 function StatusBadge({ status }: { status: ExtStatus }) {
-  if (status === 'yes') return <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/15">Yes</Badge>
-  if (status === 'partial') return <Badge className="text-[10px] bg-amber-500/15 text-amber-500 border-amber-500/30 hover:bg-amber-500/15">Partial</Badge>
-  if (status === 'no') return <Badge className="text-[10px] bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/15">No</Badge>
+  if (status === 'yes') return <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/15">Yes</Badge>
+  if (status === 'partial') return <Badge className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/15">Partial</Badge>
+  if (status === 'no') return <Badge className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30 hover:bg-red-500/15">No</Badge>
   return <Badge variant="outline" className="text-[10px]">N/A</Badge>
 }
 
@@ -383,12 +383,12 @@ export function ModelInteractionPanel({ result }: Props) {
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs">
           <span className="text-muted-foreground">Live from last generation:</span>
           {liveFramework && (
-            <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-400 bg-violet-500/10">
+            <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-700 dark:text-violet-300 bg-violet-500/10">
               framework: {liveFramework}
             </Badge>
           )}
           {liveArchetypes.slice(0, 4).map((a, i) => (
-            <Badge key={i} variant="outline" className="text-[10px] border-orange-500/40 text-orange-400 bg-orange-500/10">
+            <Badge key={i} variant="outline" className="text-[10px] border-orange-500/40 text-orange-700 dark:text-orange-300 bg-orange-500/10">
               {a}
             </Badge>
           ))}
@@ -487,7 +487,7 @@ export function ModelInteractionPanel({ result }: Props) {
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1">
-          Click any arrow to inspect the transition. <span className="text-sky-400">Blue</span> = data-driven · <span className="text-orange-400">Orange</span> = baked logic.
+          Click any arrow to inspect the transition. <span className="text-sky-700 dark:text-sky-300">Blue</span> = data-driven · <span className="text-orange-700 dark:text-orange-300">Orange</span> = baked logic.
         </p>
       </div>
 
@@ -515,7 +515,7 @@ export function ModelInteractionPanel({ result }: Props) {
                 </p>
                 <ul className="space-y-0.5">
                   {selectedEdge.yamlFromSource.map((p, i) => (
-                    <li key={i} className="text-xs font-mono text-sky-400 before:content-['·'] before:mr-1.5 before:text-muted-foreground">
+                    <li key={i} className="text-xs font-mono text-sky-700 dark:text-sky-300 before:content-['·'] before:mr-1.5 before:text-muted-foreground">
                       {p}
                     </li>
                   ))}
@@ -527,7 +527,7 @@ export function ModelInteractionPanel({ result }: Props) {
                 </p>
                 <ul className="space-y-0.5">
                   {selectedEdge.yamlFromTarget.map((p, i) => (
-                    <li key={i} className="text-xs font-mono text-sky-400 before:content-['·'] before:mr-1.5 before:text-muted-foreground">
+                    <li key={i} className="text-xs font-mono text-sky-700 dark:text-sky-300 before:content-['·'] before:mr-1.5 before:text-muted-foreground">
                       {p}
                     </li>
                   ))}
@@ -552,12 +552,12 @@ export function ModelInteractionPanel({ result }: Props) {
 
               {selectedEdge.hardcodedValues && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-500/80 mb-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80 mb-1.5">
                     Hardcoded — blocks extensibility
                   </p>
                   <ul className="space-y-1">
                     {selectedEdge.hardcodedValues.map((v, i) => (
-                      <li key={i} className="text-xs text-amber-500/90 before:content-['⚠'] before:mr-1.5">
+                      <li key={i} className="text-xs text-amber-700/90 dark:text-amber-300/90 before:content-['⚠'] before:mr-1.5">
                         {v}
                       </li>
                     ))}
@@ -640,7 +640,7 @@ export function ModelInteractionPanel({ result }: Props) {
                               key={gi}
                               className={cn(
                                 'text-[11px] leading-relaxed',
-                                g.includes('✅') ? 'text-emerald-400' :
+                                g.includes('✅') ? 'text-emerald-700 dark:text-emerald-300' :
                                 g.startsWith('Fix:') ? 'text-primary' :
                                 'text-muted-foreground'
                               )}

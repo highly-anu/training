@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import type { Session } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 interface SessionCardProps {
   session: Session
@@ -34,7 +35,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
       className={cn(
         'w-full rounded-lg border bg-card p-3 text-left transition-shadow hover:shadow-sm',
         isComplete
-          ? 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50'
+          ? cn(COMPLETION.border, COMPLETION.bg, 'hover:border-emerald-500/50')
           : 'hover:border-primary/50',
         className
       )}
@@ -45,9 +46,9 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
           <ModalityBadge modality={session.modality} size="sm" className="mt-1" />
         </div>
         <div className="flex items-center gap-1 shrink-0 mt-0.5">
-          {hasWorkout && <Activity className="size-3.5 text-blue-400" />}
+          {hasWorkout && <Activity className="size-3.5 text-blue-700 dark:text-blue-300" />}
           {isComplete
-            ? <CheckCircle2 className="size-3.5 text-emerald-500" />
+            ? <CheckCircle2 className={cn('size-3.5', COMPLETION.text)} />
             : <span className="size-3.5" />
           }
         </div>

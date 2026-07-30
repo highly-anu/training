@@ -4,6 +4,7 @@ import { SessionCard } from './SessionCard'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
 import type { Session } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const DAY_SHORT: Record<string, string> = {
@@ -35,7 +36,7 @@ export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps
         className={cn(
           'mb-2 rounded-md px-2 py-1 text-center text-xs font-semibold flex items-center justify-center gap-1',
           isComplete
-            ? 'bg-emerald-500/15 text-emerald-500'
+            ? cn('bg-emerald-500/15', COMPLETION.text)
             : isToday
               ? 'bg-primary text-primary-foreground'
               : isWeekend

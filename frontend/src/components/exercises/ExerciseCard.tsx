@@ -12,16 +12,16 @@ const EFFORT_DOT: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  barbell: 'text-red-400',
-  kettlebell: 'text-orange-400',
-  bodyweight: 'text-emerald-400',
-  aerobic: 'text-sky-400',
-  carries: 'text-amber-400',
-  sandbag: 'text-yellow-600',
-  mobility: 'text-teal-400',
-  skill: 'text-violet-400',
-  rehab: 'text-lime-400',
-  gym_jones: 'text-pink-400',
+  barbell: 'text-red-700 dark:text-red-300',
+  kettlebell: 'text-orange-700 dark:text-orange-300',
+  bodyweight: 'text-emerald-700 dark:text-emerald-300',
+  aerobic: 'text-sky-700 dark:text-sky-300',
+  carries: 'text-amber-700 dark:text-amber-300',
+  sandbag: 'text-yellow-700 dark:text-yellow-300',
+  mobility: 'text-teal-700 dark:text-teal-300',
+  skill: 'text-violet-700 dark:text-violet-300',
+  rehab: 'text-lime-700 dark:text-lime-300',
+  gym_jones: 'text-pink-700 dark:text-pink-300',
 }
 
 interface ExerciseCardProps {

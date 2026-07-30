@@ -2,35 +2,18 @@ import { AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { scoreToStatus, statusIcon, getAdjustmentPriority } from '@/lib/progressionAnalysis'
 import type { ProgressionReview } from '@/api/types'
+import { STATUS_STYLES } from '@/lib/statusColors'
 
-const STATUS_STYLES = {
-  green: {
-    ring:  'ring-emerald-500/30',
-    score: 'text-emerald-500',
-    badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
-    label: 'On Track',
-  },
-  yellow: {
-    ring:  'ring-amber-500/30',
-    score: 'text-amber-500',
-    badge: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
-    label: 'Mixed',
-  },
-  red: {
-    ring:  'ring-red-500/30',
-    score: 'text-red-500',
-    badge: 'bg-red-500/10 text-red-500 border-red-500/30',
-    label: 'Off Track',
-  },
-} as const
 
 const STATUS_ICON_COLOR: Record<string, string> = {
-  ahead:            'text-emerald-500',
-  on_track:         'text-emerald-500',
-  behind:           'text-amber-500',
-  stalled:          'text-red-400',
+  ahead:            'text-emerald-700 dark:text-emerald-300',
+  on_track:         'text-emerald-700 dark:text-emerald-300',
+  behind:           'text-amber-700 dark:text-amber-300',
+  stalled:          'text-red-700 dark:text-red-300',
   insufficient_data:'text-muted-foreground',
 }
+
+const STATUS_LABEL = { green: 'On Track', yellow: 'Mixed', red: 'Off Track' } as const
 
 export function ProgressionReviewCard({ review }: { review: ProgressionReview }) {
   const status = scoreToStatus(review.overall_score)
@@ -81,7 +64,7 @@ export function ProgressionReviewCard({ review }: { review: ProgressionReview })
                   styles.badge,
                 )}
               >
-                {styles.label}
+                {STATUS_LABEL[status]}
               </span>
               <p className="text-[10px] text-muted-foreground">
                 {review.compliance_pct}% sessions completed
@@ -128,7 +111,7 @@ export function ProgressionReviewCard({ review }: { review: ProgressionReview })
           {prioritised.length > 0 && (
             <div className="space-y-1">
               {prioritised.slice(0, 2).map((adj, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-[11px] text-orange-400">
+                <div key={i} className="flex items-start gap-1.5 text-[11px] text-orange-700 dark:text-orange-300">
                   <AlertTriangle className="size-3 mt-0.5 shrink-0" />
                   <span>{adj.reason}</span>
                 </div>

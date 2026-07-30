@@ -103,7 +103,7 @@ export function SchedulerPanel({ weeks }: Props) {
                     <>
                       <p>Default: <code className="bg-muted px-1 rounded">{fw.default_id}</code></p>
                       {fw.alternatives_checked.map((alt, i) => (
-                        <p key={i} className={alt.matched ? 'text-green-500' : 'text-muted-foreground'}>
+                        <p key={i} className={alt.matched ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}>
                           {alt.matched ? '✓' : '○'}{' '}
                           <code className="bg-muted px-1 rounded">{alt.condition}</code>{' '}
                           → {alt.framework_id}

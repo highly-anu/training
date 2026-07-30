@@ -91,10 +91,10 @@ Radix UI primitives handle ARIA roles, keyboard navigation, and focus management
 > | Gap | Status |
 > |---|---|
 > | Reduced motion unimplemented (FIX-2) | ✅ `MotionConfig` at the app root + `DumbbellLoader` gated |
-> | Light-mode semantic text at ~2.3:1 (FIX-1) | ✅ modality + phase maps on `-700`/`-300`; ⚠️ ~64 inline completion-state usages still open |
+> | Light-mode semantic text at ~2.3:1 (FIX-1) | ✅ every semantic system on the `-700`/`-300` pairing |
 > | Icon-only buttons unnamed (FIX-8) | ✅ all 7 `size="icon"` buttons labeled |
 >
-> Remaining: the inline `text-emerald-500` completion states (§8.3) and the readiness palette (§8.8). Tracked in `docs/frontend-fix-plan.md`.
+> All three are closed. The remaining accessibility work is verification rather than repair — a contrast regression test (so this cannot silently return) and a keyboard/VoiceOver pass. Tracked in `docs/frontend-fix-plan.md`.
 
 **What "foundation" obliges, concretely.** A component is not finished until:
 
@@ -682,10 +682,10 @@ There are now **six** of them, each owning one axis of meaning. Two colors may l
 |---|---|---|
 | Modality (§8.1) | `lib/modalityColors.ts` | *what kind of training* |
 | Phase (§8.2) | `lib/phaseColors.ts` | *where in the program* |
-| Completion (§8.3) | inline `emerald-500` | *done or not done* |
+| Completion (§8.3) | `lib/completionColors.ts` | *done or not done* |
 | Fatigue (§8.4) | `SessionNotes` | *how hard it felt* (subjective, 1–5) |
-| HR zone (§8.7) | duplicated ×3 — see note | *measured intensity* |
-| Readiness (§8.8) | `ReadinessWidget` | *should you train today* |
+| HR zone (§8.7) | `lib/hrZones.ts` | *measured intensity* |
+| Readiness / status (§8.8) | `lib/statusColors.ts` | *how well is this going* |
 
 ### 8.1 Modality Colors
 
@@ -790,9 +790,27 @@ const completeStyles = {
 
 Applied to: session cards, day headers, completion buttons, "all done" state of TodaySession, week-complete banners.
 
-> **Code diverges — doc is correct.** Unlike modality and phase, completion styles are written inline at ~64 call sites rather than read from a shared map, and none carry a `dark:` variant — so `text-emerald-500` measures **2.33:1** in light mode (§8.8). Because it is scattered, this is the most tedious third of FIX-1.
->
-> **Secondary recommendation:** extract these into `lib/completionColors.ts` alongside the other systems while fixing them. One color owning one meaning across the whole app is exactly the case a shared module exists for, and 64 inline copies is how the next inconsistency gets introduced.
+> **Resolved 2026-07-30 (was FIX-1).** Completion styles were previously written inline at every call site with no `dark:` variant, so `text-emerald-500` measured **2.33:1** in light mode. Now extracted to `lib/completionColors.ts`.
+
+**The module** (`lib/completionColors.ts`):
+
+```typescript
+export const COMPLETION = {
+  border:   'border-emerald-500/30',
+  bg:       'bg-emerald-500/5',          // card/panel surface
+  bgStrong: 'bg-emerald-500/10',         // interactive controls
+  hover:    'hover:bg-emerald-500/20',
+  text:     'text-emerald-700 dark:text-emerald-300',
+  hex:      '#10b981',                   // charts, SVG, inline style
+} as const
+
+export const COMPLETION_SURFACE     = `${COMPLETION.border} ${COMPLETION.bg} ${COMPLETION.text}`
+export const COMPLETION_INTERACTIVE = `${COMPLETION.border} ${COMPLETION.bgStrong} ${COMPLETION.text} ${COMPLETION.hover}`
+```
+
+Two fill strengths, because the original inline copies had silently diverged: cards used `/5`, interactive controls `/10`. Both are correct for their context, so the module names them rather than flattening them.
+
+**Completion is not "good".** Do not reach for `COMPLETION` to mean positive, on-track, or passing — that is §8.8's axis, and it has its own module. Completion means the work is finished, regardless of how it went. A session completed badly is still complete.
 
 ### 8.4 Fatigue Gradient
 
@@ -876,15 +894,19 @@ export const ZONE_BG:     readonly string[] = ZONES.map((z) => z.bg)
 
 ### 8.8 Readiness Status
 
-`lib/readiness.ts` computes a 0–100 score from four weighted components (resting HR, HRV, accumulated fatigue, sleep) and resolves it to one of three statuses. `ReadinessWidget` maps status → style set:
+`lib/readiness.ts` computes a 0–100 score from four weighted components (resting HR, HRV, accumulated fatigue, sleep) and resolves it to one of three statuses. The green/amber/red style set lives in `lib/statusColors.ts`:
 
 ```typescript
-const READINESS_STYLES = {
-  green:  { ring: 'ring-emerald-500/30', score: 'text-emerald-500', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' },
-  yellow: { ring: 'ring-amber-500/30',   score: 'text-amber-500',   badge: 'bg-amber-500/10 text-amber-500 border-amber-500/30'       },
-  red:    { ring: 'ring-red-500/30',     score: 'text-red-500',     badge: 'bg-red-500/10 text-red-500 border-red-500/30'             },
+export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
+  green:  { ring: 'ring-emerald-500/30', score: 'text-emerald-700 dark:text-emerald-300', badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
+  yellow: { ring: 'ring-amber-500/30',   score: 'text-amber-700 dark:text-amber-300',     badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'         },
+  red:    { ring: 'ring-red-500/30',     score: 'text-red-700 dark:text-red-300',         badge: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30'                 },
 }
 ```
+
+> **Resolved 2026-07-30 (was FIX-1).** This triplet was duplicated **verbatim** in `ReadinessWidget`, `DevelopmentWidget` and `ProgressionReviewCard` — identical `ring`/`score`/`badge` values in all three, differing only in `label`. Found while fixing the contrast bug; extracted at the same time.
+
+**`label` deliberately stays with the consumer.** The *scale* is shared, the vocabulary is not: the same green means "Ready" on readiness, "On Track" on development, "Ahead" on progression. Each file keeps a local `STATUS_LABEL` map and imports only the styles. Pulling labels into the module would have forced one vocabulary onto three different questions.
 
 Two things worth copying from this component:
 

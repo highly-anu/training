@@ -281,11 +281,11 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Totals</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard label="Sessions"  value={stats.sessions > 0 ? String(stats.sessions) : null} icon={Activity}     color="text-primary"        />
-          <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color="text-sky-400"        />
-          <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color="text-emerald-400"    />
-          <KpiCard label="Ascended"  value={stats.ascended}      icon={TrendingUp}   color="text-amber-400"      />
-          <KpiCard label="Descended" value={stats.descended}     icon={TrendingDown} color="text-rose-400"       />
-          <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color="text-orange-400"     />
+          <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color="text-sky-700 dark:text-sky-300"        />
+          <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color="text-emerald-700 dark:text-emerald-300"    />
+          <KpiCard label="Ascended"  value={stats.ascended}      icon={TrendingUp}   color="text-amber-700 dark:text-amber-300"      />
+          <KpiCard label="Descended" value={stats.descended}     icon={TrendingDown} color="text-rose-700 dark:text-rose-300"       />
+          <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color="text-orange-700 dark:text-orange-300"     />
         </div>
       </div>
 
@@ -728,12 +728,12 @@ function ActivityTab({ period }: { period: Period }) {
                       </Badge>
                     )}
                     {ms === 'matched' && (
-                      <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 shrink-0">
+                      <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shrink-0">
                         matched
                       </Badge>
                     )}
                     {ms === 'pending' && (
-                      <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500 shrink-0">
+                      <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300 shrink-0">
                         pending
                       </Badge>
                     )}

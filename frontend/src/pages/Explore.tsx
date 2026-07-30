@@ -40,9 +40,9 @@ function prettify(id: string) {
 
 function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
   const styles = {
-    low: 'bg-emerald-500/15 text-emerald-400',
-    medium: 'bg-amber-500/15 text-amber-400',
-    high: 'bg-red-500/15 text-red-400',
+    low: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+    medium: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+    high: 'bg-red-500/15 text-red-700 dark:text-red-300',
   }
   return (
     <span className={cn('inline-block px-1.5 py-0.5 rounded text-[10px] font-medium', styles[cost])}>
@@ -566,12 +566,12 @@ function ModalityDetail({
             <div className="grid grid-cols-2 gap-3">
               {mod.compatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-emerald-400/70 font-medium">Pairs well with</p>
+                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70 font-medium">Pairs well with</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.compatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                           <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#10b981' }} />
                           {c?.label ?? prettify(id)}
                         </span>
@@ -582,12 +582,12 @@ function ModalityDetail({
               )}
               {mod.incompatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-red-400/70 font-medium">Avoid combining</p>
+                  <p className="text-[10px] text-red-700/70 dark:text-red-300/70 font-medium">Avoid combining</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.incompatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-red-500/10 text-red-300 border border-red-500/20">
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
                           <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#ef4444' }} />
                           {c?.label ?? prettify(id)}
                         </span>
@@ -1614,9 +1614,9 @@ function FrameworkExplorerDetail({
                         <span className={cn(
                           'text-[9px] px-1.5 py-0.5 rounded font-mono',
                           item.interference_level === 'high'
-                            ? 'bg-red-500/15 text-red-400'
+                            ? 'bg-red-500/15 text-red-700 dark:text-red-300'
                             : item.interference_level === 'manageable'
-                            ? 'bg-amber-500/15 text-amber-400'
+                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
                             : 'bg-muted/50 text-muted-foreground'
                         )}>
                           {item.interference_level}

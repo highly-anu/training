@@ -11,6 +11,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import type { ExerciseFinding } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 type Period = 'weekly' | 'biweekly'
 type SessionFilter = 'all' | 'linked'
@@ -271,7 +272,7 @@ export function ProgressionTab() {
                             <p className="text-sm font-medium text-foreground truncate leading-tight">
                               {s.archetypeName}
                             </p>
-                            <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+                            <CheckCircle2 className={cn('size-3.5 shrink-0', COMPLETION.text)} />
                           </div>
                           <Link
                             to={`/import?linkTo=${s.sessionKey}`}

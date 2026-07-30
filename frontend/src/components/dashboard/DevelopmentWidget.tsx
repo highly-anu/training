@@ -9,27 +9,8 @@ import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useCurrentProgram } from '@/api/programs'
 import type { SessionInsight, WeekInsightSummary } from '@/api/types'
+import { STATUS_STYLES } from '@/lib/statusColors'
 
-const STATUS_STYLES = {
-  green: {
-    ring: 'ring-emerald-500/30',
-    score: 'text-emerald-500',
-    badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
-    label: 'On Track',
-  },
-  yellow: {
-    ring: 'ring-amber-500/30',
-    score: 'text-amber-500',
-    badge: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
-    label: 'Mixed',
-  },
-  red: {
-    ring: 'ring-red-500/30',
-    score: 'text-red-500',
-    badge: 'bg-red-500/10 text-red-500 border-red-500/30',
-    label: 'Off Track',
-  },
-} as const
 
 const DIRECTION_ICON = {
   improving: TrendingUp,
@@ -38,10 +19,12 @@ const DIRECTION_ICON = {
 }
 
 const DIRECTION_COLOR = {
-  improving: 'text-emerald-500',
+  improving: 'text-emerald-700 dark:text-emerald-300',
   stable: 'text-muted-foreground',
-  declining: 'text-amber-500',
+  declining: 'text-amber-700 dark:text-amber-300',
 }
+
+const STATUS_LABEL = { green: 'On Track', yellow: 'Mixed', red: 'Off Track' } as const
 
 export function DevelopmentWidget() {
   const program = useCurrentProgram()
@@ -160,7 +143,7 @@ export function DevelopmentWidget() {
               styles.badge,
             )}
           >
-            {styles.label}
+            {STATUS_LABEL[overallStatus]}
           </span>
           <p className="text-[10px] text-muted-foreground">compliance</p>
         </div>
@@ -216,7 +199,7 @@ export function DevelopmentWidget() {
       {topFlags.length > 0 && (
         <div className="space-y-1">
           {topFlags.map((f, i) => (
-            <div key={`${f.key}-${i}`} className="flex items-start gap-1.5 text-[11px] text-orange-400">
+            <div key={`${f.key}-${i}`} className="flex items-start gap-1.5 text-[11px] text-orange-700 dark:text-orange-300">
               <AlertTriangle className="size-3 mt-0.5 shrink-0" />
               {f.label}: {f.detail}
             </div>

@@ -16,6 +16,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import type { Session, WeekData, WorkoutMatch } from '@/api/types'
+import { COMPLETION } from '@/lib/completionColors'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const DAY_ABB = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -73,7 +74,7 @@ function SessionCard({
           ? 'shadow-xl ring-2 ring-primary/40 opacity-95'
           : 'hover:border-primary/40 hover:shadow-sm',
         isComplete
-          ? 'border-emerald-500/30 bg-emerald-500/5'
+          ? cn(COMPLETION.border, COMPLETION.bg)
           : 'border-border bg-card'
       )}
       onClick={onClick}
@@ -93,7 +94,7 @@ function SessionCard({
           >
             {session.modality.replace(/_/g, ' ')}
           </p>
-          {hasWorkout && <Activity className="size-3 text-blue-400 shrink-0 mt-0.5" />}
+          {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0 mt-0.5" />}
         </div>
 
         {/* Archetype name */}
@@ -134,8 +135,8 @@ function SessionCard({
         className={cn(
           'absolute bottom-1.5 right-1.5 p-0.5 rounded-full transition-all',
           isComplete
-            ? 'text-emerald-500'
-            : 'opacity-0 group-hover/card:opacity-40 hover:!opacity-100 text-muted-foreground hover:text-emerald-500'
+            ? COMPLETION.text
+            : 'opacity-0 group-hover/card:opacity-40 hover:!opacity-100 text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300'
         )}
         title={isComplete ? 'Mark incomplete' : 'Mark complete'}
       >
@@ -250,7 +251,7 @@ function DroppableDay({
           : isSelected
             ? 'border-primary/40 bg-primary/5'
             : isComplete
-              ? 'border-emerald-500/20 bg-emerald-500/5'
+              ? cn('border-emerald-500/20', COMPLETION.bg)
               : 'border-border bg-card/40'
       )}
     >
@@ -261,7 +262,7 @@ function DroppableDay({
         className={cn(
           'flex items-center justify-between rounded-md px-1.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors',
           isComplete
-            ? 'text-emerald-500 hover:bg-emerald-500/10'
+            ? cn(COMPLETION.text, 'hover:bg-emerald-500/10')
             : isToday
               ? 'text-primary hover:bg-primary/10'
               : 'text-muted-foreground hover:bg-muted'
@@ -273,7 +274,7 @@ function DroppableDay({
             today
           </span>
         )}
-        {isComplete && !isToday && <Check className="size-2.5 text-emerald-500" />}
+        {isComplete && !isToday && <Check className={cn('size-2.5', COMPLETION.text)} />}
       </button>
 
       {/* Sessions or rest */}

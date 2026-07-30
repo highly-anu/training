@@ -22,10 +22,10 @@ function primaryValue(pt: ExerciseHistoryPoint, metricType: ProgressionMetricTyp
 }
 
 const STATUS_BADGE: Record<ProgressionStatus, { label: string; className: string }> = {
-  ahead:            { label: 'Ahead',       className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' },
-  on_track:         { label: 'On track',    className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' },
-  behind:           { label: 'Behind',      className: 'bg-amber-500/10 text-amber-500 border-amber-500/30' },
-  stalled:          { label: 'Stalled',     className: 'bg-red-500/10 text-red-400 border-red-500/30' },
+  ahead:            { label: 'Ahead',       className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
+  on_track:         { label: 'On track',    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
+  behind:           { label: 'Behind',      className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30' },
+  stalled:          { label: 'Stalled',     className: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30' },
   insufficient_data:{ label: 'Not tracked', className: 'bg-muted/50 text-muted-foreground border-border' },
 }
 

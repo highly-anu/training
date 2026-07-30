@@ -161,8 +161,8 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
                 daysToEvent < 0
                   ? 'border-muted text-muted-foreground'
                   : daysToEvent < 14
-                    ? 'border-amber-500/30 bg-amber-500/5 text-amber-500'
-                    : 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600'
+                    ? 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300'
+                    : 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300'
               }`}>
                 {daysToEvent < 0 ? (
                   <span>Event date has passed ({Math.abs(daysToEvent)} days ago)</span>

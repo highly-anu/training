@@ -292,7 +292,7 @@ export function WeeklyScheduler() {
               <span className={cn(
                 'text-[11px] font-semibold w-8 shrink-0',
                 isActive
-                  ? isWeekend ? 'text-sky-600 dark:text-sky-400' : 'text-primary'
+                  ? isWeekend ? 'text-sky-700 dark:text-sky-300' : 'text-primary'
                   : 'text-muted-foreground',
               )}>
                 {short}
@@ -341,8 +341,8 @@ export function WeeklyScheduler() {
                   className={cn(
                     'ml-1 text-[10px] px-2 py-0.5 rounded-md border transition-colors',
                     config.has_secondary
-                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'border-border text-muted-foreground/50 hover:border-emerald-400/60 hover:text-emerald-600/80',
+                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                      : 'border-border text-muted-foreground/50 hover:border-emerald-400/60 hover:text-emerald-700/80 dark:hover:text-emerald-300/80',
                   )}
                 >
                   + sec
@@ -365,9 +365,9 @@ export function WeeklyScheduler() {
           {coverage != null && (
             <span className={cn(
               'font-semibold',
-              coverage >= 1   ? 'text-emerald-600 dark:text-emerald-400'
-                : coverage >= 0.8 ? 'text-sky-600 dark:text-sky-400'
-                : coverage >= 0.6 ? 'text-amber-600 dark:text-amber-400'
+              coverage >= 1   ? 'text-emerald-700 dark:text-emerald-300'
+                : coverage >= 0.8 ? 'text-sky-700 dark:text-sky-300'
+                : coverage >= 0.6 ? 'text-amber-700 dark:text-amber-300'
                 : 'text-destructive',
             )}>
               {Math.round(coverage * 100)}%

@@ -14,6 +14,7 @@ import { useCurrentProgram } from '@/api/programs'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import type { ComplementaryExercise } from '@/api/types'
+import { COMPLETION_INTERACTIVE } from '@/lib/completionColors'
 
 export function SessionDetail() {
   const { week, day } = useParams<{ week: string; day: string }>()
@@ -136,7 +137,7 @@ export function SessionDetail() {
                     <Link
                       to={`/import/${encodeURIComponent(sessionMatchedWorkout.id)}`}
                       state={{ workout: sessionMatchedWorkout }}
-                      className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                      className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-medium"
                     >
                       <Activity className="size-3.5" />
                       Workout
@@ -187,7 +188,7 @@ export function SessionDetail() {
                 onClick={() => toggleComplete(sessionIdx)}
                 className={`w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors ${
                   isComplete
-                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20'
+                    ? `border ${COMPLETION_INTERACTIVE}`
                     : 'bg-primary text-primary-foreground hover:bg-primary/90'
                 }`}
               >
