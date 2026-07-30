@@ -4,6 +4,30 @@ import type { GPSPoint, HRSample, HRZoneDistribution } from '@/api/types'
 // Z1: <60%, Z2: 60-70%, Z3: 70-80%, Z4: 80-90%, Z5: 90%+
 export const DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
 
+/**
+ * The five-zone ramp — single source of truth for zone colour and naming.
+ *
+ * Unlike MODALITY_COLORS/PHASE_COLORS these encode a *measured* quantity, so the
+ * ramp must read as ordered (cool at rest → hot at max) rather than categorical.
+ * Near-collisions with modality colours are intentional and the two systems never
+ * co-occur on the same mark. See docs/frontend-design.md §8.7.
+ *
+ * `bg` is the faint band fill used behind timeline plots.
+ */
+export const ZONES = [
+  { key: 'z1', label: 'Z1', description: 'Recovery',  color: '#94a3b8', bg: 'rgba(148,163,184,0.06)' },
+  { key: 'z2', label: 'Z2', description: 'Aerobic',   color: '#38bdf8', bg: 'rgba(56,189,248,0.06)'  },
+  { key: 'z3', label: 'Z3', description: 'Tempo',     color: '#fbbf24', bg: 'rgba(251,191,36,0.06)'  },
+  { key: 'z4', label: 'Z4', description: 'Threshold', color: '#f97316', bg: 'rgba(249,115,22,0.06)'  },
+  { key: 'z5', label: 'Z5', description: 'Max',       color: '#ef4444', bg: 'rgba(239,68,68,0.06)'   },
+] as const
+
+/** Zone colours, indexed 0-4 (Z1–Z5). Derived from ZONES — do not re-declare locally. */
+export const ZONE_COLORS: readonly string[] = ZONES.map((z) => z.color)
+
+/** Faint zone band fills, indexed 0-4 (Z1–Z5). */
+export const ZONE_BG: readonly string[] = ZONES.map((z) => z.bg)
+
 function assignZone(
   bpm: number,
   maxHR: number,

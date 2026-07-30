@@ -8,19 +8,15 @@ import {
   Cell,
 } from 'recharts'
 import type { HRZoneDistribution } from '@/api/types'
+import { ZONES } from '@/lib/hrZones'
 
 interface HRZoneChartProps {
   zones: HRZoneDistribution
   showEstimateLabel?: boolean
 }
 
-const ZONE_META = [
-  { key: 'z1', label: 'Z1', description: 'Recovery', color: '#94a3b8' },
-  { key: 'z2', label: 'Z2', description: 'Aerobic', color: '#38bdf8' },
-  { key: 'z3', label: 'Z3', description: 'Tempo', color: '#fbbf24' },
-  { key: 'z4', label: 'Z4', description: 'Threshold', color: '#f97316' },
-  { key: 'z5', label: 'Z5', description: 'Max', color: '#ef4444' },
-] as const
+// Zone colour + naming come from lib/hrZones (single source of truth, §8.7)
+const ZONE_META = ZONES
 
 interface TooltipPayload {
   label?: string

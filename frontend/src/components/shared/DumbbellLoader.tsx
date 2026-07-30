@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 // All 5 Lucide "Dumbbell" paths (v1.7.0, 24×24 viewBox) — used for the dim base
@@ -44,31 +44,43 @@ interface DumbbellLoaderProps {
 }
 
 export function DumbbellLoader({ className, label = 'Loading...' }: DumbbellLoaderProps) {
+  // MotionConfig's reducedMotion="user" only suppresses transform/layout values;
+  // pathOffset is an SVG attribute animation, so this continuous loop has to be
+  // gated explicitly. See docs/frontend-design.md §9.10.
+  const reduceMotion = useReducedMotion()
+
   return (
-    <div className={cn('flex flex-col items-center gap-3 text-muted-foreground', className)}>
+    <div
+      role="status"
+      className={cn('flex flex-col items-center gap-3 text-muted-foreground', className)}
+    >
       <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none" aria-hidden>
-        {/* Dim base — full Lucide icon so it looks identical to the icon set */}
+        {/* Base glyph — full Lucide icon so it looks identical to the icon set.
+            Dim when the highlight is travelling over it; full strength when the
+            highlight is suppressed, so the static fallback doesn't read as broken. */}
         <g
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          opacity={0.2}
+          opacity={reduceMotion ? 0.6 : 0.2}
         >
           {ICON_PATHS.map((d, i) => <path key={i} d={d} />)}
         </g>
 
         {/* Traveling highlight along the outer contour */}
-        <motion.path
-          d={OUTLINE_PATH}
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0.14, pathOffset: 0 }}
-          animate={{ pathOffset: 1 }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-        />
+        {!reduceMotion && (
+          <motion.path
+            d={OUTLINE_PATH}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0.14, pathOffset: 0 }}
+            animate={{ pathOffset: 1 }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          />
+        )}
       </svg>
       {label && <p className="text-sm">{label}</p>}
     </div>

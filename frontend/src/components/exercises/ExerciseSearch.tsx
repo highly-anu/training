@@ -23,6 +23,7 @@ export function ExerciseSearch({ value, onChange }: ExerciseSearchProps) {
           size="icon"
           className="absolute right-1 top-1/2 -translate-y-1/2 size-6"
           onClick={() => onChange('')}
+          aria-label="Clear search"
         >
           <X className="size-3" />
         </Button>

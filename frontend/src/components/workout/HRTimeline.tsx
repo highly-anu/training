@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import { parseISO } from 'date-fns'
 import type { HRSample } from '@/api/types'
-import { DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS, ZONE_BG } from '@/lib/hrZones'
 
 interface HRTimelineProps {
   samples: HRSample[]
@@ -24,23 +24,6 @@ interface DataPoint {
   elapsed: number // minutes from start
   bpm: number
 }
-
-// Must match HRZoneChart ZONE_META colors
-const ZONE_COLORS = [
-  '#94a3b8', // Z1 — slate (Recovery)
-  '#38bdf8', // Z2 — sky blue (Aerobic)
-  '#fbbf24', // Z3 — amber (Tempo)
-  '#f97316', // Z4 — orange (Threshold)
-  '#ef4444', // Z5 — red (Max)
-]
-
-const ZONE_BG = [
-  'rgba(148,163,184,0.06)', // Z1
-  'rgba(56,189,248,0.06)',  // Z2
-  'rgba(251,191,36,0.06)',  // Z3
-  'rgba(249,115,22,0.06)',  // Z4
-  'rgba(239,68,68,0.06)',   // Z5
-]
 
 function zoneForBpm(bpm: number, maxHR: number, thresholds: number[]): number {
   const pct = bpm / maxHR

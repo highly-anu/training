@@ -9,7 +9,7 @@ export function TopBar() {
 
   return (
     <header className="flex h-14 items-center gap-3 border-b bg-card px-4 md:hidden">
-      <Button variant="ghost" size="icon" onClick={toggleSidebar} className="size-8">
+      <Button variant="ghost" size="icon" onClick={toggleSidebar} className="size-8" aria-label="Toggle navigation menu">
         <Menu className="size-4" />
       </Button>
       <div className="flex items-center gap-2">
