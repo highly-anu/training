@@ -52,18 +52,31 @@ Auth is a device token (`ciqdev_…`) sent as `Authorization: Bearer <token>`.
 These flow into the same tables the Apple Watch app uses, so a Garmin session
 shows up in the iOS Analytics tab with no analytics changes.
 
-## Build / run (on a machine with the SDK)
+## Build / run (terminal workflow — no VS Code extension needed)
 
-1. Install the **Connect IQ SDK** + the VS Code **Monkey C** extension; run
-   *Connect IQ: Verify Installation*. Generate a **developer key**.
-2. Add `resources/drawables/launcher_icon.png` (a ~40×40 PNG — build fails without it).
-3. Confirm the Fenix 9 **product id** and **minApiLevel** in `manifest.xml`
-   against the SDK device list (VS Code: *Monkey C: Edit Application → Products*).
-4. Build + simulate: *Monkey C: Build Current Project*, then *Run* → Fenix 9 sim.
-   Point `apiBaseUrl` at your local `python api.py` (use your LAN IP; the sim can
-   reach it) or the deployed API.
-5. Sideload to the watch: *Monkey C: Build for Device*, copy the `.prg` to
-   `GARMIN/APPS/` over USB.
+Verified environment on this machine:
+- SDK: `connectiq-sdk-win-9.2.0-2026-06-09` (CIQ 9 generation)
+- Devices downloaded: `fenix943mm`, `fenix947mm` (47mm profile also covers 51mm)
+- Developer key: `~/.garmin-keys/developer_key` (created; outside the repo)
+- **Java: NOT yet installed — required.** `monkeyc` is a JAR and needs a JDK.
+
+Steps:
+
+1. **Install a JDK** (one-time). E.g. `winget install EclipseAdoptium.Temurin.17.JDK`,
+   then ensure `java` is on PATH (`java -version` works in a new shell).
+2. **Add `resources/drawables/launcher_icon.png`** — a ~40×40 PNG. `monkeyc`
+   fails the build without it.
+3. **Build for the simulator:** `./build.sh`   (targets `fenix947mm`; override with
+   `DEVICE=fenix943mm ./build.sh`).
+4. **Run in the simulator:** `./run-sim.sh` (starts `connectiq` + loads the .prg).
+   Set `apiBaseUrl` (Garmin Connect Mobile app settings, or the sim's settings
+   editor) to your local `python api.py` — use your LAN IP, not localhost — or the
+   deployed API.
+5. **Sideload to the watch:** `./build.sh --device`, then copy
+   `bin/TrainingCompanion-fenix947mm.prg` to `GARMIN/APPS/` over USB.
+
+`build.sh` / `run-sim.sh` auto-detect the SDK path and key; override with
+`CIQ_SDK`, `CIQ_KEY`, `DEVICE` env vars.
 
 ## Remaining TODO(sdk) / next phases
 
