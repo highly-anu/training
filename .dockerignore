@@ -1,5 +1,7 @@
 # Personal health data — must not be in image
 data/apple_health_export/
+data/user_profiles/
+data/legacy/
 data/*.db
 *.db
 
