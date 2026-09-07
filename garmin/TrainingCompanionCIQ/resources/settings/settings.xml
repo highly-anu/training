@@ -1,0 +1,9 @@
+<settings>
+  <!--
+    App settings, editable in Garmin Connect Mobile → the app's settings page.
+    apiBaseUrl lets you point the watch at local dev vs. production without a rebuild.
+  -->
+  <setting propertyKey="apiBaseUrl" title="API base URL">
+    <settingConfig type="alphaNumeric"/>
+  </setting>
+</settings>

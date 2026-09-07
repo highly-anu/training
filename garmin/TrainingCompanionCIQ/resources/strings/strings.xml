@@ -1,0 +1,13 @@
+<strings>
+  <string id="AppName">Training</string>
+  <string id="Pairing">Pair Watch</string>
+  <string id="PairPrompt">Enter this code at\ntraining app → Settings → Devices</string>
+  <string id="Waiting">Waiting for pairing…</string>
+  <string id="Paired">Paired!</string>
+  <string id="NoProgram">No program synced</string>
+  <string id="RestDay">Rest day</string>
+  <string id="StartWorkout">Start</string>
+  <string id="Rest">REST</string>
+  <string id="Complete">Session complete</string>
+  <string id="SyncError">Sync failed — will retry</string>
+</strings>

@@ -1,0 +1,4 @@
+<properties>
+  <!-- Default backend. Override per-device in Garmin Connect Mobile settings. -->
+  <property id="apiBaseUrl" type="string">https://training-api.fly.dev/api</property>
+</properties>

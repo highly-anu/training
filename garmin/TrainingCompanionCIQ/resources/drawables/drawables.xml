@@ -1,0 +1,8 @@
+<drawables>
+  <!--
+    TODO(sdk): Add a launcher_icon.png bitmap. monkeyc REQUIRES this file to build.
+    Fenix 9 launcher icons are typically ~40x40 px (confirm per device in the sim).
+    Drop the PNG next to this file and keep the filename below.
+  -->
+  <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+</drawables>
