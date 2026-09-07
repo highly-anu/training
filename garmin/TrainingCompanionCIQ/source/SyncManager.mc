@@ -2,6 +2,7 @@ using Toybox.Communications as Comm;
 using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.PersistedContent;
+using Toybox.System;
 
 // The exact data type makeWebRequest hands its callback on this SDK.
 typedef WebData as Null or Lang.Dictionary or Lang.String or PersistedContent.Iterator;
@@ -69,8 +70,10 @@ class SyncManager {
         if (code == 200 && data instanceof Lang.Dictionary && data.hasKey("deviceToken")) {
             Storage.setValue(Config.KEY_DEVICE_TOKEN, data["deviceToken"]);
             Storage.setValue(Config.KEY_CLAIMED, false);
+            System.println("CIQ_PAIR_CODE=" + data["code"]);  // DEBUG: capture in sim console
             if (_pairCb != null) { _pairCb.invoke(true, data["code"]); }
         } else {
+            System.println("CIQ_PAIR_FAIL http=" + code);      // DEBUG
             if (_pairCb != null) { _pairCb.invoke(false, null); }
         }
     }
