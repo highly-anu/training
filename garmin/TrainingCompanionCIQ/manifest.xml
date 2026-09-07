@@ -25,6 +25,7 @@
 
     <iq:permissions>
       <iq:uses-permission id="Communications"/>   <!-- makeWebRequest to our backend -->
+      <iq:uses-permission id="Fit"/>               <!-- ActivityRecording (FIT) session -->
       <iq:uses-permission id="Positioning"/>       <!-- GPS during outdoor sessions -->
       <iq:uses-permission id="SensorHistory"/>      <!-- HR / recovery reads -->
       <iq:uses-permission id="UserProfile"/>        <!-- HR zones, FTP (CIQ 9) -->

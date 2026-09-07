@@ -1,6 +1,7 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.Application.Storage;
+using Toybox.Lang;
 
 // Today's session(s): shows the archetype + est. minutes, or a rest-day message.
 // SELECT starts the (first) session. Refreshes from the backend on show.
@@ -15,7 +16,7 @@ class SessionListView extends Ui.View {
         _sync = new SyncManager();
         _status = "loading";
         // Seed from cache for instant paint; then refresh.
-        var cached = Storage.getValue(Config.KEY_TODAY_SESSION);
+        var cached = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
         applyToday(cached);
     }
 
@@ -24,14 +25,14 @@ class SessionListView extends Ui.View {
         _sync.fetchToday(method(:onToday));
     }
 
-    function onToday(success, data) {
-        applyToday(data);
+    function onToday(success, data) as Void {
+        applyToday(data as Lang.Dictionary?);
         Ui.requestUpdate();
     }
 
-    hidden function applyToday(data) {
+    hidden function applyToday(data as Lang.Dictionary?) as Void {
         if (data == null) { _status = "loading"; _sessions = []; return; }
-        _status = data.hasKey("status") ? data["status"] : "no_program";
+        _status = data.hasKey("status") ? (data["status"] as Lang.String) : "no_program";
         _sessions = WorkoutSession.listFromToday(data);
     }
 

@@ -1,6 +1,10 @@
 using Toybox.Communications as Comm;
 using Toybox.Application.Storage;
 using Toybox.Lang;
+using Toybox.PersistedContent;
+
+// The exact data type makeWebRequest hands its callback on this SDK.
+typedef WebData as Null or Lang.Dictionary or Lang.String or PersistedContent.Iterator;
 
 // All backend I/O. Mirrors the iOS SyncManager + WatchSessionManager + APIClient:
 // pairing, today-session fetch, and buffer-and-retry upload of a finished session.
@@ -61,8 +65,8 @@ class SyncManager {
         );
     }
 
-    function onPair(code, data) {
-        if (code == 200 && data != null && data.hasKey("deviceToken")) {
+    function onPair(code as Lang.Number, data as WebData) as Void {
+        if (code == 200 && data instanceof Lang.Dictionary && data.hasKey("deviceToken")) {
             Storage.setValue(Config.KEY_DEVICE_TOKEN, data["deviceToken"]);
             Storage.setValue(Config.KEY_CLAIMED, false);
             if (_pairCb != null) { _pairCb.invoke(true, data["code"]); }
@@ -82,8 +86,8 @@ class SyncManager {
         );
     }
 
-    function onStatus(code, data) {
-        var claimed = (code == 200 && data != null && data["claimed"] == true);
+    function onStatus(code as Lang.Number, data as WebData) as Void {
+        var claimed = (code == 200 && data instanceof Lang.Dictionary && data["claimed"] == true);
         if (claimed) { Storage.setValue(Config.KEY_CLAIMED, true); }
         if (_statusCb != null) { _statusCb.invoke(code == 200, claimed); }
     }
@@ -101,8 +105,8 @@ class SyncManager {
         );
     }
 
-    function onToday(code, data) {
-        if (code == 200 && data != null) {
+    function onToday(code as Lang.Number, data as WebData) as Void {
+        if (code == 200 && data instanceof Lang.Dictionary) {
             Storage.setValue(Config.KEY_TODAY_SESSION, data);
             Storage.setValue(Config.KEY_TODAY_DATE, data["date"]);
             if (_todayCb != null) { _todayCb.invoke(true, data); }
@@ -135,8 +139,8 @@ class SyncManager {
         );
     }
 
-    function onWorkoutPosted(code, data) {
-        if (code != 200) { return _failUpload(); }
+    function onWorkoutPosted(code as Lang.Number, data as WebData) as Void {
+        if (code != 200) { _failUpload(); return; }
         var key = _uploadSummary["sessionKey"];
         Comm.makeWebRequest(
             Config.apiBaseUrl() + "/health/sessions/" + key,
@@ -146,10 +150,10 @@ class SyncManager {
         );
     }
 
-    function onSessionLogPut(code, data) {
-        if (code != 200) { return _failUpload(); }
+    function onSessionLogPut(code as Lang.Number, data as WebData) as Void {
+        if (code != 200) { _failUpload(); return; }
         var bio = _uploadSummary.hasKey("bio") ? _uploadSummary["bio"] : null;
-        if (bio == null) { return _finishUpload(); }
+        if (bio == null) { _finishUpload(); return; }
         Comm.makeWebRequest(
             Config.apiBaseUrl() + "/health/bio/" + _uploadSummary["date"],
             bio,
@@ -158,7 +162,7 @@ class SyncManager {
         );
     }
 
-    function onBioPut(code, data) {
+    function onBioPut(code as Lang.Number, data as WebData) as Void {
         // Bio is best-effort; a failure here still counts the session as uploaded.
         _finishUpload();
     }
@@ -195,7 +199,7 @@ class SyncManager {
         uploadSession(next, method(:onFlushResult));
     }
 
-    function onFlushResult(success, data) {
+    function onFlushResult(success, data) as Void {
         // On failure uploadSession re-buffers automatically; keep draining on success.
         if (success) { flushBuffer(); }
     }

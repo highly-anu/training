@@ -63,7 +63,7 @@ class WorkoutController {
         _state = ACTIVE;
     }
 
-    function onTick() {
+    function onTick() as Void {
         _elapsed += 1;
         var info = Activity.getActivityInfo();
         if (info != null && info.currentHeartRate != null) {
@@ -152,7 +152,7 @@ class WorkoutController {
         _sync.uploadSession(summary, method(:onUploadDone));
     }
 
-    function onUploadDone(success, data) {
+    function onUploadDone(success, data) as Void {
         // View observes state()==COMPLETE; nothing else required — buffer handles failure.
     }
 

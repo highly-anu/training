@@ -22,7 +22,7 @@ class PairingView extends Ui.View {
         _sync.pair(method(:onPaired));
     }
 
-    function onPaired(success, code) {
+    function onPaired(success, code) as Void {
         if (success) {
             _code = code;
             _msg = Ui.loadResource(Rez.Strings.PairPrompt);
@@ -34,11 +34,11 @@ class PairingView extends Ui.View {
         Ui.requestUpdate();
     }
 
-    function onPoll() {
+    function onPoll() as Void {
         _sync.pollStatus(method(:onStatus));
     }
 
-    function onStatus(success, claimed) {
+    function onStatus(success, claimed) as Void {
         if (claimed) {
             if (_pollTimer != null) { _pollTimer.stop(); }
             var lv = new SessionListView();

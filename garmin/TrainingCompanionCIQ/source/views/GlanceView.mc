@@ -1,6 +1,7 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.Application.Storage;
+using Toybox.Lang;
 
 // At-a-glance card (swiped from the watch face). Shows today's headline session
 // from cache. Parity with the iOS TodayWidget / watch complication.
@@ -18,17 +19,18 @@ class GlanceView extends Ui.GlanceView {
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
         dc.clear();
 
-        var today = Storage.getValue(Config.KEY_TODAY_SESSION);
+        var today = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
         var line1 = "Training";
         var line2 = "Open to sync";
 
         if (today != null && today.hasKey("status")) {
-            if (today["status"].equals("ok") && today.hasKey("sessions")
-                && today["sessions"].size() > 0) {
-                var s = today["sessions"][0];
-                line1 = s["archetypeName"];
+            var status = today["status"] as Lang.String;
+            var sessions = today.hasKey("sessions") ? (today["sessions"] as Lang.Array) : null;
+            if (status.equals("ok") && sessions != null && sessions.size() > 0) {
+                var s = sessions[0] as Lang.Dictionary;
+                line1 = s["archetypeName"] as Lang.String;
                 line2 = s["estimatedMinutes"] + " min · " + s["modalityId"];
-            } else if (today["status"].equals("ok")) {
+            } else if (status.equals("ok")) {
                 line1 = "Rest day";
                 line2 = "";
             }
