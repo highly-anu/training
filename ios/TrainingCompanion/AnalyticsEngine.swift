@@ -45,7 +45,8 @@ enum AnalyticsEngine {
         hrConfig: HRConfig?,
         dateOfBirth: String? = nil
     ) -> HRZoneDistribution? {
-        let maxHR = effectiveMaxHR(hrConfig: hrConfig, dateOfBirth: dateOfBirth)
+        let configMax = effectiveMaxHR(hrConfig: hrConfig, dateOfBirth: dateOfBirth)
+        let maxHR = workoutMax.map { Swift.max(configMax, $0) } ?? configMax
         let boundaries = hrConfig?.zoneBoundaries ?? defaultZoneBoundaries
 
         if samples.count >= 2 {
@@ -95,6 +96,9 @@ enum AnalyticsEngine {
     private static func estimateZonesFromSummary(
         maxHR: Int, avg: Double, observedMax: Double, boundaries: [Double]
     ) -> HRZoneDistribution {
+        guard observedMax > avg else {
+            return HRZoneDistribution(z1: 100, z2: 0, z3: 0, z4: 0, z5: 0, method: "summary_estimate")
+        }
         let std = (observedMax - avg) / 2.5
         let bpmBounds = [0.0] + boundaries.map { $0 * Double(maxHR) } + [Double.infinity]
         var raw = [Double]()
@@ -259,7 +263,14 @@ enum AnalyticsEngine {
             var best: Double? = nil
             var lo = 0
             for hi in 1..<cumDist.count {
-                while lo < hi && (cumDist[hi].dist - cumDist[lo].dist) > targetM { lo += 1 }
+                while lo < hi && (cumDist[hi].dist - cumDist[lo].dist) > targetM {
+                    let segDist = cumDist[hi].dist - cumDist[lo].dist
+                    if segDist >= targetM * 0.95 {
+                        let elapsed = cumDist[hi].elapsed - cumDist[lo].elapsed
+                        if elapsed > 0 { best = best.map { Swift.min($0, elapsed) } ?? elapsed }
+                    }
+                    lo += 1
+                }
                 let segDist = cumDist[hi].dist - cumDist[lo].dist
                 if segDist >= targetM * 0.95 {
                     let elapsed = cumDist[hi].elapsed - cumDist[lo].elapsed
@@ -272,12 +283,7 @@ enum AnalyticsEngine {
             let paceStr = String(format: "%d:%02d /km", Int(secPerKm) / 60, Int(secPerKm) % 60)
 
             let prBest = personalRecordBest(distanceKm: target.km, in: allWorkouts)
-            let isPR: Bool
-            if let prSecs = prBest {
-                isPR = secs <= prSecs * 1.001  // within 0.1% — same or faster
-            } else {
-                isPR = true  // no prior data = first time = PR
-            }
+            let isPR = prBest == nil  // first effort ever = PR; suppress until per-workout GPS store is in place
             results.append(BestEffort(label: target.label, timeSeconds: secs, paceStr: paceStr, isPersonalRecord: isPR))
         }
         return results
@@ -428,13 +434,24 @@ enum AnalyticsEngine {
         var entries: [PMCEntry] = []
         var ctl = 0.0; var atl = 0.0
         guard let start = cal.date(byAdding: .day, value: -days, to: Date()) else { return [] }
+
+        // Warm-up CTL/ATL from history before the display window so athletes with >90 days
+        // of history don't see fitness rising from zero.
+        for w in workouts {
+            guard let wDate = fmt.date(from: w.date), wDate < start else { continue }
+            let t = Double(computeWorkoutTRIMP(workout: w, hrConfig: hrConfig, dateOfBirth: dateOfBirth) ?? 0)
+            ctl = ctl + kCtl * (t - ctl)
+            atl = atl + kAtl * (t - atl)
+        }
+
         for dayOffset in 0..<days {
             guard let date = cal.date(byAdding: .day, value: dayOffset, to: start) else { continue }
             let dateStr = fmt.string(from: date)
             let trimp = trimpByDate[dateStr] ?? 0.0
+            let tsbEntering = ctl - atl
             ctl = ctl + kCtl * (trimp - ctl)
             atl = atl + kAtl * (trimp - atl)
-            entries.append(PMCEntry(date: date, ctl: ctl, atl: atl, tsb: ctl - atl, trimp: trimp))
+            entries.append(PMCEntry(date: date, ctl: ctl, atl: atl, tsb: tsbEntering, trimp: trimp))
         }
         return entries
     }

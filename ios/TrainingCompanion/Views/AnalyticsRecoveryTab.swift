@@ -84,8 +84,9 @@ struct AnalyticsRecoveryTab: View {
         let targetPerNight = 480  // 8 hours in minutes
         let recent = appState.recentBioLogs.prefix(7)
         guard !recent.isEmpty else { return AnyView(EmptyView()) }
-        let totalActual = recent.compactMap(\.sleepDurationMin).reduce(0, +)
-        let totalTarget = targetPerNight * min(recent.count, 7)
+        let sleepNights = recent.compactMap(\.sleepDurationMin)
+        let totalActual = sleepNights.reduce(0, +)
+        let totalTarget = targetPerNight * sleepNights.count
         let debtMin = Swift.max(0, totalTarget - totalActual)
         let debtHours = Double(debtMin) / 60.0
         let maxDebt = Double(targetPerNight * 7) / 60.0
@@ -107,7 +108,7 @@ struct AnalyticsRecoveryTab: View {
                     .tint(debtHours < 2 ? .green : debtHours < 5 ? .orange : .red)
                     .frame(width: 52, height: 52)
                 }
-                Text("Target 8h/night · \(recent.count) nights tracked")
+                Text("Target 8h/night · \(sleepNights.count) nights tracked")
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         })

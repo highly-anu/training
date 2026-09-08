@@ -8,29 +8,28 @@ struct SleepStagesChartView: View {
 
     private struct SleepPoint: Identifiable {
         let id = UUID()
-        let date: String
+        let date: Date
         let stage: String
         let minutes: Int
     }
+
+    private static let dateFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
 
     private var points: [SleepPoint] {
         let recent = logs.prefix(30).reversed()
         var out: [SleepPoint] = []
         for log in recent {
-            if let v = log.deepSleepMin,  v > 0 { out.append(.init(date: log.date, stage: "Deep",  minutes: v)) }
-            if let v = log.remSleepMin,   v > 0 { out.append(.init(date: log.date, stage: "REM",   minutes: v)) }
-            if let v = log.lightSleepMin, v > 0 { out.append(.init(date: log.date, stage: "Light", minutes: v)) }
-            if let v = log.awakeMins,     v > 0 { out.append(.init(date: log.date, stage: "Awake", minutes: v)) }
+            guard let date = Self.dateFmt.date(from: log.date) else { continue }
+            if let v = log.deepSleepMin,  v > 0 { out.append(.init(date: date, stage: "Deep",  minutes: v)) }
+            if let v = log.remSleepMin,   v > 0 { out.append(.init(date: date, stage: "REM",   minutes: v)) }
+            if let v = log.lightSleepMin, v > 0 { out.append(.init(date: date, stage: "Light", minutes: v)) }
+            if let v = log.awakeMins,     v > 0 { out.append(.init(date: date, stage: "Awake", minutes: v)) }
         }
         return out
     }
-
-    private let stageColors: [String: Color] = [
-        "Deep": Color(red: 0.2, green: 0.2, blue: 0.7),
-        "REM":  Color(red: 0.4, green: 0.3, blue: 0.8),
-        "Light": Color(red: 0.45, green: 0.65, blue: 0.9),
-        "Awake": Color(red: 0.8, green: 0.7, blue: 0.4)
-    ]
 
     var body: some View {
         if points.isEmpty {
@@ -38,7 +37,7 @@ struct SleepStagesChartView: View {
         } else {
             Chart(points) { pt in
                 BarMark(
-                    x: .value("Date", pt.date),
+                    x: .value("Date", pt.date, unit: .day),
                     y: .value("Minutes", pt.minutes)
                 )
                 .foregroundStyle(by: .value("Stage", pt.stage))
@@ -51,10 +50,11 @@ struct SleepStagesChartView: View {
                 "Awake": Color(red: 0.8, green: 0.7, blue: 0.4)
             ])
             .chartXAxis {
-                AxisMarks(values: .stride(by: 7)) { value in
+                AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisValueLabel {
-                        if let s = value.as(String.self) {
-                            Text(s.suffix(5)).font(.caption2).foregroundStyle(.secondary)
+                        if let d = value.as(Date.self) {
+                            Text(d, format: .dateTime.month(.abbreviated).day())
+                                .font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }

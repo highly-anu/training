@@ -8,19 +8,25 @@ struct HRVTrendChartView: View {
 
     private struct DataPoint: Identifiable {
         let id = UUID()
-        let date: String
+        let date: Date
         let value: Double
         let rollingAvg: Double?
     }
+
+    private static let dateFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
 
     private var points: [DataPoint] {
         let recent = logs.prefix(30).reversed().filter { $0.hrv != nil }
         var out: [DataPoint] = []
         let arr = Array(recent)
         for (i, log) in arr.enumerated() {
+            guard let date = Self.dateFmt.date(from: log.date) else { continue }
             let window = arr[Swift.max(0, i - 6)...i].compactMap(\.hrv)
             let avg = window.isEmpty ? nil : window.reduce(0, +) / Double(window.count)
-            out.append(DataPoint(date: log.date, value: log.hrv!, rollingAvg: avg))
+            out.append(DataPoint(date: date, value: log.hrv!, rollingAvg: avg))
         }
         return out
     }
@@ -51,7 +57,7 @@ struct HRVTrendChartView: View {
 
                 Chart(points) { pt in
                     PointMark(
-                        x: .value("Date", pt.date),
+                        x: .value("Date", pt.date, unit: .day),
                         y: .value("HRV", pt.value)
                     )
                     .foregroundStyle(Color.cyan.opacity(0.5))
@@ -59,7 +65,7 @@ struct HRVTrendChartView: View {
 
                     if let avg = pt.rollingAvg {
                         LineMark(
-                            x: .value("Date", pt.date),
+                            x: .value("Date", pt.date, unit: .day),
                             y: .value("7d Avg", avg)
                         )
                         .foregroundStyle(Color.cyan)
@@ -68,10 +74,11 @@ struct HRVTrendChartView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: 7)) { value in
+                    AxisMarks(values: .stride(by: .day, count: 7)) { value in
                         AxisValueLabel {
-                            if let s = value.as(String.self) {
-                                Text(s.suffix(5)).font(.caption2).foregroundStyle(.secondary)
+                            if let d = value.as(Date.self) {
+                                Text(d, format: .dateTime.month(.abbreviated).day())
+                                    .font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                     }

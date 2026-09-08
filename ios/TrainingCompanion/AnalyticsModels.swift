@@ -28,7 +28,7 @@ struct DecouplingResult {
 // MARK: - PMC / Load
 
 struct PMCEntry: Identifiable {
-    var id = UUID()
+    var id: Date { date }
     var date: Date
     var ctl: Double
     var atl: Double
@@ -37,7 +37,7 @@ struct PMCEntry: Identifiable {
 }
 
 struct WeeklyLoadEntry: Identifiable {
-    var id = UUID()
+    var id: String { week }
     var week: String        // "MMM d"
     var trimp: Double
     var sessions: Double
@@ -69,7 +69,7 @@ struct WorkoutPeriodStats {
 // MARK: - Chart Breakdown Types
 
 struct ModalityShare: Identifiable {
-    var id = UUID()
+    var id: String { modalityId }
     var modalityId: String
     var label: String
     var pct: Int
@@ -77,7 +77,7 @@ struct ModalityShare: Identifiable {
 }
 
 struct ActivityTypeEntry: Identifiable {
-    var id = UUID()
+    var id: String { name }
     var name: String
     var hours: Double
     var sessions: Double
@@ -85,7 +85,7 @@ struct ActivityTypeEntry: Identifiable {
 }
 
 struct WeeklyConsistencyEntry: Identifiable {
-    var id = UUID()
+    var id: Date { weekStart }
     var weekLabel: String
     var sessionCount: Int
     var weekStart: Date
@@ -94,7 +94,7 @@ struct WeeklyConsistencyEntry: Identifiable {
 // MARK: - Strava-style Best Efforts
 
 struct BestEffort: Identifiable {
-    var id = UUID()
+    var id: String { label }
     var label: String           // "1 km", "5 km", "10 km"
     var timeSeconds: Double
     var paceStr: String         // "4:32 /km"

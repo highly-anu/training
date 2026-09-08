@@ -84,7 +84,16 @@ struct WorkoutDetailSheet: View {
                 Text("This will remove the workout data and unlink it from any session.")
             }
         }
-        .onChange(of: workout.id) { _ in mapMode = .flat }
+        .onChange(of: workout.id) { _ in
+            mapMode = .flat
+            fullWorkout = nil
+            trimpScore = nil
+            hrZones = nil
+            decoupling = nil
+            trainingEffect = nil
+            bestEffortsResult = []
+            recoveryTimeHours = nil
+        }
     }
 
     // MARK: - Viewing
@@ -112,6 +121,9 @@ struct WorkoutDetailSheet: View {
             if let dc = decoupling { decouplingSection(dc) }
             if !bestEffortsResult.isEmpty { bestEffortsSection }
             metricsSection
+            if let key = linkedSessionKey, let log = appState.sessionLogs[key] {
+                sessionDetailsSection(log)
+            }
             actionsSection
         }
         .listStyle(.insetGrouped)
@@ -133,8 +145,10 @@ struct WorkoutDetailSheet: View {
                     avgHR: w.heartRate?.avg, maxHR: w.heartRate?.max,
                     hrConfig: hrConfig, dateOfBirth: dob
                 )
-                let dur = w.durationMinutes ?? 0
-                let trimp = zones.map { AnalyticsEngine.computeTRIMP(zones: $0, durationMinutes: dur) }
+                let trimp: Int? = {
+                    guard let dur = w.durationMinutes, dur > 0, let z = zones else { return nil }
+                    return AnalyticsEngine.computeTRIMP(zones: z, durationMinutes: dur)
+                }()
                 let dc = AnalyticsEngine.computeAerobicDecoupling(
                     gpsTrack: w.gpsTrack ?? [], hrSamples: w.heartRate?.samples ?? []
                 )
@@ -497,6 +511,39 @@ struct WorkoutDetailSheet: View {
                 }
                 .padding(.vertical, 2)
             }
+        }
+    }
+
+    private func sessionDetailsSection(_ log: SessionLogEntry) -> some View {
+        Section("Program Session") {
+            if let rating = log.fatigueRating {
+                LabeledContent("Fatigue Rating") {
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Image(systemName: i <= rating ? "circle.fill" : "circle")
+                                .font(.caption)
+                                .foregroundStyle(i <= rating ? fatigueColor(rating) : .tertiary)
+                        }
+                        Text("\(rating)/5")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            if let notes = log.notes, !notes.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Notes").font(.caption).foregroundStyle(.secondary)
+                    Text(notes).font(.body)
+                }
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
+    private func fatigueColor(_ rating: Int) -> Color {
+        switch rating {
+        case 1, 2: return .green
+        case 3: return .yellow
+        default: return .orange
         }
     }
 

@@ -6,6 +6,7 @@ struct AnalyticsWorkoutsTab: View {
     @Binding var selectedWorkout: ImportedWorkout?
     @State private var sortKey: WorkoutSortKey = .date
     @State private var activityFilter: String? = nil  // nil = all types
+    @State private var trimpCache: [String: Int] = [:]
 
     // MARK: - Filtered + Sorted Workouts
 
@@ -45,9 +46,9 @@ struct AnalyticsWorkoutsTab: View {
                             .contentShape(Rectangle())
                             .onTapGesture { selectedWorkout = workout }
                     }
-                    .onDelete { indexSet in
+                    .onDelete { [snapshot = filtered] indexSet in
                         for idx in indexSet {
-                            let w = filtered[idx]
+                            let w = snapshot[idx]
                             Task { try? await appState.deleteWorkout(id: w.id) }
                         }
                     }
@@ -57,6 +58,20 @@ struct AnalyticsWorkoutsTab: View {
                     AppHaptics.light()
                     await appState.loadWorkouts()
                     AppHaptics.success()
+                }
+                .task(id: appState.importedWorkouts.map(\.id).joined()) {
+                    let workouts = appState.importedWorkouts
+                    let hrConfig = appState.profile.hrConfig
+                    let dob = appState.profile.dateOfBirth
+                    let result = await Task.detached(priority: .background) {
+                        Dictionary(uniqueKeysWithValues: workouts.compactMap { w -> (String, Int)? in
+                            guard let t = AnalyticsEngine.computeWorkoutTRIMP(
+                                workout: w, hrConfig: hrConfig, dateOfBirth: dob)
+                            else { return nil }
+                            return (w.id, t)
+                        })
+                    }.value
+                    trimpCache = result
                 }
             }
         }
@@ -125,9 +140,7 @@ struct AnalyticsWorkoutsTab: View {
         let modality = workout.inferredModalityId ?? linkedProgramSession(for: workout)?.modality
         let iconName  = modality.map { ModalityStyle.icon(for: $0) } ?? activityIcon(workout.activityType)
         let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? (isLinked ? .green : Color.blue)
-        let trimp = AnalyticsEngine.computeWorkoutTRIMP(workout: workout,
-                                                        hrConfig: appState.profile.hrConfig,
-                                                        dateOfBirth: appState.profile.dateOfBirth)
+        let trimp = trimpCache[workout.id]
 
         return HStack(spacing: 12) {
             Image(systemName: iconName)
@@ -256,10 +269,16 @@ struct AnalyticsWorkoutsTab: View {
         return "figure.mixed.cardio"
     }
 
+    private static let dateParser: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
+    private static let dateDisplay: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "EEE, MMM d"; return f
+    }()
+
     private func workoutDateLabel(_ dateStr: String) -> String {
-        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
-        guard let date = df.date(from: dateStr) else { return dateStr }
-        let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
-        return out.string(from: date)
+        guard let date = Self.dateParser.date(from: dateStr) else { return dateStr }
+        return Self.dateDisplay.string(from: date)
     }
 }

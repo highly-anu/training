@@ -282,17 +282,18 @@ struct AnalyticsOverviewTab: View {
         cardContainer(header: "Weekly Volume") {
             Chart(consistency) { entry in
                 BarMark(
-                    x: .value("Week", entry.weekLabel),
+                    x: .value("Week", entry.weekStart, unit: .weekOfYear),
                     y: .value("Sessions", entry.sessionCount)
                 )
                 .foregroundStyle(consistencyColor(entry.sessionCount).gradient)
                 .cornerRadius(4)
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: 3)) { value in
+                AxisMarks(values: .stride(by: .month, count: 1)) { value in
                     AxisValueLabel {
-                        if let s = value.as(String.self) {
-                            Text(s).font(.caption2).foregroundStyle(.secondary)
+                        if let d = value.as(Date.self) {
+                            Text(d, format: .dateTime.month(.abbreviated))
+                                .font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }
