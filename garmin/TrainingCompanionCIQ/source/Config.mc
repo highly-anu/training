@@ -16,6 +16,12 @@ module Config {
     // Poll cadence for pairing status (ms).
     const PAIR_POLL_MS = 3000;
 
+    // Seconds between captured GPS track points during cardio sessions.
+    const GPS_STRIDE_SEC = 5;
+
+    // Consecutive seconds outside the prescribed HR zone before a drift alert fires.
+    const HR_DRIFT_HOLD_SEC = 15;
+
     // Default per-modality rest seconds — mirrors ios/.../WatchSessionManager.swift
     // modalityRestDefaults, used only when the backend omits a value.
     function defaultRestSec(modality) {
@@ -34,5 +40,16 @@ module Config {
             return "https://training-api.fly.dev/api";
         }
         return url;
+    }
+
+    // Value encoded in the pairing QR. When a web base URL is configured we build a
+    // deep link that opens the claim page with the code prefilled; otherwise we
+    // encode the raw code (still scannable, just not a one-tap link).
+    function pairQrValue(code) {
+        var web = Application.Properties.getValue("webBaseUrl");
+        if (web != null && web.length() > 0) {
+            return web + "/pair?code=" + code;
+        }
+        return code;
     }
 }

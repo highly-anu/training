@@ -6,6 +6,7 @@ using Toybox.Time.Gregorian;
 using Toybox.Lang;
 using Toybox.Attention;
 using Toybox.WatchUi;
+using Toybox.UserProfile;
 
 // Drives one session: recording, HR capture, set/rest progression, and the final
 // upload. Mirrors ios/.../WorkoutManager.swift + WorkoutSessionState.swift.
@@ -33,6 +34,30 @@ class WorkoutController {
     hidden var _hrCount;
     hidden var _hrPeak;
 
+    // GPS / distance / elevation — captured for cardio sessions only.
+    hidden var _isCardio;
+    hidden var _distanceM;      // meters (Activity.Info.elapsedDistance)
+    hidden var _ascent;         // meters climbed (Activity.Info.totalAscent)
+    hidden var _descent;        // meters descended (Activity.Info.totalDescent)
+    hidden var _gpsTrack;       // [ {lat,lng,altitude} ] sampled every GPS_STRIDE_SEC
+    hidden var _lastGpsSec;
+
+    // HR-zone drift (cardio / zoned slots): compare live HR to the prescribed zone
+    // band, resolved from the athlete's own UserProfile zone boundaries.
+    hidden var _hrZones;        // [Number] boundaries from UserProfile, or null
+    hidden var _driftSec;       // consecutive seconds outside the prescribed band
+    hidden var _pendingDir;     // direction being timed toward an alert (+1/-1/0)
+    hidden var _driftDir;       // latched alert direction: +1 too high, -1 too low, 0 in-band
+
+    // Per-exercise interval timing for EMOM / AMRAP / for-time slots.
+    hidden var _exStartSec;     // _elapsed when the current exercise became active
+    hidden var _emomInterval;   // seconds per EMOM interval (0 = not an EMOM)
+    hidden var _emomTotal;      // total EMOM intervals prescribed (0 = open)
+    hidden var _emomRound;      // current EMOM interval, 1-based
+    hidden var _amrapRounds;    // rounds the athlete has logged (AMRAP / for-time)
+    hidden var _capSec;         // AMRAP time cap in seconds (0 = none)
+    hidden var _capBuzzed;      // whether the cap-reached buzz has fired
+
     // setLogs: { exerciseId => [ {reps, weightKg, rpe} ] }
     hidden var _setLogs;
 
@@ -45,6 +70,15 @@ class WorkoutController {
         _hrOffsets = [];
         _hrValues = [];
         _hrSum = 0; _hrCount = 0; _hrPeak = 0;
+        _isCardio = false;
+        _distanceM = 0; _ascent = 0; _descent = 0;
+        _gpsTrack = [];
+        _lastGpsSec = -1000;
+        _hrZones = null;
+        _driftSec = 0; _pendingDir = 0; _driftDir = 0;
+        _exStartSec = 0;
+        _emomInterval = 0; _emomTotal = 0; _emomRound = 1;
+        _amrapRounds = 0; _capSec = 0; _capBuzzed = false;
         _setLogs = {};
     }
 
@@ -52,6 +86,8 @@ class WorkoutController {
 
     function start() {
         _startMoment = Time.now();
+        _isCardio = isCardioModality(_session.modalityId());
+        _hrZones = readHrZones();
         _rec = Rec.createSession({
             :name => _session.archetypeName(),
             :sport => sportForModality(_session.modalityId()),
@@ -61,6 +97,7 @@ class WorkoutController {
         _timer = new Timer.Timer();
         _timer.start(method(:onTick), 1000, true);
         _state = ACTIVE;
+        beginExerciseTiming();
     }
 
     function onTick() as Void {
@@ -73,6 +110,8 @@ class WorkoutController {
             _hrSum += hr; _hrCount += 1;
             if (hr > _hrPeak) { _hrPeak = hr; }
         }
+        if (_isCardio) { captureGps(info); }
+        if (_state == ACTIVE) { evaluateHrDrift(); updateIntervalTiming(); }
         if (_state == RESTING) {
             _restRemaining -= 1;
             if (_restRemaining <= 0) {
@@ -81,6 +120,158 @@ class WorkoutController {
             }
         }
         WatchUi.requestUpdate();
+    }
+
+    // Capture distance / elevation / a subsampled GPS point from Activity.Info.
+    // Every field is guarded with `has` + null checks: indoor sessions and watches
+    // without a GPS fix simply contribute nothing.
+    hidden function captureGps(info) {
+        if (info == null) { return; }
+        if ((info has :elapsedDistance) && info.elapsedDistance != null) {
+            _distanceM = info.elapsedDistance;
+        }
+        if ((info has :totalAscent) && info.totalAscent != null) {
+            _ascent = info.totalAscent;
+        }
+        if ((info has :totalDescent) && info.totalDescent != null) {
+            _descent = info.totalDescent;
+        }
+        // Sample one location point every GPS_STRIDE_SEC seconds.
+        if (_elapsed - _lastGpsSec >= Config.GPS_STRIDE_SEC
+                && (info has :currentLocation) && info.currentLocation != null) {
+            var deg = info.currentLocation.toDegrees();   // [lat, lng] as Double
+            if (deg != null && deg.size() >= 2) {
+                var alt = ((info has :altitude) && info.altitude != null) ? info.altitude : null;
+                _gpsTrack.add({ "lat" => deg[0], "lng" => deg[1], "altitude" => alt });
+                _lastGpsSec = _elapsed;
+            }
+        }
+    }
+
+    // Read the athlete's HR zone boundaries once, preferring running zones for cardio.
+    // Guarded so it degrades to null (no drift alerts) on devices/API levels without
+    // the sport-parameterized UserProfile call.
+    hidden function readHrZones() {
+        if (!(Toybox has :UserProfile)) { return null; }
+        if (!(UserProfile has :getHeartRateZones)) { return null; }
+        var sport = UserProfile.HR_ZONE_SPORT_GENERIC;
+        if (_isCardio && (UserProfile has :HR_ZONE_SPORT_RUNNING)) {
+            sport = UserProfile.HR_ZONE_SPORT_RUNNING;
+        }
+        return UserProfile.getHeartRateZones(sport);
+    }
+
+    // BPM band [lo, hi] for the current exercise's prescribed HR zone(s), or null when
+    // no zone is prescribed / zones are unavailable. The boundary array has
+    // (numZones + 1) entries: index z-1 is the lower bound of zone z, index z its upper.
+    function currentHrBand() {
+        if (_hrZones == null || _hrZones.size() < 2) { return null; }
+        var ex = currentExercise();
+        if (ex == null) { return null; }
+        var zlo = ex.zoneLower();
+        if (zlo == null) { return null; }
+        var zhi = ex.zoneUpper();
+        if (zhi == null) { zhi = zlo; }
+        var maxZone = _hrZones.size() - 1;
+        if (zlo < 1) { zlo = 1; }
+        if (zhi > maxZone) { zhi = maxZone; }
+        if (zlo > maxZone || zhi < 1 || zlo > zhi) { return null; }
+        return [ _hrZones[zlo - 1], _hrZones[zhi] ];
+    }
+
+    // Latched drift alert direction for the current exercise: +1 HR above the
+    // prescribed band (ease off), -1 below it (push), 0 in-band / unknown.
+    function driftDirection() { return _driftDir; }
+
+    // Accumulate time outside the prescribed band; buzz once when it persists past
+    // HR_DRIFT_HOLD_SEC. Direction changes restart the timer.
+    hidden function evaluateHrDrift() {
+        var band = currentHrBand();
+        var hr = currentHR();
+        if (band == null || hr == null) {
+            _driftSec = 0; _pendingDir = 0; _driftDir = 0;
+            return;
+        }
+        var dir = (hr < band[0]) ? -1 : ((hr > band[1]) ? 1 : 0);
+        if (dir == 0) {
+            _driftSec = 0; _pendingDir = 0; _driftDir = 0;
+            return;
+        }
+        if (dir != _pendingDir) { _pendingDir = dir; _driftSec = 0; }
+        _driftSec += 1;
+        if (_driftSec == Config.HR_DRIFT_HOLD_SEC) {
+            _driftDir = dir;
+            vibrate();
+        }
+    }
+
+    // Set up interval state when an exercise becomes active. EMOM interval is
+    // derived from the prescribed total time / rounds (falling back to 60s);
+    // AMRAP reads its time cap.
+    hidden function beginExerciseTiming() {
+        _exStartSec = _elapsed;
+        _emomInterval = 0; _emomTotal = 0; _emomRound = 1;
+        _amrapRounds = 0; _capSec = 0; _capBuzzed = false;
+        var ex = currentExercise();
+        if (ex == null) { return; }
+        var slot = ex.slotType();
+        if (slot.equals("emom")) {
+            var tmin = ex.timeMinutes();
+            var rounds = ex.targetRounds();
+            _emomTotal = (rounds != null) ? rounds : 0;
+            _emomInterval = (tmin != null && rounds != null && rounds > 0)
+                ? ((tmin * 60) / rounds)
+                : 60;
+        } else if (slot.equals("amrap")) {
+            var cap = ex.timeMinutes();
+            _capSec = (cap != null) ? (cap * 60) : 0;
+        }
+    }
+
+    // Buzz at the top of each EMOM interval; buzz once when an AMRAP cap is reached.
+    hidden function updateIntervalTiming() {
+        var ex = currentExercise();
+        if (ex == null) { return; }
+        var slot = ex.slotType();
+        var since = _elapsed - _exStartSec;
+        if (slot.equals("emom") && _emomInterval > 0) {
+            var round = (since / _emomInterval) + 1;
+            if (round > _emomRound && (_emomTotal <= 0 || round <= _emomTotal)) {
+                _emomRound = round;
+                vibrate();
+            }
+        } else if (slot.equals("amrap") && _capSec > 0) {
+            if (since >= _capSec && !_capBuzzed) {
+                _capBuzzed = true;
+                vibrate();
+            }
+        }
+    }
+
+    // Log one completed AMRAP / for-time round (mirrored into setLogs so it uploads).
+    function logRound() {
+        _amrapRounds += 1;
+        var ex = currentExercise();
+        if (ex == null) { return; }
+        _setLogs[ex.name()] = [ { "reps" => _amrapRounds, "weightKg" => null, "rpe" => null } ];
+    }
+
+    function emomRound()          { return _emomRound; }
+    function emomTotal()          { return _emomTotal; }
+    function amrapRounds()        { return _amrapRounds; }
+    function exerciseElapsedSec() { return _elapsed - _exStartSec; }
+
+    // Seconds until the next EMOM interval boundary.
+    function emomSecToNext() {
+        if (_emomInterval <= 0) { return 0; }
+        return _emomInterval - ((_elapsed - _exStartSec) % _emomInterval);
+    }
+
+    // Seconds left on the AMRAP time cap (0 once elapsed).
+    function exerciseRemainingSec() {
+        if (_capSec <= 0) { return 0; }
+        var rem = _capSec - (_elapsed - _exStartSec);
+        return (rem > 0) ? rem : 0;
     }
 
     // ── progression ────────────────────────────────────────────────────────────────
@@ -138,6 +329,8 @@ class WorkoutController {
             finish();
         } else {
             _state = ACTIVE;
+            _driftSec = 0; _pendingDir = 0; _driftDir = 0;   // reset drift latch per exercise
+            beginExerciseTiming();
         }
     }
 
@@ -181,8 +374,18 @@ class WorkoutController {
                 "samples" => buildHrSamples(startIso)
             },
             "rawData" => {}
-            // TODO: distance / elevation / gpsTrack from Activity.Info for cardio.
         };
+
+        // Distance / elevation / GPS track for cardio sessions. The backend
+        // recomputes elevation gain/loss from the track's altitudes when we send
+        // loss==0 (see api.py health_upsert_workouts), so a device without a
+        // barometric total still gets correct elevation.
+        if (_isCardio && _distanceM > 0) {
+            workout["distance"] = { "value" => (_distanceM / 1000.0), "unit" => "km" };
+            workout["elevation"] = { "gain" => _ascent, "loss" => _descent };
+            var track = subsample(_gpsTrack, 600);
+            if (track.size() > 0) { workout["gpsTrack"] = track; }
+        }
 
         var exercisesLog = {};
         var keys = _setLogs.keys();
@@ -224,6 +427,16 @@ class WorkoutController {
         return out;
     }
 
+    // Even-stride subsample of an array down to <= maxN elements.
+    hidden function subsample(arr, maxN) {
+        var n = arr.size();
+        if (n <= maxN) { return arr; }
+        var stride = (n / maxN) + 1;
+        var out = [];
+        for (var i = 0; i < n; i += stride) { out.add(arr[i]); }
+        return out;
+    }
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
     hidden function vibrate() {
@@ -241,9 +454,15 @@ class WorkoutController {
         ]);
     }
 
-    // TODO(sdk): confirm SPORT_*/SUB_SPORT_* constant names against ActivityRecording.
+    // Cardio modalities drive GPS/distance capture and the RUNNING sport type.
+    hidden function isCardioModality(m) {
+        return m != null && (m.equals("aerobic_base") || m.equals("anaerobic_intervals"));
+    }
+
+    // SPORT_*/SUB_SPORT_* are ActivityRecording constants (verified against SDK 9.2.0
+    // by compilation — an unknown symbol fails the monkeyc build).
     hidden function sportForModality(m) {
-        if (m != null && (m.equals("aerobic_base") || m.equals("anaerobic_intervals"))) {
+        if (isCardioModality(m)) {
             return Rec.SPORT_RUNNING;   // refine: rowing/cycling per exercise
         }
         return Rec.SPORT_TRAINING;

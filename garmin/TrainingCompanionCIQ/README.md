@@ -6,10 +6,14 @@ today's session from the backend, guides the athlete through it, records HR + a
 FIT activity, and syncs the result back to the same backend — no Garmin partner
 API required.
 
-> Status: **Phase 0–1 scaffold.** Backend endpoints it depends on are implemented
-> and tested (`/api/devices/*`, `/api/user/today-session`). The Monkey C code here
-> is a structured skeleton — it has **not** been compiled. Every spot needing SDK
-> confirmation is marked `TODO(sdk:...)`. See the repo plan at
+> Status: **Phase 1–2, builds clean.** Compiles for Fenix 9 against SDK 9.2.0
+> (`./build.sh` and `./build.sh --device` both succeed). Backend endpoints it
+> depends on are implemented and tested (`/api/devices/*`, `/api/user/today-session`).
+> Phase-2 SDK features are implemented: GPS/distance/elevation capture, HR-zone
+> drift alerts (`UserProfile` zones), EMOM/AMRAP round logic, and a scan-to-claim
+> pairing QR (`ScanCode`, CIQ 6+). All prior `TODO(sdk)` markers are resolved.
+> Not yet verified on real hardware — first sideload + full pair→run→upload test
+> are the next step. See the repo plan at
 > `~/.claude/plans/i-have-a-garmin-parsed-twilight.md`.
 
 ## Layout
@@ -28,7 +32,7 @@ source/
   SessionModel.mc       WorkoutSession / WorkoutExercise wrappers over the JSON
   WorkoutController.mc  State machine, ActivityRecording, HR capture, summary
   views/
-    PairingView.mc      Mint code → poll until claimed (QR = TODO, code works now)
+    PairingView.mc      Mint code → show scan-to-claim QR + code → poll until claimed
     SessionListView.mc  Today's session / rest day; SELECT starts it
     ExerciseView.mc     Dispatch by slotType + rest overlay + live HR
     SessionCompleteView.mc
@@ -78,12 +82,26 @@ Steps:
 `build.sh` / `run-sim.sh` auto-detect the SDK path and key; override with
 `CIQ_SDK`, `CIQ_KEY`, `DEVICE` env vars.
 
-## Remaining TODO(sdk) / next phases
+## Done / remaining
 
-- `TODO(sdk)` markers: Fenix 9 product id + minApiLevel; QR generation (CIQ 9);
-  `SPORT_*/SUB_SPORT_*` constants; glance signature.
-- Phase 2: EMOM/AMRAP round logic, HR-zone drift alerts (use `UserProfile`
-  zones on CIQ 9), GPS/distance/elevation capture, richer set logger UI.
+Resolved (verified by compiling against SDK 9.2.0):
+- `SPORT_*/SUB_SPORT_*` constants, `getGlanceView` signature, Fenix 9 product ids.
+- On-device pairing QR via `ScanCode.createQrCodeImage` (CIQ 6+, guarded with `has`;
+  falls back to the code text on older devices). Set the `webBaseUrl` app setting to
+  make the QR a deep link (`<webBaseUrl>/pair?code=…`); empty encodes the raw code.
+- Phase 2 SDK features:
+  - GPS/distance/elevation capture for cardio sessions (`Activity.Info` +
+    `currentLocation`); sent as `distance`/`elevation`/`gpsTrack` — the backend
+    recomputes elevation gain/loss from track altitudes.
+  - HR-zone drift alerts: live HR vs. the prescribed zone band (resolved from the
+    athlete's own `UserProfile` zone boundaries); buzz + coloured arrow after
+    `HR_DRIFT_HOLD_SEC` out of band.
+  - EMOM per-interval buzz + round counter; AMRAP time-cap countdown with
+    SELECT-to-count rounds; for-time round counter.
+
+Remaining:
+- Hardware verification: first watch sideload + full pair→today→run→upload test.
+- Richer set-logger UI (edit reps/weight/RPE on-wrist rather than accept prescribed).
 - Phase 3: phone glue app (CIQ Mobile SDK) for one-tap Supabase login.
 - Phase 4: server-side Training API push of conditioning workouts.
 - Phase 5: adaptive workout steps + Fenix 9 Stamina pacing.

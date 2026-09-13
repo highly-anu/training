@@ -28,8 +28,8 @@ class TrainingCompanionApp extends Application.AppBase {
         return [ lv, new SessionListDelegate(lv) ];
     }
 
-    // Glance shown from the watch face (CIQ glance-capable devices).
-    // TODO(sdk): confirm getGlanceView signature for your min API; guard if needed.
+    // Glance shown from the watch face (CIQ glance-capable devices). Signature
+    // verified against SDK 9.2.0; the system only calls it on glance-capable devices.
     function getGlanceView() {
         return [ new GlanceView() ];
     }

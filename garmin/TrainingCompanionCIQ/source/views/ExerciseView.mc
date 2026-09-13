@@ -36,7 +36,15 @@ class ExerciseView extends Ui.View {
             Gfx.TEXT_JUSTIFY_CENTER);
         var hr = _ctl.currentHR();
         if (hr != null) {
-            dc.drawText(dc.getWidth() - 10, 12, Gfx.FONT_XTINY, hr + "♥",
+            // Colour + arrow the HR readout when live HR drifts out of the
+            // prescribed zone: red ▲ = ease off, blue ▼ = push harder.
+            var drift = _ctl.driftDirection();
+            var hrColor = Gfx.COLOR_LT_GRAY;
+            var prefix = "";
+            if (drift > 0) { hrColor = Gfx.COLOR_RED; prefix = "▲"; }
+            else if (drift < 0) { hrColor = Gfx.COLOR_BLUE; prefix = "▼"; }
+            dc.setColor(hrColor, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(dc.getWidth() - 10, 12, Gfx.FONT_XTINY, prefix + hr + "♥",
                 Gfx.TEXT_JUSTIFY_RIGHT);
         }
 
@@ -52,16 +60,37 @@ class ExerciseView extends Ui.View {
                 _ctl.currentSetCount() + "/" + target, Gfx.TEXT_JUSTIFY_CENTER);
             dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
             dc.drawText(cx, cy + 35, Gfx.FONT_TINY, ex.loadDescription(), Gfx.TEXT_JUSTIFY_CENTER);
+        } else if (slot.equals("emom")) {
+            // Countdown to the next interval + round progress.
+            dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM, mmss(_ctl.emomSecToNext()),
+                Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+            var et = _ctl.emomTotal();
+            var rlabel = "Rd " + _ctl.emomRound() + ((et > 0) ? "/" + et : "");
+            dc.drawText(cx, cy + 35, Gfx.FONT_TINY, rlabel, Gfx.TEXT_JUSTIFY_CENTER);
+        } else if (slot.equals("amrap")) {
+            // Time-cap countdown + rounds logged (press SELECT per round).
+            dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM, mmss(_ctl.exerciseRemainingSec()),
+                Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy + 35, Gfx.FONT_TINY, "Rounds: " + _ctl.amrapRounds(),
+                Gfx.TEXT_JUSTIFY_CENTER);
+        } else if (slot.equals("for_time")) {
+            // Elapsed clock + rounds done toward the target (press SELECT per round).
+            dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM, mmss(_ctl.exerciseElapsedSec()),
+                Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+            var tr = ex.targetRounds();
+            dc.drawText(cx, cy + 35, Gfx.FONT_TINY,
+                "Rounds: " + _ctl.amrapRounds() + ((tr != null) ? "/" + tr : ""),
+                Gfx.TEXT_JUSTIFY_CENTER);
         } else if (slot.equals("time_domain") || slot.equals("skill_practice")
-                   || slot.equals("amrap") || slot.equals("emom")
-                   || slot.equals("for_time") || slot.equals("distance")) {
-            // Elapsed clock for timed / interval / distance work.
-            dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM, mmss(_ctl.elapsedSec()),
+                   || slot.equals("distance")) {
+            // Elapsed clock for timed / skill / distance work.
+            dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM, mmss(_ctl.exerciseElapsedSec()),
                 Gfx.TEXT_JUSTIFY_CENTER);
             dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
             dc.drawText(cx, cy + 35, Gfx.FONT_TINY, ex.loadDescription(), Gfx.TEXT_JUSTIFY_CENTER);
-            // TODO: EMOM per-minute cue + AMRAP round counter + Zone-drift HR alert
-            //       (compare _ctl.currentHR() to ex.zoneLower()/zoneUpper()).
         } else {
             dc.drawText(cx, cy - 5, Gfx.FONT_TINY, ex.loadDescription(), Gfx.TEXT_JUSTIFY_CENTER);
         }
@@ -112,6 +141,9 @@ class ExerciseDelegate extends Ui.BehaviorDelegate {
             } else {
                 _ctl.startRest();
             }
+        } else if (slot.equals("amrap") || slot.equals("for_time")) {
+            // SELECT counts a round; swipe/next-page advances to the next exercise.
+            _ctl.logRound();
         } else {
             _ctl.nextExercise();
         }

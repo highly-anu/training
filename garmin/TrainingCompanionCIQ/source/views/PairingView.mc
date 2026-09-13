@@ -2,15 +2,17 @@ using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.Timer;
 using Toybox.Lang;
+using Toybox.ScanCode;
 
-// First-run pairing. Mints a pairing code, shows it (and — TODO — a QR), then
-// polls until the user claims it while signed in on web/phone.
+// First-run pairing. Mints a pairing code, shows it plus a scan-to-claim QR (on
+// CIQ 6+ devices), then polls until the user claims it while signed in on web/phone.
 class PairingView extends Ui.View {
 
     hidden var _sync;
     hidden var _code;
     hidden var _msg;
     hidden var _pollTimer;
+    hidden var _qr;   // BufferedBitmap of the pairing QR, or null
 
     function initialize() {
         View.initialize();
@@ -25,6 +27,7 @@ class PairingView extends Ui.View {
     function onPaired(success, code) as Void {
         if (success) {
             _code = code;
+            _qr = buildQr(code);
             _msg = Ui.loadResource(Rez.Strings.PairPrompt);
             _pollTimer = new Timer.Timer();
             _pollTimer.start(method(:onPoll), Config.PAIR_POLL_MS, true);
@@ -32,6 +35,24 @@ class PairingView extends Ui.View {
             _msg = Ui.loadResource(Rez.Strings.SyncError);
         }
         Ui.requestUpdate();
+    }
+
+    // Render a QR for scan-to-claim. Guarded: ScanCode.createQrCodeImage is CIQ 6.0+,
+    // so pre-6 devices (down to our minApiLevel 4.0) simply fall back to the code text.
+    hidden function buildQr(code) {
+        if (!(Toybox has :ScanCode) || !(ScanCode has :createQrCodeImage)) {
+            return null;
+        }
+        try {
+            return ScanCode.createQrCodeImage(
+                Config.pairQrValue(code),
+                ScanCode.QR_CODE_ECC_MEDIUM,
+                120,
+                { :color => Gfx.COLOR_BLACK, :backgroundColor => Gfx.COLOR_WHITE }
+            );
+        } catch (e) {
+            return null;
+        }
     }
 
     function onPoll() as Void {
@@ -57,11 +78,18 @@ class PairingView extends Ui.View {
         var cy = dc.getHeight() / 2;
 
         if (_code != null) {
-            // TODO(sdk): CIQ 9 adds on-device QR generation. When available, render a
-            // QR encoding e.g. `<web>/pair?code=<_code>` here for scan-to-claim.
-            // The code text below is the working fallback (user types it on the web).
-            dc.drawText(cx, cy - 45, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, cy + 5, Gfx.FONT_NUMBER_MEDIUM, _code, Gfx.TEXT_JUSTIFY_CENTER);
+            if (_qr != null) {
+                // QR + code beneath it: scan to claim, or type the code on the web.
+                var qw = _qr.getWidth();
+                var qh = _qr.getHeight();
+                dc.drawBitmap(cx - (qw / 2), 14, _qr);
+                dc.drawText(cx, 14 + qh + 4, Gfx.FONT_NUMBER_MEDIUM, _code,
+                    Gfx.TEXT_JUSTIFY_CENTER);
+            } else {
+                // No on-device QR: the user types the code on the web/phone app.
+                dc.drawText(cx, cy - 45, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);
+                dc.drawText(cx, cy + 5, Gfx.FONT_NUMBER_MEDIUM, _code, Gfx.TEXT_JUSTIFY_CENTER);
+            }
         } else {
             dc.drawText(cx, cy, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);
         }
