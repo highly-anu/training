@@ -58,6 +58,14 @@ class WorkoutController {
     hidden var _capSec;         // AMRAP time cap in seconds (0 = none)
     hidden var _capBuzzed;      // whether the cap-reached buzz has fired
 
+    // On-wrist editable working set (sets_reps). Seeded from the prescription when
+    // the exercise becomes active; UP/DOWN adjust the focused field, BACK cycles it.
+    hidden var _editReps;
+    hidden var _editWeight;     // kg, or null when the slot prescribes no load
+    hidden var _editRpe;        // or null
+    hidden var _editFields;     // applicable field ids, e.g. ["reps","weight"]
+    hidden var _editFieldIdx;
+
     // setLogs: { exerciseId => [ {reps, weightKg, rpe} ] }
     hidden var _setLogs;
 
@@ -79,6 +87,8 @@ class WorkoutController {
         _exStartSec = 0;
         _emomInterval = 0; _emomTotal = 0; _emomRound = 1;
         _amrapRounds = 0; _capSec = 0; _capBuzzed = false;
+        _editReps = 0; _editWeight = null; _editRpe = null;
+        _editFields = ["reps"]; _editFieldIdx = 0;
         _setLogs = {};
     }
 
@@ -226,6 +236,52 @@ class WorkoutController {
             var cap = ex.timeMinutes();
             _capSec = (cap != null) ? (cap * 60) : 0;
         }
+        seedSetEditor();
+    }
+
+    // Seed the editable working set from the prescription. Only the fields the slot
+    // actually prescribes become adjustable (a bodyweight lift exposes reps only).
+    hidden function seedSetEditor() {
+        _editFields = ["reps"];
+        _editFieldIdx = 0;
+        var ex = currentExercise();
+        if (ex == null) {
+            _editReps = 0; _editWeight = null; _editRpe = null;
+            return;
+        }
+        var r = ex.reps();
+        _editReps = (r != null) ? r : 8;
+        _editWeight = ex.weightKg();
+        _editRpe = ex.targetRpe();
+        if (_editWeight != null) { _editFields.add("weight"); }
+        if (_editRpe != null)    { _editFields.add("rpe"); }
+    }
+
+    // Adjust the focused field by delta (±1) with a per-field step and clamp.
+    function adjustEdit(delta) {
+        var f = _editFields[_editFieldIdx];
+        if (f.equals("reps")) {
+            _editReps = clampNum(_editReps + delta, 0, 100);
+        } else if (f.equals("weight")) {
+            _editWeight = clampNum(_editWeight + (delta * 2.5), 0, 500);
+        } else if (f.equals("rpe")) {
+            _editRpe = clampNum(_editRpe + (delta * 0.5), 5.0, 10.0);
+        }
+    }
+
+    function cycleEditField()  { _editFieldIdx = (_editFieldIdx + 1) % _editFields.size(); }
+    function editReps()        { return _editReps; }
+    function editWeight()      { return _editWeight; }
+    function editRpe()         { return _editRpe; }
+    function editFocusField()  { return _editFields[_editFieldIdx]; }
+    function editFieldCount()  { return _editFields.size(); }
+    function editHasField(id)  { return _editFields.indexOf(id) >= 0; }
+
+    // Log the current set using the edited working values.
+    function logCurrentSet()   { logSet(_editReps, _editWeight, _editRpe); }
+
+    hidden function clampNum(v, lo, hi) {
+        return (v < lo) ? lo : ((v > hi) ? hi : v);
     }
 
     // Buzz at the top of each EMOM interval; buzz once when an AMRAP cap is reached.

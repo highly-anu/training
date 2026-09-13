@@ -54,7 +54,9 @@ class ExerciseView extends Ui.View {
         dc.drawText(cx, cy - 45, Gfx.FONT_SMALL, ex.name(), Gfx.TEXT_JUSTIFY_CENTER);
 
         var slot = ex.slotType();
-        if (slot.equals("sets_reps") || slot.equals("static_hold")) {
+        if (slot.equals("sets_reps")) {
+            drawSetEditor(dc, cx, cy, ex);
+        } else if (slot.equals("static_hold")) {
             var target = (ex.sets() != null) ? ex.sets() : 1;
             dc.drawText(cx, cy - 5, Gfx.FONT_NUMBER_MEDIUM,
                 _ctl.currentSetCount() + "/" + target, Gfx.TEXT_JUSTIFY_CENTER);
@@ -96,6 +98,38 @@ class ExerciseView extends Ui.View {
         }
     }
 
+    // Editable working set: reps (big) + the prescribed load (weight or RPE), with
+    // the focused field highlighted. SELECT logs it; UP/DOWN adjust; BACK cycles field.
+    hidden function drawSetEditor(dc, cx, cy, ex) {
+        var target = (ex.sets() != null) ? ex.sets() : 1;
+        var focus = _ctl.editFocusField();
+
+        dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(cx, cy - 46, Gfx.FONT_TINY,
+            "Set " + (_ctl.currentSetCount() + 1) + "/" + target, Gfx.TEXT_JUSTIFY_CENTER);
+
+        dc.setColor(focus.equals("reps") ? Gfx.COLOR_YELLOW : Gfx.COLOR_WHITE,
+            Gfx.COLOR_TRANSPARENT);
+        dc.drawText(cx, cy - 22, Gfx.FONT_NUMBER_MEDIUM, _ctl.editReps() + " reps",
+            Gfx.TEXT_JUSTIFY_CENTER);
+
+        if (_ctl.editHasField("weight")) {
+            dc.setColor(focus.equals("weight") ? Gfx.COLOR_YELLOW : Gfx.COLOR_LT_GRAY,
+                Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy + 30, Gfx.FONT_SMALL,
+                _ctl.editWeight().toFloat().format("%.1f") + " kg", Gfx.TEXT_JUSTIFY_CENTER);
+        } else if (_ctl.editHasField("rpe")) {
+            dc.setColor(focus.equals("rpe") ? Gfx.COLOR_YELLOW : Gfx.COLOR_LT_GRAY,
+                Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy + 30, Gfx.FONT_SMALL,
+                "RPE " + _ctl.editRpe().toFloat().format("%.1f"), Gfx.TEXT_JUSTIFY_CENTER);
+        }
+
+        dc.setColor(Gfx.COLOR_DK_GRAY, Gfx.COLOR_TRANSPARENT);
+        var hint = (_ctl.editFieldCount() > 1) ? "▲▼ adjust · ← field" : "▲▼ reps";
+        dc.drawText(cx, cy + 56, Gfx.FONT_XTINY, hint, Gfx.TEXT_JUSTIFY_CENTER);
+    }
+
     hidden function drawRest(dc, cx) {
         var cy = dc.getHeight() / 2;
         dc.setColor(Gfx.COLOR_YELLOW, Gfx.COLOR_TRANSPARENT);
@@ -134,7 +168,12 @@ class ExerciseDelegate extends Ui.BehaviorDelegate {
         if (ex == null) { return true; }
         var slot = ex.slotType();
         if (slot.equals("sets_reps") || slot.equals("static_hold")) {
-            _ctl.logSet(ex.reps(), ex.weightKg(), ex.targetRpe());
+            // sets_reps logs the on-wrist edited values; static_hold logs as prescribed.
+            if (slot.equals("sets_reps")) {
+                _ctl.logCurrentSet();
+            } else {
+                _ctl.logSet(ex.reps(), ex.weightKg(), ex.targetRpe());
+            }
             var target = (ex.sets() != null) ? ex.sets() : 1;
             if (_ctl.currentSetCount() >= target) {
                 _ctl.nextExercise();
@@ -151,14 +190,39 @@ class ExerciseDelegate extends Ui.BehaviorDelegate {
         return true;
     }
 
-    // Manual navigation between exercises.
-    function onNextPage() { _ctl.nextExercise(); maybeComplete(); return true; }
+    // While editing a sets_reps set: UP/DOWN adjust the focused field. Otherwise
+    // DOWN advances to the next exercise (manual navigation); UP is a no-op.
+    function onNextPage() {
+        if (isEditing()) { _ctl.adjustEdit(-1); Ui.requestUpdate(); return true; }
+        _ctl.nextExercise(); maybeComplete(); return true;
+    }
 
-    // MENU ends the session early (saves what's been done).
+    function onPreviousPage() {
+        if (isEditing()) { _ctl.adjustEdit(1); Ui.requestUpdate(); return true; }
+        return false;
+    }
+
+    // BACK cycles the focused edit field while editing; otherwise leaves it to the
+    // system (exit the workout view).
+    function onBack() {
+        if (isEditing() && _ctl.editFieldCount() > 1) {
+            _ctl.cycleEditField(); Ui.requestUpdate(); return true;
+        }
+        return false;
+    }
+
+    // MENU (hold-UP) ends the session early (saves what's been done).
     function onMenu() {
         _ctl.finish();
         maybeComplete();
         return true;
+    }
+
+    // True when an editable sets_reps set is active (not resting).
+    hidden function isEditing() {
+        if (_ctl.state() != WorkoutController.ACTIVE) { return false; }
+        var ex = _ctl.currentExercise();
+        return ex != null && ex.slotType().equals("sets_reps");
     }
 
     hidden function maybeComplete() {

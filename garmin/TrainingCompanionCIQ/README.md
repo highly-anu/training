@@ -34,7 +34,8 @@ source/
   views/
     PairingView.mc      Mint code → show scan-to-claim QR + code → poll until claimed
     SessionListView.mc  Today's session / rest day; SELECT starts it
-    ExerciseView.mc     Dispatch by slotType + rest overlay + live HR
+    ExerciseView.mc     Dispatch by slotType + rest overlay + live HR;
+                        on-wrist set editor for sets_reps (edit reps/weight/RPE)
     SessionCompleteView.mc
     GlanceView.mc       At-a-glance card from cache
 ```
@@ -98,10 +99,13 @@ Resolved (verified by compiling against SDK 9.2.0):
     `HR_DRIFT_HOLD_SEC` out of band.
   - EMOM per-interval buzz + round counter; AMRAP time-cap countdown with
     SELECT-to-count rounds; for-time round counter.
+- On-wrist set logger for sets_reps: SELECT logs the set with edited values,
+  UP/DOWN adjust the focused field (reps ±1, weight ±2.5 kg, RPE ±0.5), BACK
+  cycles the field. Values seed from the prescription and carry across sets;
+  hold-UP still finishes the session early.
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
-- Richer set-logger UI (edit reps/weight/RPE on-wrist rather than accept prescribed).
 - Phase 3: phone glue app (CIQ Mobile SDK) for one-tap Supabase login.
 - Phase 4: server-side Training API push of conditioning workouts.
 - Phase 5: adaptive workout steps + Fenix 9 Stamina pacing.
