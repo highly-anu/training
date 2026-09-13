@@ -112,11 +112,19 @@ Resolved (verified by compiling against SDK 9.2.0):
   - Phone → Watch: `{ "type": "auth", "deviceToken": "ciqdev_…", "apiBaseUrl"?: "…" }`
     → watch stores the token, marks itself claimed, advances to today's session.
   - Phone → Watch: `{ "type": "claimed" }` → watch marks the minted code claimed.
+- Readiness dot: `SyncManager` fetches `GET /health/readiness` and caches it; the
+  glance and the session-list screen render a green/yellow/red dot (+ score on the
+  list). Glances have no reliable network, so the main app refreshes the cache and
+  both surfaces read from it.
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
+- Complication that deep-links into today's session (the glance readiness dot is done).
 - Phase 3 **phone app itself** (CIQ Mobile SDK, iOS/Android): Supabase login +
   the phone half of the protocol above. Native-mobile work (not built here).
-- Phase 4: server-side Training API push of conditioning workouts (likely blocked
-  by Garmin partner-API access being paused — the app avoids the partner API).
-- Phase 5: adaptive workout steps + Fenix 9 Stamina pacing.
+- Phase 4: server-side Training API push of conditioning workouts. Blocked — Garmin
+  partner (Training API) onboarding is paused; the app avoids the partner API.
+- Phase 5: **blocked at the platform for a watch-app.** Fenix Stamina has no Connect
+  IQ API; adaptive workout steps (`DataField.setWorkout`) are data-field-only and need
+  ActivityControl; `Activity.getCurrentWorkoutStep` only reads a *native* workout the
+  athlete isn't running while in this app. Revisit only with a data-field companion.

@@ -12,6 +12,7 @@ module Config {
     const KEY_TODAY_SESSION  = "todaySession";   // cached today-session JSON dict
     const KEY_TODAY_DATE     = "todaySessionDate";
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
+    const KEY_READINESS      = "readiness";       // cached /health/readiness dict
 
     // Poll cadence for pairing status (ms).
     const PAIR_POLL_MS = 3000;

@@ -4,11 +4,10 @@ using Toybox.Application.Storage;
 using Toybox.Lang;
 
 // At-a-glance card (swiped from the watch face). Shows today's headline session
-// from cache. Parity with the iOS TodayWidget / watch complication.
+// plus a readiness dot, both from cache (the main app refreshes them; a glance has
+// no reliable network). Parity with the iOS TodayWidget / SessionStartWidget.
 //
-// TODO: fetch GET /api/health/readiness and draw a green/yellow/red dot; wire a
-// complication that deep-links straight into the session (parity with iOS
-// SessionStartWidget).
+// TODO: wire a complication that deep-links straight into the session.
 class GlanceView extends Ui.GlanceView {
 
     function initialize() {
@@ -36,8 +35,24 @@ class GlanceView extends Ui.GlanceView {
             }
         }
 
+        // Readiness dot (green/yellow/red) at the right edge, from cache.
+        var r = Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?;
+        if (r != null && r.hasKey("status")) {
+            dc.setColor(readinessColor(r["status"] as Lang.String), Gfx.COLOR_TRANSPARENT);
+            dc.fillCircle(dc.getWidth() - 12, 14, 6);
+        }
+
+        dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
         dc.drawText(4, 2, Gfx.FONT_TINY, line1, Gfx.TEXT_JUSTIFY_LEFT);
         dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
         dc.drawText(4, 26, Gfx.FONT_XTINY, line2, Gfx.TEXT_JUSTIFY_LEFT);
+    }
+
+    hidden function readinessColor(status) {
+        if (status == null) { return Gfx.COLOR_DK_GRAY; }
+        if (status.equals("green"))  { return Gfx.COLOR_GREEN; }
+        if (status.equals("yellow")) { return Gfx.COLOR_YELLOW; }
+        if (status.equals("red"))    { return Gfx.COLOR_RED; }
+        return Gfx.COLOR_DK_GRAY;
     }
 }

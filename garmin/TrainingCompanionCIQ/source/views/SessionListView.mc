@@ -10,6 +10,7 @@ class SessionListView extends Ui.View {
     hidden var _sync;
     hidden var _sessions;   // [WorkoutSession]
     hidden var _status;     // "ok" | "no_program" | "program_expired" | "loading"
+    hidden var _readiness;  // cached /health/readiness dict, or null
 
     function initialize() {
         View.initialize();
@@ -18,16 +19,22 @@ class SessionListView extends Ui.View {
         // Seed from cache for instant paint; then refresh.
         var cached = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
         applyToday(cached);
+        _readiness = Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?;
     }
 
     function onShow() {
         _sync.flushBuffer();               // retry any failed uploads
         _sync.fetchToday(method(:onToday));
+        _sync.fetchReadiness(method(:onReadiness));
     }
 
     function onToday(success, data) as Void {
         applyToday(data as Lang.Dictionary?);
         Ui.requestUpdate();
+    }
+
+    function onReadiness(success, data) as Void {
+        if (success) { _readiness = data as Lang.Dictionary?; Ui.requestUpdate(); }
     }
 
     hidden function applyToday(data as Lang.Dictionary?) as Void {
@@ -37,6 +44,22 @@ class SessionListView extends Ui.View {
     }
 
     function sessions() { return _sessions; }
+
+    // Readiness dot + score near the top of the screen (green/yellow/red from cache).
+    hidden function drawReadiness(dc, cx) {
+        if (_readiness == null || !_readiness.hasKey("status")) { return; }
+        var status = _readiness["status"] as Lang.String;
+        var color = status.equals("green") ? Gfx.COLOR_GREEN
+                  : status.equals("yellow") ? Gfx.COLOR_YELLOW
+                  : status.equals("red") ? Gfx.COLOR_RED : Gfx.COLOR_DK_GRAY;
+        dc.setColor(color, Gfx.COLOR_TRANSPARENT);
+        dc.fillCircle(cx - 22, 22, 5);
+        if (_readiness.hasKey("score")) {
+            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx - 10, 12, Gfx.FONT_XTINY,
+                "Readiness " + _readiness["score"], Gfx.TEXT_JUSTIFY_LEFT);
+        }
+    }
 
     function startFirstSession() {
         if (_sessions != null && _sessions.size() > 0) {
@@ -52,6 +75,8 @@ class SessionListView extends Ui.View {
         dc.clear();
         var cx = dc.getWidth() / 2;
         var cy = dc.getHeight() / 2;
+
+        drawReadiness(dc, cx);
 
         if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
             var s = _sessions[0];

@@ -16,6 +16,7 @@ class SyncManager {
     hidden var _pairCb;
     hidden var _statusCb;
     hidden var _todayCb;
+    hidden var _readinessCb;
 
     // Upload state machine (workout -> session log -> bio), all-or-buffer.
     hidden var _uploadCb;
@@ -117,6 +118,29 @@ class SyncManager {
             // Fall back to cache so the app is useful offline.
             var cached = Storage.getValue(Config.KEY_TODAY_SESSION);
             if (_todayCb != null) { _todayCb.invoke(cached != null, cached); }
+        }
+    }
+
+    // ── readiness (for the glance / session-list dot) ─────────────────────────────
+
+    // GET /health/readiness. Caches the dict so the glance (which has no reliable
+    // network) can render the readiness dot from Storage. cb.invoke(success, dict).
+    function fetchReadiness(cb) {
+        _readinessCb = cb;
+        Comm.makeWebRequest(
+            Config.apiBaseUrl() + "/health/readiness",
+            null,
+            jsonGetOptions(),
+            method(:onReadiness)
+        );
+    }
+
+    function onReadiness(code as Lang.Number, data as WebData) as Void {
+        if (code == 200 && data instanceof Lang.Dictionary) {
+            Storage.setValue(Config.KEY_READINESS, data);
+            if (_readinessCb != null) { _readinessCb.invoke(true, data); }
+        } else if (_readinessCb != null) {
+            _readinessCb.invoke(false, null);
         }
     }
 
