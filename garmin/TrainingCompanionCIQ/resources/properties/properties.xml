@@ -4,4 +4,7 @@
   <!-- Web app base URL used to build the scan-to-claim QR (<webBaseUrl>/pair?code=…).
        Empty = encode the raw pairing code instead of a deep link. -->
   <property id="webBaseUrl" type="string"></property>
+  <!-- When launched from the watch-face complication/glance, jump straight into
+       today's session instead of just opening the today screen. Off by default. -->
+  <property id="autoStartOnLaunch" type="boolean">false</property>
 </properties>

@@ -116,10 +116,14 @@ Resolved (verified by compiling against SDK 9.2.0):
   glance and the session-list screen render a green/yellow/red dot (+ score on the
   list). Glances have no reliable network, so the main app refreshes the cache and
   both surfaces read from it.
+- Complication / glance deep-link: `onStart(state)` detects `:launchedFromComplication`
+  / `:launchedFromGlance` and routes straight to today's session. Safe by default
+  (lands on the today screen); the `autoStartOnLaunch` setting makes a complication
+  tap jump directly into the guided session. (Watch-face complication *placement* is
+  watch-face-dependent; the app just handles the launch context.)
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
-- Complication that deep-links into today's session (the glance readiness dot is done).
 - Phase 3 **phone app itself** (CIQ Mobile SDK, iOS/Android): Supabase login +
   the phone half of the protocol above. Native-mobile work (not built here).
 - Phase 4: server-side Training API push of conditioning workouts. Blocked — Garmin

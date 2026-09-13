@@ -10,4 +10,8 @@
   <setting propertyKey="webBaseUrl" title="Web app URL (for pairing QR)">
     <settingConfig type="alphaNumeric"/>
   </setting>
+  <!-- When opened from the watch-face complication/glance, start today's session immediately. -->
+  <setting propertyKey="autoStartOnLaunch" title="Start session on complication tap">
+    <settingConfig type="boolean"/>
+  </setting>
 </settings>

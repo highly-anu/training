@@ -46,7 +46,7 @@ class PairingView extends Ui.View {
     // Phone glue app bound the watch (pushed a token or claimed the code): advance.
     function onPhonePaired() as Void {
         if (_pollTimer != null) { _pollTimer.stop(); }
-        var lv = new SessionListView();
+        var lv = new SessionListView(false);
         Ui.switchToView(lv, new SessionListDelegate(lv), Ui.SLIDE_LEFT);
     }
 
@@ -75,7 +75,7 @@ class PairingView extends Ui.View {
     function onStatus(success, claimed) as Void {
         if (claimed) {
             if (_pollTimer != null) { _pollTimer.stop(); }
-            var lv = new SessionListView();
+            var lv = new SessionListView(false);
             Ui.switchToView(lv, new SessionListDelegate(lv), Ui.SLIDE_LEFT);
         }
     }

@@ -6,11 +6,25 @@ using Toybox.Application.Storage;
 // otherwise to today's session list.
 class TrainingCompanionApp extends Application.AppBase {
 
+    // True when the app was launched from a watch-face complication or the glance
+    // (a deliberate tap on today's session shortcut) rather than the app list.
+    hidden var _deepLinkToday;
+
     function initialize() {
         AppBase.initialize();
+        _deepLinkToday = false;
     }
 
-    function onStart(state) {}
+    // `state` carries the launch context. :launchedFromComplication (the complication
+    // index) or :launchedFromGlance mark a tap on our today shortcut — deep-link to it.
+    function onStart(state) {
+        if (state != null
+                && (state.hasKey(:launchedFromComplication)
+                    || state.hasKey(:launchedFromGlance))) {
+            _deepLinkToday = true;
+        }
+    }
+
     function onStop(state) {}
 
     // Returns [ initialView, initialDelegate ].
@@ -24,7 +38,9 @@ class TrainingCompanionApp extends Application.AppBase {
         }
 
         // Paired: show today's session (loads from cache, refreshes in background).
-        var lv = new SessionListView();
+        // When deep-linked from the complication/glance, SessionListView can jump
+        // straight into the session (opt-in via the autoStartOnLaunch setting).
+        var lv = new SessionListView(_deepLinkToday);
         return [ lv, new SessionListDelegate(lv) ];
     }
 

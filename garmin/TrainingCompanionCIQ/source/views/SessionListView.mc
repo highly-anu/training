@@ -1,5 +1,6 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
+using Toybox.Application;
 using Toybox.Application.Storage;
 using Toybox.Lang;
 
@@ -11,11 +12,15 @@ class SessionListView extends Ui.View {
     hidden var _sessions;   // [WorkoutSession]
     hidden var _status;     // "ok" | "no_program" | "program_expired" | "loading"
     hidden var _readiness;  // cached /health/readiness dict, or null
+    hidden var _deepLink;   // launched from the complication/glance today shortcut
+    hidden var _autoStarted;
 
-    function initialize() {
+    function initialize(deepLink) {
         View.initialize();
         _sync = new SyncManager();
         _status = "loading";
+        _deepLink = deepLink;
+        _autoStarted = false;
         // Seed from cache for instant paint; then refresh.
         var cached = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
         applyToday(cached);
@@ -26,11 +31,25 @@ class SessionListView extends Ui.View {
         _sync.flushBuffer();               // retry any failed uploads
         _sync.fetchToday(method(:onToday));
         _sync.fetchReadiness(method(:onReadiness));
+        maybeAutoStart();                  // in case the cache already has today's session
     }
 
     function onToday(success, data) as Void {
         applyToday(data as Lang.Dictionary?);
+        maybeAutoStart();
         Ui.requestUpdate();
+    }
+
+    // When deep-linked from the complication/glance AND the athlete has opted into
+    // autoStartOnLaunch, jump straight into today's session (once). Default is safe:
+    // the deep-link just lands on this today screen and waits for a SELECT.
+    hidden function maybeAutoStart() {
+        if (_autoStarted || !_deepLink) { return; }
+        if (Application.Properties.getValue("autoStartOnLaunch") != true) { return; }
+        if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
+            _autoStarted = true;
+            startFirstSession();
+        }
     }
 
     function onReadiness(success, data) as Void {

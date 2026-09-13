@@ -26,7 +26,7 @@ class SessionCompleteDelegate extends Ui.BehaviorDelegate {
     function onBack()   { return backToList(); }
 
     hidden function backToList() {
-        var lv = new SessionListView();
+        var lv = new SessionListView(false);
         Ui.switchToView(lv, new SessionListDelegate(lv), Ui.SLIDE_DOWN);
         return true;
     }
