@@ -12,15 +12,19 @@ class PairingView extends Ui.View {
     hidden var _code;
     hidden var _msg;
     hidden var _pollTimer;
-    hidden var _qr;   // BufferedBitmap of the pairing QR, or null
+    hidden var _qr;      // BufferedBitmap of the pairing QR, or null
+    hidden var _phone;   // PhoneLink: bind via the phone glue app instead of a code
 
     function initialize() {
         View.initialize();
         _sync = new SyncManager();
+        _phone = new PhoneLink();
         _msg = Ui.loadResource(Rez.Strings.Pairing);
     }
 
     function onShow() {
+        // Listen for the phone glue app pushing a claimed token (skips the code).
+        _phone.register(method(:onPhonePaired));
         _sync.pair(method(:onPaired));
     }
 
@@ -31,10 +35,19 @@ class PairingView extends Ui.View {
             _msg = Ui.loadResource(Rez.Strings.PairPrompt);
             _pollTimer = new Timer.Timer();
             _pollTimer.start(method(:onPoll), Config.PAIR_POLL_MS, true);
+            // Nudge the phone app to sign in and bind this code, if a phone is connected.
+            _phone.requestAuth(code);
         } else {
             _msg = Ui.loadResource(Rez.Strings.SyncError);
         }
         Ui.requestUpdate();
+    }
+
+    // Phone glue app bound the watch (pushed a token or claimed the code): advance.
+    function onPhonePaired() as Void {
+        if (_pollTimer != null) { _pollTimer.stop(); }
+        var lv = new SessionListView();
+        Ui.switchToView(lv, new SessionListDelegate(lv), Ui.SLIDE_LEFT);
     }
 
     // Render a QR for scan-to-claim. Guarded: ScanCode.createQrCodeImage is CIQ 6.0+,
@@ -69,6 +82,7 @@ class PairingView extends Ui.View {
 
     function onHide() {
         if (_pollTimer != null) { _pollTimer.stop(); }
+        _phone.unregister();
     }
 
     function onUpdate(dc) {

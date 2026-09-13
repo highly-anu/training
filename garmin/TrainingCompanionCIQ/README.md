@@ -27,6 +27,7 @@ resources/
   settings/ properties/ apiBaseUrl (overridable in Garmin Connect Mobile)
 source/
   Config.mc             Constants, storage keys, apiBaseUrl, rest defaults
+  PhoneLink.mc          Phase-3 phone glue-app link (BLE phone-app messages)
   TrainingCompanionApp.mc  Entry point + glance + routing (pair vs. today)
   SyncManager.mc        All backend I/O: pairing, today-session, buffered upload
   SessionModel.mc       WorkoutSession / WorkoutExercise wrappers over the JSON
@@ -104,8 +105,18 @@ Resolved (verified by compiling against SDK 9.2.0):
   cycles the field. Values seed from the prescription and carry across sets;
   hold-UP still finishes the session early.
 
+- Phase 3 **watch-side** phone-link hooks (`PhoneLink.mc`): registers for BLE
+  phone-app messages while the pairing screen is up, so the future glue app can
+  push a claimed token instead of the athlete typing the code. Protocol:
+  - Watch → Phone: `{ "type": "authRequest", "code": <pendingCode|null> }`
+  - Phone → Watch: `{ "type": "auth", "deviceToken": "ciqdev_…", "apiBaseUrl"?: "…" }`
+    → watch stores the token, marks itself claimed, advances to today's session.
+  - Phone → Watch: `{ "type": "claimed" }` → watch marks the minted code claimed.
+
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
-- Phase 3: phone glue app (CIQ Mobile SDK) for one-tap Supabase login.
-- Phase 4: server-side Training API push of conditioning workouts.
+- Phase 3 **phone app itself** (CIQ Mobile SDK, iOS/Android): Supabase login +
+  the phone half of the protocol above. Native-mobile work (not built here).
+- Phase 4: server-side Training API push of conditioning workouts (likely blocked
+  by Garmin partner-API access being paused — the app avoids the partner API).
 - Phase 5: adaptive workout steps + Fenix 9 Stamina pacing.
