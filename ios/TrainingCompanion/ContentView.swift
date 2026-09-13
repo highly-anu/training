@@ -69,8 +69,8 @@ struct MainTabView: View {
                 .tabItem { Label("Program", systemImage: "calendar") }
                 .tag(1)
 
-            LogView()
-                .tabItem { Label("Log", systemImage: "checkmark.circle") }
+            AnalyticsView()
+                .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }
                 .tag(2)
 
             ProfileView()

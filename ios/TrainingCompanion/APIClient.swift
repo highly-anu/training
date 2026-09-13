@@ -15,6 +15,15 @@ struct DailyBioPayload: Encodable {
     let source: String = "apple_watch"
 }
 
+/// A watch/companion device paired to the account. Server truncates deviceToken.
+struct PairedDevice: Decodable, Identifiable {
+    let deviceToken: String
+    let deviceName: String?
+    let claimedAt: String?
+    let lastUsedAt: String?
+    var id: String { deviceToken }
+}
+
 enum APIError: LocalizedError {
     case unauthenticated
     case serverError(Int)
@@ -637,6 +646,26 @@ final class APIClient {
 
     func saveProgram(_ payload: UserProgramSavePayload) async throws {
         _ = try await put("/user/program", body: payload)
+    }
+
+    // MARK: - Watch device pairing (Garmin / future companions)
+
+    /// Bind a watch's 6-character pairing code to the signed-in account.
+    func claimDevice(code: String) async throws {
+        struct Body: Encodable { let code: String }
+        let body = try JSONEncoder().encode(Body(code: code.trimmingCharacters(in: .whitespaces).uppercased()))
+        do {
+            _ = try await postRaw("/devices/claim", body: body)
+        } catch APIError.serverError(404) {
+            // Backend returns 404 {claimed:false} for an unknown/expired code.
+            throw APIError.serverErrorDetail(404, "That code is invalid or has expired. Generate a new one on your watch.")
+        }
+    }
+
+    /// List devices already paired to the signed-in account (tokens are truncated by the server).
+    func fetchDevices() async throws -> [PairedDevice] {
+        let data = try await get("/devices")
+        return (try? JSONDecoder().decode([PairedDevice].self, from: data)) ?? []
     }
 
     // MARK: - Private

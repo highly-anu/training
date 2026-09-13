@@ -1,0 +1,17 @@
+<settings>
+  <!--
+    App settings, editable in Garmin Connect Mobile → the app's settings page.
+    apiBaseUrl lets you point the watch at local dev vs. production without a rebuild.
+  -->
+  <setting propertyKey="apiBaseUrl" title="API base URL">
+    <settingConfig type="alphaNumeric"/>
+  </setting>
+  <!-- Optional web app URL; when set, the pairing screen shows a scan-to-claim QR. -->
+  <setting propertyKey="webBaseUrl" title="Web app URL (for pairing QR)">
+    <settingConfig type="alphaNumeric"/>
+  </setting>
+  <!-- When opened from the watch-face complication/glance, start today's session immediately. -->
+  <setting propertyKey="autoStartOnLaunch" title="Start session on complication tap">
+    <settingConfig type="boolean"/>
+  </setting>
+</settings>

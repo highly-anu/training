@@ -54,19 +54,30 @@ def _decode_token(token: str):
 
 
 def require_auth(f):
-    """Decorator that validates Supabase JWTs and sets g.user_id."""
+    """Decorator that validates Supabase JWTs (or watch device tokens) and sets g.user_id."""
     @wraps(f)
     def decorated(*args, **kwargs):
+        header = request.headers.get('Authorization', '')
+        token = header.split(' ', 1)[1] if header.startswith('Bearer ') else ''
+
+        # Device-token path (watch companions). Checked first so it works in both
+        # dev and prod; a claimed token resolves to its bound user_id.
+        from src import device_store
+        if token.startswith(device_store.TOKEN_PREFIX):
+            user_id = device_store.user_for_token(token)
+            if user_id:
+                g.user_id = user_id
+                return f(*args, **kwargs)
+            return jsonify({'detail': 'Invalid or unpaired device token'}), 401
+
         if not SUPABASE_URL:
             # Dev mode: no Supabase URL configured — bypass auth
             g.user_id = 'local-dev-user'
             return f(*args, **kwargs)
 
-        header = request.headers.get('Authorization', '')
         if not header.startswith('Bearer '):
             return jsonify({'detail': 'Missing authorization token'}), 401
 
-        token = header.split(' ', 1)[1]
         try:
             payload = _decode_token(token)
             g.user_id = payload['sub']

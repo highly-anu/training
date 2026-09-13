@@ -1,0 +1,7 @@
+<drawables>
+  <!--
+    Placeholder launcher icon, 65x65 (fenix947mm size; fenix943mm wants 60x60 and
+    scales down cleanly). Replace launcher_icon.png with real branding when ready.
+  -->
+  <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+</drawables>

@@ -1894,6 +1894,269 @@ def save_user_program_endpoint():
 
 
 # ---------------------------------------------------------------------------
+# Watch device pairing (Garmin / future companions)
+# ---------------------------------------------------------------------------
+# A watch mints a pending pairing with no auth, shows the code (QR/text), then
+# polls status until a signed-in user claims the code and binds the token.
+
+@app.post('/api/devices/pair')
+def devices_pair():
+    """Unauthenticated: a watch requests a pairing code + device token."""
+    from src import device_store
+    body = request.get_json(silent=True) or {}
+    result = device_store.create_pairing(device_name=body.get('deviceName'))
+    return jsonify(result)
+
+
+@app.post('/api/devices/claim')
+@require_auth
+def devices_claim():
+    """Authenticated: the signed-in user binds a pairing code to their account."""
+    from src import device_store
+    body = request.get_json(silent=True) or {}
+    code = body.get('code', '')
+    ok = device_store.claim_pairing(code, g.user_id)
+    if not ok:
+        return jsonify({'claimed': False, 'detail': 'Invalid or expired code'}), 404
+    return jsonify({'claimed': True})
+
+
+@app.get('/api/devices/status')
+def devices_status():
+    """Unauthenticated poll target: the watch checks whether its token is claimed.
+
+    The device token is supplied via `Authorization: Bearer <token>` or ?deviceToken=.
+    """
+    from src import device_store
+    header = request.headers.get('Authorization', '')
+    token = header.split(' ', 1)[1] if header.startswith('Bearer ') else request.args.get('deviceToken', '')
+    if not token:
+        return jsonify({'detail': 'Missing device token'}), 400
+    status = device_store.pairing_status(token)
+    if status is None:
+        return jsonify({'detail': 'Unknown device token'}), 404
+    return jsonify(status)
+
+
+@app.get('/api/devices')
+@require_auth
+def devices_list():
+    """List the signed-in user's claimed devices (token secrets are truncated)."""
+    from src import device_store
+    return jsonify(device_store.list_devices(g.user_id))
+
+
+@app.delete('/api/devices/<path:device_token>')
+@require_auth
+def devices_revoke(device_token: str):
+    from src import device_store
+    ok = device_store.revoke_token(device_token, g.user_id)
+    return jsonify({'revoked': ok}), (200 if ok else 404)
+
+
+# ---------------------------------------------------------------------------
+# Today's session (compact, watch-sized projection of the stored program)
+# ---------------------------------------------------------------------------
+
+# Fallback rest seconds by modality when a slot's rest_sec is null.
+# Mirrors ios/.../WatchSessionManager.swift modalityRestDefaults.
+_MODALITY_REST_DEFAULTS = {
+    'max_strength': 240, 'relative_strength': 180, 'strength_endurance': 90,
+    'power': 240, 'aerobic_base': 0, 'anaerobic_intervals': 120,
+    'mixed_modal_conditioning': 60, 'mobility': 30, 'movement_skill': 30,
+    'durability': 0, 'combat_sport': 0, 'rehab': 30,
+}
+
+_ZONE_RE = re.compile(r'[Zz]one\s*(\d)(?:\s*[-–]\s*(\d))?')
+
+
+def _pick(d: dict, *keys):
+    """First present value among snake_case / camelCase spellings."""
+    for k in keys:
+        if isinstance(d, dict) and d.get(k) is not None:
+            return d[k]
+    return None
+
+
+def _infer_slot_type(load: dict, explicit) -> str:
+    """Port of WatchSessionManager.inferSlotType for legacy programs missing slot_type."""
+    if explicit:
+        return explicit
+    if _pick(load, 'distance_km', 'distanceKm') is not None:
+        return 'distance'
+    if _pick(load, 'hold_seconds', 'holdSeconds') is not None:
+        return 'static_hold'
+    if _pick(load, 'format') is not None:
+        return 'emom'
+    if _pick(load, 'duration_minutes', 'durationMinutes') is not None:
+        return 'time_domain'
+    if _pick(load, 'time_minutes', 'timeMinutes') is not None and \
+       _pick(load, 'target_rounds', 'targetRounds') is not None:
+        return 'amrap'
+    if _pick(load, 'target_rounds', 'targetRounds') is not None:
+        return 'for_time'
+    return 'sets_reps'
+
+
+def _parse_zone_range(zone_target):
+    if not isinstance(zone_target, str):
+        return None, None
+    m = _ZONE_RE.search(zone_target)
+    if not m:
+        return None, None
+    lower = int(m.group(1))
+    upper = int(m.group(2)) if m.group(2) else lower
+    return lower, upper
+
+
+def _fmt_watch_load(slot_type: str, load: dict) -> str:
+    sets = _pick(load, 'sets')
+    reps = _pick(load, 'reps')
+    reps_s = str(reps) if reps is not None else '?'
+    if slot_type == 'sets_reps':
+        s = str(sets) if sets is not None else '?'
+        kg = _pick(load, 'weight_kg', 'weightKg', 'suggested_weight_kg', 'suggestedWeightKg')
+        rpe = _pick(load, 'target_rpe', 'targetRpe')
+        if kg is not None:
+            return f'{s}×{reps_s} @ {kg} kg'
+        if rpe is not None:
+            return f'{s}×{reps_s} @ RPE {rpe}'
+        return f'{s}×{reps_s}'
+    if slot_type in ('time_domain', 'skill_practice'):
+        mins = _pick(load, 'duration_minutes', 'durationMinutes')
+        zt = _pick(load, 'zone_target', 'zoneTarget')
+        if mins is not None:
+            return f'{mins} min' + (f' — {zt}' if zt else '')
+        return 'Duration TBD'
+    if slot_type == 'emom':
+        mins = _pick(load, 'time_minutes', 'timeMinutes')
+        rounds = _pick(load, 'target_rounds', 'targetRounds')
+        if mins is not None and rounds is not None:
+            return f'{mins} min / {rounds} rounds'
+        return _pick(load, 'format') or 'EMOM'
+    if slot_type == 'amrap':
+        mins = _pick(load, 'time_minutes', 'timeMinutes')
+        return f'AMRAP {mins} min' if mins is not None else 'AMRAP'
+    if slot_type == 'for_time':
+        rounds = _pick(load, 'target_rounds', 'targetRounds')
+        return f'{rounds} rounds for time' if rounds is not None else 'For time'
+    if slot_type == 'distance':
+        km = _pick(load, 'distance_km', 'distanceKm')
+        return f'{km} km' if km is not None else 'Distance'
+    if slot_type == 'static_hold':
+        secs = _pick(load, 'hold_seconds', 'holdSeconds')
+        prefix = f'{sets}×' if sets is not None else ''
+        return f'{prefix}{secs}s hold' if secs is not None else f'{prefix}hold'
+    return ''
+
+
+def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
+    ex = ea.get('exercise')
+    if not ex or ea.get('injury_skip') or ea.get('injurySkip'):
+        return None
+    load = ea.get('load') or {}
+    slot_type = _infer_slot_type(load, _pick(ea, 'slot_type', 'slotType'))
+    zone_target = _pick(load, 'zone_target', 'zoneTarget')
+    zlo, zhi = _parse_zone_range(zone_target)
+    rest = _pick(ea, 'rest_sec', 'restSec')
+    if rest is None:
+        rest = _MODALITY_REST_DEFAULTS.get(modality)
+    reps = _pick(load, 'reps')
+    return {
+        'exerciseId': ex.get('id'),
+        'name': ex.get('name'),
+        'slotType': slot_type,
+        'slotRole': _pick(ea, 'slot_role', 'slotRole') or '',
+        'isMeta': bool(ea.get('meta')),
+        'loadDescription': _fmt_watch_load(slot_type, load),
+        'loadNote': _pick(ea, 'load_note', 'loadNote'),
+        'coachingCue': _pick(ea, 'notes') or ex.get('notes'),
+        'sets': _pick(load, 'sets'),
+        'reps': str(reps) if reps is not None else None,
+        'weightKg': _pick(load, 'weight_kg', 'weightKg', 'suggested_weight_kg', 'suggestedWeightKg'),
+        'targetRpe': _pick(load, 'target_rpe', 'targetRpe'),
+        'durationMinutes': _pick(load, 'duration_minutes', 'durationMinutes'),
+        'zoneTarget': zone_target,
+        'timeMinutes': _pick(load, 'time_minutes', 'timeMinutes'),
+        'targetRounds': _pick(load, 'target_rounds', 'targetRounds'),
+        'emomFormat': _pick(load, 'format'),
+        'holdSeconds': _pick(load, 'hold_seconds', 'holdSeconds'),
+        'distanceKm': _pick(load, 'distance_km', 'distanceKm'),
+        'restSeconds': rest,
+        'prescribedZoneLower': zlo,
+        'prescribedZoneUpper': zhi,
+    }
+
+
+@app.get('/api/user/today-session')
+@require_auth
+def get_today_session():
+    """Compact projection of today's scheduled session(s) for the watch companion.
+
+    Server-side port of ios/.../WatchSessionManager.syncProgram(): derives the
+    current week + weekday from programStartDate and returns only the fields the
+    slot-type views need. Accepts optional ?date=YYYY-MM-DD for testing.
+    """
+    from src.db import get_user_program
+    program = get_user_program(g.user_id)
+    if not isinstance(program, dict):
+        return jsonify({'status': 'no_program'})
+    program = _normalize_program_keys(program)
+    current = program.get('currentProgram') or {}
+    start_str = program.get('programStartDate')
+    weeks = current.get('weeks') or []
+    if not start_str or not weeks:
+        return jsonify({'status': 'no_program'})
+
+    date_str = request.args.get('date')
+    try:
+        today = _date.fromisoformat(date_str) if date_str else _date.today()
+        start = _date.fromisoformat(str(start_str)[:10])
+    except ValueError:
+        return jsonify({'status': 'no_program'})
+
+    days_since = (today - start).days
+    if days_since < 0:
+        return jsonify({'status': 'not_started', 'startsOn': str(start)})
+    week_index = days_since // 7
+    day_name = _DAY_NAMES[today.weekday()]
+    if week_index >= len(weeks):
+        return jsonify({'status': 'program_expired'})
+
+    week = weeks[week_index]
+    schedule = week.get('schedule') or {}
+    sessions = schedule.get(day_name) or []
+
+    out_sessions = []
+    for i, s in enumerate(sessions):
+        modality = s.get('modality') or ''
+        archetype = s.get('archetype') or {}
+        exercises = [
+            e for e in (
+                _encode_watch_exercise(ea, modality) for ea in (s.get('exercises') or [])
+            ) if e is not None
+        ]
+        out_sessions.append({
+            'sessionId': f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}",
+            'modalityId': modality,
+            'archetypeName': archetype.get('name') or modality,
+            'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+            'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
+            'exercises': exercises,
+        })
+
+    return jsonify({
+        'status': 'ok',
+        'date': str(today),
+        'weekNumber': _pick(week, 'week_number', 'weekNumber'),
+        'phase': week.get('phase'),
+        'dayName': day_name,
+        'isRestDay': len(out_sessions) == 0,
+        'sessions': out_sessions,
+    })
+
+
+# ---------------------------------------------------------------------------
 # Health data storage
 # ---------------------------------------------------------------------------
 

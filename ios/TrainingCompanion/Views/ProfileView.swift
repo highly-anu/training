@@ -625,6 +625,14 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        DevicesView()
+                    } label: {
+                        Image(systemName: "applewatch.watchface")
+                    }
+                    .accessibilityLabel("Devices")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Picker("Level", selection: Binding(
                         get: { appState.profile.trainingLevel },

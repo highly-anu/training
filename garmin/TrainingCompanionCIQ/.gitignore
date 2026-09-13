@@ -1,0 +1,10 @@
+# Build output
+bin/
+*.prg
+*.iq
+*.debug.xml
+
+# Never commit signing keys (the real key lives outside the repo in ~/.garmin-keys/)
+developer_key
+developer_key.pem
+*.der
