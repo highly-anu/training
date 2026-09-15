@@ -50,11 +50,14 @@ function decode(v: number): number {
 }
 
 export function parseOklch(value: string): Rgb {
-  // Handles both `oklch(0.141 0.005 285.823)` and `oklch(87.9% 0.169 91.605)`.
-  const m = value.match(/oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/)
+  // Handles `oklch(0.141 0.005 285.823)`, `oklch(87.9% 0.169 91.605)`, and the
+  // `none` hue keyword achromatic colors use (e.g. `oklch(98.5% 0 none)`) — hue is
+  // powerless when chroma is 0, so `none` is treated as 0.
+  const m = value.match(/oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/)
   if (!m) throw new Error(`Unparseable oklch: ${value}`)
   const L = m[2] === '%' ? parseFloat(m[1]) / 100 : parseFloat(m[1])
-  const lin = oklchToLinearRgb(L, parseFloat(m[3]), parseFloat(m[4]))
+  const hue = m[4] === 'none' ? 0 : parseFloat(m[4])
+  const lin = oklchToLinearRgb(L, parseFloat(m[3]), hue)
   return { r: encode(lin.r), g: encode(lin.g), b: encode(lin.b) }
 }
 
