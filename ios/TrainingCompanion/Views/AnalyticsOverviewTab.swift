@@ -309,7 +309,7 @@ struct AnalyticsOverviewTab: View {
             }
             .frame(height: 130)
             HStack(spacing: 12) {
-                legendDot(color: .quaternary, label: "0")
+                legendDot(color: .gray.opacity(0.3), label: "0")
                 legendDot(color: .green,      label: "1–2")
                 legendDot(color: .blue,       label: "3–4")
                 legendDot(color: .orange,     label: "5–6")
