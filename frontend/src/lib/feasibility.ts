@@ -31,6 +31,13 @@ export function blendExpectations(
   if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
     const phil = opts.philosophies.find((p: any) => p.id === opts.selectedPhilosophyIds?.[0])
 
+    // An explicitly chosen style wins over the phase blend — the athlete is
+    // running that framework, not the philosophy's whole sequence.
+    if (opts.selectedFrameworkId) {
+      const chosen = opts.frameworks.find((f: any) => f.id === opts.selectedFrameworkId)
+      if (chosen?.expectations) return chosen.expectations
+    }
+
     // Find sequential group (new approach)
     const sequentialGroup = phil?.framework_groups?.find((g: any) => g.type === 'sequential')
     const phases = sequentialGroup?.canonical_phase_sequence
@@ -71,11 +78,9 @@ export function blendExpectations(
       }
     }
 
-    // Single framework override or primary framework
-    if (opts.selectedFrameworkId) {
-      const fw = opts.frameworks.find((f: any) => f.id === opts.selectedFrameworkId)
-      if (fw?.expectations) return fw.expectations
-    }
+    // No explicit style and no sequential group — fall back to the primary framework.
+    const primary = opts.frameworks.find((f: any) => f.id === phil?.primary_framework_id)
+    if (primary?.expectations) return primary.expectations
   }
 
   // Fall back to goal-based expectations
@@ -126,11 +131,11 @@ export function computeFeasibility(
 ): FeasibilitySignal[] {
   if (!selectedGoalIds.length) return []
 
-  const signals: FeasibilitySignal[] = []
   const exp = blendExpectations(goals, selectedGoalIds, goalWeights)
   if (!exp) return []
 
   const selectedGoals = goals.filter((g) => selectedGoalIds.includes(g.id))
+  const signals: FeasibilitySignal[] = []
 
   // 1. Goal incompatibility
   for (const g of selectedGoals) {
@@ -148,6 +153,22 @@ export function computeFeasibility(
       }
     }
   }
+
+  signals.push(...expectationSignals(exp, constraints, numWeeks))
+  return signals
+}
+
+/**
+ * Sections driven purely by a GoalExpectations block — no goal objects needed.
+ * Used directly by philosophy mode, where expectations come from the selected
+ * framework (or the weighted blend of a sequential group's phase frameworks).
+ */
+export function expectationSignals(
+  exp: GoalExpectations,
+  constraints: Partial<AthleteConstraints>,
+  numWeeks: number | null,
+): FeasibilitySignal[] {
+  const signals: FeasibilitySignal[] = []
 
   // 2. Program duration
   const weeks = numWeeks ?? 0

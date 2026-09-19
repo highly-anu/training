@@ -138,6 +138,8 @@ export function FeasibilityPanel({ mode }: FeasibilityPanelProps) {
   const signals = useFeasibility()
   const updateConstraints = useBuilderStore((s) => s.updateConstraints)
   const setNumWeeks = useBuilderStore((s) => s.setNumWeeks)
+  const setStep = useBuilderStore((s) => s.setStep)
+  const styleBlocked = signals.some((s) => s.code === 'STYLE_INCOMPATIBLE')
 
   if (!signals.length) return null
 
@@ -154,7 +156,7 @@ export function FeasibilityPanel({ mode }: FeasibilityPanelProps) {
     return (
       <div className="flex flex-wrap gap-2">
         {issues.map((s) => (
-          <SignalPill key={s.code} signal={s} onQuickFix={applyQuickFix} />
+          <SignalPill key={`${s.code}:${s.label}`} signal={s} onQuickFix={applyQuickFix} />
         ))}
       </div>
     )
@@ -172,9 +174,20 @@ export function FeasibilityPanel({ mode }: FeasibilityPanelProps) {
       </div>
       <div className="px-4 divide-y divide-border">
         {signals.map((s) => (
-          <SignalRow key={s.code} signal={s} onQuickFix={applyQuickFix} />
+          <SignalRow key={`${s.code}:${s.label}`} signal={s} onQuickFix={applyQuickFix} />
         ))}
       </div>
+      {styleBlocked && (
+        <div className="px-4 py-3 border-t bg-muted/20">
+          <button
+            type="button"
+            onClick={() => setStep(2, 'backward')}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Change training style →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

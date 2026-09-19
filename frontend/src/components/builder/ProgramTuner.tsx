@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Info, Layers } from 'lucide-react'
+import { AlertTriangle, Check, Info, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderStore } from '@/store/builderStore'
 // Goals removed - now philosophy-based only
@@ -8,6 +8,7 @@ import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { sortPriorities } from '@/lib/prioritySort'
 import { frameworkImpliedPriorities } from '@/lib/frameworkPriorities'
+import { checkStyleCompatibility, blockingReason } from '@/lib/styleCompatibility'
 import { FrameworkDetailModal } from './FrameworkDetailModal'
 import type { Framework, ModalityId } from '@/api/types'
 
@@ -23,6 +24,8 @@ export function ProgramTuner() {
     priorityOverrides,
     numWeeks,
     eventDate,
+    constraints,
+    updateConstraints,
     setFramework,
     setPriorityOverrides,
     setNumWeeks,
@@ -304,16 +307,21 @@ export function ProgramTuner() {
                       {groupFrameworks.map((fw) => {
                         const isDefault = fw.id === (defaultFrameworkId)
                         const isSelected = selectedFrameworkId === fw.id
+                        const compat = checkStyleCompatibility(fw, constraints)
+                        const blocker = blockingReason(compat)
 
                         return (
                           <div
                             key={fw.id}
                             className={cn(
                               'relative flex flex-col gap-1.5 rounded-xl border p-4 transition-shadow',
-                              'bg-card hover:shadow-md',
+                              'bg-card',
+                              !compat.selectable && !isSelected
+                                ? 'opacity-55 border-border'
+                                : 'hover:shadow-md',
                               isSelected
                                 ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                                : 'border-border hover:border-primary/50'
+                                : compat.selectable && 'border-border hover:border-primary/50'
                             )}
                           >
                             {isSelected && (
@@ -324,7 +332,9 @@ export function ProgramTuner() {
 
                             <button
                               onClick={() => setFramework(isSelected ? null : fw.id)}
-                              className="flex items-start gap-2 pr-6 text-left"
+                              disabled={!compat.selectable && !isSelected}
+                              title={blocker?.message}
+                              className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
                             >
                               <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                               <div>
@@ -338,11 +348,42 @@ export function ProgramTuner() {
                             </button>
 
                             {fw.notes && (
-                              <button onClick={() => setFramework(isSelected ? null : fw.id)} className="text-left">
+                              <button
+                                onClick={() => setFramework(isSelected ? null : fw.id)}
+                                disabled={!compat.selectable && !isSelected}
+                                className="text-left disabled:cursor-not-allowed"
+                              >
                                 <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-3">
                                   {fw.notes}
                                 </p>
                               </button>
+                            )}
+
+                            {compat.issues.length > 0 && (
+                              <div className="mt-1 space-y-1">
+                                {compat.issues.map((issue) => (
+                                  <div
+                                    key={issue.label}
+                                    className={cn(
+                                      'flex items-start gap-1.5 text-[10px] leading-relaxed',
+                                      issue.severity === 'error'
+                                        ? 'text-destructive'
+                                        : 'text-amber-600 dark:text-amber-500'
+                                    )}
+                                  >
+                                    <AlertTriangle className="size-3 mt-px shrink-0" />
+                                    <span className="flex-1">{issue.message}</span>
+                                  </div>
+                                ))}
+                                {blocker?.constraintPatch && (
+                                  <button
+                                    onClick={() => updateConstraints(blocker.constraintPatch!)}
+                                    className="text-[10px] font-medium text-primary hover:underline"
+                                  >
+                                    {blocker.label} — apply
+                                  </button>
+                                )}
+                              </div>
                             )}
 
                             <div className="flex items-end justify-between gap-2 mt-1">
