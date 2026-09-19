@@ -16,7 +16,7 @@ from flask import Flask, jsonify, redirect, request
 # Ensure src/ is importable when running from repo root
 sys.path.insert(0, os.path.dirname(__file__))
 
-from src import loader
+from src import goals, loader
 from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
@@ -631,97 +631,13 @@ def generate_program():
 
 
 def _philosophy_to_goal(phil_id: str, all_frameworks: list) -> dict:
-    """Build a synthetic goal dict from a philosophy's framework_groups."""
-    phil = loader.load_philosophy(phil_id)
-
-    # Find sequential group (if any)
-    groups = phil.get('framework_groups', [])
-    sequential_group = next((g for g in groups if g.get('type') == 'sequential'), None)
-
-    # Get phase sequence from sequential group or fall back to old canonical_phase_sequence
-    if sequential_group and sequential_group.get('canonical_phase_sequence'):
-        seq = sequential_group['canonical_phase_sequence']
-        primary_fw_id = phil.get('primary_framework_id') or sequential_group['frameworks'][0]
-    elif phil.get('canonical_phase_sequence'):
-        # Legacy support: old canonical_phase_sequence at philosophy level
-        seq = phil['canonical_phase_sequence']
-        primary_fw_id = phil.get('primary_framework_id')
-        if not primary_fw_id:
-            fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
-            primary_fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
-    else:
-        # No sequential group - create synthetic phases
-        fw_candidates = [f for f in all_frameworks if f.get('source_philosophy') == phil_id]
-        fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
-        seq = [
-            {'phase': 'base', 'weeks': 8},
-            {'phase': 'build', 'weeks': 6},
-            {'phase': 'peak', 'weeks': 4},
-        ]
-        primary_fw_id = fw_id
-
-    # Calculate priorities from primary framework
-    primary_fw = next((f for f in all_frameworks if f['id'] == primary_fw_id), None)
-    sessions = (primary_fw or {}).get('sessions_per_week', {})
-    total = sum(sessions.values()) or 1
-    priorities = {mod: count / total for mod, count in sessions.items()}
-
-    # Fallback to bias if no sessions_per_week found
-    if not priorities:
-        bias = phil.get('bias', phil.get('scope', []))
-        n = len(bias) or 1
-        priorities = {mod: 1.0 / n for mod in bias}
-
-    return {
-        'id': f'_phil_{phil_id}',
-        'name': phil.get('name', phil_id),
-        'priorities': priorities,
-        'phase_sequence': [
-            {
-                'phase': e.get('phase', 'base'),
-                'weeks': e.get('weeks', 8),
-                'framework_id': e.get('framework_id'),  # Phase-specific framework override
-                'focus': e.get('focus'),
-            }
-            for e in seq
-        ],
-        'framework_selection': {
-            'default_framework': primary_fw_id,
-            'alternatives': [],
-        },
-        'primary_sources': [phil_id],
-        'minimum_prerequisites': {},
-        'incompatible_with': [],
-        'notes': phil.get('notes', ''),
-    }
+    """Build a synthetic goal dict from a philosophy. See src/goals.py."""
+    return goals.philosophy_to_goal(phil_id, all_frameworks)
 
 
 def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list) -> dict:
     """Weighted-average a set of philosophy synthetic goals into one."""
-    total_w = sum(phil_weights.get(pid, 1.0 / len(phil_ids)) for pid in phil_ids)
-    blended_priorities: dict = {}
-    primary_phil_id = max(phil_ids, key=lambda pid: phil_weights.get(pid, 1.0 / len(phil_ids)))
-    primary_goal = _philosophy_to_goal(primary_phil_id, all_frameworks)
-
-    for pid in phil_ids:
-        w = phil_weights.get(pid, 1.0 / len(phil_ids)) / total_w
-        g = _philosophy_to_goal(pid, all_frameworks)
-        for mod, val in g['priorities'].items():
-            blended_priorities[mod] = blended_priorities.get(mod, 0.0) + val * w
-
-    # Normalize
-    p_total = sum(blended_priorities.values()) or 1.0
-    blended_priorities = {k: v / p_total for k, v in blended_priorities.items()}
-
-    result = dict(primary_goal)
-    result['id'] = '_phil_blend'
-    result['name'] = ' + '.join(
-        loader.load_philosophy(pid).get('name', pid).split(' /')[0].split(' —')[0].strip()
-        for pid in phil_ids
-    )
-    result['priorities'] = blended_priorities
-    result['primary_sources'] = phil_ids
-    return result
+    return goals.blend_philosophy_goals(phil_ids, phil_weights, all_frameworks)
 
 
 def _normalize_schedule_constraints(constraints: dict) -> dict:

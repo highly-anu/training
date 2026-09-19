@@ -31,7 +31,7 @@ applicable_when:
     - intermediate
     - advanced
     - elite
-  days_per_week_min: 2
+  days_per_week_min: 3   # must match expectations.min_days_per_week below
   days_per_week_max: 5
   goal_priority_min:
     durability: 0.2
