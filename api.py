@@ -16,7 +16,7 @@ from flask import Flask, jsonify, redirect, request
 # Ensure src/ is importable when running from repo root
 sys.path.insert(0, os.path.dirname(__file__))
 
-from src import goals, loader
+from src import goals, loader, provenance
 from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
@@ -284,6 +284,10 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'rest_sec':    slot.get('rest_sec'),
         'meta':        bool(ea.get('meta')),
         'injury_skip': bool(ea.get('injury_skip')),
+        # Unfilled because the philosophy's packages own nothing for this slot,
+        # as opposed to equipment or level ruling everything out.
+        'coverage_gap': bool(ea.get('coverage_gap')),
+        'gap_reason':   ea.get('gap_reason'),
         'error':       ea.get('error'),
         'load_note':   load_note,
         'notes':       slot.get('notes'),
@@ -309,10 +313,14 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     'modality':  session.get('modality'),
                     'archetype': session.get('archetype'),
                     'is_deload': session.get('is_deload', wk.get('is_deload', False)),
+                    'provenance': session.get('provenance'),
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])
                     ],
+                    # Was computed by the generator and dropped here, so the
+                    # SessionDetail view that renders it never received any.
+                    'complementary_work': session.get('complementary_work', []),
                 })
             named_schedule[day_name] = named_sessions
 
@@ -341,6 +349,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         'weeks':          weeks,
         'volume_summary': volume_summary,
         'compromises':    raw.get('compromises', []),
+        'coverage_report': raw.get('coverage_report'),
     }
 
 
@@ -820,17 +829,15 @@ def _generate_program_inner(body):
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
 
-    # Filter archetypes by primary_sources (philosophy packages)
-    archetypes_filtered = data['archetypes']
-    primary_sources = set(goal.get('primary_sources', []))
-    if primary_sources:
-        archetypes_filtered = [
-            arch for arch in data['archetypes']
-            if arch.get('_package') in primary_sources
-        ]
+    # One policy, used for BOTH validation and generation. These used to be two
+    # separate filters — a strict one here and a fuzzy one inside generate() — so
+    # validation was checking a different library than the one actually used.
+    policy = provenance.resolve_source_policy(goal)
+    lib = provenance.scope(data, policy)
+    archetypes_filtered = lib['archetypes']
 
     validation = validate(goal, constraints, archetypes_filtered, data['modalities'],
-                          merged_injury_flags)
+                          merged_injury_flags, policy=policy)
 
     for w in blend_warnings:
         validation.warnings.append({
@@ -858,6 +865,7 @@ def _generate_program_inner(body):
             output_format='dict',
             extra_injury_flags=extra_injury_flags or None,
             include_trace=include_trace,
+            policy=policy,
         )
 
     result = _transform_program(raw, goal, constraints, validation)
@@ -924,13 +932,9 @@ def _generate_session_inner(body):
                 constraints['injury_flags'].append(flag_id)
     merged_injury_flags = {**data['injury_flags'], **extra_injury_flags}
 
-    # Filter archetypes by primary_sources (philosophy packages)
-    archetypes_filtered = data['archetypes']
-    if primary_sources:
-        archetypes_filtered = [
-            arch for arch in data['archetypes']
-            if arch.get('_package') in primary_sources
-        ]
+    policy = provenance.resolve_source_policy(goal)
+    lib = provenance.scope(data, policy)
+    archetypes_filtered = lib['archetypes']
 
     # Resolve forced archetype if archetype_id provided (Browse tab)
     archetype_id = body.get('archetype_id')
@@ -939,16 +943,26 @@ def _generate_session_inner(body):
         forced_arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
         if forced_arch is None:
             return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
+        # A hand-picked archetype was never checked against the policy.
+        if policy.strict and not provenance.allows_archetype(forced_arch, policy):
+            return jsonify({
+                'detail': (
+                    f"Archetype {archetype_id!r} belongs to "
+                    f"{forced_arch.get('_package')!r}, which "
+                    f"{policy.describe()} does not draw from."
+                )
+            }), 422
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
     session_stub = {'modality': modality, 'is_deload': is_deload}
     populated = populate_session(
         session_stub, goal, constraints,
-        data['exercises'], archetypes_filtered,
+        lib['exercises'], archetypes_filtered,
         merged_injury_flags, phase, week_in_phase,
         forced_archetype=forced_arch,
-        exercises_by_package=data.get('exercises_by_package'),
+        exercises_by_package=lib.get('exercises_by_package'),
+        policy=policy,
     )
 
     if populated.get('archetype') is None:

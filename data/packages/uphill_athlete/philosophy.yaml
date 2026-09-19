@@ -50,6 +50,10 @@ notes: |
   not intensity, is the primary progression lever. Recovery (sleep,
   nutrition, easy days) is treated as part of training, not separate from it.
 
+# Every modality this philosophy schedules has an archetype in this package,
+# so generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: uphill_base_phase
 
 # Full program expectations (sum of all phases)

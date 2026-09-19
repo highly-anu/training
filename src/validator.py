@@ -31,7 +31,13 @@ def validate(
     archetypes: list,
     modalities: dict,
     injury_flags_data: dict,
+    policy=None,
 ) -> ValidationResult:
+    """Pre-flight feasibility.
+
+    `archetypes` must already be scoped to the policy — pass the same list the
+    generator will use, or the two check different libraries.
+    """
     result = ValidationResult()
     _check_forced_framework(goal, constraints, result)
     _check_equipment(goal, constraints, archetypes, result)
@@ -40,7 +46,50 @@ def validate(
     _check_injury_conflicts(goal, constraints, modalities, injury_flags_data, result)
     _check_phase(goal, constraints, result)
     _check_schedule(goal, constraints, result)
+    _check_coverage(goal, archetypes, policy, result)
     return result
+
+
+def _check_coverage(goal, archetypes, policy, result):
+    """Modalities the goal schedules that its packages own no archetype for.
+
+    A warning, not an error: a program missing one modality is still useful, and
+    injury_skip already establishes that a blank slot is information rather than
+    failure. Only a goal whose top priorities are all uncoverable is infeasible.
+    """
+    if policy is None or not policy.strict:
+        return
+
+    priorities = goal.get('priorities', {})
+    if not priorities:
+        return
+
+    covered = {a.get('modality') for a in archetypes}
+    uncovered = sorted(m for m in priorities if m not in covered)
+    if not uncovered:
+        return
+
+    where = policy.describe()
+    for modality in uncovered:
+        result.add_warning(
+            'PACKAGE_COVERAGE_GAP',
+            f"No {modality.replace('_', ' ')} archetype in {where}. "
+            f"Those sessions will be left unfilled rather than taken from "
+            f"another philosophy.",
+            suggested_fix=(
+                f"Add a {modality} archetype to the package, or declare a "
+                f"borrows_from entry covering {modality}."
+            ),
+        )
+
+    top = sorted(priorities.items(), key=lambda kv: kv[1], reverse=True)[:2]
+    if top and all(m in uncovered for m, _ in top):
+        result.add_error(
+            'PHILOSOPHY_NOT_GENERATABLE',
+            f"{where} has no archetype for either of its top priorities "
+            f"({', '.join(m for m, _ in top)}).",
+            suggested_fix="Author the missing archetypes or declare borrows_from.",
+        )
 
 
 # ---------------------------------------------------------------------------

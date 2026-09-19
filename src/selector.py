@@ -4,6 +4,7 @@ import os as _os
 import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
+from . import provenance
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -380,11 +381,15 @@ def select_exercise(
     session_used_ids: list | None = None,
     return_trace: bool = False,
     primary_sources: set | None = None,
+    policy=None,
+    modality: str | None = None,
 ) -> Optional[dict]:
     """Pick the best exercise for an archetype slot.
 
     When return_trace=True returns (exercise, trace_dict) instead of just exercise.
     primary_sources: set of philosophy package IDs to filter exercises by (e.g. {'starting_strength'})
+    policy: provenance.SourcePolicy. Under a strict policy the global fallback below
+        is disabled, so an unfillable slot is reported instead of silently borrowing.
     """
     available_equip = set(constraints.get('equipment', []))
     recent = recent_ex_ids or []
@@ -419,11 +424,15 @@ def select_exercise(
             # philosophy genuinely owns is rejected because another package happens
             # to declare the same id earlier in glob order.
             if restrict_to_primary and primary_sources:
-                ex_packages = ex.get('_packages') or (
-                    [ex['_package']] if ex.get('_package') else []
-                )
-                if ex_packages and not set(ex_packages) & primary_sources:
-                    continue
+                if policy is not None:
+                    if not provenance.allows_exercise(ex, policy, modality):
+                        continue
+                else:
+                    ex_packages = ex.get('_packages') or (
+                        [ex['_package']] if ex.get('_package') else []
+                    )
+                    if ex_packages and not set(ex_packages) & primary_sources:
+                        continue
             n_package += 1
 
             # Equipment
@@ -460,12 +469,16 @@ def select_exercise(
     # Pass 1: primary-sources exercises only
     candidates = _build_candidates(restrict_to_primary=True)
 
-    # Pass 2: if primary sources have no exercises for this slot, fall back to global pool.
-    # This handles cases like uphill_athlete barbell slots where barbell exercises live in
-    # gym_jones/starting_strength — any well-known compound lift is appropriate.
-    if not candidates and primary_sources:
+    # Pass 2: if the philosophy's own packages have no exercise for this slot, widen.
+    # Historically this reached the entire cross-package index with no warning, which
+    # is how a Starting Strength program ended up prescribing ATG mobility work. Under
+    # a strict policy we stay inside the allowed packages and let the slot go unfilled,
+    # so the gap is reported rather than hidden.
+    borrowed_fallback = False
+    if not candidates and primary_sources and not (policy is not None and policy.strict):
         n_pool = n_package = n_equip = n_filter = 0  # reset counters for accurate trace
         candidates = _build_candidates(restrict_to_primary=False)
+        borrowed_fallback = bool(candidates)
 
     def _score_ex(ex: dict) -> tuple:
         recency_penalty = sum(2 for eid in recent if eid == ex['id'])
@@ -528,6 +541,23 @@ def select_exercise(
 # Session population
 # ---------------------------------------------------------------------------
 
+
+def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: str | None) -> bool:
+    """True when no exercise in the policy's packages could ever match this slot.
+
+    Ignores equipment and training level on purpose: those are athlete
+    constraints, while this answers whether the philosophy owns the movement
+    at all. Used to label an unfilled slot as a package coverage gap.
+    """
+    ex_filter = slot.get('exercise_filter', {})
+    for ex in exercises.values():
+        if not provenance.allows_exercise(ex, policy, modality):
+            continue
+        if _matches_slot_filter(ex, ex_filter, set()):
+            return False
+    return True
+
+
 def populate_session(
     session: dict,
     goal: dict,
@@ -545,6 +575,7 @@ def populate_session(
     preferred_archetype_id: str | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
+    policy=None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -564,6 +595,8 @@ def populate_session(
     training_level = constraints.get('training_level', 'intermediate')
     unlocked = _get_unlocked(training_level, exercises) - excl_ids
     primary_sources = set(goal.get('primary_sources', []))
+    if policy is None:
+        policy = provenance.resolve_source_policy(goal)
 
     # Select archetype
     if forced_archetype is not None:
@@ -671,6 +704,8 @@ def populate_session(
                 session_used_ids=session_used_ids,
                 return_trace=True,
                 primary_sources=primary_sources,
+                policy=policy,
+                modality=modality,
             )
             ex, ex_trace = ex_result if isinstance(ex_result, tuple) else (ex_result, {})
         else:
@@ -679,10 +714,19 @@ def populate_session(
                 excl_patterns, excl_ids, used_ex_ids, phase,
                 session_used_ids=session_used_ids,
                 primary_sources=primary_sources,
+                policy=policy,
+                modality=modality,
             )
 
         if ex is None:
             injury_blocked = _slot_injury_blocked(slot, excl_patterns)
+            # Distinguish "the philosophy owns nothing for this slot" from
+            # "equipment/level ruled everything out" — the first is a package
+            # coverage gap to author, the second is an athlete constraint.
+            coverage_gap = bool(
+                not injury_blocked and policy is not None and policy.strict
+                and _slot_unfillable_in_policy(slot, exercises, policy, modality)
+            )
             exercise_assignments.append({
                 'slot_index': i,
                 'slot_role': slot_role,
@@ -690,6 +734,8 @@ def populate_session(
                 'exercise': None,
                 'slot': slot,
                 'injury_skip': injury_blocked,
+                'coverage_gap': coverage_gap,
+                'gap_reason': 'NO_EXERCISE_IN_ALLOWED_PACKAGES' if coverage_gap else None,
                 'error': (
                     f"skipped — {slot.get('exercise_filter', {}).get('movement_pattern')} excluded by injury flag"
                     if injury_blocked

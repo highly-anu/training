@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { PHASE_COLORS } from '@/lib/phaseColors'
@@ -208,6 +208,37 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
     minimum_prerequisites?: Record<string, number>
   }
 
+  // The blurb above is written from the requested philosophy alone, so it cannot
+  // show that a program actually drew on other packages. Count what was emitted.
+  const sourceMix = useMemo(() => {
+    const counts = new Map<string, { label: string; borrowed: boolean; count: number }>()
+    let total = 0
+    for (const week of program.weeks ?? []) {
+      for (const sessions of Object.values(week.schedule ?? {})) {
+        for (const session of sessions) {
+          const p = session.provenance
+          if (!p?.package) continue
+          total++
+          const entry = counts.get(p.package)
+          if (entry) entry.count++
+          else counts.set(p.package, {
+            label: p.label ?? p.package.replace(/_/g, ' '),
+            borrowed: p.borrowed,
+            count: 1,
+          })
+        }
+      }
+    }
+    return {
+      total,
+      packages: [...counts.entries()]
+        .map(([id, v]) => ({ id, ...v }))
+        .sort((a, b) => b.count - a.count),
+    }
+  }, [program])
+
+  const coverage = program.coverage_report
+
   // Programs saved from iOS after a replace/move only contain `weeks` — goal and
   // volume_summary are absent. Show a graceful empty state rather than crashing.
   if (!goal) {
@@ -297,6 +328,42 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
           )}
         </div>
       ) : null}
+
+      {/* 1b. Where the sessions actually came from */}
+      {(sourceMix.packages.some((p) => p.borrowed) ||
+        (coverage?.unfilled_sessions.length ?? 0) > 0 ||
+        (coverage?.unfilled_slots.length ?? 0) > 0) && (
+        <div className="rounded-xl border bg-card p-4 space-y-3">
+          <h3 className="text-xs font-semibold">Sources used</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {sourceMix.packages.map((p) => (
+              <Badge
+                key={p.id}
+                variant={p.borrowed ? 'outline' : 'secondary'}
+                className="text-xs"
+              >
+                {p.borrowed ? `via ${p.label}` : p.label} · {p.count}
+                {sourceMix.total ? ` (${Math.round((100 * p.count) / sourceMix.total)}%)` : ''}
+              </Badge>
+            ))}
+          </div>
+          {(coverage?.unfilled_sessions.length ?? 0) > 0 && (
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {coverage!.unfilled_sessions.length} session
+              {coverage!.unfilled_sessions.length === 1 ? '' : 's'} left unfilled —{' '}
+              {[...new Set(coverage!.unfilled_sessions.map((u) => u.modality.replace(/_/g, ' ')))].join(', ')}{' '}
+              has no archetype in this philosophy&apos;s package.
+            </p>
+          )}
+          {(coverage?.unfilled_slots.length ?? 0) > 0 && (
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {coverage!.unfilled_slots.length} slot
+              {coverage!.unfilled_slots.length === 1 ? '' : 's'} left unfilled rather than
+              filled from another philosophy.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 2. Phase cards — two separate cards per phase */}
       {segments.length > 0 && (
