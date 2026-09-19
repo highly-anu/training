@@ -963,6 +963,7 @@ def _generate_session_inner(body):
         forced_archetype=forced_arch,
         exercises_by_package=lib.get('exercises_by_package'),
         policy=policy,
+        level_seeds=lib.get('level_seeds'),
     )
 
     if populated.get('archetype') is None:

@@ -433,6 +433,7 @@ def generate(
                     day_session_types=day_session_types,
                     relax_equipment=is_commons_fallback,
                     policy=policy,
+                    level_seeds=lib.get('level_seeds'),
                 )
 
                 session_trace: dict | None = None

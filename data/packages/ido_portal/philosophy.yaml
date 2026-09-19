@@ -40,6 +40,10 @@ notes: >
   patterns form the core archetypes. No barbell or heavy loading is prescribed —
   open space and bodyweight are the primary tools.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: high_frequency_skill
 
 framework_groups:

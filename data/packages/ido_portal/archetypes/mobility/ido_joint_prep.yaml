@@ -1,0 +1,77 @@
+id: ido_joint_prep
+name: Ido Joint Prep & Isolated Range Work
+modality: mobility
+category: recovery
+duration_estimate_minutes: 30
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- recovery
+- maintenance
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- Ido Portal
+notes: >
+  Isolated joint work, performed daily and treated as practice rather than as a
+  warm-up for something else. Ido's position is that range of motion you cannot
+  control is not yours: the work is active — the athlete moves into and holds
+  end range under their own power rather than being pushed there by gravity or a
+  partner. Wrists, scapulae, hips and spine get attention every session because
+  they are what the floor work, hand balancing and locomotion all load. Quality
+  and attention are the prescription; there is no intensity to chase.
+slots:
+- role: joint_circles
+  slot_type: skill_practice
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+  notes: >
+    Controlled articular rotations through every major joint, slowest at the
+    positions that feel least available. Wrists and scapulae first — they carry
+    the hand-balancing and floor work.
+- role: isolated_range
+  slot_type: skill_practice
+  duration_minutes: 15
+  intensity: low
+  exercise_filter:
+    category: mobility
+  notes: >
+    End-range holds, entered and held actively: 90/90 hip transitions, pigeon,
+    couch stretch, shoulder dislocates, squat clinic. Two minutes per position.
+    If the position can only be held passively, regress until it can be held
+    under your own tension.
+- role: integration
+  slot_type: skill_practice
+  duration_minutes: 5
+  intensity: low
+  exercise_filter:
+    movement_pattern: locomotion
+    category: skill
+  notes: >
+    Close with a few minutes of slow locomotion so the range just opened is used
+    rather than left isolated. Deliberately unhurried.
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    notes: >
+      Unchanged. This is the session that stays in a deload week — it is the
+      lowest-cost work in the package and the most worth keeping daily.
+  time_limited:
+    drop_slots:
+    - integration
+    notes: >
+      Joint circles and isolated range are the session. Ten minutes of attentive
+      work beats thirty rushed.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: none
+      substitute_approach: Needs nothing but floor space.

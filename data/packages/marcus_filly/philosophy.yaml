@@ -43,6 +43,10 @@ notes: >
   (thumbs-up, elbows high), elbow-out rows, DB external rotation, band pull-aparts.
   Useful for injury rehab → return to sport transitions.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: rpe_autoregulation
 
 framework_groups:

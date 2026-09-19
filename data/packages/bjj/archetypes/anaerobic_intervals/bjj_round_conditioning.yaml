@@ -1,0 +1,88 @@
+id: bjj_round_conditioning
+name: BJJ Round Conditioning (Sprawl / Shuttle Intervals)
+modality: anaerobic_intervals
+category: conditioning
+duration_estimate_minutes: 35
+required_equipment:
+- open_space
+applicable_phases:
+- base
+- build
+- peak
+- specific
+- maintenance
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- BJJ
+notes: >
+  Conditioning built to the shape of a competition round rather than to a generic
+  interval protocol. What runs a grappler out of air is not steady output but
+  repeated scrambles — explosive effort, incomplete recovery, again — so the work
+  periods match round length and the rest periods are deliberately too short.
+  Scheduled on non-rolling days: this competes with mat work for recovery and mat
+  work wins.
+slots:
+- role: warm_up
+  slot_type: time_domain
+  duration_sec: 480
+  intensity: zone2
+  exercise_filter:
+    category: mobility
+  notes: >
+    8 min. Hips, shoulders and neck before anything explosive — the same joints
+    the sport already taxes.
+- role: interval_block
+  slot_type: emom
+  sets: 8
+  duration_sec: 30
+  work_sec: 30
+  rest_sec: 30
+  intensity: zone4
+  exercise_filter:
+    movement_pattern: hinge
+    category: bodyweight
+  notes: >
+    Sprawl intervals, 30 s on / 30 s off x 8. Hips to the floor each rep, back to
+    the feet immediately. The 1:1 ratio is the point — it does not allow recovery,
+    which is what the fifth minute of a round feels like.
+- role: shuttle_block
+  slot_type: emom
+  sets: 10
+  duration_sec: 20
+  work_sec: 20
+  rest_sec: 40
+  intensity: zone4_5
+  exercise_filter:
+    category: aerobic
+  notes: >
+    10 x 20 m shuttles with a direction change at each end, 40 s rest. Change of
+    direction under fatigue, not straight-line speed.
+- role: cool_down
+  slot_type: time_domain
+  duration_sec: 300
+  intensity: zone1
+  exercise_filter:
+    category: mobility
+  notes: 5 min easy movement and breathing down.
+scaling:
+  deload:
+    volume_multiplier: 0.5
+    intensity_pct: 0.85
+    notes: >
+      Halve both blocks. In competition week, drop this session entirely — it adds
+      fatigue without adding skill.
+  time_limited:
+    drop_slots:
+    - shuttle_block
+    - cool_down
+    notes: Sprawl intervals alone, after a real warm-up, is a complete session.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: open_space
+      substitute_approach: >
+        Sprawls in place plus burpees for the shuttle block. Same work:rest,
+        no travel.

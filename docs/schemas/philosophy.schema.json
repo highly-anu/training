@@ -319,6 +319,16 @@
               "type": "string"
             },
             "description": "Optional allowlist of exercise ids."
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "archetypes",
+                "exercises"
+              ]
+            },
+            "description": "What may be taken from the borrowed package. Defaults to both. ['exercises'] borrows the movements while keeping this philosophy's own session designs."
           }
         }
       }

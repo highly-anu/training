@@ -37,6 +37,10 @@ notes: >
   strength training but mandates its own lower-body prep work regardless of other
   modalities in the program.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: atg_joint_health
 
 framework_groups:

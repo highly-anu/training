@@ -37,6 +37,10 @@ notes: >
   Progression is time_based: mat hours and drilling volume are the primary
   advancement mechanism, not load or complexity increments.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: bjj_performance
 
 framework_groups:

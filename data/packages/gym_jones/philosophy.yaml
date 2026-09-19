@@ -52,6 +52,10 @@ notes: >
   mental durability. Programs are 1-month blocks, repeatable 2–3× or cycled
   between Operator I / Operator II.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: block_periodization
 
 framework_groups:

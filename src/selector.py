@@ -24,7 +24,15 @@ _PATTERN_ALIASES: dict[str, tuple] = {
 # Training-level prerequisite seeding
 # ---------------------------------------------------------------------------
 _LEVEL_CONCEPTS: dict[str, set] = {
-    'novice': set(),
+    # Basic movement literacy, not a progression to be earned. Every beginner
+    # program teaches bracing and hinging in the first session — granting a novice
+    # the empty set meant a novice unlocked nothing in Starting Strength, the
+    # method written for novices. Exercise-ID prerequisites (pull_up, front_squat,
+    # power_clean) stay gated below: those are genuine progressions.
+    'novice': {
+        'bracing_mechanics', 'bracing', 'hip_hinge', 'hip_hinge_pattern',
+        'squat_pattern', 'push_pattern', 'pull_pattern', 'open_space',
+    },
     'intermediate': {
         'hip_hinge', 'bracing_mechanics', 'bracing', 'squat_pattern',
         'push_pattern', 'pull_pattern', 'hanging', 'shoulder_stability',
@@ -49,19 +57,46 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 }
 
 
-def _get_unlocked(training_level: str, exercises: dict) -> set:
-    """Return set of exercise IDs accessible at this training level."""
+_LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
+
+
+def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None = None) -> set:
+    """Return set of exercise IDs accessible at this training level.
+
+    level_seeds: {package_id: {level: set}} from loader.load_level_seeds, already
+    narrowed to the packages this goal may use. A package seeds the concepts its
+    own athletes are assumed to arrive with — Starting Strength teaches a novice
+    to brace and hinge in the first session, and without that seed every one of
+    its 13 exercises stayed locked for the novices it is written for.
+    """
     if training_level == 'elite':
         return set(exercises.keys())
 
-    known = _LEVEL_CONCEPTS.get(training_level, set())
-    unlocked = set()
-    for ex_id, ex in exercises.items():
-        requires = ex.get('requires', [])
-        if not requires:
-            unlocked.add(ex_id)
-        elif all(r in known for r in requires):
-            unlocked.add(ex_id)
+    known = set(_LEVEL_CONCEPTS.get(training_level, set()))
+    if level_seeds:
+        # Seeds cascade upward: what a novice knows, an advanced athlete knows.
+        cutoff = _LEVEL_ORDER.index(training_level) if training_level in _LEVEL_ORDER else 0
+        for seeds in level_seeds.values():
+            for level in _LEVEL_ORDER[:cutoff + 1]:
+                known |= set(seeds.get(level, ()))
+
+    # Resolve prerequisite chains to a fixed point. A requirement is satisfied
+    # when it is a known concept OR an exercise that is itself unlocked, so a
+    # chain like atg_split_squat -> bulgarian_split_squat_light resolves on its
+    # own. Previously only one hop was checked, which is why _LEVEL_CONCEPTS had
+    # to seed carries "directly to avoid multi-hop prerequisite chain limitation".
+    unlocked: set = set()
+    pending = dict(exercises)
+    while True:
+        newly = {
+            ex_id for ex_id, ex in pending.items()
+            if all(r in known or r in unlocked for r in (ex.get('requires') or []))
+        }
+        if not newly:
+            break
+        unlocked |= newly
+        for ex_id in newly:
+            pending.pop(ex_id, None)
     return unlocked
 
 
@@ -576,6 +611,7 @@ def populate_session(
     day_session_types: list | None = None,
     relax_equipment: bool = False,
     policy=None,
+    level_seeds: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -593,7 +629,7 @@ def populate_session(
 
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags_data)
     training_level = constraints.get('training_level', 'intermediate')
-    unlocked = _get_unlocked(training_level, exercises) - excl_ids
+    unlocked = _get_unlocked(training_level, exercises, level_seeds) - excl_ids
     primary_sources = set(goal.get('primary_sources', []))
     if policy is None:
         policy = provenance.resolve_source_policy(goal)

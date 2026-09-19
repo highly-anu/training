@@ -54,6 +54,23 @@ notes: |
 # so generation never needs to reach into another philosophy.
 self_contained: true
 
+# The max-strength gym sessions prescribe standard barbell lifts, which this
+# package does not own and has no reason to duplicate — House and Johnston send
+# the athlete to the same squat, deadlift and press everyone else uses. Declared
+# rather than silently borrowed, and labelled in the UI.
+borrows_from:
+  - package: starting_strength
+    label: "Starting Strength"
+    reason: >
+      Uphill Athlete's max strength block prescribes the standard barbell lifts
+      without redefining them; Rippetoe's package owns those movements.
+    modalities:
+      - max_strength
+    # Movements only. The session design stays Uphill's — a max strength gym
+    # session here is theirs, it just uses Rippetoe's barbell lifts to fill it.
+    kinds:
+      - exercises
+
 primary_framework_id: uphill_base_phase
 
 # Full program expectations (sum of all phases)

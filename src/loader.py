@@ -181,13 +181,23 @@ def load_equipment_profiles() -> list:
 
 
 def load_level_seeds() -> dict:
-    """Merge per-package level seed sets into a single dict of level -> set of exercise IDs."""
-    base: dict = {'novice': set(), 'intermediate': set(), 'advanced': set(), 'elite': set()}
-    for path in glob.glob(os.path.join(_PACKAGES_DIR, '*', 'level_seeds.yaml')):
-        data = _load_yaml(path)
-        for level, ids in data.get('seeds', {}).items():
-            base.setdefault(level, set()).update(ids)
-    return base
+    """Return {package_id: {level: set(concept or exercise ids)}}.
+
+    A package declares what an athlete at each level is assumed to already know,
+    which unlocks exercises whose `requires` list those concepts. Package-scoped
+    rather than merged globally: Starting Strength teaches a novice to brace and
+    hinge in the first session, but that says nothing about whether a novice in
+    another philosophy has those prerequisites.
+    """
+    by_package: dict = {}
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'level_seeds.yaml'))):
+        pkg_id = os.path.basename(os.path.dirname(path))
+        data = _load_yaml(path) or {}
+        by_package[pkg_id] = {
+            level: set(ids or ())
+            for level, ids in (data.get('seeds') or {}).items()
+        }
+    return by_package
 
 
 def load_philosophies() -> list:
@@ -245,4 +255,5 @@ def load_all_data() -> dict:
         'exercises':            exercises,
         'exercises_by_package': exercises_by_package,
         'injury_flags':         load_injury_flags(),
+        'level_seeds':          load_level_seeds(),
     }

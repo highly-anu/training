@@ -37,6 +37,10 @@ notes: >
   post-session and throughout the day. Resistance bands are the core tool for joint
   distraction work; no heavy equipment required.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: kelly_starrett_mobility
 
 framework_groups:

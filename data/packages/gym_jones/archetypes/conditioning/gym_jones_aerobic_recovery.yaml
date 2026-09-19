@@ -1,0 +1,63 @@
+id: gym_jones_aerobic_recovery
+name: Gym Jones Aerobic Recovery (Row / Swim / Ruck)
+modality: aerobic_base
+category: conditioning
+duration_estimate_minutes: 60
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- maintenance
+- transition
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- Gym Jones
+notes: >
+  Gym Jones recovery-day format: 60-120 min of easy, continuous, low-impact work
+  at conversational pace. The purpose is circulation and aerobic development
+  between hard sessions, not additional stress — Twight's rule is that the
+  recovery day must actually recover, and an athlete who turns it into a third
+  hard session loses the following week. Row is the default (Concept II is the
+  house ergometer); swim and ruck are equally valid. Damper 4-6, 18-22 SPM.
+slots:
+- role: aerobic_main
+  slot_type: time_domain
+  duration_sec: 3600
+  intensity: zone2
+  exercise_filter:
+    category: aerobic
+  notes: >
+    60 min continuous, Zone 1-2. Conversational throughout: if you cannot hold a
+    sentence, you are working too hard and this has stopped being a recovery
+    session. Duration scales to the athlete's budget; intensity never does.
+- role: mobility_finisher
+  slot_type: skill_practice
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+  notes: >
+    10 min of unloaded hip, thoracic and shoulder work while warm.
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    notes: 35-40 min. Already a low-stress session; shorten rather than soften.
+  time_limited:
+    drop_slots:
+    - mobility_finisher
+    notes: >
+      Keep the aerobic work. Under 30 min the session still has value — unlike the
+      hard sessions, this one does not need a minimum dose to be worth doing.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: rower
+      substitute_approach: >
+        Swim, ruck at 15-20 kg, or bike. Low-impact is the priority since this
+        session sits between hard days.

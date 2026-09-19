@@ -17,6 +17,7 @@ order, and so the UI can label it:
         label: "Gym Jones"
         reason: "The strength block is explicitly Twight-derived."
         modalities: [max_strength]     # omit or ['*'] for any
+        kinds: [exercises]             # movements only, not session designs
 
 This module is the single place that answers "is this allowed", so the
 validate path in api.py and the generate path in generator.py cannot drift
@@ -40,6 +41,7 @@ class Borrow:
     modalities: frozenset       # frozenset({'*'}) means any modality
     archetypes: frozenset       # empty means any archetype in the package
     exercises: frozenset        # empty means any exercise in the package
+    kinds: frozenset            # {'archetypes', 'exercises'} — what may be taken
 
     def allows_modality(self, modality: str | None) -> bool:
         if ANY in self.modalities:
@@ -87,6 +89,10 @@ def _parse_borrows(phil: dict) -> dict:
         if not pkg or pkg == phil.get('id'):
             continue  # self-reference is meaningless
         modalities = _as_frozenset(entry.get('modalities')) or frozenset({ANY})
+        # Default is both. `kinds: [exercises]` borrows the movements while the
+        # borrowing philosophy keeps its own session designs — usually what is
+        # meant when a package needs a barbell it does not define.
+        kinds = _as_frozenset(entry.get('kinds')) or frozenset({'archetypes', 'exercises'})
         borrows[pkg] = Borrow(
             package=pkg,
             label=entry.get('label') or pkg.replace('_', ' ').title(),
@@ -94,6 +100,7 @@ def _parse_borrows(phil: dict) -> dict:
             modalities=modalities,
             archetypes=_as_frozenset(entry.get('archetypes')),
             exercises=_as_frozenset(entry.get('exercises')),
+            kinds=kinds,
         )
     return borrows
 
@@ -143,6 +150,8 @@ def allows_archetype(arch: dict, policy: SourcePolicy) -> bool:
     borrow = policy.borrows.get(pkg)
     if borrow is None:
         return False
+    if 'archetypes' not in borrow.kinds:
+        return False
     if borrow.archetypes and arch.get('id') not in borrow.archetypes:
         return False
     return borrow.allows_modality(arch.get('modality'))
@@ -172,6 +181,8 @@ def allows_exercise(ex: dict, policy: SourcePolicy, modality: str | None = None)
     for pkg in packages:
         borrow = policy.borrows.get(pkg)
         if borrow is None:
+            continue
+        if 'exercises' not in borrow.kinds:
             continue
         if borrow.exercises and ex.get('id') not in borrow.exercises:
             continue
@@ -238,11 +249,17 @@ def scope(data: dict, policy: SourcePolicy) -> dict:
         if pkg in policy.allowed_packages
     }
 
+    scoped_seeds = {
+        pkg: seeds for pkg, seeds in (data.get('level_seeds') or {}).items()
+        if pkg in policy.allowed_packages
+    }
+
     return {
         **data,
         'archetypes': archetypes,
         'exercises': exercises,
         'exercises_by_package': scoped_by_package,
+        'level_seeds': scoped_seeds,
         'all_archetypes': data.get('archetypes', []),
         'all_exercises': data.get('exercises', {}),
     }

@@ -1197,3 +1197,170 @@ exercises:
   sources:
     - Marcus Filly — Functional Bodybuilding
   notes: 'Step up onto box (knee height) driving through the lead heel. 10 reps each leg. Used in conditioning blocks as a low-impact locomotive lower-body movement. Load with DBs at sides when bodyweight becomes easy. Also serves as a unilateral strength entry movement.'
+
+# ── Mobility ─────────────────────────────────────────────────────────────────
+# The package prescribes mobility sessions but owned no category: mobility
+# exercises, so those sessions were filled from other philosophies. Functional
+# Bodybuilding's mobility work is positional — earning and owning a shape you
+# will then load — rather than generic stretching.
+- id: fb_thoracic_opener
+  name: Thoracic Opener over Box
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - box
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 45
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Forearms on a box or bench, hips back, chest sinking between the arms. Breathe
+    into the position rather than pushing into it. Prepares the overhead position
+    for pressing without the shoulder compensating at the lumbar spine.'
+
+- id: fb_90_90_hip_switch
+  name: 90/90 Hip Switch
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - hip_impingement
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Seated, both knees at 90 degrees, switching sides under control without
+    the hands. Active internal and external rotation of the hip — the range you can
+    switch through unassisted is the range you actually own.'
+
+- id: fb_deep_squat_hold
+  name: Deep Squat Hold with Reach
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  - patellar_tendinopathy
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Bottom of a squat, heels down, elbows inside the knees, alternating an
+    overhead reach. Hold long enough that the position becomes restful. Heels on a
+    small plate if the ankles will not allow it yet.'
+
+- id: fb_wall_slide
+  name: Wall Slide (Scapular Upward Rotation)
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Back against the wall, forearms sliding overhead while the ribs stay
+    down. Slow. This is the shoulder maintenance work that lets the pressing volume
+    in the strength sessions stay sustainable.'
+
+- id: fb_couch_stretch_active
+  name: Active Couch Stretch
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Rear foot elevated, hips square, glute of the back leg squeezed to drive
+    the stretch. Squeezing rather than sinking is what makes this active work — the
+    passive version gives range you cannot use.'
+
+- id: fb_banded_shoulder_distraction
+  name: Banded Shoulder Distraction
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - "Marcus Filly — Functional Bodybuilding"
+  notes: 'Band anchored overhead, stepping away to create traction, then rotating
+    slowly through the available range. Opens the overhead position before pressing
+    and after pulling volume.'

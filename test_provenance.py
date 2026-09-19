@@ -84,6 +84,21 @@ def test_borrows() -> None:
           and not provenance.allows_exercise(
               {'id': 'curl', '_packages': ['lender']}, ex_narrowed))
 
+    ex_only = policy_with_borrow(kinds=['exercises'])
+    check('kinds:[exercises] borrows movements but not session designs',
+          provenance.allows_exercise({'id': 'squat', '_packages': ['lender']}, ex_only)
+          and not provenance.allows_archetype(
+              {'id': 'z', '_package': 'lender', 'modality': 'm'}, ex_only))
+
+    arch_only = policy_with_borrow(kinds=['archetypes'])
+    check('kinds:[archetypes] borrows session designs but not movements',
+          provenance.allows_archetype({'id': 'z', '_package': 'lender', 'modality': 'm'}, arch_only)
+          and not provenance.allows_exercise({'id': 'squat', '_packages': ['lender']}, arch_only))
+
+    check('omitted kinds borrows both',
+          provenance.allows_archetype({'id': 'z', '_package': 'lender', 'modality': 'm'}, any_mod)
+          and provenance.allows_exercise({'id': 'squat', '_packages': ['lender']}, any_mod))
+
     check('self-reference in borrows_from is ignored',
           provenance._parse_borrows({'id': 'owner', 'borrows_from': [{'package': 'owner'}]}) == {})
 

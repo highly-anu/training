@@ -33,6 +33,10 @@ notes: >
   domains — this philosophy has no conditioning prescription beyond "don't do much."
   Novice completion benchmarks: squat 1.5× BW, deadlift 2× BW, press 0.75× BW.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: linear_progression
 
 framework_groups:
