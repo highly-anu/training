@@ -287,6 +287,11 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'error':       ea.get('error'),
         'load_note':   load_note,
         'notes':       slot.get('notes'),
+        # Links an amrap_movement component to the amrap slot it belongs to.
+        # Without it these render as separate sequential exercises instead of
+        # as the movements of one AMRAP.
+        'parent_slot_role': slot.get('parent_slot_role'),
+        'skip_exercise':    bool(slot.get('skip_exercise')),
     }
 
 
@@ -1783,6 +1788,7 @@ def update_profile():
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
 
+
         # Build profile data dict; use `or []` so a null body field never overwrites stored data with null
         profile_data = {
             'trainingLevel': body.get('trainingLevel') or 'intermediate',
@@ -1851,6 +1857,9 @@ def get_user_program_endpoint():
                         pass
                 except Exception as heal_err:
                     app.logger.warning('program heal error: %s', heal_err)
+        if isinstance(program, dict):
+            from src.db import get_program_revision
+            program['revision'] = get_program_revision(user_id)
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
@@ -1882,22 +1891,84 @@ def save_user_program_endpoint():
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
 
+        # Optimistic concurrency.
+        #
+        # Every client previously blind-overwrote the whole program. iOS sends a
+        # weeks-only payload (Swift Codable drops unknown keys), so a phone
+        # holding a stale copy could replace a program generated on the web
+        # minutes earlier, and the goal back-fill welded the new program's goal
+        # onto the old program's weeks — exactly the state this account reached.
+        #
+        # A client that read revision R may only write while the stored revision
+        # is still R. Anything else is rejected with 409 so the client re-pulls
+        # instead of destroying newer work. `revision` is omitted by older
+        # clients, which keep the previous (unchecked) behaviour.
+        from src.db import get_program_revision
+        base_rev = body.pop('baseRevision', None) or body.pop('revision', None)
+        if base_rev is not None:
+            current_rev = get_program_revision(user_id)
+            if current_rev is not None and str(base_rev) != str(current_rev):
+                app.logger.info('program save rejected: stale base %s != %s',
+                                base_rev, current_rev)
+                return jsonify({
+                    'saved': False,
+                    'detail': 'stale_revision',
+                    'currentRevision': current_rev,
+                }), 409
+
         # When the iOS app saves after move/replace, GeneratedProgram only contains
         # `weeks` (Swift Codable strips unknown fields on re-encode). Preserve the
         # goal, constraints, validation, and volume_summary from the existing stored
         # program so the web overview stays functional.
+        #
+        # But only when the program is still the SAME one. Copying the stored goal
+        # forward unconditionally fossilised it: once iOS wrote back a program, the
+        # old goal was carried across every later save, so a record could end up
+        # with sourceGoalIds ['uphill_athlete'] and goal '_phil_horsemen_gpp'. When
+        # the source goals change, the goal is re-derived instead of inherited.
         current = body.get('currentProgram') or {}
         if current and 'goal' not in current:
-            existing = get_user_program(user_id)
-            if existing:
-                existing_cp = existing.get('currentProgram') or {}
-                for field in ('goal', 'constraints', 'validation', 'volume_summary'):
-                    if field in existing_cp and field not in current:
-                        current[field] = existing_cp[field]
-                body['currentProgram'] = current
+            existing = get_user_program(user_id) or {}
+            existing = _normalize_program_keys(existing) if existing else {}
+            existing_cp = existing.get('currentProgram') or {}
+
+            new_ids = body.get('sourceGoalIds') or []
+            old_ids = existing.get('sourceGoalIds') or []
+            same_goal = (sorted(new_ids) == sorted(old_ids))
+
+            for field in ('constraints', 'validation'):
+                if field in existing_cp and field not in current:
+                    current[field] = existing_cp[field]
+
+            if same_goal and 'goal' in existing_cp:
+                current['goal'] = existing_cp['goal']
+            elif new_ids:
+                # Source goals changed — rebuild rather than inherit a stale goal.
+                try:
+                    all_frameworks = list(loader.load_all_frameworks().values())
+                    if len(new_ids) == 1:
+                        current['goal'] = _philosophy_to_goal(new_ids[0], all_frameworks)
+                    else:
+                        weights = body.get('sourceGoalWeights') or {}
+                        current['goal'] = _blend_philosophy_goals(new_ids, weights, all_frameworks)
+                except Exception as goal_err:
+                    app.logger.warning('goal rebuild error: %s', goal_err)
+
+            # volume_summary describes THESE weeks, so recompute it rather than
+            # inheriting a summary of a different program.
+            if 'volume_summary' not in current:
+                try:
+                    current['volume_summary'] = [
+                        _week_volume(w) for w in current.get('weeks', [])
+                    ]
+                except Exception:
+                    if 'volume_summary' in existing_cp:
+                        current['volume_summary'] = existing_cp['volume_summary']
+
+            body['currentProgram'] = current
 
         save_user_program(user_id, body)
-        return jsonify({'saved': True})
+        return jsonify({'saved': True, 'revision': get_program_revision(user_id)})
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
@@ -1994,6 +2065,11 @@ def _infer_slot_type(load: dict, explicit) -> str:
         return explicit
     if _pick(load, 'distance_km', 'distanceKm') is not None:
         return 'distance'
+    # Sub-500m carries (40m farmer carry, 20m bear crawl) keep distance_m rather
+    # than distance_km. Without this they fell through to sets_reps and rendered
+    # as "?x?" on the watch.
+    if _pick(load, 'distance_m', 'distanceM') is not None:
+        return 'distance'
     if _pick(load, 'hold_seconds', 'holdSeconds') is not None:
         return 'static_hold'
     if _pick(load, 'format') is not None:
@@ -2041,6 +2117,12 @@ def _fmt_watch_load(slot_type: str, load: dict) -> str:
     if slot_type == 'emom':
         mins = _pick(load, 'time_minutes', 'timeMinutes')
         rounds = _pick(load, 'target_rounds', 'targetRounds')
+        work = _pick(load, 'work_sec', 'workSec')
+        rest = _pick(load, 'rest_sec', 'restSec')
+        if rounds is not None and work:
+            # e.g. "8 x 20s/10s" (Tabata) or "10 x 60s" (EMOM strength)
+            span = f'{work}s/{rest}s' if rest else f'{work}s'
+            return f'{rounds} x {span}'
         if mins is not None and rounds is not None:
             return f'{mins} min / {rounds} rounds'
         return _pick(load, 'format') or 'EMOM'
@@ -2052,7 +2134,17 @@ def _fmt_watch_load(slot_type: str, load: dict) -> str:
         return f'{rounds} rounds for time' if rounds is not None else 'For time'
     if slot_type == 'distance':
         km = _pick(load, 'distance_km', 'distanceKm')
-        return f'{km} km' if km is not None else 'Distance'
+        if km is not None:
+            pack = _pick(load, 'pack_load_kg', 'packLoadKg')
+            return f'{km} km' + (f' @ {pack} kg' if pack is not None else '')
+        m = _pick(load, 'distance_m', 'distanceM')
+        if m is not None:
+            sets = _pick(load, 'sets')
+            return (f'{sets}x{m} m' if sets is not None else f'{m} m')
+        return 'Distance'
+    if slot_type == 'amrap_movement':
+        rpr = _pick(load, 'reps_per_round', 'repsPerRound')
+        return f'{rpr} reps / round' if rpr is not None else 'Per round'
     if slot_type == 'static_hold':
         secs = _pick(load, 'hold_seconds', 'holdSeconds')
         prefix = f'{sets}×' if sets is not None else ''
@@ -2060,38 +2152,76 @@ def _fmt_watch_load(slot_type: str, load: dict) -> str:
     return ''
 
 
+def _humanize_role(role: str) -> str:
+    """'positional_sparring' -> 'Positional Sparring'. Names exercise-less blocks."""
+    return (role or 'Block').replace('_', ' ').title()
+
+
 def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
+    """Project one exercise assignment into the compact watch shape.
+
+    Slots flagged `skip_exercise` (BJJ drilling/rolling rounds, circuit round
+    wrappers) resolve to no exercise at all. Returning None for those meant a
+    whole bjj_class session arrived at the watch as an empty exercise list, so
+    they are projected as named meta blocks instead.
+    """
     ex = ea.get('exercise')
-    if not ex or ea.get('injury_skip') or ea.get('injurySkip'):
+    if ea.get('injury_skip') or ea.get('injurySkip'):
         return None
+    is_meta = bool(ea.get('meta')) or bool(_pick(ea, 'skip_exercise', 'skipExercise'))
+    if not ex and not is_meta:
+        return None
+    ex = ex or {}
+
     load = ea.get('load') or {}
     slot_type = _infer_slot_type(load, _pick(ea, 'slot_type', 'slotType'))
     zone_target = _pick(load, 'zone_target', 'zoneTarget')
-    zlo, zhi = _parse_zone_range(zone_target)
+    # Prefer the structured bounds the engine now emits; fall back to parsing the
+    # label for programs generated before that change.
+    zlo = _pick(load, 'zone_lower', 'zoneLower')
+    zhi = _pick(load, 'zone_upper', 'zoneUpper')
+    if zlo is None:
+        zlo, zhi = _parse_zone_range(zone_target)
     rest = _pick(ea, 'rest_sec', 'restSec')
     if rest is None:
         rest = _MODALITY_REST_DEFAULTS.get(modality)
     reps = _pick(load, 'reps')
+    slot_role = _pick(ea, 'slot_role', 'slotRole') or ''
+    patterns = ex.get('movement_patterns') or []
+
     return {
         'exerciseId': ex.get('id'),
-        'name': ex.get('name'),
+        'name': ex.get('name') or _humanize_role(slot_role),
         'slotType': slot_type,
-        'slotRole': _pick(ea, 'slot_role', 'slotRole') or '',
-        'isMeta': bool(ea.get('meta')),
+        'slotRole': slot_role,
+        'isMeta': is_meta,
         'loadDescription': _fmt_watch_load(slot_type, load),
         'loadNote': _pick(ea, 'load_note', 'loadNote'),
         'coachingCue': _pick(ea, 'notes') or ex.get('notes'),
+        # Identity — drives the movement-pattern icon and side alternation.
+        'category': ex.get('category'),
+        'movementPattern': patterns[0] if patterns else None,
+        'bilateral': ex.get('bilateral'),
         'sets': _pick(load, 'sets'),
         'reps': str(reps) if reps is not None else None,
         'weightKg': _pick(load, 'weight_kg', 'weightKg', 'suggested_weight_kg', 'suggestedWeightKg'),
         'targetRpe': _pick(load, 'target_rpe', 'targetRpe'),
+        'rir': _pick(load, 'rir'),
         'durationMinutes': _pick(load, 'duration_minutes', 'durationMinutes'),
         'zoneTarget': zone_target,
         'timeMinutes': _pick(load, 'time_minutes', 'timeMinutes'),
         'targetRounds': _pick(load, 'target_rounds', 'targetRounds'),
         'emomFormat': _pick(load, 'format'),
+        # Real interval structure — Tabata's 20s/10s, EMOM's 60s window.
+        'workSec': _pick(load, 'work_sec', 'workSec'),
+        'intervalRestSec': _pick(load, 'rest_sec', 'restSec'),
         'holdSeconds': _pick(load, 'hold_seconds', 'holdSeconds'),
         'distanceKm': _pick(load, 'distance_km', 'distanceKm'),
+        'distanceM': _pick(load, 'distance_m', 'distanceM'),
+        'repsPerRound': _pick(load, 'reps_per_round', 'repsPerRound'),
+        'packLoadKg': _pick(load, 'pack_load_kg', 'packLoadKg'),
+        'focus': _pick(load, 'focus'),
+        'parentSlotRole': _pick(ea, 'parent_slot_role', 'parentSlotRole'),
         'restSeconds': rest,
         'prescribedZoneLower': zlo,
         'prescribedZoneUpper': zhi,
@@ -2149,19 +2279,41 @@ def get_today_session():
         out_sessions.append({
             'sessionId': f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}",
             'modalityId': modality,
+            # Archetype identity drives the client's per-archetype behavior table
+            # (TGU side alternation, Tabata work/rest, BJJ round names, ...) and
+            # the category icon. Previously only the display name was sent.
+            'archetypeId': archetype.get('id'),
             'archetypeName': archetype.get('name') or modality,
+            'archetypeCategory': archetype.get('category'),
             'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
             'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
             'exercises': exercises,
         })
 
+    try:
+        readiness = _compute_readiness(
+            _health.get_recent_bio_logs(g.user_id, days=14),
+            _health.get_session_logs(g.user_id),
+            user_id=g.user_id,
+        )
+    except Exception:
+        readiness = None
+
     return jsonify({
         'status': 'ok',
         'date': str(today),
-        'weekNumber': _pick(week, 'week_number', 'weekNumber'),
+        # Position in the program, not the stored absolute week_number.
+        # programStartDate anchors weeks[0] as week 1, so a program whose weeks
+        # are numbered 16..31 (the tail of an earlier plan) was reporting
+        # "week 16" on its first day. absoluteWeekNumber keeps the stored value
+        # for anything that genuinely wants it.
+        'weekNumber': week_index + 1,
+        'totalWeeks': len(weeks),
+        'absoluteWeekNumber': _pick(week, 'week_number', 'weekNumber'),
         'phase': week.get('phase'),
         'dayName': day_name,
         'isRestDay': len(out_sessions) == 0,
+        'readiness': readiness,
         'sessions': out_sessions,
     })
 

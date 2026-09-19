@@ -140,6 +140,39 @@ def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool)
     return result
 
 
+# Canonical intensity token -> (zone_lower, zone_upper, label).
+# Archetype slots carry intensity as one of these tokens; everything downstream
+# (the watch HR band, the web zone chip) needs a real 1-5 zone range, not the raw
+# token. Previously only 'zone2' produced a parseable label, so every Z3/Z4/Z5
+# prescription reached the client with no HR bounds at all.
+_INTENSITY_ZONES: dict[str, tuple[int, int, str]] = {
+    'zone1':       (1, 1, 'Zone 1 (recovery)'),
+    'zone2':       (1, 2, 'Zone 1-2 (conversational pace)'),
+    'zone3':       (3, 3, 'Zone 3 (tempo)'),
+    'zone4':       (4, 4, 'Zone 4 (threshold)'),
+    'zone4_5':     (4, 5, 'Zone 4-5 (VO2max)'),
+    'zone5':       (5, 5, 'Zone 5 (maximal)'),
+    'light':       (1, 2, 'Zone 1-2 (light)'),
+    'low':         (1, 2, 'Zone 1-2 (easy)'),
+    'moderate':    (2, 3, 'Zone 2-3 (moderate)'),
+    'work_pace':   (2, 3, 'Zone 2-3 (work pace)'),
+    'high':        (3, 4, 'Zone 3-4 (hard)'),
+    'hard':        (3, 4, 'Zone 3-4 (hard)'),
+    'max':         (4, 5, 'Zone 4-5 (max effort)'),
+    'progressing': (2, 4, 'Zone 2-4 (progressive)'),
+}
+
+
+def zone_band(intensity) -> tuple[Optional[int], Optional[int], Optional[str]]:
+    """(lower, upper, label) for an archetype intensity token, or (None, None, token)."""
+    if not isinstance(intensity, str):
+        return None, None, None
+    entry = _INTENSITY_ZONES.get(intensity.strip().lower())
+    if entry is None:
+        return None, None, intensity
+    return entry[0], entry[1], entry[2]
+
+
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
                   max_minutes: int | None = None) -> dict:
     # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
@@ -168,8 +201,14 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     if max_minutes is not None:
         minutes = min(minutes, max_minutes)
     intensity = slot.get('intensity', 'zone2')
-    zone_label = 'Zone 1–2 (conversational pace)' if intensity == 'zone2' else intensity
-    return {'duration_minutes': minutes, 'zone_target': zone_label}
+    lo, hi, label = zone_band(intensity)
+    out = {'duration_minutes': minutes, 'zone_target': label or intensity}
+    if slot.get('pack_load_kg') is not None:
+        out['pack_load_kg'] = slot['pack_load_kg']
+    if lo is not None:
+        out['zone_lower'] = lo
+        out['zone_upper'] = hi
+    return out
 
 
 def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: bool) -> dict:
@@ -177,8 +216,17 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
     intensity = slot.get('intensity', 'zone2')
 
     # Short fixed per-set distances (e.g. 40m carry sets) — no scaling
+    lo, hi, label = zone_band(intensity)
+    pack = slot.get('pack_load_kg')
     if base_m < 500:
-        return {'distance_m': base_m, 'intensity': intensity}
+        short = {'distance_m': base_m, 'intensity': intensity}
+        if pack is not None:
+            short['pack_load_kg'] = pack
+        if lo is not None:
+            short['zone_target'] = label
+            short['zone_lower'] = lo
+            short['zone_upper'] = hi
+        return short
 
     level_mult = {'novice': 0.5, 'intermediate': 0.75, 'advanced': 1.0, 'elite': 1.25}
     phase_mult = {'base': 1.0, 'build': 1.25, 'peak': 1.40, 'taper': 0.60, 'deload': 0.60}
@@ -191,11 +239,42 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
     if is_deload:
         distance_m *= 0.60
 
-    return {'distance_km': round(distance_m / 1000, 1), 'intensity': intensity}
+    out = {'distance_km': round(distance_m / 1000, 1), 'intensity': intensity}
+    if pack is not None:
+        out['pack_load_kg'] = pack
+    if lo is not None:
+        out['zone_target'] = label
+        out['zone_lower'] = lo
+        out['zone_upper'] = hi
+    return out
 
 
 def _density_slot(slot: dict, week: int, is_deload: bool) -> dict:
     duration_sec = slot.get('duration_sec', slot.get('time_cap_sec', 1200))
+    slot_type = slot.get('slot_type', 'amrap')
+
+    # Structured intervals (work_sec/rest_sec) are prescriptions, not something to
+    # derive. Tabata is 8 x 20s/10s: `sets` IS the round count and `duration_sec`
+    # IS the work period. Collapsing that into rounds = duration/180 destroyed the
+    # protocol -- it produced "5 min / 1 round" for a 4-minute 8-round block.
+    work_sec = slot.get('work_sec')
+    rest_sec = slot.get('rest_sec')
+    if work_sec is None and slot_type == 'emom' and slot.get('sets'):
+        work_sec = duration_sec          # emom slots carry the work period here
+
+    if work_sec:
+        rounds = slot.get('sets') or max(1, round(duration_sec / max(1, work_sec)))
+        if is_deload:
+            rounds = max(1, round(rounds * 0.70))
+        cycle = work_sec + (rest_sec or 0)
+        return {
+            'time_minutes': max(1, round((rounds * cycle) / 60)),
+            'target_rounds': rounds,
+            'work_sec': work_sec,
+            'rest_sec': rest_sec or 0,
+            'format': slot_type.upper(),
+        }
+
     base_rounds = max(1, round(duration_sec / 180))
     rounds = base_rounds + max(0, week - 1)
 
@@ -203,17 +282,30 @@ def _density_slot(slot: dict, week: int, is_deload: bool) -> dict:
         rounds = max(1, round(rounds * 0.70))
         duration_sec = round(duration_sec * 0.75)
 
-    slot_type = slot.get('slot_type', 'amrap').upper()
     return {
         'time_minutes': max(5, round(duration_sec / 60)),
         'target_rounds': rounds,
-        'format': slot_type,
+        'format': slot_type.upper(),
     }
 
 
 def _skill_slot(slot: dict) -> dict:
-    minutes = slot.get('duration_minutes', 15)
-    return {'duration_minutes': minutes, 'focus': 'movement quality over quantity'}
+    # Honor duration_sec and sets/rest_sec. movement_flow prescribes 3 x 5-min
+    # floreio blocks as {sets: 3, duration_sec: 300, rest_sec: 90}; discarding all
+    # three rendered it as a single undifferentiated "15 min".
+    if 'duration_minutes' in slot:
+        minutes = slot['duration_minutes']
+    elif 'duration_sec' in slot:
+        minutes = max(1, round(slot['duration_sec'] / 60))
+    else:
+        minutes = 15
+    out = {'duration_minutes': minutes, 'focus': 'movement quality over quantity'}
+    sets = slot.get('sets')
+    if sets and sets > 1:
+        out['sets'] = sets
+    if slot.get('rest_sec'):
+        out['rest_sec'] = slot['rest_sec']
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +357,11 @@ def calculate_load(
         return _skill_slot(slot)
 
     elif slot_type == 'static_hold':
-        duration = slot.get('hold_seconds', 30)
+        # Four of the five static_hold archetypes write duration_sec, not
+        # hold_seconds, and were silently falling back to the 30s default.
+        duration = slot.get('hold_seconds')
+        if duration is None:
+            duration = slot.get('duration_sec', 30)
         sets = slot.get('sets', 3)
         return {'sets': sets, 'hold_seconds': duration}
 

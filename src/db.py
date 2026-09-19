@@ -138,6 +138,31 @@ def save_user_profile(user_id: str, profile_data: dict[str, Any]) -> None:
             raise
 
 
+def get_program_revision(user_id: str) -> str | None:
+    """Opaque revision token for the stored program (its updated_at).
+
+    Clients echo this back when saving so a write based on a stale read can be
+    rejected instead of silently clobbering a newer program.
+    """
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute('SELECT updated_at FROM user_programs WHERE user_id = %s',
+                            (user_id,))
+                row = cur.fetchone()
+                return row[0].isoformat() if row and row[0] else None
+        except Exception as e:
+            print(f"Error fetching program revision: {e}")
+            return None
+    _ensure_local_storage()
+    safe_id = user_id.replace('/', '_').replace('\\', '_')
+    program_path = _local_storage_dir / f'{safe_id}_program.json'
+    if program_path.exists():
+        return str(program_path.stat().st_mtime)
+    return None
+
+
 def get_user_program(user_id: str) -> dict[str, Any] | None:
     """Fetch user's current program from database or local file."""
     conn = _get_pg_conn()

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os as _os
 import yaml as _yaml
 from typing import Optional
+from src.progression import zone_band as _zone_band
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -616,14 +617,35 @@ def populate_session(
         slot_role = slot.get('role', f'slot_{i}')
         slot_type = slot.get('slot_type', 'sets_reps')
 
-        # Meta/structural slots don't get individual exercise assignments
+        # Meta/structural slots don't get individual exercise assignments.
+        # They still carry a prescription, though: a BJJ drilling round is
+        # "25 minutes at moderate intensity" whether or not an exercise resolves
+        # for it. Emitting an empty load left these blocks with no duration for
+        # any client to time, which is why a bjj_class session showed up on the
+        # watch as four unusable rows.
         if slot.get('skip_exercise'):
+            meta_load = {}
+            if 'duration_minutes' in slot:
+                meta_load['duration_minutes'] = slot['duration_minutes']
+            elif 'duration_sec' in slot:
+                meta_load['duration_minutes'] = max(1, round(slot['duration_sec'] / 60))
+            if slot.get('sets'):
+                meta_load['sets'] = slot['sets']
+            intensity = slot.get('intensity')
+            if intensity:
+                lo, hi, label = _zone_band(intensity)
+                meta_load['intensity'] = intensity
+                if lo is not None:
+                    meta_load['zone_target'] = label
+                    meta_load['zone_lower'] = lo
+                    meta_load['zone_upper'] = hi
             exercise_assignments.append({
                 'slot_index': i,
                 'slot_role': slot_role,
                 'slot_type': slot_type,
                 'exercise': None,
                 'slot': slot,
+                'load': meta_load,
                 'meta': True,
             })
             if collect_trace:
