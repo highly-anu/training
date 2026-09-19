@@ -11,6 +11,7 @@ import { useOntology } from '@/api/ontology'
 import { useGenerateWithTrace } from '@/api/programs'
 import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { belongsToPackage } from '@/lib/provenance'
 import {
   Select,
   SelectContent,
@@ -77,7 +78,7 @@ function NodeInfoPanel({
   const groupKey = node.id.replace('exercise_group::', '')
   const exercises = node.layer === 'exercise_group'
     ? [...(graphData.exercisesByGroup[groupKey] ?? [])]
-        .filter(ex => !activePackage || !ex._package || ex._package === activePackage)
+        .filter(ex => belongsToPackage(ex, activePackage))
         .sort((a, b) => b.rawCount - a.rawCount)
     : []
   // Modality-only: exercise_groups reachable through scoped child archetypes
@@ -199,7 +200,7 @@ function NodeInfoPanel({
                     const gKey = c.id.replace('exercise_group::', '')
                     const allEx = graphData.exercisesByGroup[gKey] ?? []
                     const scopedEx = activePackage
-                      ? allEx.filter(ex => !ex._package || ex._package === activePackage)
+                      ? allEx.filter(ex => belongsToPackage(ex, activePackage))
                       : allEx
                     countLabel = ` (${scopedEx.length})`
                   }

@@ -243,7 +243,10 @@ export interface Exercise extends ExerciseMedia {
   weekly_increment_kg?: number
   sources: string[]
   notes?: string
+  /** First package to declare this id. Display only — use _packages for provenance. */
   _package?: string
+  /** Every package that declares this exercise id. */
+  _packages?: string[]
 }
 
 // ─── Archetypes ───────────────────────────────────────────────────────────────
@@ -405,7 +408,8 @@ export interface CandidateScore {
   name: string
   score: number
   breakdown: Record<string, number>
-  package?: string  // Philosophy package ID (for exercises)
+  package?: string  // First declaring package (display only)
+  packages?: string[]  // Every philosophy package declaring this exercise id
 }
 
 export interface ArchetypeTrace {

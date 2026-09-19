@@ -3,6 +3,7 @@ import { HeatmapNode } from './HeatmapNode'
 import { HeatmapEdge } from './HeatmapEdge'
 import type { HeatmapGraphData, LayerKind, ExerciseInGroup } from './useHeatmapData'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { belongsToPackage } from '@/lib/provenance'
 import type { ModalityId } from '@/api/types'
 import { motion } from 'framer-motion'
 
@@ -244,7 +245,7 @@ export function HeatmapGraph({
         if (!id.startsWith('exercise_group::')) continue
         const key = id.replace('exercise_group::', '')
         for (const ex of (data.exercisesByGroup[key] ?? [])) {
-          if (activePackage && ex._package && ex._package !== activePackage) continue
+          if (!belongsToPackage(ex, activePackage)) continue
           exItems.push({ ...ex, groupId: id })
         }
       }

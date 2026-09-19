@@ -10,6 +10,7 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { Badge } from '@/components/ui/badge'
+import { belongsToPackage } from '@/lib/provenance'
 import {
   Select,
   SelectContent,
@@ -1425,7 +1426,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
   // Only show exercises belonging to this package in slot matching.
   // Cross-package exercises are valid for generation but misleading in the explorer.
   const philosophyExercises = useMemo(
-    () => selectedId ? exercises.filter(ex => ex._package === selectedId) : exercises,
+    () => selectedId ? exercises.filter(ex => belongsToPackage(ex, selectedId)) : exercises,
     [exercises, selectedId],
   )
 

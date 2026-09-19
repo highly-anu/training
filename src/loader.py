@@ -128,12 +128,28 @@ def load_all_exercises() -> tuple[dict, dict]:
         pkg_id = os.path.basename(os.path.dirname(path))
         pkg_exercises: dict = {}
         data = _load_yaml(path)
-        for ex in data.get('exercises', []):
-            ex = dict(ex)
-            ex['_package'] = pkg_id
-            pkg_exercises[ex['id']] = ex
-            if ex['id'] not in global_index:
-                global_index[ex['id']] = ex
+        for raw_ex in data.get('exercises', []):
+            ex_id = raw_ex['id']
+
+            # Package-scoped copy — carries this package's prescription fields.
+            pkg_ex = dict(raw_ex)
+            pkg_ex['_package'] = pkg_id
+            pkg_ex['_packages'] = [pkg_id]
+            pkg_exercises[ex_id] = pkg_ex
+
+            # Global copy — structural fields are first-seen-wins, but _packages
+            # accumulates EVERY package that declares this id. 76 exercise ids are
+            # declared by more than one package; using the first declarer as the
+            # owner mislabels 33/79 horsemen_gpp and 8/13 starting_strength ids.
+            # Provenance decisions must read _packages, never _package.
+            existing = global_index.get(ex_id)
+            if existing is None:
+                global_ex = dict(raw_ex)
+                global_ex['_package'] = pkg_id      # display back-compat only
+                global_ex['_packages'] = [pkg_id]
+                global_index[ex_id] = global_ex
+            elif pkg_id not in existing['_packages']:
+                existing['_packages'].append(pkg_id)
         by_package[pkg_id] = pkg_exercises
     return global_index, by_package
 

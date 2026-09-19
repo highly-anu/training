@@ -414,10 +414,15 @@ def select_exercise(
                 continue
             n_pool += 1
 
-            # Philosophy package filter
+            # Philosophy package filter. Read _packages (every package that declares
+            # this id), not _package (first declarer) — otherwise an exercise the
+            # philosophy genuinely owns is rejected because another package happens
+            # to declare the same id earlier in glob order.
             if restrict_to_primary and primary_sources:
-                ex_package = ex.get('_package')
-                if ex_package and ex_package not in primary_sources:
+                ex_packages = ex.get('_packages') or (
+                    [ex['_package']] if ex.get('_package') else []
+                )
+                if ex_packages and not set(ex_packages) & primary_sources:
                     continue
             n_package += 1
 
@@ -505,6 +510,7 @@ def select_exercise(
                 'id': ex['id'],
                 'name': ex.get('name', ex['id']),
                 'package': ex.get('_package', ''),
+                'packages': ex.get('_packages', []),
                 'score': round(_score_ex(ex)[0], 2),
                 'breakdown': {
                     'recency_penalty': -sum(2 for eid in recent if eid == ex['id']),
