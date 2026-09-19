@@ -38,6 +38,8 @@ slots:
     slot_type: emom
     sets: 6
     distance_m: 500
+    work_sec: 110
+    rest_sec: 180
     intensity: zone4
     exercise_filter:
       category: aerobic

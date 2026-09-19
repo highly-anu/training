@@ -24,6 +24,7 @@ slots:
   slot_type: time_domain
   duration_minutes: 100
   intensity: zone2
+  pack_load_kg: 15
   exercise_filter:
     category: loaded_carry
 - role: cooldown

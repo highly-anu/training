@@ -24,21 +24,6 @@ notes: >
   Typically follows a brief barbell warm-up; do not precede with heavy volume work.
 
 slots:
-  - role: primary_emom_lift
-    slot_type: emom
-    sets: 10
-    reps: 1
-    duration_sec: 60
-    intensity: heavy
-    intensity_pct_1rm: 0.90
-    exercise_filter:
-      category: barbell
-      bilateral: true
-    notes: >
-      One rep per minute for 10 minutes. Default movement is back squat or deadlift.
-      Load wave: start at 85%, build to 92–95% by set 5, descend to 85–87% by set 10.
-      If any rep looks or feels poor, reduce load and hold there; no grinding.
-
   - role: barbell_warm_up
     slot_type: sets_reps
     sets: 3
@@ -51,6 +36,23 @@ slots:
       category: barbell
       bilateral: true
     notes: "Three brief warm-up sets at 50–65% before the EMOM block. Keep reps crisp and fast."
+
+  - role: primary_emom_lift
+    slot_type: emom
+    sets: 10
+    reps: 1
+    duration_sec: 60
+    work_sec: 60
+    rest_sec: 0
+    intensity: heavy
+    intensity_pct_1rm: 0.90
+    exercise_filter:
+      category: barbell
+      bilateral: true
+    notes: >
+      One rep per minute for 10 minutes. Default movement is back squat or deadlift.
+      Load wave: start at 85%, build to 92–95% by set 5, descend to 85–87% by set 10.
+      If any rep looks or feels poor, reduce load and hold there; no grinding.
 
   - role: accessory_pull
     slot_type: sets_reps

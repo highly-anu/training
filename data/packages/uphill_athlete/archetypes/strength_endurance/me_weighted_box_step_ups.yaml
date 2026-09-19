@@ -23,6 +23,7 @@ slots:
   slot_type: time_domain
   duration_minutes: 50
   intensity: high
+  pack_load_kg: 18
   exercise_filter:
     category: loaded_carry
 - role: cooldown

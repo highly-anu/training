@@ -43,6 +43,7 @@ slots:
 
   - role: amrap_pull
     slot_type: amrap_movement
+    parent_slot_role: amrap_main
     reps_per_round: 10
     exercise_filter:
       movement_pattern: pull
@@ -51,6 +52,7 @@ slots:
 
   - role: amrap_push
     slot_type: amrap_movement
+    parent_slot_role: amrap_main
     reps_per_round: 10
     exercise_filter:
       movement_pattern: push

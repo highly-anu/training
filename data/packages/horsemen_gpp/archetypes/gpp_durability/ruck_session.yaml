@@ -32,6 +32,7 @@ slots:
   slot_type: distance
   distance_m: 12000
   intensity: zone2
+  pack_load_kg: 20
   exercise_filter:
     movement_pattern: ruck
     category: aerobic

@@ -33,6 +33,8 @@ slots:
     slot_type: emom
     sets: 8
     duration_sec: 20
+    work_sec: 20
+    rest_sec: 10
     intensity: max
     notes: >
       8 intervals of 20 sec max effort / 10 sec rest. Select movement based on goal:
@@ -45,6 +47,8 @@ slots:
     slot_type: emom
     sets: 8
     duration_sec: 20
+    work_sec: 20
+    rest_sec: 10
     intensity: max
     notes: >
       Second 4-minute Tabata block after 60-sec rest. Use a different movement pattern
@@ -55,6 +59,8 @@ slots:
     slot_type: emom
     sets: 8
     duration_sec: 20
+    work_sec: 20
+    rest_sec: 10
     intensity: max
     notes: "Third block. Third modality (e.g., core or monostructural). Optional; include only when 3+ blocks are prescribed."
 
