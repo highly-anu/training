@@ -61,29 +61,32 @@ training/
 │       └── benchmark.schema.json
 │
 └── data/
-    ├── philosophies/                ← 11 YAML files, one per source
-    ├── frameworks/                  ← 9 YAML files, one per methodology
-    ├── modalities/                  ← 12 YAML files, one per training domain
-    ├── archetypes/                  ← 20 YAML files in 5 subdirectories
-    │   ├── strength/                    (3x5_linear, 5x5, hlm, emom_strength)
-    │   ├── conditioning/                (long_zone_2, threshold_intervals, mixed_modal_amrap, tabata, gym_jones_circuit)
-    │   ├── movement_skill/              (skill_ladder, movement_flow, joint_prep_circuit)
-    │   ├── gpp_durability/              (sandbag_complex, ruck_session, loaded_carry_circuit, bodyweight_circuit, horsemen_power_endurance)
-    │   └── kettlebell/                  (kb_ballistic_session, kb_pentathlon_training, tgu_practice)
-    ├── exercises/                   ← 191 exercises across 9 category files
-    │   ├── barbell.yaml             (27 exercises)
-    │   ├── kettlebell.yaml          (24 exercises)
-    │   ├── bodyweight.yaml          (31 exercises)
-    │   ├── aerobic.yaml             (16 exercises)
-    │   ├── carries.yaml             (16 exercises)
-    │   ├── sandbag.yaml             (15 exercises)
-    │   ├── mobility.yaml            (22 exercises)
-    │   ├── skill.yaml               (16 exercises)
-    │   └── rehab.yaml               (24 exercises)
-    ├── goals/                       ← 7 YAML files, one per goal profile
-    ├── constraints/
-    │   ├── injury_flags.yaml        ← 12 injury flags with exclusion rules
-    │   └── equipment_profiles.yaml  ← 5 preset equipment setups
+    ├── packages/                    ← one self-contained folder per philosophy
+    │   ├── atg/
+    │   ├── bjj/
+    │   ├── crossfit/
+    │   ├── gym_jones/
+    │   ├── horsemen_gpp/
+    │   ├── ido_portal/
+    │   ├── kelly_starrett/
+    │   ├── marcus_filly/
+    │   ├── starting_strength/
+    │   ├── uphill_athlete/
+    │   └── wildman_kettlebell/
+    │       ├── philosophy.yaml      ← beliefs, scope, framework_groups,
+    │       │                          self_contained, borrows_from
+    │       ├── frameworks/          ← the training styles this philosophy offers
+    │       ├── archetypes/          ← session shapes, one subdir per modality
+    │       ├── exercises.yaml       ← the movements this philosophy owns
+    │       ├── exercise_media.yaml  ← demo links per exercise
+    │       └── level_seeds.yaml     ← optional; what this philosophy assumes an
+    │                                  athlete at each level already knows
+    ├── commons/                     ← genuinely shared, owned by no philosophy
+    │   ├── modalities/              ← 12 YAML files, one per training domain
+    │   ├── movement_patterns.yaml   ← slot-filter aliases (press, hinge, carry…)
+    │   └── constraints/
+    │       ├── injury_flags.yaml    ← 12 injury flags with exclusion rules
+    │       └── equipment_profiles.yaml
     └── benchmarks/
         ├── cell_standards.yaml      ← Level I–V Cell Fitness standards
         ├── strength_standards.yaml  ← BW ratio standards for barbell lifts
@@ -100,7 +103,7 @@ The system is built as a hierarchy of composable layers. Each layer depends on t
 Philosophy → Framework → Modality → Archetype → Exercise → Progression → Constraints → Goal → Program
 ```
 
-### Layer 1: Philosophy (`data/philosophies/`)
+### Layer 1: Philosophy (`data/packages/<id>/philosophy.yaml`)
 
 The non-negotiable beliefs of each source. Governs what the system will and won't do when drawing from that methodology.
 
@@ -112,19 +115,19 @@ The non-negotiable beliefs of each source. Governs what the system will and won'
 
 ---
 
-### Layer 2: Framework (`data/frameworks/`)
+### Layer 2: Framework (`data/packages/<id>/frameworks/`)
 
 Structured approaches that define how sessions are allocated across the week. This is where programming decisions happen — how many sessions of each type, in what intensity split, with what progression mechanism.
 
 **Key fields:** `sessions_per_week` (map of modality → count), `intensity_distribution` (zone fractions summing to 1.0), `progression_model`, `applicable_when` (training level, days available), `incompatible_with` (interference rules with other frameworks)
 
-**9 frameworks:** Linear Progression, Block Periodization, Polarized 80/20, Concurrent Training, EMOM/AMRAP, High-Frequency Skill, GPP Circuits, RPE Autoregulation, KB Pentathlon
+**16 frameworks**, each owned by the package it belongs to. A philosophy lists the ones it offers in `framework_groups`: a `sequential` group is a phase progression (Uphill Athlete's transition → base → specific → taper), an `alternatives` group is a choice of training style (Horsemen's Concurrent Training vs GPP Circuits).
 
 **How it's used:** The generator selects a framework based on the goal profile's `framework_selection` field and the athlete's `training_level`. The framework's `sessions_per_week` object tells the scheduler how many slots of each modality to fill per week.
 
 ---
 
-### Layer 3: Modality (`data/modalities/`)
+### Layer 3: Modality (`data/commons/modalities/`)
 
 Categories of physical quality. Goal profiles weight these; the scheduler uses recovery costs and compatibility rules to place sessions on specific days.
 
@@ -136,7 +139,7 @@ Categories of physical quality. Goal profiles weight these; the scheduler uses r
 
 ---
 
-### Layer 4: Archetype (`data/archetypes/`)
+### Layer 4: Archetype (`data/packages/<id>/archetypes/`)
 
 Reusable workout shapes. Each archetype defines the structure of a session — how many exercise slots, of what type, in what format — without specifying which exercises fill them. Exercises are assigned at generation time by the selector.
 
@@ -144,19 +147,19 @@ Reusable workout shapes. Each archetype defines the structure of a session — h
 
 **Slot types:** `sets_reps`, `time_domain`, `distance`, `amrap`, `emom`, `for_time`, `skill_practice`, `static_hold`
 
-**20 archetypes** across 5 categories (see directory structure above)
+**62 archetypes**, each owned by its package. Every modality a package's framework prescribes must have at least one archetype in that package — `tools/check_provenance.py --coverage` reports any that do not.
 
 **How it's used:** The scheduler assigns archetypes to session slots based on modality match and constraint filtering. The 3×5 Linear archetype gets assigned to a max_strength slot; Long Zone 2 to an aerobic_base slot.
 
 ---
 
-### Layer 5: Exercise (`data/exercises/`)
+### Layer 5: Exercise (`data/packages/<id>/exercises.yaml`)
 
 Atomic training elements. Each exercise carries all metadata needed for filtering, prerequisite checking, and progression chaining.
 
 **Key fields:** `movement_patterns` (for injury exclusion matching), `equipment` (for constraint filtering), `requires` / `unlocks` (prerequisite graph edges), `contraindicated_with` (injury flag IDs), `effort` (low/medium/high/max), `progressions` (load/volume/complexity axes)
 
-**191 exercises** across 9 category files
+**388 exercises**, one `exercises.yaml` per package. 76 ids are declared by more than one package, each with that package's own prescription (loads, progressions, notes); `_packages` on the global index records every declarer, and provenance decisions read that rather than `_package`, which is only the first one seen.
 
 **How it's used:** The selector populates archetype slots with exercises. For each slot, it filters the exercise library by: modality match, equipment availability, no active contraindications, prerequisites met. The `requires`/`unlocks` fields across all exercises form a directed acyclic graph (DAG) — the generator builds this at runtime to enforce prerequisite checks.
 
@@ -165,15 +168,15 @@ Atomic training elements. Each exercise carries all metadata needed for filterin
 ### Layer 6: Progression (embedded in frameworks and exercises)
 
 Rules for how training advances over time. Not a separate data layer — progression logic lives in:
-- `frameworks/*.yaml` → `progression_model` field (which model governs this framework)
-- `exercises/*.yaml` → `progressions` object (load/volume/complexity axes per exercise)
+- `packages/<id>/frameworks/*.yaml` → `progression_model` field (which model governs this framework)
+- `packages/<id>/exercises.yaml` → `progressions` object (load/volume/complexity axes per exercise)
 - Phase 3 will formalize the algorithmic rules for each of the 9 progression models
 
 **9 progression models:** Linear Load, Density, Volume Block, Complexity, Time-to-Task, Intensity Split Shift, RPE Autoregulation, Pentathlon RPM, Range Progression
 
 ---
 
-### Layer 7: Constraints (`data/constraints/`)
+### Layer 7: Constraints (`data/commons/constraints/`)
 
 Runtime filters provided by the athlete. The constraint layer is the only layer that is not a library — it is input, not data.
 
@@ -187,13 +190,18 @@ Runtime filters provided by the athlete. The constraint layer is the only layer 
 
 ---
 
-### Layer 8: Goal Profile (`data/goals/`)
+### Layer 8: Goal (synthesised, not authored)
 
-Weighted priority vectors that tell the system what to optimize for. The goal profile is the primary input that drives framework selection, session allocation, and phase sequencing.
+`data/goals/` no longer exists. A goal is built at request time from the selected
+philosophy by `src/goals.py:philosophy_to_goal` — priorities come from the chosen
+framework's `sessions_per_week`, the phase sequence from the philosophy's
+`framework_groups`, and `primary_sources` from the philosophy id. Blends are a
+weighted average of the members' goals.
 
-**Key fields:** `priorities` (modality weights summing to 1.0), `phase_sequence` (ordered meso phases), `primary_sources` (philosophy IDs), `minimum_prerequisites` (entry benchmarks), `incompatible_with` (goals that cannot run concurrently), `framework_selection`
-
-**7 goal profiles:** Alpine Climbing, SOF Operator, BJJ Competitor, General GPP, Ultra Endurance, Max Strength Focus, Injury Rehab
+**Key fields:** `priorities` (modality weights summing to 1.0), `phase_sequence`
+(ordered meso phases), `primary_sources` (philosophy IDs, which drive the package
+source policy in `src/provenance.py`), `framework_selection` (default plus every
+style the philosophy offers)
 
 **How it's used:** The generator reads `priorities` to decide how many sessions of each modality to schedule per week (e.g. aerobic_base: 0.50 → roughly half of all sessions are aerobic). It reads `phase_sequence` to determine the current phase and adjust priorities with any `priority_override` defined for that phase.
 

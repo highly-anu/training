@@ -22,40 +22,35 @@ training/
 ├── requirements.txt          # pyyaml, flask, flask-cors
 ├── src/
 │   ├── generator.py          # Orchestrates full program generation
+│   ├── goals.py              # Builds the synthetic goal from a philosophy
+│   ├── provenance.py         # Which packages a goal may draw from
 │   ├── scheduler.py          # Assigns modalities to days (recovery-aware)
 │   ├── selector.py           # Selects archetypes and exercises per slot
 │   ├── progression.py        # Calculates loads (linear, RPE, time-domain)
 │   ├── validator.py          # Pre-flight feasibility checks
-│   ├── loader.py             # YAML data loading + caching
+│   ├── loader.py             # YAML data loading
 │   ├── output.py             # Markdown formatter
 │   └── summary.py            # Volume summary computation
+├── tools/
+│   ├── check_provenance.py   # Asserts no package leaks; --coverage reports gaps
+│   ├── check_styles.py       # Every philosophy x style validates and generates
+│   └── validate_entities.py  # YAML against docs/schemas/
 ├── data/
-│   ├── packages/             # 11 philosophy packages (philosophy + frameworks + exercises)
-│   │   ├── uphill_athlete/
-│   │   ├── starting_strength/
-│   │   ├── horsemen_gpp/
-│   │   ├── wildman_kettlebell/
-│   │   └── ...
-│   ├── commons/
-│   │   ├── modalities/       # 12 core modalities
-│   │   └── archetypes/       # ~25 workout archetypes across 5 categories
-│   │   ├── strength/         # 5x5, 3x5_linear, hlm, emom_strength, gym_jones_operator
-│   │   ├── conditioning/     # long_zone_2, threshold_intervals, mixed_modal_amrap,
-│   │   │                     #   tabata, gym_jones_circuit, gym_jones_accumulation, etc.
-│   │   ├── kettlebell/       # kb_double_strength, kb_ballistic, tgu_practice, etc.
-│   │   ├── gpp_durability/   # ruck_session, loaded_carry_circuit, bodyweight_circuit,
-│   │   │                     #   sandbag_complex, horsemen_power_endurance
-│   │   └── movement_skill/   # skill_ladder, movement_flow, joint_prep_circuit
-│   ├── exercises/            # ~198 exercises across 9 files (barbell, bodyweight,
-│   │                         #   kettlebell, aerobic, carries, mobility, skill,
-│   │                         #   rehab, gym_jones, sandbag)
-│   ├── modalities/           # 12 modality definitions
-│   ├── frameworks/           # 8 frameworks (linear_progression, polarized_80_20,
-│   │                         #   concurrent_training, gpp_circuits, etc.)
-│   ├── philosophies/         # Source philosophy YAMLs (reference only)
-│   ├── constraints/
-│   │   ├── injury_flags.yaml # 12 injury flags with excluded patterns + substitutions
-│   │   └── equipment_profiles.yaml
+│   ├── packages/             # 11 self-contained philosophy packages
+│   │   └── <philosophy_id>/
+│   │       ├── philosophy.yaml      # beliefs, scope, framework_groups,
+│   │       │                        #   self_contained, borrows_from
+│   │       ├── frameworks/          # the training styles it offers
+│   │       ├── archetypes/          # session shapes, one subdir per modality
+│   │       ├── exercises.yaml       # the movements it owns
+│   │       ├── exercise_media.yaml  # demo links
+│   │       └── level_seeds.yaml     # optional; per-level assumed knowledge
+│   ├── commons/              # shared, owned by no philosophy
+│   │   ├── modalities/              # 12 modality definitions
+│   │   ├── movement_patterns.yaml   # slot-filter aliases (press, hinge, carry…)
+│   │   └── constraints/
+│   │       ├── injury_flags.yaml    # 12 flags with patterns + substitutions
+│   │       └── equipment_profiles.yaml
 │   └── benchmarks/           # Strength + conditioning + cell standards
 ├── docs/plan.md              # Original design document (ontology reference)
 └── frontend/                 # React app (see below)
@@ -109,13 +104,32 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
 
 - **Injury flags**: excluded_movement_patterns blocks exercises by movement pattern; contraindicated_with blocks specific exercises. Slots whose required pattern is fully excluded show as `injury_skip` (not an error).
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
-- **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back to `aerobic_base`.
+- **Package provenance**: a program may only use its philosophy's own package, plus any package that philosophy declares in `borrows_from` (`src/provenance.py`). Enforcement is per philosophy via `self_contained: true` — all 11 are on. `api.py` and `generator.py` share one `SourcePolicy`, so validation and generation can never check different libraries. Borrowed sessions carry a `provenance` tag and are badged "via X" in the UI.
+- **Coverage gaps, not substitutions**: when a package cannot fill a slot, the slot is left empty and marked `coverage_gap` (the same way `injury_skip` marks an injury-blocked slot) rather than filled from another philosophy. Programs carry a `coverage_report` listing unfilled sessions, unfilled slots and borrowed sessions; `validate()` warns `PACKAGE_COVERAGE_GAP` per uncovered modality and only errors when every top-2 priority is uncoverable.
+- **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back within the allowed packages (equipment filter relaxed first, then `aerobic_base` → `durability` → `mobility`).
+- **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: auto-triggered every N weeks (per framework) or when `fatigue_state: overreached`.
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
 - **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
 - **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
 
+## Checks
+
+Run these after touching engine code or package data:
+
+```bash
+.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (125 files)
+.venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
+.venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
+.venv/bin/python tools/check_styles.py                   # every philosophy x style generates
+.venv/bin/python test_provenance.py                      # source-policy rules
+```
+
 ## Known Gaps / Next Work
 
-No open gaps. All planned features are implemented.
+- Non-blocking scope gaps remain: some packages declare a modality in `scope` that
+  their own frameworks never prescribe and that has no archetype (e.g. `power` and
+  `relative_strength` in several packages). `check_provenance.py --coverage` lists
+  them. These do not affect generation — nothing schedules them — so they are
+  authoring backlog rather than bugs.
