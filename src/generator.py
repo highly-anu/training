@@ -278,13 +278,13 @@ def generate(
     Generate a training program.
 
     Args:
-        goal_id:        ID from data/goals/ (e.g. 'alpine_climbing', 'general_gpp')
+        goal_id:        Identifier for logging/trace only; goal_dict supplies the content.
         constraints:    Dict matching constraints.schema.json
         num_weeks:      Weeks to generate (default 4); ignored when phase_schedule provided
         output_format:  'markdown' (default) or 'dict'
         phase_schedule: Optional list of {phase, week_in_phase, week_in_program} dicts.
                         When provided, generates exactly these weeks spanning phases.
-        goal_dict:      Pre-built goal dict (e.g. blended goal); skips load_goal when provided.
+        goal_dict:      The goal to generate for. Required — see src/goals.py.
         policy:         Package SourcePolicy; derived from the goal when omitted.
                         Pass the one api.py validated against so the two paths
                         can never check different libraries.
@@ -293,7 +293,15 @@ def generate(
         Formatted markdown string, or raw dict if output_format='dict'.
     """
     # --- Load data -----------------------------------------------------------
-    goal = goal_dict if goal_dict is not None else loader.load_goal(goal_id)
+    # goal_dict is always supplied by api.py and the tools; loader.load_goal was
+    # removed with the data/goals/ directory in the vertical migration, so calling
+    # it here raised AttributeError rather than reporting a missing goal.
+    if goal_dict is None:
+        raise ValueError(
+            f"generate() needs goal_dict. Goals are no longer loaded by id "
+            f"(got goal_id={goal_id!r}); build one with src.goals.philosophy_to_goal."
+        )
+    goal = goal_dict
     data = loader.load_all_data()
 
     # Narrow the library to the packages this goal may draw from. Archetypes used

@@ -280,6 +280,11 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
     # PHASE 1: Apply priority tier filtering if modalities_dict provided
     filtered_priorities = priorities
     if modalities_dict:
+        # A framework's own `committed` modalities are exempt. The global tiers put
+        # mobility and movement_skill at tier 4 ("needs 5+ days"), which is sensible
+        # when they are accessory work — but for Ido Portal and Kelly Starrett they
+        # ARE the philosophy, and a 4-day week was being emptied out entirely.
+        committed = set((framework.get('modality_priority') or {}).get('committed') or [])
         filtered_priorities = {}
         for mod, weight in priorities.items():
             if weight <= 0:
@@ -288,12 +293,22 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
             tier = modalities_dict.get(mod, {}).get('priority_tier', 3)
 
             # Tier thresholds: 1 (always), 2 (needs 3+ days), 3 (needs 4+ days), 4 (needs 5+ days)
-            if tier == 1 or days_per_week >= (tier + 1):
+            if tier == 1 or mod in committed or days_per_week >= (tier + 1):
                 filtered_priorities[mod] = weight
             else:
                 # Track dropped modalities
                 mod_name = mod.replace('_', ' ')
                 compromises.append(f"Dropped {mod_name} (tier {tier}) - needs {tier + 1}+ training days")
+
+        # Never filter a program down to nothing: keep the top-priority modality
+        # and say so, rather than returning an empty week.
+        if not filtered_priorities and priorities:
+            top = max(priorities.items(), key=lambda kv: kv[1])
+            filtered_priorities = {top[0]: top[1]}
+            compromises.append(
+                f"Kept {top[0].replace('_', ' ')} despite the day count — dropping every "
+                f"modality would leave an empty program."
+            )
 
     # PHASE 2: Calculate raw allocation (same logic as before)
     if fw_sessions:

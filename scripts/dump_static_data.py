@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""Dump static YAML reference data to JSON for frontend bundling.
+"""Dump benchmark standards to JSON for frontend bundling.
 
 Run from the repo root before `npm run build`:
     python scripts/dump_static_data.py
 
-Output goes to frontend/src/data/static/*.json.
-These files are imported directly by TanStack Query hooks, eliminating
-API calls for data that never changes at runtime.
+Output goes to frontend/src/data/static/benchmarks.json, imported directly by
+frontend/src/api/benchmarks.ts.
+
+This script used to dump exercises, modalities, frameworks, philosophies, goals
+and constraints too, reading the top-level data/<type>/ directories. The vertical
+package migration deleted those directories, so the script could not run and the
+dumps sat frozen at a pre-migration snapshot — 198 exercises against 388 live, a
+framework list still naming the deleted polarized_80_20 and missing every uphill
+phase framework. Nothing imported them, so they are gone; that data is served
+from the API, which reads the packages directly and cannot go stale.
 """
 from __future__ import annotations
 
-import glob
 import json
 import math
 import os
@@ -33,53 +39,11 @@ def _load_yaml(path: str) -> dict | list:
         return yaml.safe_load(f)
 
 
-def _all_goals() -> list[dict]:
-    goals = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'goals', '*.yaml'))):
-        goals.append(_load_yaml(path))
-    return goals
 
 
-def _all_exercises() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'exercises', '*.yaml'))):
-        data = _load_yaml(path)
-        for ex in data.get('exercises', []):
-            if isinstance(ex.get('sources'), str):
-                ex['sources'] = [ex['sources']]
-            result.append(ex)
-    return result
 
 
-def _all_modalities() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'modalities', '*.yaml'))):
-        result.append(_load_yaml(path))
-    return result
 
-
-def _all_frameworks() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'frameworks', '*.yaml'))):
-        result.append(_load_yaml(path))
-    return result
-
-
-def _all_philosophies() -> list[dict]:
-    result = []
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'philosophies', '*.yaml'))):
-        result.append(_load_yaml(path))
-    return result
-
-
-def _equipment_profiles() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'equipment_profiles.yaml'))
-    return raw.get('equipment_profiles', [])
-
-
-def _injury_flags() -> list[dict]:
-    raw = _load_yaml(os.path.join(_DATA_DIR, 'constraints', 'injury_flags.yaml'))
-    return raw.get('injury_flags', [])
 
 
 _BENCHMARK_CATEGORY_MAP = {
@@ -173,14 +137,7 @@ def _write(filename: str, data: object) -> None:
 
 def main() -> None:
     os.makedirs(_OUT_DIR, exist_ok=True)
-    print('Dumping static reference data...')
-    _write('goals.json', _all_goals())
-    _write('exercises.json', _all_exercises())
-    _write('modalities.json', _all_modalities())
-    _write('frameworks.json', _all_frameworks())
-    _write('philosophies.json', _all_philosophies())
-    _write('equipment_profiles.json', _equipment_profiles())
-    _write('injury_flags.json', _injury_flags())
+    print('Dumping benchmark standards...')
     _write('benchmarks.json', _all_benchmarks())
     print('Done.')
 
