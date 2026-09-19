@@ -14,4 +14,8 @@
   <setting propertyKey="autoStartOnLaunch" title="Start session on complication tap">
     <settingConfig type="boolean"/>
   </setting>
+  <!-- Demo session, for verifying the workout screens without a paired account. -->
+  <setting propertyKey="demoMode" title="Demo session (no account)">
+    <settingConfig type="boolean"/>
+  </setting>
 </settings>

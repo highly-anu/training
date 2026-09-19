@@ -12,7 +12,8 @@ class PairingView extends Ui.View {
     hidden var _code;
     hidden var _msg;
     hidden var _pollTimer;
-    hidden var _qr;      // BufferedBitmap of the pairing QR, or null
+    hidden var _qr;
+    hidden var _qrPx;   // QR edge in px, sized off the screen      // BufferedBitmap of the pairing QR, or null
     hidden var _phone;   // PhoneLink: bind via the phone glue app instead of a code
 
     function initialize() {
@@ -60,7 +61,7 @@ class PairingView extends Ui.View {
             return ScanCode.createQrCodeImage(
                 Config.pairQrValue(code),
                 ScanCode.QR_CODE_ECC_MEDIUM,
-                120,
+                _qrPx,
                 { :color => Gfx.COLOR_BLACK, :backgroundColor => Gfx.COLOR_WHITE }
             );
         } catch (e) {
@@ -85,20 +86,28 @@ class PairingView extends Ui.View {
         _phone.unregister();
     }
 
+    function onLayout(dc) {
+        // The QR was a hardcoded 120px — 26% of a 454 face and 29% of a 416 one,
+        // small enough to be awkward to scan. Take a little over half the width.
+        _qrPx = (dc.getWidth() * 52) / 100;
+    }
+
     function onUpdate(dc) {
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
         dc.clear();
         var cx = dc.getWidth() / 2;
         var cy = dc.getHeight() / 2;
+        if (_qrPx == null) { _qrPx = (dc.getWidth() * 52) / 100; }
 
         if (_code != null) {
             if (_qr != null) {
                 // QR + code beneath it: scan to claim, or type the code on the web.
                 var qw = _qr.getWidth();
                 var qh = _qr.getHeight();
-                dc.drawBitmap(cx - (qw / 2), 14, _qr);
-                dc.drawText(cx, 14 + qh + 4, Gfx.FONT_NUMBER_MEDIUM, _code,
-                    Gfx.TEXT_JUSTIFY_CENTER);
+                var qy = (dc.getHeight() - qh) / 2 - (dc.getHeight() / 10);
+                dc.drawBitmap(cx - (qw / 2), qy, _qr);
+                dc.drawText(cx, qy + qh + (dc.getHeight() / 40),
+                    Gfx.FONT_NUMBER_MEDIUM, _code, Gfx.TEXT_JUSTIFY_CENTER);
             } else {
                 // No on-device QR: the user types the code on the web/phone app.
                 dc.drawText(cx, cy - 45, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);

@@ -2,6 +2,7 @@ using Toybox.Application;
 
 // Central constants + storage keys. Mirrors the iOS app's UserDefaults keys where
 // it helps keep the two companions conceptually aligned.
+(:glance)
 module Config {
     // Must match src/device_store.py TOKEN_PREFIX and the backend routes.
     const TOKEN_PREFIX = "ciqdev_";

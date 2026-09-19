@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <path fill="#FFFFFF" fill-rule="evenodd" d="M14,48 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0 Z M23,48 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0 Z"/>
+  <rect x="44" y="8" width="8" height="22" rx="3" fill="#FFFFFF"/>
+  <polygon points="48,6 72,20 48,34" fill="#FFFFFF"/>
+</svg>

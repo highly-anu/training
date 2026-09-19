@@ -10,4 +10,6 @@
   <string id="Rest">REST</string>
   <string id="Complete">Session complete</string>
   <string id="SyncError">Sync failed — will retry</string>
+  <string id="EndWorkoutQ">End workout?</string>
+  <string id="Resume">Resume session</string>
 </strings>

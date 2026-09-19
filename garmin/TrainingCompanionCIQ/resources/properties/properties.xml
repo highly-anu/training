@@ -7,4 +7,9 @@
   <!-- When launched from the watch-face complication/glance, jump straight into
        today's session instead of just opening the today screen. Off by default. -->
   <property id="autoStartOnLaunch" type="boolean">false</property>
+  <!-- Demo session: renders a built-in session that exercises every slot type and
+       archetype specialization, without pairing or a synced program. Used to
+       verify the workout screens in the simulator and on-wrist before an account
+       exists. Off by default; never ships enabled. -->
+  <property id="demoMode" type="boolean">false</property>
 </properties>
