@@ -72,7 +72,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
   if (!assignment.exercise) {
     return (
       <div className="flex items-center gap-3 rounded-md bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground/60 italic">
-        {(assignment as { injury_skip?: boolean }).injury_skip
+        {assignment.injury_skip
           ? `(${assignment.slot_role?.replace(/_/g, ' ')} — skipped: injury management)`
           : `(${assignment.slot_role?.replace(/_/g, ' ')} — no exercise available)`}
       </div>

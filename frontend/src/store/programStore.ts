@@ -9,6 +9,9 @@ interface ProgramStore {
   eventDate: string | null        // YYYY-MM-DD — the race/event/goal date
   sourceGoalIds: string[]
   sourceGoalWeights: Record<string, number>
+  /** Revision of the server copy this state was loaded from; sent on save so a
+   *  stale write is rejected instead of clobbering newer work. */
+  revision: string | null
   setCurrentProgram: (program: GeneratedProgram | null) => void
   /** Set program + all metadata atomically and persist to server. Use after generation. */
   setFullProgram: (
@@ -36,6 +39,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   eventDate: null,
   sourceGoalIds: [],
   sourceGoalWeights: {},
+  revision: null,
 
   setCurrentProgram: (currentProgram) => {
     set({ currentProgram })
@@ -46,6 +50,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       eventDate: s.eventDate,
       sourceGoalIds: s.sourceGoalIds,
       sourceGoalWeights: s.sourceGoalWeights,
+      revision: s.revision,
     })
   },
 
@@ -57,6 +62,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       programStartDate:   startDate,
       sourceGoalIds,
       sourceGoalWeights,
+      revision: get().revision,
     })
     saveUserProgram({
       currentProgram:     program,
@@ -64,6 +70,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       eventDate,
       sourceGoalIds,
       sourceGoalWeights,
+      revision: get().revision,
     })
   },
 
@@ -95,6 +102,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         eventDate:          s.eventDate,
         sourceGoalIds:      s.sourceGoalIds,
         sourceGoalWeights:  s.sourceGoalWeights,
+        revision:           s.revision,
       })
     }
   },
@@ -131,6 +139,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       eventDate: null,
       sourceGoalIds: [],
       sourceGoalWeights: {},
+      revision: null,
     })
     try {
       const data = await fetchUserProgram()
@@ -141,6 +150,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         eventDate:         data?.eventDate ?? null,
         sourceGoalIds:     data?.sourceGoalIds ?? [],
         sourceGoalWeights: data?.sourceGoalWeights ?? {},
+        revision:          data?.revision ?? null,
       })
     } catch {
       set({ programLoadState: 'loaded' })

@@ -80,9 +80,30 @@ export function useRegenerateFromWeek() {
       apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
     onSuccess: (newPartial, params) => {
       const current = useProgramStore.getState().currentProgram
-      if (!current || params.numWeeks === undefined) {
+      // Only replace the whole program when there is nothing to keep.
+      //
+      // This used to also fall through when numWeeks was undefined, saving just
+      // the regenerated TAIL and discarding every earlier week — which is how a
+      // program ends up stored as 16 weeks numbered 16...31 with no weeks 1-15.
+      // Without numWeeks we cannot know the split point, so keep the existing
+      // weeks the new run does not cover rather than dropping them.
+      if (!current) {
         queryClient.setQueryData(queryKeys.programs.current, newPartial)
         useProgramStore.getState().setCurrentProgram(newPartial)
+        return
+      }
+      if (params.numWeeks === undefined) {
+        const keep = Math.max(0, current.weeks.length - newPartial.weeks.length)
+        const merged: GeneratedProgram = {
+          ...newPartial,
+          weeks: [...current.weeks.slice(0, keep), ...newPartial.weeks],
+          volume_summary: [
+            ...(current.volume_summary ?? []).slice(0, keep),
+            ...(newPartial.volume_summary ?? []),
+          ],
+        }
+        queryClient.setQueryData(queryKeys.programs.current, merged)
+        useProgramStore.getState().setCurrentProgram(merged)
         return
       }
       const keepCount = Math.max(0, current.weeks.length - params.numWeeks)

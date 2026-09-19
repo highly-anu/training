@@ -306,6 +306,14 @@ export interface ExerciseLoad {
   hold_seconds?: number
   focus?: string
   intensity?: string
+  /** Structured interval timing — e.g. Tabata's 20s work / 10s rest. */
+  work_sec?: number
+  rest_sec?: number
+  /** Resolved HR zone bounds (1–5) for the slot's intensity token. */
+  zone_lower?: number
+  zone_upper?: number
+  /** Pack weight for rucks and loaded carries. */
+  pack_load_kg?: number
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────
@@ -319,6 +327,13 @@ export interface ExerciseAssignment {
   rest_sec?: number
   load_note?: string
   notes?: string
+  /** Set when an injury flag blocked every candidate for this slot.
+   *  Previously read via an inline cast in ExerciseRow.tsx. */
+  injury_skip?: boolean
+  /** Links an `amrap_movement` component to the `amrap` slot it belongs to. */
+  parent_slot_role?: string
+  /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */
+  skip_exercise?: boolean
 }
 
 export interface ComplementaryExercise {

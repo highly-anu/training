@@ -40,11 +40,22 @@ export function formatLoad(load: ExerciseLoad): string {
     parts.push(`${load.distance_m} m`)
   }
 
-  // Rounds / AMRAP
-  if (load.target_rounds && load.reps_per_round) {
+  // Rounds / AMRAP / structured intervals
+  if (load.target_rounds && load.work_sec) {
+    // e.g. "8 × 20s/10s" (Tabata) or "10 × 60s" (EMOM strength)
+    const span = load.rest_sec ? `${load.work_sec}s/${load.rest_sec}s` : `${load.work_sec}s`
+    parts.push(`${load.target_rounds} × ${span}`)
+  } else if (load.target_rounds && load.reps_per_round) {
     parts.push(`${load.target_rounds} rounds × ${load.reps_per_round} reps`)
   } else if (load.target_rounds) {
     parts.push(`${load.target_rounds} rounds`)
+  } else if (load.reps_per_round) {
+    parts.push(`${load.reps_per_round} reps / round`)
+  }
+
+  // Pack weight (rucks, loaded carries)
+  if (load.pack_load_kg) {
+    parts.push(`${load.pack_load_kg} kg pack`)
   }
 
   // Time domain
@@ -52,8 +63,8 @@ export function formatLoad(load: ExerciseLoad): string {
     parts.push(`${load.time_minutes} min`)
   }
 
-  // Format label (e.g. AMRAP, EMOM)
-  if (load.format) {
+  // Format label (e.g. AMRAP, EMOM) — redundant once an interval span is shown.
+  if (load.format && !load.work_sec) {
     parts.push(load.format)
   }
 
