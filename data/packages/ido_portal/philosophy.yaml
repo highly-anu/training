@@ -53,5 +53,8 @@ canonical_phase_sequence:
     weeks: 12
   - phase: build
     weeks: 8
-  - phase: refine
+  # 'refine' was not a phase any archetype or the schema recognised, so this
+  # third block scheduled nothing. Ido's refinement block is the peak of skill
+  # expression; both package archetypes already declare `peak`.
+  - phase: peak
     weeks: 4

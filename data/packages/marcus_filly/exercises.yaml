@@ -476,7 +476,7 @@ exercises:
     - relative_strength
     - rehab
   equipment: []
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - horizontal_push
@@ -621,7 +621,7 @@ exercises:
     - relative_strength
     - rehab
   equipment: []
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - squat
@@ -650,7 +650,7 @@ exercises:
     - relative_strength
     - movement_skill
   equipment: []
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - isometric
@@ -676,7 +676,7 @@ exercises:
     - relative_strength
     - movement_skill
   equipment: []
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - isometric
@@ -732,7 +732,7 @@ exercises:
     - relative_strength
     - movement_skill
   equipment: []
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - isometric
@@ -758,7 +758,7 @@ exercises:
     - relative_strength
     - rehab
   equipment: []
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - isometric
@@ -786,7 +786,7 @@ exercises:
     - movement_skill
   equipment:
     - resistance_band
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - isometric
@@ -813,7 +813,7 @@ exercises:
     - movement_skill
   equipment:
     - pull_up_bar
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - isometric
@@ -841,7 +841,7 @@ exercises:
     - rehab
   equipment:
     - barbell
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - vertical_push
@@ -868,7 +868,7 @@ exercises:
     - mobility
   equipment:
     - resistance_band
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - horizontal_pull
@@ -895,7 +895,7 @@ exercises:
     - mobility
   equipment:
     - dumbbell
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - rotation
@@ -921,7 +921,7 @@ exercises:
     - mobility
   equipment:
     - resistance_band
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - horizontal_pull
@@ -947,7 +947,7 @@ exercises:
     - mobility
   equipment:
     - resistance_band
-  effort: light
+  effort: low
   bilateral: false
   movement_patterns:
     - rotation
@@ -1032,7 +1032,7 @@ exercises:
     - mobility
   equipment:
     - dumbbell
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - rotation
@@ -1059,7 +1059,7 @@ exercises:
     - mobility
   equipment:
     - dumbbell
-  effort: light
+  effort: low
   bilateral: true
   movement_patterns:
     - horizontal_pull

@@ -97,6 +97,85 @@ def audit_program(raw: dict, policy, ex_index: dict) -> dict:
     return {'archetypes': arch_pkgs, 'exercises': ex_pkgs, 'foreign': foreign}
 
 
+def _valid_exercise_categories() -> set:
+    import json
+    schema_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'docs', 'schemas', 'exercise.schema.json')
+    with open(schema_path) as f:
+        schema = json.load(f)
+    items = schema.get('items', schema)
+    return set(items.get('properties', {}).get('category', {}).get('enum', []))
+
+
+def report_authoring() -> list:
+    """Cross-file checks a per-file schema pass cannot make.
+
+    Each of these caught a real defect: gym_jones filtered a slot on a movement
+    pattern no exercise carries, ido_portal filtered on a category that is not in
+    the enum, and ido_portal declared a phase no archetype supports.
+    """
+    from src import selector
+
+    problems: list = []
+    data = loader.load_all_data()
+    installed = {p['id'] for p in loader.load_philosophies()}
+    valid_categories = _valid_exercise_categories()
+
+    # Resolve slot patterns exactly the way select_exercise does: an alias from
+    # data/commons/movement_patterns.yaml, or a raw pattern some exercise carries.
+    known_patterns: set = set(selector._PATTERN_ALIASES)
+    for ex in data['exercises'].values():
+        known_patterns.update(ex.get('movement_patterns') or [])
+
+    # 1. borrows_from must reference an installed package, and never itself.
+    for phil in loader.load_philosophies():
+        for entry in phil.get('borrows_from', []) or []:
+            pkg = entry.get('package') if isinstance(entry, dict) else entry
+            if pkg == phil['id']:
+                problems.append(f"{phil['id']}: borrows_from references itself")
+            elif pkg not in installed:
+                problems.append(f"{phil['id']}: borrows_from references unknown package {pkg!r}")
+
+    # 2/3. Slot filters must be satisfiable in principle.
+    for arch in data['archetypes']:
+        for slot in arch.get('slots', []) or []:
+            ex_filter = slot.get('exercise_filter') or {}
+            pattern = ex_filter.get('movement_pattern')
+            if pattern and pattern not in known_patterns:
+                problems.append(
+                    f"{arch.get('_package')}/{arch['id']}: slot "
+                    f"{slot.get('role')!r} filters on movement_pattern {pattern!r}, "
+                    f"which no exercise carries")
+            category = ex_filter.get('category')
+            if category and valid_categories and category not in valid_categories:
+                problems.append(
+                    f"{arch.get('_package')}/{arch['id']}: slot "
+                    f"{slot.get('role')!r} filters on category {category!r}, "
+                    f"not a valid exercise category")
+
+    # 4. Every phase a philosophy schedules needs an archetype that claims it.
+    for phil in loader.load_philosophies():
+        phil_id = phil['id']
+        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
+        claimed: set = set()
+        for arch in archetypes:
+            claimed.update(arch.get('applicable_phases') or [])
+        declared: set = set()
+        for group in phil.get('framework_groups', []) or []:
+            for entry in group.get('canonical_phase_sequence', []) or []:
+                declared.add(entry.get('phase'))
+        for entry in phil.get('canonical_phase_sequence', []) or []:
+            declared.add(entry.get('phase'))
+        for phase in sorted(p for p in declared if p):
+            if claimed and phase not in claimed:
+                problems.append(
+                    f"{phil_id}: declares phase {phase!r} but no archetype in the "
+                    f"package lists it in applicable_phases")
+
+    return problems
+
+
 def report_coverage() -> int:
     """Static: modalities a package declares or prescribes but owns no archetype for."""
     frameworks = list(loader.load_all_frameworks().values())
@@ -121,6 +200,15 @@ def report_coverage() -> int:
         print(f"{phil_id:22} {', '.join(blocking) or '-':46} {', '.join(other) or '-'}")
 
     print(f"\n{total_blocking} blocking coverage gap(s) across all packages.")
+
+    problems = report_authoring()
+    print()
+    if problems:
+        print(f"{len(problems)} authoring problem(s):")
+        for p in problems:
+            print(f"  - {p}")
+        return 1
+    print('No authoring problems.')
     return 0
 
 
