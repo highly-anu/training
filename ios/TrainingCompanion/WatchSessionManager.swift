@@ -106,7 +106,9 @@ final class WatchSessionManager: NSObject, ObservableObject {
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
             AppLogger.shared.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
         } catch {
-            // Silent failure — Watch will use cached sessions
+            // Was a bare silent catch: a failed fetch left the Watch on cached
+            // sessions with nothing anywhere saying why.
+            AppLogger.shared.logFromBackground("WCSession: syncProgram FAILED — \(error.localizedDescription)")
         }
     }
 

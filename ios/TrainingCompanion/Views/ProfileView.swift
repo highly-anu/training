@@ -607,6 +607,7 @@ private struct ScheduleTab: View {
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: ProfileTab = .equipment
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
 
     private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
 
@@ -625,6 +626,20 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
             .toolbar {
+                // Appearance. Dark is the default (see AppAppearance);
+                // "System" hands control back to iOS.
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Appearance", selection: $appearanceRaw) {
+                            ForEach(AppAppearance.allCases) { option in
+                                Label(option.label, systemImage: option.symbol)
+                                    .tag(option.rawValue)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: (AppAppearance(rawValue: appearanceRaw) ?? .fallback).symbol)
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Picker("Level", selection: Binding(
                         get: { appState.profile.trainingLevel },

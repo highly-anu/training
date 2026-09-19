@@ -237,7 +237,12 @@ struct ProgramView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     HStack(spacing: 8) {
-                        Text("Week \(week.weekNumber)").font(.headline)
+                        // Position in the program, not week.weekNumber.
+                        // A program whose weeks are numbered 16...31 (the tail of
+                        // an earlier plan) but whose programStartDate is this week
+                        // showed "Week 16" on day one. programStartDate anchors
+                        // weeks[0] as week 1, so position is the truth.
+                        Text("Week \(weekIdx + 1) of \(weeks.count)").font(.headline)
                         if isCurrent {
                             Text("Current")
                                 .font(.caption2).fontWeight(.semibold)

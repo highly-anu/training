@@ -374,7 +374,8 @@ final class AppState: ObservableObject {
         weeks[weekIndex] = week
         program = GeneratedProgram(weeks: weeks)
         sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
-                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds)
+                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
+                           revision: sp.revision)
         serverProgram = sp
         writeWidgetData()
         Task { try? await saveProgramToServer() }
@@ -399,7 +400,8 @@ final class AppState: ObservableObject {
         weeks[weekIndex] = week
         program = GeneratedProgram(weeks: weeks)
         sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
-                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds)
+                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
+                           revision: sp.revision)
         serverProgram = sp
         writeWidgetData()
         Task { try? await saveProgramToServer() }
@@ -412,9 +414,15 @@ final class AppState: ObservableObject {
             programStartDate: sp.programStartDate,
             eventDate: sp.eventDate,
             sourceGoalIds: sp.sourceGoalIds,
-            sourceGoalWeights: [:]
+            sourceGoalWeights: [:],
+            baseRevision: sp.revision
         )
-        try await api.saveProgram(payload)
+        do {
+            try await api.saveProgram(payload)
+        } catch is APIClient.StaleProgramRevision {
+            // Someone (the web) has newer work. Take theirs.
+            await loadProgram()
+        }
     }
 
     /// Computed readiness from most recent bio log: green/yellow/red based on HRV + resting HR.

@@ -92,7 +92,7 @@ struct SyncStatusView: View {
                     Spacer()
                     Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 }
-            } else {
+        } else {
                 ForEach(garminDevices) { d in
                     HStack {
                         Label(d.deviceName ?? "Garmin Watch",
@@ -218,47 +218,37 @@ struct SyncStatusView: View {
     private func runFullSync() async {
         await sync.syncAll()
 
-        // Push program to server so Garmin can fetch it via today-session.
-        // Save BEFORE loadProgram() so we don't overwrite in-memory state with a
-        // stale or missing DB entry.
-        do {
-            if appState.serverProgram != nil {
-                let startDate = appState.serverProgram?.programStartDate ?? "nil"
-                AppLogger.shared.log("garmin: saving program (startDate=\(startDate))")
-                try await appState.saveProgramToServer()
-                let now = Date()
-                lastGarminPushDate = now
-                UserDefaults.standard.set(now, forKey: "lastGarminProgramSyncDate")
-                AppLogger.shared.log("garmin: program pushed to server")
-                // Verify: call today-session to see what Garmin would get
-                if let api = appState.api {
-                    let status = (try? await api.fetchTodaySessionStatus()) ?? "error"
-                    AppLogger.shared.log("garmin: today-session status = \(status)")
-                    if status == "program_expired" || status == "not_started" {
-                        await resetProgramStartToToday()
-                    }
-                }
-            } else {
-                // Nothing in memory — try fetching from DB first
-                await appState.loadProgram()
-                if appState.serverProgram != nil {
-                    let startDate = appState.serverProgram?.programStartDate ?? "nil"
-                    AppLogger.shared.log("garmin: saving program from DB (startDate=\(startDate))")
-                    try await appState.saveProgramToServer()
-                    let now = Date()
-                    lastGarminPushDate = now
-                    UserDefaults.standard.set(now, forKey: "lastGarminProgramSyncDate")
-                    AppLogger.shared.log("garmin: program pushed to server (after reload)")
-                    if let api = appState.api {
-                        let status = (try? await api.fetchTodaySessionStatus()) ?? "error"
-                        AppLogger.shared.log("garmin: today-session status = \(status)")
-                    }
-                } else {
-                    AppLogger.shared.log("garmin: no program to push — generate a program first")
+        // The SERVER is the source of truth for the program.
+        //
+        // This used to push appState.serverProgram back to the server on every
+        // sync, "so Garmin can fetch it". That was both unnecessary and
+        // destructive: Garmin reads GET /user/today-session from the server
+        // directly and never needed the phone to re-upload, while the phone's
+        // in-memory copy is only refreshed by loadProgram() — which this path
+        // did not call. So generating a program on the web and then pressing
+        // Sync on the phone overwrote the new program with the phone's stale
+        // copy, and the web, phone and watch all reverted together.
+        //
+        // Pull first. Only push when the server genuinely has nothing.
+        await appState.loadProgram()
+
+        if appState.serverProgram == nil {
+            AppLogger.shared.log("program: server has none — nothing to pull")
+        } else {
+            let startDate = appState.serverProgram?.programStartDate ?? "nil"
+            AppLogger.shared.log("program: pulled from server (startDate=\(startDate))")
+            let now = Date()
+            lastGarminPushDate = now
+            UserDefaults.standard.set(now, forKey: "lastGarminProgramSyncDate")
+
+            // Verify what Garmin would actually receive.
+            if let api = appState.api {
+                let status = (try? await api.fetchTodaySessionStatus()) ?? "error"
+                AppLogger.shared.log("garmin: today-session status = \(status)")
+                if status == "program_expired" || status == "not_started" {
+                    await resetProgramStartToToday()
                 }
             }
-        } catch {
-            AppLogger.shared.log("garmin: program push failed — \(error.localizedDescription)")
         }
 
         await appState.loadProfile()
@@ -297,7 +287,8 @@ struct SyncStatusView: View {
             currentProgram: sp.currentProgram,
             programStartDate: newStartStr,
             eventDate: sp.eventDate,
-            sourceGoalIds: sp.sourceGoalIds
+            sourceGoalIds: sp.sourceGoalIds,
+            revision: sp.revision
         )
         appState.serverProgram = updated
         do {
@@ -341,7 +332,7 @@ struct SyncStatusView: View {
             if filteredEntries.isEmpty {
                 Text("No log entries yet.")
                     .font(.caption).foregroundStyle(.secondary)
-            } else {
+        } else {
                 ForEach(filteredEntries.suffix(10)) { entry in logEntryRow(entry) }
             }
         } label: {
@@ -368,7 +359,7 @@ struct SyncStatusView: View {
         return DisclosureGroup {
             if filteredEntries.isEmpty {
                 Text("No uploads yet.").font(.caption).foregroundStyle(.secondary)
-            } else {
+        } else {
                 ForEach(filteredEntries.suffix(10)) { entry in logEntryRow(entry) }
             }
         } label: {
@@ -396,7 +387,7 @@ struct SyncStatusView: View {
         return DisclosureGroup {
             if filteredEntries.isEmpty {
                 Text("No Watch session activity yet.").font(.caption).foregroundStyle(.secondary)
-            } else {
+        } else {
                 ForEach(filteredEntries.suffix(10)) { entry in logEntryRow(entry) }
             }
         } label: {

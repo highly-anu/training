@@ -134,7 +134,9 @@ struct TodayView: View {
                         Text(goalName).foregroundStyle(.primary)
                         Text("·")
                     }
-                    Text("Week \(week.weekNumber)")
+                    // Position in the program (see ProgramView) — weekNumber is
+                    // the stored absolute number and can disagree with the start date.
+                    Text("Week \((appState.currentWeekIndex ?? 0) + 1)")
                     Text("·")
                     Text(week.phase.capitalized)
                     if week.isDeload {

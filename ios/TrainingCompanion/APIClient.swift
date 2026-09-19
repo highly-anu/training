@@ -650,8 +650,25 @@ final class APIClient {
         return try await post("/sessions/generate", body: request)
     }
 
+    /// Thrown when the server rejects a program write as based on a stale read.
+    struct StaleProgramRevision: Error {}
+
     func saveProgram(_ payload: UserProgramSavePayload) async throws {
-        _ = try await put("/user/program", body: payload)
+        let url = URL(string: APIClient.baseURL + "/user/program")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuth(to: &request)
+        request.httpBody = try JSONEncoder().encode(payload)
+        let (_, response) = try await URLSession.shared.data(for: request)
+        // 409 means the stored program moved on since this copy was read — the
+        // web generated something newer. Surface it so the caller re-pulls
+        // instead of overwriting work it has never seen.
+        if let http = response as? HTTPURLResponse, http.statusCode == 409 {
+            AppLogger.shared.logFromBackground("program: save rejected (stale revision) — re-pulling")
+            throw StaleProgramRevision()
+        }
+        try validateStatus(response)
     }
 
     // MARK: - Watch device pairing (Garmin / future companions)

@@ -5,10 +5,18 @@ import BackgroundTasks
 struct TrainingCompanionApp: App {
     @StateObject private var auth = AuthManager()
 
+    // Defaults to dark; AppAppearance.system hands control back to iOS.
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
+
+    private var appearance: AppAppearance {
+        AppAppearance(rawValue: appearanceRaw) ?? .fallback
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(auth)
+                .preferredColorScheme(appearance.colorScheme)
         }
     }
 

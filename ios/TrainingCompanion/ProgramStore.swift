@@ -43,7 +43,8 @@ final class ProgramStore: ObservableObject {
         sp = ServerProgram(currentProgram: program,
                            programStartDate: sp.programStartDate,
                            eventDate: sp.eventDate,
-                           sourceGoalIds: sp.sourceGoalIds)
+                           sourceGoalIds: sp.sourceGoalIds,
+                           revision: sp.revision)
         serverProgram = sp
         Task { try? await saveProgram(api: api) }
     }
@@ -70,7 +71,8 @@ final class ProgramStore: ObservableObject {
         sp = ServerProgram(currentProgram: program,
                            programStartDate: sp.programStartDate,
                            eventDate: sp.eventDate,
-                           sourceGoalIds: sp.sourceGoalIds)
+                           sourceGoalIds: sp.sourceGoalIds,
+                           revision: sp.revision)
         serverProgram = sp
         Task { try? await saveProgram(api: api) }
     }
@@ -82,7 +84,8 @@ final class ProgramStore: ObservableObject {
             programStartDate: sp.programStartDate,
             eventDate: sp.eventDate,
             sourceGoalIds: sp.sourceGoalIds,
-            sourceGoalWeights: [:]
+            sourceGoalWeights: [:],
+            baseRevision: sp.revision
         )
         try await api.saveProgram(payload)
     }

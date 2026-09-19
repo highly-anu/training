@@ -10,6 +10,19 @@ struct ServerProgram: Codable {
     let programStartDate: String?   // "YYYY-MM-DD"
     let eventDate: String?
     let sourceGoalIds: [String]
+    /// Opaque revision of the copy this was read from. Echoed back on save so the
+    /// server can reject a write based on a stale read (409) instead of letting
+    /// this phone overwrite a program generated elsewhere since.
+    let revision: String?
+
+    init(currentProgram: GeneratedProgram?, programStartDate: String?,
+         eventDate: String?, sourceGoalIds: [String], revision: String? = nil) {
+        self.currentProgram = currentProgram
+        self.programStartDate = programStartDate
+        self.eventDate = eventDate
+        self.sourceGoalIds = sourceGoalIds
+        self.revision = revision
+    }
 }
 
 struct GeneratedProgram: Codable {
@@ -199,6 +212,9 @@ struct UserProgramSavePayload: Encodable {
     let eventDate: String?
     let sourceGoalIds: [String]
     let sourceGoalWeights: [String: Double]
+    /// Revision this edit was based on; the server rejects the write with 409 if
+    /// the stored program has moved on.
+    let baseRevision: String?
 }
 
 // MARK: - Watch payload (sent from iPhone to Watch via WCSession)
