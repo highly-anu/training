@@ -522,7 +522,7 @@ struct WorkoutDetailSheet: View {
                         ForEach(1...5, id: \.self) { i in
                             Image(systemName: i <= rating ? "circle.fill" : "circle")
                                 .font(.caption)
-                                .foregroundStyle(i <= rating ? fatigueColor(rating) : .tertiary)
+                                .foregroundStyle(i <= rating ? fatigueColor(rating) : .gray.opacity(0.3))
                         }
                         Text("\(rating)/5")
                             .font(.caption).foregroundStyle(.secondary)

@@ -605,7 +605,17 @@ def generate_program():
     import traceback as _tb
     body = request.get_json(silent=True) or {}
     try:
-        return _generate_program_inner(body)
+        resp = _generate_program_inner(body)
+        # Auto-save the generated program to the DB so Garmin/Watch can fetch it.
+        try:
+            from src.db import save_user_program
+            import json as _json
+            resp_data = _json.loads(resp.get_data(as_text=True))
+            if isinstance(resp_data, dict) and resp_data.get('weeks') is not None:
+                save_user_program(g.user_id, resp_data)
+        except Exception as _save_err:
+            app.logger.warning('generate: auto-save failed: %s', _save_err)
+        return resp
     except Exception as e:
         msg = _tb.format_exc()
         with open(os.path.join(tempfile.gettempdir(), 'api_errors.txt'), 'a') as _f:

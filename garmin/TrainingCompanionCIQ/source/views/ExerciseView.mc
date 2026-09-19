@@ -27,7 +27,16 @@ class ExerciseView extends Ui.View {
         }
 
         var ex = _ctl.currentExercise();
-        if (ex == null) { return; }
+        if (ex == null) {
+            // No exercises in this session (all injury-skipped, etc.).
+            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx, dc.getHeight() / 2 - 16, Gfx.FONT_MEDIUM,
+                "No exercises", Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Gfx.COLOR_DK_GRAY, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(cx, dc.getHeight() / 2 + 20, Gfx.FONT_XTINY,
+                "hold UP to finish", Gfx.TEXT_JUSTIFY_CENTER);
+            return;
+        }
 
         // Header: progress + HR.
         dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);

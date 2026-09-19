@@ -61,6 +61,12 @@ final class APIClient {
         _ = try await put("/health/bio/\(date)", body: payload)
     }
 
+    func fetchTodaySessionStatus() async throws -> String {
+        let data = try await get("/user/today-session")
+        let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+        return (json["status"] as? String) ?? "unknown"
+    }
+
     func fetchProgram() async throws -> ServerProgram? {
         let data = try await get("/user/program")
         if let program = try? JSONDecoder().decode(ServerProgram.self, from: data) {

@@ -28,7 +28,7 @@ class GlanceView extends Ui.GlanceView {
             if (status.equals("ok") && sessions != null && sessions.size() > 0) {
                 var s = sessions[0] as Lang.Dictionary;
                 line1 = s["archetypeName"] as Lang.String;
-                line2 = s["estimatedMinutes"] + " min · " + s["modalityId"];
+                line2 = s["estimatedMinutes"] + " min  |  " + s["archetypeName"];
             } else if (status.equals("ok")) {
                 line1 = "Rest day";
                 line2 = "";

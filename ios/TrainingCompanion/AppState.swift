@@ -405,7 +405,7 @@ final class AppState: ObservableObject {
         Task { try? await saveProgramToServer() }
     }
 
-    private func saveProgramToServer() async throws {
+    func saveProgramToServer() async throws {
         guard let api, let sp = serverProgram else { return }
         let payload = UserProgramSavePayload(
             currentProgram: sp.currentProgram,
