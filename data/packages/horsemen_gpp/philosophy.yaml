@@ -53,6 +53,10 @@ notes: >
   are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black,
   Russian Aggression, SMMF) are distinct from generic archetypes.
 
+# Every modality concurrent_training and gpp_circuits prescribe now has an
+# archetype in this package. Borrowing, where it happens, is declared below.
+self_contained: true
+
 primary_framework_id: concurrent_training
 
 framework_groups:

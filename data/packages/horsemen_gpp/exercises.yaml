@@ -3111,3 +3111,120 @@ exercises:
     back (ref: Double Eagle). Other variants chain clean + press + lunge. Used in
     EMOM format: 2× clean & squat + 3 burpees every minute for 20 min (''Teabag Your
     Buddy Tonight''). Treat reps as complex rounds — one rep = full sequence.'
+# ── Aerobic base ─────────────────────────────────────────────────────────────
+# The Horsemen PT test includes a 3-mile run under 20:00 and the program runs
+# low-HR recovery sessions at <=65% MHR, but the package owned only `ruck`, so
+# every aerobic session had to be taken from another philosophy.
+- id: run_zone2
+  name: Zone 2 Run
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires: []
+  unlocks:
+  - run_tempo_horsemen
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - ruck
+  typical_volume:
+    duration_sec: 2700
+  sources:
+  - Horsemen
+  notes: 'Conversational-pace run. The Horsemen aerobic base exists to support
+    repeatable output, not to chase run times — the 3-mile-under-20:00 PT standard
+    is a prerequisite, not the training target. Nasal breathing is the pace check.
+    Recovery-day runs are capped at 65% MHR.'
+
+- id: run_tempo_horsemen
+  name: Tempo Run (Zone 3)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires:
+  - run_zone2
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - run_zone2
+  typical_volume:
+    duration_sec: 1200
+  sources:
+  - Horsemen
+  notes: 'Sustained comfortably-hard effort, roughly 3-mile race pace. Used to hold
+    the PT-test run standard through the strength-dominant block without spending
+    a full aerobic session on it.'
+
+- id: row_zone2
+  name: Zone 2 Row
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - rower
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    duration_sec: 2400
+  sources:
+  - Horsemen
+  notes: 'Low-impact aerobic option, and the default when the athlete is carrying
+    accumulated lower-body load from rucking and carries. Damper 4-6, 18-22 SPM.'
+
+- id: bike_zone2
+  name: Zone 2 Bike
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - bike
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    duration_sec: 2700
+  sources:
+  - Horsemen
+  notes: 'Lowest-impact aerobic option. Preferred for the active-recovery sessions
+    the program caps at 65% MHR, and when ankle or knee load needs unloading.'

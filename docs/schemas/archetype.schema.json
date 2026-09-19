@@ -206,6 +206,10 @@
           "parent_slot_role": {
             "type": "string",
             "description": "Links an amrap_movement component to the AMRAP slot it belongs to."
+          },
+          "time_cap_sec": {
+            "type": "integer",
+            "description": "Time cap for an amrap/for_time slot. Read by progression._density_slot as the duration fallback."
           }
         }
       }

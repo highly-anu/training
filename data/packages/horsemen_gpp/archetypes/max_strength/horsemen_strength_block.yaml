@@ -1,0 +1,115 @@
+id: horsemen_strength_block
+name: Horsemen Strength Block (Month 1 Barbell)
+modality: max_strength
+category: strength
+duration_estimate_minutes: 70
+required_equipment:
+- barbell
+- plates
+- rack
+applicable_phases:
+- base
+- build
+- specific
+- maintenance
+training_levels:
+- intermediate
+- advanced
+- elite
+sources:
+- Horsemen
+- Gym Jones
+- Dan John
+notes: >
+  Month 1 of the Horsemen macro is strength-dominant — roughly four strength
+  sessions per fourteen days. The standards the program names are prerequisites
+  rather than goals: deadlift 2.5x bodyweight, front squat 1.5x, bench 1.5x,
+  military press 1x. An athlete who has them trains here to hold them while the
+  later blocks do the work; an athlete who does not spends this block earning them.
+  One main lift taken heavy, one secondary compound, then pulling and carrying
+  accessory work. Not a bodybuilding session: total working sets stay low so the
+  session does not compete with the conditioning days around it.
+slots:
+- role: warm_up
+  slot_type: time_domain
+  duration_sec: 600
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: >
+    Thoracic extension, hip flexor and ankle work, then empty-bar and ramping
+    warm-up sets of the main lift. Do not skip the ramp — the first working set
+    should not be the first heavy set.
+- role: main_lift
+  slot_type: sets_reps
+  sets: 5
+  reps: 3-5
+  intensity: heavy
+  intensity_pct_1rm: 0.85
+  rest_sec: 180
+  exercise_filter:
+    movement_pattern: squat
+    category: barbell
+  notes: >
+    Squat or deadlift variant, 5x3 to 5x5 at 82-88% of 1RM. Stop the session's
+    main work if bar speed collapses — the Horsemen strength block feeds the rest
+    of the program and is not the place to grind singles.
+- role: secondary_compound
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: moderate
+  intensity_pct_1rm: 0.75
+  rest_sec: 150
+  exercise_filter:
+    movement_pattern: press
+    category: barbell
+  notes: >
+    Press or bench, 3x5 at 70-78%. Alternate strict press and bench across the
+    block so both standards are maintained.
+- role: posterior_accessory
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  intensity: moderate
+  rest_sec: 90
+  exercise_filter:
+    movement_pattern: hinge
+    category: barbell
+  notes: Barbell row or a lighter hinge variant. Controlled, no body english.
+- role: loaded_carry_finisher
+  slot_type: distance
+  distance_m: 40
+  sets: 4
+  intensity: heavy
+  rest_sec: 90
+  exercise_filter:
+    movement_pattern: carry
+  notes: >
+    4 x 40 m heavy carry. Farmer, rack or zercher. This is the bridge between the
+    strength block and the durability work the program is actually built around.
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    intensity_pct: 0.85
+    notes: >
+      Drop to 3 working sets on the main lift at 70-75%, keep the secondary
+      compound at 2 sets, cut the carry finisher.
+  time_limited:
+    drop_slots:
+    - posterior_accessory
+    - loaded_carry_finisher
+    notes: >
+      Main lift and secondary compound are the session. Everything after them is
+      accessory and comes off first.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: rack
+      substitute_approach: >
+        Deadlift and floor press instead of squat and bench — both start from the
+        floor and need no rack.
+    - missing_equipment: barbell
+      substitute_approach: >
+        Double-kettlebell front squat and press, or sandbag clean and press. Load
+        is lower, so add a set and treat it as strength endurance rather than max
+        strength for that week.
