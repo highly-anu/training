@@ -114,6 +114,44 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
 - **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
 - **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
 
+## Workout Import
+
+Activities reach the `workouts` table from five places: a manual `.fit`/`.xml`/`.json`
+upload (`POST /api/workouts/parse`), the Strava OAuth sync, the Connect IQ watch app,
+the iOS Apple Health relay, and the Garmin Connect webhook.
+
+- **One FIT parser** — `src/fit_import.py`, extracted from the upload handler so the
+  Garmin webhook can parse the same format. `parse_fit(stream, source=...)` is pure:
+  no Flask, no DB.
+- **Deterministic ids** — `src/workout_ids.py`. The formula is mirrored in
+  `frontend/src/lib/importParsers.ts` and `ios/.../WorkoutID.swift`. **Do not change
+  it**: `workout_matches.imported_workout_id` references the ids it produces.
+- **Cross-source dedup** — because the id embeds the source, one activity arriving
+  four ways makes four ids. `src/workout_dedupe.py` decides whether two records are the
+  same activity (±5 min start, duration within 3 min or 10%, same modality family) and
+  merges into the row already there. The canonical row's id never changes; duplicates
+  are kept, marked `canonical_id` and hidden from reads. Sources rank by richness:
+  `fit_file > garmin > apple_watch_live > apple_health > strava > manual`.
+- **Matching** — `src/workout_matcher.py` (server) and
+  `frontend/src/lib/workoutMatcher.ts` (browser) share `data/matching_rules.json` and
+  the golden fixtures in `data/matcher_fixtures.json`. Change scoring in the JSON, not
+  in either implementation, and run both suites. Weak matches go to
+  `workout_match_suggestions`, never to `workout_matches` with a 'pending' confidence —
+  a dozen readers treat "row that isn't 'rejected'" as "is matched".
+- **Settings** — `profile_data['integrations']`: a master switch plus per-source
+  toggles, gated server-side via `api.integration_allows(user_id, source)`. Enforcing
+  it only in the UI would leave it decorative for webhook traffic.
+- **Garmin webhook** — unauthenticated by necessity. Defended by a shared secret in
+  the URL, identity taken only as a `garmin_user_id` looked up against an existing
+  registration, and the activity fetched from Garmin with our own token after the
+  callback host/port is checked against `GARMIN_API_BASE` (without which the endpoint
+  is an SSRF primitive). Always answers 200 except on a bad secret — Garmin disables
+  endpoints that keep erroring. Work happens on a worker thread against the durable
+  `garmin_webhook_events` queue, because gunicorn runs `--workers 1`.
+- **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
+  carries. It used to rebuild the blob, which is why every iOS save wiped
+  `activeGoalId`.
+
 ## Checks
 
 Run these after touching engine code or package data:
@@ -124,6 +162,24 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
+```
+
+Run these after touching the workout import pipeline:
+
+```bash
+.venv/bin/python test_fit_import.py        # FIT parser + the deterministic id formula
+.venv/bin/python test_profile_merge.py     # profile blob merges; auto-import settings
+.venv/bin/python test_workout_matcher.py   # matcher, against the shared fixtures
+.venv/bin/python test_workout_dedupe.py    # cross-source dedup decisions (pure logic)
+cd frontend && npx vitest run              # incl. the TS half of the matcher parity suite
+```
+
+Two suites need a local PostgreSQL and skip cleanly (exit 0) without one:
+
+```bash
+brew services start postgresql@14 && createdb training_test
+.venv/bin/python test_dedupe_sql.py        # dedup SQL: merge, canonical_id, visibility
+.venv/bin/python test_garmin_webhook.py    # the whole webhook path, no Garmin account needed
 ```
 
 ## Known Gaps / Next Work
