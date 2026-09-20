@@ -20,6 +20,7 @@ import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
 import type { Session, InsightItem, ImportedWorkout } from '@/api/types'
+import { sourceLabel } from '@/lib/workoutSource'
 
 const GPSMap = lazy(() =>
   import('@/components/workout/GPSMap').then((m) => ({ default: m.GPSMap }))
@@ -207,12 +208,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
     )
   }
 
-  const sourceLabel =
-    matched.source === 'apple_health' ? 'Apple Health'
-    : matched.source === 'apple_watch_live' ? 'Apple Watch Live'
-    : matched.source === 'fit_file' ? '.fit file'
-    : matched.source === 'strava' ? 'Strava'
-    : matched.source
+  const sourceText = sourceLabel(matched.source)
 
   const hasGPS = matched.gpsTrack && matched.gpsTrack.length > 1
   const hasSamples = (matched.heartRate.samples?.length ?? 0) > 1
@@ -246,7 +242,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-[10px]">
-            {sourceLabel}
+            {sourceText}
           </Badge>
           <Link
             to={`/import/${encodeURIComponent(matched.id)}`}

@@ -3,7 +3,7 @@
  * These endpoints are protected by JWT auth on the Flask backend.
  */
 import { apiClient } from './client'
-import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, TrainingLevel, GeneratedProgram, WeeklyLoad, PMCEntry } from './types'
+import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, IntegrationSettings, TrainingLevel, GeneratedProgram, WeeklyLoad, PMCEntry } from './types'
 
 export interface ServerProfile {
   trainingLevel: TrainingLevel
@@ -14,6 +14,7 @@ export interface ServerProfile {
   dateOfBirth: string | null
   weeklySchedule?: Record<Day, DaySchedule> | null
   hrConfig?: HRConfig | null
+  integrations?: IntegrationSettings | null
 }
 
 export interface ServerProgram {

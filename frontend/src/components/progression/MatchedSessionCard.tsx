@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBioStore } from '@/store/bioStore'
 import type { MatchedSessionSummary } from '@/api/types'
+import { sourceBadgeLabel } from '@/lib/workoutSource'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -27,12 +28,7 @@ function DurationDelta({ pct }: { pct: number | null }) {
 }
 
 function SourceBadge({ source, confidence }: { source: string; confidence: string }) {
-  const label =
-    source === 'strava'           ? 'Strava'
-    : source === 'apple_health' || source === 'apple_watch_live' ? 'GPS'
-    : source === 'fit_file'       ? 'FIT'
-    : source === 'manual'         ? 'Manual'
-    : 'GPS'
+  const label = sourceBadgeLabel(source)
   return (
     <span className="shrink-0 text-[9px] text-muted-foreground/60 border border-border/40 rounded px-1 py-px leading-none">
       {confidence === 'manual' ? '⊙' : ''}{label}
