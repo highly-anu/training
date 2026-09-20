@@ -11,26 +11,183 @@ def init_db() -> None:
 
 # ── Workouts ──────────────────────────────────────────────────────────────────
 
-def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
+_DEDUPE_COLUMNS_READY: bool | None = None   # None = not yet checked
+
+
+def _ensure_dedupe_columns(cur) -> bool:
+    """Add the dedup columns if they're missing; report whether they exist.
+
+    Additive and idempotent, mirroring migrations/003_workout_dedupe.sql so a
+    deployment that hasn't run the migration still works. Returns False instead
+    of raising when the DDL isn't permitted, so read paths can fall back to a
+    query that doesn't mention the columns rather than returning nothing.
+    """
+    global _DEDUPE_COLUMNS_READY
+    if _DEDUPE_COLUMNS_READY is not None:
+        return _DEDUPE_COLUMNS_READY
+    try:
+        cur.execute('ALTER TABLE workouts ADD COLUMN IF NOT EXISTS dedupe_key TEXT')
+        cur.execute('ALTER TABLE workouts ADD COLUMN IF NOT EXISTS canonical_id TEXT')
+        cur.execute('CREATE INDEX IF NOT EXISTS idx_workouts_dedupe '
+                    'ON workouts (user_id, dedupe_key)')
+        cur.execute('CREATE INDEX IF NOT EXISTS idx_workouts_user_start '
+                    'ON workouts (user_id, start_time)')
+        _DEDUPE_COLUMNS_READY = True
+    except Exception:
+        _DEDUPE_COLUMNS_READY = False
+    return _DEDUPE_COLUMNS_READY
+
+
+def _load_dedupe_candidates(cur, user_id: str, workouts: list[dict]) -> list[dict]:
+    """Canonical rows that could be duplicates of anything in this batch.
+
+    One query for the whole batch, bounded by the time span the batch covers,
+    so a 20k-workout Apple Health backfill doesn't become 20k round-trips.
+    """
+    from src.workout_dedupe import parse_time, START_WINDOW_SECONDS
+
+    times = [t for t in (parse_time(w.get('startTime')) for w in workouts) if t]
+    if not times:
+        return []
+    from datetime import timedelta
+    lo = min(times) - timedelta(seconds=START_WINDOW_SECONDS)
+    hi = max(times) + timedelta(seconds=START_WINDOW_SECONDS)
+
+    cur.execute('''
+        SELECT id, source, start_time, duration_minutes, inferred_modality_id,
+               calories, distance_value, distance_unit,
+               elevation_gain, elevation_loss,
+               (gps_track  IS NOT NULL) AS has_gps,
+               (hr_samples IS NOT NULL) AS has_hr,
+               hr_avg, hr_max, hr_min
+        FROM workouts
+        WHERE user_id = %s AND canonical_id IS NULL
+          AND start_time BETWEEN %s AND %s
+    ''', (user_id, lo, hi))
+
+    rows = []
+    for row in cur.fetchall():
+        rows.append({
+            'id':                 row['id'],
+            'source':             row['source'],
+            'startTime':          row['start_time'],
+            'durationMinutes':    row['duration_minutes'],
+            'inferredModalityId': row['inferred_modality_id'],
+            'calories':           row['calories'],
+            'distance': ({'value': row['distance_value'], 'unit': row['distance_unit']}
+                         if row['distance_value'] is not None else None),
+            'elevation': ({'gain': row['elevation_gain'], 'loss': row['elevation_loss']}
+                          if row['elevation_gain'] is not None else None),
+            # Presence flags stand in for the payloads, which are large and only
+            # needed to answer "is this field already populated?".
+            'gpsTrack':  [1] if row['has_gps'] else None,
+            'heartRate': {'avg': row['hr_avg'], 'max': row['hr_max'], 'min': row['hr_min'],
+                          'samples': [1] if row['has_hr'] else None},
+        })
+    return rows
+
+
+def _apply_merge(cur, user_id: str, canonical_id: str, updates: dict) -> None:
+    """Promote fields from a duplicate onto the row that already exists.
+
+    Only the columns that actually gained something are written, and never the
+    row's identity — workout_matches points at that id.
+    """
+    sets, params = [], []
+
+    if 'gpsTrack' in updates:
+        sets.append('gps_track = %s::jsonb')
+        params.append(json.dumps(updates['gpsTrack']))
+    if 'calories' in updates:
+        sets.append('calories = %s')
+        params.append(updates['calories'])
+    if 'inferredModalityId' in updates:
+        sets.append('inferred_modality_id = %s')
+        params.append(updates['inferredModalityId'])
+    if 'distance' in updates and updates['distance']:
+        sets.append('distance_value = %s')
+        params.append(updates['distance'].get('value'))
+        sets.append('distance_unit = %s')
+        params.append(updates['distance'].get('unit'))
+    if 'elevation' in updates and updates['elevation']:
+        sets.append('elevation_gain = %s')
+        params.append(updates['elevation'].get('gain'))
+        sets.append('elevation_loss = %s')
+        params.append(updates['elevation'].get('loss'))
+    if 'heartRate' in updates:
+        hr = updates['heartRate']
+        for column, key in (('hr_avg', 'avg'), ('hr_max', 'max'), ('hr_min', 'min')):
+            if hr.get(key) is not None:
+                sets.append(f'{column} = %s')
+                params.append(hr[key])
+        if hr.get('samples'):
+            sets.append('hr_samples = %s::jsonb')
+            params.append(json.dumps(hr['samples']))
+
+    if not sets:
+        return
+    params.extend([canonical_id, user_id])
+    cur.execute(f'UPDATE workouts SET {", ".join(sets)} '
+                f'WHERE id = %s AND user_id = %s', params)
+
+
+def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
+                    raise_on_error: bool = False) -> int:
+    """Store imported workouts, folding together duplicates from other sources.
+
+    Returns the number of rows written or enriched.
+
+    `raise_on_error` exists for the automatic import paths: a webhook that
+    reports success on a silently failed write loses the workout permanently,
+    with nothing to retry from. Interactive callers keep the historic
+    swallow-everything behaviour.
+    """
     from src.db import get_conn
+    from src import workout_dedupe
+
+    if not workouts:
+        return 0
+
+    written = 0
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                for w in workouts:
+                # Without the columns (migration not yet applied on this
+                # deployment) we still store everything — just without folding
+                # duplicates together.
+                has_dedupe_columns = _ensure_dedupe_columns(cur)
+                if dedupe and has_dedupe_columns:
+                    existing = _load_dedupe_candidates(cur, user_id, workouts)
+                    actions = workout_dedupe.plan_upserts(workouts, existing)
+                else:
+                    actions = [{'action': 'insert', 'workout': w} for w in workouts]
+
+                for action in actions:
+                    # A duplicate is still stored, then pointed at its canonical
+                    # row and hidden from reads — a client that computed the
+                    # duplicate's id locally (the iOS importer does) can still
+                    # reference it without conjuring a stub row.
+                    w = action['workout']
                     hr         = w.get('heartRate') or {}
                     dist       = w.get('distance') or {}
                     elev       = w.get('elevation') or {}
                     gps        = w.get('gpsTrack')
                     hr_samples = hr.get('samples') or []
-                    cur.execute('''
+                    dedupe_col = ', dedupe_key' if has_dedupe_columns else ''
+                    dedupe_val = ', %s' if has_dedupe_columns else ''
+                    dedupe_set = (',\n                            '
+                                  'dedupe_key = EXCLUDED.dedupe_key'
+                                  if has_dedupe_columns else '')
+                    cur.execute(f'''
                         INSERT INTO workouts
                         (id, user_id, source, date, start_time, end_time, duration_minutes,
                          activity_type, inferred_modality_id,
                          hr_avg, hr_max, hr_min, calories,
                          distance_value, distance_unit, raw_data,
-                         gps_track, elevation_gain, elevation_loss, hr_samples)
+                         gps_track, elevation_gain, elevation_loss, hr_samples
+                         {dedupe_col})
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s::jsonb, %s::jsonb, %s, %s, %s::jsonb)
+                                %s::jsonb, %s::jsonb, %s, %s, %s::jsonb {dedupe_val})
                         ON CONFLICT (id, user_id) DO UPDATE SET
                             source               = EXCLUDED.source,
                             date                 = EXCLUDED.date,
@@ -49,8 +206,8 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
                             gps_track            = EXCLUDED.gps_track,
                             elevation_gain       = EXCLUDED.elevation_gain,
                             elevation_loss       = EXCLUDED.elevation_loss,
-                            hr_samples           = EXCLUDED.hr_samples
-                    ''', (
+                            hr_samples           = EXCLUDED.hr_samples{dedupe_set}
+                    ''', [
                         w['id'], user_id, w['source'], w['date'], w['startTime'], w['endTime'],
                         w['durationMinutes'], w['activityType'],
                         w.get('inferredModalityId'),
@@ -61,10 +218,24 @@ def upsert_workouts(user_id: str, workouts: list[dict]) -> None:
                         json.dumps(gps) if gps else None,
                         elev.get('gain'), elev.get('loss'),
                         json.dumps(hr_samples) if hr_samples else None,
-                    ))
+                    ] + ([workout_dedupe.dedupe_key(w)] if has_dedupe_columns else []))
+                    written += 1
+
+                    if action['action'] == 'merge':
+                        _apply_merge(cur, user_id, action['canonicalId'], action['updates'])
+                        cur.execute(
+                            'UPDATE workouts SET canonical_id = %s '
+                            'WHERE id = %s AND user_id = %s',
+                            (action['canonicalId'], w['id'], user_id),
+                        )
             conn.commit()
+        return written
     except Exception:
-        pass
+        # The automatic import paths need to know a write failed so the event
+        # stays retryable; the interactive ones have always swallowed it.
+        if raise_on_error:
+            raise
+        return written
 
 
 def recalculate_workouts_elevation(user_id: str, calc_elevation_fn) -> dict:
@@ -172,8 +343,14 @@ def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                # canonical_id IS NULL hides rows that were folded into another
+                # source's copy of the same activity. They are kept rather than
+                # deleted because workout_matches may still reference them.
+                where = 'user_id = %s'
+                if _ensure_dedupe_columns(cur):
+                    where += ' AND canonical_id IS NULL'
                 cur.execute(
-                    'SELECT * FROM workouts WHERE user_id = %s ORDER BY date DESC',
+                    f'SELECT * FROM workouts WHERE {where} ORDER BY date DESC',
                     (user_id,),
                 )
                 rows = cur.fetchall()
