@@ -2279,6 +2279,28 @@ def health_upsert_workouts():
     workouts = body.get('workouts', [])
     if not isinstance(workouts, list):
         return jsonify({'detail': 'workouts must be an array'}), 400
+
+    # `autoMatch` marks an automatic import (the iOS Apple Health relay) rather
+    # than an interactive one. Those need the server-side matcher, because the
+    # client doing the importing has no matcher of its own and there may be no
+    # browser open at all.
+    auto_match = bool(body.get('autoMatch'))
+
+    # An automatic import also respects the athlete's settings — enforcing this
+    # only in the UI would leave the toggle decorative.
+    if auto_match:
+        sources = {w.get('source') for w in workouts if isinstance(w, dict)}
+        # Apple Health is the relay's own channel; a Garmin-written workout
+        # arriving through it is gated on the Garmin toggle, as the athlete
+        # would expect from the label.
+        allowed = {
+            s for s in sources
+            if integration_allows(g.user_id, 'garmin' if s == 'garmin' else 'appleHealth')
+        }
+        workouts = [w for w in workouts if w.get('source') in allowed]
+        if not workouts:
+            return jsonify({'saved': 0, 'skipped': 'auto-import disabled'})
+
     # Enrich elevation from GPS track altitude when the client only sent gain (loss=0).
     # Apple Watch live workouts always arrive with loss=0; recalculate from track altitude.
     for workout in workouts:
@@ -2288,8 +2310,14 @@ def health_upsert_workouts():
             gain, loss = _calc_elevation(gps)
             if gain or loss:
                 workout['elevation'] = {'gain': round(gain), 'loss': round(loss)}
+
     _health.upsert_workouts(g.user_id, workouts)
-    return jsonify({'saved': len(workouts)})
+
+    result = {'saved': len(workouts)}
+    if auto_match:
+        from src import workout_matcher
+        result['matched'] = workout_matcher.match_and_store(g.user_id, workouts)
+    return jsonify(result)
 
 
 @app.delete('/api/health/workouts/<workout_id>')

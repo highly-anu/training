@@ -53,7 +53,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to sign in to Training Companion without entering your password.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>TrainingCompanion reads your sleep, heart rate, and HRV data to sync with your training dashboard.</string>
+	<string>TrainingCompanion reads your sleep, heart rate and HRV, and your completed workouts including their GPS routes, so activities recorded on your Garmin or Apple Watch appear in your training log automatically.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>TrainingCompanion does not write health data.</string>
 	<key>SUPABASE_ANON_KEY</key>

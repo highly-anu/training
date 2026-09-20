@@ -4,6 +4,10 @@
 <dict>
 	<key>com.apple.developer.healthkit</key>
 	<true/>
+	<!-- Lets HealthKit wake the app when a workout is written, instead of
+	     waiting for the ~6h background refresh. -->
+	<key>com.apple.developer.healthkit.background-delivery</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.haerdsoft.TrainingCompanion</string>

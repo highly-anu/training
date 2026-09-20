@@ -11,6 +11,8 @@ final class SyncManager: ObservableObject {
     @Published var lastBioSyncDate: Date? = UserDefaults.standard.object(forKey: "lastBioSyncDate") as? Date
     @Published var lastBioPushedCount: Int = UserDefaults.standard.integer(forKey: "lastBioPushedCount")
     @Published var lastProgramSyncDate: Date? = UserDefaults.standard.object(forKey: "lastProgramSyncDate") as? Date
+    @Published var lastWorkoutSyncDate: Date? = UserDefaults.standard.object(forKey: "lastWorkoutSyncDate") as? Date
+    @Published var lastWorkoutImportedCount: Int = UserDefaults.standard.integer(forKey: "lastWorkoutImportedCount")
 
     private var cancelled = false
     private let hk = HealthKitManager.shared
@@ -23,13 +25,18 @@ final class SyncManager: ObservableObject {
 
     private var api: APIClient?
     private var watchSync: WatchSessionManager?
+    /// Needed to read the athlete's auto-import settings, which live on the
+    /// server profile rather than in UserDefaults — the Garmin webhook worker
+    /// reads the same object.
+    private weak var appState: AppState?
 
     private let logger = AppLogger.shared
 
-    func configure(auth: AuthManager) {
+    func configure(auth: AuthManager, appState: AppState? = nil) {
         let client = APIClient(auth: auth)
         api = client
         watchSync = WatchSessionManager(api: client)
+        self.appState = appState
     }
 
     func cancel() { cancelled = true }
@@ -98,6 +105,7 @@ final class SyncManager: ObservableObject {
                 await watchSync?.syncProgram()
                 lastProgramSyncDate = Date()
                 UserDefaults.standard.set(lastProgramSyncDate!, forKey: "lastProgramSyncDate")
+                await importHealthWorkouts()
                 logger.log("syncAll: complete")
             }
         } catch {
@@ -106,5 +114,69 @@ final class SyncManager: ObservableObject {
         }
 
         isSyncing = false
+    }
+
+    // MARK: - Workout import (Garmin via Apple Health)
+
+    /// Pull workouts other apps wrote to Apple Health — in practice, the
+    /// activities Garmin Connect syncs down from the watch.
+    ///
+    /// Runs inside syncAll(), so it inherits the existing ~6h BGAppRefreshTask
+    /// with no new background identifier. The HKObserverQuery registered at
+    /// launch makes it closer to immediate when the entitlement allows.
+    func importHealthWorkouts() async {
+        guard let api else { return }
+
+        // In the foreground AppState already holds the profile. The background
+        // task builds its own SyncManager with no AppState, and that is the
+        // path where the gate matters most, so fall back to fetching it.
+        var settings = appState?.profile.integrations
+        if settings == nil {
+            settings = try? await api.fetchUserProfile().integrations
+        }
+        guard (settings ?? .default).allows("appleHealth") else {
+            logger.log("workout-import: skipped — auto-import is off")
+            return
+        }
+
+        let workouts = await hk.importableWorkouts()
+        guard !workouts.isEmpty else {
+            logger.log("workout-import: nothing new")
+            markWorkoutSync(imported: 0)
+            return
+        }
+
+        var payload: [ImportedWorkout] = []
+        for workout in workouts {
+            payload.append(await hk.toImportedWorkout(workout))
+        }
+
+        do {
+            // The server dedups, so re-sending one the watch relay already
+            // uploaded costs a merge, not a duplicate.
+            let count = try await api.saveImportedWorkouts(payload)
+            logger.log("workout-import: uploaded \(count) workout(s)")
+            markWorkoutSync(imported: count)
+        } catch {
+            // Deliberately not rethrown: a failed workout import must not fail
+            // the bio sync that already succeeded. The anchor has moved on, so
+            // recover with "Re-import recent workouts" in Sync settings.
+            logger.log("workout-import: ERROR — \(error.localizedDescription)")
+        }
+    }
+
+    /// Forget the HealthKit anchor so the next pass re-examines recent history.
+    func reimportRecentWorkouts() async {
+        hk.resetWorkoutAnchor()
+        logger.log("workout-import: anchor reset, re-importing")
+        await importHealthWorkouts()
+    }
+
+    private func markWorkoutSync(imported: Int) {
+        let now = Date()
+        lastWorkoutSyncDate = now
+        lastWorkoutImportedCount = imported
+        UserDefaults.standard.set(now, forKey: "lastWorkoutSyncDate")
+        UserDefaults.standard.set(imported, forKey: "lastWorkoutImportedCount")
     }
 }

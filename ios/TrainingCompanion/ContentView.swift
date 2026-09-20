@@ -14,7 +14,7 @@ struct ContentView: View {
                 .environmentObject(appState)
                 .environmentObject(programStore)
                 .onAppear {
-                    sync.configure(auth: auth)
+                    sync.configure(auth: auth, appState: appState)
                     appState.configure(auth: auth)
                     // Load everything except workouts immediately (Today tab needs program/profile/logs).
                     Task { await appState.loadAllExceptWorkouts() }
@@ -27,6 +27,23 @@ struct ContentView: View {
                         }
                         await sync.syncAll()
                         await appState.loadAll()
+
+                        // Near-real-time import: HealthKit wakes us when a new
+                        // workout is written, instead of waiting for the ~6h
+                        // background refresh. Observer queries must be
+                        // re-registered every launch. Background delivery needs
+                        // an entitlement, so a failure here is expected on
+                        // builds without it and simply leaves the 6h path.
+                        do {
+                            try await HealthKitManager.shared.enableWorkoutBackgroundDelivery()
+                        } catch {
+                            AppLogger.shared.log(
+                                "workout-import: background delivery unavailable — \(error.localizedDescription)")
+                        }
+                        HealthKitManager.shared.startWorkoutObserver {
+                            await sync.importHealthWorkouts()
+                            await appState.loadAll()
+                        }
                     }
                     scheduleNextSync()
                 }

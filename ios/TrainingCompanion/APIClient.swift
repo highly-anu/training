@@ -98,6 +98,25 @@ final class APIClient {
         _ = try await postRaw("/health/matches", body: body)
     }
 
+    /// Upload automatically imported workouts.
+    ///
+    /// Goes through Flask rather than `saveWorkoutDirect`'s Supabase REST call
+    /// on purpose: this endpoint recomputes elevation from the GPS track,
+    /// folds together copies of the same activity from other sources, and runs
+    /// the server-side matcher. Writing straight to Supabase skips all three —
+    /// and this app has no matcher of its own.
+    @discardableResult
+    func saveImportedWorkouts(_ workouts: [ImportedWorkout]) async throws -> Int {
+        guard !workouts.isEmpty else { return 0 }
+        struct Payload: Encodable {
+            let workouts: [ImportedWorkout]
+            let autoMatch: Bool
+        }
+        let body = try JSONEncoder().encode(Payload(workouts: workouts, autoMatch: true))
+        _ = try await postRaw("/health/workouts", body: body)
+        return workouts.count
+    }
+
     // MARK: - User Profile
 
     func fetchUserProfile() async throws -> UserProfile {

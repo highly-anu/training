@@ -221,6 +221,191 @@ final class HealthKitManager {
         }
     }
 
+    // MARK: - Workout import (Garmin via Apple Health)
+    //
+    // Garmin Connect writes the activities it syncs from the watch into Apple
+    // Health. Reading them here is what makes automatic import work without a
+    // Garmin Developer Program approval — and on a phone that already has both
+    // apps, it is the shortest path the data can take.
+
+    private static let anchorKey = "hkWorkoutAnchor"
+    /// On a first run there is no anchor, so HealthKit returns the entire
+    /// workout history. Import only the recent tail of that first flood; the
+    /// anchor is still saved, so it happens exactly once.
+    private static let firstRunLookbackDays = 90
+
+    private var storedAnchor: HKQueryAnchor? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: Self.anchorKey) else { return nil }
+            return try? NSKeyedUnarchiver.unarchivedObject(ofClass: HKQueryAnchor.self, from: data)
+        }
+        set {
+            guard let anchor = newValue,
+                  let data = try? NSKeyedArchiver.archivedData(
+                      withRootObject: anchor, requiringSecureCoding: true)
+            else { return }
+            UserDefaults.standard.set(data, forKey: Self.anchorKey)
+        }
+    }
+
+    /// Forget the sync position, so the next pass re-examines recent history.
+    /// Dedup on the server makes a replay harmless.
+    func resetWorkoutAnchor() {
+        UserDefaults.standard.removeObject(forKey: Self.anchorKey)
+    }
+
+    /// Workouts added since the last pass that we want to import.
+    func importableWorkouts() async -> [HKWorkout] {
+        let hadAnchor = storedAnchor != nil
+
+        let (workouts, newAnchor): ([HKWorkout], HKQueryAnchor?) = await withCheckedContinuation { continuation in
+            let query = HKAnchoredObjectQuery(
+                type: HKObjectType.workoutType(),
+                predicate: nil,
+                anchor: storedAnchor,
+                limit: HKObjectQueryNoLimit
+            ) { _, samples, _, anchor, _ in
+                continuation.resume(returning: ((samples as? [HKWorkout]) ?? [], anchor))
+            }
+            store.execute(query)
+        }
+
+        // Save the anchor even when we discard most of this batch, so the
+        // first-run flood is bounded to a single pass.
+        if let newAnchor { storedAnchor = newAnchor }
+
+        let cutoff = Calendar.current.date(
+            byAdding: .day, value: -Self.firstRunLookbackDays, to: Date())!
+
+        return workouts.filter { workout in
+            guard HKWorkoutMapping.shouldImport(workout) else {
+                AppLogger.shared.logFromBackground(
+                    "workout-import: skipping \(workout.sourceRevision.source.bundleIdentifier)")
+                return false
+            }
+            if !hadAnchor && workout.startDate < cutoff { return false }
+            return true
+        }
+    }
+
+    /// Per-sample heart rate recorded during a workout.
+    func fetchHRSamples(for workout: HKWorkout) async -> [HRSample] {
+        guard let hrType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return [] }
+        let predicate = HKQuery.predicateForObjects(from: workout)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        let unit = HKUnit.count().unitDivided(by: .minute())
+
+        let samples: [HKQuantitySample] = await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: hrType, predicate: predicate,
+                limit: HKObjectQueryNoLimit, sortDescriptors: [sort]
+            ) { _, results, _ in
+                continuation.resume(returning: (results as? [HKQuantitySample]) ?? [])
+            }
+            store.execute(query)
+        }
+
+        return samples.map {
+            HRSample(timestamp: WorkoutID.isoFormatter.string(from: $0.startDate),
+                     bpm: Int($0.quantity.doubleValue(for: unit).rounded()))
+        }
+    }
+
+    /// Convert an HKWorkout into the shape the backend stores.
+    ///
+    /// A note on ids: these will NOT match the ids the web app's Apple Health
+    /// XML importer produces for the same workout. That path hashes the raw
+    /// `HKWorkoutActivityTypeRunning` spelling with a differently formatted
+    /// start time, and mimicking it here would be brittle for no gain — the
+    /// server's cross-source dedup collapses the two anyway. Don't "fix" this.
+    func toImportedWorkout(_ workout: HKWorkout) async -> ImportedWorkout {
+        let source = HKWorkoutMapping.sourceTag(for: workout)
+        let activityType = HKWorkoutMapping.displayName(for: workout.workoutActivityType)
+        let durationMin = workout.duration / 60.0
+        let startStr = WorkoutID.isoFormatter.string(from: workout.startDate)
+
+        let hrSamples = await fetchHRSamples(for: workout)
+        let locations = await fetchWorkoutRoute(for: workout)
+
+        let gpsTrack: [GPSPoint]? = locations.isEmpty ? nil : locations.map { loc in
+            GPSPoint(
+                lat: loc.coordinate.latitude,
+                lng: loc.coordinate.longitude,
+                altitude: loc.altitude,
+                timestamp: WorkoutID.isoFormatter.string(from: loc.timestamp),
+                bpm: nil,
+                speed: loc.speed >= 0 ? loc.speed : nil
+            )
+        }
+
+        let hrValues = hrSamples.map(\.bpm)
+        let distanceMeters = workout.statistics(
+            for: HKQuantityType(.distanceWalkingRunning))?
+            .sumQuantity()?.doubleValue(for: .meter)
+            ?? workout.statistics(for: HKQuantityType(.distanceCycling))?
+                .sumQuantity()?.doubleValue(for: .meter)
+        let calories = workout.statistics(for: HKQuantityType(.activeEnergyBurned))?
+            .sumQuantity()?.doubleValue(for: .kilocalorie)
+
+        return ImportedWorkout(
+            id: WorkoutID.deterministic(source: source,
+                                       startTime: startStr,
+                                       activityType: activityType,
+                                       durationMinutes: Int(durationMin)),
+            source: source,
+            date: WorkoutID.dateFormatter.string(from: workout.startDate),
+            startTime: startStr,
+            durationMinutes: durationMin.rounded(),
+            activityType: activityType,
+            inferredModalityId: HKWorkoutMapping.modalityId(for: workout.workoutActivityType),
+            heartRate: WorkoutHRData(
+                avg: hrValues.isEmpty ? nil : hrValues.reduce(0, +) / hrValues.count,
+                max: hrValues.max(),
+                samples: hrSamples
+            ),
+            calories: calories,
+            distance: distanceMeters.map {
+                WorkoutDistance(value: (($0 / 1000) * 1000).rounded() / 1000, unit: "km")
+            },
+            gpsTrack: gpsTrack,
+            // Left to the server, which recomputes gain/loss from the track's
+            // altitudes whenever loss is zero (see POST /api/health/workouts).
+            elevation: nil
+        )
+    }
+
+    // MARK: - Background delivery
+
+    /// Ask HealthKit to wake the app when a workout is written.
+    ///
+    /// Needs the `com.apple.developer.healthkit.background-delivery`
+    /// entitlement; without it this throws and the app falls back to the
+    /// existing ~6h BGAppRefreshTask, which is why the caller only logs.
+    func enableWorkoutBackgroundDelivery() async throws {
+        try await store.enableBackgroundDelivery(
+            for: HKObjectType.workoutType(), frequency: .immediate)
+    }
+
+    /// Observer queries must be re-registered on every launch, and the
+    /// completion handler MUST be called or iOS throttles delivery.
+    func startWorkoutObserver(onChange: @escaping () async -> Void) {
+        let query = HKObserverQuery(
+            sampleType: HKObjectType.workoutType(), predicate: nil
+        ) { _, completionHandler, error in
+            if let error {
+                AppLogger.shared.logFromBackground(
+                    "workout-import: observer error \(error.localizedDescription)")
+                completionHandler()
+                return
+            }
+            Task {
+                await onChange()
+                completionHandler()
+            }
+        }
+        store.execute(query)
+    }
+
     private func fetchAverageQuantity(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, date: Date) async -> Double? {
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: date)

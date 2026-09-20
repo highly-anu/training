@@ -33,6 +33,7 @@ struct SyncStatusView: View {
             List {
                 devicesSection
                 pairGarminSection
+                connectionsSection
                 syncCategoriesSection
                 debugLogSection
             }
@@ -174,8 +175,74 @@ struct SyncStatusView: View {
 
     // MARK: - Sync Categories
 
+    // MARK: - Connections (automatic workout import)
+
+    /// Server-backed, not @AppStorage: the Garmin webhook worker reads the
+    /// same settings object, so a switch kept only on this phone would do
+    /// nothing about activities Garmin is already pushing.
+    private var integrations: IntegrationSettings {
+        appState.profile.integrations ?? .default
+    }
+
+    private func setAutoImport(_ enabled: Bool) {
+        var next = integrations
+        next.autoImport = enabled
+        appState.profile.integrations = next
+        Task { await appState.saveProfile() }
+    }
+
+    private func setSource(_ key: String, _ enabled: Bool) {
+        var next = integrations
+        next.sources[key] = IntegrationSource(enabled: enabled)
+        appState.profile.integrations = next
+        Task { await appState.saveProfile() }
+    }
+
+    private var connectionsSection: some View {
+        Section {
+            Toggle("Automatic import", isOn: Binding(
+                get: { integrations.autoImport },
+                set: setAutoImport
+            ))
+
+            Toggle("Apple Health workouts", isOn: Binding(
+                get: { integrations.sources["appleHealth"]?.enabled ?? true },
+                set: { setSource("appleHealth", $0) }
+            ))
+            .disabled(!integrations.autoImport)
+
+            Toggle("Garmin Connect", isOn: Binding(
+                get: { integrations.sources["garmin"]?.enabled ?? true },
+                set: { setSource("garmin", $0) }
+            ))
+            .disabled(!integrations.autoImport)
+
+            Button {
+                Task { await sync.reimportRecentWorkouts() }
+            } label: {
+                Label("Re-import recent workouts", systemImage: "arrow.clockwise")
+            }
+            .disabled(sync.isSyncing || !integrations.autoImport)
+        } header: {
+            Text("Connections")
+        } footer: {
+            Text("Activities Garmin Connect writes to Apple Health are imported "
+                 + "automatically and matched to your planned sessions. "
+                 + "Re-import forgets where the last sync stopped and looks again — "
+                 + "duplicates are merged, not repeated.")
+        }
+    }
+
     private var syncCategoriesSection: some View {
         Section("Sync Details") {
+            syncRow(
+                icon: "figure.run",
+                label: "Workout Import",
+                date: sync.lastWorkoutSyncDate,
+                detail: "Garmin activities via Apple Health",
+                logKeyword: "workout-import"
+            )
+
             syncRow(
                 icon: "person.crop.circle",
                 label: "Profile Sync",
