@@ -53,3 +53,6 @@ data/create_fit.py
 
 # Local workout files for import testing (.wkt tracks + .png previews)
 Workouts/
+
+# local backup created while testing against a local API
+frontend/.env.local.bak
