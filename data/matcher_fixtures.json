@@ -1,0 +1,315 @@
+{
+  "_comment": "Golden cases for the workout matcher, asserted by BOTH implementations: test_workout_matcher.py (Python, src/workout_matcher.py) and frontend/src/lib/workoutMatcher.test.ts (TS, frontend/src/lib/workoutMatcher.ts). If you change scoring, update data/matching_rules.json and re-run both; a case that passes on one side and fails on the other means the two have drifted.",
+
+  "scoreCases": [
+    {
+      "name": "exact modality and near-exact duration is the top score",
+      "workout": { "inferredModalityId": "aerobic_base", "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 5
+    },
+    {
+      "name": "exact modality, duration within 15 min",
+      "workout": { "inferredModalityId": "max_strength", "durationMinutes": 50 },
+      "sessionModality": "max_strength",
+      "sessionDuration": 60,
+      "expectedScore": 5
+    },
+    {
+      "name": "exact modality, duration within 30 min",
+      "workout": { "inferredModalityId": "max_strength", "durationMinutes": 35 },
+      "sessionModality": "max_strength",
+      "sessionDuration": 60,
+      "expectedScore": 4
+    },
+    {
+      "name": "exact modality, duration way off",
+      "workout": { "inferredModalityId": "max_strength", "durationMinutes": 5 },
+      "sessionModality": "max_strength",
+      "sessionDuration": 60,
+      "expectedScore": 3
+    },
+    {
+      "name": "same family only, duration close",
+      "workout": { "inferredModalityId": "anaerobic_intervals", "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 3
+    },
+    {
+      "name": "different family, duration close",
+      "workout": { "inferredModalityId": "max_strength", "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 2
+    },
+    {
+      "name": "no inferred modality scores on duration alone",
+      "workout": { "inferredModalityId": null, "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 2
+    },
+    {
+      "name": "nothing agrees",
+      "workout": { "inferredModalityId": "mobility", "durationMinutes": 120 },
+      "sessionModality": "max_strength",
+      "sessionDuration": 45,
+      "expectedScore": 0
+    },
+    {
+      "name": "duration boundary: exactly 15 min out still earns the top tier",
+      "workout": { "inferredModalityId": "aerobic_base", "durationMinutes": 45 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 5
+    },
+    {
+      "name": "duration boundary: exactly 30 min out earns the lower tier",
+      "workout": { "inferredModalityId": "aerobic_base", "durationMinutes": 30 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "expectedScore": 4
+    }
+  ],
+
+  "matchCases": [
+    {
+      "name": "a single strong candidate is auto-confirmed",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-abc",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 58
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [{ "importedWorkoutId": "garmin-abc", "sessionKey": "1-Monday-0" }],
+        "suggested": []
+      }
+    },
+    {
+      "name": "a weak candidate is suggested, not confirmed",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "max_strength", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-weak",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 55
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [],
+        "suggested": [{ "importedWorkoutId": "garmin-weak", "sessionKey": "1-Monday-0", "score": 2 }]
+      }
+    },
+    {
+      "name": "two equally strong candidates are ambiguous, so neither is confirmed",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } },
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-ambiguous",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [],
+        "suggested": [{ "importedWorkoutId": "garmin-ambiguous", "sessionKey": "1-Monday-0", "score": 5 }]
+      }
+    },
+    {
+      "name": "the stronger of two candidates wins outright",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "mobility", "archetype": { "duration_estimate_minutes": 20 } },
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-clear",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [{ "importedWorkoutId": "garmin-clear", "sessionKey": "1-Monday-1" }],
+        "suggested": []
+      }
+    },
+    {
+      "name": "an already-matched workout is left alone",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-done",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [
+        { "importedWorkoutId": "garmin-done", "sessionKey": "1-Monday-0", "matchConfidence": "manual" }
+      ],
+      "expected": { "confirmed": [], "suggested": [] }
+    },
+    {
+      "name": "a workout on a rest day matches nothing",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-restday",
+          "date": "2026-03-03",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [],
+      "expected": { "confirmed": [], "suggested": [] }
+    },
+    {
+      "name": "week two maps to the right calendar date and keeps its week_number",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Wednesday": [
+                { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          },
+          {
+            "week_number": 2,
+            "schedule": {
+              "Wednesday": [
+                { "modality": "max_strength", "archetype": { "duration_estimate_minutes": 60 } }
+              ]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-week2",
+          "date": "2026-03-11",
+          "inferredModalityId": "max_strength",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [{ "importedWorkoutId": "garmin-week2", "sessionKey": "2-Wednesday-0" }],
+        "suggested": []
+      }
+    },
+    {
+      "name": "a session with no archetype falls back to 60 minutes",
+      "programStartDate": "2026-03-02",
+      "program": {
+        "weeks": [
+          {
+            "week_number": 1,
+            "schedule": {
+              "Monday": [{ "modality": "aerobic_base" }]
+            }
+          }
+        ]
+      },
+      "workouts": [
+        {
+          "id": "garmin-noarch",
+          "date": "2026-03-02",
+          "inferredModalityId": "aerobic_base",
+          "durationMinutes": 60
+        }
+      ],
+      "existingMatches": [],
+      "expected": {
+        "confirmed": [{ "importedWorkoutId": "garmin-noarch", "sessionKey": "1-Monday-0" }],
+        "suggested": []
+      }
+    }
+  ]
+}

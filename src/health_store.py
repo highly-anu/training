@@ -700,3 +700,104 @@ def list_progression_snapshots(user_id: str) -> list[dict]:
         ]
     except Exception:
         return []
+
+
+# ---------------------------------------------------------------------------
+# Match suggestions
+# ---------------------------------------------------------------------------
+# Kept in their own table rather than as a 'pending' value in
+# workout_matches.match_confidence. Roughly a dozen readers across api.py and
+# the frontend treat "has a workout_matches row that isn't 'rejected'" as "is
+# matched", so a pending row there would render as a confirmed match
+# everywhere and the workout would never reach the confirm dialog.
+
+_SUGGESTION_TABLE_CREATED = False
+
+
+def _ensure_suggestion_table(cur) -> None:
+    global _SUGGESTION_TABLE_CREATED
+    if _SUGGESTION_TABLE_CREATED:
+        return
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS workout_match_suggestions (
+            imported_workout_id TEXT NOT NULL,
+            user_id             TEXT NOT NULL,
+            session_key         TEXT NOT NULL,
+            score               INTEGER NOT NULL,
+            created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (imported_workout_id, user_id)
+        )
+    ''')
+    _SUGGESTION_TABLE_CREATED = True
+
+
+def upsert_match_suggestions(user_id: str, suggestions: list[dict]) -> None:
+    """Record 'this workout might be that session' for the user to confirm."""
+    from src.db import get_conn
+    if not suggestions:
+        return
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_suggestion_table(cur)
+                for s in suggestions:
+                    cur.execute('''
+                        INSERT INTO workout_match_suggestions
+                        (imported_workout_id, user_id, session_key, score)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (imported_workout_id, user_id) DO UPDATE SET
+                            session_key = EXCLUDED.session_key,
+                            score       = EXCLUDED.score,
+                            created_at  = NOW()
+                    ''', (s['importedWorkoutId'], user_id, s['sessionKey'], int(s['score'])))
+            conn.commit()
+    except Exception:
+        pass
+
+
+def get_match_suggestions(user_id: str) -> list[dict]:
+    """Outstanding suggestions, minus any the user has since resolved."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_suggestion_table(cur)
+                # A workout that has since been matched or rejected outright is
+                # no longer a question worth asking.
+                cur.execute('''
+                    SELECT s.imported_workout_id, s.session_key, s.score, s.created_at
+                    FROM workout_match_suggestions s
+                    LEFT JOIN workout_matches m
+                      ON m.imported_workout_id = s.imported_workout_id
+                     AND m.user_id = s.user_id
+                    WHERE s.user_id = %s AND m.imported_workout_id IS NULL
+                    ORDER BY s.created_at DESC
+                ''', (user_id,))
+                rows = cur.fetchall()
+        return [
+            {
+                'importedWorkoutId': row['imported_workout_id'],
+                'sessionKey':        row['session_key'],
+                'score':             row['score'],
+                'createdAt':         str(row['created_at']),
+            }
+            for row in rows
+        ]
+    except Exception:
+        return []
+
+
+def delete_match_suggestion(user_id: str, workout_id: str) -> None:
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                _ensure_suggestion_table(cur)
+                cur.execute(
+                    'DELETE FROM workout_match_suggestions '
+                    'WHERE user_id = %s AND imported_workout_id = %s',
+                    (user_id, workout_id),
+                )
+            conn.commit()
+    except Exception:
+        pass

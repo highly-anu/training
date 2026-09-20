@@ -2187,8 +2187,32 @@ def health_upsert_bio(date: str):
 @require_auth
 def health_upsert_match():
     match = request.get_json(silent=True) or {}
+    workout_id = match.get('importedWorkoutId')
     _health.upsert_match(g.user_id, match)
-    return jsonify({'saved': match.get('importedWorkoutId')})
+    # Deciding a workout — either way — answers any outstanding suggestion.
+    if workout_id:
+        _health.delete_match_suggestion(g.user_id, workout_id)
+    return jsonify({'saved': workout_id})
+
+
+@app.get('/api/health/matches/suggestions')
+@require_auth
+def health_match_suggestions():
+    """Workouts the server matched too weakly to confirm on its own.
+
+    Populated by the automatic import paths (Garmin webhook, iOS Apple Health),
+    which run server-side where there is no browser to ask. The web app merges
+    these into its existing pending-match flow so the athlete confirms or
+    rejects them the same way as an upload made in the browser.
+    """
+    return jsonify(_health.get_match_suggestions(g.user_id))
+
+
+@app.delete('/api/health/matches/suggestions/<path:workout_id>')
+@require_auth
+def health_dismiss_suggestion(workout_id: str):
+    _health.delete_match_suggestion(g.user_id, workout_id)
+    return jsonify({'dismissed': workout_id})
 
 
 @app.post('/api/health/performance')

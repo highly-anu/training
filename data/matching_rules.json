@@ -1,0 +1,15 @@
+{
+  "_comment": "Scoring rules shared by the workout matcher's two implementations: src/workout_matcher.py (server, used by webhook and iOS imports) and frontend/src/lib/workoutMatcher.ts (browser). Both read this file so the thresholds cannot drift apart. Parity is asserted by test_workout_matcher.py and frontend/src/lib/workoutMatcher.test.ts against data/matcher_fixtures.json.",
+  "families": {
+    "strength": ["max_strength", "relative_strength", "strength_endurance", "power"],
+    "cardio": ["aerobic_base", "anaerobic_intervals", "mixed_modal_conditioning"],
+    "durability": ["durability"],
+    "skill": ["movement_skill", "mobility", "rehab"]
+  },
+  "modalityExactPoints": 3,
+  "familyPoints": 1,
+  "durationTiers": [[15, 2], [30, 1]],
+  "defaultSessionMinutes": 60,
+  "autoThreshold": 4,
+  "suggestThreshold": 2
+}
