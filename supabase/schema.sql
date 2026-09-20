@@ -185,3 +185,83 @@ ALTER TABLE strava_tokens ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users access own strava tokens"
   ON strava_tokens FOR ALL
   USING (user_id = auth.uid());
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Cross-source workout dedup (migrations/003_workout_dedupe.sql)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- A workout's id embeds its source, so one activity arriving via the Garmin
+-- webhook, Apple Health, Strava and a manual .fit upload becomes four rows.
+-- dedupe_key buckets them; canonical_id marks the ones folded into another.
+-- Deliberately no UNIQUE index: existing data already contains duplicates.
+-- ALTER TABLE workouts ADD COLUMN IF NOT EXISTS dedupe_key   TEXT;
+-- ALTER TABLE workouts ADD COLUMN IF NOT EXISTS canonical_id TEXT;
+-- CREATE INDEX IF NOT EXISTS idx_workouts_dedupe     ON workouts (user_id, dedupe_key);
+-- CREATE INDEX IF NOT EXISTS idx_workouts_user_start ON workouts (user_id, start_time);
+
+
+-- Weak matches from the server-side matcher. Kept out of workout_matches
+-- because a dozen readers treat "row that isn't 'rejected'" as "is matched".
+CREATE TABLE IF NOT EXISTS workout_match_suggestions (
+  imported_workout_id TEXT NOT NULL,
+  user_id             TEXT NOT NULL,
+  session_key         TEXT NOT NULL,
+  score               INTEGER NOT NULL,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (imported_workout_id, user_id)
+);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Garmin Connect + shared OAuth state (migrations/004_garmin.sql)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- oauth_state replaces oauth.py's local SQLite file, which did not survive a
+-- fly.io restart, and carries Garmin's PKCE code_verifier.
+CREATE TABLE IF NOT EXISTS oauth_state (
+  state         TEXT PRIMARY KEY,
+  user_id       TEXT NOT NULL,
+  provider      TEXT NOT NULL,
+  code_verifier TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- garmin_user_id is the reverse lookup the webhook depends on: Garmin
+-- identifies the athlete by its own id and knows nothing about ours.
+CREATE TABLE IF NOT EXISTS garmin_tokens (
+  user_id                  TEXT PRIMARY KEY,
+  oauth_version            SMALLINT NOT NULL DEFAULT 2,
+  access_token             TEXT NOT NULL,
+  refresh_token            TEXT,
+  token_secret             TEXT,
+  expires_at               BIGINT,
+  refresh_token_expires_at BIGINT,
+  garmin_user_id           TEXT UNIQUE,
+  scope                    TEXT,
+  athlete_name             TEXT,
+  connected_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_sync_at             TIMESTAMPTZ,
+  last_webhook_at          TIMESTAMPTZ
+);
+
+-- Durable queue: the webhook handler must return fast (gunicorn runs a single
+-- sync worker) and the row is what survives a machine restart mid-batch.
+CREATE TABLE IF NOT EXISTS garmin_webhook_events (
+  id           BIGSERIAL PRIMARY KEY,
+  received_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  event_type   TEXT NOT NULL,
+  payload      JSONB NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'pending',
+  attempts     INTEGER NOT NULL DEFAULT 0,
+  last_error   TEXT,
+  processed_at TIMESTAMPTZ
+);
+
+-- Idempotency guard for redelivered pings.
+CREATE TABLE IF NOT EXISTS garmin_activities (
+  garmin_user_id TEXT NOT NULL,
+  summary_id     TEXT NOT NULL,
+  user_id        TEXT NOT NULL,
+  workout_id     TEXT,
+  imported_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (garmin_user_id, summary_id)
+);

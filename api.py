@@ -1019,17 +1019,19 @@ def strava_authorize():
 def strava_callback():
     import oauth as _oauth
     _oauth.init_db()
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    # Lands on the Connections tab, where StravaConnect actually renders. This
+    # used to redirect to /import, a page that reads none of these parameters —
+    # so the round-trip silently went nowhere.
     error = request.args.get('error')
     if error:
-        return redirect(f'{frontend_url}/import?strava=error&reason={error}')
+        return redirect(_integrations_redirect('strava', 'error', error))
     code = request.args.get('code', '')
     state = request.args.get('state', '')
     try:
         _oauth.handle_callback(code, state)
-        return redirect(f'{frontend_url}/import?strava=connected')
+        return redirect(_integrations_redirect('strava', 'connected'))
     except Exception as e:
-        return redirect(f'{frontend_url}/import?strava=error&reason={e}')
+        return redirect(_integrations_redirect('strava', 'error', str(e)))
 
 
 @app.delete('/api/oauth/strava/disconnect')
@@ -1053,6 +1055,156 @@ def strava_sync():
     since = body.get('since_timestamp')
     activities = _oauth.sync_activities(g.user_id, since_timestamp=since)
     return jsonify({'activities': activities, 'count': len(activities)})
+
+
+# ---------------------------------------------------------------------------
+# Garmin Connect
+# ---------------------------------------------------------------------------
+# Mirrors the Strava block above. Everything is inert until GARMIN_CLIENT_ID /
+# GARMIN_CLIENT_SECRET are set, so this ships safely before the Garmin
+# Developer Program application is approved.
+
+def _integrations_redirect(provider: str, outcome: str, reason: str = '') -> str:
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    url = f'{frontend_url}/profile?tab=connections&{provider}={outcome}'
+    if reason:
+        url += f'&reason={reason}'
+    return url
+
+
+@app.get('/api/oauth/garmin/status')
+@require_auth
+def garmin_status():
+    from src import garmin_connect
+    return jsonify(garmin_connect.get_status(g.user_id))
+
+
+@app.get('/api/oauth/garmin/authorize')
+@require_auth
+def garmin_authorize():
+    from src import garmin_connect
+    if not garmin_connect.is_configured():
+        return jsonify({
+            'detail': 'GARMIN_CLIENT_ID / GARMIN_CLIENT_SECRET not set in environment'
+        }), 503
+    return jsonify({'auth_url': garmin_connect.generate_auth_url(g.user_id)})
+
+
+@app.get('/api/oauth/garmin/callback')
+def garmin_callback():
+    """Garmin redirects the athlete's browser here — no JWT available."""
+    from src import garmin_connect
+    error = request.args.get('error')
+    if error:
+        return redirect(_integrations_redirect('garmin', 'error', error))
+    try:
+        user_id = garmin_connect.handle_callback(
+            request.args.get('code', ''), request.args.get('state', ''))
+        # Pull recent history immediately; Garmin delivers it through the same
+        # webhook, so there is nothing to poll.
+        try:
+            garmin_connect.request_backfill(user_id)
+        except Exception as e:
+            app.logger.warning('garmin backfill on connect failed: %s', e)
+        return redirect(_integrations_redirect('garmin', 'connected'))
+    except Exception as e:
+        app.logger.warning('garmin callback failed: %s', e)
+        return redirect(_integrations_redirect('garmin', 'error', str(e)))
+
+
+@app.delete('/api/oauth/garmin/disconnect')
+@require_auth
+def garmin_disconnect():
+    from src import garmin_connect
+    garmin_connect.disconnect(g.user_id)
+    return jsonify({'disconnected': True})
+
+
+@app.post('/api/oauth/garmin/backfill')
+@require_auth
+def garmin_backfill():
+    from src import garmin_connect
+    if not garmin_connect.get_status(g.user_id).get('connected'):
+        return jsonify({'detail': 'Garmin not connected'}), 401
+    body = request.get_json(silent=True) or {}
+    days = int(body.get('days') or 90)
+    return jsonify(garmin_connect.request_backfill(g.user_id, days=days))
+
+
+@app.post('/api/oauth/garmin/drain')
+@require_auth
+def garmin_drain():
+    """Manual safety valve: retry queued webhook events.
+
+    The worker thread normally handles these, but a machine restart mid-batch
+    leaves rows pending until the next webhook arrives.
+    """
+    from src import garmin_worker
+    return jsonify(garmin_worker.drain())
+
+
+# ---------------------------------------------------------------------------
+# Garmin webhooks
+# ---------------------------------------------------------------------------
+# Unauthenticated by necessity: Garmin holds no user JWT. The defences are
+#   1. a shared secret in the URL, compared in constant time;
+#   2. the body is never trusted for identity — only `userId` is used, and only
+#      to look up an existing registration;
+#   3. the activity itself is FETCHED from Garmin with our own token rather
+#      than read out of the request body, and the callback host is checked
+#      against GARMIN_API_BASE first (otherwise this endpoint is an SSRF
+#      primitive for anyone who learns its URL).
+#
+# Always 200 except on a bad secret. Garmin retries non-2xx responses and
+# eventually disables endpoints that keep failing, so a malformed or unknown
+# payload is acknowledged and dropped, not errored.
+
+def _webhook_authorized() -> bool:
+    import hmac
+    from src import garmin_connect
+    expected = garmin_connect.webhook_secret()
+    if not expected:
+        return False
+    supplied = request.args.get('t') or request.headers.get('X-Webhook-Token', '')
+    return hmac.compare_digest(str(supplied), expected)
+
+
+def _receive_garmin_webhook(event_type: str):
+    from src import garmin_worker
+    if not _webhook_authorized():
+        return jsonify({'detail': 'Unauthorized'}), 401
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        # Acknowledge and drop: retrying will not make it parse.
+        app.logger.warning('garmin webhook (%s) had no JSON body', event_type)
+        return jsonify({'received': 0}), 200
+
+    try:
+        garmin_worker.enqueue(event_type, payload)
+        garmin_worker.kick()
+    except Exception as e:
+        # A 500 here would make Garmin retry, which is right — but only if the
+        # failure is ours to fix. Log loudly and let it retry.
+        app.logger.exception('could not queue garmin webhook: %s', e)
+        return jsonify({'detail': 'Queue unavailable'}), 503
+
+    return jsonify({'received': 1}), 200
+
+
+@app.post('/api/webhooks/garmin/activities')
+def garmin_webhook_activities():
+    return _receive_garmin_webhook('activities')
+
+
+@app.post('/api/webhooks/garmin/deregistration')
+def garmin_webhook_deregistration():
+    return _receive_garmin_webhook('deregistration')
+
+
+@app.post('/api/webhooks/garmin/permission-change')
+def garmin_webhook_permission_change():
+    return _receive_garmin_webhook('permission_change')
 
 
 # Both helpers now live in src/fit_import.py (the FIT parser needs them too).

@@ -2,19 +2,17 @@
 from __future__ import annotations
 
 import os
-import secrets
-import sqlite3
 import time
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 import requests as _requests
 
-# ---------------------------------------------------------------------------
-# Ephemeral state DB (SQLite — short-lived CSRF tokens only)
-# Actual Strava tokens are stored in Supabase (strava_tokens table).
-
-_STATE_DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'oauth_state.db')
+# CSRF state now lives in Postgres (src/oauth_state.py). It used to be a local
+# SQLite file, which on fly.io's ephemeral disk meant a machine restart between
+# the redirect and the callback lost the state and the athlete saw "possible
+# CSRF" instead of a connection.
+from src import oauth_state as _oauth_state
 
 _STRAVA_MODALITY_MAP = {
     'Run': 'aerobic_base', 'TrailRun': 'aerobic_base', 'VirtualRun': 'aerobic_base',
@@ -28,27 +26,11 @@ _STRAVA_MODALITY_MAP = {
 }
 
 
-def _get_state_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(_STATE_DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
 def init_db() -> None:
-    """Create the ephemeral CSRF state table."""
-    with _get_state_db() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS oauth_state (
-                state      TEXT PRIMARY KEY,
-                user_id    TEXT NOT NULL,
-                created_at INTEGER NOT NULL
-            )
-        ''')
-        # Migrate existing state table that lacks user_id
-        try:
-            conn.execute('ALTER TABLE oauth_state ADD COLUMN user_id TEXT NOT NULL DEFAULT ""')
-        except sqlite3.OperationalError:
-            pass
+    """No-op: state lives in Postgres and creates its own table on demand.
+
+    Kept so the existing call sites in api.py don't all need touching.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -107,15 +89,8 @@ def get_strava_status(user_id: str) -> dict:
 
 def generate_auth_url(user_id: str) -> str:
     client_id, _, redirect_uri = _creds()
-    state = secrets.token_urlsafe(16)
-    with _get_state_db() as conn:
-        conn.execute(
-            'DELETE FROM oauth_state WHERE created_at < ?', (int(time.time()) - 600,)
-        )
-        conn.execute(
-            'INSERT OR REPLACE INTO oauth_state VALUES (?, ?, ?)',
-            (state, user_id, int(time.time())),
-        )
+    state = _oauth_state.new_state()
+    _oauth_state.put(state, user_id, 'strava')
     params = {
         'client_id':       client_id,
         'redirect_uri':    redirect_uri,
@@ -129,15 +104,10 @@ def generate_auth_url(user_id: str) -> str:
 
 def handle_callback(code: str, state: str) -> None:
     """Exchange authorization code for tokens and store in Supabase."""
-    with _get_state_db() as conn:
-        row = conn.execute(
-            'SELECT * FROM oauth_state WHERE state = ?', (state,)
-        ).fetchone()
-        if not row or int(time.time()) - row['created_at'] > 600:
-            raise ValueError('Invalid or expired state parameter — possible CSRF')
-        user_id = row['user_id']
-        conn.execute('DELETE FROM oauth_state WHERE state = ?', (state,))
-
+    taken = _oauth_state.take(state, 'strava')
+    if taken is None:
+        raise ValueError('Invalid or expired state parameter — possible CSRF')
+    user_id, _verifier = taken
     if not user_id:
         raise ValueError('State token missing user_id — re-authorize')
 
