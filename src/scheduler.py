@@ -4,6 +4,7 @@ import math
 from typing import Dict, List
 
 from . import loader
+from .goals import FrameworkResolutionError
 
 _RECOVERY_COST_RANK = {'high': 3, 'medium': 2, 'low': 1}
 _POSITION_ORDER = {'first': 0, 'main': 1, 'accessory': 2, 'finisher': 3, 'cooldown': 4}
@@ -71,7 +72,15 @@ def select_framework(goal: dict, constraints: dict,
     # Priority 2: Explicit override from the API request (set by api.py from body.framework_id)
     forced = constraints.get('forced_framework')
     fw_sel = goal.get('framework_selection', {})
-    default_id = fw_sel.get('default_framework', 'concurrent_training')
+    # No literal default here. 'concurrent_training' used to be the fallback, but it
+    # is owned by horsemen_gpp — any philosophy that fell through silently inherited
+    # Horsemen's periodization. A goal must carry its own default_framework.
+    default_id = fw_sel.get('default_framework')
+    if not default_id:
+        raise FrameworkResolutionError(
+            "Goal has no framework_selection.default_framework; cannot select a "
+            "framework without borrowing another philosophy's."
+        )
 
     if _trace is not None:
         _trace['forced_override'] = forced
@@ -108,7 +117,13 @@ def select_framework(goal: dict, constraints: dict,
     try:
         fw = loader.load_framework(selected_id)
     except FileNotFoundError:
-        fw = loader.load_framework(default_id)
+        try:
+            fw = loader.load_framework(default_id)
+        except FileNotFoundError as exc:
+            raise FrameworkResolutionError(
+                f"Neither framework '{selected_id}' nor the goal default "
+                f"'{default_id}' could be loaded."
+            ) from exc
 
     # Validate days_per_week against framework limits
     applicable = fw.get('applicable_when', {})
@@ -265,6 +280,11 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
     # PHASE 1: Apply priority tier filtering if modalities_dict provided
     filtered_priorities = priorities
     if modalities_dict:
+        # A framework's own `committed` modalities are exempt. The global tiers put
+        # mobility and movement_skill at tier 4 ("needs 5+ days"), which is sensible
+        # when they are accessory work — but for Ido Portal and Kelly Starrett they
+        # ARE the philosophy, and a 4-day week was being emptied out entirely.
+        committed = set((framework.get('modality_priority') or {}).get('committed') or [])
         filtered_priorities = {}
         for mod, weight in priorities.items():
             if weight <= 0:
@@ -273,12 +293,22 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
             tier = modalities_dict.get(mod, {}).get('priority_tier', 3)
 
             # Tier thresholds: 1 (always), 2 (needs 3+ days), 3 (needs 4+ days), 4 (needs 5+ days)
-            if tier == 1 or days_per_week >= (tier + 1):
+            if tier == 1 or mod in committed or days_per_week >= (tier + 1):
                 filtered_priorities[mod] = weight
             else:
                 # Track dropped modalities
                 mod_name = mod.replace('_', ' ')
                 compromises.append(f"Dropped {mod_name} (tier {tier}) - needs {tier + 1}+ training days")
+
+        # Never filter a program down to nothing: keep the top-priority modality
+        # and say so, rather than returning an empty week.
+        if not filtered_priorities and priorities:
+            top = max(priorities.items(), key=lambda kv: kv[1])
+            filtered_priorities = {top[0]: top[1]}
+            compromises.append(
+                f"Kept {top[0].replace('_', ' ')} despite the day count — dropping every "
+                f"modality would leave an empty program."
+            )
 
     # PHASE 2: Calculate raw allocation (same logic as before)
     if fw_sessions:
@@ -763,7 +793,7 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
     forced_rest: List[int] = sorted(
         d for d in (constraints.get('forced_rest_days') or []) if 1 <= d <= 7
     )
-    effective_days = max(constraints['days_per_week'], len(forced_workout))
+    effective_days = max(constraints.get('days_per_week', 5), len(forced_workout))
     pool = _build_day_pool(
         effective_days, forced_workout, forced_rest,
         framework_id=framework.get('id', ''),

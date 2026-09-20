@@ -1624,3 +1624,160 @@ exercises:
     as a primary conditioning tool.
 
     '
+
+# ── Mobility ─────────────────────────────────────────────────────────────────
+# Every conditioning archetype in this package ends with a cool_down_mobility
+# slot, but the library held no category: mobility exercises at all — so those
+# slots were filled from other philosophies or left empty.
+- id: cf_couch_stretch
+  name: Couch Stretch
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - CrossFit
+  - Kelly Starrett
+  notes: 'Rear knee against a wall, hips square, glute squeezed. Restores the hip
+    extension that squatting and rowing volume shortens. Two minutes a side.'
+
+- id: cf_thoracic_extension
+  name: Thoracic Extension over Roller
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - CrossFit
+  notes: 'Roller under the mid-back, segmental extension. Overhead positions —
+    snatch, jerk, wall ball, handstand — all need thoracic extension the athlete
+    otherwise borrows from the lumbar spine.'
+
+- id: cf_ankle_dorsiflexion
+  name: Ankle Dorsiflexion Drill
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - knee_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources:
+  - CrossFit
+  notes: 'Knee driven over the toe with the heel down, against a wall. Squat depth
+    and receiving position both bottom out at the ankle long before the hip.'
+
+- id: cf_shoulder_pass_through
+  name: Shoulder Pass-Through
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 12
+  sources:
+  - CrossFit
+  notes: 'Wide grip on a band or PVC, slow arc overhead and behind. Prepares the
+    overhead receiving position and restores it after pressing volume.'
+
+- id: cf_pigeon_stretch
+  name: Pigeon Stretch
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - hip_impingement
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - CrossFit
+  notes: 'External hip rotation, held and breathed into. Counters the repeated
+    internal rotation of running and rowing volume.'
+
+- id: cf_wrist_prep
+  name: Wrist Prep
+  category: mobility
+  modality:
+  - mobility
+  - durability
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources:
+  - CrossFit
+  notes: 'Flexion, extension and rotation under bodyweight before front rack and
+    handstand work. Cheap, and the wrists take more volume here than anywhere else.'

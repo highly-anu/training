@@ -1,0 +1,90 @@
+id: horsemen_named_workout
+name: Horsemen Named Workout (Curtis P / Riley Black / Russian Aggression)
+modality: mixed_modal_conditioning
+category: conditioning
+duration_estimate_minutes: 45
+required_equipment:
+- barbell
+- plates
+- open_space
+applicable_phases:
+- build
+- peak
+- specific
+- maintenance
+training_levels:
+- intermediate
+- advanced
+- elite
+sources:
+- Horsemen
+- Gym Jones
+- CrossFit
+notes: >
+  The Horsemen benchmark workouts, which are named formats rather than generic
+  circuits and are the program's hardest conditioning sessions. The canonical set:
+    - "Curtis P": power clean -> forward lunge left -> forward lunge right ->
+      push press, all as one unbroken rep; 50 reps for time at 95 lb.
+    - "Riley Black": barbell complex ladder against a running clock.
+    - "Russian Aggression": kettlebell and bodyweight couplet under a hard cap.
+  These are repeated across the macro as benchmarks — the score is the point, and
+  athletes are expected to see the same workout again and compare. Gym Jones supplies
+  the framing: discomfort is the training stimulus, and the workout ends when the
+  work is done rather than when the athlete is comfortable stopping. Scored for time.
+slots:
+- role: warm_up
+  slot_type: time_domain
+  duration_sec: 600
+  intensity: light
+  exercise_filter:
+    category: mobility
+  notes: >
+    Full ramp: thoracic and hip mobility, then two or three rounds of the workout's
+    own movements at a light load. These formats punish a cold start.
+- role: named_workout
+  slot_type: for_time
+  time_cap_sec: 1500
+  intensity: max_effort
+  exercise_filter:
+    movement_pattern: olympic_lift
+    category: barbell
+  notes: >
+    The scored piece. Curtis P as the default: 50 reps of
+    power clean -> lunge left -> lunge right -> push press, one continuous rep,
+    at 95 lb (43 kg) for intermediate and 115 lb (52 kg) for advanced. 25-min cap.
+    Break into planned sets from the start — 10 sets of 5 beats going unbroken to
+    failure at rep 12. Record the time; this is a benchmark and will be repeated.
+- role: cool_down
+  slot_type: time_domain
+  duration_sec: 420
+  intensity: zone1
+  exercise_filter:
+    category: mobility
+  notes: >
+    7 min. Walk until breathing is back to normal before stretching. Front rack and
+    hip flexor work — the lunge volume loads both hard.
+scaling:
+  deload:
+    volume_multiplier: 0.5
+    intensity_pct: 0.8
+    notes: >
+      Halve the rep target (25 reps of Curtis P) and drop the load one step. These
+      are benchmark efforts; in a true deload week replace with a bodyweight circuit
+      instead of scoring a compromised attempt.
+  time_limited:
+    drop_slots:
+    - cool_down
+    notes: >
+      Keep the full warm-up — it is not optional here — and cut the rep target to
+      fit the remaining budget. Note the reduced target alongside the score so the
+      benchmark is not compared against a full attempt.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: barbell
+      substitute_approach: >
+        Sandbag or double-kettlebell version: clean -> lunge -> press for the same
+        rep target. The loading pattern survives; the score does not compare to the
+        barbell version, so log it as a separate benchmark.
+    - missing_equipment: open_space
+      substitute_approach: >
+        Replace walking lunges with reverse lunges in place. Same reps, no travel.

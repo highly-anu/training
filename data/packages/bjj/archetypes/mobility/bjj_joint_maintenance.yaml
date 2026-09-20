@@ -1,0 +1,78 @@
+id: bjj_joint_maintenance
+name: BJJ Joint Maintenance (Neck / Shoulders / Hips)
+modality: mobility
+category: recovery
+duration_estimate_minutes: 25
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- recovery
+- maintenance
+- specific
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- BJJ
+- Kelly Starrett
+notes: >
+  Joint maintenance treated as mandatory rather than optional. The sport
+  repeatedly loads three areas near end range with someone else supplying the
+  force — shoulders from armbars and kimuras, knees from leg locks and passing,
+  neck from guillotines and simple mat posture — and the athlete who wants to
+  still be training in twenty years maintains them deliberately. Low intensity,
+  high frequency; this belongs on hard days too.
+slots:
+- role: neck_work
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 20
+  rest_sec: 30
+  intensity: low
+  exercise_filter:
+    movement_pattern: isometric
+    category: mobility
+  notes: >
+    Self-resisted isometric holds in four directions, gently. Building tolerance,
+    not strength. Stop immediately at any radiating symptom.
+- role: shoulder_hip_range
+  slot_type: skill_practice
+  duration_minutes: 12
+  intensity: low
+  exercise_filter:
+    category: mobility
+  notes: >
+    Shoulder dislocates, 90/90 hip rotations, couch stretch, thoracic extension.
+    Active through range rather than hanging in it.
+- role: wrist_and_grip
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  intensity: light
+  rest_sec: 30
+  exercise_filter:
+    movement_pattern: isometric
+    category: mobility
+  notes: >
+    Wrist flexion, extension and rotation under bodyweight. Grip fighting loads
+    the wrists every session and almost nobody prepares them.
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    notes: >
+      Unchanged, and the session most worth keeping in a deload week — it is
+      recovery rather than training stress.
+  time_limited:
+    drop_slots:
+    - wrist_and_grip
+    notes: Neck and the shoulder/hip range work are the session.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: resistance_band
+      substitute_approach: A belt, gi or broomstick works for shoulder dislocates.

@@ -128,12 +128,28 @@ def load_all_exercises() -> tuple[dict, dict]:
         pkg_id = os.path.basename(os.path.dirname(path))
         pkg_exercises: dict = {}
         data = _load_yaml(path)
-        for ex in data.get('exercises', []):
-            ex = dict(ex)
-            ex['_package'] = pkg_id
-            pkg_exercises[ex['id']] = ex
-            if ex['id'] not in global_index:
-                global_index[ex['id']] = ex
+        for raw_ex in data.get('exercises', []):
+            ex_id = raw_ex['id']
+
+            # Package-scoped copy — carries this package's prescription fields.
+            pkg_ex = dict(raw_ex)
+            pkg_ex['_package'] = pkg_id
+            pkg_ex['_packages'] = [pkg_id]
+            pkg_exercises[ex_id] = pkg_ex
+
+            # Global copy — structural fields are first-seen-wins, but _packages
+            # accumulates EVERY package that declares this id. 76 exercise ids are
+            # declared by more than one package; using the first declarer as the
+            # owner mislabels 33/79 horsemen_gpp and 8/13 starting_strength ids.
+            # Provenance decisions must read _packages, never _package.
+            existing = global_index.get(ex_id)
+            if existing is None:
+                global_ex = dict(raw_ex)
+                global_ex['_package'] = pkg_id      # display back-compat only
+                global_ex['_packages'] = [pkg_id]
+                global_index[ex_id] = global_ex
+            elif pkg_id not in existing['_packages']:
+                existing['_packages'].append(pkg_id)
         by_package[pkg_id] = pkg_exercises
     return global_index, by_package
 
@@ -165,13 +181,23 @@ def load_equipment_profiles() -> list:
 
 
 def load_level_seeds() -> dict:
-    """Merge per-package level seed sets into a single dict of level -> set of exercise IDs."""
-    base: dict = {'novice': set(), 'intermediate': set(), 'advanced': set(), 'elite': set()}
-    for path in glob.glob(os.path.join(_PACKAGES_DIR, '*', 'level_seeds.yaml')):
-        data = _load_yaml(path)
-        for level, ids in data.get('seeds', {}).items():
-            base.setdefault(level, set()).update(ids)
-    return base
+    """Return {package_id: {level: set(concept or exercise ids)}}.
+
+    A package declares what an athlete at each level is assumed to already know,
+    which unlocks exercises whose `requires` list those concepts. Package-scoped
+    rather than merged globally: Starting Strength teaches a novice to brace and
+    hinge in the first session, but that says nothing about whether a novice in
+    another philosophy has those prerequisites.
+    """
+    by_package: dict = {}
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'level_seeds.yaml'))):
+        pkg_id = os.path.basename(os.path.dirname(path))
+        data = _load_yaml(path) or {}
+        by_package[pkg_id] = {
+            level: set(ids or ())
+            for level, ids in (data.get('seeds') or {}).items()
+        }
+    return by_package
 
 
 def load_philosophies() -> list:
@@ -229,4 +255,5 @@ def load_all_data() -> dict:
         'exercises':            exercises,
         'exercises_by_package': exercises_by_package,
         'injury_flags':         load_injury_flags(),
+        'level_seeds':          load_level_seeds(),
     }

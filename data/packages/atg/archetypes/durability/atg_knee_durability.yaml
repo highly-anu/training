@@ -1,0 +1,87 @@
+id: atg_knee_durability
+name: ATG Knee Durability (Reverse Sled + Tibialis)
+modality: durability
+category: gpp_durability
+duration_estimate_minutes: 35
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- recovery
+- maintenance
+- rehab
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- "ATG — Ben Patrick"
+notes: >
+  The lower-body durability session the system mandates regardless of whatever
+  else is in the program. Reverse sled leads because it loads the knee with no
+  eccentric component, which is why it can be tolerated by knees that tolerate
+  very little else; tibialis and full-range calf work follow because the shin
+  decelerators are what protect the joint in the first place. Everything here is
+  meant to be tolerable often — Patrick's progression is range first, load second,
+  and pain is a stop signal rather than something to train through.
+slots:
+- role: reverse_sled
+  slot_type: distance
+  distance_m: 50
+  sets: 4
+  intensity: low
+  rest_sec: 60
+  exercise_filter:
+    movement_pattern: locomotion
+  notes: >
+    4 x 50 m walking backwards. Short steps, upright, full knee extension each
+    step. Load light enough that the walk stays smooth — if the gait breaks down,
+    the knee is no longer getting the thing this is for.
+- role: tibialis_work
+  slot_type: sets_reps
+  sets: 3
+  reps: 25
+  intensity: low
+  rest_sec: 45
+  exercise_filter:
+    movement_pattern: knee_extension
+    category: rehab
+  notes: >
+    Tibialis raises through full range, then full-ROM calf raises. High reps, no
+    bouncing. Both ends of the shin, both ends of the range.
+- role: posterior_chain
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  intensity: moderate
+  rest_sec: 90
+  exercise_filter:
+    movement_pattern: hinge
+    category: rehab
+  notes: >
+    Nordic curl or single-leg hinge. Eccentric-biased and controlled. Regress the
+    Nordic by shortening the lever until the descent can be owned the whole way.
+scaling:
+  deload:
+    volume_multiplier: 0.7
+    notes: >
+      Drop the sled to 2 rounds and cut the Nordic. Keep tibialis work at full
+      volume — it is restorative rather than taxing.
+  time_limited:
+    drop_slots:
+    - posterior_chain
+    notes: >
+      Sled and tibialis are the session. Fifteen minutes of those beats a rushed
+      full session.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: sled
+      substitute_approach: >
+        Backward tire drag, or backward treadmill walking at incline with the belt
+        off. Failing both, backward walking uphill — less load, same direction.
+    - missing_equipment: box
+      substitute_approach: Calf raises from the floor, pausing hard at the top.

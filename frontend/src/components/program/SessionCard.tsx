@@ -43,7 +43,19 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-foreground truncate">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</p>
-          <ModalityBadge modality={session.modality} size="sm" className="mt-1" />
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <ModalityBadge modality={session.modality} size="sm" />
+            {session.provenance?.borrowed && (
+              // This session came from a package the philosophy declares it
+              // borrows from — say so rather than passing it off as its own.
+              <span
+                title={session.provenance.reason}
+                className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground"
+              >
+                via {session.provenance.label ?? session.provenance.package.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1 shrink-0 mt-0.5">
           {hasWorkout && <Activity className="size-3.5 text-blue-700 dark:text-blue-300" />}

@@ -768,3 +768,229 @@ exercises:
     extension range. ATG approach to terminal knee extension and patellofemoral rehab.
     Requires adequate knee flexion tolerance. Begin with partial range and progress
     to full lean.
+
+# ── Signature ATG movements ──────────────────────────────────────────────────
+# The philosophy names reverse sled, tibialis raises, ATG split squats and
+# full-ROM calf raises as its core vehicles, but the library held none of them —
+# so durability and mobility sessions had to be filled from other packages.
+- id: reverse_sled_drag
+  name: Backward Sled Drag (Reverse Sled)
+  category: loaded_carry
+  modality:
+  - durability
+  - rehab
+  equipment:
+  - sled
+  - open_space
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - knee_extension
+  - loaded_carry
+  requires: []
+  unlocks:
+  - atg_split_squat
+  contraindicated_with: []
+  progressions:
+    load: add_plate_per_week
+    volume: increase_distance
+  scaling_down:
+  - tire_drag_backward
+  typical_volume:
+    sets: 3
+    distance_m: 50
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'The entry movement of the whole system and the one Patrick starts nearly
+    everyone on. Walking backwards dragging a sled loads the knee with no eccentric
+    component at all, which is why it can be tolerated by knees that tolerate very
+    little else. Short steps, upright torso, full knee extension at the end of each
+    step. Start light enough to walk smoothly; load progresses only once the range
+    is comfortable.'
+
+- id: tibialis_raise
+  name: Tibialis Raise
+  category: rehab
+  modality:
+  - durability
+  - rehab
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - knee_extension
+  requires: []
+  unlocks:
+  - reverse_sled_drag
+  contraindicated_with: []
+  progressions:
+    load: add_band_resistance
+    volume: add_reps_per_set
+  scaling_down:
+  - ankle_pump
+  typical_volume:
+    sets: 3
+    reps: 25
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Back against a wall, heels out, toes lifted through full range. Patrick
+    treats the tibialis as the most neglected muscle in lower-body durability: it
+    decelerates the shin and protects the knee, and it responds quickly. High reps,
+    daily-tolerable. Band or tib bar for resistance once bodyweight is easy.'
+
+- id: atg_split_squat
+  name: ATG Split Squat (Full ROM)
+  category: mobility
+  modality:
+  - mobility
+  - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - knee_extension
+  - hip_flexion
+  requires:
+  - bulgarian_split_squat_light
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  - knee_meniscus_post_op
+  progressions:
+    load: add_dumbbell_load
+    volume: increase_range_of_motion
+  scaling_down:
+  - bulgarian_split_squat_light
+  - step_up_low
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Front knee travels well past the toes, hamstring covering calf at the
+    bottom, rear knee approaching the floor. Range comes before load, always: the
+    standard is a pain-free full-depth rep, and only then is a dumbbell added.
+    Elevate the front foot to reduce range while the position is still being earned.'
+
+- id: calf_raise_full_rom
+  name: Full-ROM Calf Raise
+  category: rehab
+  modality:
+  - durability
+  - rehab
+  equipment:
+  - box
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - knee_extension
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - achilles_tendinopathy
+  progressions:
+    load: add_dumbbell_load
+    volume: add_reps_per_set
+  scaling_down:
+  - ankle_pump
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Off a step, heel dropped to full stretch and driven to full plantarflexion.
+    Partial-range calf work is what Patrick blames for stiff ankles; the bottom half
+    of the range is the half that matters. Single leg, slow, no bouncing.'
+
+- id: jefferson_curl
+  name: Jefferson Curl
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - dumbbell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - lumbar_disc_pathology
+  progressions:
+    load: add_1_2kg_per_session
+    volume: increase_range_of_motion
+  scaling_down:
+  - single_leg_deadlift_light
+  typical_volume:
+    sets: 3
+    reps: 5
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Standing on a box, rolling down one vertebra at a time with a light
+    weight, then reversing. Loaded spinal flexion through full range, done light and
+    slow — this is range work, not a hinge. Start with an empty hand and add a
+    kilogram at a time. Not for anyone with an active disc issue.'
+
+- id: elephant_walk
+  name: Elephant Walk
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - locomotion
+  requires: []
+  unlocks:
+  - jefferson_curl
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 20
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Hands on the floor, alternately straightening one leg while bending the
+    other, walking the hamstrings through range. Daily-tolerable hamstring work that
+    does not require holding a static stretch.'
+
+- id: seated_good_morning
+  name: Seated Good Morning
+  category: mobility
+  modality:
+  - mobility
+  - durability
+  equipment:
+  - barbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires:
+  - glute_bridge
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - lumbar_disc_pathology
+  progressions:
+    load: add_2_5kg_per_week
+    volume: add_reps_per_set
+  scaling_down:
+  - single_leg_deadlift_light
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - "ATG — Ben Patrick"
+  notes: 'Seated on a box with a light bar, hinging forward under control. Takes the
+    legs out of the movement so the load lands on the spinal erectors and hamstrings
+    at length. Light — this is a durability exercise, not a strength lift.'

@@ -3,7 +3,8 @@
 import json
 import sys
 from src.generator import generate
-from src import loader
+from src.validator import validate
+from src import goals, loader
 
 # Force UTF-8 for Windows console
 sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') else None
@@ -25,21 +26,10 @@ phil_id = 'wildman_kettlebell'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 
-# Find primary framework
-fw_candidates = [f for f in all_frameworks.values() if f.get('source_philosophy') == phil_id]
-primary_fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
-primary_fw = all_frameworks.get(primary_fw_id, {})
-sessions = primary_fw.get('sessions_per_week', {})
-total = sum(sessions.values()) or 1
-priorities = {mod: count / total for mod, count in sessions.items()}
-
-# Build synthetic goal
-goal_dict = {
-    'id': f'_phil_{phil_id}',
-    'name': phil.get('name', phil_id),
-    'priorities': priorities,
-    'primary_sources': [phil_id],
-}
+# Build the synthetic goal exactly the way the API does.
+goal_dict = goals.philosophy_to_goal(phil_id, list(all_frameworks.values()))
+priorities = goal_dict['priorities']
+primary_fw_id = goal_dict['framework_selection']['default_framework']
 
 print(f'Using framework: {primary_fw_id}')
 print(f'Priorities: {json.dumps(priorities, indent=2)}')
@@ -110,8 +100,16 @@ for day_name, sessions in week1['schedule'].items():
 print('=== SUMMARY ===')
 total_sessions = sum(len(sessions) for sessions in week1['schedule'].values())
 print(f'Total sessions in Week 1: {total_sessions}')
-print(f'Validation feasible: {result["validation"]["feasible"]}')
-if result['validation'].get('errors'):
-    print(f'Errors: {result["validation"]["errors"]}')
-if result['validation'].get('warnings'):
-    print(f'Warnings: {result["validation"]["warnings"]}')
+# generate() returns the raw program; validation is a separate pre-flight step
+# (api.py runs it before generating). Run it here the same way.
+data = loader.load_all_data()
+archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
+validation = validate(goal_dict, constraints, archetypes,
+                      data['modalities'], data['injury_flags'])
+print(f'Validation feasible: {validation.feasible}')
+if validation.errors:
+    print(f'Errors: {[e["code"] for e in validation.errors]}')
+if validation.warnings:
+    print(f'Warnings: {[w["code"] for w in validation.warnings]}')
+assert validation.feasible, validation.errors
+assert total_sessions > 0, 'no sessions generated'

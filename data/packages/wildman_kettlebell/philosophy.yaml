@@ -34,6 +34,10 @@ notes: >
   mechanics and movement quality take priority over grinding. Operator readiness
   means daily session selection responds to how the athlete actually feels.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: kb_general_practice
 
 framework_groups:

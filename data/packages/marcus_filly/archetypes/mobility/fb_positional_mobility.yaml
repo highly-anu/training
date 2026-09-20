@@ -1,0 +1,82 @@
+id: fb_positional_mobility
+name: Functional Bodybuilding Positional Mobility
+modality: mobility
+category: recovery
+duration_estimate_minutes: 25
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- recovery
+- maintenance
+- transition
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- "Marcus Filly — Functional Bodybuilding"
+notes: >
+  Positional mobility rather than general stretching: each piece earns a shape the
+  strength sessions will then load. Filly's argument is that mobility work is only
+  useful if it transfers, so the emphasis is active — end range entered and held
+  under the athlete's own tension, not gravity's. Shoulders and hips get most of
+  the attention because they are what the pressing and squatting volume taxes.
+  Run as its own short session or appended to a strength day.
+slots:
+- role: shoulder_prep
+  slot_type: skill_practice
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+    movement_pattern: press
+  notes: >
+    Wall slides, banded distraction, thoracic opener. Slow and controlled — the
+    point is scapular position, and speed hides exactly what needs fixing.
+- role: hip_prep
+  slot_type: skill_practice
+  duration_minutes: 10
+  intensity: low
+  exercise_filter:
+    category: mobility
+    movement_pattern: hip_flexion
+  notes: >
+    90/90 switches, active couch stretch, deep squat hold. Squeeze the working
+    glute rather than sinking into the position.
+- role: integration
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 60
+  intensity: low
+  exercise_filter:
+    category: mobility
+    movement_pattern: squat
+  notes: >
+    Finish in the bottom of a deep squat, two minutes total, breathing normally.
+    If the position is still work rather than rest, that is the honest answer for
+    where the session should start next time.
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    notes: >
+      Unchanged, and worth keeping when everything else comes down — this is
+      restorative work, not a training stress.
+  time_limited:
+    drop_slots:
+    - integration
+    notes: >
+      Keep whichever of shoulder or hip prep matches the day's main session. Ten
+      focused minutes is a real dose.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: resistance_band
+      substitute_approach: >
+        Hang from a pull-up bar for the shoulder distraction, or use a doorway for
+        a static pec stretch.
+    - missing_equipment: box
+      substitute_approach: Thoracic opener on the floor with arms overhead, or over a chair.

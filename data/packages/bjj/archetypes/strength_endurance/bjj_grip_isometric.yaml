@@ -1,0 +1,94 @@
+id: bjj_grip_isometric
+name: BJJ Grip & Isometric Endurance
+modality: strength_endurance
+category: strength
+duration_estimate_minutes: 40
+required_equipment:
+- pull_up_bar
+applicable_phases:
+- base
+- build
+- peak
+- specific
+- maintenance
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- BJJ
+- Gym Jones
+notes: >
+  The endurance qualities grappling actually demands: grip that survives a six
+  minute round, and isometric strength held under sustained pressure. Both are
+  endurance problems rather than max-strength problems, which is why the loads
+  here stay submaximal and the durations stay long. Towel work is the most
+  transferable item in the session — a towel over the bar is a lapel, and the
+  grip fails in the same order it fails on the mat.
+slots:
+- role: grip_pulling
+  slot_type: sets_reps
+  sets: 4
+  reps: 6
+  intensity: moderate
+  rest_sec: 120
+  exercise_filter:
+    movement_pattern: vertical_pull
+    category: bodyweight
+  notes: >
+    Towel pull-ups where grip allows, otherwise standard pull-ups. Full dead hang
+    at the bottom. Stop the set when grip goes, not when the back does.
+- role: grip_hold
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 45
+  rest_sec: 60
+  intensity: moderate
+  exercise_filter:
+    movement_pattern: isometric
+    category: bodyweight
+  notes: >
+    Dead hangs. Shoulders active. 45 s is a fair intermediate standard; a round
+    asks for considerably more than that.
+- role: isometric_endurance
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 45
+  rest_sec: 45
+  intensity: moderate
+  exercise_filter:
+    movement_pattern: isometric
+  notes: >
+    Rotate across sessions: plank, side plank, bridge hold, wall sit. Each maps to
+    a position held against pressure, and rotating keeps any one of them from
+    becoming a party trick.
+- role: anti_rotation
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  intensity: moderate
+  rest_sec: 60
+  exercise_filter:
+    movement_pattern: rotation
+  notes: >
+    Pallof press per side, slow. Retaining guard is refusing to be turned — the
+    demand is anti-rotation, not rotation.
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    notes: >
+      Three sets of pulling, one isometric, drop the anti-rotation work. This
+      session must never bleed fatigue into mat performance.
+  time_limited:
+    drop_slots:
+    - anti_rotation
+    notes: Pulling plus one isometric hold is the minimum worth doing.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: pull_up_bar
+      substitute_approach: >
+        Inverted rows under a table, and swap dead hangs for a towel-gripped
+        isometric row hold.
+    - missing_equipment: resistance_band
+      substitute_approach: Side plank with reach-through for the anti-rotation slot.

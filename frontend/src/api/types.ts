@@ -243,7 +243,10 @@ export interface Exercise extends ExerciseMedia {
   weekly_increment_kg?: number
   sources: string[]
   notes?: string
+  /** First package to declare this id. Display only — use _packages for provenance. */
   _package?: string
+  /** Every package that declares this exercise id. */
+  _packages?: string[]
 }
 
 // ─── Archetypes ───────────────────────────────────────────────────────────────
@@ -330,6 +333,9 @@ export interface ExerciseAssignment {
   /** Set when an injury flag blocked every candidate for this slot.
    *  Previously read via an inline cast in ExerciseRow.tsx. */
   injury_skip?: boolean
+  /** Unfilled because the philosophy's packages own nothing for this slot. */
+  coverage_gap?: boolean
+  gap_reason?: string | null
   /** Links an `amrap_movement` component to the `amrap` slot it belongs to. */
   parent_slot_role?: string
   /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */
@@ -345,12 +351,38 @@ export interface ComplementaryExercise {
   }
 }
 
+/** Which philosophy package a session's archetype actually came from. */
+export interface SessionProvenance {
+  package: string
+  /** True when the package is one the philosophy declares in borrows_from. */
+  borrowed: boolean
+  label?: string
+  reason?: string
+}
+
 export interface Session {
   modality: ModalityId
   archetype: Archetype
   exercises: ExerciseAssignment[]
   complementary_work?: ComplementaryExercise[]
   duration_min?: number
+  provenance?: SessionProvenance | null
+}
+
+/** What the philosophy could not cover on its own, and what it borrowed. */
+export interface CoverageReport {
+  philosophy: string | null
+  strict: boolean
+  unfilled_sessions: { week: number; day: string; modality: string; reason: string }[]
+  unfilled_slots: { archetype: string; slot_role: string; reason: string }[]
+  borrowed_sessions: {
+    week: number
+    day: string
+    archetype: string
+    from_package: string
+    label?: string
+    reason?: string
+  }[]
 }
 
 // ─── Generated Program ────────────────────────────────────────────────────────
@@ -396,6 +428,7 @@ export interface GeneratedProgram {
   volume_summary?: WeekVolumeSummary[]
   program_start_date?: string
   compromises?: string[]
+  coverage_report?: CoverageReport | null
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────
@@ -405,7 +438,8 @@ export interface CandidateScore {
   name: string
   score: number
   breakdown: Record<string, number>
-  package?: string  // Philosophy package ID (for exercises)
+  package?: string  // First declaring package (display only)
+  packages?: string[]  // Every philosophy package declaring this exercise id
 }
 
 export interface ArchetypeTrace {

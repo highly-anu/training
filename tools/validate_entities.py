@@ -3,8 +3,8 @@
 Validate training system YAML entity files against their JSON schemas.
 
 Usage:
-    python tools/validate_entities.py data/frameworks/theragun_recovery.yaml
-    python tools/validate_entities.py data/philosophies/ data/frameworks/
+    python tools/validate_entities.py data/packages/horsemen_gpp/frameworks/gpp_circuits.yaml
+    python tools/validate_entities.py data/packages/horsemen_gpp/
     python tools/validate_entities.py --all
 
 Requires: jsonschema  (pip install jsonschema)
@@ -47,8 +47,14 @@ _LIST_SCHEMAS = {'exercises'}
 
 def _detect_schema(path: str) -> tuple[str | None, bool]:
     """Return (schema_filename, is_list_file) for a given path, or (None, False)."""
-    parts = path.replace('\\', '/').split('/')
-    for i, part in enumerate(parts):
+    norm = path.replace('\\', '/')
+    basename = os.path.basename(norm)
+    # Vertical packages name files rather than nesting them in a typed directory.
+    if basename == 'philosophy.yaml':
+        return 'philosophy.schema.json', False
+    if basename == 'exercises.yaml':
+        return 'exercise.schema.json', True
+    for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS
     return None, False
@@ -189,11 +195,15 @@ def main():
 
     targets = list(args.paths)
     if args.all:
-        data_dir = os.path.join(_ROOT, 'data')
-        for subdir in _PATH_TO_SCHEMA:
-            candidate = os.path.join(data_dir, subdir)
-            if os.path.isdir(candidate):
-                targets.append(candidate)
+        # Everything lives under data/packages/ since the vertical migration; the
+        # old top-level data/<type>/ directories are gone, so --all used to find
+        # nothing and report "0/0 files valid".
+        packages_dir = os.path.join(_ROOT, 'data', 'packages')
+        if os.path.isdir(packages_dir):
+            targets.append(packages_dir)
+        commons_dir = os.path.join(_ROOT, 'data', 'commons')
+        if os.path.isdir(commons_dir):
+            targets.append(commons_dir)
 
     all_results: dict[str, list[str]] = {}
     for target in targets:

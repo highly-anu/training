@@ -51,7 +51,7 @@ slots:
     intensity_pct_1rm: 0.75
     rest_sec: 180
     exercise_filter:
-      movement_pattern: power_pull
+      movement_pattern: olympic_lift
       category: barbell
     notes: >
       5 × 3 power clean or hang power clean at 70-80% of power clean max.

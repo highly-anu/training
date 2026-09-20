@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List
 
+from .goals import FrameworkResolutionError
 from .scheduler import select_framework
 
 
@@ -17,8 +18,8 @@ class ValidationResult:
         self.errors.append({'code': code, 'message': message, 'suggested_fix': suggested_fix})
         self.feasible = False
 
-    def add_warning(self, code: str, message: str):
-        self.warnings.append({'code': code, 'message': message})
+    def add_warning(self, code: str, message: str, suggested_fix: str = None):
+        self.warnings.append({'code': code, 'message': message, 'suggested_fix': suggested_fix})
 
     def add_info(self, code: str, message: str):
         self.info.append({'code': code, 'message': message})
@@ -30,7 +31,13 @@ def validate(
     archetypes: list,
     modalities: dict,
     injury_flags_data: dict,
+    policy=None,
 ) -> ValidationResult:
+    """Pre-flight feasibility.
+
+    `archetypes` must already be scoped to the policy — pass the same list the
+    generator will use, or the two check different libraries.
+    """
     result = ValidationResult()
     _check_forced_framework(goal, constraints, result)
     _check_equipment(goal, constraints, archetypes, result)
@@ -39,7 +46,50 @@ def validate(
     _check_injury_conflicts(goal, constraints, modalities, injury_flags_data, result)
     _check_phase(goal, constraints, result)
     _check_schedule(goal, constraints, result)
+    _check_coverage(goal, archetypes, policy, result)
     return result
+
+
+def _check_coverage(goal, archetypes, policy, result):
+    """Modalities the goal schedules that its packages own no archetype for.
+
+    A warning, not an error: a program missing one modality is still useful, and
+    injury_skip already establishes that a blank slot is information rather than
+    failure. Only a goal whose top priorities are all uncoverable is infeasible.
+    """
+    if policy is None or not policy.strict:
+        return
+
+    priorities = goal.get('priorities', {})
+    if not priorities:
+        return
+
+    covered = {a.get('modality') for a in archetypes}
+    uncovered = sorted(m for m in priorities if m not in covered)
+    if not uncovered:
+        return
+
+    where = policy.describe()
+    for modality in uncovered:
+        result.add_warning(
+            'PACKAGE_COVERAGE_GAP',
+            f"No {modality.replace('_', ' ')} archetype in {where}. "
+            f"Those sessions will be left unfilled rather than taken from "
+            f"another philosophy.",
+            suggested_fix=(
+                f"Add a {modality} archetype to the package, or declare a "
+                f"borrows_from entry covering {modality}."
+            ),
+        )
+
+    top = sorted(priorities.items(), key=lambda kv: kv[1], reverse=True)[:2]
+    if top and all(m in uncovered for m, _ in top):
+        result.add_error(
+            'PHILOSOPHY_NOT_GENERATABLE',
+            f"{where} has no archetype for either of its top priorities "
+            f"({', '.join(m for m, _ in top)}).",
+            suggested_fix="Author the missing archetypes or declare borrows_from.",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +108,9 @@ def _check_forced_framework(goal, constraints, result):
     fw_sel = goal.get('framework_selection', {})
     if fw_sel.get('default_framework'):
         owned.add(fw_sel['default_framework'])
-    owned.update(fw_sel.get('alternatives', []))
+    for alt in fw_sel.get('alternatives', []):
+        # Alternatives are {framework_id, condition} dicts; plain ids are tolerated.
+        owned.add(alt['framework_id'] if isinstance(alt, dict) else alt)
     for phase in goal.get('phase_sequence', []):
         if phase.get('framework_id'):
             owned.add(phase['framework_id'])
@@ -101,26 +153,58 @@ def _check_equipment(goal, constraints, archetypes, result):
 def _check_days(goal, constraints, result):
     try:
         fw = select_framework(goal, constraints)
-        min_days = fw.get('applicable_when', {}).get('days_per_week_min', 1)
-        days = constraints.get('days_per_week', 5)
-        if days < min_days:
-            result.add_error(
-                'INSUFFICIENT_DAYS',
-                f"Framework '{fw['name']}' requires at least {min_days} days/week. "
-                f"Athlete has {days}.",
-                suggested_fix=(
-                    f"Increase days_per_week to {min_days}, or see "
-                    f"goal.framework_selection.alternatives for lower-day options."
-                ),
-            )
-        elif days == min_days:
-            result.add_warning(
-                'MINIMAL_DAYS',
-                f"Running at minimum {min_days} day(s)/week — "
-                f"lower-priority modalities will be dropped.",
-            )
+    except FrameworkResolutionError as exc:
+        result.add_error(
+            'FRAMEWORK_UNRESOLVED', str(exc),
+            suggested_fix="Set primary_framework_id on the philosophy.",
+        )
+        return
     except Exception:
-        pass
+        return
+
+    applicable = fw.get('applicable_when', {})
+    min_days = applicable.get('days_per_week_min', 1)
+    max_days = applicable.get('days_per_week_max', 7)
+    days = constraints.get('days_per_week', 5)
+
+    if days < min_days:
+        result.add_error(
+            'INSUFFICIENT_DAYS',
+            f"Framework '{fw['name']}' requires at least {min_days} days/week. "
+            f"Athlete has {days}.",
+            suggested_fix=(
+                f"Increase days_per_week to {min_days}, or see "
+                f"goal.framework_selection.alternatives for lower-day options."
+            ),
+        )
+    elif days > max_days:
+        # Previously unenforced: over the max, cadence_options has no entry for the
+        # day count and the scheduler silently fell back to a generic spread.
+        result.add_error(
+            'EXCESSIVE_DAYS',
+            f"Framework '{fw['name']}' supports at most {max_days} days/week. "
+            f"Athlete has {days}.",
+            suggested_fix=(
+                f"Reduce days_per_week to {max_days}, or choose a framework that "
+                f"supports more training days."
+            ),
+        )
+    elif days == min_days:
+        result.add_warning(
+            'MINIMAL_DAYS',
+            f"Running at minimum {min_days} day(s)/week — "
+            f"lower-priority modalities will be dropped.",
+        )
+
+    levels = applicable.get('training_level') or []
+    level = constraints.get('training_level', 'intermediate')
+    if levels and level not in levels:
+        result.add_warning(
+            'LEVEL_MISMATCH',
+            f"Framework '{fw['name']}' is intended for {', '.join(levels)} athletes; "
+            f"this athlete is {level}.",
+            suggested_fix=f"Choose a framework that lists {level} in applicable_when.",
+        )
 
 
 def _check_session_time(goal, constraints, archetypes, result):

@@ -1,0 +1,82 @@
+id: atg_range_work
+name: ATG Range Work (Progressive ROM)
+modality: mobility
+category: recovery
+duration_estimate_minutes: 30
+required_equipment: []
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- recovery
+- maintenance
+- rehab
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- "ATG — Ben Patrick"
+notes: >
+  Range of motion trained as its own adaptation rather than as a warm-up.
+  The system's central claim is that progressive range matters as much as
+  progressive load, and that the range has to be earned pain-free before anything
+  is added to it — so every piece here is loaded lightly and progressed by depth
+  before weight. ATG split squat for the knee, Jefferson curl and elephant walk
+  for the posterior chain, seated good morning for the hinge at length.
+slots:
+- role: knee_range
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  intensity: light
+  rest_sec: 60
+  exercise_filter:
+    movement_pattern: squat
+    category: mobility
+  notes: >
+    ATG split squat. Front knee past the toes, hamstring to calf at the bottom.
+    Elevate the front foot to shorten the range while it is still being earned;
+    lower the elevation before adding any load.
+- role: posterior_range
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: light
+  rest_sec: 60
+  exercise_filter:
+    movement_pattern: hinge
+    category: mobility
+  notes: >
+    Jefferson curl or seated good morning. Light and slow — segmental, one
+    vertebra at a time. Add a kilogram at a time, never a plate.
+- role: daily_range
+  slot_type: skill_practice
+  duration_minutes: 8
+  intensity: low
+  exercise_filter:
+    category: mobility
+  notes: >
+    Elephant walks and ankle work to close. This is the portion meant to be
+    tolerable every day, including on days nothing else is trained.
+scaling:
+  deload:
+    volume_multiplier: 1.0
+    notes: >
+      Unchanged. Range work is the thing that continues through a deload; if
+      anything the extra recovery makes the depth easier to find.
+  time_limited:
+    drop_slots:
+    - posterior_range
+    notes: Knee range and the daily closing work are the session.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: dumbbell
+      substitute_approach: Unloaded Jefferson curl, or hold a single plate.
+    - missing_equipment: barbell
+      substitute_approach: >
+        Seated good morning with a dumbbell held at the chest, or skip it and add
+        a set of elephant walks.

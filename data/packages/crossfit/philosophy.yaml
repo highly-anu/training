@@ -45,6 +45,10 @@ notes: >
   to running, rowing, and cycling; it explicitly rejects high-mileage base building.
   Rhabdo risk on first exposure requires mandatory scaling.
 
+# Every modality this philosophy's frameworks prescribe has an archetype in
+# this package; generation never needs to reach into another philosophy.
+self_contained: true
+
 primary_framework_id: emom_amrap
 
 framework_groups:

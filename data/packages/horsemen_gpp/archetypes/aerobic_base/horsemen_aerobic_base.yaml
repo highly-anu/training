@@ -1,0 +1,66 @@
+id: horsemen_aerobic_base
+name: Horsemen Aerobic Base (Run / Row / Ruck)
+modality: aerobic_base
+category: conditioning
+duration_estimate_minutes: 50
+required_equipment:
+- open_space
+applicable_phases:
+- base
+- build
+- peak
+- taper
+- deload
+- maintenance
+- specific
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+sources:
+- Horsemen
+notes: >
+  Steady aerobic work. In the Horsemen macro the aerobic base is infrastructure,
+  not the objective: it exists so power-endurance and job-specific blocks can be
+  repeated without accumulating unrecoverable fatigue, and so the 3-mile PT-test
+  standard holds while the strength block is running. Modality is interchangeable
+  (run, row, bike, ruck) — pick whatever the athlete's current lower-body load can
+  absorb. Recovery-day versions of this session are held at or below 65% MHR, which
+  is the deload scaling below.
+slots:
+- role: aerobic_main
+  slot_type: time_domain
+  duration_sec: 2700
+  intensity: zone2
+  exercise_filter:
+    category: aerobic
+  notes: >
+    45 min continuous at conversational pace. Nasal breathing is the pace check —
+    if you cannot breathe through your nose, slow down. Duration scales with the
+    athlete's session budget; intensity does not.
+- role: cool_down
+  slot_type: time_domain
+  duration_sec: 300
+  intensity: zone1
+  exercise_filter:
+    category: mobility
+  notes: 5 min easy walk plus hip flexor and calf work.
+scaling:
+  deload:
+    volume_multiplier: 0.6
+    notes: >
+      Active recovery session. Cap heart rate at 65% MHR, 25-30 min, and prefer
+      bike or row over running so the legs unload.
+  time_limited:
+    drop_slots:
+    - cool_down
+    notes: >
+      Keep the main effort and cut the cool-down. Below 20 min this session is not
+      worth doing as aerobic base — ruck to work instead.
+  equipment_limited:
+    substitutions:
+    - missing_equipment: open_space
+      substitute_approach: Row or bike at the same duration and heart rate.
+    - missing_equipment: rower
+      substitute_approach: Run, or ruck at 20-25 kg for the same duration.

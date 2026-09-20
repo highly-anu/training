@@ -3,7 +3,8 @@
 import json
 import sys
 from src.generator import generate
-from src import loader
+from src import goals, loader
+from api import _normalize_schedule_constraints
 
 # Force UTF-8 for Windows console
 sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') else None
@@ -25,20 +26,10 @@ phil_id = 'wildman_kettlebell'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 
-# Build synthetic goal
-fw_candidates = [f for f in all_frameworks.values() if f.get('source_philosophy') == phil_id]
-primary_fw_id = fw_candidates[0]['id'] if fw_candidates else 'concurrent_training'
-primary_fw = all_frameworks.get(primary_fw_id, {})
-sessions = primary_fw.get('sessions_per_week', {})
-total = sum(sessions.values()) or 1
-priorities = {mod: count / total for mod, count in sessions.items()}
-
-goal_dict = {
-    'id': f'_phil_{phil_id}',
-    'name': phil.get('name', phil_id),
-    'priorities': priorities,
-    'primary_sources': [phil_id],
-}
+# Build the synthetic goal exactly the way the API does.
+goal_dict = goals.philosophy_to_goal(phil_id, list(all_frameworks.values()))
+priorities = goal_dict['priorities']
+primary_fw_id = goal_dict['framework_selection']['default_framework']
 
 print(f'Framework: {primary_fw_id}')
 print(f'Ideal priorities: {json.dumps(priorities, indent=2)}')
@@ -115,9 +106,11 @@ constraints_scheduled = {
 print('User schedule: Mon=Long (75min), Wed=Short (40min), Fri=Long (75min)')
 print()
 
+# api.py derives days_per_week / day_configs from weekly_schedule before
+# generating; do the same here so this exercises the real path.
 result2 = generate(
     goal_id=None,
-    constraints=constraints_scheduled,
+    constraints=_normalize_schedule_constraints(constraints_scheduled),
     num_weeks=1,
     output_format='dict',
     goal_dict=goal_dict,

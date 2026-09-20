@@ -4,7 +4,13 @@
   "title": "Training Philosophy",
   "description": "A source's non-negotiable guiding principles. Governs what the system will and won't do when drawing from this methodology.",
   "type": "object",
-  "required": ["id", "name", "core_principles", "scope", "bias"],
+  "required": [
+    "id",
+    "name",
+    "core_principles",
+    "scope",
+    "bias"
+  ],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -18,26 +24,43 @@
     },
     "core_principles": {
       "type": "array",
-      "description": "Non-negotiable beliefs expressed as short slug strings. These are the axioms — the system won't violate them when this source is active.",
-      "items": { "type": "string" },
+      "description": "Non-negotiable beliefs expressed as short slug strings. These are the axioms \u2014 the system won't violate them when this source is active.",
+      "items": {
+        "type": "string"
+      },
       "minItems": 1,
-      "examples": [["linear_progression", "compound_lifts", "sra_cycle"]]
+      "examples": [
+        [
+          "linear_progression",
+          "compound_lifts",
+          "sra_cycle"
+        ]
+      ]
     },
     "scope": {
       "type": "array",
       "description": "Which modalities this philosophy claims authority over. Use existing modality IDs or introduce new ones specific to this package (e.g. 'swimming', 'cycling', 'contact_strength').",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      },
       "minItems": 1
     },
     "bias": {
       "type": "array",
       "description": "Modalities this philosophy actively emphasizes. Subset of scope.",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      }
     },
     "avoid_with": {
       "type": "array",
       "description": "Modality IDs this philosophy conflicts with at high volume. Can reference any installed modality ID.",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      },
       "default": []
     },
     "required_equipment": {
@@ -46,11 +69,28 @@
       "items": {
         "type": "string",
         "enum": [
-          "barbell", "rack", "plates", "kettlebell", "dumbbell",
-          "pull_up_bar", "rings", "parallettes", "rower", "bike",
-          "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
-          "medicine_ball", "resistance_band", "rope", "box",
-          "ghd", "jump_rope", "open_space"
+          "barbell",
+          "rack",
+          "plates",
+          "kettlebell",
+          "dumbbell",
+          "pull_up_bar",
+          "rings",
+          "parallettes",
+          "rower",
+          "bike",
+          "ski_erg",
+          "ruck_pack",
+          "sandbag",
+          "sled",
+          "tire",
+          "medicine_ball",
+          "resistance_band",
+          "rope",
+          "box",
+          "ghd",
+          "jump_rope",
+          "open_space"
         ]
       },
       "default": []
@@ -61,6 +101,7 @@
       "enum": [
         "linear_progression",
         "polarized_80_20",
+        "polarized_80_20_uphill",
         "block_periodization",
         "autoregulation_rpe",
         "constant_variation",
@@ -86,7 +127,9 @@
     "sources": {
       "type": "array",
       "description": "Source documents or URLs this entry was derived from.",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "default": []
     },
     "notes": {
@@ -109,7 +152,12 @@
       "description": "Defines how frameworks are grouped and presented to users. Each group is either alternatives (pick one) or sequential (all phases in order). Replaces frameworks_are_phases pattern.",
       "items": {
         "type": "object",
-        "required": ["id", "name", "type", "frameworks"],
+        "required": [
+          "id",
+          "name",
+          "type",
+          "frameworks"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -123,7 +171,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["alternatives", "sequential"],
+            "enum": [
+              "alternatives",
+              "sequential"
+            ],
             "description": "alternatives = user picks one framework; sequential = all frameworks run as phases"
           },
           "frameworks": {
@@ -140,7 +191,11 @@
             "description": "Required when type=sequential. Defines phase progression with framework_id per phase.",
             "items": {
               "type": "object",
-              "required": ["phase", "weeks", "framework_id"],
+              "required": [
+                "phase",
+                "weeks",
+                "framework_id"
+              ],
               "additionalProperties": false,
               "properties": {
                 "phase": {
@@ -182,7 +237,10 @@
       "deprecated": true,
       "items": {
         "type": "object",
-        "required": ["phase", "weeks"],
+        "required": [
+          "phase",
+          "weeks"
+        ],
         "properties": {
           "phase": {
             "type": "string",
@@ -213,6 +271,71 @@
           }
         }
       }
+    },
+    "self_contained": {
+      "type": "boolean",
+      "description": "When true, generation may only use this package and any package listed in borrows_from. Sessions that cannot be filled are reported as coverage gaps instead of being taken from another philosophy."
+    },
+    "borrows_from": {
+      "type": "array",
+      "description": "Packages this philosophy explicitly draws on. Borrowed sessions are labelled in the UI.",
+      "items": {
+        "type": "object",
+        "required": [
+          "package",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "package": {
+            "type": "string",
+            "description": "Installed philosophy package id."
+          },
+          "label": {
+            "type": "string",
+            "description": "Display name for the \"via X\" badge."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this philosophy legitimately draws on that one."
+          },
+          "modalities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Modalities the borrow covers. Omit or ['*'] for any."
+          },
+          "archetypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional allowlist of archetype ids."
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional allowlist of exercise ids."
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "archetypes",
+                "exercises"
+              ]
+            },
+            "description": "What may be taken from the borrowed package. Defaults to both. ['exercises'] borrows the movements while keeping this philosophy's own session designs."
+          }
+        }
+      }
+    },
+    "expectations": {
+      "type": "object",
+      "description": "Aggregate program expectations across the whole philosophy (weeks, days/week, session minutes)."
     }
   }
 }

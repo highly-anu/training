@@ -1,0 +1,752 @@
+# BJJ / grappling exercise library.
+#
+# The package shipped with archetypes but no exercises at all, so every slot in
+# bjj_class and grappling_sc resolved zero in-package candidates and was filled
+# from whichever philosophy happened to own a matching movement.
+#
+# Scope is deliberately narrow: mat work, the S&C that supports it, and the joint
+# maintenance the sport demands. General strength belongs to the strength
+# philosophies; this package covers what grappling specifically needs.
+exercises:
+
+# ── Mat work ─────────────────────────────────────────────────────────────────
+- id: bjj_drilling
+  name: Positional Drilling
+  category: skill
+  modality:
+  - combat_sport
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - rotation
+  requires: []
+  unlocks:
+  - bjj_positional_sparring
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    duration_sec: 1200
+  sources:
+  - BJJ
+  notes: 'Repetition of a technique with a cooperative partner, at a pace that
+    allows correction. Drilling precedes live work: a movement that falls apart
+    cooperatively will not survive resistance. Volume, not intensity.'
+
+- id: bjj_positional_sparring
+  name: Positional Sparring
+  category: skill
+  modality:
+  - combat_sport
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  - locomotion
+  requires:
+  - bjj_drilling
+  unlocks:
+  - bjj_live_rolling
+  contraindicated_with: []
+  progressions:
+    volume: add_rounds
+  scaling_down:
+  - bjj_drilling
+  typical_volume:
+    sets: 6
+    duration_sec: 180
+  sources:
+  - BJJ
+  notes: 'Live resistance from a fixed starting position, reset on escape or
+    submission. Gives the intensity of rolling with the repetition of drilling,
+    and lets a specific position be trained rather than whatever the roll happens
+    to produce.'
+
+- id: bjj_live_rolling
+  name: Live Rolling (Sparring)
+  category: skill
+  modality:
+  - combat_sport
+  equipment:
+  - open_space
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  - locomotion
+  requires:
+  - bjj_positional_sparring
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  - knee_meniscus_acute
+  - cervical_radiculopathy
+  progressions:
+    volume: add_rounds
+  scaling_down:
+  - bjj_positional_sparring
+  typical_volume:
+    sets: 5
+    duration_sec: 300
+  sources:
+  - BJJ
+  notes: 'Full rounds from standing or seated. Both the training stimulus and the
+    test — there is no substitute for it, and no amount of S&C replaces mat time.
+    Tap early: the joints have to last decades, and a competitive round is not
+    worth a shoulder.'
+
+- id: bjj_takedown_practice
+  name: Takedown Entries
+  category: skill
+  modality:
+  - combat_sport
+  - power
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - locomotion
+  requires:
+  - bjj_drilling
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  - cervical_radiculopathy
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+  - bjj_drilling
+  typical_volume:
+    sets: 5
+    reps: 10
+  sources:
+  - BJJ
+  notes: 'Penetration steps, level changes and grip fighting into a takedown
+    entry. Trained separately from ground work because the standing exchange is
+    where most injuries happen and it needs volume at controlled intensity.'
+
+# ── Grappling-specific conditioning ──────────────────────────────────────────
+- id: bjj_shrimp_drill
+  name: Shrimp / Hip Escape Drill
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - combat_sport
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    distance_m: 15
+  sources:
+  - BJJ
+  notes: 'The foundational escape movement, drilled down the mat and back. Also
+    the cheapest conditioning in the sport: it trains the exact hip pattern used
+    under an opponent, at a heart rate that keeps climbing.'
+
+- id: bjj_sprawl_interval
+  name: Sprawl Intervals
+  category: bodyweight
+  modality:
+  - anaerobic_intervals
+  - combat_sport
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - horizontal_push
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - bjj_shrimp_drill
+  typical_volume:
+    sets: 8
+    duration_sec: 30
+  sources:
+  - BJJ
+  notes: 'Repeated sprawls on a short clock. Reproduces the specific gasser of a
+    scramble — explosive hip drop, immediate recovery to the feet, repeat — which
+    is what actually runs a grappler out of air in the last minute of a round.'
+
+- id: bjj_shuttle_sprint
+  name: Mat Shuttle Sprint
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - patellar_tendinopathy
+  progressions:
+    volume: add_sets
+  scaling_down: []
+  typical_volume:
+    sets: 10
+    distance_m: 20
+  sources:
+  - BJJ
+  notes: 'Short shuttles with direction changes, matched to the work:rest of a
+    competition round. Trains the repeated-effort capacity that separates a strong
+    first round from a usable fifth.'
+
+- id: bjj_bear_crawl
+  name: Bear Crawl
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - isometric
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  progressions:
+    volume: increase_distance
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    distance_m: 20
+  sources:
+  - BJJ
+  notes: 'Knees just off the floor, hips low. Shoulder endurance in a loaded
+    position close to the one held while passing guard.'
+
+# ── Pulling and grip ─────────────────────────────────────────────────────────
+- id: pull_up
+  name: Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks:
+  - bjj_towel_pull_up
+  contraindicated_with:
+  - shoulder_impingement
+  - elbow_tendinopathy
+  progressions:
+    volume: add_reps_per_set
+    load: add_weight_when_reps_exceed_8
+  scaling_down:
+  - bjj_inverted_row
+  typical_volume:
+    sets: 5
+    reps: 5
+  sources:
+  - BJJ
+  - Gym Jones
+  notes: 'Full dead hang at the bottom, chin clearly over the bar. Pulling
+    strength carries over to grappling more directly than any press does — every
+    guard retention and every sweep starts with a pull.'
+
+- id: bjj_towel_pull_up
+  name: Towel Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires:
+  - pull_up
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - elbow_tendinopathy
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+  - pull_up
+  typical_volume:
+    sets: 4
+    reps: 5
+  sources:
+  - BJJ
+  notes: 'Two towels over the bar, gripped like lapels. The most sport-specific
+    pulling exercise available — grip fails before the back does, which is exactly
+    what happens in a long round.'
+
+- id: bjj_inverted_row
+  name: Inverted Row
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks:
+  - pull_up
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    reps: 10
+  sources:
+  - BJJ
+  notes: 'Body straight, bar to sternum. The horizontal pull that balances the
+    heavy vertical pulling volume grappling already supplies.'
+
+- id: dead_hang
+  name: Dead Hang
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    duration_sec: 45
+  sources:
+  - BJJ
+  - Gym Jones
+  notes: 'Grip endurance, measured honestly. 45 seconds is a reasonable
+    intermediate standard; a six-minute round asks for grip long after that.
+    Shoulders active, not hanging passively off the joint.'
+
+# ── Hips and posterior chain ─────────────────────────────────────────────────
+- id: bjj_kb_swing
+  name: Kettlebell Swing
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    load: increase_bell_size
+    volume: add_reps_per_set
+  scaling_down:
+  - bjj_glute_bridge
+  typical_volume:
+    sets: 4
+    reps: 15
+  sources:
+  - BJJ
+  notes: 'Hip snap, not a squat and not a front raise. Bridging off the bottom,
+    sweeping and finishing a takedown are all the same hip extension — this trains
+    it ballistically without the joint cost of heavy barbell work on a mat week.'
+
+- id: bjj_romanian_deadlift
+  name: Romanian Deadlift
+  category: barbell
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    load: add_2_5kg_per_week
+    volume: add_reps_per_set
+  scaling_down:
+  - bjj_kb_swing
+  typical_volume:
+    sets: 4
+    reps: 6
+  sources:
+  - BJJ
+  notes: 'Moderate load, controlled. Kept submaximal on purpose: the S&C session
+    supports mat work rather than competing with it for recovery.'
+
+- id: bjj_glute_bridge
+  name: Bridge Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    duration_sec: 45
+  sources:
+  - BJJ
+  notes: 'Hips locked out, held. Escaping from underneath is a sustained bridge
+    against resistance, so the hip extensors need endurance and not just power.'
+
+# ── Isometric and anti-rotation ──────────────────────────────────────────────
+- id: bjj_plank_hold
+  name: Plank Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - BJJ
+  notes: 'Anti-extension under sustained load. The frame held off a heavier
+    opponent is this, with an unhelpful partner on top of it.'
+
+- id: bjj_side_plank
+  name: Side Plank
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment: []
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 45
+  sources:
+  - BJJ
+  notes: 'Lateral trunk endurance. Directly the shape of a side-control frame.'
+
+- id: bjj_pallof_press
+  name: Pallof Press
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - resistance_band
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - isometric
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down:
+  - bjj_plank_hold
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - BJJ
+  notes: 'Anti-rotation. Guard retention is resisting rotation, not producing it —
+    the core demand of grappling is refusing to be turned.'
+
+- id: bjj_hollow_hold
+  name: Hollow Body Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - bjj_plank_hold
+  typical_volume:
+    sets: 3
+    duration_sec: 30
+  sources:
+  - BJJ
+  notes: 'Closed guard is a sustained hollow position. Trains the same thing with
+    nobody trying to open it.'
+
+- id: bjj_wall_sit
+  name: Wall Sit
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - patellar_tendinopathy
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    duration_sec: 60
+  sources:
+  - BJJ
+  notes: 'Isometric quad endurance for sustained guard-passing pressure and a
+    long-held combat base.'
+
+# ── Joint maintenance ────────────────────────────────────────────────────────
+- id: bjj_neck_isometric
+  name: Neck Isometric
+  category: mobility
+  modality:
+  - mobility
+  - durability
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - cervical_radiculopathy
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    duration_sec: 20
+  sources:
+  - BJJ
+  notes: 'Gentle self-resisted holds in four directions. The neck takes load from
+    guillotines, stack passes and simple mat posture, and it is the joint most
+    often neglected until it complains.'
+
+- id: bjj_shoulder_dislocate
+  name: Shoulder Dislocate (Band or Stick)
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - resistance_band
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 12
+  sources:
+  - BJJ
+  - Kelly Starrett
+  notes: 'Wide grip, slow arc overhead and behind. Maintains the external
+    rotation that armbars and kimuras repeatedly test.'
+
+- id: bjj_hip_90_90
+  name: 90/90 Hip Rotation
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - hip_impingement
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 8
+  sources:
+  - BJJ
+  notes: 'Active internal and external hip rotation. Guard work lives in these
+    ranges, and hips that cannot get there under their own power get there anyway
+    when someone else supplies the force.'
+
+- id: bjj_couch_stretch
+  name: Couch Stretch
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_acute
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 90
+  sources:
+  - BJJ
+  - Kelly Starrett
+  notes: 'Hip flexor length for full extension when bridging and finishing
+    takedowns. Squeeze the glute of the trailing leg rather than sinking.'
+
+- id: bjj_thoracic_extension
+  name: Thoracic Extension over Roller
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: increase_duration
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    duration_sec: 60
+  sources:
+  - BJJ
+  - Kelly Starrett
+  notes: 'Counters the rounded posture that hours of guard work produces, and
+    restores the extension the overhead positions need.'
+
+- id: bjj_wrist_prep
+  name: Wrist Prep
+  category: mobility
+  modality:
+  - mobility
+  - durability
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: add_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources:
+  - BJJ
+  notes: 'Flexion, extension and rotation under bodyweight. Grip fighting and
+    posting load the wrists constantly and they are rarely prepared for it.'

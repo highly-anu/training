@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import loader
+from . import loader, provenance
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -67,7 +67,7 @@ def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: st
 
     Mirrors the filter logic in select_archetype so that _resolve_session's pass
     decisions stay consistent with what select_archetype will actually find.
-    When relax_equipment=True, skips the equipment hard filter — used for the commons
+    When relax_equipment=True, skips the equipment hard filter — used for the
     fallback pass so bodyweight/equipment-limited archetypes are still found.
     """
     available = set(constraints.get('equipment', []))
@@ -157,7 +157,7 @@ def _build_phase_entries(
     return entries
 
 
-def _resolve_session(sessions: list, archetypes: list, all_archetypes: list,
+def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list,
                      constraints: dict, phase: str) -> list:
     """
     Replace sessions whose modality has no archetype for the current phase
@@ -165,9 +165,10 @@ def _resolve_session(sessions: list, archetypes: list, all_archetypes: list,
 
     Three-pass strategy:
       Pass 1: primary-sources archetypes, normal equipment filter (current behaviour).
-      Pass 2: full archetype pool (commons fallback), equipment filter relaxed — keeps the
-              same modality but uses a bodyweight/equipment-limited alternative.
-              Marks session with '_commons_fallback: True'.
+      Pass 2: fallback_archetypes, equipment filter relaxed — same modality, but a
+              bodyweight/equipment-limited alternative. Marks '_commons_fallback'.
+              NOTE: data/commons/ holds no archetypes, so this is NOT a commons pool:
+              it is the policy-allowed packages when strict, else the whole library.
       Pass 3: cross-modality substitution from primary-sources archetypes only.
               Fallback order: aerobic_base → durability → mobility.
     If no pass resolves, the session is passed through (produces null archetype output).
@@ -182,8 +183,8 @@ def _resolve_session(sessions: list, archetypes: list, all_archetypes: list,
             resolved.append(session)
             continue
 
-        # Pass 2: commons fallback — same modality, full pool, relaxed equipment
-        if _has_archetype(modality, all_archetypes, constraints, phase, relax_equipment=True):
+        # Pass 2: same modality from the fallback pool, equipment filter relaxed
+        if _has_archetype(modality, fallback_archetypes, constraints, phase, relax_equipment=True):
             resolved.append({**session, '_commons_fallback': True})
             continue
 
@@ -204,6 +205,64 @@ def _resolve_session(sessions: list, archetypes: list, all_archetypes: list,
 _GEN_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
+
+def _build_coverage_report(program: dict, policy) -> dict:
+    """What the philosophy could not cover, and what it borrowed to cover it.
+
+    Sibling of `compromises`. Compromises explain a substitution in prose; this
+    is the structured record of where the package fell short, so the UI can show
+    it and tools/check_provenance.py can assert on it.
+    """
+    unfilled_sessions: list[dict] = []
+    unfilled_slots: list[dict] = []
+    borrowed_sessions: list[dict] = []
+    seen_slots: set = set()
+
+    for week in program.get('weeks', []):
+        week_no = week.get('week')
+        for day_name, sessions in (week.get('schedule') or {}).items():
+            for session in sessions:
+                arch = session.get('archetype')
+                if not arch:
+                    unfilled_sessions.append({
+                        'week': week_no, 'day': day_name,
+                        'modality': session.get('modality'),
+                        'reason': 'NO_ARCHETYPE_IN_ALLOWED_PACKAGES',
+                    })
+                    continue
+
+                tag = provenance.origin(arch, policy, kind='archetype')
+                if tag and tag.get('borrowed'):
+                    borrowed_sessions.append({
+                        'week': week_no, 'day': day_name,
+                        'archetype': arch.get('id'),
+                        'from_package': tag.get('package'),
+                        'label': tag.get('label'),
+                        'reason': tag.get('reason'),
+                    })
+
+                for ea in session.get('exercises', []):
+                    if not ea.get('coverage_gap'):
+                        continue
+                    key = (arch.get('id'), ea.get('slot_role'))
+                    if key in seen_slots:
+                        continue
+                    seen_slots.add(key)
+                    unfilled_slots.append({
+                        'archetype': arch.get('id'),
+                        'slot_role': ea.get('slot_role'),
+                        'reason': ea.get('gap_reason'),
+                    })
+
+    return {
+        'philosophy': sorted(policy.owner_packages)[0] if policy.owner_packages else None,
+        'strict': policy.strict,
+        'unfilled_sessions': unfilled_sessions,
+        'unfilled_slots': unfilled_slots,
+        'borrowed_sessions': borrowed_sessions,
+    }
+
+
 def generate(
     goal_id: str | None,
     constraints: dict,
@@ -213,60 +272,69 @@ def generate(
     extra_injury_flags: dict | None = None,
     goal_dict: dict | None = None,
     include_trace: bool = False,
+    policy: 'provenance.SourcePolicy | None' = None,
 ) -> str | dict:
     """
     Generate a training program.
 
     Args:
-        goal_id:        ID from data/goals/ (e.g. 'alpine_climbing', 'general_gpp')
+        goal_id:        Identifier for logging/trace only; goal_dict supplies the content.
         constraints:    Dict matching constraints.schema.json
         num_weeks:      Weeks to generate (default 4); ignored when phase_schedule provided
         output_format:  'markdown' (default) or 'dict'
         phase_schedule: Optional list of {phase, week_in_phase, week_in_program} dicts.
                         When provided, generates exactly these weeks spanning phases.
-        goal_dict:      Pre-built goal dict (e.g. blended goal); skips load_goal when provided.
+        goal_dict:      The goal to generate for. Required — see src/goals.py.
+        policy:         Package SourcePolicy; derived from the goal when omitted.
+                        Pass the one api.py validated against so the two paths
+                        can never check different libraries.
 
     Returns:
         Formatted markdown string, or raw dict if output_format='dict'.
     """
     # --- Load data -----------------------------------------------------------
-    goal = goal_dict if goal_dict is not None else loader.load_goal(goal_id)
+    # goal_dict is always supplied by api.py and the tools; loader.load_goal was
+    # removed with the data/goals/ directory in the vertical migration, so calling
+    # it here raised AttributeError rather than reporting a missing goal.
+    if goal_dict is None:
+        raise ValueError(
+            f"generate() needs goal_dict. Goals are no longer loaded by id "
+            f"(got goal_id={goal_id!r}); build one with src.goals.philosophy_to_goal."
+        )
+    goal = goal_dict
     data = loader.load_all_data()
-    all_archetypes = data['archetypes']   # Unfiltered pool — retained for commons fallback
-    archetypes = data['archetypes']
-    exercises  = data['exercises']
-    modalities = data['modalities']
-    injury_flags_data = data['injury_flags']
+
+    # Narrow the library to the packages this goal may draw from. Archetypes used
+    # to be matched by a substring search over their free-text `sources:` prose,
+    # which let any package claiming "Gym Jones" in its bibliography into a Gym
+    # Jones program; ownership is `_package`, not attribution.
+    if policy is None:
+        policy = provenance.resolve_source_policy(goal)
+    lib = provenance.scope(data, policy)
+
+    archetypes = lib['archetypes']
+    exercises  = lib['exercises']
+    modalities = lib['modalities']
+    injury_flags_data = lib['injury_flags']
     if extra_injury_flags:
         injury_flags_data = {**injury_flags_data, **extra_injury_flags}
 
-    # Filter archetypes by primary_sources (philosophy packages).
-    # An archetype matches if its _package is in primary_sources, OR if any
-    # primary_source name appears (case-insensitive) in its sources list
-    # (e.g. ruck_session lives in horsemen_gpp but lists "Uphill Athlete" as a source).
-    primary_sources = set(goal.get('primary_sources', []))
-    if primary_sources:
-        # Normalise to lowercase+no-underscores for fuzzy matching
-        # so 'uphill_athlete' matches 'Uphill Athlete' in sources arrays
-        def _norm(s: str) -> str:
-            return s.lower().replace('_', ' ')
-
-        primary_norm = {_norm(ps) for ps in primary_sources}
-
-        def _arch_matches(arch: dict) -> bool:
-            if arch.get('_package') in primary_sources:
-                return True
-            for src in arch.get('sources', []):
-                src_norm = _norm(src)
-                if any(pn in src_norm for pn in primary_norm):
-                    return True
-            return False
-
-        archetypes = [arch for arch in archetypes if _arch_matches(arch)]
+    # Pool used when the philosophy's own archetypes cannot cover a scheduled
+    # modality. Under a strict policy that stays inside the allowed packages and
+    # the session is reported as a coverage gap; otherwise it is the whole
+    # library, which is the legacy permissive behaviour.
+    fallback_archetypes = archetypes if policy.strict else lib['all_archetypes']
+    fallback_exercises = exercises if policy.strict else lib['all_exercises']
 
     # --- Validate feasibility ------------------------------------------------
     validation = validate(goal, constraints, archetypes, modalities, injury_flags_data)
     if not validation.feasible:
+        # Honour output_format here too — callers asking for a dict were getting
+        # a markdown string back on this path.
+        if output_format == 'dict':
+            return {'weeks': [], 'compromises': [],
+                    'coverage_report': _build_coverage_report({}, policy),
+                    'validation_errors': list(validation.errors)}
         return format_program({'weeks': []}, goal, constraints, validation)
 
     # --- Build week entries --------------------------------------------------
@@ -344,7 +412,7 @@ def generate(
             mobility_hint = day_cfg.get('mobility_archetype_hint')
             day_session_types = day_cfg.get('session_types')
 
-            for session in _resolve_session(week_schedule[day], archetypes, all_archetypes, constraints, phase):
+            for session in _resolve_session(week_schedule[day], archetypes, fallback_archetypes, constraints, phase):
                 # Determine if this session should use the mobility hint
                 preferred_arch = None
                 if session['modality'] == 'mobility' and mobility_hint:
@@ -353,7 +421,7 @@ def generate(
                 # Commons fallback: use full archetype pool with relaxed equipment
                 is_commons_fallback = session.pop('_commons_fallback', False)
                 is_cross_modality = session.pop('_cross_modality', False)
-                session_archetypes = all_archetypes if is_commons_fallback else archetypes
+                session_archetypes = fallback_archetypes if is_commons_fallback else archetypes
 
                 # Record compromise message for commons fallback (once per unique substitution)
                 if is_commons_fallback:
@@ -368,10 +436,12 @@ def generate(
                     injury_flags_data, phase, week_in_phase,
                     recent_arch_ids, recent_ex_ids,
                     collect_trace=include_trace,
-                    exercises_by_package=data.get('exercises_by_package'),
+                    exercises_by_package=lib.get('exercises_by_package'),
                     preferred_archetype_id=preferred_arch,
                     day_session_types=day_session_types,
                     relax_equipment=is_commons_fallback,
+                    policy=policy,
+                    level_seeds=lib.get('level_seeds'),
                 )
 
                 session_trace: dict | None = None
@@ -439,8 +509,16 @@ def generate(
                     if len(recent_arch_ids) > 14:
                         recent_arch_ids.pop(0)
 
+                # Tag which package this session actually came from, so a borrowed
+                # session can be labelled instead of silently passing as the
+                # philosophy's own.
+                if populated.get('archetype'):
+                    tag = provenance.origin(populated['archetype'], policy, kind='archetype')
+                    if tag:
+                        populated['provenance'] = tag
+
                 # Complementary recovery work — mobility/rehab exercises targeting stressed patterns
-                comp = _select_complementary(populated.get('exercises', []), exercises)
+                comp = _select_complementary(populated.get('exercises', []), fallback_exercises)
                 if comp:
                     populated['complementary_work'] = [
                         {
@@ -475,6 +553,7 @@ def generate(
 
     # Add compromises to program
     program['compromises'] = all_compromises
+    program['coverage_report'] = _build_coverage_report(program, policy)
 
     if output_format == 'dict':
         if include_trace and generation_trace is not None:

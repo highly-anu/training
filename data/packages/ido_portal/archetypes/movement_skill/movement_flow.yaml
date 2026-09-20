@@ -44,7 +44,7 @@ slots:
   intensity: light
   exercise_filter:
     movement_pattern: locomotion
-    category: movement_skill
+    category: skill
   notes: "3–5 circuit rounds through 5–6 locomotion patterns. Each movement performed\
     \ for prescribed distance (12–30m depending on level):\n  Beginner: duck walk\
     \ 24m, horse walk 24m, lizard walk 12m, ostrich walk 24m,\n            bridge\

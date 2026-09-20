@@ -188,7 +188,7 @@ def format_program(
         lines.append(f"| Phases | {' -> '.join(phases_in_program)} |")
     else:
         lines.append(f"| Phase | {constraints.get('training_phase', 'base').title()} |")
-    lines.append(f"| Days / week | {constraints['days_per_week']} |")
+    lines.append(f"| Days / week | {constraints.get('days_per_week', 5)} |")
     lines.append(f"| Session length | {constraints.get('session_time_minutes', 75)} min |")
     lines.append(f"| Training level | {constraints.get('training_level', 'intermediate').title()} |")
     eq = ', '.join(constraints.get('equipment', []))

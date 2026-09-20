@@ -211,7 +211,7 @@ maintain    reduce_slightly    reduce
 
 ## 5. Schema: Philosophy
 
-**File:** `data/philosophies/{id}.yaml`
+**File:** `data/packages/{id}/philosophy.yaml`
 
 A philosophy describes a training source's beliefs and scope. It doesn't describe workouts — just principles and orientation.
 
@@ -526,9 +526,12 @@ wrist_acute             cervical_spine          general_fatigue_overreach
 
 ## 9. Schema: Goal Profile
 
-**File:** `data/goals/{id}.yaml` or `data/goals/custom/{id}.yaml`
-
-A goal profile is the athlete's objective. It drives program generation by setting priority weights across modalities and defining a phase sequence.
+**Not an authored file.** `data/goals/` was removed in the vertical package
+migration. A goal is synthesised per request by `src/goals.py:philosophy_to_goal`
+from the selected philosophy: priorities come from the chosen framework's
+`sessions_per_week`, the phase sequence from the philosophy's `framework_groups`.
+The shape below is still what the engine consumes, so it is documented here for
+anyone reading a generated program's `goal` object or building one in a test.
 
 ```yaml
 id: your_goal_id                    # required — unique, snake_case
