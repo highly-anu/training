@@ -341,11 +341,11 @@ final class HealthKitManager {
         let hrValues = hrSamples.map(\.bpm)
         let distanceMeters = workout.statistics(
             for: HKQuantityType(.distanceWalkingRunning))?
-            .sumQuantity()?.doubleValue(for: .meter)
+            .sumQuantity()?.doubleValue(for: .meter())
             ?? workout.statistics(for: HKQuantityType(.distanceCycling))?
-                .sumQuantity()?.doubleValue(for: .meter)
+                .sumQuantity()?.doubleValue(for: .meter())
         let calories = workout.statistics(for: HKQuantityType(.activeEnergyBurned))?
-            .sumQuantity()?.doubleValue(for: .kilocalorie)
+            .sumQuantity()?.doubleValue(for: .kilocalorie())
 
         return ImportedWorkout(
             id: WorkoutID.deterministic(source: source,
