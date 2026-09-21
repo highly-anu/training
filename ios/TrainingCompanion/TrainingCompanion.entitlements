@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Was missing here while present in the Debug variant, so release builds
+	     had no HealthKit access at all. -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<!-- Lets HealthKit wake the app when a workout is written, instead of
+	     waiting for the ~6h background refresh. -->
+	<key>com.apple.developer.healthkit.background-delivery</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.haerdsoft.TrainingCompanion</string>

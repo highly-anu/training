@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut, Heart, RotateCcw } from 'lucide-react'
+import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut, Heart, RotateCcw, Plug } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,13 +12,14 @@ import { useBioStore } from '@/store/bioStore'
 import { useBenchmarks } from '@/api/benchmarks'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
+import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate'
+type SubTab = 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate' | 'connections'
 
 interface SubTabItem {
   id: SubTab
@@ -32,7 +33,10 @@ const SUB_TABS: SubTabItem[] = [
   { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
   { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
   { id: 'heartrate',  label: 'Heart Rate', Icon: Heart         },
+  { id: 'connections', label: 'Connections', Icon: Plug         },
 ]
+
+const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
 
 // ── Equipment by category ──────────────────────────────────────────────────────
 
@@ -792,7 +796,13 @@ export function ProfileBenchmarks() {
   const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
   const { user, savedAccounts, signOutCurrent, switchToAccount } = useAuthStore()
 
-  const [activeTab, setActiveTab] = useState<SubTab>('equipment')
+  // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
+  // straight on Connections — they redirect to /profile?tab=connections.
+  const [searchParams] = useSearchParams()
+  const requestedTab = searchParams.get('tab') as SubTab | null
+  const [activeTab, setActiveTab] = useState<SubTab>(
+    requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'equipment'
+  )
   const [switching, setSwitching] = useState(false)
 
   return (
@@ -880,6 +890,7 @@ export function ProfileBenchmarks() {
         {activeTab === 'benchmarks' && <BenchmarksOverview />}
         {activeTab === 'schedule'   && <ScheduleOverview />}
         {activeTab === 'heartrate'  && <HRSettingsOverview />}
+        {activeTab === 'connections' && <ConnectionsSettings />}
       </div>
     </motion.div>
   )

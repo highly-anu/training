@@ -119,6 +119,31 @@ struct HRConfig: Codable {
     var zoneBoundaries: [Double]?  // 4 upper-boundary fractions, e.g. [0.60, 0.70, 0.80, 0.90]
 }
 
+/// Whether a source may import automatically. Mirrors `integrations` in the
+/// server profile (see `default_integrations()` in api.py).
+struct IntegrationSource: Codable {
+    var enabled: Bool
+}
+
+struct IntegrationSettings: Codable {
+    /// Master switch over every source.
+    var autoImport: Bool
+    var sources: [String: IntegrationSource]
+
+    static let `default` = IntegrationSettings(
+        autoImport: true,
+        sources: [
+            "garmin": IntegrationSource(enabled: true),
+            "strava": IntegrationSource(enabled: true),
+            "appleHealth": IntegrationSource(enabled: true),
+        ]
+    )
+
+    func allows(_ source: String) -> Bool {
+        autoImport && (sources[source]?.enabled ?? true)
+    }
+}
+
 struct UserProfile: Codable {
     var trainingLevel: String
     var equipment: [String]
@@ -128,6 +153,11 @@ struct UserProfile: Codable {
     var performanceLogs: [String: [PerformanceEntry]]?
     var weeklySchedule: WeeklySchedule?
     var hrConfig: HRConfig?
+    /// Present so a save from this app does not drop it. The server merges
+    /// per-key now, but round-tripping what we read is still the honest thing
+    /// for a client to do.
+    var activeGoalId: String?
+    var integrations: IntegrationSettings?
 
     static let `default` = UserProfile(
         trainingLevel: "intermediate",
@@ -137,7 +167,9 @@ struct UserProfile: Codable {
         dateOfBirth: nil,
         performanceLogs: nil,
         weeklySchedule: nil,
-        hrConfig: nil
+        hrConfig: nil,
+        activeGoalId: nil,
+        integrations: nil
     )
 }
 

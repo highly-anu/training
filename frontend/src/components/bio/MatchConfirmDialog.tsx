@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { useBioStore } from '@/store/bioStore'
 import { useCurrentProgram } from '@/api/programs'
 import type { PendingMatch } from '@/api/types'
+import { sourceLabel } from '@/lib/workoutSource'
 
 interface MatchConfirmDialogProps {
   match: PendingMatch | null
@@ -99,9 +100,7 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
               {importedWorkout.activityType.replace(/HKWorkoutActivityType/, '')}
             </span>
             <Badge variant="outline" className="text-[10px]">
-              {importedWorkout.source === 'apple_health' ? 'Apple Health'
-                : importedWorkout.source === 'fit_file' ? '.fit file'
-                : 'Strava'}
+              {sourceLabel(importedWorkout.source)}
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">{startFormatted}</p>

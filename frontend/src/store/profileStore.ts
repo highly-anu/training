@@ -1,7 +1,19 @@
 import { create } from 'zustand'
-import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, TrainingLevel } from '@/api/types'
+import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, IntegrationSettings, TrainingLevel } from '@/api/types'
 import * as healthApi from '@/api/health'
 import { fetchProfile, saveProfile } from '@/api/userdata'
+
+/** Mirrors default_integrations() in api.py. Auto-import defaults on, but a
+ *  source only imports once it is also connected, so this changes nothing
+ *  until the athlete connects something. */
+export const DEFAULT_INTEGRATIONS: IntegrationSettings = {
+  autoImport: true,
+  sources: {
+    garmin: { enabled: true },
+    strava: { enabled: true },
+    appleHealth: { enabled: true },
+  },
+}
 
 interface PerformanceEntry {
   value: number
@@ -19,6 +31,7 @@ interface ProfileStore {
   dateOfBirth: string | null // YYYY-MM-DD, used for max HR estimation
   weeklySchedule: Record<Day, DaySchedule> | null
   hrConfig: HRConfig
+  integrations: IntegrationSettings
 
   setTrainingLevel: (level: TrainingLevel) => void
   setEquipment: (equipment: EquipmentId[]) => void
@@ -32,6 +45,7 @@ interface ProfileStore {
   setDateOfBirth: (dob: string | null) => void
   setWeeklySchedule: (schedule: Record<Day, DaySchedule>) => void
   setHRConfig: (config: HRConfig) => void
+  setIntegrations: (settings: IntegrationSettings) => void
   // Hydrate performance logs from server health snapshot
   initPerformanceLogs: (logs: Record<string, PerformanceEntry[]>) => void
   // Hydrate session completion from server health snapshot
@@ -50,6 +64,7 @@ function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; initPe
     dateOfBirth:        state.dateOfBirth,
     weeklySchedule:     state.weeklySchedule,
     hrConfig:           state.hrConfig,
+    integrations:       state.integrations,
   })
 }
 
@@ -64,6 +79,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   dateOfBirth: null,
   weeklySchedule: null,
   hrConfig: {},
+  integrations: DEFAULT_INTEGRATIONS,
 
   setTrainingLevel: (trainingLevel) => {
     set({ trainingLevel })
@@ -126,6 +142,11 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     set({ hrConfig })
     _sync({ ...get(), hrConfig })
   },
+
+  setIntegrations: (integrations) => {
+    set({ integrations })
+    _sync({ ...get(), integrations })
+  },
   initPerformanceLogs: (logs) => set({ performanceLogs: logs }),
   initSessionLogs: (logs) => set({ sessionLogs: logs }),
 
@@ -141,6 +162,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
       dateOfBirth:       data.dateOfBirth ?? null,
       weeklySchedule:    data.weeklySchedule ?? null,
       hrConfig:          data.hrConfig ?? {},
+      integrations:      data.integrations ?? DEFAULT_INTEGRATIONS,
     })
   },
 }))

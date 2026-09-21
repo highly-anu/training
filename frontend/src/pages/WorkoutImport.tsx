@@ -14,6 +14,7 @@ import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
 import { supabase } from '@/lib/supabase'
 import type { ImportedWorkout, PendingMatch, GeneratedProgram } from '@/api/types'
+import { sourceShortLabel } from '@/lib/workoutSource'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api'
 
@@ -438,11 +439,7 @@ function MatchedTab({
           {rows.map(({ match, workout }) => {
             const session = sessionLookup.get(match.sessionKey)
             const { weekNum, dayName } = parseSessionKey(match.sessionKey)
-            const sourceLabel =
-              workout.source === 'fit_file' ? 'FIT'
-              : workout.source === 'strava' ? 'Strava'
-              : workout.source === 'apple_health' || workout.source === 'apple_watch_live' ? 'Apple Health'
-              : 'GPS'
+            const sourceText = sourceShortLabel(workout.source)
             return (
               <div
                 key={workout.id}
@@ -465,7 +462,7 @@ function MatchedTab({
                       matched
                     </Badge>
                     <span className="text-[9px] text-muted-foreground/60 border border-border/40 rounded px-1 py-px shrink-0">
-                      {sourceLabel}
+                      {sourceText}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">

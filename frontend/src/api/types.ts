@@ -659,7 +659,12 @@ export interface OntologyData {
 
 // ─── Bio / Performance Data ────────────────────────────────────────────────────
 
-export type ImportSource = 'apple_health' | 'strava' | 'manual' | 'apple_watch_live' | 'fit_file'
+// 'garmin' is written by the Connect IQ watch app and by the Garmin Connect
+// webhook; 'watch' by the Apple Watch relay. Both were already reaching the
+// database before they were listed here.
+export type ImportSource =
+  | 'apple_health' | 'strava' | 'manual' | 'apple_watch_live' | 'fit_file'
+  | 'garmin' | 'watch'
 export type RPE = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 export type FatigueRating = 1 | 2 | 3 | 4 | 5
 export type MatchConfidence = 'auto' | 'manual' | 'rejected'
@@ -690,6 +695,34 @@ export interface HRZoneDistribution {
 export interface HRConfig {
   maxHROverride?: number | null     // user-measured max HR; null/undefined = use 220-age
   zoneBoundaries?: number[] | null  // 4 upper-boundary fractions [0.60, 0.70, 0.80, 0.90]; null = Friel defaults
+}
+
+/** Auto-import settings, stored server-side next to hrConfig so the Garmin
+ *  webhook worker can read them — a toggle the browser kept to itself would do
+ *  nothing about activities Garmin is already pushing. */
+export interface IntegrationSettings {
+  /** Master switch over every source. */
+  autoImport: boolean
+  sources: Record<string, { enabled: boolean }>
+}
+
+/** A workout the server matched too weakly to confirm on its own. */
+export interface MatchSuggestion {
+  importedWorkoutId: string
+  sessionKey: string
+  score: number
+  createdAt: string
+}
+
+export interface GarminStatus {
+  connected: boolean
+  /** False when the server has no Garmin credentials — the feature is inert. */
+  configured: boolean
+  garminUserId?: string | null
+  athleteName?: string | null
+  connected_at?: string | null
+  last_sync_at?: string | null
+  last_webhook_at?: string | null
 }
 
 export interface ImportedWorkout {

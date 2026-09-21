@@ -34,6 +34,7 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import { Badge } from '@/components/ui/badge'
 import type { ImportedWorkout, ModalityId } from '@/api/types'
+import { sourceShortLabel } from '@/lib/workoutSource'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -588,11 +589,7 @@ function ActivityTab({ period }: { period: Period }) {
     return Array.from(set).sort()
   }, [filtered])
 
-  const sourceLabel = (s: string) =>
-    s === 'fit_file' ? 'FIT'
-    : s === 'strava' ? 'Strava'
-    : s === 'apple_health' || s === 'apple_watch_live' ? 'Apple Health'
-    : s
+  const sourceLabel = sourceShortLabel
 
   const displayed = useMemo(() => {
     let list = filtered

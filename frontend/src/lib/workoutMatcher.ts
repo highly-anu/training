@@ -1,4 +1,17 @@
+/**
+ * Matching imported workouts to planned sessions, in the browser.
+ *
+ * There is a second implementation of this in `src/workout_matcher.py`, because
+ * the automatic import paths have no browser — a Garmin webhook fires while
+ * nobody is logged in, and the iOS app has no matcher of its own.
+ *
+ * The two share their thresholds (`data/matching_rules.json`, imported below)
+ * and their golden fixtures (`data/matcher_fixtures.json`, asserted by
+ * `workoutMatcher.test.ts` here and `test_workout_matcher.py` there). Change
+ * the scoring in the JSON, not in either implementation, and run both suites.
+ */
 import { addDays, parseISO, format } from 'date-fns'
+import rules from '@shared/matching_rules.json'
 import type {
   ImportedWorkout,
   WorkoutMatch,
@@ -9,17 +22,15 @@ import type {
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-const STRENGTH_MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power']
-const CARDIO_MODALITIES: ModalityId[] = ['aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning']
-const DURABILITY_MODALITIES: ModalityId[] = ['durability']
-const SKILL_MODALITIES: ModalityId[] = ['movement_skill', 'mobility', 'rehab']
+/** modality id → family name, inverted once from the shared rules file. */
+const FAMILY_OF: Record<string, string> = Object.fromEntries(
+  Object.entries(rules.families).flatMap(([family, modalities]) =>
+    (modalities as string[]).map((m) => [m, family])
+  )
+)
 
-function modalityFamily(modality: ModalityId): string {
-  if (STRENGTH_MODALITIES.includes(modality)) return 'strength'
-  if (CARDIO_MODALITIES.includes(modality)) return 'cardio'
-  if (DURABILITY_MODALITIES.includes(modality)) return 'durability'
-  if (SKILL_MODALITIES.includes(modality)) return 'skill'
-  return 'other'
+function modalityFamily(modality: ModalityId | string): string {
+  return FAMILY_OF[modality] ?? 'other'
 }
 
 /**
@@ -41,15 +52,19 @@ export function scoreMatch(workout: ImportedWorkout, sessionModality: ModalityId
 
   if (workout.inferredModalityId) {
     if (workout.inferredModalityId === sessionModality) {
-      score += 3
+      score += rules.modalityExactPoints
     } else if (modalityFamily(workout.inferredModalityId) === modalityFamily(sessionModality)) {
-      score += 1
+      score += rules.familyPoints
     }
   }
 
   const durDiff = Math.abs(workout.durationMinutes - sessionDuration)
-  if (durDiff <= 15) score += 2
-  else if (durDiff <= 30) score += 1
+  for (const [maxDelta, points] of rules.durationTiers) {
+    if (durDiff <= maxDelta) {
+      score += points
+      break
+    }
+  }
 
   return score
 }
@@ -84,7 +99,7 @@ export function autoMatchWorkouts(
         const entry = {
           sessionKey,
           modality: session.modality,
-          duration: session.archetype?.duration_estimate_minutes ?? 60,
+          duration: session.archetype?.duration_estimate_minutes ?? rules.defaultSessionMinutes,
         }
         const existing = dateIndex.get(calDate) ?? []
         existing.push(entry)
@@ -102,7 +117,7 @@ export function autoMatchWorkouts(
     if (candidates.length === 1) {
       const c = candidates[0]
       const score = scoreMatch(workout, c.modality, c.duration)
-      if (score >= 4) {
+      if (score >= rules.autoThreshold) {
         confirmed.push({
           importedWorkoutId: workout.id,
           sessionKey: c.sessionKey,
@@ -120,14 +135,15 @@ export function autoMatchWorkouts(
     }))
     const best = scored.reduce((a, b) => (a.score >= b.score ? a : b))
 
-    if (best.score >= 4 && scored.filter((s) => s.score >= 4).length === 1) {
+    if (best.score >= rules.autoThreshold &&
+        scored.filter((s) => s.score >= rules.autoThreshold).length === 1) {
       confirmed.push({
         importedWorkoutId: workout.id,
         sessionKey: best.sessionKey,
         matchConfidence: 'auto',
         matchedAt: new Date().toISOString(),
       })
-    } else if (best.score >= 2) {
+    } else if (best.score >= rules.suggestThreshold) {
       pending.push({
         importedWorkout: workout,
         candidateSessionKeys: [best.sessionKey],

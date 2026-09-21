@@ -5,8 +5,10 @@ on:
     branches: [master]
     paths:
       - 'api.py'
+      - 'oauth.py'
       - 'src/**'
       - 'data/**'
+      - 'migrations/**'
       - 'requirements.txt'
       - 'Dockerfile'
       - 'fly.toml'

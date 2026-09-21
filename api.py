@@ -16,6 +16,8 @@ from flask import Flask, jsonify, redirect, request
 # Ensure src/ is importable when running from repo root
 sys.path.insert(0, os.path.dirname(__file__))
 
+from src import fit_import as _fit_import
+from src import workout_ids as _workout_ids
 from src import goals, loader, provenance
 from src.similarity import compute_all_similarities
 from src.generator import generate
@@ -1017,17 +1019,19 @@ def strava_authorize():
 def strava_callback():
     import oauth as _oauth
     _oauth.init_db()
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    # Lands on the Connections tab, where StravaConnect actually renders. This
+    # used to redirect to /import, a page that reads none of these parameters —
+    # so the round-trip silently went nowhere.
     error = request.args.get('error')
     if error:
-        return redirect(f'{frontend_url}/import?strava=error&reason={error}')
+        return redirect(_integrations_redirect('strava', 'error', error))
     code = request.args.get('code', '')
     state = request.args.get('state', '')
     try:
         _oauth.handle_callback(code, state)
-        return redirect(f'{frontend_url}/import?strava=connected')
+        return redirect(_integrations_redirect('strava', 'connected'))
     except Exception as e:
-        return redirect(f'{frontend_url}/import?strava=error&reason={e}')
+        return redirect(_integrations_redirect('strava', 'error', str(e)))
 
 
 @app.delete('/api/oauth/strava/disconnect')
@@ -1053,84 +1057,162 @@ def strava_sync():
     return jsonify({'activities': activities, 'count': len(activities)})
 
 
-def _calc_elevation(points: list, noise_floor: float = 1.0) -> tuple[float, float]:
-    gain = loss = 0.0
-    prev = None
-    for p in points:
-        alt = p.get('altitude')
-        if alt is None:
-            continue
-        if prev is not None:
-            diff = alt - prev
-            if diff >= noise_floor:
-                gain += diff
-            elif diff <= -noise_floor:
-                loss += abs(diff)
-        prev = alt
-    return gain, loss
+# ---------------------------------------------------------------------------
+# Garmin Connect
+# ---------------------------------------------------------------------------
+# Mirrors the Strava block above. Everything is inert until GARMIN_CLIENT_ID /
+# GARMIN_CLIENT_SECRET are set, so this ships safely before the Garmin
+# Developer Program application is approved.
+
+def _integrations_redirect(provider: str, outcome: str, reason: str = '') -> str:
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    url = f'{frontend_url}/profile?tab=connections&{provider}={outcome}'
+    if reason:
+        url += f'&reason={reason}'
+    return url
 
 
-def _clean_hr_samples(samples: list, session_avg_hr: float | None = None) -> list:
-    """Remove sensor lock-on artifacts and smooth outliers from HR sample lists.
+@app.get('/api/oauth/garmin/status')
+@require_auth
+def garmin_status():
+    from src import garmin_connect
+    return jsonify(garmin_connect.get_status(g.user_id))
 
-    1. Startup trim  — drop readings in the first 30 s that are below 75 % of
-       session average HR, but only for real exercise sessions (avg > 100 bpm).
-       This eliminates the optical-HR cold-start lag common on Apple Watch.
-    2. Rolling median — replace every sample with the median of its ±7.5 s
-       neighbourhood (min 3 neighbours required) to suppress mid-workout spikes
-       without distorting genuine effort changes.
-    """
-    from statistics import median as _median
-    from datetime import datetime, timezone
 
-    if not samples:
-        return samples
+@app.get('/api/oauth/garmin/authorize')
+@require_auth
+def garmin_authorize():
+    from src import garmin_connect
+    if not garmin_connect.is_configured():
+        return jsonify({
+            'detail': 'GARMIN_CLIENT_ID / GARMIN_CLIENT_SECRET not set in environment'
+        }), 503
+    return jsonify({'auth_url': garmin_connect.generate_auth_url(g.user_id)})
 
-    # Parse timestamps once
-    parsed: list[tuple[float, int, str]] = []  # (unix_ts, bpm, iso_str)
-    for s in samples:
+
+@app.get('/api/oauth/garmin/callback')
+def garmin_callback():
+    """Garmin redirects the athlete's browser here — no JWT available."""
+    from src import garmin_connect
+    error = request.args.get('error')
+    if error:
+        return redirect(_integrations_redirect('garmin', 'error', error))
+    try:
+        user_id = garmin_connect.handle_callback(
+            request.args.get('code', ''), request.args.get('state', ''))
+        # Pull recent history immediately; Garmin delivers it through the same
+        # webhook, so there is nothing to poll.
         try:
-            dt = datetime.fromisoformat(s['timestamp'])
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            parsed.append((dt.timestamp(), int(s['bpm']), s['timestamp']))
-        except Exception:
-            continue
+            garmin_connect.request_backfill(user_id)
+        except Exception as e:
+            app.logger.warning('garmin backfill on connect failed: %s', e)
+        return redirect(_integrations_redirect('garmin', 'connected'))
+    except Exception as e:
+        app.logger.warning('garmin callback failed: %s', e)
+        return redirect(_integrations_redirect('garmin', 'error', str(e)))
 
-    if not parsed:
-        return samples
 
-    # Filter physiologically impossible readings (sensor dropout or overflow artifacts)
-    parsed = [(ts, bpm, iso) for ts, bpm, iso in parsed if 30 <= bpm <= 250]
+@app.delete('/api/oauth/garmin/disconnect')
+@require_auth
+def garmin_disconnect():
+    from src import garmin_connect
+    garmin_connect.disconnect(g.user_id)
+    return jsonify({'disconnected': True})
 
-    if not parsed:
-        return samples
 
-    # 1 — Startup trim: drop all leading readings below threshold until HR first
-    #     stabilises at exercise level. Handles cold-start lag of any duration
-    #     (Apple Watch can take 3-5 min to lock on). Guard: never trim > 5 min.
-    avg = session_avg_hr or (sum(b for _, b, _ in parsed) / len(parsed))
-    if avg > 100:
-        threshold = avg * 0.75
-        start_ts = parsed[0][0]
-        first_valid = next(
-            (i for i, (ts, bpm, _) in enumerate(parsed)
-             if bpm >= threshold or ts - start_ts > 300),
-            0,
-        )
-        parsed = parsed[first_valid:]
+@app.post('/api/oauth/garmin/backfill')
+@require_auth
+def garmin_backfill():
+    from src import garmin_connect
+    if not garmin_connect.get_status(g.user_id).get('connected'):
+        return jsonify({'detail': 'Garmin not connected'}), 401
+    body = request.get_json(silent=True) or {}
+    days = int(body.get('days') or 90)
+    return jsonify(garmin_connect.request_backfill(g.user_id, days=days))
 
-    if not parsed:
-        return samples
 
-    # 2 — Rolling median (±7.5 s window)
-    cleaned = []
-    for ts, bpm, iso in parsed:
-        window = sorted(b for t, b, _ in parsed if abs(t - ts) <= 7.5)
-        smoothed = int(round(_median(window))) if len(window) >= 3 else bpm
-        cleaned.append({'timestamp': iso, 'bpm': smoothed})
+@app.post('/api/oauth/garmin/drain')
+@require_auth
+def garmin_drain():
+    """Manual safety valve: retry queued webhook events.
 
-    return cleaned
+    The worker thread normally handles these, but a machine restart mid-batch
+    leaves rows pending until the next webhook arrives.
+    """
+    from src import garmin_worker
+    return jsonify(garmin_worker.drain())
+
+
+# ---------------------------------------------------------------------------
+# Garmin webhooks
+# ---------------------------------------------------------------------------
+# Unauthenticated by necessity: Garmin holds no user JWT. The defences are
+#   1. a shared secret in the URL, compared in constant time;
+#   2. the body is never trusted for identity — only `userId` is used, and only
+#      to look up an existing registration;
+#   3. the activity itself is FETCHED from Garmin with our own token rather
+#      than read out of the request body, and the callback host is checked
+#      against GARMIN_API_BASE first (otherwise this endpoint is an SSRF
+#      primitive for anyone who learns its URL).
+#
+# Always 200 except on a bad secret. Garmin retries non-2xx responses and
+# eventually disables endpoints that keep failing, so a malformed or unknown
+# payload is acknowledged and dropped, not errored.
+
+def _webhook_authorized() -> bool:
+    import hmac
+    from src import garmin_connect
+    expected = garmin_connect.webhook_secret()
+    if not expected:
+        return False
+    supplied = request.args.get('t') or request.headers.get('X-Webhook-Token', '')
+    return hmac.compare_digest(str(supplied), expected)
+
+
+def _receive_garmin_webhook(event_type: str):
+    from src import garmin_worker
+    if not _webhook_authorized():
+        return jsonify({'detail': 'Unauthorized'}), 401
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        # Acknowledge and drop: retrying will not make it parse.
+        app.logger.warning('garmin webhook (%s) had no JSON body', event_type)
+        return jsonify({'received': 0}), 200
+
+    try:
+        garmin_worker.enqueue(event_type, payload)
+        garmin_worker.kick()
+    except Exception as e:
+        # A 500 here would make Garmin retry, which is right — but only if the
+        # failure is ours to fix. Log loudly and let it retry.
+        app.logger.exception('could not queue garmin webhook: %s', e)
+        return jsonify({'detail': 'Queue unavailable'}), 503
+
+    return jsonify({'received': 1}), 200
+
+
+@app.post('/api/webhooks/garmin/activities')
+def garmin_webhook_activities():
+    return _receive_garmin_webhook('activities')
+
+
+@app.post('/api/webhooks/garmin/deregistration')
+def garmin_webhook_deregistration():
+    return _receive_garmin_webhook('deregistration')
+
+
+@app.post('/api/webhooks/garmin/permission-change')
+def garmin_webhook_permission_change():
+    return _receive_garmin_webhook('permission_change')
+
+
+# Both helpers now live in src/fit_import.py (the FIT parser needs them too).
+# Aliased under their old private names so the existing call sites are unchanged
+# — note _calc_elevation is also passed as a *callback* into
+# health_store.recalculate_workouts_elevation, so its signature is load-bearing.
+_calc_elevation = _fit_import.calc_elevation
+_clean_hr_samples = _fit_import.clean_hr_samples
 
 
 @app.post('/api/workouts/parse')
@@ -1179,13 +1261,9 @@ def parse_workout_file():
         'MartialArts': 'combat_sport',
     }
 
-    import uuid as _uuid
-    import hashlib as _hashlib
-
-    def _deterministic_id(source, start_time, activity_type, duration_minutes):
-        raw = f"{source}|{start_time}|{activity_type}|{duration_minutes}"
-        h = _hashlib.sha256(raw.encode()).hexdigest()[:24]
-        return f"{source}-{h}"
+    # One formula, shared with the FIT path and the iOS/web parsers —
+    # see src/workout_ids.py before changing anything about it.
+    _deterministic_id = _workout_ids.deterministic_id
 
     def _minutes_between(start_str, end_str):
         from datetime import datetime
@@ -1312,156 +1390,15 @@ def parse_workout_file():
 
     elif filename.endswith('.fit'):
         try:
-            import fitparse as _fitparse
-        except ImportError:
-            return jsonify({'detail': 'fitparse library not installed — run pip install fitparse'}), 503
-
-        from datetime import datetime as _dt, timezone as _tz
-
-        _FIT_SPORT_MAP = {
-            'running':           'aerobic_base',
-            'cycling':           'aerobic_base',
-            'swimming':          'aerobic_base',
-            'walking':           'durability',
-            'hiking':            'durability',
-            'rowing':            'aerobic_base',
-            'elliptical':        'aerobic_base',
-            'yoga':              'mobility',
-            'flexibility':       'mobility',
-            'training':          'mixed_modal_conditioning',
-            'generic':           'mixed_modal_conditioning',
-            'strength_training': 'max_strength',
-            'cardio':            'aerobic_base',
-            'cross_training':    'mixed_modal_conditioning',
-            'hiit':              'anaerobic_intervals',
-            'boxing':            'combat_sport',
-            'martial_arts':      'combat_sport',
-        }
-
-        # Semicircles → degrees conversion factor
-        _SEMI_TO_DEG = 180.0 / (2 ** 31)
-
-        try:
-            fit = _fitparse.FitFile(f.stream)
-
-            # ── Collect all record-level data (GPS, HR, altitude, cadence, power) ──
-            records = []
-            for rec in fit.get_messages('record'):
-                ts = rec.get_value('timestamp')
-                if ts is None:
-                    continue
-                if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=_tz.utc)
-
-                lat_semi = rec.get_value('position_lat')
-                lon_semi = rec.get_value('position_long')
-                lat = float(lat_semi) * _SEMI_TO_DEG if lat_semi is not None else None
-                lng = float(lon_semi) * _SEMI_TO_DEG if lon_semi is not None else None
-
-                records.append({
-                    'timestamp': ts.isoformat(),
-                    'lat':       lat,
-                    'lng':       lng,
-                    'altitude':  float(rec.get_value('enhanced_altitude') or rec.get_value('altitude') or 0) if (rec.get_value('enhanced_altitude') or rec.get_value('altitude')) is not None else None,
-                    'bpm':       int(rec.get_value('heart_rate')) if rec.get_value('heart_rate') is not None else None,
-                    'cadence':   int(rec.get_value('cadence')) if rec.get_value('cadence') is not None else None,
-                    'power':     int(rec.get_value('power')) if rec.get_value('power') is not None else None,
-                    'speed':     float(rec.get_value('enhanced_speed') or rec.get_value('speed') or 0) if (rec.get_value('enhanced_speed') or rec.get_value('speed')) is not None else None,
-                })
-
-            # Build GPS track (only points with coordinates)
-            gps_track = [
-                {'lat': r['lat'], 'lng': r['lng'], 'altitude': r['altitude'],
-                 'timestamp': r['timestamp'], 'bpm': r['bpm'], 'speed': r['speed']}
-                for r in records if r['lat'] is not None and r['lng'] is not None
-            ]
-
-            # Build HR samples (all points with valid HR, filter zeros)
-            hr_samples = _clean_hr_samples(
-                [{'timestamp': r['timestamp'], 'bpm': r['bpm']}
-                 for r in records if r['bpm'] is not None and r['bpm'] > 0]
-            )
-
-            # ── Session-level summary (unchanged logic) ──
-            results = []
-            for session in fit.get_messages('session'):
-                sport = str(session.get_value('sport') or 'generic').lower()
-                sub_sport = str(session.get_value('sub_sport') or '').lower()
-
-                start_time = session.get_value('start_time')  # UTC naive datetime
-                elapsed = float(
-                    session.get_value('total_elapsed_time')
-                    or session.get_value('total_timer_time')
-                    or 0
-                )
-
-                if not start_time:
-                    continue
-
-                if start_time.tzinfo is None:
-                    start_time = start_time.replace(tzinfo=_tz.utc)
-                end_time = _dt.fromtimestamp(start_time.timestamp() + elapsed, tz=_tz.utc)
-
-                # Prefer sub_sport, but skip 'generic' since it's uninformative
-                modality = (
-                    (_FIT_SPORT_MAP.get(sub_sport) if sub_sport not in ('generic', 'none', '') else None)
-                    or _FIT_SPORT_MAP.get(sport)
-                )
-                avg_hr  = session.get_value('avg_heart_rate')
-                max_hr  = session.get_value('max_heart_rate')
-                calories = session.get_value('total_calories')
-                dist_m   = session.get_value('total_distance')  # meters
-
-                # Prefer GPS-computed cumulative gain/loss (same algorithm as
-                # WorkoutDetail frontend) so all views agree.  Fall back to the
-                # device barometric session total only when no GPS altitude data
-                # is present at all (e.g. treadmill, indoor cycling).
-                # Check presence of altitude data explicitly — don't use a zero
-                # result as a proxy, or genuinely flat runs fall back to barometric.
-                has_gps_altitude = any(r.get('altitude') is not None for r in records)
-                if has_gps_altitude:
-                    elev_gain, elev_loss = _calc_elevation(records)
-                else:
-                    total_ascent  = session.get_value('total_ascent')
-                    total_descent = session.get_value('total_descent')
-                    elev_gain = float(total_ascent  or 0)
-                    elev_loss = float(total_descent or 0)
-
-                # Use sub_sport for display when it adds meaning
-                display_type = (
-                    sub_sport
-                    if sub_sport and sub_sport not in ('generic', 'none', '')
-                    else sport
-                ).replace('_', ' ').title()
-
-                fit_dur = round(elapsed / 60)
-                results.append({
-                    'id':                _deterministic_id('fit_file', start_time.isoformat(), display_type, fit_dur),
-                    'source':            'fit_file',
-                    'date':              start_time.strftime('%Y-%m-%d'),
-                    'startTime':         start_time.isoformat(),
-                    'endTime':           end_time.isoformat(),
-                    'durationMinutes':   fit_dur,
-                    'activityType':      display_type,
-                    'inferredModalityId': modality,
-                    'heartRate': {
-                        'avg': float(avg_hr)  if avg_hr  is not None else None,
-                        'max': float(max_hr)  if max_hr  is not None else None,
-                        'min': None,
-                        'samples': hr_samples,
-                    },
-                    'calories':  int(calories) if calories is not None else None,
-                    'distance':  {'value': round(float(dist_m) / 1000, 3), 'unit': 'km'} if dist_m else None,
-                    'gpsTrack':  gps_track if gps_track else None,
-                    'elevation': {'gain': round(elev_gain), 'loss': round(elev_loss)} if elev_gain or elev_loss else None,
-                    'rawData':   {'sport': sport, 'sub_sport': sub_sport},
-                })
-
-            if results:
-                _health.upsert_workouts(g.user_id, results)
-            return jsonify(results)
+            results = _fit_import.parse_fit(f.stream)
+        except _fit_import.FitNotAvailable as e:
+            return jsonify({'detail': str(e)}), 503
         except Exception as e:
             return jsonify({'detail': f'FIT parse error: {e}'}), 422
+
+        if results:
+            _health.upsert_workouts(g.user_id, results)
+        return jsonify(results)
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
 
@@ -1673,67 +1610,133 @@ def _profile_to_frontend(row: dict) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Profile
+# ---------------------------------------------------------------------------
+# The profile is one JSONB blob (profiles.profile_data). Clients do not all know
+# the same keys — iOS's UserProfile struct has no activeGoalId, the web app has
+# no performanceLogs — so a write must MERGE over what is stored rather than
+# rebuild the blob from the request body. Rebuilding is how activeGoalId used to
+# get silently nulled every time the phone saved a profile.
+
+# Which sources may be auto-imported from, and the master switch over all of
+# them. Read by every import path before it writes a workout.
+INTEGRATION_SOURCES = ('garmin', 'strava', 'appleHealth')
+
+# Keys a client is allowed to write. Anything else already in the stored blob is
+# preserved untouched; anything else in the body is ignored.
+_PROFILE_KEYS = (
+    'trainingLevel', 'equipment', 'injuryFlags', 'customInjuryFlags',
+    'activeGoalId', 'dateOfBirth', 'weeklySchedule', 'hrConfig', 'integrations',
+)
+
+
+def default_integrations() -> dict:
+    """Auto-import defaults: on, for every source.
+
+    Defaulting to on is safe because a source only imports when it is *also*
+    connected — so this changes nothing until the athlete connects something.
+    """
+    return {
+        'autoImport': True,
+        'sources': {name: {'enabled': True} for name in INTEGRATION_SOURCES},
+    }
+
+
+def _merge_integrations(stored) -> dict:
+    """Fill a stored (possibly partial, possibly absent) integrations object out
+    to the full shape, so callers can index it without defensive gets."""
+    merged = default_integrations()
+    if not isinstance(stored, dict):
+        return merged
+    if isinstance(stored.get('autoImport'), bool):
+        merged['autoImport'] = stored['autoImport']
+    stored_sources = stored.get('sources')
+    if isinstance(stored_sources, dict):
+        for name in INTEGRATION_SOURCES:
+            entry = stored_sources.get(name)
+            if isinstance(entry, dict) and isinstance(entry.get('enabled'), bool):
+                merged['sources'][name]['enabled'] = entry['enabled']
+    return merged
+
+
+def _default_profile() -> dict:
+    return {
+        'trainingLevel': 'intermediate',
+        'equipment': [],
+        'injuryFlags': [],
+        'customInjuryFlags': [],
+        'activeGoalId': None,
+        'dateOfBirth': None,
+        'weeklySchedule': None,
+        'hrConfig': {},
+        'integrations': default_integrations(),
+    }
+
+
+def _sanitize_profile(profile: dict) -> dict:
+    """Coerce the nullable fields to their empty values — a client may have
+    stored null where a list or object is expected."""
+    profile['trainingLevel'] = profile.get('trainingLevel') or 'intermediate'
+    profile['equipment'] = profile.get('equipment') or []
+    profile['injuryFlags'] = profile.get('injuryFlags') or []
+    profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
+    profile['hrConfig'] = profile.get('hrConfig') or {}
+    profile['integrations'] = _merge_integrations(profile.get('integrations'))
+    return profile
+
+
+def get_integration_settings(user_id: str) -> dict:
+    """The athlete's auto-import settings, fully defaulted. Import paths call
+    this before writing; see `integration_allows`."""
+    try:
+        from src.db import get_user_profile
+        return _merge_integrations((get_user_profile(user_id) or {}).get('integrations'))
+    except Exception as e:
+        app.logger.warning('get_integration_settings error: %s', e)
+        return default_integrations()
+
+
+def integration_allows(user_id: str, source: str) -> bool:
+    """True when the athlete has auto-import on, both overall and for `source`."""
+    settings = get_integration_settings(user_id)
+    if not settings.get('autoImport'):
+        return False
+    return bool(settings['sources'].get(source, {}).get('enabled'))
+
+
 @app.get('/api/profile')
 @require_auth
 def get_profile():
     try:
         from src.db import get_user_profile
-        user_id = g.user_id
-        profile = get_user_profile(user_id)
-        if profile is None:
-            # Return default profile
-            return jsonify({
-                'trainingLevel': 'intermediate',
-                'equipment': [],
-                'injuryFlags': [],
-                'customInjuryFlags': [],
-                'activeGoalId': None,
-                'dateOfBirth': None,
-                'weeklySchedule': None,
-                'hrConfig': {},
-            })
-        # Sanitize array fields — stored value may be null if client sent null
-        profile['equipment'] = profile.get('equipment') or []
-        profile['injuryFlags'] = profile.get('injuryFlags') or []
-        profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
-        profile.setdefault('hrConfig', {})
-        return jsonify(profile)
+        profile = _default_profile()
+        stored = get_user_profile(g.user_id)
+        if stored:
+            profile.update(stored)
+        return jsonify(_sanitize_profile(profile))
     except Exception as e:
         app.logger.warning('get_profile error: %s', e)
-        return jsonify({
-            'trainingLevel': 'intermediate',
-            'equipment': [],
-            'injuryFlags': [],
-            'customInjuryFlags': [],
-            'activeGoalId': None,
-            'dateOfBirth': None,
-            'weeklySchedule': None,
-            'hrConfig': {},
-        })
+        return jsonify(_default_profile())
 
 
 @app.put('/api/profile')
 @require_auth
 def update_profile():
     try:
-        from src.db import save_user_profile
+        from src.db import get_user_profile, save_user_profile
         user_id = g.user_id
         body = request.get_json(silent=True) or {}
 
+        # Start from what is stored (keeping keys this client doesn't know about)
+        # and overwrite only the keys the body actually carries.
+        profile_data = _default_profile()
+        profile_data.update(get_user_profile(user_id) or {})
+        for key in _PROFILE_KEYS:
+            if key in body:
+                profile_data[key] = body[key]
 
-        # Build profile data dict; use `or []` so a null body field never overwrites stored data with null
-        profile_data = {
-            'trainingLevel': body.get('trainingLevel') or 'intermediate',
-            'equipment': body.get('equipment') or [],
-            'injuryFlags': body.get('injuryFlags') or [],
-            'customInjuryFlags': body.get('customInjuryFlags') or [],
-            'activeGoalId': body.get('activeGoalId'),
-            'dateOfBirth': body.get('dateOfBirth'),
-            'weeklySchedule': body.get('weeklySchedule'),
-            'hrConfig': body.get('hrConfig') or {},
-        }
-
-        save_user_profile(user_id, profile_data)
+        save_user_profile(user_id, _sanitize_profile(profile_data))
         return jsonify({'saved': True})
     except Exception as e:
         app.logger.warning('update_profile error: %s', e)
@@ -2276,6 +2279,28 @@ def health_upsert_workouts():
     workouts = body.get('workouts', [])
     if not isinstance(workouts, list):
         return jsonify({'detail': 'workouts must be an array'}), 400
+
+    # `autoMatch` marks an automatic import (the iOS Apple Health relay) rather
+    # than an interactive one. Those need the server-side matcher, because the
+    # client doing the importing has no matcher of its own and there may be no
+    # browser open at all.
+    auto_match = bool(body.get('autoMatch'))
+
+    # An automatic import also respects the athlete's settings — enforcing this
+    # only in the UI would leave the toggle decorative.
+    if auto_match:
+        sources = {w.get('source') for w in workouts if isinstance(w, dict)}
+        # Apple Health is the relay's own channel; a Garmin-written workout
+        # arriving through it is gated on the Garmin toggle, as the athlete
+        # would expect from the label.
+        allowed = {
+            s for s in sources
+            if integration_allows(g.user_id, 'garmin' if s == 'garmin' else 'appleHealth')
+        }
+        workouts = [w for w in workouts if w.get('source') in allowed]
+        if not workouts:
+            return jsonify({'saved': 0, 'skipped': 'auto-import disabled'})
+
     # Enrich elevation from GPS track altitude when the client only sent gain (loss=0).
     # Apple Watch live workouts always arrive with loss=0; recalculate from track altitude.
     for workout in workouts:
@@ -2285,8 +2310,14 @@ def health_upsert_workouts():
             gain, loss = _calc_elevation(gps)
             if gain or loss:
                 workout['elevation'] = {'gain': round(gain), 'loss': round(loss)}
+
     _health.upsert_workouts(g.user_id, workouts)
-    return jsonify({'saved': len(workouts)})
+
+    result = {'saved': len(workouts)}
+    if auto_match:
+        from src import workout_matcher
+        result['matched'] = workout_matcher.match_and_store(g.user_id, workouts)
+    return jsonify(result)
 
 
 @app.delete('/api/health/workouts/<workout_id>')
@@ -2336,8 +2367,32 @@ def health_upsert_bio(date: str):
 @require_auth
 def health_upsert_match():
     match = request.get_json(silent=True) or {}
+    workout_id = match.get('importedWorkoutId')
     _health.upsert_match(g.user_id, match)
-    return jsonify({'saved': match.get('importedWorkoutId')})
+    # Deciding a workout — either way — answers any outstanding suggestion.
+    if workout_id:
+        _health.delete_match_suggestion(g.user_id, workout_id)
+    return jsonify({'saved': workout_id})
+
+
+@app.get('/api/health/matches/suggestions')
+@require_auth
+def health_match_suggestions():
+    """Workouts the server matched too weakly to confirm on its own.
+
+    Populated by the automatic import paths (Garmin webhook, iOS Apple Health),
+    which run server-side where there is no browser to ask. The web app merges
+    these into its existing pending-match flow so the athlete confirms or
+    rejects them the same way as an upload made in the browser.
+    """
+    return jsonify(_health.get_match_suggestions(g.user_id))
+
+
+@app.delete('/api/health/matches/suggestions/<path:workout_id>')
+@require_auth
+def health_dismiss_suggestion(workout_id: str):
+    _health.delete_match_suggestion(g.user_id, workout_id)
+    return jsonify({'dismissed': workout_id})
 
 
 @app.post('/api/health/performance')
