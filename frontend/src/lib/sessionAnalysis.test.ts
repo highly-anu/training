@@ -68,9 +68,10 @@ describe('sessions with no archetype (coverage gaps)', () => {
       phase: 'base',
       schedule: { Monday: [gapSession], Tuesday: [normalSession] },
     }
+    const insight = computeSessionInsight([normalSession], workout(), undefined, 190)
     expect(() =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      computeWeekInsights(week as any, [], {} as any, 190),
+      computeWeekInsights(week as any, [insight]),
     ).not.toThrow()
   })
 
