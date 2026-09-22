@@ -616,6 +616,40 @@ def create_archetype():
     return jsonify(body), 201
 
 
+def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
+    """Source philosophy ids + weights for an envelope, from the request if it
+    carried them, else recovered from the generated goal's own id."""
+    ids = body.get('philosophy_ids') or body.get('goal_ids') or []
+    if not ids and body.get('philosophy_id'):
+        ids = [body['philosophy_id']]
+    if not ids:
+        # A synthetic goal's id is '_phil_<philosophy_id>' (see
+        # _philosophy_to_goal), so it can be read back when the caller did not
+        # say which philosophy it asked for.
+        goal_id = ((generated.get('goal') or {}).get('id') or '')
+        if goal_id.startswith('_phil_'):
+            ids = [goal_id[len('_phil_'):]]
+    weights = body.get('philosophy_weights') or body.get('goal_weights') or {}
+    return list(ids), dict(weights)
+
+
+def _wrap_generated_program(generated: dict, body: dict, existing) -> dict:
+    """Put a freshly generated program into the stored envelope.
+
+    Keeps the existing start date when there is one, so regenerating does not
+    silently restart the athlete's calendar.
+    """
+    existing = _normalize_program_keys(existing) if isinstance(existing, dict) else {}
+    ids, weights = _goal_ids_from_body(body, generated)
+    return {
+        'currentProgram':    generated,
+        'programStartDate':  existing.get('programStartDate') or _date.today().isoformat(),
+        'eventDate':         body.get('event_date') or existing.get('eventDate'),
+        'sourceGoalIds':     ids or existing.get('sourceGoalIds') or [],
+        'sourceGoalWeights': weights or existing.get('sourceGoalWeights') or {},
+    }
+
+
 @app.post('/api/programs/generate')
 @require_auth
 def generate_program():
@@ -624,12 +658,21 @@ def generate_program():
     try:
         resp = _generate_program_inner(body)
         # Auto-save the generated program to the DB so Garmin/Watch can fetch it.
+        #
+        # This MUST write the envelope, not the bare GeneratedProgram. Saving
+        # `resp_data` directly (as this did) left program_data with the
+        # generator's own top-level keys — no `currentProgram`, no
+        # `programStartDate` — and every client reads `.currentProgram`, so the
+        # program silently vanished from web and iOS while the weeks sat intact
+        # in the database.
         try:
-            from src.db import save_user_program
+            from src.db import get_user_program, save_user_program
             import json as _json
             resp_data = _json.loads(resp.get_data(as_text=True))
             if isinstance(resp_data, dict) and resp_data.get('weeks') is not None:
-                save_user_program(g.user_id, resp_data)
+                save_user_program(g.user_id,
+                                  _wrap_generated_program(resp_data, body,
+                                                          get_user_program(g.user_id)))
         except Exception as _save_err:
             app.logger.warning('generate: auto-save failed: %s', _save_err)
         return resp
@@ -1764,6 +1807,32 @@ def get_user_program_endpoint():
         program = get_user_program(user_id)
         if isinstance(program, dict):
             program = _normalize_program_keys(program)
+
+            # Heal a program stored WITHOUT its envelope — the generate
+            # auto-save used to write the bare GeneratedProgram, leaving the
+            # generator's own keys at the top level and no `currentProgram`.
+            # Every client reads `.currentProgram`, so such a row reads as "no
+            # program" even though all the weeks are there. Wrap it and persist
+            # the repair.
+            #
+            # programStartDate cannot be recovered from the payload — it only
+            # ever lived in the envelope that was overwritten — so it stays
+            # null and the athlete re-dates the program.
+            if 'currentProgram' not in program and program.get('weeks') is not None:
+                app.logger.warning('healing envelope-less program for %s', user_id)
+                ids, weights = _goal_ids_from_body({}, program)
+                program = {
+                    'currentProgram':    program,
+                    'programStartDate':  None,
+                    'eventDate':         None,
+                    'sourceGoalIds':     ids,
+                    'sourceGoalWeights': weights,
+                }
+                try:
+                    save_user_program(user_id, program)
+                except Exception as wrap_err:
+                    app.logger.warning('envelope heal save failed: %s', wrap_err)
+
             # Heal programs saved by iOS (missing goal/volume_summary) by
             # reconstructing goal from sourceGoalIds and recomputing volume.
             current = program.get('currentProgram') or {}

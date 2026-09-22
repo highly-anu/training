@@ -297,7 +297,9 @@ export function Dashboard() {
     })
   }, [currentWeek, sessionLogs])
 
-  if (programLoadState !== 'loaded') {
+  // Only show the loader when there is nothing to show yet. A background
+  // refetch keeps the current program on screen instead of blanking it.
+  if (programLoadState !== 'loaded' && !program) {
     return (
       <motion.div
         key="dashboard-loading"

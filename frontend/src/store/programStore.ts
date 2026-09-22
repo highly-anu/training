@@ -132,15 +132,13 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   },
 
   loadFromServer: async () => {
-    set({
-      programLoadState: 'loading',
-      currentProgram: null,
-      programStartDate: null,
-      eventDate: null,
-      sourceGoalIds: [],
-      sourceGoalWeights: {},
-      revision: null,
-    })
+    // Deliberately does NOT blank the current program first. It used to, and
+    // because React StrictMode double-invokes effects in dev, the second call
+    // flashed the empty state — the dashboard visibly alternated between
+    // "Retrieving your program..." and "no program". A load replaces state on
+    // success and clears it on failure; there is no window where it is empty
+    // for no reason.
+    set({ programLoadState: 'loading' })
     try {
       const data = await fetchUserProgram()
       set({
@@ -153,7 +151,16 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         revision:          data?.revision ?? null,
       })
     } catch {
-      set({ programLoadState: 'loaded' })
+      // Clear on failure so a different account's program can never linger.
+      set({
+        programLoadState: 'loaded',
+        currentProgram: null,
+        programStartDate: null,
+        eventDate: null,
+        sourceGoalIds: [],
+        sourceGoalWeights: {},
+        revision: null,
+      })
     }
   },
 }))
