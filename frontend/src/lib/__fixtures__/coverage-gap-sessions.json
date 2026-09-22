@@ -1,0 +1,142 @@
+{
+  "_comment": "Two sessions taken verbatim from a real stored program. The first has archetype: null \u2014 a coverage gap the philosophy package could not fill. Rendering it used to crash the program view.",
+  "gapSession": {
+    "modality": "movement_skill",
+    "archetype": null,
+    "exercises": [],
+    "is_deload": false,
+    "provenance": null,
+    "complementary_work": []
+  },
+  "normalSession": {
+    "modality": "aerobic_base",
+    "archetype": {
+      "id": "kb_antiglycolic_session",
+      "name": "KB Anti-Glycolytic Practice (Wildman)",
+      "notes": "Anti-glycolytic KB session popularised by Pavel and taught by Wildman. Short timed sets (10\u201320 sec) of swings or snatches alternate with full rest until HR returns below ~130 bpm. Total session volume accumulates over 30\u201340 min; the glycolytic system is never taxed. Builds aerobic base and repeatable work capacity without accumulated fatigue or soreness. Breathing must remain nasal throughout \u2014 if mouth-breathing is required, the set was too long or the bell too heavy. This is not cardio: it is high-quality ballistic repetitions performed aerobically.\n",
+      "slots": [
+        {
+          "role": "main",
+          "intensity": "zone2",
+          "slot_type": "time_domain",
+          "exercise_filter": {
+            "category": "kettlebell",
+            "movement_pattern": "ballistic"
+          },
+          "duration_minutes": 35
+        }
+      ],
+      "sources": [
+        "Wildman",
+        "Pavel"
+      ],
+      "_package": "wildman_kettlebell",
+      "category": "kettlebell",
+      "modality": "aerobic_base",
+      "training_levels": [
+        "novice",
+        "intermediate",
+        "advanced",
+        "elite"
+      ],
+      "applicable_phases": [
+        "base",
+        "maintenance",
+        "transition"
+      ],
+      "required_equipment": [
+        "kettlebell"
+      ],
+      "duration_estimate_minutes": 40
+    },
+    "exercises": [
+      {
+        "load": {
+          "zone_lower": 1,
+          "zone_upper": 2,
+          "zone_target": "Zone 1-2 (conversational pace)",
+          "duration_minutes": 35
+        },
+        "meta": false,
+        "error": null,
+        "notes": null,
+        "exercise": {
+          "id": "kb_jerk_single",
+          "name": "Kettlebell Jerk (Single-Arm)",
+          "notes": "Double-dip jerk: first dip drives bell overhead, second dip catches arm locked under bell. KB sport RPM target: 10 RPM at 1 pood (16 kg). Timed protocol: 8 min at 10 RPM switching hands every 2 min. Pentathlon standard: 120 reps in 6 min (20 RPM).\n",
+          "effort": "high",
+          "sources": [
+            "Wildman",
+            "Pavel"
+          ],
+          "unlocks": [
+            "kb_jerk_double"
+          ],
+          "_package": "wildman_kettlebell",
+          "category": "kettlebell",
+          "modality": [
+            "power",
+            "strength_endurance",
+            "anaerobic_intervals"
+          ],
+          "requires": [
+            "wk_kb_clean_single",
+            "wk_kb_push_press_single"
+          ],
+          "_packages": [
+            "wildman_kettlebell"
+          ],
+          "bilateral": false,
+          "equipment": [
+            "kettlebell"
+          ],
+          "progressions": {
+            "load": "increase_bell_weight",
+            "volume": "increase_rpm_target",
+            "complexity": "kb_jerk_double"
+          },
+          "scaling_down": [
+            "wk_kb_push_press_single"
+          ],
+          "typical_volume": {
+            "sets": 4,
+            "duration_sec": 120
+          },
+          "starting_load_kg": {
+            "elite": 32,
+            "novice": 12,
+            "advanced": 24,
+            "intermediate": 16
+          },
+          "movement_patterns": [
+            "vertical_push",
+            "ballistic",
+            "olympic_lift"
+          ],
+          "contraindicated_with": [
+            "shoulder_impingement",
+            "shoulder_instability",
+            "wrist_injury",
+            "knee_meniscus_post_op",
+            "ankle_sprain"
+          ]
+        },
+        "rest_sec": null,
+        "load_note": null,
+        "slot_role": "main",
+        "slot_type": "time_domain",
+        "gap_reason": null,
+        "injury_skip": false,
+        "coverage_gap": false,
+        "skip_exercise": false,
+        "parent_slot_role": null
+      }
+    ],
+    "is_deload": false,
+    "provenance": {
+      "package": "wildman_kettlebell",
+      "borrowed": false
+    },
+    "complementary_work": []
+  }
+}

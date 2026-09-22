@@ -362,7 +362,11 @@ export interface SessionProvenance {
 
 export interface Session {
   modality: ModalityId
-  archetype: Archetype
+  /** null when the philosophy package could not fill this slot (a documented
+   *  coverage gap) or an injury excluded every candidate. The type used to
+   *  claim this was always present, which hid four unguarded dereferences that
+   *  crashed the program view for anyone whose program had such a slot. */
+  archetype: Archetype | null
   exercises: ExerciseAssignment[]
   complementary_work?: ComplementaryExercise[]
   duration_min?: number

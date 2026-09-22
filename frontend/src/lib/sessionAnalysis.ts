@@ -75,7 +75,7 @@ function analyzeAerobic(
   // Prescribed duration
   const prescribedMin = sessions.reduce((sum, s) => {
     const dur = s.exercises.reduce((d, e) => d + (e.load.duration_minutes ?? 0), 0)
-    return sum + (dur || s.duration_min || s.archetype.duration_estimate_minutes || 0)
+    return sum + (dur || s.duration_min || s.archetype?.duration_estimate_minutes || 0)
   }, 0)
 
   if (prescribedMin > 0) {
@@ -388,7 +388,7 @@ function analyzeIntervals(
   // Duration match
   const prescribedMin = sessions.reduce((sum, s) => {
     const tm = s.exercises.reduce((d, e) => d + (e.load.time_minutes ?? 0), 0)
-    return sum + (tm || s.duration_min || s.archetype.duration_estimate_minutes || 0)
+    return sum + (tm || s.duration_min || s.archetype?.duration_estimate_minutes || 0)
   }, 0)
 
   if (prescribedMin > 0) {
@@ -483,7 +483,7 @@ function analyzeDistance(
 
   // Duration fallback if no distance prescribed
   const prescribedMin = sessions.reduce(
-    (sum, s) => sum + (s.duration_min || s.archetype.duration_estimate_minutes || 0), 0,
+    (sum, s) => sum + (s.duration_min || s.archetype?.duration_estimate_minutes || 0), 0,
   )
   if (prescribedKm === 0 && prescribedMin > 0) {
     const delta = pctDelta(prescribedMin, workout.durationMinutes)
@@ -506,7 +506,7 @@ function analyzeMobility(
   const insights: InsightItem[] = []
 
   const prescribedMin = sessions.reduce(
-    (sum, s) => sum + (s.duration_min || s.archetype.duration_estimate_minutes || 0), 0,
+    (sum, s) => sum + (s.duration_min || s.archetype?.duration_estimate_minutes || 0), 0,
   )
 
   if (prescribedMin > 0) {
