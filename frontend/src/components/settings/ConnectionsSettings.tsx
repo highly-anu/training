@@ -60,7 +60,9 @@ function GarminConnect() {
       },
       { replace: true }
     )
-  }, [garminParam])
+    // queryClient and setSearchParams are stable references from their
+    // providers; the effect should run when the callback param changes.
+  }, [garminParam, queryClient, setSearchParams])
 
   if (isLoading) {
     return (

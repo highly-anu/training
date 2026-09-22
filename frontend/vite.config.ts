@@ -25,7 +25,10 @@ export default defineConfig({
     },
   },
   test: {
+    // Pure-logic suites stay in node; the component suites opt into jsdom with
+    // a `// @vitest-environment jsdom` docblock so the fast ones stay fast.
     environment: 'node',
-    include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'test/**/*.test.ts'],
+    setupFiles: ['./test/setup.ts'],
   },
 })
