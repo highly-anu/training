@@ -84,5 +84,52 @@ env2 = api._wrap_generated_program(bare, {}, None)
 print('  first-ever generate gets today:', env2['programStartDate'])
 assert env2['sourceGoalIds'] == ['wildman_kettlebell'], 'ids recovered from goal id'
 
-with conn.cursor() as c: c.execute('DROP TABLE user_programs')
 print('\nALL HEAL ASSERTIONS PASSED')
+
+
+# --- persist is opt-in -------------------------------------------------------
+# A generate that does not ask to persist must leave the stored program alone.
+# The web app saves through PUT /api/user/program itself; iOS sends persist.
+save_user_program(U, healthy)
+before = get_user_program(U)
+
+gen = api.generate_program.__wrapped__
+import flask
+# `philosophy_id`, not `goal_id` — see _generate_program_inner.
+body_no_persist = {'philosophy_id': 'wildman_kettlebell',
+                   'constraints': {'training_level': 'intermediate', 'days_per_week': 3,
+                                   'session_time_minutes': 45,
+                                   'equipment': ['kettlebell', 'pull_up_bar']},
+                   'num_weeks': 2}
+with api.app.test_request_context('/api/programs/generate', method='POST', json=body_no_persist):
+    from flask import g
+    g.user_id = U
+    try:
+        gen()
+    except Exception as e:
+        print('  (generate raised, which is fine for this assertion):', type(e).__name__)
+after = get_user_program(U)
+assert after == before, 'a non-persisting generate must not touch the stored program'
+print('non-persisting generate left the stored program untouched')
+
+with api.app.test_request_context('/api/programs/generate', method='POST',
+                                  json={**body_no_persist, 'persist': True}):
+    from flask import g
+    g.user_id = U
+    try:
+        gen()
+    except Exception as e:
+        print('  (generate raised:', type(e).__name__, ')')
+after2 = get_user_program(U)
+if after2 != before:
+    assert 'currentProgram' in after2, 'persisted write must keep the envelope'
+    assert after2.get('programStartDate') == '2026-05-04', \
+        'an existing start date must survive a persisting regenerate'
+    print('persisting generate wrote an envelope and kept the start date:',
+          after2['programStartDate'])
+else:
+    raise AssertionError('persisting generate did not write anything — '
+                         'the main assertion of this test would be vacuous')
+
+with conn.cursor() as c: c.execute('DROP TABLE IF EXISTS user_programs')
+print('\nPERSIST OPT-IN ASSERTIONS PASSED')

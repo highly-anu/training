@@ -657,14 +657,21 @@ def generate_program():
     body = request.get_json(silent=True) or {}
     try:
         resp = _generate_program_inner(body)
-        # Auto-save the generated program to the DB so Garmin/Watch can fetch it.
+        # Persist only when the caller says this generate is a commit.
         #
-        # This MUST write the envelope, not the bare GeneratedProgram. Saving
-        # `resp_data` directly (as this did) left program_data with the
-        # generator's own top-level keys — no `currentProgram`, no
-        # `programStartDate` — and every client reads `.currentProgram`, so the
-        # program silently vanished from web and iOS while the weeks sat intact
-        # in the database.
+        # This used to save unconditionally, and it saved `resp_data` — the bare
+        # GeneratedProgram — leaving program_data with the generator's own
+        # top-level keys, no `currentProgram` and no `programStartDate`. Every
+        # client reads `.currentProgram`, so a real account's program silently
+        # read as "no program" while all its weeks sat intact in the database.
+        #
+        # Now: the web app saves the program itself through
+        # PUT /api/user/program after a successful generate, so it passes
+        # nothing here; iOS has no such step (it generates, then re-fetches) so
+        # it sends persist=true. Defaulting to off means an exploratory or
+        # failed generate can no longer replace a stored program.
+        if not body.get('persist'):
+            return resp
         try:
             from src.db import get_user_program, save_user_program
             import json as _json

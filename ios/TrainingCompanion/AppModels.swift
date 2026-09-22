@@ -335,6 +335,12 @@ struct GenerateProgramRequest: Encodable {
     let numWeeks: Int?
     let startDate: String?
     let eventDate: String?
+    /// Tells the server this generate is a commit and should replace the
+    /// stored program. Unlike the web app, this app has no separate save step
+    /// after generating — it generates and then re-fetches — so it must opt in.
+    /// The server no longer persists by default, so that an exploratory or
+    /// failed generate cannot silently replace an athlete's program.
+    var persist: Bool = true
 
     enum CodingKeys: String, CodingKey {
         case goalId = "goal_id"
@@ -342,6 +348,7 @@ struct GenerateProgramRequest: Encodable {
         case numWeeks = "num_weeks"
         case startDate = "start_date"
         case eventDate = "event_date"
+        case persist
     }
 }
 
