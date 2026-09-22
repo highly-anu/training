@@ -114,6 +114,24 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
 - **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
 - **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
 
+## Design
+
+Before building or changing UI, read the design system for that platform — it
+is the source of the patterns, not the neighbouring screen:
+
+- **iOS / watchOS**: `ios/docs/design-system.md`. Colour, typography, spacing,
+  motion, and the component patterns in §6. §1.7 covers the governing rule:
+  when two screens need the same component, extract it and convert both in the
+  same change, then document it in §6. Profile and Analytics each grew their
+  own sub-tab selector before that rule existed; both now use
+  `AppSubTabs.swift` (§6.8).
+- **Web**: `docs/frontend-design.md`.
+
+Shared iOS style primitives live in `AppAnimationSettings.swift`
+(`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
+`AppSubTabs.swift`. Put shared behaviour inside the component rather than in
+instructions at the call site.
+
 ## Workout Import
 
 Activities reach the `workouts` table from five places: a manual `.fit`/`.xml`/`.json`

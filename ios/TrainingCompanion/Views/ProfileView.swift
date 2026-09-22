@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Tab definition
 
-private enum ProfileTab: Int, CaseIterable {
+private enum ProfileTab: Int, AppSubTab {
     case equipment, injuries, benchmarks, schedule
 
     var label: String {
@@ -11,15 +11,6 @@ private enum ProfileTab: Int, CaseIterable {
         case .injuries:   return "Injuries"
         case .benchmarks: return "Benchmarks"
         case .schedule:   return "Schedule"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .equipment:  return "dumbbell"
-        case .injuries:   return "bandage"
-        case .benchmarks: return "trophy"
-        case .schedule:   return "calendar"
         }
     }
 }
@@ -82,42 +73,6 @@ private struct SelectionCard: View {
 }
 
 // MARK: - Custom tab bar
-
-private struct ProfileTabBar: View {
-    @Binding var selected: ProfileTab
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(ProfileTab.allCases, id: \.rawValue) { tab in
-                    let isActive = tab == selected
-                    Button {
-                        selected = tab
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: tab.icon)
-                                .font(.system(size: 11))
-                            Text(tab.label)
-                                .font(.caption)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(isActive ? Color.accentColor.opacity(0.15) : Color.clear)
-                        .foregroundStyle(isActive ? Color.accentColor : Color.secondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(isActive ? Color.accentColor.opacity(0.4) : Color(.separator).opacity(0.4))
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal)
-        }
-        .padding(.vertical, 8)
-    }
-}
 
 // MARK: - Equipment Tab
 
@@ -614,17 +569,19 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                ProfileTabBar(selected: $selectedTab)
-                Divider()
+                AppSubTabPicker(selection: $selectedTab)
 
-                switch selectedTab {
-                case .equipment:  EquipmentTab()
-                case .injuries:   InjuriesTab()
-                case .benchmarks: BenchmarksTab()
-                case .schedule:   ScheduleTab()
+                AppSubTabContent(selection: $selectedTab) { tab in
+                    switch tab {
+                    case .equipment:  EquipmentTab()
+                    case .injuries:   InjuriesTab()
+                    case .benchmarks: BenchmarksTab()
+                    case .schedule:   ScheduleTab()
+                    }
                 }
             }
             .navigationTitle("Profile")
+            .appTabStyle()
             .toolbar {
                 // Appearance. Dark is the default (see AppAppearance);
                 // "System" hands control back to iOS.

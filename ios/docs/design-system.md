@@ -73,6 +73,37 @@ withAnimation(.spring(response: 0.8, dampingFraction: 0.5)) { ... }
 
 Dynamic Type supported on all text. VoiceOver labels on every icon-only button. Color is never the sole conveyor of meaning — always paired with an icon or text label.
 
+### 1.7 One Pattern, One Implementation
+
+The rules above only hold if there is one place they are written down in code.
+Two screens solving the same problem their own way is how a design language
+dissolves — not through a bad decision, but through a reasonable one made
+twice.
+
+**When you need a component that another screen already has:**
+
+1. **Look here first.** If §6 documents the pattern, use the component it
+   names. Do not re-derive it from how a neighbouring screen looks.
+2. **If two screens need it and no component exists, extract one** — then
+   convert *both* call sites in the same change. A shared component with one
+   user is a guess; with two it is a pattern. Leaving the original screen on
+   its old implementation means the divergence survives, just with more code.
+3. **Document it in §6** with its rules and, where the decision is not
+   obvious, a *when not to use it*. A component without a boundary gets
+   stretched to fit things it was never meant for.
+4. **Put shared behaviour inside the component**, not in instructions at the
+   call site. Haptics, spacing and animation belong to `AppSubTabPicker`
+   precisely so no screen has to remember them. If a rule can only be followed
+   by remembering it, it will eventually not be.
+
+**When you find two screens already diverged**, treat it as a bug in the design
+system rather than in either screen: the system failed to offer the pattern.
+Fix it by extracting, converting both, and writing the section — in one change,
+so the next person meets a rule rather than a precedent.
+
+The counter-pressure is real: converting the second screen is always more work
+than copying the first. Do it anyway, or be explicit in review about why not.
+
 ---
 
 ## 2. Color Architecture
@@ -479,6 +510,78 @@ HStack(spacing: 8) {
 .overlay(RoundedRectangle(cornerRadius: 10)
     .stroke(Color(TrainingPhase.deload.color).opacity(0.25), lineWidth: 1))
 ```
+
+### 6.8 Sub-Tab Selector
+
+**When a screen divides into sections, there is exactly one way to do it.**
+
+Analytics and Profile each grew their own: Analytics a native segmented
+`Picker` with haptics and a swipeable paged `TabView`; Profile a hand-rolled
+scrolling row of bordered, icon-bearing pills with neither. Same job, two
+languages, and nothing stopping the next screen from inventing a third. Both
+now use `AppSubTabs.swift`.
+
+Conform the section enum to `AppSubTab` and the screen gets the selector and
+the paged content:
+
+```swift
+private enum ProfileTab: Int, AppSubTab {
+    case equipment, injuries, benchmarks, schedule
+
+    var label: String {
+        switch self {
+        case .equipment:  return "Equipment"
+        case .injuries:   return "Injuries"
+        case .benchmarks: return "Benchmarks"
+        case .schedule:   return "Schedule"
+        }
+    }
+}
+
+VStack(spacing: 0) {
+    AppSubTabPicker(selection: $selectedTab)
+
+    AppSubTabContent(selection: $selectedTab) { tab in
+        switch tab {
+        case .equipment:  EquipmentTab()
+        case .injuries:   InjuriesTab()
+        case .benchmarks: BenchmarksTab()
+        case .schedule:   ScheduleTab()
+        }
+    }
+}
+.navigationTitle("Profile")
+.appTabStyle()
+```
+
+**Rules**
+
+- **Use the native segmented control.** It inherits system styling, Dynamic
+  Type and VoiceOver. A custom pill row has to reimplement all three, and the
+  one we had reimplemented none of them.
+- **Labels are words, not icons.** A segmented control divides the width
+  evenly and truncates what does not fit; an icon adds nothing a word does not
+  already say. Prefer one word per section.
+- **Two to five sections.** One is not a choice. Beyond five the labels
+  truncate on the narrowest iPhone — split the screen or push a level of
+  navigation instead of shrinking the text.
+- **The selector is never the only way to move.** `AppSubTabContent` pages, so
+  sections can be swiped between as well as tapped.
+- **Selection is always haptic** (`AppHaptics.selection()`), wired into
+  `AppSubTabPicker` so no call site has to remember.
+- **No `Divider()` under the selector.** The segmented control already reads as
+  a discrete band; a rule beneath it doubles the boundary.
+- Spacing is fixed in the component — `.padding(.horizontal)` and
+  `.padding(.vertical, 8)`. Do not re-pad at the call site.
+
+**When NOT to use it**
+
+This pattern is for *screen-level* sub-navigation: dividing a whole tab into
+sections. A segmented control that switches a **mode or filter inside content**
+— Map/3D on a workout map, Browse/Generate in a sheet — is a different thing
+and stays a plain `Picker`. The test: does it change what the screen *is*
+about, or just how the thing in front of you is displayed? Only the former is
+a sub-tab.
 
 ---
 

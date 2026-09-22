@@ -1,12 +1,24 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+private enum AnalyticsTab: Int, AppSubTab {
+    case overview, workouts, recovery
+
+    var label: String {
+        switch self {
+        case .overview: return "Overview"
+        case .workouts: return "Workouts"
+        case .recovery: return "Recovery"
+        }
+    }
+}
+
 /// Root container for the Analytics tab. Owns shared state: period selector, selected workout
 /// sheet, and bio entry sheet. Replaces LogView at tab position 2 in ContentView.
 struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var selectedSegment = 0
+    @State private var selectedSegment: AnalyticsTab = .overview
     @State private var period: AnalyticsPeriod = .thirtyDays
     @State private var selectedWorkout: ImportedWorkout? = nil
     @State private var showBioEntry = false
@@ -15,43 +27,33 @@ struct AnalyticsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("", selection: $selectedSegment) {
-                    Text("Overview").tag(0)
-                    Text("Workouts").tag(1)
-                    Text("Recovery").tag(2)
+                AppSubTabPicker(selection: $selectedSegment)
+
+                AppSubTabContent(selection: $selectedSegment) { tab in
+                    switch tab {
+                    case .overview:
+                        AnalyticsOverviewTab(period: $period)
+                            .environmentObject(appState)
+                    case .workouts:
+                        AnalyticsWorkoutsTab(period: $period, selectedWorkout: $selectedWorkout)
+                            .environmentObject(appState)
+                    case .recovery:
+                        AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
+                            .environmentObject(appState)
+                    }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .onChange(of: selectedSegment) { _ in AppHaptics.selection() }
-
-                TabView(selection: $selectedSegment) {
-                    AnalyticsOverviewTab(period: $period)
-                        .tag(0)
-                        .environmentObject(appState)
-
-                    AnalyticsWorkoutsTab(period: $period, selectedWorkout: $selectedWorkout)
-                        .tag(1)
-                        .environmentObject(appState)
-
-                    AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
-                        .tag(2)
-                        .environmentObject(appState)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(AppAnimation.springStandard, value: selectedSegment)
             }
             .navigationTitle("Analytics")
             .appTabStyle()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if selectedSegment == 1 {
+                    if selectedSegment == .workouts {
                         Button {
                             showImportPicker = true
                         } label: {
                             Label("Import .fit", systemImage: "square.and.arrow.down")
                         }
-                    } else if selectedSegment == 2 {
+                    } else if selectedSegment == .recovery {
                         Button {
                             showBioEntry = true
                         } label: {
