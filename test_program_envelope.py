@@ -131,5 +131,41 @@ else:
     raise AssertionError('persisting generate did not write anything — '
                          'the main assertion of this test would be vacuous')
 
+
+# --- start date precedence ------------------------------------------------
+# Week position is (today - start).days // 7, so a mid-week anchor puts the
+# athlete on the wrong week for the rest of every week.
+import datetime as _dt
+
+gen_with_start = {**bare, 'program_start_date': '2026-09-07'}
+env = api._wrap_generated_program(gen_with_start, {'start_date': '2026-09-09'},
+                                  {'programStartDate': '2026-01-12'})
+assert env['programStartDate'] == '2026-09-07', env['programStartDate']
+print('generator start date wins over both the request and the stored one')
+
+env = api._wrap_generated_program(bare, {'start_date': '2026-09-07'},
+                                  {'programStartDate': '2026-01-12'})
+assert env['programStartDate'] == '2026-09-07', env['programStartDate']
+print('requested start date wins over the stored one')
+
+env = api._wrap_generated_program(bare, {}, {'programStartDate': '2026-01-12'})
+assert env['programStartDate'] == '2026-01-12'
+print('a regenerate specifying nothing keeps the existing start date')
+
+env = api._wrap_generated_program(bare, {}, None)
+anchor = _dt.date.fromisoformat(env['programStartDate'])
+assert anchor.weekday() == 0, f'{anchor} is a {anchor.strftime("%A")}, not a Monday'
+print('a first-ever generate anchors to a Monday:', env['programStartDate'])
+
+# --- the heal recovers a start date when the payload still has one ---------
+with_start = {**bare, 'program_start_date': '2026-03-02'}
+save_user_program(U, with_start)
+with api.app.test_request_context('/api/user/program'):
+    from flask import g
+    g.user_id = U
+    healed = json.loads(get().get_data(as_text=True))
+assert healed['programStartDate'] == '2026-03-02', healed['programStartDate']
+print('heal recovered the start date from the bare payload:', healed['programStartDate'])
+
 with conn.cursor() as c: c.execute('DROP TABLE IF EXISTS user_programs')
-print('\nPERSIST OPT-IN ASSERTIONS PASSED')
+print('\nPERSIST OPT-IN + START DATE ASSERTIONS PASSED')

@@ -4,7 +4,9 @@ import { fetchUserProgram, saveUserProgram } from '@/api/userdata'
 
 interface ProgramStore {
   currentProgram: GeneratedProgram | null
-  programLoadState: 'idle' | 'loading' | 'loaded'
+  programLoadState: 'idle' | 'loading' | 'loaded' | 'error'
+  /** Which account the loaded program belongs to, so a switch clears it. */
+  loadedForUserId: string | null
   programStartDate: string | null // YYYY-MM-DD
   eventDate: string | null        // YYYY-MM-DD — the race/event/goal date
   sourceGoalIds: string[]
@@ -29,12 +31,23 @@ interface ProgramStore {
   /** Replace a single session at the given position with a new one. */
   replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
   /** Load program from server (called on login). */
-  loadFromServer: () => Promise<void>
+  loadFromServer: (userId?: string) => Promise<void>
 }
+
+/** The fields a program load owns, in their empty form. */
+const EMPTY_PROGRAM_STATE = {
+  currentProgram: null,
+  programStartDate: null,
+  eventDate: null,
+  sourceGoalIds: [] as string[],
+  sourceGoalWeights: {} as Record<string, number>,
+  revision: null,
+} as const
 
 export const useProgramStore = create<ProgramStore>()((set, get) => ({
   currentProgram: null,
   programLoadState: 'idle',
+  loadedForUserId: null,
   programStartDate: null,
   eventDate: null,
   sourceGoalIds: [],
@@ -131,18 +144,26 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     }
   },
 
-  loadFromServer: async () => {
-    // Deliberately does NOT blank the current program first. It used to, and
-    // because React StrictMode double-invokes effects in dev, the second call
-    // flashed the empty state — the dashboard visibly alternated between
-    // "Retrieving your program..." and "no program". A load replaces state on
-    // success and clears it on failure; there is no window where it is empty
-    // for no reason.
+  loadFromServer: async (userId?: string) => {
+    // Blank the store only when the ACCOUNT changed, not on every load.
+    //
+    // Blanking every time made React StrictMode's double-invoke flash the
+    // empty state — the dashboard visibly alternated between "Retrieving your
+    // program..." and "no program". Never blanking was worse: nothing else
+    // clears this store on sign-out or account switch, so account A's program
+    // and revision survived into account B's session until the fetch
+    // resolved, and any save in that window PUT A's program into B's row.
+    const previousUser = get().loadedForUserId
+    if (userId !== undefined && userId !== previousUser) {
+      set({ ...EMPTY_PROGRAM_STATE, loadedForUserId: userId })
+    }
+
     set({ programLoadState: 'loading' })
     try {
       const data = await fetchUserProgram()
       set({
         programLoadState:  'loaded',
+        loadedForUserId:   userId ?? get().loadedForUserId,
         currentProgram:    data?.currentProgram ?? null,
         programStartDate:  data?.programStartDate ?? null,
         eventDate:         data?.eventDate ?? null,
@@ -150,17 +171,14 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         sourceGoalWeights: data?.sourceGoalWeights ?? {},
         revision:          data?.revision ?? null,
       })
-    } catch {
-      // Clear on failure so a different account's program can never linger.
-      set({
-        programLoadState: 'loaded',
-        currentProgram: null,
-        programStartDate: null,
-        eventDate: null,
-        sourceGoalIds: [],
-        sourceGoalWeights: {},
-        revision: null,
-      })
+    } catch (err) {
+      // The request failed — which is NOT the same as having no program.
+      // Staying in 'error' keeps the "build your first program" offer off the
+      // screen, because acting on it would overwrite a program that is
+      // probably still there.
+      console.error('[program] load failed', err)
+      set({ ...EMPTY_PROGRAM_STATE, loadedForUserId: userId ?? previousUser,
+            programLoadState: 'error' })
     }
   },
 }))

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Wand2, ChevronRight, Flag } from 'lucide-react'
+import { LayoutDashboard, Wand2, ChevronRight, Flag, CloudOff } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -267,6 +267,7 @@ export function Dashboard() {
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const programLoadState = useProgramStore((s) => s.programLoadState)
+  const loadProgram = useProgramStore((s) => s.loadFromServer)
   const { selectedWeekIndex: weekIndex, setSelectedWeekIndex } = useUiStore()
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const eventDate = useProgramStore((s) => s.eventDate)
@@ -296,6 +297,23 @@ export function Dashboard() {
       return sessions.every((_, i) => sessionLogs[`${currentWeek.week_number}-${day}`]?.[i] === true)
     })
   }, [currentWeek, sessionLogs])
+
+  // A failed load is not an empty program. Offering "build your first
+  // program" here would invite overwriting a program that is still on the
+  // server but could not be fetched.
+  if (programLoadState === 'error' && !program) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <EmptyState
+          title="Couldn't load your program"
+          description="We couldn't reach the server. Your program is safe — try again in a moment."
+          action={{ label: 'Retry', onClick: () => void loadProgram() }}
+          icon={<CloudOff className="size-10" />}
+          className="max-w-md"
+        />
+      </div>
+    )
+  }
 
   // Only show the loader when there is nothing to show yet. A background
   // refetch keeps the current program on screen instead of blanking it.

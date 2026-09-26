@@ -620,8 +620,8 @@ def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
     """Source philosophy ids + weights for an envelope, from the request if it
     carried them, else recovered from the generated goal's own id."""
     ids = body.get('philosophy_ids') or body.get('goal_ids') or []
-    if not ids and body.get('philosophy_id'):
-        ids = [body['philosophy_id']]
+    if not ids and (body.get('philosophy_id') or body.get('goal_id')):
+        ids = [body.get('philosophy_id') or body['goal_id']]
     if not ids:
         # A synthetic goal's id is '_phil_<philosophy_id>' (see
         # _philosophy_to_goal), so it can be read back when the caller did not
@@ -633,17 +633,42 @@ def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
     return list(ids), dict(weights)
 
 
+def _monday_of(day: _date) -> _date:
+    """Programs are anchored to a Monday.
+
+    Week position is computed as `(today - start).days // 7` (see
+    /api/user/today-session), so a mid-week anchor puts the athlete on the
+    wrong week for the rest of every week.
+    """
+    return day - _timedelta(days=day.weekday())
+
+
 def _wrap_generated_program(generated: dict, body: dict, existing) -> dict:
     """Put a freshly generated program into the stored envelope.
 
-    Keeps the existing start date when there is one, so regenerating does not
-    silently restart the athlete's calendar.
+    Start date precedence, most authoritative first:
+
+    1. what the generator resolved — `program_start_date`, already
+       Monday-aligned, present whenever the caller asked for a start date;
+    2. what the caller asked for, if the generator did not echo it back;
+    3. the existing program's start date, so a regenerate that specifies
+       nothing does not silently restart the athlete's calendar;
+    4. this Monday.
+
+    Taking (3) before (1) — as this did — meant a regenerate from the phone's
+    Program Settings sheet kept the old start date while telling the athlete
+    the program had been replaced, and a first-ever generate anchored to
+    *today* rather than the Monday the athlete chose.
     """
     existing = _normalize_program_keys(existing) if isinstance(existing, dict) else {}
     ids, weights = _goal_ids_from_body(body, generated)
+    start = (generated.get('program_start_date')
+             or body.get('start_date')
+             or existing.get('programStartDate')
+             or _monday_of(_date.today()).isoformat())
     return {
         'currentProgram':    generated,
-        'programStartDate':  existing.get('programStartDate') or _date.today().isoformat(),
+        'programStartDate':  start,
         'eventDate':         body.get('event_date') or existing.get('eventDate'),
         'sourceGoalIds':     ids or existing.get('sourceGoalIds') or [],
         'sourceGoalWeights': weights or existing.get('sourceGoalWeights') or {},
@@ -1822,16 +1847,22 @@ def get_user_program_endpoint():
             # program" even though all the weeks are there. Wrap it and persist
             # the repair.
             #
-            # programStartDate cannot be recovered from the payload — it only
-            # ever lived in the envelope that was overwritten — so it stays
-            # null and the athlete re-dates the program.
+            # The generator echoes `program_start_date` into its result whenever
+            # the caller asked for one, and _normalize_program_keys above has
+            # already renamed it, so a bare row often still carries the start
+            # date even though the envelope holding it was overwritten. Recover
+            # it rather than writing null over a value that is sitting right
+            # there; it is only genuinely unrecoverable when the generate did
+            # not specify a start date at all.
             if 'currentProgram' not in program and program.get('weeks') is not None:
                 app.logger.warning('healing envelope-less program for %s', user_id)
                 ids, weights = _goal_ids_from_body({}, program)
+                recovered_start = (program.get('programStartDate')
+                                   or program.get('program_start_date'))
                 program = {
                     'currentProgram':    program,
-                    'programStartDate':  None,
-                    'eventDate':         None,
+                    'programStartDate':  recovered_start,
+                    'eventDate':         program.get('eventDate'),
                     'sourceGoalIds':     ids,
                     'sourceGoalWeights': weights,
                 }

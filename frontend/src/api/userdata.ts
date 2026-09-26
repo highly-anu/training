@@ -47,12 +47,18 @@ export async function saveProfile(profile: Partial<ServerProfile>): Promise<void
   }
 }
 
+/**
+ * Throws when the request fails, rather than reporting a failure as "this
+ * athlete has no program".
+ *
+ * Swallowing the error here meant a 500, a timeout or being offline rendered
+ * the "No program yet — build your first program" empty state to someone whose
+ * program was intact on the server; accepting that offer then PUT a new
+ * program with `baseRevision: null`, which the optimistic-concurrency check
+ * skips, overwriting the real one.
+ */
 export async function fetchUserProgram(): Promise<ServerProgram | null> {
-  try {
-    return await (apiClient.get('/user/program') as unknown as Promise<ServerProgram | null>)
-  } catch {
-    return null
-  }
+  return await (apiClient.get('/user/program') as unknown as Promise<ServerProgram | null>)
 }
 
 /** Last program-save failure, or null when the most recent save succeeded. */

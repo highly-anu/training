@@ -111,3 +111,62 @@ describe('while the program is still loading', () => {
     expect(screen.queryByText(/retrieving your program/i)).not.toBeInTheDocument()
   })
 })
+
+describe('when the program could not be loaded', () => {
+  beforeEach(() => {
+    setEmptyProgramState()
+    useProgramStore.setState({ programLoadState: 'error' })
+  })
+
+  it('does not offer to build a first program', () => {
+    wrap(<Dashboard />)
+    // Taking that offer would PUT a new program with baseRevision: null, which
+    // the server's concurrency check skips — overwriting a program that is
+    // probably still there.
+    expect(screen.queryByText(/build a program/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/no program yet/i)).not.toBeInTheDocument()
+  })
+
+  it('says the load failed and offers a retry', () => {
+    wrap(<Dashboard />)
+    expect(screen.getByText(/couldn't load your program/i)).toBeInTheDocument()
+    expect(screen.getByText(/retry/i)).toBeInTheDocument()
+  })
+})
+
+describe('switching accounts', () => {
+  it('drops the previous account program before the next load resolves', async () => {
+    // Account A is loaded...
+    useProgramStore.setState({
+      ...useProgramStore.getState(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentProgram: { weeks: [] } as any,
+      revision: 'rev-A',
+      loadedForUserId: 'user-A',
+      programLoadState: 'loaded',
+    })
+
+    // ...and account B starts loading. Nothing else in the app clears this
+    // store on sign-out or switch, so if the program survived here a save in
+    // the gap would write A's program into B's row.
+    void useProgramStore.getState().loadFromServer('user-B')
+
+    expect(useProgramStore.getState().currentProgram).toBeNull()
+    expect(useProgramStore.getState().revision).toBeNull()
+  })
+
+  it('does not blank the store when the same account re-loads', () => {
+    useProgramStore.setState({
+      ...useProgramStore.getState(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentProgram: { weeks: [] } as any,
+      loadedForUserId: 'user-A',
+      programLoadState: 'loaded',
+    })
+
+    // StrictMode double-invokes effects in dev; this second call must not
+    // flash the empty state.
+    void useProgramStore.getState().loadFromServer('user-A')
+    expect(useProgramStore.getState().currentProgram).not.toBeNull()
+  })
+})

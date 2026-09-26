@@ -343,7 +343,11 @@ struct GenerateProgramRequest: Encodable {
     var persist: Bool = true
 
     enum CodingKeys: String, CodingKey {
-        case goalId = "goal_id"
+        // The backend requires `philosophy_id` and answers 400 to anything
+        // else (see _generate_program_inner), so every generate from this app
+        // failed before it reached the generator — which also meant the
+        // `persist` flag below could never take effect.
+        case goalId = "philosophy_id"
         case constraints
         case numWeeks = "num_weeks"
         case startDate = "start_date"

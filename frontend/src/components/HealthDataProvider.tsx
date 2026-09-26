@@ -22,7 +22,9 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
 
     // Profile and program load in parallel
     loadProfile()
-    loadProgram()
+    // Pass the account id so the store can tell a re-load from an account
+    // switch — nothing else clears it when the user changes.
+    loadProgram(user.id)
 
     // Health snapshot (workouts, bio, session logs, matches)
     fetchHealthSnapshot()
