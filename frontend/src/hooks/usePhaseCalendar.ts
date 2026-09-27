@@ -24,18 +24,22 @@ export function usePhaseCalendar(goal: GoalProfile | undefined, currentWeek = 1)
       return { segments: [], totalWeeks: 0, currentWeek: null, currentPhase: null, weeksToEvent: null }
     }
 
+    // A plain loop rather than a side-effecting `.map`: advancing `cursor`
+    // from inside the callback is a mutation the React Compiler cannot prove
+    // stays within the render, so it bailed out of optimising this hook
+    // entirely. The running total is also simply clearer this way.
+    const segments: PhaseSegment[] = []
     let cursor = 1
-    const segments: PhaseSegment[] = goal.phase_sequence.map((entry) => {
-      const seg: PhaseSegment = {
+    for (const entry of goal.phase_sequence) {
+      segments.push({
         phase: entry.phase,
         weeks: entry.weeks,
         focus: entry.focus,
         startWeek: cursor,
         endWeek: cursor + entry.weeks - 1,
-      }
+      })
       cursor += entry.weeks
-      return seg
-    })
+    }
 
     const totalWeeks = cursor - 1
 

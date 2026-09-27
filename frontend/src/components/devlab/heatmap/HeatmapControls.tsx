@@ -25,8 +25,12 @@ export function HeatmapControls({
   const weekRef = useRef(weekRange[1])
   const totalWeeks = program?.weeks.length ?? 0
 
-  // Keep ref in sync with prop
-  weekRef.current = weekRange[1]
+  // Sync in an effect, not during render. A render can be discarded (concurrent
+  // rendering, StrictMode's double invoke) but the ref write would survive it,
+  // leaving the interval below reading a week the user never landed on.
+  useEffect(() => {
+    weekRef.current = weekRange[1]
+  }, [weekRange])
 
   // Current phase for the end of the range
   const currentPhase = program?.weeks.find(w => w.week_number === weekRange[1])?.phase

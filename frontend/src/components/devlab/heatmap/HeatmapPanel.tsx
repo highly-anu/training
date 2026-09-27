@@ -289,7 +289,10 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   const [selectionByLayer, setSelectionByLayer] = useState<Map<LayerKey, string>>(new Map())
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null) // 2nd click — drives layout centering
   const lockedNodeRef = useRef<string | null>(null)
-  lockedNodeRef.current = lockedNodeId
+  // Synced in an effect rather than during render — see HeatmapControls.
+  useEffect(() => {
+    lockedNodeRef.current = lockedNodeId
+  }, [lockedNodeId])
 
   // Seed initial locked node into the correct layer slot
   useEffect(() => {
