@@ -2418,9 +2418,12 @@ def health_upsert_workouts():
             if gain or loss:
                 workout['elevation'] = {'gain': round(gain), 'loss': round(loss)}
 
-    _health.upsert_workouts(g.user_id, workouts)
+    # raise_on_error: this is an automatic import path. Reporting success for a
+    # write that failed loses the workout with nothing to retry from — the
+    # client commits its HealthKit anchor on a 2xx and never offers it again.
+    written = _health.upsert_workouts(g.user_id, workouts, raise_on_error=True)
 
-    result = {'saved': len(workouts)}
+    result = {'saved': written}
     if auto_match:
         from src import workout_matcher
         result['matched'] = workout_matcher.match_and_store(g.user_id, workouts)

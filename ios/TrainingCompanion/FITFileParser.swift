@@ -361,6 +361,8 @@ struct FITFileParser {
             source: "fit_file",
             date: dateStr,
             startTime: startStr,
+            endTime: WorkoutID.isoFormatter.string(
+                from: startTime.addingTimeInterval(durationMin * 60)),
             durationMinutes: durationMin,
             activityType: session.sport,
             inferredModalityId: modalityForSport(session.sport),

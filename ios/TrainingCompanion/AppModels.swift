@@ -204,6 +204,10 @@ struct ImportedWorkout: Codable, Identifiable {
     let source: String
     let date: String             // YYYY-MM-DD
     let startTime: String?
+    /// Required by the server: `workouts.end_time` is NOT NULL. Omitting it
+    /// made every upload fail — first as a swallowed KeyError, then as a
+    /// constraint violation. Every producer knows the value; send it.
+    let endTime: String?
     let durationMinutes: Double?
     let activityType: String
     let inferredModalityId: String?
@@ -216,12 +220,33 @@ struct ImportedWorkout: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, source, date, calories, distance, elevation
         case startTime = "startTime"
+        case endTime = "endTime"
         case durationMinutes = "durationMinutes"
         case activityType = "activityType"
         case inferredModalityId = "inferredModalityId"
         case heartRate = "heartRate"
         case gpsTrack = "gpsTrack"
     }
+}
+
+/// Identity is the deterministic id from `WorkoutID`, never the contents:
+/// navigation must treat the trimmed list row and the re-fetched full row as
+/// the same workout, and a synthesised `==` would compare tracks that run to
+/// tens of thousands of points.
+extension ImportedWorkout: Hashable {
+    static func == (lhs: ImportedWorkout, rhs: ImportedWorkout) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
+/// A confirmed link between an imported workout and a planned session.
+///
+/// Mirrors a `workout_matches` row. `confidence` is "auto" | "manual" | a
+/// stringified number, depending on which writer created it; the only value
+/// with meaning here is "rejected", which `fetchWorkoutMatches` filters out.
+struct WorkoutMatch {
+    let workoutId: String
+    let sessionKey: String
+    let confidence: String
 }
 
 struct WorkoutHRData: Codable {
@@ -491,4 +516,17 @@ struct ProgressionAdjustment: Codable, Identifiable {
     let magnitude: String?
 
     var id: String { "\(type)-\(target)" }
+}
+
+extension WorkoutDistance {
+    /// Distance worth showing.
+    ///
+    /// A strength or mobility session recorded on a watch still carries a
+    /// distance field, and it is noise: "0.0 km" under a flexibility workout
+    /// tells the athlete nothing and crowds out the numbers that do. The
+    /// threshold is in kilometres, so a mile-unit record is converted first.
+    var isMeaningful: Bool {
+        let km = unit.lowercased().hasPrefix("mi") ? value * 1.609344 : value
+        return km > 0.1
+    }
 }

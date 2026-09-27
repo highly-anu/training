@@ -570,6 +570,7 @@ final class APIClient {
             source: src,
             date: date,
             startTime: row["start_time"]?.stringValue,
+            endTime: row["end_time"]?.stringValue,
             durationMinutes: row["duration_minutes"]?.doubleValue,
             activityType: type,
             inferredModalityId: row["inferred_modality_id"]?.stringValue,
@@ -582,12 +583,74 @@ final class APIClient {
     }
 
     /// Fetch all workouts for the current user directly from Supabase.
+    /// Set once a request proves whether this database has been migrated for
+    /// dedup, so an un-migrated database costs one extra request per launch
+    /// rather than one per refresh.
+    private static var canonicalIdSupported: Bool? = nil
+
     func fetchWorkouts() async throws -> [ImportedWorkout] {
         guard let uid = userId else { throw APIError.unauthenticated }
         // Fetch metadata only — GPS track and HR samples are loaded on demand in the detail sheet.
         // Fetching select=* for large GPS tracks causes payload timeouts that silently drop the list.
         let cols = "id,source,date,start_time,end_time,duration_minutes,activity_type,inferred_modality_id,hr_avg,hr_max,calories,distance_value,distance_unit,elevation_gain,elevation_loss"
-        let urlStr = "\(APIClient.supabaseURL)/rest/v1/workouts?user_id=eq.\(uid)&select=\(cols)&order=date.desc,start_time.desc"
+
+        // canonical_id IS NULL hides rows folded into another source's copy of
+        // the same activity — the same filter the server list applies
+        // (src/health_store.py). Without it the phone shows duplicates the web
+        // does not. Older databases predate the column and PostgREST answers
+        // 400 for it, so fall back once and say so rather than showing an
+        // empty list.
+        var data: Data
+        if APIClient.canonicalIdSupported != false {
+            do {
+                data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: true)
+                APIClient.canonicalIdSupported = true
+            } catch APIError.serverError(400) {
+                APIClient.canonicalIdSupported = false
+                AppLogger.shared.log("workouts: canonical_id unavailable — showing unmerged list")
+                data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: false)
+            }
+        } else {
+            data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: false)
+        }
+
+        let rows = try JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
+        print("📋 fetchWorkouts: \(rows.count) rows from Supabase")
+        let decoded = rows.compactMap { row -> ImportedWorkout? in
+            do { return try workoutFromSupabaseRow(row) }
+            catch { print("⚠️ workoutFromSupabaseRow dropped row \(row["id"]?.stringValue ?? "?"): \(error)"); return nil }
+        }
+        print("📋 fetchWorkouts: \(decoded.count) decoded successfully")
+        return decoded
+    }
+
+    private func fetchWorkoutRows(uid: String, cols: String, dedupedOnly: Bool) async throws -> Data {
+        var urlStr = "\(APIClient.supabaseURL)/rest/v1/workouts?user_id=eq.\(uid)"
+            + "&select=\(cols)&order=date.desc,start_time.desc"
+        if dedupedOnly { urlStr += "&canonical_id=is.null" }
+        guard let url = URL(string: urlStr) else { throw APIError.decodingError }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw APIError.serverError(http.statusCode)
+        }
+        return data
+    }
+
+    /// Every confirmed match for this athlete, keyed by imported workout id.
+    ///
+    /// Read from `workout_matches` rather than inferred from `session_logs`:
+    /// the server-side matcher writes only `workout_matches`, so a workout it
+    /// matched automatically had no session log and therefore read as
+    /// unmatched on the phone while the web showed it linked.
+    func fetchWorkoutMatches() async throws -> [String: WorkoutMatch] {
+        guard let uid = userId else { throw APIError.unauthenticated }
+        let urlStr = "\(APIClient.supabaseURL)/rest/v1/workout_matches?user_id=eq.\(uid)"
+            + "&select=imported_workout_id,session_key,match_confidence"
         guard let url = URL(string: urlStr) else { throw APIError.decodingError }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -599,13 +662,23 @@ final class APIClient {
             throw APIError.serverError(http.statusCode)
         }
         let rows = try JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
-        print("📋 fetchWorkouts: \(rows.count) rows from Supabase")
-        let decoded = rows.compactMap { row -> ImportedWorkout? in
-            do { return try workoutFromSupabaseRow(row) }
-            catch { print("⚠️ workoutFromSupabaseRow dropped row \(row["id"]?.stringValue ?? "?"): \(error)"); return nil }
+
+        var result: [String: WorkoutMatch] = [:]
+        for row in rows {
+            guard let workoutId = row["imported_workout_id"]?.stringValue,
+                  let sessionKey = row["session_key"]?.stringValue else { continue }
+            // The writers disagree on this column's type — this app has written
+            // the number 1.0 and the string "manual", the server writes "auto"
+            // — so read either and compare only against "rejected".
+            let confidence = row["match_confidence"]?.stringValue
+                ?? row["match_confidence"]?.doubleValue.map { String($0) }
+                ?? ""
+            guard confidence != "rejected" else { continue }
+            result[workoutId] = WorkoutMatch(workoutId: workoutId,
+                                             sessionKey: sessionKey,
+                                             confidence: confidence)
         }
-        print("📋 fetchWorkouts: \(decoded.count) decoded successfully")
-        return decoded
+        return result
     }
 
     /// Delete a workout (and its match) directly from Supabase.

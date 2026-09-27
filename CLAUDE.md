@@ -129,8 +129,10 @@ is the source of the patterns, not the neighbouring screen:
 
 Shared iOS style primitives live in `AppAnimationSettings.swift`
 (`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
-`AppSubTabs.swift`. Put shared behaviour inside the component rather than in
-instructions at the call site.
+`AppSubTabs.swift`. Tab selection lives in `AppRouter.swift`, so one screen can
+send the user to a section of another (§6.9) — route through its methods, never
+by assigning tab state at the call site. Put shared behaviour inside the
+component rather than in instructions at the call site.
 
 ## Workout Import
 
@@ -169,6 +171,32 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
 - **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
   carries. It used to rebuild the blob, which is why every iOS save wiped
   `activeGoalId`.
+
+## Running the iOS App
+
+**Every iOS change ends in the simulator.** A green `xcodebuild` says the code
+compiles, not that the screen still works — so after touching anything under
+`ios/`, rebuild, reinstall and relaunch the app before reporting the work done,
+and look at a screenshot of the screen you changed:
+
+```bash
+./ios/run_sim.sh                      # build + install + relaunch on a booted sim
+./ios/run_sim.sh /tmp/after.png       # …and screenshot the result
+```
+
+The script boots `iPhone 17 Pro` (override with `SIM_DEVICE=`) if nothing is
+booted, and always terminates the old copy first so the running app is the code
+that was just built.
+
+To drive the UI, the simulator maps device points to screen coordinates through
+`group 1 of window 1` — its AX position is the top-left of the device screen and
+its size is the screen in points (a screenshot's pixels ÷ the device scale):
+
+```bash
+osascript -e 'tell application "System Events" to tell process "Simulator" \
+    to get {position, size} of group 1 of window 1'    # e.g. 1812, 105, 402, 874
+osascript -e 'tell application "System Events" to click at {1812, 105}'
+```
 
 ## Checks
 

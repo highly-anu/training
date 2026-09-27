@@ -1,7 +1,9 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-private enum AnalyticsTab: Int, AppSubTab {
+/// Internal rather than private: `AppRouter` names a section so another screen
+/// can send the user to one (the Dashboard's readiness card → Recovery).
+enum AnalyticsTab: Int, AppSubTab {
     case overview, workouts, recovery
 
     var label: String {
@@ -17,6 +19,7 @@ private enum AnalyticsTab: Int, AppSubTab {
 /// sheet, and bio entry sheet. Replaces LogView at tab position 2 in ContentView.
 struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var router: AppRouter
 
     @State private var selectedSegment: AnalyticsTab = .overview
     @State private var period: AnalyticsPeriod = .thirtyDays
@@ -45,6 +48,11 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .appTabStyle()
+            // A section asked for from another tab. Handled in both places
+            // because the router may set it before this view exists (onAppear
+            // catches that) or while it is already on screen (onChange does).
+            .onAppear { applyRequestedSection() }
+            .onChange(of: router.analyticsSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if selectedSegment == .workouts {
@@ -62,8 +70,13 @@ struct AnalyticsView: View {
                     }
                 }
             }
-            .sheet(item: $selectedWorkout) { workout in
-                WorkoutDetailSheet(workout: workout)
+            // Pushed, not presented: a workout detail is a place you go and
+            // come back from, and a sheet is cramped for a map plus charts.
+            // Attached to the VStack rather than inside AppSubTabContent — a
+            // destination registered on an off-screen page of a paged TabView
+            // is not reliably found.
+            .navigationDestination(item: $selectedWorkout) { workout in
+                WorkoutDetailView(workout: workout)
                     .environmentObject(appState)
             }
             .sheet(isPresented: $showBioEntry) {
@@ -79,5 +92,15 @@ struct AnalyticsView: View {
                 }
             }
         }
+    }
+
+    /// Move to the section the router asked for, if any, and clear the request
+    /// so a later visit keeps the user's own last choice.
+    private func applyRequestedSection() {
+        guard let requested = router.analyticsSection else { return }
+        if selectedSegment != requested {
+            withAnimation(AppAnimation.springStandard) { selectedSegment = requested }
+        }
+        router.clearAnalyticsSection()
     }
 }

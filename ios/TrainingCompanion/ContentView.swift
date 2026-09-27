@@ -5,11 +5,12 @@ struct ContentView: View {
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
     @StateObject private var programStore = ProgramStore()
-    @State private var selectedTab = 0
+    @StateObject private var router = AppRouter()
 
     var body: some View {
         if auth.isSignedIn {
-            MainTabView(selectedTab: $selectedTab)
+            MainTabView()
+                .environmentObject(router)
                 .environmentObject(sync)
                 .environmentObject(appState)
                 .environmentObject(programStore)
@@ -55,7 +56,7 @@ struct ContentView: View {
                     }
                     // Widget deep links — trainingcompanion://today or trainingcompanion://session?key=...
                     guard url.scheme == "trainingcompanion" else { return }
-                    selectedTab = 0     // always land on the Dashboard tab
+                    router.tab = .dashboard     // always land on the Dashboard tab
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },
@@ -74,25 +75,25 @@ struct ContentView: View {
 
 struct MainTabView: View {
     @EnvironmentObject var sync: SyncManager
-    @Binding var selectedTab: Int
+    @EnvironmentObject var router: AppRouter
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $router.tab) {
             TodayView()
                 .tabItem { Label("Dashboard", systemImage: "house") }
-                .tag(0)
+                .tag(AppRouter.Tab.dashboard)
 
             ProgramView()
                 .tabItem { Label("Program", systemImage: "calendar") }
-                .tag(1)
+                .tag(AppRouter.Tab.program)
 
             AnalyticsView()
                 .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }
-                .tag(2)
+                .tag(AppRouter.Tab.analytics)
 
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person") }
-                .tag(3)
+                .tag(AppRouter.Tab.profile)
 
             SyncStatusView()
                 .tabItem {
@@ -101,7 +102,7 @@ struct MainTabView: View {
                         systemImage: sync.isSyncing ? "arrow.clockwise.circle.fill" : "arrow.triangle.2.circlepath"
                     )
                 }
-                .tag(4)
+                .tag(AppRouter.Tab.sync)
         }
     }
 }

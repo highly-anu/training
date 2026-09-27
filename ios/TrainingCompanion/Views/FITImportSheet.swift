@@ -254,7 +254,7 @@ struct FITImportSheet: View {
     private func workoutSummaryCard(_ workout: ImportedWorkout) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: activityIcon(workout.activityType))
+                Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: nil))
                     .foregroundStyle(.blue).font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(workout.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
@@ -346,18 +346,6 @@ struct FITImportSheet: View {
         guard let date = df.date(from: dateStr) else { return dateStr }
         let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
         return out.string(from: date)
-    }
-
-    private func activityIcon(_ activityType: String) -> String {
-        let lower = activityType.lowercased()
-        if lower.contains("run") { return "figure.run" }
-        if lower.contains("cycl") || lower.contains("bike") { return "figure.outdoor.cycle" }
-        if lower.contains("swim") { return "figure.pool.swim" }
-        if lower.contains("hik") { return "figure.hiking" }
-        if lower.contains("walk") { return "figure.walk" }
-        if lower.contains("row") { return "figure.rowing" }
-        if lower.contains("strength") || lower.contains("weight") { return "dumbbell" }
-        return "figure.mixed.cardio"
     }
 
     private func statChip(value: String, unit: String, icon: String) -> some View {

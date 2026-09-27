@@ -208,8 +208,13 @@ def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
                             elevation_loss       = EXCLUDED.elevation_loss,
                             hr_samples           = EXCLUDED.hr_samples{dedupe_set}
                     ''', [
-                        w['id'], user_id, w['source'], w['date'], w['startTime'], w['endTime'],
-                        w['durationMinutes'], w['activityType'],
+                        # .get() for everything the client may legitimately omit:
+                        # the iOS model carries no endTime, and a KeyError here
+                        # is swallowed below — which silently dropped every
+                        # Apple Health workout this path ever received.
+                        w['id'], user_id, w['source'], w['date'],
+                        w.get('startTime'), w.get('endTime'),
+                        w.get('durationMinutes'), w.get('activityType'),
                         w.get('inferredModalityId'),
                         hr.get('avg'), hr.get('max'), hr.get('min'),
                         w.get('calories'),
@@ -338,6 +343,15 @@ def get_workout(user_id: str, workout_id: str) -> dict | None:
     return None
 
 
+# Everything `_row_to_workout` reads except `gps_track`, `hr_samples` and
+# `raw_data` — the three a summary discards. Keep in step with that function.
+SUMMARY_COLUMNS = (
+    'id, source, date, start_time, end_time, duration_minutes, activity_type, '
+    'inferred_modality_id, hr_avg, hr_max, hr_min, calories, '
+    'distance_value, distance_unit, elevation_gain, elevation_loss'
+)
+
+
 def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
     from src.db import get_conn
     try:
@@ -349,8 +363,14 @@ def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
                 where = 'user_id = %s'
                 if _ensure_dedupe_columns(cur):
                     where += ' AND canonical_id IS NULL'
+                # Never SELECT the heavy columns for a summary. They were being
+                # fetched and then discarded in `_row_to_workout`, so a snapshot
+                # pulled every GPS track and HR series into memory to throw them
+                # away — 7 MB of JSON on a 256 MB box, which OOM-killed the
+                # worker once the library grew past a hundred workouts.
+                cols = SUMMARY_COLUMNS if summary_only else '*'
                 cur.execute(
-                    f'SELECT * FROM workouts WHERE {where} ORDER BY date DESC',
+                    f'SELECT {cols} FROM workouts WHERE {where} ORDER BY date DESC',
                     (user_id,),
                 )
                 rows = cur.fetchall()

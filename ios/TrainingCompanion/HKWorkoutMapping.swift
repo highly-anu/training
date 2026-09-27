@@ -18,11 +18,15 @@ enum HKWorkoutMapping {
         case thirdParty
     }
 
-    /// Bundle ids we import from. An allowlist rather than a denylist so a new
-    /// vendor is a one-line addition and nothing unexpected slips in.
-    static let importBundleIDs: Set<String> = [
-        "com.garmin.connect.mobile",
-    ]
+    /// Bundle id prefix that identifies Garmin Connect as the writer.
+    ///
+    /// This only *labels* the workout — see `sourceTag(for:)`. It does not gate
+    /// the import, and it must not go back to doing so: this started life as a
+    /// one-entry allowlist (`com.garmin.connect.mobile`) and every workout the
+    /// athlete's watch recorded was silently skipped because a guess at an
+    /// undocumented vendor string did not match. A prefix, because Garmin ships
+    /// more than one bundle id across regions and app generations.
+    static let garminBundlePrefix = "com.garmin"
 
     /// Never import these, whatever else matches.
     ///
@@ -31,21 +35,41 @@ enum HKWorkoutMapping {
     /// already relayed that session as `apple_watch_live` under a completely
     /// different id, so re-importing it would duplicate the session. Apple's
     /// own workouts are excluded for the same reason.
+    ///
+    /// These are prefixes, not exact ids, for a second load-bearing reason: the
+    /// watch app writes under `haerdsoft.TrainingCompanion.watchkitapp`, which
+    /// only a prefix test catches.
     static let excludedBundlePrefixes: [String] = [
         "com.apple",
         "haerdsoft.TrainingCompanion",
     ]
 
     static func origin(of workout: HKWorkout) -> Origin {
-        let bundle = workout.sourceRevision.source.bundleIdentifier
-        if importBundleIDs.contains(bundle) { return .garmin }
+        origin(ofBundle: workout.sourceRevision.source.bundleIdentifier)
+    }
+
+    /// Same decision, from a bundle id alone — so the diagnostic log can report
+    /// what the importer *would* do with a source without holding the workout.
+    /// One implementation of the rule, two readers.
+    static func origin(ofBundle bundle: String) -> Origin {
+        if bundle.hasPrefix(garminBundlePrefix) { return .garmin }
         if excludedBundlePrefixes.contains(where: { bundle.hasPrefix($0) }) { return .apple }
         return .thirdParty
     }
 
     /// True when we should pull this workout into the training log.
+    ///
+    /// A denylist: everything except the two writers whose workouts we already
+    /// hold under another id. The inversion is safe because the server dedups
+    /// (`POST /api/health/workouts` → `src/workout_dedupe.py`), so importing one
+    /// activity twice costs a merge rather than a duplicate — whereas importing
+    /// nothing, which is what the old allowlist did, costs the workout.
+    ///
+    /// The trade: a third-party app writing to Health now imports too, and the
+    /// athlete may have to delete a row by hand. That is the right way round for
+    /// a tool whose job is to not lose the workout you did.
     static func shouldImport(_ workout: HKWorkout) -> Bool {
-        origin(of: workout) == .garmin
+        origin(of: workout) != .apple
     }
 
     /// Which `source` the imported workout carries.

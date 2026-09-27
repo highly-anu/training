@@ -32,6 +32,14 @@ final class SyncManager: ObservableObject {
 
     private let logger = AppLogger.shared
 
+    /// Workouts per upload request — see the batching note in
+    /// `importHealthWorkouts()`. Small because a single workout can carry a
+    /// multi-thousand-point GPS route plus a per-second HR series; ten at a
+    /// time lost the connection mid-import.
+    private static let uploadBatchSize = 3
+    /// Attempts per batch before giving up on it.
+    private static let uploadAttempts = 3
+
     func configure(auth: AuthManager, appState: AppState? = nil) {
         let client = APIClient(auth: auth)
         api = client
@@ -139,29 +147,96 @@ final class SyncManager: ObservableObject {
             return
         }
 
-        let workouts = await hk.importableWorkouts()
-        guard !workouts.isEmpty else {
-            logger.log("workout-import: nothing new")
+        let scan = await hk.scanImportableWorkouts()
+        logScan(scan)
+
+        guard !scan.kept.isEmpty else {
+            logger.log("workout-import: nothing new (anchor=\(scan.hadAnchor ? "yes" : "no"), "
+                       + "raw=\(scan.rawCount))")
+            hk.commitWorkoutAnchor(scan)
             markWorkoutSync(imported: 0)
             return
         }
 
         var payload: [ImportedWorkout] = []
-        for workout in workouts {
-            payload.append(await hk.toImportedWorkout(workout))
+        var hrCounts: [String: Int] = [:]
+        for workout in scan.kept {
+            let imported = await hk.toImportedWorkout(workout)
+            payload.append(imported)
+            let samples = imported.heartRate?.samples.count ?? 0
+            let key = samples > 0 ? "series" : (imported.heartRate?.avg != nil ? "avg-only" : "none")
+            hrCounts[key, default: 0] += 1
+        }
+        logger.log("workout-import: heart rate — "
+                   + hrCounts.sorted { $0.key < $1.key }
+                       .map { "\($0.key):\($0.value)" }.joined(separator: " "))
+
+        // Uploaded in batches because the first pass after an anchor reset can
+        // carry 90 days of workouts, each with its HR samples and GPS track.
+        // The server dedups, so a replayed batch costs a merge — but a single
+        // timed-out request would lose the whole import.
+        let batches = stride(from: 0, to: payload.count, by: Self.uploadBatchSize).map {
+            Array(payload[$0..<min($0 + Self.uploadBatchSize, payload.count)])
+        }
+        var uploaded = 0
+        var failed = 0
+        for (index, batch) in batches.enumerated() {
+            var lastError: String? = nil
+            for attempt in 1...Self.uploadAttempts {
+                do {
+                    let count = try await api.saveImportedWorkouts(batch)
+                    uploaded += count
+                    logger.log("workout-import: uploaded \(count) "
+                               + "(batch \(index + 1)/\(batches.count))")
+                    lastError = nil
+                    break
+                } catch {
+                    lastError = error.localizedDescription
+                    // A dropped connection on a large payload is transient;
+                    // back off briefly rather than abandoning the import.
+                    if attempt < Self.uploadAttempts {
+                        try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_500_000_000)
+                    }
+                }
+            }
+            if let lastError {
+                // Keep going: one bad batch must not cost the other 29. The
+                // anchor is withheld below, so the next pass retries the lot
+                // and the server dedups what already landed.
+                failed += 1
+                logger.log("workout-import: batch \(index + 1) failed — \(lastError)")
+            }
         }
 
-        do {
-            // The server dedups, so re-sending one the watch relay already
-            // uploaded costs a merge, not a duplicate.
-            let count = try await api.saveImportedWorkouts(payload)
-            logger.log("workout-import: uploaded \(count) workout(s)")
-            markWorkoutSync(imported: count)
-        } catch {
-            // Deliberately not rethrown: a failed workout import must not fail
-            // the bio sync that already succeeded. The anchor has moved on, so
-            // recover with "Re-import recent workouts" in Sync settings.
-            logger.log("workout-import: ERROR — \(error.localizedDescription)")
+        if failed == 0 {
+            hk.commitWorkoutAnchor(scan)
+        } else {
+            logger.log("workout-import: \(failed) batch(es) failed — "
+                       + "keeping the sync position so they are retried")
+        }
+        markWorkoutSync(imported: uploaded)
+    }
+
+    /// One aggregate line per sync, plus one for the sources.
+    ///
+    /// `AppLogger` keeps only the last 100 entries, so a line per workout would
+    /// evict everything else on the very sync the user is trying to read.
+    private func logScan(_ scan: HealthKitManager.WorkoutImportScan) {
+        logger.log("workout-import: scan anchor=\(scan.hadAnchor ? "yes" : "no") "
+                   + "raw=\(scan.rawCount) kept=\(scan.kept.count) "
+                   + "skip(source)=\(scan.skippedByBundle) skip(cutoff)=\(scan.skippedByCutoff)")
+
+        if let error = scan.queryError {
+            logger.log("workout-import: query ERROR — \(error)")
+        }
+
+        if !scan.bundleCounts.isEmpty {
+            let sources = scan.bundleCounts
+                .sorted { $0.value > $1.value }
+                .prefix(6)
+                .map { "\($0.key)×\($0.value) [\(HealthKitManager.disposition(forBundle: $0.key))]" }
+                .joined(separator: ", ")
+            logger.log("workout-import: sources \(sources)")
         }
     }
 

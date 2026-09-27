@@ -56,3 +56,49 @@ struct ModalityStyle {
         }
     }
 }
+
+/// The icon for a *recorded* activity, as opposed to a planned modality.
+///
+/// These are different questions with different answers, and conflating them is
+/// what put a runner on every cycling row: a ride infers the `aerobic_base`
+/// modality, whose icon is `figure.run`, so the list showed a runner while the
+/// detail page — which keyed off the activity type — showed a bike.
+///
+/// Four screens had each written their own version of this mapping (§6.12 of
+/// `ios/docs/design-system.md`), and they disagreed: only two of them knew that
+/// "bike" means cycling.
+enum ActivityIcon {
+    /// The icon for an activity type, or nil when the string names no
+    /// particular activity ("workout", "watch_16-Saturday-0", …) and the
+    /// caller should fall back to the modality.
+    static func forActivityType(_ activityType: String) -> String? {
+        let t = activityType.lowercased()
+        if t.contains("run")                        { return "figure.run" }
+        if t.contains("cycl") || t.contains("bike") { return "figure.outdoor.cycle" }
+        if t.contains("swim")                       { return "figure.pool.swim" }
+        if t.contains("hik")                        { return "figure.hiking" }
+        if t.contains("walk")                       { return "figure.walk" }
+        if t.contains("row")                        { return "figure.rowing" }
+        if t.contains("elliptical")                 { return "figure.elliptical" }
+        if t.contains("yoga")                       { return "figure.yoga" }
+        if t.contains("flexib") || t.contains("mobility") { return "figure.flexibility" }
+        if t.contains("strength") || t.contains("weight") {
+            return "figure.strengthtraining.traditional"
+        }
+        if t.contains("core")                       { return "figure.core.training" }
+        if t.contains("box")                        { return "figure.boxing" }
+        if t.contains("climb")                      { return "figure.climbing" }
+        if t.contains("ski")                        { return "figure.skiing.crosscountry" }
+        if t.contains("hiit") || t.contains("interval") { return "figure.highintensity.intervaltraining" }
+        if t.contains("watch")                      { return "applewatch.watchface" }
+        return nil
+    }
+
+    /// What a row or header should show for an imported workout: what the
+    /// device recorded, falling back to the modality it was filed under.
+    static func forWorkout(activityType: String, modalityId: String?) -> String {
+        if let icon = forActivityType(activityType) { return icon }
+        if let modalityId { return ModalityStyle.icon(for: modalityId) }
+        return "figure.mixed.cardio"
+    }
+}
