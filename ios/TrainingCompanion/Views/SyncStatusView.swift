@@ -8,6 +8,8 @@ struct SyncStatusView: View {
     @ObservedObject private var logger = AppLogger.shared
 
     @State private var showDebugLog = false
+    @State private var diagnosis: WorkoutAccessDiagnosis?
+    @State private var isDiagnosing = false
     @State private var garminDevices: [PairedDevice] = []
     @State private var isLoadingDevices = false
     @State private var garminCode = ""
@@ -198,6 +200,59 @@ struct SyncStatusView: View {
         Task { await appState.saveProfile() }
     }
 
+    // MARK: - Apple Health access check
+
+    /// Runs the unfiltered, unanchored scan and shows the answer in place.
+    ///
+    /// Rendered inline rather than only logged: the debug log holds 100 entries
+    /// and lives behind a disclosure group, and this is the one answer the
+    /// athlete opened this screen to get.
+    private func runHealthAccessCheck() async {
+        isDiagnosing = true
+        AppHaptics.light()
+        let result = await HealthKitManager.shared.diagnoseWorkoutAccess()
+        diagnosis = result
+        isDiagnosing = false
+
+        AppLogger.shared.log("health-access: \(result.summaryLine)")
+        for source in result.sources.prefix(6) {
+            AppLogger.shared.log("health-access: \(source.bundle)×\(source.count) [\(source.disposition)]")
+        }
+        AppHaptics.success()
+    }
+
+    @ViewBuilder
+    private func healthAccessResult(_ result: WorkoutAccessDiagnosis) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(result.summaryLine)
+                .font(.caption)
+                .foregroundStyle(result.total == 0 ? Color.orange : Color.secondary)
+
+            ForEach(result.sources, id: \.bundle) { source in
+                HStack(spacing: 6) {
+                    Text(source.bundle)
+                        .font(.caption2.monospaced())
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Text("\(source.count)")
+                        .font(.caption2).fontWeight(.semibold)
+                    Text(source.disposition)
+                        .font(.caption2)
+                        .foregroundStyle(source.disposition.hasPrefix("skip") ? Color.secondary : Color.green)
+                }
+            }
+
+            if result.total == 0 && result.needsAuthorizationPrompt {
+                Text("Turn on Workouts for Training Companion in "
+                     + "Settings → Health → Data Access & Devices.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
     private var connectionsSection: some View {
         Section {
             Toggle("Automatic import", isOn: Binding(
@@ -216,6 +271,20 @@ struct SyncStatusView: View {
                 set: { setSource("garmin", $0) }
             ))
             .disabled(!integrations.autoImport)
+
+            // Deliberately not disabled by the auto-import toggle: the reason to
+            // run this is that nothing is importing.
+            Button {
+                Task { await runHealthAccessCheck() }
+            } label: {
+                Label(isDiagnosing ? "Checking…" : "Check Apple Health access",
+                      systemImage: "stethoscope")
+            }
+            .disabled(isDiagnosing)
+
+            if let diagnosis {
+                healthAccessResult(diagnosis)
+            }
 
             Button {
                 Task { await sync.reimportRecentWorkouts() }

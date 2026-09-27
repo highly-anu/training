@@ -33,6 +33,8 @@ final class AppState: ObservableObject {
 
     @Published var importedWorkouts: [ImportedWorkout] = []
     @Published var isLoadingWorkouts = false
+    /// Confirmed `workout_matches` rows, keyed by imported workout id.
+    @Published var workoutMatches: [String: WorkoutMatch] = [:]
 
     // MARK: - Bio Logs (last 30 days)
 
@@ -104,6 +106,26 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
+        // Matches come from their own table rather than from session logs —
+        // see `matchedSessionKey(for:)`. A failure here costs badges, not the
+        // list, so it never fails the load.
+        do {
+            workoutMatches = try await api.fetchWorkoutMatches()
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            print("⚠️ fetchWorkoutMatches failed: \(error)")
+        }
+    }
+
+    /// The planned session an imported workout is linked to, if any.
+    ///
+    /// The one place that answers this. It used to be derived at three call
+    /// sites from `sessionLogs`, which the server populates by LEFT JOIN from
+    /// session logs — so an auto-matched workout, which has no session log,
+    /// read as unmatched on the phone while the web showed it linked.
+    func matchedSessionKey(for workoutId: String) -> String? {
+        if let key = workoutMatches[workoutId]?.sessionKey { return key }
+        return sessionLogs.values.first { $0.matchedWorkoutId == workoutId }?.sessionKey
     }
 
     func deleteWorkout(id: String) async throws {

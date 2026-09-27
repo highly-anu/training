@@ -585,6 +585,170 @@ a sub-tab.
 
 ---
 
+### 6.9 Cross-Tab Navigation
+
+**A screen never reaches into another screen's state.** It asks the router.
+
+Tab selection lives in `AppRouter` (`AppRouter.swift`), injected once by
+`ContentView` and read by `MainTabView` as the `TabView` selection. It was
+`@State` in `ContentView` before, which meant `ContentView` was the only thing
+that could move the user — a card on the Dashboard had nowhere to send a tap.
+
+```swift
+@EnvironmentObject var router: AppRouter
+
+Button {
+    router.showAnalytics(.recovery)   // Dashboard readiness card → Analytics ▸ Recovery
+} label: {
+    readinessCard
+}
+.buttonStyle(.plain)
+.accessibilityHint("Opens Analytics, Recovery")
+```
+
+**Rules**
+
+- **Route through the methods**, not by assigning `router.tab` at a call site.
+  The haptic and the order of the two writes (section first, then tab) belong
+  to the router — the same reason haptics live inside `AppSubTabPicker`.
+- **A requested sub-tab is a one-shot.** `showAnalytics(_:)` sets
+  `analyticsSection`; Analytics applies it and calls `clearAnalyticsSection()`.
+  Leaving it set would drag the user back to Recovery every time they returned
+  to the tab, overriding the section they chose themselves.
+- **Consume it in `onAppear` *and* `onChange`.** The router may name a section
+  before the destination view exists (first visit — `onAppear` catches it) or
+  while it is already on screen (`onChange`). One alone leaves a dead tap.
+- **A card that navigates says so**: trailing `chevron.right`, `.caption`,
+  `.tertiary` — the same affordance as §6.1's session card and the progression
+  card. Wrap the card in a `Button` with `.buttonStyle(.plain)` (or a
+  `NavigationLink` when it pushes within the tab) so the whole card is the
+  target, and give it an `.accessibilityHint` naming the destination.
+
+**When NOT to use it**
+
+Pushing *within* a tab is still `NavigationLink` — the router is for crossing
+between tabs. And a sub-tab is only worth naming in the router if some other
+screen actually sends the user there; do not pre-declare routes nothing uses.
+
+---
+
+### 6.10 Workout Route & Charts
+
+**The recorded shape of a workout: where it went, and what the sensors saw.**
+`WorkoutTimeseriesSection.swift` — `WorkoutRouteSection` and
+`WorkoutChartsSection`.
+
+Two screens drew this independently and had already drifted: the workout detail
+offered a Swiss 3D toggle and the session-log detail did not, and they disagreed
+on how many GPS points make a pace chart (10 vs 1). Both now use these.
+
+```swift
+WorkoutRouteSection(points: detail.gpsTrack ?? [])
+WorkoutChartsSection(workout: detail, hrConfig: appState.profile.hrConfig)
+```
+
+**Rules**
+
+- **Absent data renders nothing** — not an empty frame. No track, no Route
+  section; no series, no chart section. A reserved 160pt box with nothing in it
+  reads as a loading failure.
+- **The selected chart is derived, never assumed.** `WorkoutChartsSection` holds
+  a `ChartKind?` and normalises it into whatever the data supports. The previous
+  form — an `Int` defaulting to `0` (HR) — let a workout with elevation but no
+  HR select a chart that did not exist, and that bug had already been copied
+  into the second screen. Prefer making a bad state unrepresentable over fixing
+  it in each copy.
+- **Availability thresholds live in the component**: HR needs one sample,
+  elevation one point with an altitude, pace ten points moving faster than
+  0.3 m/s — enough to draw a line, not a dot.
+- **Pass the re-fetched workout, not the list row.** List payloads omit
+  `gpsTrack` and `heartRate.samples` deliberately (a long run carries 16k GPS
+  points); the detail re-fetches with `APIClient.fetchWorkout(id:)`.
+- The Swiss 3D toggle appears only inside the Swiss bounding box
+  (`isInSwitzerland`), and the map mode is the component's own state.
+
+**When NOT to use it**
+
+This is for a stored workout's recorded timeseries. A live, in-progress session
+is a different component with different needs — don't stretch this one to cover
+it.
+
+### 6.11 Period Filter
+
+**One control for "over what period".** `AnalyticsPeriodPicker.swift`.
+
+```swift
+AnalyticsPeriodPicker(period: $period)
+```
+
+`period` is shared across the Analytics sub-tabs, but its only control used to
+be inline in Overview — so the Workouts list was silently filtered by a choice
+made on a different screen, while its own empty state advised "try a longer
+period" and offered no way to do it.
+
+**Rules**
+
+- **Render it on every tab that filters by it.** Shared state with a control on
+  one screen only is a filter the user cannot see or reach.
+- **The haptic and the animation are inside the component** (`AppHaptics.selection()`,
+  `AppAnimation.springSnappy`); call sites pass a binding and nothing else.
+- Give it its own line — do not fold it into a horizontal scroller of sort and
+  filter pills, where it reads as one more chip rather than the scope of
+  everything below.
+
+**When NOT to use it**
+
+It is not an `AppSubTabs` selector, and must not become one. By §6.8's own test
+it changes *how the thing in front of you is displayed*, not what the screen is
+about. It also does not belong above `AppSubTabPicker`: Recovery ignores period,
+and a control that does nothing on the tab you are looking at is worse than one
+you have to find.
+
+---
+
+### 6.12 Activity vs Modality Icons
+
+**Two different questions, two different answers.** `ActivityIcon` in
+`ModalityStyle.swift`.
+
+- `ModalityStyle.icon(for:)` answers *what kind of training is this* — the
+  planned modality. `aerobic_base` is a runner.
+- `ActivityIcon.forActivityType(_:)` answers *what did the device record* —
+  cycling is a bike, swimming is a swimmer.
+
+Conflating them put a runner on every cycling row: a ride is filed under
+`aerobic_base`, so a list keyed off modality showed a runner while the detail
+page, keyed off activity type, showed a bike. Four screens had each written
+their own copy of the activity mapping and only two of them knew that "bike"
+means cycling.
+
+```swift
+// An imported workout: what was recorded, falling back to how it was filed.
+Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
+                                          modalityId: workout.inferredModalityId))
+    .foregroundStyle(ModalityStyle.color(for: modality))
+```
+
+**Rules**
+
+- **A recorded workout leads with its activity.** Use
+  `ActivityIcon.forWorkout(activityType:modalityId:)`, which falls back to the
+  modality only when the activity string names nothing specific ("Workout",
+  `watch_16-Saturday-0`).
+- **Colour still comes from the modality.** The icon says what you did; the
+  colour says where it sits in the training palette. Keeping the colour on
+  `ModalityStyle` is what lets a list stay readable when every row is a bike.
+- **A planned session uses `ModalityStyle.icon(for:)`** — there is no recorded
+  activity yet, and the modality is the whole truth about it.
+
+**When NOT to use it**
+
+Not for programme sessions, archetypes or anything in the Program tab: those
+have a modality and no activity, so the modality icon is the correct and only
+answer.
+
+---
+
 ## 7. Motion & Animation
 
 ### 7.1 Rules

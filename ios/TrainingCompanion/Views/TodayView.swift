@@ -4,6 +4,7 @@ struct TodayView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var sync: SyncManager
     @EnvironmentObject var programStore: ProgramStore
+    @EnvironmentObject var router: AppRouter
 
     @State private var selectedSession: (session: ProgramSession, key: String, weekIndex: Int, dayName: String, sessionIndex: Int)? = nil
     @State private var dayOffset: Int = 0          // 0 = today, ±n = days from today
@@ -344,7 +345,13 @@ struct TodayView: View {
     private var readinessSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionLabel("Readiness")
-            readinessCard
+            Button {
+                router.showAnalytics(.recovery)
+            } label: {
+                readinessCard
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens Analytics, Recovery")
         }
     }
 
@@ -387,6 +394,9 @@ struct TodayView: View {
                             }
                         }
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
 
                 // Flags from API (exclude insufficient_data from actionable list)
@@ -423,9 +433,13 @@ struct TodayView: View {
             HStack {
                 Image(systemName: "waveform.path.ecg")
                     .foregroundStyle(.secondary)
-                Text("No bio data · sync from Apple Watch or add a manual entry in Log")
+                Text("No bio data · sync from Apple Watch or add an entry in Recovery")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)

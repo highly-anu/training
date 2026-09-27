@@ -37,7 +37,7 @@ struct AnalyticsOverviewTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                periodSelector
+                AnalyticsPeriodPicker(period: $period)
                 kpiGrid
                 if loadFocus.total > 0 { loadFocusCard }
                 if !modalities.isEmpty { modalityDonutCard }
@@ -57,28 +57,6 @@ struct AnalyticsOverviewTab: View {
             await recomputePMC()
             AppHaptics.success()
         }
-    }
-
-    // MARK: - Period Selector
-
-    private var periodSelector: some View {
-        HStack(spacing: 6) {
-            ForEach(AnalyticsPeriod.allCases) { p in
-                Button {
-                    AppHaptics.selection()
-                    withAnimation(AppAnimation.springSnappy) { period = p }
-                } label: {
-                    Text(p.label)
-                        .font(.subheadline).fontWeight(period == p ? .semibold : .regular)
-                        .foregroundStyle(period == p ? .white : .primary)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(period == p ? Color.blue : Color(.systemGray5))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - KPI Grid (Apple Fitness-style with trend arrows)

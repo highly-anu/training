@@ -3,7 +3,7 @@ import SwiftUI
 /// Full-detail sheet for a stored workout.
 /// Shows GPS map, timeseries charts, stats, and a "Link to Session" flow
 /// that reuses the same matching UI as FITImportSheet.
-struct WorkoutDetailSheet: View {
+struct WorkoutDetailView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
@@ -40,59 +40,46 @@ struct WorkoutDetailSheet: View {
 
     // Linked session key (from existing session logs)
     private var linkedSessionKey: String? {
-        appState.sessionLogs.first(where: { $0.value.matchedWorkoutId == workout.id })?.key
+        appState.matchedSessionKey(for: workout.id)
     }
 
+    /// No `NavigationStack` of its own: this is pushed onto the Analytics
+    /// stack, and a nested stack breaks the back button and the title.
     var body: some View {
-        NavigationStack {
-            Group {
-                switch state {
-                case .viewing:           viewingBody
-                case .matching(let s):   matchingBody(sessions: s)
-                case .manualPick:        manualPickBody
-                case .confirmed(let k):  confirmedBody(sessionKey: k)
-                case .error(let msg):    errorBody(msg)
-                }
-            }
-            .navigationTitle(titleFor(state))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if case .confirmed = state { EmptyView() }
-                    else if case .viewing = state { EmptyView() }
-                    else {
-                        Button("Back") {
-                            AppHaptics.selection()
-                            state = .viewing
-                        }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    if case .confirmed = state {
-                        Button("Done") { dismiss() }
-                    } else {
-                        Button("Close") { dismiss() }
-                    }
-                }
-            }
-            .confirmationDialog("Delete Workout",
-                                isPresented: $showDeleteConfirm,
-                                titleVisibility: .visible) {
-                Button("Delete", role: .destructive) { Task { await performDelete() } }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("This will remove the workout data and unlink it from any session.")
+        Group {
+            switch state {
+            case .viewing:           viewingBody
+            case .matching(let s):   matchingBody(sessions: s)
+            case .manualPick:        manualPickBody
+            case .confirmed(let k):  confirmedBody(sessionKey: k)
+            case .error(let msg):    errorBody(msg)
             }
         }
-        .onChange(of: workout.id) { _ in
-            mapMode = .flat
-            fullWorkout = nil
-            trimpScore = nil
-            hrZones = nil
-            decoupling = nil
-            trainingEffect = nil
-            bestEffortsResult = []
-            recoveryTimeHours = nil
+        .navigationTitle(titleFor(state))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // "Cancel", not "Back": the navigation bar already has a back
+                // chevron that means something else — leave this screen, rather
+                // than abandon the matching step.
+                if case .viewing = state { EmptyView() }
+                else if case .confirmed = state {
+                    Button("Done") { state = .viewing }
+                } else {
+                    Button("Cancel") {
+                        AppHaptics.selection()
+                        state = .viewing
+                    }
+                }
+            }
+        }
+        .confirmationDialog("Delete Workout",
+                            isPresented: $showDeleteConfirm,
+                            titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { Task { await performDelete() } }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will remove the workout data and unlink it from any session.")
         }
     }
 
@@ -111,8 +98,8 @@ struct WorkoutDetailSheet: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                if let gps = detail.gpsTrack, !gps.isEmpty { routeSection(gps: gps) }
-                if hasAnyTimeseries { timeseriesSection }
+                WorkoutRouteSection(points: detail.gpsTrack ?? [])
+                WorkoutChartsSection(workout: detail, hrConfig: appState.profile.hrConfig)
             }
             // Analytics sections (Garmin/Apple/Strava-inspired)
             if let effect = trainingEffect { trainingEffectSection(effect) }
@@ -172,16 +159,16 @@ struct WorkoutDetailSheet: View {
     private var workoutHeaderSection: some View {
         Section {
             HStack(spacing: 12) {
-                Image(systemName: activityIcon(workout.activityType))
+                Image(systemName: ActivityIcon.forWorkout(activityType: detail.activityType, modalityId: detail.inferredModalityId))
                     .font(.title2)
                     .foregroundStyle(.blue)
                     .frame(width: 36)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(workout.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
+                    Text(detail.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
                         .font(.headline)
                     Text(formattedDate(workout.date))
                         .font(.subheadline).foregroundStyle(.secondary)
-                    Text(workout.source.replacingOccurrences(of: "_", with: " ").capitalized)
+                    Text(detail.source.replacingOccurrences(of: "_", with: " ").capitalized)
                         .font(.caption).foregroundStyle(.tertiary)
                 }
                 Spacer()
@@ -199,11 +186,11 @@ struct WorkoutDetailSheet: View {
     }
 
     private var heroStatsSection: some View {
-        let dur  = workout.durationMinutes
-        let dist = workout.distance
-        let cal  = workout.calories
+        let dur  = detail.durationMinutes
+        let dist = detail.distance.flatMap { $0.isMeaningful ? $0 : nil }
+        let cal  = detail.calories
         let pace = avgPaceString(dist: dist, durMin: dur)
-        let avgHR = workout.heartRate?.avg
+        let avgHR = detail.heartRate?.avg
 
         return Section {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -220,111 +207,18 @@ struct WorkoutDetailSheet: View {
         }
     }
 
-    private func routeSection(gps: [GPSPoint]) -> some View {
-        Section("Route") {
-            if isInSwitzerland(gps) {
-                Picker("View", selection: $mapMode) {
-                    Label("Map", systemImage: "map").tag(MapMode.flat)
-                    Label("3D", systemImage: "cube").tag(MapMode.swiss3d)
-                }
-                .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 0, trailing: 8))
-            }
-
-            Group {
-                if mapMode == .swiss3d && isInSwitzerland(gps) {
-                    Swiss3DMapView(points: gps)
-                        .frame(height: 300)
-                } else {
-                    WorkoutRouteMapView(points: gps)
-                        .frame(height: 220)
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
-        }
-    }
-
-    // MARK: - Map mode
-
-    private enum MapMode { case flat, swiss3d }
-    @State private var mapMode: MapMode = .flat
-
-    // MARK: - Timeseries
-
-    @State private var chartTab: Int = 0
-
-    private var hasHR: Bool        { !(detail.heartRate?.samples ?? []).isEmpty }
-    private var hasElevation: Bool { detail.gpsTrack?.contains { $0.altitude != nil } ?? false }
-    private var hasPace: Bool {
-        guard let gps = detail.gpsTrack else { return false }
-        return gps.filter { ($0.speed ?? 0) > 0.3 }.count >= 10
-    }
-    private var hasAnyTimeseries: Bool { hasHR || hasElevation || hasPace }
-
-    private var availableTabs: [(label: String, icon: String, tag: Int)] {
-        var tabs: [(String, String, Int)] = []
-        if hasHR        { tabs.append(("HR",        "heart.fill",      0)) }
-        if hasElevation { tabs.append(("Elevation", "mountain.2.fill", 1)) }
-        if hasPace      { tabs.append(("Pace",      "figure.run",      2)) }
-        return tabs
-    }
-
-    private var timeseriesSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 0) {
-                if availableTabs.count > 1 {
-                    Picker("Chart", selection: $chartTab) {
-                        ForEach(availableTabs, id: \.tag) { tab in
-                            Label(tab.label, systemImage: tab.icon).tag(tab.tag)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.bottom, 10)
-                    .onChange(of: chartTab) { _ in AppHaptics.selection() }
-                }
-                Group {
-                    switch chartTab {
-                    case 0:
-                        if let samples = detail.heartRate?.samples, !samples.isEmpty {
-                            HRTimelineView(samples: samples,
-                                           avgHR: detail.heartRate?.avg,
-                                           maxHR: detail.heartRate?.max,
-                                           hrConfig: appState.profile.hrConfig)
-                        }
-                    case 1:
-                        if let gps = detail.gpsTrack {
-                            ElevationProfileView(points: gps, gainM: detail.elevation?.gain)
-                        }
-                    case 2:
-                        if let gps = detail.gpsTrack {
-                            PaceTimelineView(points: gps, distanceKm: detail.distance?.value)
-                        }
-                    default:
-                        EmptyView()
-                    }
-                }
-                .frame(height: 160)
-                .animation(.easeInOut(duration: 0.2), value: chartTab)
-            }
-            .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
-        } header: {
-            Text(availableTabs.count == 1 ? availableTabs[0].label : "Activity Data")
-        }
-    }
-
     // MARK: - Metrics
 
     private var metricsSection: some View {
-        let dist  = workout.distance
-        let elev  = workout.elevation
-        let avgHR = workout.heartRate?.avg
-        let maxHR = workout.heartRate?.max
-        let pace  = avgPaceString(dist: dist, durMin: workout.durationMinutes)
+        let dist  = detail.distance.flatMap { $0.isMeaningful ? $0 : nil }
+        let elev  = detail.elevation
+        let avgHR = detail.heartRate?.avg
+        let maxHR = detail.heartRate?.max
+        let pace  = avgPaceString(dist: dist, durMin: detail.durationMinutes)
         let bestP = bestPaceString(gps: detail.gpsTrack ?? [])
 
         let hasHRStats     = avgHR != nil || maxHR != nil
-        let hasActivityStats = dist != nil || elev != nil || workout.calories != nil
+        let hasActivityStats = dist != nil || elev != nil || detail.calories != nil
 
         return Group {
             if hasHRStats {
@@ -368,7 +262,7 @@ struct WorkoutDetailSheet: View {
                     if let b = bestP { LabeledContent("Best Pace", value: "\(b) /km") }
                     if let g = elev?.gain, g > 0 { LabeledContent("Elevation Gain", value: "\(Int(g)) m") }
                     if let l = elev?.loss, l > 0 { LabeledContent("Elevation Loss", value: "\(Int(l)) m") }
-                    if let c = workout.calories   { LabeledContent("Calories", value: "\(Int(c)) kcal") }
+                    if let c = detail.calories   { LabeledContent("Calories", value: "\(Int(c)) kcal") }
                 }
             }
         }
@@ -706,7 +600,7 @@ struct WorkoutDetailSheet: View {
 
     private var workoutSummaryCard: some View {
         HStack(spacing: 12) {
-            Image(systemName: activityIcon(workout.activityType))
+            Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId))
                 .foregroundStyle(.blue).font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(workout.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
@@ -799,18 +693,6 @@ struct WorkoutDetailSheet: View {
         guard let date = df.date(from: dateStr) else { return dateStr }
         let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
         return out.string(from: date)
-    }
-
-    private func activityIcon(_ type: String) -> String {
-        let t = type.lowercased()
-        if t.contains("run")   { return "figure.run" }
-        if t.contains("cycl") || t.contains("bike") { return "figure.outdoor.cycle" }
-        if t.contains("swim")  { return "figure.pool.swim" }
-        if t.contains("hik")   { return "figure.hiking" }
-        if t.contains("walk")  { return "figure.walk" }
-        if t.contains("row")   { return "figure.rowing" }
-        if t.contains("watch") { return "applewatch.watchface" }
-        return "figure.mixed.cardio"
     }
 
     private func statChip(value: String, unit: String, icon: String) -> some View {

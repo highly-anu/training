@@ -39,7 +39,7 @@ struct LogView: View {
                 }
             }
             .sheet(item: $selectedWorkout) { workout in
-                WorkoutDetailSheet(workout: workout)
+                WorkoutDetailView(workout: workout)
                     .environmentObject(appState)
             }
             .sheet(isPresented: $showBioEntry) {
@@ -96,7 +96,7 @@ struct LogView: View {
     private func workoutRow(_ workout: ImportedWorkout) -> some View {
         let isLinked = appState.sessionLogs.values.contains { $0.matchedWorkoutId == workout.id }
         let modality = workout.inferredModalityId ?? linkedProgramSession(for: workout)?.modality
-        let iconName  = modality.map { ModalityStyle.icon(for: $0) } ?? workoutRowIcon(workout.activityType)
+        let iconName  = modality.map { ModalityStyle.icon(for: $0) } ?? ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId)
         let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? (isLinked ? .green : Color.blue)
         let title = workoutDisplayName(workout)
         return HStack(spacing: 12) {
@@ -195,18 +195,6 @@ struct LogView: View {
               let sessions = week.schedule[dayName],
               idx < sessions.count else { return nil }
         return sessions[idx]
-    }
-
-    private func workoutRowIcon(_ activityType: String) -> String {
-        let t = activityType.lowercased()
-        if t.contains("run")   { return "figure.run" }
-        if t.contains("cycl")  { return "figure.outdoor.cycle" }
-        if t.contains("swim")  { return "figure.pool.swim" }
-        if t.contains("hik")   { return "figure.hiking" }
-        if t.contains("walk")  { return "figure.walk" }
-        if t.contains("row")   { return "figure.rowing" }
-        if t.contains("watch") { return "applewatch.watchface" }
-        return "figure.mixed.cardio"
     }
 
     private func workoutDateLabel(_ dateStr: String) -> String {
@@ -360,7 +348,6 @@ struct SessionLogDetailView: View {
     let sessionWithKey: SessionWithKey
 
     @State private var matchedWorkout: ImportedWorkout? = nil
-    @State private var chartTab: Int = 0   // 0=HR, 1=Elevation, 2=Pace
 
     private var log: SessionLogEntry? { appState.sessionLogs[sessionWithKey.key] }
     private var session: ProgramSession { sessionWithKey.session }
@@ -368,17 +355,6 @@ struct SessionLogDetailView: View {
     // Derived convenience
     private var gps: [GPSPoint] { matchedWorkout?.gpsTrack ?? [] }
     private var hrSamples: [HRSample] { matchedWorkout?.heartRate?.samples ?? [] }
-    private var hasElevation: Bool { gps.contains { $0.altitude != nil } }
-    private var hasPace: Bool { gps.contains { ($0.speed ?? 0) > 0.3 } }
-
-    // Available tabs (only those with data)
-    private var availableTabs: [(label: String, icon: String, tag: Int)] {
-        var tabs: [(String, String, Int)] = []
-        if !hrSamples.isEmpty       { tabs.append(("HR",        "heart.fill",       0)) }
-        if hasElevation             { tabs.append(("Elevation", "mountain.2.fill",  1)) }
-        if hasPace                  { tabs.append(("Pace",      "figure.run",       2)) }
-        return tabs
-    }
 
     var body: some View {
         NavigationStack {
@@ -386,8 +362,11 @@ struct SessionLogDetailView: View {
                 headerSection
                 if let log {
                     heroStatsSection(log: log)
-                    if !gps.isEmpty          { routeSection }
-                    if !availableTabs.isEmpty { timeseriesSection }
+                    WorkoutRouteSection(points: gps)
+                    if let matchedWorkout {
+                        WorkoutChartsSection(workout: matchedWorkout,
+                                             hrConfig: appState.profile.hrConfig)
+                    }
                     metricsSection(log: log)
                     if let fatigue = log.fatigueRating { effortSection(fatigue: fatigue) }
                     if let notes = log.notes, !notes.isEmpty { notesSection(notes: notes) }
@@ -454,61 +433,6 @@ struct SessionLogDetailView: View {
             }
             .padding(.vertical, 4)
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-        }
-    }
-
-    private var routeSection: some View {
-        Section("Route") {
-            WorkoutRouteMapView(points: gps)
-                .frame(height: 220)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
-        }
-    }
-
-    private var timeseriesSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 0) {
-                // Tab picker (only when >1 chart available)
-                if availableTabs.count > 1 {
-                    Picker("Chart", selection: $chartTab) {
-                        ForEach(availableTabs, id: \.tag) { tab in
-                            Label(tab.label, systemImage: tab.icon).tag(tab.tag)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.bottom, 10)
-                    .onChange(of: chartTab) { _ in AppHaptics.selection() }
-                }
-
-                // Chart content
-                Group {
-                    switch chartTab {
-                    case 0:
-                        if !hrSamples.isEmpty {
-                            HRTimelineView(samples: hrSamples,
-                                           avgHR: matchedWorkout?.heartRate?.avg,
-                                           maxHR: matchedWorkout?.heartRate?.max,
-                                           hrConfig: appState.profile.hrConfig)
-                        }
-                    case 1:
-                        if hasElevation {
-                            ElevationProfileView(points: gps, gainM: matchedWorkout?.elevation?.gain)
-                        }
-                    case 2:
-                        if hasPace {
-                            PaceTimelineView(points: gps, distanceKm: matchedWorkout?.distance?.value)
-                        }
-                    default:
-                        EmptyView()
-                    }
-                }
-                .frame(height: 160)
-                .animation(.easeInOut(duration: 0.2), value: chartTab)
-            }
-            .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
-        } header: {
-            Text(availableTabs.count == 1 ? availableTabs[0].label : "Activity Data")
         }
     }
 
