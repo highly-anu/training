@@ -72,13 +72,17 @@ export function ProgramView() {
     weekRefs.current[weekIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [weekIndex, activeTab])
 
-  // Initialise draft state when sheet opens
-  useEffect(() => {
+  // Seed the draft when the sheet opens, during render rather than in an
+  // effect — an effect would render the sheet once with the previous session's
+  // selections before correcting them.
+  const [prevInjurySheetOpen, setPrevInjurySheetOpen] = useState(injurySheetOpen)
+  if (injurySheetOpen !== prevInjurySheetOpen) {
+    setPrevInjurySheetOpen(injurySheetOpen)
     if (injurySheetOpen && program) {
       setLocalFlags([...(program.constraints?.injury_flags ?? [])] as InjuryFlagId[])
       setLocalCustom([...customInjuryFlags])
     }
-  }, [injurySheetOpen])
+  }
 
   const activeInjuryCount =
     (program?.constraints?.injury_flags?.length ?? 0) + customInjuryFlags.length

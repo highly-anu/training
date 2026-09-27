@@ -180,10 +180,13 @@ export function ProgramTuner() {
     }
   }, [tightChoice, eventIsTight, weeksUntilEvent, defaultNumWeeks]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset tight choice when event date is removed
-  useEffect(() => {
+  // Reset the tight choice when the event date is removed, during render
+  // rather than in an effect.
+  const [prevEventDate, setPrevEventDate] = useState(eventDate)
+  if (eventDate !== prevEventDate) {
+    setPrevEventDate(eventDate)
     if (!eventDate) setTightChoice('fit')
-  }, [eventDate])
+  }
 
   // Reset label
   const resetLabel = 'Source default'

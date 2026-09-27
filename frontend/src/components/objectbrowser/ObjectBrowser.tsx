@@ -151,6 +151,10 @@ export function ObjectBrowser({ onOpenInOntology }: { onOpenInOntology?: OpenInO
       <AddModalityDialog open={showAddModality} onClose={() => setShowAddModality(false)} />
       {editingExercise && (
         <EditExerciseDialog
+          // Remount when a different exercise is picked, so the form re-seeds
+          // from the new props instead of syncing sixteen pieces of state in
+          // an effect.
+          key={editingExercise.id}
           exercise={editingExercise}
           open={!!editingExercise}
           onClose={() => setEditingExercise(null)}

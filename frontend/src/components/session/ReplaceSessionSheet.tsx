@@ -62,20 +62,12 @@ export function ReplaceSessionSheet({
   // Shared: pending session preview
   const [pendingSession, setPendingSession] = useState<Session | null>(null)
 
-  // Reset on close
-  useEffect(() => {
-    if (!open) {
-      setPendingSession(null)
-      setSelectedArchId(null)
-      setSearchQuery('')
-      setShowConstraints(false)
-      setTimeOverride(null)
-      setEquipOverride(null)
-      setInjuryOverride(null)
-      setFatigueOverride(null)
-      generateSession.reset()
-    }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  // No reset-on-close effect: both call sites render this conditionally
+  // (`{replaceTarget && <ReplaceSessionSheet open={true} …>}`) so closing
+  // unmounts it and every piece of state below goes with it. The effect that
+  // used to live here could never fire — `open` is never false — and setting
+  // eight pieces of state synchronously in an effect is exactly what the
+  // compiler warns about.
 
   // Auto-focus search on open
   useEffect(() => {

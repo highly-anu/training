@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -41,26 +41,10 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
   const [loadElite, setLoadElite] = useState(String(initLoads?.elite ?? ''))
   const [weeklyIncrement, setWeeklyIncrement] = useState(String(exercise.weekly_increment_kg ?? ''))
 
-  // Sync state when exercise prop changes (e.g. dialog re-opened for different exercise)
-  useEffect(() => {
-    setCategory(exercise.category ?? '')
-    setEffort(exercise.effort ?? '')
-    setBilateral(exercise.bilateral ?? true)
-    setModality((exercise.modality ?? []) as ModalityId[])
-    setEquipment((exercise.equipment ?? []) as EquipmentId[])
-    setMovementPatterns(exercise.movement_patterns ?? [])
-    setPatternInput('')
-    setSets(String(exercise.typical_volume?.sets ?? ''))
-    setReps(String(exercise.typical_volume?.reps ?? ''))
-    setNotes(exercise.notes ?? '')
-    const loads = exercise.starting_load_kg
-    setLoadNovice(String(loads?.novice ?? ''))
-    setLoadIntermediate(String(loads?.intermediate ?? ''))
-    setLoadAdvanced(String(loads?.advanced ?? ''))
-    setLoadElite(String(loads?.elite ?? ''))
-    setWeeklyIncrement(String(exercise.weekly_increment_kg ?? ''))
-    updateMutation.reset()
-  }, [exercise.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // No prop-sync effect: ObjectBrowser keys this dialog by `exercise.id`, so
+  // picking a different exercise remounts it and every useState above re-seeds
+  // from the new props. Re-seeding sixteen pieces of state in an effect
+  // instead meant a full second render every time the dialog opened.
 
   function toggleModality(m: ModalityId) {
     setModality(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])

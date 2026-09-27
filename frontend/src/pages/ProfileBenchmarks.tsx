@@ -240,9 +240,14 @@ function PrInput({ benchId, unit }: PrInputProps) {
   const stored = logs[benchId]?.at(-1)?.value
   const [draft, setDraft] = useState(stored !== undefined ? String(stored) : '')
 
-  useEffect(() => {
+  // Re-derive during render rather than in an effect. An effect would paint
+  // the stale draft first and only correct it on a second render; React
+  // explicitly sanctions this pattern for resetting state when a value changes.
+  const [prevStored, setPrevStored] = useState(stored)
+  if (stored !== prevStored) {
+    setPrevStored(stored)
     setDraft(stored !== undefined ? String(stored) : '')
-  }, [stored])
+  }
 
   function commit() {
     const n = parseFloat(draft)
@@ -573,10 +578,13 @@ function HRSettingsOverview() {
   )
   const [localBoundaries, setLocalBoundaries] = useState<number[]>(boundaries)
 
-  // Keep localBoundaries in sync when hrConfig changes from outside
-  useEffect(() => {
+  // Keep localBoundaries in sync when hrConfig changes from outside, derived
+  // during render for the same reason as the benchmark draft above.
+  const [prevZoneBoundaries, setPrevZoneBoundaries] = useState(hrConfig.zoneBoundaries)
+  if (hrConfig.zoneBoundaries !== prevZoneBoundaries) {
+    setPrevZoneBoundaries(hrConfig.zoneBoundaries)
     setLocalBoundaries(hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES)
-  }, [hrConfig.zoneBoundaries])
+  }
 
   const localMax = overrideInput !== '' && !isNaN(Number(overrideInput))
     ? Number(overrideInput)
