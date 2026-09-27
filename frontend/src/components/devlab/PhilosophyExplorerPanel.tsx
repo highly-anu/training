@@ -1526,7 +1526,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
                           key={fw.id}
                           framework={fw}
                           isOpen={fwOpen.has(fw.id)}
-                          onToggle={() => setFwOpen(s => { const n = new Set(s); n.has(fw.id) ? n.delete(fw.id) : n.add(fw.id); return n })}
+                          onToggle={() => setFwOpen(s => { const n = new Set(s); if (n.has(fw.id)) n.delete(fw.id); else n.add(fw.id); return n })}
                         />
                       ))}
                     </div>
@@ -1559,7 +1559,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
                           modality={modalitiesMap[modId]}
                           sessionsPerWeek={modalitySessionsMap[modId] ?? 0}
                           isOpen={modOpen.has(modId)}
-                          onToggle={() => setModOpen(s => { const n = new Set(s); n.has(modId) ? n.delete(modId) : n.add(modId); return n })}
+                          onToggle={() => setModOpen(s => { const n = new Set(s); if (n.has(modId)) n.delete(modId); else n.add(modId); return n })}
                         />
                       ))}
                     </div>
@@ -1592,7 +1592,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
                           allExercises={philosophyExercises}
                           allArchetypes={archetypesList}
                           isOpen={archOpen.has(arch.id)}
-                          onToggle={() => setArchOpen(s => { const n = new Set(s); n.has(arch.id) ? n.delete(arch.id) : n.add(arch.id); return n })}
+                          onToggle={() => setArchOpen(s => { const n = new Set(s); if (n.has(arch.id)) n.delete(arch.id); else n.add(arch.id); return n })}
                         />
                       ))}
                     </div>

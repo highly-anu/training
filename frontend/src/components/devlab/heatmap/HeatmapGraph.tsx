@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { HeatmapNode } from './HeatmapNode'
+import { getConnectedNodeIds, prunePhilosophyScope } from './heatmapGraphSelectors'
+import { belongsToPackage } from '@/lib/provenance'
 import { HeatmapEdge } from './HeatmapEdge'
 import type { HeatmapGraphData, LayerKind, ExerciseInGroup } from './useHeatmapData'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { belongsToPackage } from '@/lib/provenance'
 import type { ModalityId } from '@/api/types'
 import { motion } from 'framer-motion'
 
@@ -58,80 +59,6 @@ interface HeatmapGraphProps {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const LAYER_ORDER: LayerKind[] = ['philosophy', 'framework', 'modality', 'archetype', 'exercise_group']
-
-export function getConnectedNodeIds(
-  nodeId: string,
-  edges: HeatmapGraphData['edges'],
-): Set<string> {
-  const connected = new Set<string>()
-  connected.add(nodeId)
-
-  // Walk upward
-  const queue = [nodeId]
-  const visited = new Set<string>()
-  while (queue.length > 0) {
-    const current = queue.pop()!
-    if (visited.has(current)) continue
-    visited.add(current)
-    for (const edge of edges) {
-      if (edge.target === current) {
-        connected.add(edge.source)
-        connected.add(edge.id)
-        queue.push(edge.source)
-      }
-    }
-  }
-
-  // Walk downward
-  const queue2 = [nodeId]
-  const visited2 = new Set<string>()
-  while (queue2.length > 0) {
-    const current = queue2.pop()!
-    if (visited2.has(current)) continue
-    visited2.add(current)
-    for (const edge of edges) {
-      if (edge.source === current) {
-        connected.add(edge.target)
-        connected.add(edge.id)
-        queue2.push(edge.target)
-      }
-    }
-  }
-
-  return connected
-}
-
-/** When locked on a philosophy node, prune cross-package archetypes and every
- *  edge/node that hangs exclusively off them (both incoming and outgoing). */
-export function prunePhilosophyScope(
-  raw: Set<string>,
-  pkg: string,
-  nodes: HeatmapGraphData['nodes'],
-  edges: HeatmapGraphData['edges'],
-) {
-  const nodeMap = new Map(nodes.map(n => [n.id, n]))
-
-  // 1. Remove cross-package archetype nodes + their incident edges (both directions)
-  for (const id of [...raw]) {
-    if (!id.startsWith('archetype::')) continue
-    const node = nodeMap.get(id)
-    if (node?._package && node._package !== pkg) {
-      raw.delete(id)
-      for (const edge of edges) {
-        if (edge.source === id || edge.target === id) raw.delete(edge.id)
-      }
-    }
-  }
-
-  // 2. Remove exercise_group nodes that no longer have any highlighted incoming edge
-  for (const id of [...raw]) {
-    if (!id.startsWith('exercise_group::')) continue
-    const hasIncoming = edges.some(e => e.target === id && raw.has(e.id))
-    if (!hasIncoming) raw.delete(id)
-  }
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export function HeatmapGraph({
   data,
@@ -279,7 +206,7 @@ export function HeatmapGraph({
     } else {
       // ── Normal mode: fit all nodes of each layer into one equal-width row ──
       for (const layer of LAYER_ORDER) {
-        let nodes = nodesByLayer[layer]
+        const nodes = nodesByLayer[layer]
         const count = nodes.length
         if (count === 0) continue
 

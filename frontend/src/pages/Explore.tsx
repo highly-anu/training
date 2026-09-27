@@ -696,7 +696,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
   function toggleCat(cat: string) {
     setActiveCategories(prev => {
       const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
       return next
     })
   }
@@ -1065,7 +1065,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
   function toggleCat(cat: string) {
     setActiveCategories(prev => {
       const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
       return next
     })
   }
