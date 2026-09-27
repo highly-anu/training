@@ -309,7 +309,7 @@ function buildStaticGraph(ontology: OntologyData) {
         : exerciseMatchesPattern(exPatterns, exCategory, patternKey)
 
       if (matches) {
-        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns, _package: (ex as any)._package, _packages: (ex as any)._packages })
+        exercisesByGroup[gId].push({ id: ex.id, name: ex.name, heat: 0, rawCount: 0, movement_patterns: exPatterns, _package: ex._package, _packages: ex._packages })
         groups.push(gId)
       }
     }

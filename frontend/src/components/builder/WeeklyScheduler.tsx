@@ -6,7 +6,7 @@ import { useBuilderStore } from '@/store/builderStore'
 import { useFrameworks } from '@/api/frameworks'
 import { usePhilosophies } from '@/api/philosophies'
 import { blendExpectations } from '@/lib/feasibility'
-import type { DayConfig } from '@/api/types'
+import type { DayConfig, GoalProfile } from '@/api/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ export function WeeklyScheduler() {
     selectedPhilosophyIds,
   } = useBuilderStore()
   // Goals deprecated - philosophy-based only
-  const goals: any[] = []
+  const goals: GoalProfile[] = []
   const { data: frameworks = [] } = useFrameworks()
   const { data: philosophies = [] } = usePhilosophies()
 

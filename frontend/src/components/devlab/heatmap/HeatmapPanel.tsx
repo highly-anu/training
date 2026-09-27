@@ -10,7 +10,7 @@ import type { HeatNode, HeatmapGraphData } from './useHeatmapData'
 import { useOntology } from '@/api/ontology'
 // Goals deprecated
 import { useGenerateWithTrace } from '@/api/programs'
-import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId } from '@/api/types'
+import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId, GoalProfile } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { belongsToPackage } from '@/lib/provenance'
 import {
@@ -282,7 +282,7 @@ interface HeatmapPanelProps {
 export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }: HeatmapPanelProps) {
   const { data: ontology, isLoading: ontologyLoading } = useOntology()
   // Goals deprecated - philosophy-based only
-  const goals: any[] = []
+  const goals: GoalProfile[] = []
   const generateMutation = useGenerateWithTrace()
 
   const [weekRange, setWeekRange] = useState<[number, number]>([1, program?.weeks.length ?? 1])
@@ -295,12 +295,16 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
     lockedNodeRef.current = lockedNodeId
   }, [lockedNodeId])
 
-  // Seed initial locked node into the correct layer slot
-  useEffect(() => {
-    if (!initialLockedNode) return
-    const layer = LAYER_ORDER_KEYS.find(l => initialLockedNode.startsWith(`${l}::`))
-    if (layer) setSelectionByLayer(new Map([[layer, initialLockedNode]]))
-  }, [initialLockedNode])
+  // Seed the initial locked node into its layer slot during render, so the
+  // graph never paints once with nothing selected before correcting itself.
+  const [prevInitialLockedNode, setPrevInitialLockedNode] = useState(initialLockedNode)
+  if (initialLockedNode !== prevInitialLockedNode) {
+    setPrevInitialLockedNode(initialLockedNode)
+    if (initialLockedNode) {
+      const layer = LAYER_ORDER_KEYS.find(l => initialLockedNode.startsWith(`${l}::`))
+      if (layer) setSelectionByLayer(new Map([[layer, initialLockedNode]]))
+    }
+  }
 
   // Ordered top-layer first
   const selectedNodes = useMemo(() =>

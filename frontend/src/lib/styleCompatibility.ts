@@ -1,4 +1,4 @@
-import type { AthleteConstraints, Framework } from '@/api/types'
+import type { AthleteConstraints, Framework, FrameworkApplicableWhen } from '@/api/types'
 
 /**
  * Whether a training style can actually run under the athlete's constraints.
@@ -39,7 +39,7 @@ export function checkStyleCompatibility(
   constraints: Partial<AthleteConstraints>,
 ): StyleCompatibility {
   const issues: StyleIssue[] = []
-  const applicable = (framework.applicable_when ?? {}) as Record<string, any>
+  const applicable: FrameworkApplicableWhen = framework.applicable_when ?? {}
   const exp = framework.expectations
 
   const days = constraints.days_per_week ?? 4

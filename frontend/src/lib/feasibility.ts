@@ -1,4 +1,4 @@
-import type { GoalProfile, AthleteConstraints, GoalExpectations } from '@/api/types'
+import type { GoalProfile, AthleteConstraints, GoalExpectations, Framework, Philosophy } from '@/api/types'
 
 export interface FeasibilitySignal {
   code: string
@@ -21,47 +21,58 @@ export function blendExpectations(
   goalWeights: Record<string, number>,
   opts?: {
     sourceMode?: 'philosophy' | 'blend' | 'custom' | null
-    frameworks?: any[]
+    frameworks?: Framework[]
     selectedFrameworkId?: string | null
     selectedPhilosophyIds?: string[]
-    philosophies?: any[]
+    philosophies?: Philosophy[]
   },
 ): GoalExpectations | null {
   // For philosophy mode with sequential framework group, aggregate framework expectations
   if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
-    const phil = opts.philosophies.find((p: any) => p.id === opts.selectedPhilosophyIds?.[0])
+    const phil = opts.philosophies.find((p) => p.id === opts.selectedPhilosophyIds?.[0])
 
     // An explicitly chosen style wins over the phase blend — the athlete is
     // running that framework, not the philosophy's whole sequence.
     if (opts.selectedFrameworkId) {
-      const chosen = opts.frameworks.find((f: any) => f.id === opts.selectedFrameworkId)
+      const chosen = opts.frameworks.find((f) => f.id === opts.selectedFrameworkId)
       if (chosen?.expectations) return chosen.expectations
     }
 
     // Find sequential group (new approach)
-    const sequentialGroup = phil?.framework_groups?.find((g: any) => g.type === 'sequential')
+    const sequentialGroup = phil?.framework_groups?.find((g) => g.type === 'sequential')
     const phases = sequentialGroup?.canonical_phase_sequence
       || (phil?.frameworks_are_phases && phil.canonical_phase_sequence)  // Legacy fallback
 
     if (phases) {
+      // Keep each phase paired with its framework. These used to be a filtered
+      // array of frameworks indexed alongside the UNfiltered `phases`, so a
+      // phase whose framework was missing or had no expectations shifted every
+      // later phase onto the wrong duration — silently weighting the blend by
+      // another phase's weeks.
       const phaseFrameworks = phases
-        .map((phase: any) => opts.frameworks!.find((f: any) => f.id === phase.framework_id))
-        .filter((f: any) => f?.expectations)
+        .map((phase) => ({ phase, fw: opts.frameworks!.find((f) => f.id === phase.framework_id) }))
+        .filter((pair): pair is { phase: typeof pair.phase; fw: Framework } =>
+          pair.fw?.expectations != null)
 
       if (phaseFrameworks.length > 0) {
-        const totalWeeks = phases.reduce((s: number, p: any) => s + (p.weeks ?? 0), 0)
+        // Program length counts every phase; the weighting denominator counts
+        // only the phases actually contributing, so the weights sum to 1.
+        const totalWeeks = phases.reduce((sum: number, phase) => sum + (phase.weeks ?? 0), 0)
+        const weightedWeeks = phaseFrameworks.reduce(
+          (sum, { phase }) => sum + (phase.weeks ?? 0), 0)
+
         const weighted = (fn: (e: GoalExpectations) => number): number => {
+          if (weightedWeeks === 0) return 0
           let sum = 0
-          for (let i = 0; i < phaseFrameworks.length; i++) {
-            const fw = phaseFrameworks[i]
-            const phaseWeeks = phases[i]?.weeks ?? 0
-            const weight = phaseWeeks / totalWeeks
+          for (const { phase, fw } of phaseFrameworks) {
+            const weight = (phase.weeks ?? 0) / weightedWeeks
             if (fw.expectations) sum += fn(fw.expectations) * weight
           }
           return sum
         }
 
-        const longDays = phaseFrameworks.filter((f: any) => f.expectations?.ideal_long_session_minutes != null)
+        const longDays = phaseFrameworks.filter(
+          ({ fw }) => fw.expectations?.ideal_long_session_minutes != null)
 
         return {
           min_weeks: totalWeeks,
@@ -71,15 +82,17 @@ export function blendExpectations(
           min_session_minutes: Math.round(weighted((e) => e.min_session_minutes)),
           ideal_session_minutes: Math.round(weighted((e) => e.ideal_session_minutes)),
           ideal_long_session_minutes: longDays.length
-            ? Math.round(longDays.reduce((s: number, f: any) => s + f.expectations!.ideal_long_session_minutes!, 0) / longDays.length)
+            ? Math.round(longDays.reduce(
+                (sum: number, { fw }) => sum + fw.expectations!.ideal_long_session_minutes!, 0,
+              ) / longDays.length)
             : undefined,
-          supports_split_days: phaseFrameworks.some((f: any) => f.expectations?.supports_split_days),
+          supports_split_days: phaseFrameworks.some(({ fw }) => fw.expectations?.supports_split_days),
         }
       }
     }
 
     // No explicit style and no sequential group — fall back to the primary framework.
-    const primary = opts.frameworks.find((f: any) => f.id === phil?.primary_framework_id)
+    const primary = opts.frameworks.find((f) => f.id === phil?.primary_framework_id)
     if (primary?.expectations) return primary.expectations
   }
 

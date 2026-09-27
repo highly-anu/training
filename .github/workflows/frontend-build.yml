@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: TypeScript + Vite build
+    name: Lint + TypeScript + Vite build
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: frontend
+
+      # Runs before the build so a lint regression is reported on its own terms
+      # rather than buried under compile output. The error count was 64 for a
+      # long time, which made the command useless as a signal — it is 0 now and
+      # this keeps it there. Warnings do not fail the build.
+      - name: Lint
+        run: npm run lint
         working-directory: frontend
 
       - name: Build

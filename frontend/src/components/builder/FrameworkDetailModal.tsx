@@ -23,12 +23,7 @@ const INTENSITY_LABELS: Record<string, string> = {
 export function FrameworkDetailModal({ framework, open, onClose }: FrameworkDetailModalProps) {
   if (!framework) return null
 
-  const incompatible = (framework as any).incompatible_with as Array<{
-    framework_id: string
-    reason?: string
-    interference_level?: string
-    mitigation?: string
-  }> | undefined
+  const incompatible = framework.incompatible_with
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

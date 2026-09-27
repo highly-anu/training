@@ -371,7 +371,7 @@ export function ModelInteractionPanel({ result }: Props) {
   const liveArchetypes = traceWeek0
     ? Object.values(traceWeek0.sessions ?? {})
         .flat()
-        .map((s: any) => s?.archetype_trace?.selected)
+        .map((s) => (s as { archetype_trace?: { selected?: string } })?.archetype_trace?.selected)
         .filter(Boolean) as string[]
     : []
 

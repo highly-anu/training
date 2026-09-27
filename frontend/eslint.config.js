@@ -20,6 +20,15 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
+      // A compiler optimisation advisory, not a correctness rule: it fires
+      // where React Compiler cannot PROVE a dependency is never mutated, and
+      // declines to optimise that component. The three current sites were
+      // checked by hand — the values derive from query data via `.find()` and
+      // nothing mutates them — so this is kept visible as a warning rather
+      // than contorting working code to satisfy a conservative analysis.
+      // The correctness rules it ships alongside (rules-of-hooks,
+      // set-state-in-effect, refs-during-render) stay errors.
+      'react-hooks/preserve-manual-memoization': 'warn',
       // The codebase already marks deliberately-unused bindings with a leading
       // underscore — `catch (_)`, props destructured only to drop them from a
       // rest spread. Honour that rather than reporting intent as dead code.

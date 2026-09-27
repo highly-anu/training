@@ -1077,7 +1077,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
   const sorted = useMemo(() => {
     if (sort === 'alpha') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
     return sortByLikeness(filtered, matrix?.['archetypes'])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [filtered, sort, matrix])
 
   return (

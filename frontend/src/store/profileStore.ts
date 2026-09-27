@@ -123,7 +123,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   removePerformanceLog: (benchmarkId) => {
     healthApi.deletePerformanceLog(benchmarkId)
     set((s) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const { [benchmarkId]: _removed, ...rest } = s.performanceLogs
       return { performanceLogs: rest }
     })

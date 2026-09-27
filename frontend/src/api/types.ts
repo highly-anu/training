@@ -625,6 +625,14 @@ export interface Framework {
   intensity_distribution?: Record<string, number>
   progression_model?: string
   applicable_when?: FrameworkApplicableWhen
+  /** Frameworks that interfere with this one. Authored per framework in
+   *  data/packages/<id>/frameworks/*.yaml. */
+  incompatible_with?: Array<{
+    framework_id: string
+    reason?: string
+    interference_level?: string
+    mitigation?: string
+  }>
   deload_protocol?: { frequency_weeks: number; volume_reduction_pct: number; intensity_change: string }
   sources?: string[]
   notes?: string

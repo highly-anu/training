@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { ChevronDown, ChevronRight, BookOpen, Loader2, Link2 } from 'lucide-react'
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts'
 import { usePhilosophies } from '@/api/philosophies'
@@ -1374,11 +1374,16 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
   const [modOpen, setModOpen] = useState<Set<string>>(new Set())
   const [archOpen, setArchOpen] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
+  // Collapse every disclosure when a different philosophy is selected, during
+  // render rather than in an effect — an effect would paint the previous
+  // philosophy's expanded sections for one frame first.
+  const [prevSelectedId, setPrevSelectedId] = useState(selectedId)
+  if (selectedId !== prevSelectedId) {
+    setPrevSelectedId(selectedId)
     setFwOpen(new Set())
     setModOpen(new Set())
     setArchOpen(new Set())
-  }, [selectedId])
+  }
 
   const modalitiesMap = useMemo(
     () => Object.fromEntries(modalitiesList.map(m => [m.id, m])) as Record<ModalityId, Modality>,
