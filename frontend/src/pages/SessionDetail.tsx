@@ -21,6 +21,17 @@ export function SessionDetail() {
   const navigate = useNavigate()
   const program = useCurrentProgram()
 
+  // Every hook must run before the early return below. They used to sit after
+  // it, so the render where `program` arrives called six more hooks than the
+  // render before it — "Rendered more hooks than during the previous render",
+  // on the single most common transition this page has.
+  const { sessionLogs, setSessionLog } = useProfileStore()
+  const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
+  const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
+  const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
+  const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
+
   if (!program) {
     return (
       <motion.div
@@ -40,12 +51,6 @@ export function SessionDetail() {
     )
   }
 
-  const { sessionLogs, setSessionLog } = useProfileStore()
-  const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
-  const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
-  const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   function getSessionMatch(si: number) {
     const perKey = `${sessionKey}-${si}`

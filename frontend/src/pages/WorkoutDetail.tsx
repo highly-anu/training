@@ -224,6 +224,27 @@ export function WorkoutDetail() {
     return computeAerobicDecoupling(workout.gpsTrack, workout.heartRate.samples)
   }, [workout])
 
+  // Must run before the `if (!workout)` early return further down: the render
+  // where the query resolves would otherwise call one more hook than the
+  // render before it.
+  const hasAltitude = workout?.gpsTrack?.some(p => p.altitude != null) ?? false
+
+  const gpsElevation = useMemo(() => {
+    if (!hasAltitude) return null
+    let gain = 0, loss = 0, prev: number | null = null
+    for (const p of workout?.gpsTrack ?? []) {
+      const alt = p.altitude
+      if (alt == null) continue
+      if (prev !== null) {
+        const diff = alt - prev
+        if (diff >= 1) gain += diff
+        else if (diff <= -1) loss += Math.abs(diff)
+      }
+      prev = alt
+    }
+    return { gain: Math.round(gain), loss: Math.round(loss) }
+  }, [hasAltitude, workout?.gpsTrack])
+
   function handleManualLink() {
     if (!workout || !program || !programStartDate) return
     const candidates: { sessionKey: string; score: number }[] = []
@@ -302,28 +323,11 @@ export function WorkoutDetail() {
 
   const hasGPS = workout.gpsTrack && workout.gpsTrack.length > 1
   const hasSamples = (workout.heartRate.samples?.length ?? 0) > 1
-  const hasAltitude = workout.gpsTrack?.some(p => p.altitude != null) ?? false
 
   // Swiss bounding box — mirrors iOS isInSwitzerland check
   const isSwiss = hasGPS
     && workout.gpsTrack![0].lat >= 45.8 && workout.gpsTrack![0].lat <= 47.8
     && workout.gpsTrack![0].lng >= 5.9   && workout.gpsTrack![0].lng <= 10.5
-
-  const gpsElevation = useMemo(() => {
-    if (!hasAltitude) return null
-    let gain = 0, loss = 0, prev: number | null = null
-    for (const p of workout.gpsTrack!) {
-      const alt = p.altitude
-      if (alt == null) continue
-      if (prev !== null) {
-        const diff = alt - prev
-        if (diff >= 1) gain += diff
-        else if (diff <= -1) loss += Math.abs(diff)
-      }
-      prev = alt
-    }
-    return { gain: Math.round(gain), loss: Math.round(loss) }
-  }, [hasAltitude, workout.gpsTrack])
 
   const rawEntries = Object.entries(workout.rawData).filter(
     ([, v]) => v != null && v !== '' && v !== 0
