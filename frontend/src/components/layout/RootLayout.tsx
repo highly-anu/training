@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { ProgramSaveBanner } from './ProgramSaveBanner'
 import { useUiStore } from '@/store/uiStore'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +37,7 @@ export function RootLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
+        <ProgramSaveBanner />
         <main className="flex-1 overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
             <Outlet />

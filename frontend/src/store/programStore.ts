@@ -1,12 +1,20 @@
 import { create } from 'zustand'
 import type { GeneratedProgram, Session } from '@/api/types'
-import { fetchUserProgram, saveUserProgram } from '@/api/userdata'
+import { fetchUserProgram, saveUserProgram, lastProgramSaveError } from '@/api/userdata'
 
 interface ProgramStore {
   currentProgram: GeneratedProgram | null
   programLoadState: 'idle' | 'loading' | 'loaded' | 'error'
   /** Which account the loaded program belongs to, so a switch clears it. */
   loadedForUserId: string | null
+  /**
+   * Why the last program save failed, or null when it succeeded.
+   *
+   * Every mutation persists fire-and-forget, so without this a failed save is
+   * invisible: the browser shows a program the server never received, and it
+   * disappears on reload. 'stale_revision' means someone else's copy won.
+   */
+  programSaveError: string | null
   programStartDate: string | null // YYYY-MM-DD
   eventDate: string | null        // YYYY-MM-DD — the race/event/goal date
   sourceGoalIds: string[]
@@ -34,6 +42,27 @@ interface ProgramStore {
   loadFromServer: (userId?: string) => Promise<void>
 }
 
+/**
+ * Persist the program and remember whether it worked.
+ *
+ * saveUserProgram already retries once and returns false on failure, but every
+ * caller discarded that boolean and `lastProgramSaveError` was exported and
+ * read by nothing — so a transient 5xx after a generate left the browser
+ * showing a program the server never received, with no signal, until a reload
+ * silently lost it.
+ */
+async function persistProgram(
+  set: (partial: Partial<ProgramStore>) => void,
+  payload: Parameters<typeof saveUserProgram>[0],
+) {
+  const ok = await saveUserProgram(payload)
+  set({
+    programSaveError: ok ? null : (lastProgramSaveError ?? 'save_failed'),
+    // saveUserProgram advances the revision in place on success.
+    revision: payload.revision ?? null,
+  })
+}
+
 /** The fields a program load owns, in their empty form. */
 const EMPTY_PROGRAM_STATE = {
   currentProgram: null,
@@ -48,6 +77,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   currentProgram: null,
   programLoadState: 'idle',
   loadedForUserId: null,
+  programSaveError: null,
   programStartDate: null,
   eventDate: null,
   sourceGoalIds: [],
@@ -57,7 +87,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   setCurrentProgram: (currentProgram) => {
     set({ currentProgram })
     const s = get()
-    saveUserProgram({
+    void persistProgram(set, {
       currentProgram,
       programStartDate: s.programStartDate,
       eventDate: s.eventDate,
@@ -77,7 +107,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       sourceGoalWeights,
       revision: get().revision,
     })
-    saveUserProgram({
+    void persistProgram(set, {
       currentProgram:     program,
       programStartDate:   startDate,
       eventDate,
@@ -109,7 +139,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     })
     const s = get()
     if (s.currentProgram) {
-      saveUserProgram({
+      void persistProgram(set, {
         currentProgram:     s.currentProgram,
         programStartDate:   s.programStartDate,
         eventDate:          s.eventDate,
@@ -134,7 +164,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     })
     const s = get()
     if (s.currentProgram) {
-      saveUserProgram({
+      void persistProgram(set, {
         currentProgram:    s.currentProgram,
         programStartDate:  s.programStartDate,
         eventDate:         s.eventDate,
