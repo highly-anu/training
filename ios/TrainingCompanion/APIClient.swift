@@ -67,6 +67,24 @@ final class APIClient {
         return (json["status"] as? String) ?? "unknown"
     }
 
+    // MARK: - Program history
+    //
+    // Which plan was in force when, and what it planned each day. The server
+    // keeps one current program per athlete and overwrites it, so before this
+    // a replaced block left nothing behind.
+
+    func fetchProgramHistory() async throws -> [ProgramHistoryEntry] {
+        let data = try await get("/programs/history")
+        return (try? JSONDecoder().decode([ProgramHistoryEntry].self, from: data)) ?? []
+    }
+
+    func fetchProgramVersion(_ versionId: String) async throws -> ProgramHistoryDetail? {
+        let escaped = versionId.addingPercentEncoding(
+            withAllowedCharacters: .urlPathAllowed) ?? versionId
+        let data = try await get("/programs/history/\(escaped)")
+        return try? JSONDecoder().decode(ProgramHistoryDetail.self, from: data)
+    }
+
     func fetchProgram() async throws -> ServerProgram? {
         let data = try await get("/user/program")
         if let program = try? JSONDecoder().decode(ServerProgram.self, from: data) {

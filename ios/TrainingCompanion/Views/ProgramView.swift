@@ -13,6 +13,31 @@ struct ProgramView: View {
     @State private var showBuilder = false
     @State private var showSettings = false
     @State private var selectedDay: DaySelection? = nil
+    @State private var section: ProgramSection = .current
+
+    /// The two things this screen is about: the plan you are on, and the plans
+    /// you have been on. Two sections, one word each (§6.8).
+    private enum ProgramSection: Int, AppSubTab {
+        case current, history
+
+        var label: String {
+            switch self {
+            case .current: return "Current"
+            case .history: return "History"
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var currentProgramSection: some View {
+        if appState.allWeeks.isEmpty && !appState.isLoadingProgram {
+            noProgramView
+        } else if appState.isLoadingProgram && appState.allWeeks.isEmpty {
+            loadingView
+        } else {
+            programContent
+        }
+    }
 
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     private var cardWidth: CGFloat { UIScreen.main.bounds.width - 32 }
@@ -22,23 +47,29 @@ struct ProgramView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if appState.allWeeks.isEmpty && !appState.isLoadingProgram {
-                    noProgramView
-                } else if appState.isLoadingProgram && appState.allWeeks.isEmpty {
-                    loadingView
-                } else {
-                    programContent
+            VStack(spacing: 0) {
+                // §6.8: screen-level sub-navigation goes through AppSubTabs, so
+                // this screen does not invent a third selector.
+                AppSubTabPicker(selection: $section)
+
+                AppSubTabContent(selection: $section) { tab in
+                    switch tab {
+                    case .current: currentProgramSection
+                    case .history: ProgramHistoryView()
+                    }
                 }
             }
             .navigationTitle("Program")
             .appTabStyle()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if appState.allWeeks.isEmpty {
-                        Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
-                    } else {
-                        Button { AppHaptics.light(); showSettings = true } label: { Image(systemName: "gearshape") }
+                    // History is a record, not something to build or configure.
+                    if section == .current {
+                        if appState.allWeeks.isEmpty {
+                            Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
+                        } else {
+                            Button { AppHaptics.light(); showSettings = true } label: { Image(systemName: "gearshape") }
+                        }
                     }
                 }
             }

@@ -530,3 +530,68 @@ extension WorkoutDistance {
         return km > 0.1
     }
 }
+
+
+// MARK: - Program history (GET /api/programs/history)
+
+/// One activation of one program: what was in force, and when.
+///
+/// The server used to keep a single program row per athlete and overwrite it, so
+/// a replaced plan left nothing behind and a workout dated inside one could
+/// never be matched to what had actually been planned for that day.
+struct ProgramHistoryEntry: Codable, Identifiable {
+    let activationId: Int
+    let versionId: String
+    let lineageId: String
+    let label: String
+    let goalName: String?
+    let sourceGoalIds: [String]
+    let effectiveFrom: String
+    let effectiveTo: String?
+    let isActive: Bool
+    let startDate: String?
+    let weekCount: Int
+    let sessionCount: Int
+    let matchedCount: Int
+    let loggedCount: Int
+
+    var id: Int { activationId }
+
+    /// What to call this block on screen.
+    var displayName: String {
+        if let goalName, !goalName.isEmpty { return goalName }
+        let ids = sourceGoalIds.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }
+        return ids.isEmpty ? "Program" : ids.joined(separator: " + ")
+    }
+}
+
+/// A session as it was planned, flattened onto the calendar day it fell on.
+struct PlannedSessionRecord: Codable, Identifiable {
+    let sessionUid: String
+    let date: String
+    let weekIndex: Int
+    let weekNumber: Int?
+    let dayName: String
+    let sessionIndex: Int
+    let sessionKey: String
+    let modality: String
+    let archetypeId: String?
+    let archetypeName: String?
+    let durationMinutes: Int
+    let phase: String?
+    let isDeload: Bool
+    /// False for weeks a plan never reached, because it was replaced first.
+    let wasEffective: Bool?
+    let matchedWorkoutId: String?
+    let completedAt: String?
+
+    var id: String { sessionUid }
+}
+
+struct ProgramHistoryDetail: Codable {
+    let versionId: String
+    let startDate: String
+    let weekCount: Int
+    let activations: [ProgramHistoryEntry]
+    let sessions: [PlannedSessionRecord]
+}

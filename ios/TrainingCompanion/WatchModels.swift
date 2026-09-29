@@ -14,14 +14,23 @@ struct ServerProgram: Codable {
     /// server can reject a write based on a stale read (409) instead of letting
     /// this phone overwrite a program generated elsewhere since.
     let revision: String?
+    /// Which archived program version the stored program currently is.
+    ///
+    /// Response-only, like `revision`: the server derives it on read and it is
+    /// never sent back. It is what tells a match on *this* week 3 Monday from
+    /// one recorded against a plan that has since been replaced — a session key
+    /// is program-relative and means a different session in every plan.
+    let programVersionId: String?
 
     init(currentProgram: GeneratedProgram?, programStartDate: String?,
-         eventDate: String?, sourceGoalIds: [String], revision: String? = nil) {
+         eventDate: String?, sourceGoalIds: [String], revision: String? = nil,
+         programVersionId: String? = nil) {
         self.currentProgram = currentProgram
         self.programStartDate = programStartDate
         self.eventDate = eventDate
         self.sourceGoalIds = sourceGoalIds
         self.revision = revision
+        self.programVersionId = programVersionId
     }
 }
 
