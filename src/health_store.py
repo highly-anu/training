@@ -446,9 +446,31 @@ def _row_to_workout(row, summary_only: bool = False) -> dict:
 
 # ── Session logs ──────────────────────────────────────────────────────────────
 
+def _log_session_uid(user_id: str, log: dict) -> str | None:
+    """Which program version's session this log belongs to.
+
+    Resolved outside any connection block — `get_conn()` hands out one
+    process-global connection and a nested `with` on it silently returns
+    nothing (see _session_uid_for).
+    """
+    given = log.get('sessionUid')
+    if given:
+        return given
+    try:
+        from src import program_history
+        return program_history.active_session_uid(user_id, log.get('sessionKey') or '')
+    except Exception:
+        return None
+
+
 def upsert_session_log(user_id: str, log: dict) -> None:
     from src.db import get_conn
     timeline = log.get('exerciseTimeline')
+    # Scopes the row to one program version. Without it the primary key was the
+    # program-relative session_key, so logging week 3 Monday of a new program
+    # merged the old program's set data into itself and inherited its completion
+    # timestamp — see migrations/006_session_log_scope.sql.
+    session_uid = _log_session_uid(user_id, log)
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
@@ -461,9 +483,9 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                 cur.execute('''
                     INSERT INTO session_logs
                     (session_key, user_id, exercises, notes, fatigue_rating, completed_at, source,
-                     avg_hr, peak_hr, exercise_timeline)
-                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb)
-                    ON CONFLICT (session_key, user_id) DO UPDATE SET
+                     avg_hr, peak_hr, exercise_timeline, session_uid)
+                    VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)
+                    ON CONFLICT (user_id, log_key) DO UPDATE SET
                         exercises         = session_logs.exercises || EXCLUDED.exercises,
                         notes             = CASE
                             WHEN EXCLUDED.completed_at IS NOT NULL
@@ -489,6 +511,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     log.get('avgHR'),
                     log.get('peakHR'),
                     json.dumps(timeline) if timeline else None,
+                    session_uid,
                 ))
             conn.commit()
     except Exception:
@@ -502,12 +525,19 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
-                    '''SELECT sl.session_key, sl.completed_at, sl.source, sl.notes,
-                              sl.fatigue_rating, sl.avg_hr, sl.peak_hr,
+                    '''SELECT sl.session_key, sl.session_uid, sl.completed_at,
+                              sl.source, sl.notes, sl.fatigue_rating,
+                              sl.avg_hr, sl.peak_hr,
                               wm.imported_workout_id AS matched_workout_id
                        FROM session_logs sl
                        LEFT JOIN workout_matches wm
-                           ON wm.session_key = sl.session_key AND wm.user_id = sl.user_id
+                           ON wm.user_id = sl.user_id
+                          AND CASE
+                                WHEN sl.session_uid IS NOT NULL
+                                 AND wm.session_uid IS NOT NULL
+                                THEN wm.session_uid = sl.session_uid
+                                ELSE wm.session_key = sl.session_key
+                              END
                        WHERE sl.user_id = %s
                        ORDER BY sl.completed_at DESC NULLS LAST''',
                     (user_id,),
@@ -516,6 +546,7 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
         return [
             {
                 'session_key':        row['session_key'],
+                'session_uid':        row.get('session_uid'),
                 'completed_at':       str(row['completed_at']) if row['completed_at'] else None,
                 'source':             row.get('source') or 'web',
                 'notes':              row.get('notes') or '',
@@ -531,13 +562,39 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
 
 
 def get_session_logs(user_id: str) -> dict:
+    """Session logs keyed by their program-relative session key.
+
+    That key is no longer unique: since logs are scoped to a program version
+    (migrations/006_session_log_scope.sql), the same '3-Monday-0' can exist for
+    this program and for one the athlete has since replaced. Callers all want
+    "what did I do in *this* session", so when a key has more than one row the
+    one belonging to the active plan wins, an unscoped legacy row is the
+    fallback, and a row that provably belongs to a different program is not
+    offered at all — showing it is how a brand-new session used to render as
+    already complete with the previous block's numbers in it.
+    """
     from src.db import get_conn
+    # Resolved before the connection opens — see _session_uid_for.
+    try:
+        from src import program_history
+        active_vid = program_history.active_version_id(user_id)
+    except Exception:
+        active_vid = None
+
+    def rank(uid: str | None) -> int:
+        if not uid or not active_vid:
+            # Either the log predates history, or we cannot tell which plan is
+            # current. Assume it is ours rather than hiding real data.
+            return 1
+        return 2 if uid.startswith(active_vid + ':') else 0
+
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('SELECT * FROM session_logs WHERE user_id = %s', (user_id,))
                 rows = cur.fetchall()
         result = {}
+        ranks: dict[str, int] = {}
         for row in rows:
             exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
                 json.loads(row['exercises'] or '{}')
@@ -560,8 +617,54 @@ def get_session_logs(user_id: str) -> dict:
                 entry['peakHR'] = row['peak_hr']
             if timeline is not None:
                 entry['exerciseTimeline'] = timeline
-            result[row['session_key']] = entry
+            if row.get('session_uid'):
+                entry['sessionUid'] = row['session_uid']
+
+            key = row['session_key']
+            row_rank = rank(row.get('session_uid'))
+            if row_rank == 0:
+                continue                  # provably another program's session
+            if key in ranks and ranks[key] >= row_rank:
+                continue
+            ranks[key] = row_rank
+            result[key] = entry
         return result
+    except Exception:
+        return {}
+
+
+def get_session_logs_by_uid(user_id: str) -> dict:
+    """Every scoped session log, keyed by session_uid.
+
+    The companion to get_session_logs: that one answers "what did I do in this
+    session of the current program" and therefore hides other programs' rows,
+    which is right for a completion tick and wrong for a history view. The
+    progression endpoints want every block the athlete has ever trained, so they
+    read this instead. Logs with no uid are absent by definition — they were
+    written before a log could say which program it belonged to.
+    """
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute('SELECT * FROM session_logs WHERE user_id = %s '
+                            'AND session_uid IS NOT NULL', (user_id,))
+                rows = cur.fetchall()
+        out = {}
+        for row in rows:
+            exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
+                json.loads(row['exercises'] or '{}')
+            )
+            out[row['session_uid']] = {
+                'sessionKey':    row['session_key'],
+                'sessionUid':    row['session_uid'],
+                'exercises':     exercises,
+                'notes':         row['notes'] or '',
+                'fatigueRating': row['fatigue_rating'],
+                'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
+                'source':        row.get('source') or 'web',
+            }
+        return out
     except Exception:
         return {}
 
@@ -709,11 +812,50 @@ def get_daily_bio(user_id: str) -> dict:
 
 # ── Workout matches ───────────────────────────────────────────────────────────
 
+def _session_uid_for(user_id: str, workout_id: str, session_key: str,
+                     given: str | None = None) -> str | None:
+    """The program-scoped identity of the session a match refers to.
+
+    Resolved here rather than in the matcher because five paths write matches —
+    the browser matcher, POST /api/health/matches behind the confirm dialog, the
+    Garmin webhook, the iOS relay and iOS's direct Supabase write — and this is
+    the only code all of them pass through.
+
+    `session_key` on its own cannot identify a session across programs: it is
+    program-relative, so '3-Monday-0' names a different session in every plan
+    the athlete has ever had. The workout's own date is what pins it to one.
+    Returns None rather than guessing, and the caller then stores the legacy key
+    alone, exactly as before.
+
+    Call this BEFORE opening a connection, never inside a `with get_conn()`
+    block. `get_conn()` hands out one process-global connection and a nested
+    `with` on it makes the inner query return nothing while swallowing the
+    reason, so this quietly stored no uid at all the first time round.
+    """
+    if given:
+        return given
+    if not session_key or not workout_id:
+        return None                       # a rejection carries no session
+    try:
+        from src import program_history
+        workout = get_workout(user_id, workout_id)
+        if not workout or not workout.get('date'):
+            return None
+        row = program_history.resolve_session(
+            user_id, legacy_key=session_key, date_str=str(workout['date']))
+        return row['session_uid'] if row else None
+    except Exception:
+        return None
+
+
 def upsert_match(user_id: str, match: dict) -> None:
     from src.db import get_conn
     from datetime import datetime as _dt
     workout_id = match['importedWorkoutId']
     session_key = match['sessionKey']
+    # Outside the connection block on purpose — see _session_uid_for.
+    session_uid = _session_uid_for(user_id, workout_id, session_key,
+                                   match.get('sessionUid'))
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
@@ -724,20 +866,28 @@ def upsert_match(user_id: str, match: dict) -> None:
                     VALUES (%s, %s, 'fit_file', CURRENT_DATE, 'unknown')
                     ON CONFLICT (id, user_id) DO NOTHING
                 ''', (workout_id, user_id))
+                # session_uid is the durable link: it names the session in the
+                # program that was actually in force, so the match survives a
+                # regenerate instead of silently re-pointing at whatever now
+                # occupies that (week, day, index). session_key stays for every
+                # reader and client that already speaks it.
                 cur.execute('''
                     INSERT INTO workout_matches
-                    (imported_workout_id, user_id, session_key, match_confidence, matched_at)
-                    VALUES (%s, %s, %s, %s, %s)
+                    (imported_workout_id, user_id, session_key, match_confidence,
+                     matched_at, session_uid)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     ON CONFLICT (imported_workout_id, user_id) DO UPDATE SET
                         session_key      = EXCLUDED.session_key,
                         match_confidence = EXCLUDED.match_confidence,
-                        matched_at       = EXCLUDED.matched_at
+                        matched_at       = EXCLUDED.matched_at,
+                        session_uid      = EXCLUDED.session_uid
                 ''', (
                     workout_id,
                     user_id,
                     session_key,
                     match.get('matchConfidence', 'auto'),
                     match.get('matchedAt') or _dt.utcnow().isoformat(),
+                    session_uid,
                 ))
             conn.commit()
     except Exception:
@@ -755,6 +905,7 @@ def get_matches(user_id: str) -> list[dict]:
             {
                 'importedWorkoutId': row['imported_workout_id'],
                 'sessionKey':        row['session_key'],
+                'sessionUid':        row.get('session_uid'),
                 'matchConfidence':   row['match_confidence'],
                 'matchedAt':         str(row['matched_at']),
             }
@@ -945,9 +1096,14 @@ def _ensure_suggestion_table(cur) -> None:
             session_key         TEXT NOT NULL,
             score               INTEGER NOT NULL,
             created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            session_uid         TEXT,
             PRIMARY KEY (imported_workout_id, user_id)
         )
     ''')
+    # For tables this created before session_uid existed. The column is added by
+    # migrations/005_program_history.sql too; both are idempotent.
+    cur.execute('ALTER TABLE workout_match_suggestions '
+                'ADD COLUMN IF NOT EXISTS session_uid TEXT')
     _SUGGESTION_TABLE_CREATED = True
 
 
@@ -956,20 +1112,26 @@ def upsert_match_suggestions(user_id: str, suggestions: list[dict]) -> None:
     from src.db import get_conn
     if not suggestions:
         return
+    # Resolved before the connection opens — see _session_uid_for.
+    uids = [_session_uid_for(user_id, s['importedWorkoutId'], s['sessionKey'],
+                             s.get('sessionUid'))
+            for s in suggestions]
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 _ensure_suggestion_table(cur)
-                for s in suggestions:
+                for s, uid in zip(suggestions, uids):
                     cur.execute('''
                         INSERT INTO workout_match_suggestions
-                        (imported_workout_id, user_id, session_key, score)
-                        VALUES (%s, %s, %s, %s)
+                        (imported_workout_id, user_id, session_key, score, session_uid)
+                        VALUES (%s, %s, %s, %s, %s)
                         ON CONFLICT (imported_workout_id, user_id) DO UPDATE SET
                             session_key = EXCLUDED.session_key,
                             score       = EXCLUDED.score,
+                            session_uid = EXCLUDED.session_uid,
                             created_at  = NOW()
-                    ''', (s['importedWorkoutId'], user_id, s['sessionKey'], int(s['score'])))
+                    ''', (s['importedWorkoutId'], user_id, s['sessionKey'],
+                          int(s['score']), uid))
             conn.commit()
     except Exception:
         pass
@@ -985,7 +1147,8 @@ def get_match_suggestions(user_id: str) -> list[dict]:
                 # A workout that has since been matched or rejected outright is
                 # no longer a question worth asking.
                 cur.execute('''
-                    SELECT s.imported_workout_id, s.session_key, s.score, s.created_at
+                    SELECT s.imported_workout_id, s.session_key, s.score,
+                           s.created_at, s.session_uid
                     FROM workout_match_suggestions s
                     LEFT JOIN workout_matches m
                       ON m.imported_workout_id = s.imported_workout_id
@@ -998,6 +1161,7 @@ def get_match_suggestions(user_id: str) -> list[dict]:
             {
                 'importedWorkoutId': row['imported_workout_id'],
                 'sessionKey':        row['session_key'],
+                'sessionUid':        row.get('session_uid'),
                 'score':             row['score'],
                 'createdAt':         str(row['created_at']),
             }
