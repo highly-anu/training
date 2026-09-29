@@ -13,6 +13,11 @@ import psycopg2
 
 # Load environment variables from .env
 load_dotenv()
+# .env holds the production-shaped config (op inject < .env.template);
+# .env.local, when present, layers local-dev values over it — local
+# Postgres, no Supabase (auth bypass), FRONTEND_URL=localhost:5173.
+# Same convention as Vite's frontend/.env.local. Neither is committed.
+load_dotenv('.env.local', override=True)
 
 MIGRATIONS_DIR = Path(__file__).parent / 'migrations'
 

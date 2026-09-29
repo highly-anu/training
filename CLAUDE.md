@@ -11,7 +11,16 @@ A training logic system that algorithmically generates periodized training progr
 **Fully functional end-to-end.** Python backend generates programs; Flask API serves them; React frontend connects to the API.
 
 - To run: `python api.py` (port 8000) + `cd frontend && npm run dev` (port 5173)
-- Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`; falls back to MSW mock data otherwise
+- **Env layering.** `.env` is the production-shaped config (`op inject -i .env.template -o .env`);
+  `.env.local` (from `.env.local.template`, no secrets) layers over it with `override=True`
+  and points local dev at the local `training_test` Postgres with Supabase unset, so the
+  API runs as `local-dev-user` and `FRONTEND_URL=http://localhost:5173` for CORS. Fly gets
+  its config from `fly secrets`; neither file is committed or copied into the image.
+  Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
+  (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
+- Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
+  falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
+  runs as the same `local-dev-user`.
 
 ## Repository Structure
 

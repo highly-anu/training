@@ -11,6 +11,11 @@ from datetime import date as _date, timedelta as _timedelta
 import yaml
 from dotenv import load_dotenv
 load_dotenv()
+# .env holds the production-shaped config (op inject < .env.template);
+# .env.local, when present, layers local-dev values over it — local
+# Postgres, no Supabase (auth bypass), FRONTEND_URL=localhost:5173.
+# Same convention as Vite's frontend/.env.local. Neither is committed.
+load_dotenv('.env.local', override=True)
 from flask import Flask, jsonify, redirect, request
 
 # Ensure src/ is importable when running from repo root
