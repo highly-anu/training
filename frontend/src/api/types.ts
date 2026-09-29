@@ -822,9 +822,76 @@ export interface DailyBioLog {
 
 export interface WorkoutMatch {
   importedWorkoutId: string
+  /**
+   * Program-relative: `"3-Monday-0"` names a different session in every plan the
+   * athlete has ever had. Never use it alone to decide whether a match belongs
+   * to the session on screen — see lib/sessionMatching.ts.
+   */
   sessionKey: string
+  /**
+   * `"<programVersionId>:w<weekIndex>-<Day>-<index>"`. Names one session of one
+   * archived program version, so a match survives a regenerate instead of
+   * re-pointing at whatever now occupies that slot. Absent on matches stored
+   * before program history existed, and on any the server could not resolve
+   * without guessing.
+   */
+  sessionUid?: string | null
   matchConfidence: MatchConfidence
   matchedAt: string
+}
+
+/** One activation of one program: what was in force, and when. */
+export interface ProgramHistoryEntry {
+  activationId: number
+  versionId: string
+  lineageId: string
+  label: string
+  goalName: string | null
+  sourceGoalIds: string[]
+  effectiveFrom: string
+  effectiveTo: string | null
+  isActive: boolean
+  activatedAt: string
+  source: string
+  startDate: string | null
+  weekCount: number
+  sessionCount: number
+  firstDate: string | null
+  lastDate: string | null
+  matchedCount: number
+  loggedCount: number
+}
+
+/** A session as it was planned, flattened onto the calendar day it fell on. */
+export interface PlannedSession {
+  sessionUid: string
+  programVersionId?: string
+  date: string
+  weekIndex: number
+  weekNumber: number | null
+  dayName: string
+  sessionIndex: number
+  sessionKey: string
+  modality: ModalityId
+  archetypeId: string | null
+  archetypeName: string | null
+  durationMinutes: number
+  phase: string | null
+  isDeload: boolean
+  /** False for weeks a plan never got to run, because it was replaced first. */
+  wasEffective?: boolean
+  matchedWorkoutId?: string | null
+  completedAt?: string | null
+}
+
+export interface ProgramHistoryDetail {
+  versionId: string
+  program: GeneratedProgram & Record<string, unknown>
+  startDate: string
+  weekCount: number
+  firstSeenAt: string
+  activations: ProgramHistoryEntry[]
+  sessions: PlannedSession[]
 }
 
 export interface PendingMatch {

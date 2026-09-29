@@ -13,6 +13,8 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
+import { useProgramStore } from '@/store/programStore'
+import { findSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
 import type { ComplementaryExercise } from '@/api/types'
 import { COMPLETION_INTERACTIVE } from '@/lib/completionColors'
 
@@ -30,6 +32,7 @@ export function SessionDetail() {
   const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
+  const programVersionId = useProgramStore((s) => s.programVersionId)
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   if (!program) {
@@ -53,9 +56,8 @@ export function SessionDetail() {
 
 
   function getSessionMatch(si: number) {
-    const perKey = `${sessionKey}-${si}`
-    const entry = workoutMatches.find(
-      m => (m.sessionKey === perKey || m.sessionKey === sessionKey) && m.matchConfidence !== 'rejected'
+    const entry = findSessionMatch(
+      workoutMatches, sessionKeyVariants(sessionKey, si), programVersionId
     )
     return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
   }

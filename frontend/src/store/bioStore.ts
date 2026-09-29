@@ -12,6 +12,8 @@ import type {
 import * as healthApi from '@/api/health'
 import type { HealthSnapshot } from '@/api/health'
 import { useProfileStore } from '@/store/profileStore'
+import { findSessionMatch } from '@/lib/sessionMatching'
+import { useProgramStore } from '@/store/programStore'
 
 interface BioStore {
   importedWorkouts: ImportedWorkout[]
@@ -293,18 +295,16 @@ export const useBioStore = create<BioStore>()((set, get) => ({
 
   getMatchedWorkout: (sessionKey) => {
     const { workoutMatches, importedWorkouts } = get()
-    // Exact match (per-session "weekNum-Day-si" or legacy day-level "weekNum-Day")
-    let match = workoutMatches.find(
-      (m) => m.sessionKey === sessionKey && m.matchConfidence !== 'rejected'
+    // Resolution lives in lib/sessionMatching so that every screen rejects a
+    // match belonging to a replaced program the same way. On the key alone, a
+    // finished block's run showed up as this block's session.
+    const match = findSessionMatch(
+      workoutMatches,
+      [sessionKey],
+      useProgramStore.getState().programVersionId
     )
-    // Fallback: if given a day-level key, find the first per-session variant
-    if (!match) {
-      match = workoutMatches.find(
-        (m) => m.sessionKey.startsWith(`${sessionKey}-`) && m.matchConfidence !== 'rejected'
-      )
-    }
     if (!match) return undefined
-    return importedWorkouts.find((w) => w.id === match!.importedWorkoutId)
+    return importedWorkouts.find((w) => w.id === match.importedWorkoutId)
   },
 
   getPerformanceLog: (sessionKey) => get().sessionPerformanceLogs[sessionKey],

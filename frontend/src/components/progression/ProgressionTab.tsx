@@ -10,6 +10,7 @@ import { MatchedSessionCard } from './MatchedSessionCard'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
+import { findSessionMatch } from '@/lib/sessionMatching'
 import type { ExerciseFinding } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
@@ -29,6 +30,7 @@ export function ProgressionTab() {
 
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const currentProgram = useProgramStore((s) => s.currentProgram)
+  const programVersionId = useProgramStore((s) => s.programVersionId)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const initBio = useBioStore((s) => s.init)
@@ -95,10 +97,9 @@ export function ProgressionTab() {
           daySessions[0]?.archetype?.name ??
           daySessions[0]?.modality.replace(/_/g, ' ') ??
           'Session'
-        // Check per-session keys ("weekNum-Day-si") and legacy day-level keys
-        const matchEntry = workoutMatches.find(
-          (m) => (m.sessionKey === key || m.sessionKey.startsWith(`${key}-`)) && m.matchConfidence !== 'rejected'
-        )
+        // Per-session and legacy day-level keys, excluding any match recorded
+        // against a program that has since been replaced.
+        const matchEntry = findSessionMatch(workoutMatches, [key], programVersionId)
         const matched = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
         return { sessionKey: key, weekNumber, dayName, archetypeName, matchedWorkout: matched }
       })
@@ -106,7 +107,7 @@ export function ProgressionTab() {
         if (a.weekNumber !== b.weekNumber) return b.weekNumber - a.weekNumber
         return (DAY_ORDER[b.dayName] ?? 0) - (DAY_ORDER[a.dayName] ?? 0)
       })
-  }, [sessionLogs, currentProgram, workoutMatches, importedWorkouts])
+  }, [sessionLogs, currentProgram, workoutMatches, importedWorkouts, programVersionId])
 
   const linkedCount = allCompleted.filter((s) => s.matchedWorkout).length
 

@@ -25,6 +25,10 @@ export const queryKeys = {
   },
   programs: {
     current: ['programs', 'current'] as const,
+    history: ['programs', 'history'] as const,
+    version: (id: string) => ['programs', 'history', id] as const,
+    plannedSessions: (from?: string, to?: string) =>
+      ['programs', 'plannedSessions', from ?? '', to ?? ''] as const,
   },
   analytics: {
     program: ['analytics', 'program'] as const,

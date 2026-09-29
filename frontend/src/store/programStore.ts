@@ -22,6 +22,14 @@ interface ProgramStore {
   /** Revision of the server copy this state was loaded from; sent on save so a
    *  stale write is rejected instead of clobbering newer work. */
   revision: string | null
+  /**
+   * Which archived program version the loaded program is.
+   *
+   * What makes it possible to tell a match on *this* week 3 Monday from one
+   * recorded against a plan that has since been replaced — see
+   * lib/sessionMatching.ts. Read-only: the server derives it.
+   */
+  programVersionId: string | null
   setCurrentProgram: (program: GeneratedProgram | null) => void
   /** Set program + all metadata atomically and persist to server. Use after generation. */
   setFullProgram: (
@@ -71,6 +79,7 @@ const EMPTY_PROGRAM_STATE = {
   sourceGoalIds: [] as string[],
   sourceGoalWeights: {} as Record<string, number>,
   revision: null,
+  programVersionId: null,
 } as const
 
 export const useProgramStore = create<ProgramStore>()((set, get) => ({
@@ -83,6 +92,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   sourceGoalIds: [],
   sourceGoalWeights: {},
   revision: null,
+  programVersionId: null,
 
   setCurrentProgram: (currentProgram) => {
     set({ currentProgram })
@@ -200,6 +210,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         sourceGoalIds:     data?.sourceGoalIds ?? [],
         sourceGoalWeights: data?.sourceGoalWeights ?? {},
         revision:          data?.revision ?? null,
+        programVersionId:  data?.programVersionId ?? null,
       })
     } catch (err) {
       // The request failed — which is NOT the same as having no program.
