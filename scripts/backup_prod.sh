@@ -37,11 +37,20 @@ SCRATCH=training_restore_check
 echo "restoring into local $SCRATCH"
 dropdb --if-exists "$SCRATCH"
 createdb "$SCRATCH"
-# Benign on a local server older than prod: SET transaction_timeout (PG17-only
-# GUC) and CREATE SCHEMA public (already there). Anything else is a real error.
-"$PG_BIN/pg_restore" -d "$SCRATCH" --no-owner --no-privileges "$OUT" 2>&1 \
-  | grep -v 'transaction_timeout\|schema "public" already exists\|^pg_restore: warning\|^Command was:' \
-  | grep 'error' && { echo "restore reported errors above" >&2; exit 1; } || true
+# Expected on a local server: SET transaction_timeout (a PG17-only GUC), CREATE
+# SCHEMA public (already there), and the RLS policies that call auth.uid() —
+# there is no Supabase `auth` schema locally, so those policies do not restore
+# and the data does. Anything else is a real error and fails the run.
+restore_log=$(mktemp)
+"$PG_BIN/pg_restore" -d "$SCRATCH" --no-owner --no-privileges "$OUT" >"$restore_log" 2>&1 || true
+if grep 'error' "$restore_log" \
+     | grep -v 'transaction_timeout\|schema "public" already exists\|schema "auth" does not exist' \
+     | grep -q .; then
+  grep -v '^Command was:' "$restore_log" >&2
+  echo "restore reported unexpected errors above" >&2
+  rm -f "$restore_log"; exit 1
+fi
+rm -f "$restore_log"
 
 echo "row counts  prod | restored"
 status=0
