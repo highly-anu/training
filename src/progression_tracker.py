@@ -139,10 +139,68 @@ def _relevant_metrics(priorities: dict) -> list[str]:
     return _PHILOSOPHY_METRICS.get(dominant, ['duration', 'hr', 'distance'])
 
 
+def _session_records(program: dict, history_sessions: list[dict] | None = None,
+                     active_version_id: str | None = None) -> list[dict]:
+    """Every planned session worth considering, across the athlete's history.
+
+    Previously both readers below walked `program['weeks']` — the ONE stored
+    program — and dropped anything they could not resolve there, so every
+    matched session and every logged set from a block the athlete had replaced
+    silently vanished from progression. History records come first and carry a
+    `session_uid`, which is unambiguous; the current program is then added only
+    for sessions history does not already cover, so a program that has not been
+    archived yet (or a local dev run with no database) still works exactly as
+    before.
+    """
+    records: list[dict] = []
+    covered: set[tuple] = set()
+    active_prefix = (active_version_id + ':') if active_version_id else None
+
+    for h in (history_sessions or []):
+        legacy = h['legacy_key']
+        records.append({
+            'week_number':   h['week_number'],
+            'day_name':      h['day_name'],
+            'session_index': h['session_index'],
+            'session':       h['session'],
+            'date':          h.get('date') or '',
+            'session_uid':   h['session_uid'],
+            'version_id':    h['program_version_id'],
+            'phase':         h.get('phase'),
+            # Most specific first: a day-level key is shared by every program's
+            # same weekday, so it must never win over an exact one.
+            'keys':          [legacy, legacy.rsplit('-', 1)[0]],
+        })
+        if active_prefix and h['session_uid'].startswith(active_prefix):
+            covered.add((h['week_number'], h['day_name'], h['session_index']))
+
+    for week in program.get('weeks', []):
+        week_num = week.get('week_number', 1)
+        for day_name, sessions in (week.get('schedule') or {}).items():
+            for s_idx, session in enumerate(sessions or []):
+                if (week_num, day_name, s_idx) in covered:
+                    continue
+                base = f'{week_num}-{day_name}'
+                records.append({
+                    'week_number':   week_num,
+                    'day_name':      day_name,
+                    'session_index': s_idx,
+                    'session':       session,
+                    'date':          '',
+                    'session_uid':   None,
+                    'version_id':    None,
+                    'phase':         week.get('phase'),
+                    'keys':          [f'{base}-{s_idx}', base],
+                })
+    return records
+
+
 def compute_matched_sessions(
     matches: list[dict],
     workout_map: dict,
     program: dict,
+    history_sessions: list[dict] | None = None,
+    active_version_id: str | None = None,
 ) -> list[dict]:
     """
     Return a session-level summary for every non-rejected matched workout.
@@ -152,17 +210,19 @@ def compute_matched_sessions(
     signals (duration delta, modality match quality).  Results are sorted
     by date descending so the most recent session appears first.
     """
-    # Build session index: key → (week_num, day_name, session_dict)
-    session_index: dict[str, tuple[int, str, dict]] = {}
-    for week in program.get('weeks', []):
-        week_num = week.get('week_number', 1)
-        for day_name, sessions in week.get('schedule', {}).items():
-            for s_idx, session in enumerate(sessions):
-                key_base = f"{week_num}-{day_name}"
-                key_idx  = f"{key_base}-{s_idx}"
-                entry    = (week_num, day_name, session)
-                session_index.setdefault(key_base, entry)
-                session_index[key_idx] = entry
+    records = _session_records(program, history_sessions, active_version_id)
+
+    # Two indexes. `by_uid` is exact — it names one session of one program
+    # version. `by_key` is the legacy program-relative key, which means a
+    # different session in every plan, so it is only consulted for a match that
+    # has no uid (one stored before this existed, or one nothing could resolve).
+    by_uid: dict[str, dict] = {}
+    by_key: dict[str, dict] = {}
+    for record in records:
+        if record['session_uid']:
+            by_uid[record['session_uid']] = record
+        for key in record['keys']:
+            by_key.setdefault(key, record)
 
     priorities     = (program.get('goal') or {}).get('priorities') or {}
     relevant_mets  = _relevant_metrics(priorities)
@@ -174,10 +234,12 @@ def compute_matched_sessions(
         if not workout:
             continue
 
-        session_entry = session_index.get(session_key)
-        if not session_entry:
+        record = by_uid.get(match.get('sessionUid') or '') or by_key.get(session_key)
+        if not record:
             continue
-        week_num, day_name, session = session_entry
+        week_num  = record['week_number']
+        day_name  = record['day_name']
+        session   = record['session']
 
         archetype       = session.get('archetype') or {}
         modality        = session.get('modality') or session.get('primary_modality') or ''
@@ -264,12 +326,21 @@ def compute_exercise_history(
     session_logs: dict,
     program: dict,
     matched_workouts: list[dict] | None = None,
+    history_sessions: list[dict] | None = None,
+    logs_by_uid: dict | None = None,
+    active_version_id: str | None = None,
 ) -> dict:
     """
-    Returns {exerciseId: [HistoryPoint, ...]} sorted by week_number.
+    Returns {exerciseId: [HistoryPoint, ...]} sorted by date.
+
+    Sorted by date, not by week number: week 3 of two different training blocks
+    is not one point in a progression, and ordering by week number interleaved
+    them into a sawtooth. `history_sessions` is what makes more than one block
+    visible at all — without it this walked only the stored program and every
+    set logged under a replaced one was invisible.
 
     HistoryPoint: {
-        date, week_number, session_key,
+        date, week_number, session_key, session_uid, program_version_id,
         best_weight_kg, total_volume, est_1rm,
         best_reps, rpe, duration_sec, distance_km, rounds_completed,
         source?  # 'matched_workout' when synthesized from an import
@@ -281,98 +352,117 @@ def compute_exercise_history(
     slot types only).  Manual logs always take priority over matched workouts.
     """
     history: dict[str, list[dict]] = {}
+    logs_by_uid = logs_by_uid or {}
 
-    # Index matched workouts by session key (rejected matches excluded by caller)
+    # Matched workouts, indexed both ways. The uid is exact; the legacy key is
+    # program-relative and only consulted for a match that has no uid.
     match_by_key: dict[str, dict] = {}
+    match_by_uid: dict[str, dict] = {}
     for mw in (matched_workouts or []):
+        wo = mw.get('workout')
+        if not wo:
+            continue
+        if mw.get('sessionUid'):
+            match_by_uid[mw['sessionUid']] = wo
         key = mw.get('sessionKey', '')
-        wo  = mw.get('workout')
-        if key and wo:
-            match_by_key[key] = wo
+        if key:
+            match_by_key.setdefault(key, wo)
 
-    for week in program.get('weeks', []):
-        week_num = week.get('week_number', 1)
-        for day_name, sessions in week.get('schedule', {}).items():
-            for s_idx, session in enumerate(sessions):
-                key_base = f"{week_num}-{day_name}"
-                key_idx  = f"{key_base}-{s_idx}"
-                log = session_logs.get(key_base) or session_logs.get(key_idx)
+    for record in _session_records(program, history_sessions, active_version_id):
+        week_num  = record['week_number']
+        session   = record['session']
+        uid       = record['session_uid']
+        key_idx   = record['keys'][0]
+        key_base  = record['keys'][1]
+        planned_date = record.get('date') or ''
 
-                if log:
-                    # ── Manual log path ──────────────────────────────────────
-                    completed_at  = log.get('completedAt') or ''
-                    log_exercises = log.get('exercises') or {}
+        log = logs_by_uid.get(uid) if uid else None
+        if log is None:
+            log = session_logs.get(key_idx) or session_logs.get(key_base)
 
-                    for ea in session.get('exercises', []):
-                        if ea.get('meta') or ea.get('injury_skip'):
-                            continue
-                        ex    = ea.get('exercise') or {}
-                        ex_id = ex.get('id', '')
-                        if not ex_id:
-                            continue
+        if log:
+            # ── Manual log path ──────────────────────────────────────
+            completed_at  = log.get('completedAt') or planned_date
+            log_exercises = log.get('exercises') or {}
 
-                        ex_log = log_exercises.get(ex_id)
-                        if not ex_log:
-                            continue
+            for ea in session.get('exercises', []):
+                if ea.get('meta') or ea.get('injury_skip'):
+                    continue
+                ex    = ea.get('exercise') or {}
+                ex_id = ex.get('id', '')
+                if not ex_id:
+                    continue
 
-                        sets_data      = ex_log.get('sets') or []
-                        completed_sets = [s for s in sets_data if s.get('completed')]
+                ex_log = log_exercises.get(ex_id)
+                if not ex_log:
+                    continue
 
-                        point: dict = {
-                            'date':             completed_at,
-                            'week_number':      week_num,
-                            'session_key':      key_base,
-                            'best_weight_kg':   None,
-                            'total_volume':     None,
-                            'est_1rm':          None,
-                            'best_reps':        None,
-                            'rpe':              ex_log.get('rpe'),
-                            'duration_sec':     None,
-                            'distance_km':      None,
-                            'rounds_completed': None,
-                            'hr_avg':           None,
-                            'hr_max':           None,
-                        }
+                sets_data      = ex_log.get('sets') or []
+                completed_sets = [s for s in sets_data if s.get('completed')]
 
-                        weights   = [s['weightKg']   for s in completed_sets if s.get('weightKg')]
-                        reps_list = [s['repsActual']  for s in completed_sets if s.get('repsActual')]
+                point: dict = {
+                    'date':             completed_at,
+                    'week_number':      week_num,
+                    'session_key':      key_base,
+                    'session_uid':      uid,
+                    'program_version_id': record['version_id'],
+                    'best_weight_kg':   None,
+                    'total_volume':     None,
+                    'est_1rm':          None,
+                    'best_reps':        None,
+                    'rpe':              ex_log.get('rpe'),
+                    'duration_sec':     None,
+                    'distance_km':      None,
+                    'rounds_completed': None,
+                    'hr_avg':           None,
+                    'hr_max':           None,
+                }
 
-                        if weights:
-                            point['best_weight_kg'] = max(weights)
-                        if reps_list:
-                            point['best_reps'] = max(reps_list)
-                        if weights and reps_list:
-                            best_idx = weights.index(max(weights))
-                            w = weights[best_idx]
-                            r = reps_list[min(best_idx, len(reps_list) - 1)]
-                            point['est_1rm'] = round(w * (1 + 0.0333 * r), 1)
-                            point['total_volume'] = round(
-                                sum(w2 * r2 for w2, r2 in zip(weights, reps_list)), 1
-                            )
+                weights   = [s['weightKg']   for s in completed_sets if s.get('weightKg')]
+                reps_list = [s['repsActual']  for s in completed_sets if s.get('repsActual')]
 
-                        if ex_log.get('durationSec'):
-                            point['duration_sec'] = ex_log['durationSec']
-                        if ex_log.get('distanceKm'):
-                            point['distance_km'] = ex_log['distanceKm']
-                        if ex_log.get('rounds'):
-                            point['rounds_completed'] = ex_log['rounds']
+                if weights:
+                    point['best_weight_kg'] = max(weights)
+                if reps_list:
+                    point['best_reps'] = max(reps_list)
+                if weights and reps_list:
+                    best_idx = weights.index(max(weights))
+                    w = weights[best_idx]
+                    r = reps_list[min(best_idx, len(reps_list) - 1)]
+                    point['est_1rm'] = round(w * (1 + 0.0333 * r), 1)
+                    point['total_volume'] = round(
+                        sum(w2 * r2 for w2, r2 in zip(weights, reps_list)), 1
+                    )
 
-                        history.setdefault(ex_id, []).append(point)
+                if ex_log.get('durationSec'):
+                    point['duration_sec'] = ex_log['durationSec']
+                if ex_log.get('distanceKm'):
+                    point['distance_km'] = ex_log['distanceKm']
+                if ex_log.get('rounds'):
+                    point['rounds_completed'] = ex_log['rounds']
 
-                else:
-                    # ── Matched workout fallback ──────────────────────────────
-                    workout = match_by_key.get(key_base) or match_by_key.get(key_idx)
-                    if not workout:
-                        continue
-                    result = _primary_endurance_exercise(session)
-                    if not result:
-                        continue
-                    ex_id, _ex, _slot = result
-                    point = _workout_to_history_point(workout, week_num, key_base)
-                    history.setdefault(ex_id, []).append(point)
+                history.setdefault(ex_id, []).append(point)
+
+        else:
+            # ── Matched workout fallback ──────────────────────────────
+            workout = (match_by_uid.get(uid) if uid else None)
+            if workout is None:
+                workout = match_by_key.get(key_idx) or match_by_key.get(key_base)
+            if not workout:
+                continue
+            result = _primary_endurance_exercise(session)
+            if not result:
+                continue
+            ex_id, _ex, _slot = result
+            point = _workout_to_history_point(workout, week_num, key_base)
+            point['session_uid'] = uid
+            point['program_version_id'] = record['version_id']
+            history.setdefault(ex_id, []).append(point)
 
     for ex_id in history:
-        history[ex_id].sort(key=lambda p: (p['week_number'], p['date']))
+        # By date, so two blocks' week 3 do not interleave. Points with no date
+        # (a log that was never completed) sort first rather than being dropped.
+        history[ex_id].sort(key=lambda p: (p.get('date') or '', p['week_number']))
 
     return history
 
@@ -685,10 +775,18 @@ def compute_progression_review(
     bio_logs: list[dict],
     session_logs: dict,
     period: str = 'weekly',
+    history_sessions: list[dict] | None = None,
+    logs_by_uid: dict | None = None,
+    active_version_id: str | None = None,
 ) -> dict:
     """
     Builds a full ProgressionReview dict.
     Returns a minimal result with insufficient_data flag when data is sparse.
+
+    The history arguments are passed straight through to
+    compute_exercise_history: a review that can only see the stored program
+    reports "insufficient data" for an athlete whose training is all in blocks
+    they have since replaced.
     """
     period_key  = _current_period_key(period)
     weeks       = program.get('weeks', [])
@@ -732,7 +830,12 @@ def compute_progression_review(
             readiness_trend = 'improving'
 
     # Exercise history
-    ex_history = compute_exercise_history(session_logs, program)
+    ex_history = compute_exercise_history(
+        session_logs, program,
+        history_sessions=history_sessions,
+        logs_by_uid=logs_by_uid,
+        active_version_id=active_version_id,
+    )
 
     # Need ≥ 2 exercises with ≥ 2 data points
     usable = {eid: pts for eid, pts in ex_history.items() if len(pts) >= 2}

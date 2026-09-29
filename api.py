@@ -660,6 +660,25 @@ def _wrap_generated_program(generated: dict, body: dict, existing) -> dict:
     }
 
 
+def _record_program_history(user_id: str, envelope: dict, source: str,
+                            revision: str | None = None) -> dict:
+    """Archive a stored program into the history, never failing the save.
+
+    Idempotent on the plan's skeleton, so the three self-healing re-saves below
+    and every iOS round-trip are no-ops rather than new history entries. A
+    failure here must not fail the program save that triggered it — an
+    unarchived program is recoverable (the next GET archives it), a 503 on a
+    program save is not.
+    """
+    try:
+        from src import program_history
+        return program_history.record_version(user_id, envelope, source=source,
+                                              source_revision=revision)
+    except Exception as e:
+        app.logger.warning('program history record failed: %s', e)
+        return {'recorded': False, 'versionId': None, 'reason': str(e)}
+
+
 @app.post('/api/programs/generate')
 @require_auth
 def generate_program():
@@ -687,9 +706,14 @@ def generate_program():
             import json as _json
             resp_data = _json.loads(resp.get_data(as_text=True))
             if isinstance(resp_data, dict) and resp_data.get('weeks') is not None:
-                save_user_program(g.user_id,
-                                  _wrap_generated_program(resp_data, body,
-                                                          get_user_program(g.user_id)))
+                envelope = _wrap_generated_program(resp_data, body,
+                                                   get_user_program(g.user_id))
+                save_user_program(g.user_id, envelope)
+                # Archive what we just made the active plan. This is the richest
+                # copy that will ever exist — iOS strips `goal` and every `slot`
+                # when it saves — so capturing it here matters.
+                from src.db import get_program_revision as _rev
+                _record_program_history(g.user_id, envelope, 'generate', _rev(g.user_id))
         except Exception as _save_err:
             app.logger.warning('generate: auto-save failed: %s', _save_err)
         return resp
@@ -1886,7 +1910,24 @@ def get_user_program_endpoint():
                     app.logger.warning('program heal error: %s', heal_err)
         if isinstance(program, dict):
             from src.db import get_program_revision
-            program['revision'] = get_program_revision(user_id)
+            revision = get_program_revision(user_id)
+            program['revision'] = revision
+
+            # Bootstrap the history for a program that predates it, and for one
+            # generated before this endpoint last ran. Guarded by the revision
+            # the response already carries, so the common case is one indexed
+            # lookup rather than hashing a ~1 MB envelope on every app open.
+            #
+            # Archiving on READ, not only on write, is what preserves the full
+            # copy: an iOS save strips `goal` and every exercise's `slot`, both
+            # of which the progression endpoints read.
+            from src import program_history
+            try:
+                if not program_history.is_archived(user_id, revision):
+                    _record_program_history(user_id, program, 'heal', revision)
+                program['programVersionId'] = program_history.active_version_id(user_id)
+            except Exception as hist_err:
+                app.logger.warning('program history bootstrap failed: %s', hist_err)
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
@@ -1995,7 +2036,16 @@ def save_user_program_endpoint():
             body['currentProgram'] = current
 
         save_user_program(user_id, body)
-        return jsonify({'saved': True, 'revision': get_program_revision(user_id)})
+        revision = get_program_revision(user_id)
+        # After the save and after the 409 check: history must never claim a
+        # plan the stale-revision guard rejected.
+        history = _record_program_history(user_id, body, 'put', revision)
+        return jsonify({
+            'saved':            True,
+            'revision':         revision,
+            'historyRecorded':  bool(history.get('recorded')),
+            'programVersionId': history.get('versionId'),
+        })
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
@@ -2006,6 +2056,128 @@ def save_user_program_endpoint():
 # ---------------------------------------------------------------------------
 # A watch mints a pending pairing with no auth, shows the code (QR/text), then
 # polls status until a signed-in user claims the code and binds the token.
+
+# ---------------------------------------------------------------------------
+# Program history
+# ---------------------------------------------------------------------------
+# Answers the two questions a single mutable user_programs row could not: which
+# plan was in force when, and what did it plan for a given day. Both matter after
+# a program has been replaced — see src/program_history.py.
+
+@app.get('/api/programs/history')
+@require_auth
+def programs_history():
+    """The athlete's program timeline, newest first."""
+    from src import program_history
+    return jsonify(program_history.list_activations(g.user_id))
+
+
+@app.get('/api/programs/history/<version_id>')
+@require_auth
+def programs_history_version(version_id: str):
+    """One archived program: its frozen envelope and its flattened sessions.
+
+    The sessions are NOT filtered by the activation interval — browsing a
+    finished block should show the whole plan, including the weeks it never got
+    to run, with `wasEffective` saying which is which.
+    """
+    from src import program_history
+    version = program_history.get_version(g.user_id, version_id)
+    if not version:
+        return jsonify({'error': 'not_found'}), 404
+
+    activations = [a for a in program_history.list_activations(g.user_id)
+                   if a['versionId'] == version_id]
+    windows = [(a['effectiveFrom'], a['effectiveTo']) for a in activations]
+
+    def was_effective(day: str) -> bool:
+        return any(day >= start and (end is None or day < end) for start, end in windows)
+
+    # Same join the planned-sessions endpoint does: the page shows what was
+    # planned AND what came of it, and without these the detail view could never
+    # render the logged/matched markers it draws.
+    matches = {m['sessionUid']: m for m in _health.get_matches(g.user_id)
+               if m.get('sessionUid') and m['matchConfidence'] != 'rejected'}
+    logs = _health.get_session_logs_by_uid(g.user_id)
+
+    sessions = []
+    for row in program_history.sessions_for_version(g.user_id, version_id):
+        day = str(row['date'])
+        match = matches.get(row['session_uid'])
+        sessions.append({
+            'sessionUid':     row['session_uid'],
+            'date':           day,
+            'weekIndex':      row['week_index'],
+            'weekNumber':     row['week_number'],
+            'dayName':        row['day_name'],
+            'sessionIndex':   row['session_index'],
+            'sessionKey':     row['legacy_key'],
+            'modality':       row['modality'],
+            'archetypeId':    row['archetype_id'],
+            'archetypeName':  row['archetype_name'],
+            'durationMinutes': row['duration_min'],
+            'phase':          row['phase'],
+            'isDeload':       row['is_deload'],
+            'wasEffective':   was_effective(day),
+            'matchedWorkoutId': match['importedWorkoutId'] if match else None,
+            'completedAt':    (logs.get(row['session_uid']) or {}).get('completedAt') or None,
+        })
+
+    version['activations'] = activations
+    version['sessions'] = sessions
+    return jsonify(version)
+
+
+@app.get('/api/programs/planned-sessions')
+@require_auth
+def programs_planned_sessions():
+    """What was actually planned on each day in a range, across every program.
+
+    `from` and `to` are inclusive ISO dates; the range defaults to the last 90
+    days. Each session carries the match and the log attached to it, so a
+    calendar or a confirm dialog can show planned against actual for a date that
+    belongs to a block the athlete has long since replaced.
+    """
+    from src import program_history
+    try:
+        to_date = _date.fromisoformat(request.args.get('to') or str(_date.today()))
+        from_date = _date.fromisoformat(
+            request.args.get('from') or str(to_date - _timedelta(days=90)))
+    except ValueError:
+        return jsonify({'error': 'bad_date'}), 400
+    if from_date > to_date:
+        from_date, to_date = to_date, from_date
+
+    rows = program_history.planned_sessions_between(g.user_id, str(from_date), str(to_date))
+
+    matches = {m['sessionUid']: m for m in _health.get_matches(g.user_id)
+               if m.get('sessionUid') and m['matchConfidence'] != 'rejected'}
+    logs = _health.get_session_logs_by_uid(g.user_id)
+
+    out = []
+    for row in rows:
+        uid = row['session_uid']
+        match = matches.get(uid)
+        out.append({
+            'sessionUid':      uid,
+            'programVersionId': row['program_version_id'],
+            'date':            str(row['date']),
+            'weekIndex':       row['week_index'],
+            'weekNumber':      row['week_number'],
+            'dayName':         row['day_name'],
+            'sessionIndex':    row['session_index'],
+            'sessionKey':      row['legacy_key'],
+            'modality':        row['modality'],
+            'archetypeId':     row['archetype_id'],
+            'archetypeName':   row['archetype_name'],
+            'durationMinutes': row['duration_min'],
+            'phase':           row['phase'],
+            'isDeload':        row['is_deload'],
+            'matchedWorkoutId': match['importedWorkoutId'] if match else None,
+            'completedAt':     (logs.get(uid) or {}).get('completedAt') or None,
+        })
+    return jsonify({'from': str(from_date), 'to': str(to_date), 'sessions': out})
+
 
 @app.post('/api/devices/pair')
 def devices_pair():
@@ -2469,6 +2641,30 @@ def health_upsert_session_notes(session_key: str):
         log['fatigueRating'] = body['fatigueRating']
     _health.upsert_session_log(g.user_id, log)
     return jsonify({'saved': session_key})
+
+
+@app.put('/api/health/sessions/by-uid/<path:session_uid>')
+@require_auth
+def health_upsert_session_by_uid(session_uid: str):
+    """Write a session log against a planned session's durable identity.
+
+    The route below takes the program-relative key ('3-Monday-0'), which names a
+    different session in every plan the athlete has ever had; the server has to
+    guess which program is meant. A client that knows the session_uid — which
+    GET /api/programs/planned-sessions hands out — says it outright, and the log
+    is unambiguous even for a session in a block that has since been replaced.
+
+    The session key is still stored alongside, because plenty of readers speak
+    only that; it is recovered from the uid when the body omits it.
+    """
+    log = request.get_json(silent=True) or {}
+    log['sessionUid'] = session_uid
+    if not log.get('sessionKey'):
+        from src import program_history
+        planned = program_history.resolve_session(g.user_id, session_uid=session_uid)
+        log['sessionKey'] = planned['legacy_key'] if planned else session_uid
+    _health.upsert_session_log(g.user_id, log)
+    return jsonify({'saved': session_uid, 'sessionKey': log['sessionKey']})
 
 
 @app.put('/api/health/sessions/<path:session_key>')
@@ -2935,6 +3131,29 @@ def analytics_program():
     return jsonify(doc)
 
 
+def _progression_history(user_id: str, matches: list[dict]) -> dict:
+    """The cross-program context the progression readers need.
+
+    Bounded on purpose: it looks up only the sessions something is attached to —
+    every match and every log — rather than every snapshot the athlete has ever
+    had. Degrades to empty, and the readers then behave exactly as they did when
+    they could only see the stored program.
+    """
+    try:
+        from src import program_history
+        logs_by_uid = _health.get_session_logs_by_uid(user_id)
+        uids = {m['sessionUid'] for m in matches if m.get('sessionUid')}
+        uids |= set(logs_by_uid)
+        return {
+            'history_sessions':  program_history.session_lookup(user_id, sorted(uids)),
+            'logs_by_uid':       logs_by_uid,
+            'active_version_id': program_history.active_version_id(user_id),
+        }
+    except Exception as e:
+        app.logger.warning('progression history context failed: %s', e)
+        return {'history_sessions': [], 'logs_by_uid': {}, 'active_version_id': None}
+
+
 @app.get('/api/progression/review')
 @require_auth
 def progression_review():
@@ -2971,12 +3190,16 @@ def progression_review():
     # Compute fresh
     # program_data may be the full GeneratedProgram or wrapped {currentProgram: ...}
     program = program_data.get('currentProgram') or program_data
+    ctx = _progression_history(g.user_id, _health.get_matches(g.user_id))
     review = _pt.compute_progression_review(
         user_id=g.user_id,
         program=program,
         bio_logs=bio_logs,
         session_logs=session_logs,
         period=period,
+        history_sessions=ctx['history_sessions'],
+        logs_by_uid=ctx['logs_by_uid'],
+        active_version_id=ctx['active_version_id'],
     )
 
     # The per-exercise findings come from the program analytics engine, which
@@ -3031,12 +3254,19 @@ def progression_exercises():
     workouts   = _health.get_workouts(g.user_id)
     wo_map     = {wo['id']: wo for wo in workouts}
     matched_wos = [
-        {'sessionKey': m['sessionKey'], 'workout': wo_map[m['importedWorkoutId']]}
+        {'sessionKey': m['sessionKey'], 'sessionUid': m.get('sessionUid'),
+         'workout': wo_map[m['importedWorkoutId']]}
         for m in matches
         if m['matchConfidence'] != 'rejected' and m['importedWorkoutId'] in wo_map
     ]
 
-    history = _pt.compute_exercise_history(session_logs, program, matched_workouts=matched_wos)
+    ctx = _progression_history(g.user_id, matches)
+    history = _pt.compute_exercise_history(
+        session_logs, program, matched_workouts=matched_wos,
+        history_sessions=ctx['history_sessions'],
+        logs_by_uid=ctx['logs_by_uid'],
+        active_version_id=ctx['active_version_id'],
+    )
 
     # Build index: exerciseId → (exercise dict, slot dict)
     ex_index: dict = {}
@@ -3080,14 +3310,19 @@ def progression_history():
 @app.get('/api/progression/sessions')
 @require_auth
 def progression_sessions():
-    program_data = _db.get_user_program(g.user_id)
-    if not program_data:
-        return jsonify([])
+    # No `if not program_data: return []` guard: an athlete between programs
+    # still has every matched session of every block they have trained.
+    program_data = _db.get_user_program(g.user_id) or {}
     program  = program_data.get('currentProgram') or program_data
     matches  = [m for m in _health.get_matches(g.user_id) if m['matchConfidence'] != 'rejected']
     workouts = _health.get_workouts(g.user_id)
     wo_map   = {wo['id']: wo for wo in workouts}
-    return jsonify(_pt.compute_matched_sessions(matches, wo_map, program))
+    ctx      = _progression_history(g.user_id, matches)
+    return jsonify(_pt.compute_matched_sessions(
+        matches, wo_map, program,
+        history_sessions=ctx['history_sessions'],
+        active_version_id=ctx['active_version_id'],
+    ))
 
 
 if __name__ == '__main__':
