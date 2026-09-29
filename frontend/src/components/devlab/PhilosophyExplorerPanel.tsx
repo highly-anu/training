@@ -6,6 +6,9 @@ import { useFrameworks } from '@/api/frameworks'
 import { useArchetypes } from '@/api/archetypes'
 import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
+import { useAnalyticsSpecs } from '@/api/analyticsSpecs'
+import { PhilosophySetupCard } from '@/components/explore/PhilosophySetupCard'
+import { PhilosophyMeasuresCard } from '@/components/explore/PhilosophyMeasuresCard'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { SimilarItems } from '@/components/shared/SimilarItems'
@@ -1364,6 +1367,7 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
   const { data: archetypesList = [] } = useArchetypes()
   const { data: exercises = [] } = useExercises()
   const { data: modalitiesList = [] } = useModalities()
+  const { data: specs } = useAnalyticsSpecs()
 
   const [internalId, setInternalId] = useState<string>('')
   const selectedId = controlledId !== undefined ? controlledId : internalId
@@ -1500,6 +1504,21 @@ export function PhilosophyExplorerPanel({ controlledId, onBack }: { controlledId
               </button>
             )}
             {phil && <PhilosophyHeader phil={phil} frameworks={frameworks} allFrameworks={frameworksList} philosophies={philosophies} onSelectPhil={setSelectedId} />}
+
+            {/* At a glance: how it's set up, and what it tracks — side by side,
+                stacking at phone width. The disclosures below are the detail. */}
+            {phil && (() => {
+              const accentHex = MODALITY_COLORS[phil.bias[0] as ModalityId]?.hex ?? '#8b5cf6'
+              const spec = specs?.philosophies[phil.id]
+              return (
+                <div className="grid gap-3 lg:grid-cols-2 items-start">
+                  <PhilosophySetupCard phil={phil} frameworks={frameworks} accentHex={accentHex} />
+                  {spec && specs
+                    ? <PhilosophyMeasuresCard spec={spec} vocabulary={specs.vocabulary} accentHex={accentHex} />
+                    : <div className="rounded-lg border border-border/40 bg-card/40 p-4 text-[11px] text-muted-foreground">Loading what it measures…</div>}
+                </div>
+              )
+            })()}
 
             {frameworks.length === 0 ? (
               <div className="rounded-lg border border-border/40 p-4 text-center text-sm text-muted-foreground">

@@ -305,6 +305,27 @@ function BenchmarksOverview() {
           </p>
         </div>
 
+        {/* Bodyweight is a benchmark series, not a profile field: logged here
+            with the PRs, kept with its history, and what turns an estimated
+            1RM into the ×BW standards below. Without it six of them cannot be
+            read at all. */}
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
+            bodyweight
+          </h3>
+          <div className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-1">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Bodyweight</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Used to derive the ×BW strength standards from your logged sets.
+                </p>
+              </div>
+              <PrInput benchId="bodyweight_kg" unit="kg" />
+            </div>
+          </div>
+        </div>
+
         {categories.map((cat) => (
           byCategory[cat].length > 0 && (
             <div key={cat} className="space-y-3">

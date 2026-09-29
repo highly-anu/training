@@ -21,7 +21,6 @@ _STALL_RULES: dict[str, tuple[int, str, str]] = {
     'rpe_autoregulation':(3, 'weight',   'kg'),   # RPE stays high with same load
     'volume_block':      (2, 'weight',   'kg'),
     'density':           (2, 'rounds',   'rounds'),
-    'concurrent_training':(2,'weight',   'kg'),
 }
 
 _SLOT_METRIC: dict[str, tuple[str, str]] = {
@@ -447,6 +446,7 @@ def _exercise_finding(
     history: list[dict],
     expected_trajectory: list[dict],
     progression_model: str,
+    deload_weeks: set | None = None,
 ) -> dict:
     """Compares actual history against expected trajectory for one exercise."""
     if not expected_trajectory:
@@ -502,7 +502,7 @@ def _exercise_finding(
 
     # Status
     status = _status(
-        actual_points, expected_val, progression_model, metric_type
+        actual_points, expected_val, progression_model, metric_type, deload_weeks
     )
 
     # Change summary
@@ -556,16 +556,19 @@ def _status(
     expected_val: float | None,
     progression_model: str,
     metric_type: str,
+    deload_weeks: set | None = None,
 ) -> str:
     if not actual_points:
         return 'insufficient_data'
 
     latest_val = actual_points[-1][1]
 
-    # Stall: no meaningful change across last N data points
+    # Stall: no meaningful change across last N data points. Deload weeks are
+    # the program asking for less, not the athlete failing to progress.
     stall_sessions, _, _ = _STALL_RULES.get(progression_model, (2, 'weight', 'kg'))
-    if len(actual_points) >= stall_sessions + 1:
-        window = [v for _, v in actual_points[-(stall_sessions + 1):]]
+    live_points = [(wk, v) for wk, v in actual_points if wk not in (deload_weeks or ())]
+    if len(live_points) >= stall_sessions + 1:
+        window = [v for _, v in live_points[-(stall_sessions + 1):]]
         max_delta = max(window) - min(window)
         # stall if less than 1% change across window
         threshold = abs(window[0]) * 0.01 if window[0] else 0.5
@@ -695,15 +698,17 @@ def compute_progression_review(
     philosophy_weights: dict = program.get('philosophy_weights') or {}
     progression_model  = _infer_progression_model(program)
 
-    # Compliance
+    # Compliance — over the weeks that have actually happened. Counting every
+    # week of a 16-week program in week 2 reported ~12% by construction.
+    elapsed = _elapsed_weeks(program, weeks)
     total_scheduled = sum(
         len(sessions)
-        for w in weeks
+        for w in elapsed
         for sessions in w.get('schedule', {}).values()
     )
     total_completed = sum(
         1
-        for w in weeks
+        for w in elapsed
         for day_name, day_sessions in w.get('schedule', {}).items()
         for s_idx, _ in enumerate(day_sessions)
         if (f"{w['week_number']}-{day_name}" in session_logs
@@ -746,13 +751,16 @@ def compute_progression_review(
             'adjustments':       [],
         }
 
-    # Build per-exercise findings
+    # Build per-exercise findings. A deload week — flagged, or a taper — is the
+    # program asking for less, and must not read as a stall.
+    deload_weeks = {w.get('week_number') for w in weeks
+                    if w.get('is_deload') or w.get('phase') in ('deload', 'taper')}
     exercise_findings = []
     for w in weeks:
         for day_sessions in w.get('schedule', {}).values():
             for session in day_sessions:
                 modality = session.get('modality', '')
-                prog_model = progression_model
+                prog_model = _infer_progression_model(program, modality)
                 for ea in session.get('exercises', []):
                     if ea.get('meta') or ea.get('injury_skip'):
                         continue
@@ -775,6 +783,7 @@ def compute_progression_review(
                         usable[ex_id],
                         trajectory,
                         prog_model,
+                        deload_weeks,
                     )
                     # De-duplicate by exercise_id — keep first occurrence
                     if not any(f['exercise_id'] == ex_id for f in exercise_findings):
@@ -833,8 +842,35 @@ def compute_progression_review(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _infer_progression_model(program: dict) -> str:
-    """Best-effort: extract progression_model from the first framework reference in the program."""
+def _elapsed_weeks(program: dict, weeks: list) -> list:
+    """Weeks whose Monday is on or before today, when a start date is known."""
+    from datetime import date, timedelta
+    start_raw = program.get('program_start_date') or program.get('programStartDate')
+    if not start_raw:
+        return weeks
+    try:
+        start = date.fromisoformat(str(start_raw)[:10])
+    except ValueError:
+        return weeks
+    today = date.today()
+    return [w for i, w in enumerate(weeks) if start + timedelta(days=7 * i) <= today]
+
+
+def _infer_progression_model(program: dict, modality: str | None = None) -> str:
+    """The progression model that actually prescribed a modality's load.
+
+    This used to read `goal.progression_model`, which goals.py never writes, so
+    every program was analysed as linear_load. Generation reads the model from
+    the modality yaml (src/generator.py:360-363), and so does this.
+    """
+    if modality:
+        try:
+            from src import loader
+            model = (loader.load_all_modalities().get(modality) or {}).get('progression_model')
+            if model:
+                return model
+        except Exception:
+            pass
     goal = program.get('goal') or {}
     return goal.get('progression_model') or 'linear_load'
 

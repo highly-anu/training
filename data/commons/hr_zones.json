@@ -1,0 +1,19 @@
+{
+  "_comment": "Heart-rate zone edges, as fractions of max HR, read by src/analytics/zones.py (TRIMP, PMC, intensity split) and frontend/src/lib/hrZones.ts. One file so the server and the browser never bucket the same sample differently. Z2's upper edge is set near the aerobic threshold (~78% of max) so that z1+z2 corresponds to the `zone1_2` bucket every framework's intensity_distribution is written in — under the previous Friel 60/70/80/90 edges, honest Zone 2 work at 72% was counted as `zone3`, inverting Uphill Athlete's core diagnostic. Bump `version` when the edges change: cached per-workout zone metrics are keyed on it.",
+  "version": 2,
+  "upper_bounds": [0.65, 0.78, 0.87, 0.93],
+  "zones": [
+    {"key": "z1", "label": "Z1", "description": "Recovery",  "lower_pct": 0,    "upper_pct": 0.65},
+    {"key": "z2", "label": "Z2", "description": "Aerobic",   "lower_pct": 0.65, "upper_pct": 0.78},
+    {"key": "z3", "label": "Z3", "description": "Tempo",     "lower_pct": 0.78, "upper_pct": 0.87},
+    {"key": "z4", "label": "Z4", "description": "Threshold", "lower_pct": 0.87, "upper_pct": 0.93},
+    {"key": "z5", "label": "Z5", "description": "Max",       "lower_pct": 0.93, "upper_pct": 1}
+  ],
+  "banister_weights": [1.0, 1.5, 2.0, 3.0, 4.5],
+  "framework_buckets": {
+    "zone1_2_pct": ["z1", "z2"],
+    "zone3_pct":   ["z3"],
+    "zone4_5_pct": ["z4", "z5"]
+  },
+  "default_max_hr": 190
+}

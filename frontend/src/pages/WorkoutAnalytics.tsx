@@ -28,6 +28,7 @@ import {
 import { cn } from '@/lib/utils'
 import { WeeklyLoadChart } from '@/components/bio/WeeklyLoadChart'
 import { PMCChart } from '@/components/bio/PMCChart'
+import { ProgramTab } from '@/components/analytics/ProgramTab'
 import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -38,10 +39,12 @@ import { sourceShortLabel } from '@/lib/workoutSource'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'overview' | 'load' | 'activity'
+type SubTab = 'program' | 'overview' | 'load' | 'activity'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
 const SUB_TABS: { id: SubTab; label: string }[] = [
+  // Program first: what the training is for, before what the watch recorded.
+  { id: 'program',  label: 'Program'  },
   { id: 'overview', label: 'Overview' },
   { id: 'load',     label: 'Load'     },
   { id: 'activity', label: 'Activity' },
@@ -757,7 +760,7 @@ function ActivityTab({ period }: { period: Period }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function WorkoutAnalytics() {
-  const [activeTab, setActiveTab] = useState<SubTab>('overview')
+  const [activeTab, setActiveTab] = useState<SubTab>('program')
   const [period, setPeriod] = useState<Period>('30d')
 
   return (
@@ -780,6 +783,7 @@ export function WorkoutAnalytics() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
+        {activeTab === 'program'   && <ProgramTab />}
         {activeTab === 'overview'  && <OverviewTab  period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'load'      && <LoadTab      period={period} />}
         {activeTab === 'activity'  && <ActivityTab  period={period} />}

@@ -188,36 +188,16 @@ def _cell_benchmarks() -> list[dict]:
     return result
 
 
-def _all_benchmarks() -> list[dict]:
-    result = []
-    for fname in ('strength_standards.yaml', 'conditioning_standards.yaml'):
-        path = os.path.join(_DATA_DIR, 'benchmarks', fname)
-        items = _load_yaml(path) or []
-        for item in items:
-            domain = item.get('domain', '')
-            metric_type = item.get('metric_type', '')
-            levels = item.get('levels', {})
-            standards: dict[str, float] = {}
-            for lvl in ('entry', 'intermediate', 'advanced', 'elite'):
-                lvl_data = levels.get(lvl, {})
-                val = lvl_data.get('male') if isinstance(lvl_data, dict) else None
-                if val is not None:
-                    standards[lvl] = val
-            if len(standards) < 4:
-                continue
-            b: dict = {
-                'id':              item['id'],
-                'name':            item['name'],
-                'category':        _BENCHMARK_CATEGORY_MAP.get(domain, 'conditioning'),
-                'unit':            _BENCHMARK_UNIT_MAP.get(metric_type, ''),
-                'standards':       standards,
-                'lower_is_better': bool(item.get('lower_is_better', False)),
-            }
-            if item.get('notes'):
-                b['notes'] = item['notes'].strip()
-            result.append(b)
-    result.extend(_cell_benchmarks())
-    return result
+def _all_benchmarks(sex: str = 'male') -> list[dict]:
+    """Every benchmark in the client shape — now with the fields it never got.
+
+    Delegates to src/analytics/benchmarks_data.py, which keeps `sources`,
+    `goal_relevance`, `domain`, `metric_type` and the female values that this
+    used to drop. `sources` is the only authored link from a standard to a
+    philosophy, and program analytics is built on it.
+    """
+    from src.analytics import benchmarks_data as _bd
+    return [_bd.to_client(b, sex) for b in _bd.load_benchmarks()]
 
 
 def _week_volume(week_data: dict) -> dict:
@@ -2449,10 +2429,47 @@ def health_recent_bio():
     return jsonify(_health.get_recent_bio_logs(g.user_id))
 
 
+def _normalise_fatigue(log: dict) -> dict:
+    """Fatigue is 1–5 on the web and in the type; the iOS slider sends 1–10.
+
+    _score_fatigue assumes 1–5, so an iOS 7/10 read as "high accumulated
+    fatigue". Anything above 5 is folded onto the 1–5 scale here, once, at the
+    boundary, rather than in every reader.
+    """
+    import math
+    for key in ('fatigueRating', 'fatigue_rating'):
+        v = log.get(key)
+        if isinstance(v, (int, float)) and v > 5:
+            log[key] = int(math.ceil(v / 2))
+    if 'fatigue_rating' in log and 'fatigueRating' not in log:
+        log['fatigueRating'] = log.pop('fatigue_rating')
+    return log
+
+
+@app.put('/api/health/sessions/<path:session_key>/notes')
+@require_auth
+def health_upsert_session_notes(session_key: str):
+    """Notes and fatigue only — the route the iOS app has been calling.
+
+    It never existed: `<path:session_key>` on the route below swallowed the
+    `/notes` suffix, so every note and fatigue rating the phone saved landed in
+    a phantom row keyed "1-Monday-0/notes" and was invisible to analytics.
+    Registered with a static suffix, which werkzeug ranks above the path
+    catch-all; test_program_analytics.py asserts the routing.
+    """
+    body = _normalise_fatigue(request.get_json(silent=True) or {})
+    log = {'sessionKey': session_key, 'notes': body.get('notes', ''),
+           'exercises': {}, 'source': body.get('source') or 'ios'}
+    if body.get('fatigueRating') is not None:
+        log['fatigueRating'] = body['fatigueRating']
+    _health.upsert_session_log(g.user_id, log)
+    return jsonify({'saved': session_key})
+
+
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):
-    log = request.get_json(silent=True) or {}
+    log = _normalise_fatigue(request.get_json(silent=True) or {})
     log['sessionKey'] = session_key
     _health.upsert_session_log(g.user_id, log)
     return jsonify({'saved': session_key})
@@ -2649,81 +2666,35 @@ _DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
 
 
 def _get_user_max_hr(user_id: str) -> int:
-    """Return user's max HR from hrConfig override, or 190 as default."""
+    """hrConfig override → 220 − age → the shared default.
+
+    Used to ignore date of birth and fall back to 190, so the server's zones
+    and TRIMP disagreed with the browser's for anyone who had set a DOB but no
+    override. The resolution now lives with the analytics engine so every
+    zone number on every platform starts from the same max HR.
+    """
+    from datetime import date as _d
+    from src.analytics.context import AnalyticsInputs, Context
+    from src.analytics.primitives import max_hr_for
     try:
         from src.db import get_user_profile
         profile = get_user_profile(user_id) or {}
-        hr_config = profile.get('hrConfig') or {}
-        override = hr_config.get('maxHROverride')
-        if override and int(override) > 0:
-            return int(override)
     except Exception:
-        pass
-    return 190
+        profile = {}
+    ctx = Context(AnalyticsInputs({}, _d.today(), _d.today(), profile=profile),
+                  frameworks={}, modalities={})
+    return int(round(max_hr_for(ctx)))
 
 
 def _calc_workout_trimp(workout: dict, max_hr: int = 190) -> float:
-    """Compute TRIMP for a single workout using Banister zone-minute weights."""
-    from statistics import median as _median
+    """Banister zone-minute TRIMP for one workout.
 
-    duration_min = workout.get('durationMinutes') or 0
-    if duration_min <= 0:
-        return 0.0
-
-    hr_data = workout.get('heartRate') or {}
-    samples = hr_data.get('samples') or []
-    boundaries = _DEFAULT_ZONE_BOUNDARIES
-
-    def _assign_zone(bpm: float) -> int:
-        pct = bpm / max_hr
-        for i, b in enumerate(boundaries):
-            if pct < b:
-                return i
-        return 4
-
-    if len(samples) >= 2:
-        try:
-            sorted_samples = sorted(samples, key=lambda s: s['timestamp'])
-            zone_times = [0.0] * 5
-            total = 0.0
-            for i in range(len(sorted_samples) - 1):
-                from datetime import datetime, timezone as _tz
-                tA = datetime.fromisoformat(sorted_samples[i]['timestamp'].replace('Z', '+00:00')).timestamp()
-                tB = datetime.fromisoformat(sorted_samples[i + 1]['timestamp'].replace('Z', '+00:00')).timestamp()
-                interval = min((tB - tA), 60.0)
-                if interval <= 0:
-                    continue
-                z = _assign_zone(sorted_samples[i]['bpm'])
-                zone_times[z] += interval
-                total += interval
-            if total > 0:
-                zone_pcts = [t / total for t in zone_times]
-                return sum(pct * duration_min * _BANISTER_WEIGHTS[i] for i, pct in enumerate(zone_pcts))
-        except Exception:
-            pass
-
-    # Fallback: normal distribution estimate from avg/max HR
-    avg_hr = hr_data.get('avg')
-    max_hr_sample = hr_data.get('max')
-    if avg_hr:
-        import math as _math
-        std = max((max_hr_sample or max_hr) - avg_hr, 1) / 2.5
-
-        def _norm_cdf(x: float, mean: float, sigma: float) -> float:
-            return 0.5 * (1.0 + _math.erf((x - mean) / (sigma * _math.sqrt(2))))
-
-        bpm_bounds = [0.0] + [b * max_hr for b in boundaries] + [float('inf')]
-        zone_pcts = []
-        for i in range(5):
-            lo, hi = bpm_bounds[i], bpm_bounds[i + 1]
-            p_lo = 0.0 if lo == 0 else _norm_cdf(lo, avg_hr, std)
-            p_hi = 1.0 if hi == float('inf') else _norm_cdf(hi, avg_hr, std)
-            zone_pcts.append(max(0.0, p_hi - p_lo))
-        total = sum(zone_pcts) or 1.0
-        zone_pcts = [p / total for p in zone_pcts]
-        return sum(pct * duration_min * _BANISTER_WEIGHTS[i] for i, pct in enumerate(zone_pcts))
-
-    return 0.0
+    Delegates to src/analytics/zones.py so this, the intensity split and the
+    browser all bucket a sample from the same edges in data/commons/hr_zones.json
+    — this function used to carry its own Friel 60/70/80/90 copy.
+    """
+    from src.analytics import zones as _zones
+    return _zones.trimp(workout, float(max_hr))
 
 
 def _compute_pmc(workouts: list, max_hr: int, days: int = 90) -> list[dict]:
@@ -2850,6 +2821,115 @@ from src import progression_tracker as _pt
 from src import db as _db
 
 
+# ---------------------------------------------------------------------------
+# Program-specific analytics
+# ---------------------------------------------------------------------------
+# One document: what the active program is for, and how the athlete is doing
+# against it — per methodology, in that methodology's own currency. The engine
+# is src/analytics; this only gathers inputs and caches the result.
+
+def _program_analytics_inputs(user_id: str):
+    """Everything the engine needs, or None when there is no usable program."""
+    from datetime import date as _d
+    from src.analytics.context import AnalyticsInputs, parse_iso_date
+    from src.program_keys import normalize_program_keys
+
+    stored = _db.get_user_program(user_id)
+    if not isinstance(stored, dict):
+        return None
+    stored = normalize_program_keys(stored)
+    program = stored.get('currentProgram') or ({'weeks': stored.get('weeks')} if stored.get('weeks') else None)
+    if not program or not program.get('weeks'):
+        return None
+    start = parse_iso_date(stored.get('programStartDate') or program.get('program_start_date'))
+    if start is None:
+        return None
+
+    matches = _health.get_matches(user_id)
+    matched_ids = [m['importedWorkoutId'] for m in matches if m.get('matchConfidence') != 'rejected']
+    # Only matched workouts need their HR and GPS series; the rest of the
+    # library is summary-only. See health_store.get_workouts_by_ids.
+    workouts = _health.get_workouts_by_ids(user_id, matched_ids)
+    profile = _db.get_user_profile(user_id) or {}
+    return AnalyticsInputs(
+        program=program, start_date=start, today=_d.today(),
+        session_logs=_health.get_session_logs(user_id), matches=matches, workouts=workouts,
+        performance_logs=_health.get_performance_logs(user_id),
+        bio_logs=_health.get_recent_bio_logs(user_id, days=42), profile=profile,
+        philosophy_weights=stored.get('sourceGoalWeights') or {},
+    ), stored
+
+
+def _program_analytics_hash(inputs, stored: dict, revision) -> str:
+    """Everything that can change the document. The old progression cache
+    hashed session keys and exercise counts only, so adding sets to a logged
+    exercise, importing a workout, a new PR, a changed max HR or simply a new
+    day never invalidated it."""
+    import hashlib as _h
+    import json as _j
+    parts = [
+        str(revision), inputs.today.isoformat(),
+        _j.dumps({k: (v.get('completedAt'), sorted((ex, len((d or {}).get('sets') or []),
+                                                     (d or {}).get('rounds'), (d or {}).get('durationSec'))
+                                                    for ex, d in (v.get('exercises') or {}).items()))
+                  for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
+        _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
+                        for m in inputs.matches), default=str),
+        _j.dumps({k: len(v) for k, v in inputs.performance_logs.items()}, sort_keys=True),
+        _j.dumps(sorted(b.get('date', '') for b in inputs.bio_logs), default=str),
+        _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
+        str(inputs.profile.get('sex')),
+    ]
+    return _h.sha256('|'.join(parts).encode()).hexdigest()
+
+
+@app.get('/api/analytics/specs')
+def analytics_specs():
+    """Every package's analytics spec, described: what each philosophy tracks
+    and measures, resolved to names. Static data — no user, no program."""
+    from src.analytics.describe import describe_all
+    return jsonify(describe_all())
+
+
+@app.get('/api/analytics/program')
+@require_auth
+def analytics_program():
+    from src.analytics.document import compute_program_analytics
+    from src.db import get_program_revision
+
+    got = _program_analytics_inputs(g.user_id)
+    if got is None:
+        return jsonify({'status': 'no_program'})
+    inputs, stored = got
+    revision = get_program_revision(g.user_id)
+    period_key = f"{inputs.start_date.isoformat()}:{(stored.get('sourceGoalIds') or ['-'])[0]}"
+    digest = _program_analytics_hash(inputs, stored, revision)
+
+    if not request.args.get('fresh'):
+        cached = _health.get_progression_snapshot(g.user_id, period_key, 'program')
+        if cached and cached.get('session_hash') == digest:
+            return jsonify(cached['data'])
+
+    # The existing load numbers, computed once here and reframed by the engine.
+    load = {}
+    try:
+        max_hr = _get_user_max_hr(g.user_id)
+        all_workouts = _health.get_workouts(g.user_id, summary_only=True)
+        load['pmc'] = _compute_pmc(all_workouts, max_hr, days=90)[-14:]
+        load['readiness'] = _compute_readiness(inputs.bio_logs, inputs.session_logs, user_id=g.user_id)
+    except Exception as load_err:
+        app.logger.warning('analytics load inputs failed: %s', load_err)
+
+    doc = compute_program_analytics(inputs, load=load)
+    doc['status'] = 'ok'
+    doc['revision'] = revision
+    try:
+        _health.save_progression_snapshot(g.user_id, period_key, 'program', digest, doc)
+    except Exception as cache_err:
+        app.logger.warning('analytics snapshot save failed: %s', cache_err)
+    return jsonify(doc)
+
+
 @app.get('/api/progression/review')
 @require_auth
 def progression_review():
@@ -2893,6 +2973,33 @@ def progression_review():
         session_logs=session_logs,
         period=period,
     )
+
+    # The per-exercise findings come from the program analytics engine, which
+    # reads the stored prescription instead of replaying the generator against
+    # a slot it no longer has, and knows each modality's real progression
+    # model. The rest of the review (compliance, readiness, flags) is unchanged
+    # so iOS ProgressionView and the Dashboard keep their shape.
+    try:
+        from src.analytics.document import compute_program_analytics, progression_findings
+        got = _program_analytics_inputs(g.user_id)
+        if got is not None:
+            doc = compute_program_analytics(got[0])
+            findings = progression_findings(doc)
+            if findings:
+                review['exercise_findings'] = findings
+                statuses = [f['status'] for f in findings]
+                score_map = {'ahead': 100, 'on_track': 80, 'behind': 40, 'stalled': 20, 'insufficient_data': 50}
+                finding_score = round(sum(score_map.get(st, 50) for st in statuses) / len(statuses))
+                review['overall_score'] = round(review.get('compliance_pct', 0) * 0.4 + finding_score * 0.6)
+                review['flags'] = [f for f in review.get('flags', []) if not f.startswith(('stalled', 'behind_target', 'insufficient_data'))]
+                stalled = [f['name'] for f in findings if f['status'] == 'stalled']
+                behind = [f['name'] for f in findings if f['status'] == 'behind']
+                if stalled:
+                    review['flags'].append('stalled: ' + ', '.join(stalled))
+                if behind:
+                    review['flags'].append('behind_target: ' + ', '.join(behind))
+    except Exception as engine_err:
+        app.logger.warning('progression review: engine findings unavailable: %s', engine_err)
 
     _health.save_progression_snapshot(g.user_id, period_key, period, session_hash, review)
     return jsonify(review)

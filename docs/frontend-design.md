@@ -1904,6 +1904,42 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 ---
 
+### 13.7 Explorer Detail: the "At a Glance" Pair
+
+**Use case:** A detail page whose subject has two halves a reader wants side by
+side before the deep disclosures — on a philosophy, *how it is set up* and
+*what it tracks and measures* (`components/explore/PhilosophySetupCard.tsx`,
+`PhilosophyMeasuresCard.tsx`, mounted by `PhilosophyExplorerPanel`).
+
+```tsx
+<div className="grid gap-3 lg:grid-cols-2 items-start">
+  <SetupCard />      {/* authored structure: phases, weekly shape, expectations */}
+  <MeasuresCard />   {/* the analytics spec in words, from /api/analytics/specs */}
+</div>
+{/* …then the existing collapsed disclosures: frameworks, modalities, archetypes */}
+```
+
+**Key patterns:**
+- **Two cards, one row, stacking under `lg`** — each card is
+  `rounded-lg border border-border/40 bg-card/40 p-4 space-y-4` with an
+  uppercase `text-[10px] tracking-widest` eyebrow ("How it's set up" / "What it
+  tracks & measures") and a one-line `text-[11px]` summary under it.
+- **`items-start`** so the shorter card does not stretch to the taller one's
+  height; the cards are read, not compared.
+- **Sections inside a card use `Section` from
+  `components/explore/ExploreSection.tsx`** — the same label style the
+  framework and modality details use, so the eye reads one system.
+- **The measures card leads with the headline signal open** (`ProgressSpecRow`
+  with `defaultOpen`) and the rest collapsed — §1.4 progressive disclosure at
+  row level; the sentence on each row (`lib/analyticsSpecText.ts`) is enough to
+  scan without expanding.
+- **Facts, not claims.** Both cards render authored package data; a default
+  (synthesised) spec is badged `SpecSourceBadge` and a movement-balance rule
+  the package did not declare is captioned *shown for information only*.
+- **Cross-references, not copies.** The framework detail's "Measured by", the
+  modality's "How philosophies measure it" and the archetype's "Tracked by"
+  filter the same spec document by scope rather than restating it.
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage

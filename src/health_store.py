@@ -379,6 +379,29 @@ def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
         return []
 
 
+def get_workouts_by_ids(user_id: str, ids: list[str]) -> list[dict]:
+    """Full rows — HR samples, GPS — for a named set of workouts.
+
+    Program analytics needs the series only for workouts matched to sessions
+    inside the current block, never for the whole library; pulling every
+    gps_track and hr_samples blob is what OOM-killed the worker once (see
+    get_workouts). Callers pass the ids the matcher already resolved.
+    """
+    from src.db import get_conn
+    wanted = [i for i in (ids or []) if i]
+    if not wanted:
+        return []
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute('SELECT * FROM workouts WHERE user_id = %s AND id = ANY(%s::text[])',
+                            (user_id, wanted))
+                rows = cur.fetchall()
+        return [_row_to_workout(row, summary_only=False) for row in rows]
+    except Exception:
+        return []
+
+
 def _row_to_workout(row, summary_only: bool = False) -> dict:
     dist = None
     if row['distance_value'] is not None:

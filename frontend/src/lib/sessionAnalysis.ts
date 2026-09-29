@@ -2,6 +2,7 @@
  * Session analysis engine — compares prescribed sessions to actual workout data
  * and produces actionable insights. Pure functions, no store access.
  */
+import { familyOf } from '@/lib/modalityFamilies'
 import type {
   Session,
   ImportedWorkout,
@@ -18,20 +19,24 @@ import { computeHRZones, parseZoneTarget, isZoneCompliant } from '@/lib/hrZones'
 
 // ── Modality family classification ───────────────────────────────────────────
 
-const STRENGTH: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power']
-const CARDIO: ModalityId[] = ['aerobic_base']
-const INTERVALS: ModalityId[] = ['anaerobic_intervals', 'mixed_modal_conditioning']
-const SKILL: ModalityId[] = ['movement_skill', 'mobility', 'rehab']
-
 type ModalityFamily = 'strength' | 'aerobic' | 'intervals' | 'distance' | 'mobility' | 'other'
 
+/**
+ * The analyser to use for a modality. Family membership comes from the shared
+ * data/commons/modality_families.json (lib/modalityFamilies.ts); this only maps
+ * those families onto the analysers below. Durability is analysed as distance
+ * work; skill, mobility and combat by duration.
+ */
 function modalityFamily(mod: ModalityId): ModalityFamily {
-  if (STRENGTH.includes(mod)) return 'strength'
-  if (CARDIO.includes(mod)) return 'aerobic'
-  if (INTERVALS.includes(mod)) return 'intervals'
-  if (mod === 'durability') return 'distance'
-  if (SKILL.includes(mod)) return 'mobility'
-  return 'other'
+  switch (familyOf(mod)) {
+    case 'strength':   return 'strength'
+    case 'aerobic':    return 'aerobic'
+    case 'intervals':  return 'intervals'
+    case 'durability': return 'distance'
+    case 'skill':
+    case 'combat':     return 'mobility'
+    default:           return 'other'
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -636,7 +641,7 @@ function trendDirection(points: number[]): 'improving' | 'stable' | 'declining' 
 
 export function computeDevelopmentTrends(
   weekInsights: WeekInsightSummary[],
-  allInsights: SessionInsight[],
+  _allInsights: SessionInsight[],
   allWorkouts: ImportedWorkout[],
   _weekDataMap: Map<number, WeekData>,
 ): DevelopmentTrend[] {
@@ -687,56 +692,11 @@ export function computeDevelopmentTrends(
     })
   }
 
-  // 3. Aerobic efficiency — avg HR at zone 2 over time
-  const z2Sessions: { weekNumber: number; avgHR: number }[] = []
-  for (const si of allInsights) {
-    const zoneInsight = si.insights.find((i) => i.key === 'zone_compliance' && i.severity === 'positive')
-    if (!zoneInsight) continue
-    // Find the workout for this session
-    const wk = allWorkouts.find((w) => {
-      // Match via sessionKey — we need the workout that was matched to this session
-      return si.sessionKey && w.heartRate.avg != null
-    })
-    if (!wk || wk.heartRate.avg == null) continue
-    const weekNum = parseInt(si.sessionKey.split('-')[0], 10)
-    if (!isNaN(weekNum)) {
-      z2Sessions.push({ weekNumber: weekNum, avgHR: wk.heartRate.avg })
-    }
-  }
-
-  if (z2Sessions.length >= 3) {
-    // Average per week
-    const byWeek = new Map<number, number[]>()
-    for (const s of z2Sessions) {
-      const arr = byWeek.get(s.weekNumber) ?? []
-      arr.push(s.avgHR)
-      byWeek.set(s.weekNumber, arr)
-    }
-    const points = [...byWeek.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([weekNumber, hrs]) => ({
-        weekNumber,
-        value: Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length),
-      }))
-
-    if (points.length >= 3) {
-      // For HR, "improving" means HR is going DOWN
-      const rawDir = trendDirection(points.map((p) => p.value))
-      const dir = rawDir === 'improving' ? 'declining' : rawDir === 'declining' ? 'improving' : 'stable'
-      trends.push({
-        metric: 'aerobic_efficiency',
-        label: 'Aerobic Efficiency',
-        dataPoints: points,
-        direction: dir,
-        detail:
-          dir === 'improving'
-            ? `HR at Zone 2 effort is dropping — aerobic fitness is improving.`
-            : dir === 'declining'
-              ? 'HR at Zone 2 effort is rising — may indicate fatigue or detraining.'
-              : 'Aerobic efficiency has been stable.',
-      })
-    }
-  }
+  // 3. Aerobic efficiency used to live here. Its workout lookup ignored the
+  //    session it was asked about and returned the first workout with any HR,
+  //    so the "trend" was one constant plotted against week numbers. The real
+  //    series — metres per beat and Pa:HR decoupling per matched run — is the
+  //    `aerobic_efficiency` primitive in the program analytics document.
 
   // 4. Weekly vertical meters (elevation gain across all imported workouts with GPS)
   const elevWorkouts = allWorkouts.filter(w => (w.elevation?.gain ?? 0) > 0)

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Network, Search, X, Zap } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
@@ -20,17 +21,33 @@ import { PhilosophyExplorerPanel, ArchetypeCard } from '@/components/devlab/Phil
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { useSimilarity } from '@/api/similarity'
-import type { Philosophy, Modality, Archetype, ModalityId, Exercise, Framework } from '@/api/types'
+import { useAnalyticsSpecs } from '@/api/analyticsSpecs'
+import { ZONES } from '@/lib/hrZones'
+import { Section, StatCell } from '@/components/explore/ExploreSection'
+import { SessionsPerWeekRows } from '@/components/explore/SessionsPerWeekRows'
+import { ProgressSpecRow } from '@/components/explore/ProgressSpecRow'
+import type { Philosophy, Modality, Archetype, ModalityId, Exercise, Framework, AnalyticsSpecs, ProgressSpecEntry } from '@/api/types'
 
-// ─── Intensity zone definitions (HR % thresholds) ────────────────────────────
+// ─── Intensity zones — the same edges the analytics engine buckets by ─────────
 
-const HR_ZONES = [
-  { id: 'z1', label: 'Z1', min: 55, max: 65 },
-  { id: 'z2', label: 'Z2', min: 65, max: 75 },
-  { id: 'z3', label: 'Z3', min: 75, max: 85 },
-  { id: 'z4', label: 'Z4', min: 85, max: 92 },
-  { id: 'z5', label: 'Z5', min: 92, max: 100 },
-]
+const HR_ZONES = ZONES.map((z) => ({
+  id: z.key, label: z.label, min: Math.round(z.lowerPct * 100), max: Math.round(z.upperPct * 100),
+}))
+
+// ─── Which spec entries name a thing ─────────────────────────────────────────
+
+type SpecHit = { phil: { id: string; name: string }; entry: ProgressSpecEntry }
+
+function specEntriesWhere(specs: AnalyticsSpecs | undefined, pred: (e: ProgressSpecEntry) => boolean): SpecHit[] {
+  if (!specs) return []
+  const out: SpecHit[] = []
+  for (const spec of Object.values(specs.philosophies)) {
+    for (const entry of spec.progress) {
+      if (pred(entry)) out.push({ phil: { id: spec.philosophy, name: spec.name }, entry })
+    }
+  }
+  return out
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -483,6 +500,11 @@ function ModalityDetail({
     () => philosophies.filter(p => p.bias.includes(mod.id)),
     [mod.id, philosophies]
   )
+  const { data: specs } = useAnalyticsSpecs()
+  const measuredAs = useMemo(
+    () => specEntriesWhere(specs, (e) => e.scope.modalities.some((m) => m.id === mod.id)),
+    [specs, mod.id],
+  )
 
   return (
     <div className="h-full overflow-y-auto">
@@ -597,6 +619,27 @@ function ModalityDetail({
                 </div>
               )}
             </div>
+          </Section>
+        )}
+
+        {/* How philosophies measure it */}
+        {specs && (
+          <Section label="How philosophies measure it">
+            {measuredAs.length > 0 ? (
+              <ul className="space-y-1">
+                {measuredAs.map(({ phil, entry }) => (
+                  <li key={`${phil.id}-${entry.id}`} className="flex items-baseline gap-2 text-[10px]">
+                    <span className="text-foreground/80 shrink-0">{phil.name}</span>
+                    <span className="text-muted-foreground">
+                      — {entry.label}
+                      <span className="text-muted-foreground/60"> ({specs.vocabulary.primitives[entry.primitive]?.label.toLowerCase() ?? entry.primitive})</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[10px] text-muted-foreground/60">No philosophy measures this modality directly.</p>
+            )}
           </Section>
         )}
 
@@ -982,24 +1025,6 @@ function ExercisePanel({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">{label}</p>
-      {children}
-    </div>
-  )
-}
-
-function StatCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border/30 bg-card/30 px-2.5 py-2">
-      <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-0.5">{label}</p>
-      <p className="text-[11px] font-medium text-foreground">{value}</p>
-    </div>
-  )
-}
-
 // ─── Archetype landing card ───────────────────────────────────────────────────
 
 function ArchetypeLandingCard({ archetype, onSelect }: { archetype: Archetype; onSelect: () => void }) {
@@ -1155,6 +1180,11 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
   onBack: () => void
 }) {
   const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const { data: specs } = useAnalyticsSpecs()
+  const trackedBy = useMemo(
+    () => specEntriesWhere(specs, (e) => e.scope.archetypes.some((a) => a.id === archetype.id)),
+    [specs, archetype.id],
+  )
 
   return (
     <div className="h-full overflow-y-auto">
@@ -1189,6 +1219,20 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
             <span>{(archetype.slots ?? []).length} slots</span>
           </div>
         </div>
+
+        {trackedBy.length > 0 && (
+          <Section label="Tracked by">
+            <div className="flex flex-wrap gap-1.5">
+              {trackedBy.map(({ phil, entry }) => (
+                <span key={`${phil.id}-${entry.id}`}
+                  className="inline-block px-2 py-0.5 rounded-full text-[10px] border border-border/40 bg-card/40 text-muted-foreground"
+                  style={{ borderLeftColor: catColor, borderLeftWidth: 2 }}>
+                  {phil.name} — {entry.label}
+                </span>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* Card content — always open, no accordion */}
         <ArchetypeCard
@@ -1358,23 +1402,8 @@ function FrameworkOverview({
 
 // ─── Framework Explorer detail ────────────────────────────────────────────────
 
-interface FrameworkRuntime extends Framework {
-  modality_priority?: {
-    committed?: ModalityId[]
-    core?: ModalityId[]
-    supplementary?: ModalityId[]
-  }
-  cadence_options?: Record<string, number[][]>
-  incompatible_with?: Array<{
-    framework_id: string
-    reason?: string
-    interference_level?: string
-    mitigation?: string
-  }>
-}
-
 function FrameworkExplorerDetail({
-  fw: fwRaw,
+  fw,
   philosophies,
   frameworks,
   onBack,
@@ -1386,7 +1415,17 @@ function FrameworkExplorerDetail({
   onBack: () => void
   onSelect: (fw: Framework) => void
 }) {
-  const fw = fwRaw as FrameworkRuntime
+  const { data: specs } = useAnalyticsSpecs()
+  // The source philosophy's signals that apply while this framework governs:
+  // unscoped ones always, framework-scoped ones only when they name it.
+  const measuredBy = useMemo(
+    () => specEntriesWhere(specs, () => true).filter(({ phil, entry }) =>
+      phil.id === fw.source_philosophy
+      && (entry.scope.frameworks.length === 0 || entry.scope.frameworks.some((f) => f.id === fw.id))),
+    [specs, fw.id, fw.source_philosophy],
+  )
+  const splitPoliced = measuredBy.some(({ entry }) =>
+    entry.primitive === 'zone_minutes' && entry.expected.kind === 'framework_field' && entry.expected.field === 'intensity_distribution')
 
   const philMap = useMemo(
     () => Object.fromEntries(philosophies.map(p => [p.id, p])),
@@ -1401,10 +1440,6 @@ function FrameworkExplorerDetail({
   const hex = sourcePhil
     ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? '#6366f1')
     : '#6366f1'
-
-  const sessionsPerWeek = fw.sessions_per_week
-    ? Object.entries(fw.sessions_per_week).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
-    : []
 
   const intensityEntries = fw.intensity_distribution
     ? Object.entries(fw.intensity_distribution)
@@ -1499,21 +1534,9 @@ function FrameworkExplorerDetail({
         </div>
 
         {/* Sessions per week — dot visualization */}
-        {sessionsPerWeek.length > 0 && (
+        {fw.sessions_per_week && Object.keys(fw.sessions_per_week).length > 0 && (
           <Section label="Sessions / week">
-            <div className="space-y-1.5">
-              {sessionsPerWeek.map(([mod, count]) => (
-                <div key={mod} className="flex items-center gap-2 text-xs">
-                  <span className="w-48 truncate text-muted-foreground text-[11px]">{prettify(mod)}</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: count ?? 0 }).map((_, i) => (
-                      <div key={i} className="size-2 rounded-full" style={{ backgroundColor: hex, opacity: 0.7 }} />
-                    ))}
-                  </div>
-                  <span className="font-mono text-muted-foreground text-[10px]">{count}×/wk</span>
-                </div>
-              ))}
-            </div>
+            <SessionsPerWeekRows sessionsPerWeek={fw.sessions_per_week} accentHex={hex} />
           </Section>
         )}
 
@@ -1532,7 +1555,27 @@ function FrameworkExplorerDetail({
                   </span>
                 </div>
               ))}
+              {splitPoliced && (
+                <p className="text-[10px] text-muted-foreground/60 italic pt-0.5">
+                  Policed by the intensity-split signal: actual zone minutes are measured against this split.
+                </p>
+              )}
             </div>
+          </Section>
+        )}
+
+        {/* Measured by — what the source philosophy tracks while this framework governs */}
+        {specs && (
+          <Section label="Measured by">
+            {measuredBy.length > 0 ? (
+              <div className="space-y-1.5">
+                {measuredBy.map(({ entry }) => (
+                  <ProgressSpecRow key={entry.id} entry={entry} vocab={specs.vocabulary.primitives[entry.primitive]} accentHex={hex} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-muted-foreground/60">No signal from its philosophy applies while this framework governs.</p>
+            )}
           </Section>
         )}
 
@@ -1681,10 +1724,14 @@ const EXPLORE_SECTIONS: { key: ExploreSection; label: string }[] = [
   { key: 'ontology', label: 'Ontology' },
 ]
 
+const TOPIC_IDS = new Set<string>(TOPICS.map((t) => t.id))
+
 export function Explore() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTopic = searchParams.get('topic')
   const [section, setSection] = useState<ExploreSection>('explorer')
-  const [topic, setTopic] = useState<Topic>('philosophies')
-  const [selectedPhil, setSelectedPhil] = useState<Philosophy | null>(null)
+  const [topic, setTopic] = useState<Topic>(initialTopic && TOPIC_IDS.has(initialTopic) ? initialTopic as Topic : 'philosophies')
+  const [selectedPhil, setSelectedPhilState] = useState<Philosophy | null>(null)
   const [selectedMod, setSelectedMod] = useState<Modality | null>(null)
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null)
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
@@ -1696,9 +1743,25 @@ export function Explore() {
   const { data: allArchetypes = [] } = useArchetypes()
   const { data: allExercises = [] } = useExercises()
 
+  // A ?id= from a deep link resolves once the philosophies have loaded.
+  const wantedPhilId = searchParams.get('id')
+  const [resolvedWantedId, setResolvedWantedId] = useState<string | null>(null)
+  if (topic === 'philosophies' && wantedPhilId && wantedPhilId !== resolvedWantedId && philosophies.length) {
+    setResolvedWantedId(wantedPhilId)
+    setSelectedPhilState(philosophies.find((p) => p.id === wantedPhilId) ?? null)
+  }
+
+  function setSelectedPhil(p: Philosophy | null) {
+    setSelectedPhilState(p)
+    setResolvedWantedId(p?.id ?? null)
+    setSearchParams(p ? { topic: 'philosophies', id: p.id } : {}, { replace: true })
+  }
+
   function handleTopicChange(t: Topic) {
     setTopic(t)
-    setSelectedPhil(null)
+    setSelectedPhilState(null)
+    setResolvedWantedId(null)
+    setSearchParams(t === 'philosophies' ? {} : { topic: t }, { replace: true })
     setSelectedMod(null)
     setSelectedArchetype(null)
     setSelectedExercise(null)

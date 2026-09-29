@@ -1,0 +1,20 @@
+{
+  "_comment": "The one canonical grouping of the 12 modalities into families, read by src/analytics/families.py and frontend/src/lib/modalityFamilies.ts. It replaced five divergent copies (progression_tracker._MODALITY_FAMILIES, summary.py, api._week_volume, sessionAnalysis.ts), two of which named modalities that do not exist and all of which dropped combat_sport and rehab. This is a display/rollup grouping; data/matching_rules.json `families` is a *similarity* grouping under a cross-language parity contract and is deliberately separate.",
+  "version": 1,
+  "families": {
+    "strength":   ["max_strength", "relative_strength", "strength_endurance", "power"],
+    "aerobic":    ["aerobic_base"],
+    "intervals":  ["anaerobic_intervals", "mixed_modal_conditioning"],
+    "durability": ["durability"],
+    "skill":      ["movement_skill", "mobility", "rehab"],
+    "combat":     ["combat_sport"]
+  },
+  "labels": {
+    "strength":   "Strength",
+    "aerobic":    "Aerobic",
+    "intervals":  "Intervals & conditioning",
+    "durability": "Durability",
+    "skill":      "Skill & mobility",
+    "combat":     "Combat sport"
+  }
+}

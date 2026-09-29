@@ -200,6 +200,23 @@ def load_level_seeds() -> dict:
     return by_package
 
 
+def load_analytics_specs() -> dict:
+    """Return {package_id: analytics spec} for every package that declares one.
+
+    A package's analytics.yaml says what progress means for its methodology
+    (docs/schemas/analytics.schema.json). Package-scoped like level_seeds: a
+    package that ships none gets a spec synthesised from its frameworks by
+    src/analytics/spec.py, so declaring one is an override, not a requirement.
+    """
+    specs: dict = {}
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'analytics.yaml'))):
+        pkg_id = os.path.basename(os.path.dirname(path))
+        data = _load_yaml(path) or {}
+        data['_package'] = pkg_id
+        specs[pkg_id] = data
+    return specs
+
+
 def load_philosophies() -> list:
     """Return list of philosophy dicts, each with a system_connections key."""
     fw_map: dict = {}
