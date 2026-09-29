@@ -24,6 +24,11 @@ export interface ServerProgram {
   revision?: string | null
   /** Revision this edit was based on (sent, not stored). */
   baseRevision?: string | null
+  /** Which archived program version the stored program currently is.
+   *  Response-only: the server injects it on read (like `revision`) and it is
+   *  never sent back, because iOS's Codable would strip it and the archive's
+   *  skeleton hash would then have to learn to ignore it. */
+  programVersionId?: string | null
   currentProgram: GeneratedProgram | null
   programStartDate: string | null
   eventDate: string | null

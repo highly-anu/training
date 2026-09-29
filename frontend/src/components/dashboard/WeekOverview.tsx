@@ -15,6 +15,7 @@ import { formatLoad } from '@/lib/formatLoad'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
+import { hasSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
 import type { Session, WeekData, WorkoutMatch } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
@@ -330,6 +331,7 @@ interface WeekOverviewProps {
 
 export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: WeekOverviewProps) {
   const programStartDate = useProgramStore(s => s.programStartDate)
+  const programVersionId = useProgramStore(s => s.programVersionId)
   const sessionLogs = useProfileStore(s => s.sessionLogs)
   const setSessionLog = useProfileStore(s => s.setSessionLog)
   const upsertSessionPerformance = useBioStore(s => s.upsertSessionPerformance)
@@ -337,11 +339,8 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
   const moveSession = useProgramStore(s => s.moveSession)
 
   function hasLinkedWorkout(weekNum: number, day: string, si: number, matches: WorkoutMatch[]): boolean {
-    const perSessionKey = `${weekNum}-${day}-${si}`
-    const dayKey = `${weekNum}-${day}`
-    return matches.some(m =>
-      (m.sessionKey === perSessionKey || m.sessionKey === dayKey) &&
-      m.matchConfidence !== 'rejected'
+    return hasSessionMatch(
+      matches, sessionKeyVariants(`${weekNum}-${day}`, si), programVersionId
     )
   }
 

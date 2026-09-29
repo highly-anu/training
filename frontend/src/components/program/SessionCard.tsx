@@ -7,6 +7,8 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import type { Session } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
+import { hasSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
+import { useProgramStore } from '@/store/programStore'
 
 interface SessionCardProps {
   session: Session
@@ -21,10 +23,12 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
   const isComplete = sessionLogs[`${weekNumber}-${day}`]?.[sessionIndex] === true
   const workoutMatches = useBioStore((s) => s.workoutMatches)
+  const programVersionId = useProgramStore((s) => s.programVersionId)
   const dayKey = `${weekNumber}-${day}`
-  const perKey = `${dayKey}-${sessionIndex}`
-  const hasWorkout = workoutMatches.some(
-    (m) => (m.sessionKey === perKey || m.sessionKey === dayKey) && m.matchConfidence !== 'rejected'
+  const hasWorkout = hasSessionMatch(
+    workoutMatches,
+    sessionKeyVariants(dayKey, sessionIndex),
+    programVersionId
   )
 
   return (

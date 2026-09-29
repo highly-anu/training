@@ -252,7 +252,7 @@ writes.
 - **Window.** Session logs, matches and workouts are keyed program-relatively
   and a regenerate leaves the last block's rows under the same keys, so
   `context.py` filters every input to the program's own date span. Cross-block
-  comparison needs the parked `feat/program-history` branch.
+  comparison is what the Program History tables (below) exist for.
 - **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
   durationSec / distanceKm` — the keys the tracker always read and nothing
   wrote; `ExerciseRow` dispatches on `slot_type`, not `load.sets`. Bodyweight
@@ -262,6 +262,83 @@ writes.
   1–5 at the boundary (iOS sends 1–10).
 - `GET /api/progression/review` keeps its shape for iOS but takes its
   `exercise_findings` from the engine.
+
+## Program History
+
+`user_programs` holds **one row per athlete** and `save_user_program` upserts it,
+so generating a program used to destroy the previous one outright. Nothing
+recorded what had been planned, and a planned session's only identity was the
+program-relative string `"{week_number}-{DayName}-{idx}"`, which references
+nothing. Three consequences, all fixed here: a workout dated inside a finished
+block was dropped by the matcher and could never be matched; a stored match
+silently re-pointed at whatever now occupied that (week, day, index); and
+`session_logs`, keyed on the same string, **merged** one block's set data into
+another's row.
+
+- **Three tables** (`migrations/005_program_history.sql`), because three things
+  were conflated: `program_versions` is the content (an immutable snapshot,
+  deduplicated by skeleton hash), `program_activations` is the timeline
+  (append-only, DATE-valued intervals), `planned_sessions` is the geometry (one
+  row per planned session per version, on the calendar day it fell on).
+- **`session_uid` is keyed on the week's ARRAY INDEX**, never on `week_number`.
+  `src/generator.py` numbers weeks from `week_in_program` and, with an event
+  date, `phase_calendar.build_remaining_schedule` starts that at the athlete's
+  *absolute* week — so a 16-week generate legitimately yields weeks[0..15]
+  numbered 16..31, and a partial regenerate splices that onto the kept head. One
+  `week_number` then sits at two array indices. `legacy_key` ('3-Monday-0') is
+  descriptive and **not unique**; resolve it as `(user_id, legacy_key, date)`.
+- **Dates come from `workout_matcher.session_calendar_date`**, called rather
+  than reimplemented: `PUT /api/user/program` does not Monday-align (only
+  generate does) so non-Monday starts are real, and both paths must agree.
+- **The skeleton hash covers only plan-defining content** — start date, and per
+  week index the number, phase, deload flag and each day's (modality, archetype
+  id, exercise ids), with days iterated in `DAY_NAMES` order. Everything the
+  three self-healing re-saves in `GET /api/user/program` rebuild is excluded, or
+  every app open would mint a version; so is every load and slot, because iOS
+  re-encodes `reps` through `AnyCodable` and `8` comes back as `8.0`. Days are
+  iterated in fixed order because Swift re-encodes the schedule dictionary
+  arbitrarily. `content_hash` is separate: same skeleton, different content means
+  the snapshot is stale, and it is refreshed in place — but only by a copy at
+  least as *rich*, because an iOS save strips `goal` and every `slot`.
+- **Intervals are DATEs computed in Python**, never `activated_at::date` — that
+  cast uses the server's TimeZone (UTC on fly.io) and is a day out every evening
+  west of Greenwich. The **first** activation runs from the program's own
+  `start_date`, which is what lets the program archived on first read own its
+  already-elapsed weeks; later ones start the day they are activated. Intervals
+  must stay disjoint: two candidate sets on one date inflate the `unambiguous`
+  count in `auto_match_indexed` and silently demote auto-matches to suggestions.
+- **Archiving is idempotent and happens on read as well as on write.** `PUT`,
+  the `persist` branch of generate, and `GET /api/user/program` all call
+  `record_version`; the GET path is guarded by `source_revision` so the common
+  case is one indexed lookup, not hashing a ~1 MB envelope. Archiving on *read*
+  is what captures the pre-strip copy.
+- **The matcher's index is a union** (`workout_matcher.history_aware_index`):
+  the current program first, history overwriting any date it covers. Strictly
+  additive — history is empty on a fresh deploy and in local dev with no
+  `DATABASE_URL`, and indexing it alone would stop all auto-matching.
+- **`session_uid` is resolved in `health_store`, not in the matcher**, so all
+  five match writers get it. Resolve it **before** opening a connection:
+  `get_conn()` hands out one process-global connection and a nested `with` on it
+  returns nothing while swallowing the reason.
+- **`session_logs` is scoped to a version** (`migrations/006_session_log_scope.sql`):
+  `log_key` is `COALESCE(session_uid, session_key)` and the primary key moved to
+  `(user_id, log_key)`. Existing rows keep their old key, so nothing breaks.
+  `get_session_logs` answers "this program's log for that key" and hides other
+  versions' rows; `get_session_logs_by_uid` is the cross-program reader the
+  progression endpoints use.
+- **Run `005` before deploying the code.** `src/program_history._ensure_tables`
+  is a fallback for a deploy that got ahead of its migration, and it creates the
+  tables with row security enabled but *no policy* (deny-by-default) because a
+  test database has no `auth` schema. The migration is what adds the real
+  per-user policies — these tables live in `public`, which Supabase exposes
+  through PostgREST.
+- **History starts at deploy.** Programs already overwritten are unrecoverable.
+  `scripts/backfill_program_history.py` archives each athlete's current program
+  and attributes existing matches and logs where a key resolves unambiguously on
+  the workout's own date. It does **not** infer a start date from
+  `(workout.date, session_key)`: that is wrong by
+  `(week_number - 1 - week_index) * 7` days — fifteen weeks in the absolute-week
+  case — and undefined when a week number repeats.
 
 ## Running the iOS App
 
@@ -298,6 +375,12 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
 ```
 
+Before anything that changes production structure (a migration, a backfill):
+
+```bash
+scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-count compare; exits 1 on mismatch
+```
+
 Run these after touching engine code or package data:
 
 ```bash
@@ -306,6 +389,13 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
+```
+
+Run these after touching program history, the matcher or the session-log path:
+
+```bash
+.venv/bin/python test_program_history.py      # hashing, flattening, intervals (no DB)
+.venv/bin/python test_workout_matcher.py      # the cross-language parity contract
 ```
 
 Run these after touching the workout import pipeline:
@@ -324,6 +414,7 @@ Two suites need a local PostgreSQL and skip cleanly (exit 0) without one:
 brew services start postgresql@14 && createdb training_test
 .venv/bin/python test_dedupe_sql.py        # dedup SQL: merge, canonical_id, visibility
 .venv/bin/python test_garmin_webhook.py    # the whole webhook path, no Garmin account needed
+.venv/bin/python test_program_history_sql.py  # the timeline, and matching inside a finished block
 ```
 
 ## Known Gaps / Next Work

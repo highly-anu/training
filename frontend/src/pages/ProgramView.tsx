@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { CalendarDays, Wand2, ShieldAlert } from 'lucide-react'
+import { CalendarDays, Wand2, ShieldAlert, History } from 'lucide-react'
 import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { WeekSelector } from '@/components/program/WeekSelector'
@@ -160,6 +160,13 @@ export function ProgramView() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Link
+              to="/program/history"
+              className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+            >
+              <History className="size-3.5" aria-hidden="true" />
+              History
+            </Link>
             <button
               type="button"
               onClick={() => setInjurySheetOpen(true)}

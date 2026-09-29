@@ -8,6 +8,8 @@ import { RootLayout } from '@/components/layout/RootLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { ProgramBuilder } from '@/pages/ProgramBuilder'
 import { ProgramView } from '@/pages/ProgramView'
+import { ProgramHistory } from '@/pages/ProgramHistory'
+import { ProgramHistoryDetail } from '@/pages/ProgramHistoryDetail'
 import { SessionDetail } from '@/pages/SessionDetail'
 import { ExerciseCatalog } from '@/pages/ExerciseCatalog'
 import { ProfileBenchmarks } from '@/pages/ProfileBenchmarks'
@@ -63,6 +65,9 @@ export default function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="builder" element={<ProgramBuilder />} />
                     <Route path="program" element={<ProgramView />} />
+                    {/* Before the :week/:day route, or "history" is read as a week. */}
+                    <Route path="program/history" element={<ProgramHistory />} />
+                    <Route path="program/history/:versionId" element={<ProgramHistoryDetail />} />
                     <Route path="program/:week/:day" element={<SessionDetail />} />
                     <Route path="exercises" element={<ExerciseCatalog />} />
                     <Route path="profile" element={<ProfileBenchmarks />} />

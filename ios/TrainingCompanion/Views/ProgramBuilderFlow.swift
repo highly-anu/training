@@ -598,7 +598,13 @@ struct ProgramSettingsSheet: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Your current program and all logged session progress will be permanently deleted and replaced with the new settings.")
+            // This used to say the current program and all logged progress
+            // "will be permanently deleted", which was never true — nothing
+            // deleted the logs. They simply re-attached to whatever session
+            // landed on the same {week}-{day}-{index} slot in the new plan.
+            // Now the old plan is kept in Program → History and the logs stay
+            // attached to it, so the dialog can say what actually happens.
+            Text("A new program replaces the one you are on. The current plan is kept in Program → History, and everything you have logged stays attached to it.")
         }
     }
 

@@ -69,6 +69,32 @@ def get_conn():
     return conn
 
 
+def new_conn(autocommit: bool = False):
+    """A connection of one's own, for work that needs a real transaction.
+
+    `get_conn()` hands out one process-global connection with
+    `autocommit = True`, and it is shared by everything — the Garmin drain
+    thread (src/garmin_worker.py) and the async parse threads (api.py) included.
+    Flipping autocommit off on that object to get a transaction would enrol
+    another thread's INSERT in ours, to be rolled back by our `except` or
+    committed early by our `commit()`. So callers that need atomicity take a
+    fresh connection instead and close it when they are done.
+
+    Returns None when there is no database configured, so a caller in local-dev
+    mode can degrade rather than raise.
+    """
+    if not _pg_dsn:
+        return None
+    import psycopg2
+    try:
+        conn = psycopg2.connect(_pg_dsn)
+        conn.autocommit = autocommit
+        return conn
+    except Exception as e:
+        print(f"Warning: could not open a new PostgreSQL connection: {e}")
+        return None
+
+
 def _ensure_local_storage():
     """Create local storage directory if it doesn't exist."""
     _local_storage_dir.mkdir(parents=True, exist_ok=True)

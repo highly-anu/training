@@ -13,6 +13,18 @@ final class AppState: ObservableObject {
     @Published var isLoadingProgram = false
     @Published var programError: String? = nil
 
+    /// Every plan this athlete has trained, newest first.
+    ///
+    /// Lives on AppState rather than on ProgramStore: that type already keeps a
+    /// second `serverProgram` of its own with no stale-revision recovery and no
+    /// widget refresh, and a third copy of the program's state is not what this
+    /// needed.
+    @Published var programHistory: [ProgramHistoryEntry] = []
+    @Published var isLoadingHistory = false
+
+    /// Which archived version the loaded program is, or nil before history knows.
+    var programVersionId: String? { serverProgram?.programVersionId }
+
     // MARK: - Profile
 
     @Published var profile: UserProfile = .default
@@ -160,6 +172,15 @@ final class AppState: ObservableObject {
         } catch {
             programError = error.localizedDescription
         }
+    }
+
+    /// Load the program timeline. Never throws: the history is a view onto the
+    /// past, and failing to fetch it must not disturb the program itself.
+    func loadProgramHistory() async {
+        guard let api else { return }
+        isLoadingHistory = true
+        defer { isLoadingHistory = false }
+        programHistory = (try? await api.fetchProgramHistory()) ?? []
     }
 
     /// Writes today's sessions to the shared App Group container so iPhone widgets can display them.

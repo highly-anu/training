@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Settings, CalendarDays, Wand2, Flag, RotateCcw } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format, addDays } from 'date-fns'
 import {
@@ -241,7 +241,9 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
         <DialogHeader>
           <DialogTitle>Rebuild Program</DialogTitle>
           <DialogDescription>
-            Choose how much of your program to replace. Sessions and data you've already logged are never affected.
+            Choose how much of your program to replace. The plan you have now is
+            kept in your program history, and everything you have already logged
+            stays attached to it.
           </DialogDescription>
         </DialogHeader>
 
@@ -274,6 +276,17 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
               Opens the builder so you can change goals or constraints. Replaces all weeks from the start.
             </p>
           </button>
+
+          <Link
+            to="/program/history"
+            onClick={() => setRebuildDialogOpen(false)}
+            className="block w-full rounded-lg border border-border px-4 py-3 text-left transition-colors hover:bg-muted"
+          >
+            <p className="text-sm font-semibold">View program history</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Every plan you have trained, and what each had you doing on a given day.
+            </p>
+          </Link>
 
           <button
             type="button"

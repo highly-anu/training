@@ -115,12 +115,37 @@ def auto_match(workouts: list[dict], program: dict, program_start_date: str,
     Returns {'confirmed': [WorkoutMatch], 'suggested': [{importedWorkoutId,
     sessionKey, score}]}. A workout that already has a match is left alone, and
     one with no planned session that day is dropped entirely.
+
+    Matches against a single program. This is the shape the golden fixtures in
+    data/matcher_fixtures.json assert and the shape the TS twin implements, so
+    it stays exactly as it was; `auto_match_indexed` is the seam that lets the
+    server match against every program the athlete has ever had.
+    """
+    return auto_match_indexed(
+        workouts,
+        index_sessions_by_date(program, program_start_date),
+        existing_matches,
+    )
+
+
+def auto_match_indexed(workouts: list[dict], date_index: dict[str, list[dict]],
+                       existing_matches: list[dict] | None = None) -> dict:
+    """`auto_match` over a pre-built date index.
+
+    Separated out because the index no longer has to come from one program. The
+    caller can hand over an index spanning the athlete's whole program history
+    (src/program_history.sessions_on_dates), which is the only way a workout
+    that landed inside a *finished* block can be matched at all — indexing the
+    current program alone drops it, permanently.
+
+    A candidate carrying a `sessionUid` passes it through to the match; one
+    built from a bare program has none, and the match then identifies its
+    session only by the program-relative `sessionKey`, as before.
     """
     confirmed: list[dict] = []
     suggested: list[dict] = []
 
     existing_ids = {m.get('importedWorkoutId') for m in (existing_matches or [])}
-    date_index = index_sessions_by_date(program, program_start_date)
     now_iso = datetime.now(timezone.utc).isoformat()
 
     auto_threshold = RULES['autoThreshold']
@@ -150,20 +175,65 @@ def auto_match(workouts: list[dict], program: dict, program_start_date: str,
         unambiguous = len(scored) == 1 or sum(1 for s in scored if s['score'] >= auto_threshold) == 1
 
         if best['score'] >= auto_threshold and unambiguous:
-            confirmed.append({
+            match = {
                 'importedWorkoutId': workout_id,
                 'sessionKey': best['sessionKey'],
                 'matchConfidence': 'auto',
                 'matchedAt': now_iso,
-            })
+            }
+            if best.get('sessionUid'):
+                match['sessionUid'] = best['sessionUid']
+            confirmed.append(match)
         elif best['score'] >= suggest_threshold:
-            suggested.append({
+            suggestion = {
                 'importedWorkoutId': workout_id,
                 'sessionKey': best['sessionKey'],
                 'score': best['score'],
-            })
+            }
+            if best.get('sessionUid'):
+                suggestion['sessionUid'] = best['sessionUid']
+            suggested.append(suggestion)
 
     return {'confirmed': confirmed, 'suggested': suggested}
+
+
+def history_aware_index(user_id: str, dates: list[str]) -> dict[str, list[dict]]:
+    """Candidate sessions for these dates, from history where it reaches.
+
+    A union, on purpose, and in this order:
+
+      1. the stored current program, indexed as it always was;
+      2. program history, which overwrites any date it covers.
+
+    History wins where it has an answer because it knows *which* program was in
+    force on that date — the current program does not, and for a date inside a
+    finished block its answer is simply wrong. But history must not be the only
+    source: it is empty before the first archive, empty on a fresh deploy, and
+    empty in local dev with no DATABASE_URL. Indexing history alone would
+    silently stop all auto-matching in exactly those cases, so this stays
+    strictly additive to today's behaviour.
+    """
+    index: dict[str, list[dict]] = {}
+
+    try:
+        from src.db import get_user_program
+        stored = get_user_program(user_id)
+        if isinstance(stored, dict):
+            stored = normalize_program_keys(stored)
+            program = stored.get('currentProgram') or {}
+            start_date = stored.get('programStartDate')
+            if program.get('weeks') and start_date:
+                index.update(index_sessions_by_date(program, str(start_date)))
+    except Exception:
+        pass
+
+    try:
+        from src import program_history
+        index.update(program_history.sessions_on_dates(user_id, dates))
+    except Exception:
+        pass
+
+    return index
 
 
 def match_and_store(user_id: str, workouts: list[dict]) -> dict:
@@ -175,28 +245,32 @@ def match_and_store(user_id: str, workouts: list[dict]) -> dict:
     treat "has a row that isn't 'rejected'" as "is matched", so a pending row
     there would show up as a confirmed match everywhere.
 
+    Candidates come from `history_aware_index`, so a workout that landed inside
+    a program the athlete has since replaced still finds the session that was
+    actually planned for it. Before that, this loaded only the stored program
+    and such a workout had no candidates at all — it was dropped on import and
+    could never be matched afterwards.
+
     Returns counts; never raises — a matching failure must not fail the import
     that produced the workouts.
     """
     from src import health_store
-    from src.db import get_user_program
 
     result = {'confirmed': 0, 'suggested': 0}
     if not workouts:
         return result
 
     try:
-        stored = get_user_program(user_id)
-        if not isinstance(stored, dict):
+        dates = sorted({str(w.get('date'))[:10] for w in workouts if w.get('date')})
+        if not dates:
             return result
-        stored = normalize_program_keys(stored)
-        program = stored.get('currentProgram') or {}
-        start_date = stored.get('programStartDate')
-        if not program.get('weeks') or not start_date:
+
+        date_index = history_aware_index(user_id, dates)
+        if not date_index:
             return result
 
         existing = health_store.get_matches(user_id)
-        outcome = auto_match(workouts, program, str(start_date), existing)
+        outcome = auto_match_indexed(workouts, date_index, existing)
 
         for match in outcome['confirmed']:
             health_store.upsert_match(user_id, match)

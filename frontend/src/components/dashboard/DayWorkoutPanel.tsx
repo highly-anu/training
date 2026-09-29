@@ -13,6 +13,7 @@ import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import type { WeekData } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
+import { findSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
 
 interface DayWorkoutPanelProps {
   weekData: WeekData
@@ -31,12 +32,12 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const currentProgram = useProgramStore((s) => s.currentProgram)
+  const programVersionId = useProgramStore((s) => s.programVersionId)
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
   function getSessionMatch(si: number) {
-    const perKey = `${sessionKey}-${si}`
-    const entry = workoutMatches.find(
-      m => (m.sessionKey === perKey || m.sessionKey === sessionKey) && m.matchConfidence !== 'rejected'
+    const entry = findSessionMatch(
+      workoutMatches, sessionKeyVariants(sessionKey, si), programVersionId
     )
     return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
   }
