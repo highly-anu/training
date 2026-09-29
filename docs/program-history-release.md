@@ -47,10 +47,25 @@ psql "$DATABASE_URL" -c "SELECT
   (SELECT count(*) FROM user_programs)   AS programs;"
 ```
 
-**Take a snapshot.** Supabase → Database → Backups, or `pg_dump`. The only
-existing tables this touches are `session_logs`, `workout_matches` and
-`workout_match_suggestions` (one nullable column each), so a partial dump of
-those three plus `user_programs` is enough if a full one is awkward.
+**Take a snapshot — and prove it restores:**
+
+```bash
+scripts/backup_prod.sh        # pg_dump 17 → backups/, restore into a scratch
+                              # local DB, row counts compared table by table
+```
+
+It reads the production `DATABASE_URL` from `.env` (not `.env.local`, which
+points local dev at the local database) and exits non-zero on any mismatch.
+`backups/` is gitignored and dockerignored. Take the Supabase dashboard backup
+too if the project's tier offers one; the dump is the one we rely on.
+
+**Two things the CI setup changes about the order below.**
+`.github/workflows/deploy-api.yml` deploys to Fly on every push to `master`
+that touches `api.py`, `src/` or `migrations/` — so *merging the PR is step 2*.
+Run step 1 from the branch checkout before merging. And because `api.py` and
+`run_migration.py` now layer `.env.local` over `.env`, rename `.env.local`
+aside (`mv .env.local .env.local.off`) for the duration of the prod steps, or
+`run_migration.py` will migrate the local database instead. Restore it after.
 
 What the snapshot is actually for is explained under *Risk* below — it is not
 migration failure.

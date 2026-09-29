@@ -252,7 +252,7 @@ writes.
 - **Window.** Session logs, matches and workouts are keyed program-relatively
   and a regenerate leaves the last block's rows under the same keys, so
   `context.py` filters every input to the program's own date span. Cross-block
-  comparison needs the parked `feat/program-history` branch.
+  comparison is what the Program History tables (below) exist for.
 - **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
   durationSec / distanceKm` — the keys the tracker always read and nothing
   wrote; `ExerciseRow` dispatches on `slot_type`, not `load.sets`. Bodyweight
@@ -373,6 +373,12 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
+```
+
+Before anything that changes production structure (a migration, a backfill):
+
+```bash
+scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-count compare; exits 1 on mismatch
 ```
 
 Run these after touching engine code or package data:

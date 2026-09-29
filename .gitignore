@@ -56,3 +56,6 @@ Workouts/
 
 # local backup created while testing against a local API
 frontend/.env.local.bak
+
+# Production database dumps (scripts/backup_prod.sh) — personal health data
+backups/
