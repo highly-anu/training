@@ -11,7 +11,16 @@ A training logic system that algorithmically generates periodized training progr
 **Fully functional end-to-end.** Python backend generates programs; Flask API serves them; React frontend connects to the API.
 
 - To run: `python api.py` (port 8000) + `cd frontend && npm run dev` (port 5173)
-- Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`; falls back to MSW mock data otherwise
+- **Env layering.** `.env` is the production-shaped config (`op inject -i .env.template -o .env`);
+  `.env.local` (from `.env.local.template`, no secrets) layers over it with `override=True`
+  and points local dev at the local `training_test` Postgres with Supabase unset, so the
+  API runs as `local-dev-user` and `FRONTEND_URL=http://localhost:5173` for CORS. Fly gets
+  its config from `fly secrets`; neither file is committed or copied into the image.
+  Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
+  (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
+- Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
+  falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
+  runs as the same `local-dev-user`.
 
 ## Repository Structure
 
@@ -63,6 +72,7 @@ All prefixed `/api/`:
 | Method | Path | Returns |
 |--------|------|---------|
 | GET | `/philosophies` | `Philosophy[]` |
+| GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
 | GET | `/modalities` | `Modality[]` |
@@ -172,6 +182,87 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
   carries. It used to rebuild the blob, which is why every iOS save wiped
   `activeGoalId`.
 
+## Program Analytics
+
+`GET /api/analytics/program` answers "how is the athlete doing against what the
+active program is *for*" — per methodology, in that methodology's own currency.
+The engine is `src/analytics/`; the web Program tab (`components/analytics/`)
+only lays the document out. Analytics used to be goal-blind on every platform
+(TRIMP, PMC and readiness with no idea what the program was), and the one
+tracker that could have been goal-aware analysed every program as
+`linear_load` because it read a `goal.progression_model` that `goals.py` never
+writes.
+
+- **The spec is shown before it is run.** `GET /api/analytics/specs`
+  (`src/analytics/describe.py`) describes every package's composed spec —
+  declared or default, ids resolved to names, `expected` normalised, and the
+  capture requirements unioned from `src/analytics/vocabulary.py`, the one
+  place the twelve primitives are put into words. The Explore tab's
+  philosophy detail renders it beside the phase spine and weekly shape
+  (`components/explore/`), and the framework, modality and archetype details
+  list the signals that name them. Static, no user, no program.
+- **Packages own their analytics.** A methodology declares what progress means
+  for it in `data/packages/<id>/analytics.yaml` (schema
+  `docs/schemas/analytics.schema.json`; validated by `validate_entities.py`,
+  provenance-checked by `check_provenance.py`, loaded by
+  `loader.load_analytics_specs`). A package that ships none gets a spec
+  synthesised from its frameworks (`src/analytics/spec.py`). **Nothing in
+  `src/` names a philosophy** — a new package with an `analytics.yaml` gets its
+  own section with no engine change, and `test_program_analytics.py` proves it
+  with a throwaway package.
+- **The engine's vocabulary is twelve primitives** (`src/analytics/primitives/`):
+  `set_load`, `load_at_rpe`, `rounds`, `duration`, `distance`, `hold_seconds`,
+  `rate`, `zone_minutes`, `aerobic_efficiency`, `unlocks`, `benchmark_level`,
+  `session_completion`. A spec entry names one, scopes it (modalities,
+  archetypes, frameworks, slot types, roles, exercises, patterns) and says where
+  its expectation comes from. Every result carries **coverage** — the share of
+  completed in-scope sessions that produced the metric, with a reason code
+  when it is zero — so a methodology whose currency is not captured yet says
+  "not measurable — log rounds" instead of showing nothing.
+- **Expected values come from the stored prescription, never a generator
+  re-run.** `api._clean_exercise_assignment` strips the slot, and generation
+  used `week_in_phase` where the old tracker replayed with `week_number`; the
+  old "expected trajectory" was a recomputation against a bare slot with the
+  wrong week. Read `ea.load`; for load, expect last achieved + the exercise's
+  increment.
+- **The framework's `progression_model` never drove a prescription** —
+  `generator.py` reads the modality yaml's. Default primitives key on
+  `(modality.progression_model, slot_type)`; the framework's model informs
+  only the intensity section.
+- **Slot roles are free-form (144 strings).** Never scope by guessing a role
+  name; the default `set_load` scope is `slot_types: [sets_reps]` plus
+  `exclude_slot_roles` for warm-up/accessory/prep. Starting Strength's own
+  roles are `primary_squat`, `upper_press`, `secondary_compound`.
+- **One HR-zone definition, one family map.** `data/commons/hr_zones.json`
+  (edges near the aerobic threshold, with a `version` cached workout metrics
+  key on) is read by `src/analytics/zones.py`, `_calc_workout_trimp` and
+  `lib/hrZones.ts`; `data/commons/modality_families.json` replaced five
+  divergent copies. Under the old Friel 60/70/80/90 edges honest Zone 2 at 72%
+  counted as Z3, inverting Uphill's 80/20 diagnostic. Server max HR is now
+  DOB-aware like the clients.
+- **The scorecard headline is a gate, not a weighted sum**: Σ priority ×
+  completion is arithmetically plain compliance (priorities *are* the session
+  shares). Committed-tier completion < 70% is `off_plan` regardless.
+- **A strength session contributes to `max_effort` whether or not it wore a
+  strap** — never to the HR buckets as well. Sessions with neither HR nor a
+  strength modality are `unclassified`, counted not dropped.
+- **Trend** is a least-squares slope over non-deload points (`trend.py`),
+  ±1 %/point; stall for load is per *session*, over the package's declared
+  window. A deload week — flagged, or a taper — is never a stall.
+- **Window.** Session logs, matches and workouts are keyed program-relatively
+  and a regenerate leaves the last block's rows under the same keys, so
+  `context.py` filters every input to the program's own date span. Cross-block
+  comparison needs the parked `feat/program-history` branch.
+- **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
+  durationSec / distanceKm` — the keys the tracker always read and nothing
+  wrote; `ExerciseRow` dispatches on `slot_type`, not `load.sets`. Bodyweight
+  is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
+  the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
+  iOS app had been posting notes into a phantom key — and fatigue is folded to
+  1–5 at the boundary (iOS sends 1–10).
+- `GET /api/progression/review` keeps its shape for iOS but takes its
+  `exercise_findings` from the engine.
+
 ## Running the iOS App
 
 **Every iOS change ends in the simulator.** A green `xcodebuild` says the code
@@ -199,6 +290,13 @@ osascript -e 'tell application "System Events" to click at {1812, 105}'
 ```
 
 ## Checks
+
+Run this after touching analytics, a package's `analytics.yaml`, the matcher's
+zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing checks):
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
+```
 
 Run these after touching engine code or package data:
 

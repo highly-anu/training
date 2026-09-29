@@ -1,0 +1,40 @@
+# What progress means for Wildman kettlebell work. RPM-based when training for
+# the pentathlon; complexity-based in general practice, where a new movement
+# earned is the unit of progress.
+id: wildman_kettlebell
+
+progress:
+  - id: jerk_rpm
+    label: Jerk cadence
+    primitive: rate
+    scope:
+      frameworks: [kb_pentathlon]
+      archetypes: [kb_pentathlon_training]
+      exercises: [kb_jerk_single]
+    rpm_target: 20          # "jerk ~20 RPM at 1 pood" — kb_pentathlon_training.yaml
+
+  - id: snatch_rpm
+    label: Snatch cadence
+    primitive: rate
+    scope:
+      frameworks: [kb_pentathlon]
+      archetypes: [kb_pentathlon_training]
+      exercises: [wk_kb_snatch]
+    rpm_target: 14          # "snatch ~14 RPM at 1 pood"
+
+  - id: ballistic_load
+    label: Ballistic load
+    primitive: set_load
+    scope:
+      modalities: [power]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*warm*", "*cool*"]
+    expected: prescribed
+
+  - id: skills
+    label: Movements earned
+    primitive: unlocks
+    scope: {modalities: [movement_skill, power, strength_endurance]}
+    min_sessions: 2
+
+benchmarks: [ssst_reps]

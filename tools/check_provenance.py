@@ -173,7 +173,85 @@ def report_authoring() -> list:
                     f"{phil_id}: declares phase {phase!r} but no archetype in the "
                     f"package lists it in applicable_phases")
 
+    # 5. A package's analytics.yaml may only name what the package owns or
+    #    borrows. The self-containment rule for programs, applied to the
+    #    declarations that measure them: a philosophy that ships its own
+    #    analytics cannot quietly reach into another package's exercises.
+    problems.extend(_report_analytics_specs(data, installed))
+
     return problems
+
+
+def _report_analytics_specs(data: dict, installed: set) -> list:
+    from src.provenance import SourcePolicy, _parse_borrows
+
+    problems: list = []
+    arch_owner = {a['id']: a.get('_package') for a in data['archetypes']}
+    benchmark_ids = _known_benchmark_ids()
+    modality_ids = set(data['modalities'])
+    frameworks = loader.load_all_frameworks()
+
+    for pkg, spec in loader.load_analytics_specs().items():
+        if spec.get('id') != pkg:
+            problems.append(f"{pkg}/analytics.yaml: id {spec.get('id')!r} must equal the package")
+        if pkg not in installed:
+            problems.append(f"{pkg}/analytics.yaml: no philosophy.yaml beside it")
+            continue
+        phil = loader.load_philosophy(pkg)
+        policy = SourcePolicy(owner_packages=frozenset({pkg}), borrows=_parse_borrows(phil))
+        allowed = policy.allowed_packages
+
+        def owned_exercise(ex_id: str) -> bool:
+            ex = data['exercises'].get(ex_id)
+            return bool(ex) and bool(set(ex.get('_packages') or []) & allowed)
+
+        for entry in spec.get('progress') or []:
+            scope = entry.get('scope') or {}
+            where = f"{pkg}/analytics.yaml: {entry.get('id')!r}"
+            for ex_id in scope.get('exercises') or []:
+                if not owned_exercise(ex_id):
+                    problems.append(f"{where} scopes exercise {ex_id!r}, which the package "
+                                    f"neither owns nor borrows")
+            for arch_id in scope.get('archetypes') or []:
+                if arch_owner.get(arch_id) not in allowed:
+                    problems.append(f"{where} scopes archetype {arch_id!r}, which the package "
+                                    f"neither owns nor borrows")
+            for mod in scope.get('modalities') or []:
+                if mod not in modality_ids:
+                    problems.append(f"{where} scopes unknown modality {mod!r}")
+            for fw_id in scope.get('frameworks') or []:
+                fw = frameworks.get(fw_id)
+                if not fw or fw.get('source_philosophy') != pkg:
+                    problems.append(f"{where} scopes framework {fw_id!r}, not this package's")
+            for b in entry.get('benchmarks') or []:
+                if b not in benchmark_ids:
+                    problems.append(f"{where} names unknown benchmark {b!r}")
+        for b in spec.get('benchmarks') or []:
+            if b not in benchmark_ids:
+                problems.append(f"{pkg}/analytics.yaml: names unknown benchmark {b!r}")
+    return problems
+
+
+def _known_benchmark_ids() -> set:
+    """Every benchmark id the API can serve, read from data/benchmarks directly."""
+    import yaml
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'data', 'benchmarks')
+    ids: set = {'bodyweight_kg'}
+    for name in ('strength_standards.yaml', 'conditioning_standards.yaml'):
+        path = os.path.join(root, name)
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as f:
+                for item in yaml.safe_load(f) or []:
+                    if isinstance(item, dict) and item.get('id'):
+                        ids.add(item['id'])
+    cell = os.path.join(root, 'cell_standards.yaml')
+    if os.path.exists(cell):
+        with open(cell, encoding='utf-8') as f:
+            for domain, entries in ((yaml.safe_load(f) or {}).get('standards') or {}).items():
+                for ex in (entries or {}):
+                    ids.add(f'cell_{domain}_{ex}')
+    return ids
 
 
 def report_coverage() -> int:

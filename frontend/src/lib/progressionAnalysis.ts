@@ -1,42 +1,14 @@
 import type {
   ExerciseFinding,
-  ExerciseHistoryPoint,
   ProgressionAdjustment,
   ProgressionStatus,
-  TrendDirection,
 } from '@/api/types'
 
 // ── Trend helpers ─────────────────────────────────────────────────────────────
 
-export function getExerciseTrend(history: ExerciseHistoryPoint[]): {
-  slope: number
-  direction: TrendDirection
-} {
-  const vals = history
-    .map((p) => p.best_weight_kg ?? p.duration_sec ?? p.distance_km ?? p.rounds_completed)
-    .filter((v): v is number => v !== null && v !== undefined)
-
-  if (vals.length < 2) return { slope: 0, direction: 'stable' }
-
-  // Simple linear regression slope
-  const n = vals.length
-  const xs = vals.map((_, i) => i)
-  const sumX  = xs.reduce((a, b) => a + b, 0)
-  const sumY  = vals.reduce((a, b) => a + b, 0)
-  const sumXY = xs.reduce((a, x, i) => a + x * vals[i], 0)
-  const sumX2 = xs.reduce((a, x) => a + x * x, 0)
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1)
-
-  const relativeDelta = Math.abs(slope) / (Math.abs(vals[0]) || 1)
-  const direction: TrendDirection =
-    relativeDelta < 0.02
-      ? 'stable'
-      : slope > 0
-      ? 'improving'
-      : 'declining'
-
-  return { slope, direction }
-}
+// getExerciseTrend (a least-squares slope with no callers) moved to the server:
+// src/analytics/trend.py fits the slope over non-deload points and the analytics
+// document carries it as `trend.slopePct`.
 
 // ── Display helpers ───────────────────────────────────────────────────────────
 

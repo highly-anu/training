@@ -17,6 +17,7 @@ const FLAG_LABELS: Record<ReadinessFlag, string> = {
   insufficient_sleep: 'Less than 5h sleep last night',
   poor_sleep_3d: 'Poor sleep 3+ nights in a row',
   insufficient_data: 'Limited data — add daily check-ins',
+  overreached: 'Training stress balance deeply negative — overreached',
 }
 
 

@@ -1,0 +1,29 @@
+# What progress means for Starting Strength. Load-based: the bar goes up every
+# session, and the program is over when it has stopped going up.
+id: starting_strength
+
+progress:
+  - id: bar_load
+    label: Load on the bar
+    primitive: set_load
+    headline: true
+    scope:
+      modalities: [max_strength]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*warm*", "*accessory*", "*prep*"]
+    expected: achieved_plus_increment
+    # "Run until linear gains stall (3 consecutive sessions without progress on
+    # a lift), then transition to intermediate programming." — linear_progression.yaml
+    stall: {sessions: 3, tolerance_pct: 1}
+
+  - id: novice_completion
+    label: Novice completion standard
+    primitive: benchmark_level
+    # squat 1.5× BW, deadlift 2× BW, press 0.75× BW — the `intermediate` level
+    # of the shared standards, which cite this package as a source.
+    benchmarks: [back_squat_bw_ratio, deadlift_bw_ratio, strict_press_bw_ratio]
+    target_level: intermediate
+
+# No movement balance declared: 3x5 has no pull slot on purpose, and a push:pull
+# warning here would be noise.
+benchmarks: [bench_press_bw_ratio, power_clean_bw_ratio]

@@ -634,6 +634,9 @@ export interface Framework {
     mitigation?: string
   }>
   deload_protocol?: { frequency_weeks: number; volume_reduction_pct: number; intensity_change: string }
+  /** Authored in every framework yaml; the analytics scorecard tiers by it. */
+  modality_priority?: { committed?: ModalityId[]; core?: ModalityId[]; supplementary?: ModalityId[] }
+  cadence_options?: Record<string, number[][]>
   sources?: string[]
   notes?: string
   expectations?: GoalExpectations
@@ -769,6 +772,14 @@ export interface ExercisePerformance {
   sets: SetPerformance[]
   rpe?: RPE
   notes?: string
+  /**
+   * Outcomes for slots that are not sets × reps — what the OutcomeLogger
+   * writes and what src/progression_tracker.py and the analytics engine
+   * read. Until the logger existed nothing ever wrote these.
+   */
+  rounds?: number
+  durationSec?: number
+  distanceKm?: number
 }
 
 export interface ExerciseTimelineEntry {
@@ -993,4 +1004,299 @@ export interface ParseJobStatus {
   progress: number   // 0.0 – 1.0
   stage: string
   error: string | null
+}
+
+// ─── Program analytics (GET /api/analytics/program) ───────────────────────────
+// The document src/analytics/document.py produces. Progress entries are shaped by
+// the primitive that made them; the common fields are typed, the rest is `extra`.
+
+export type AnalyticsStatus =
+  | 'ahead' | 'on_track' | 'behind' | 'stalled' | 'stable_by_design' | 'insufficient_data'
+  | 'on_target' | 'off_target' | 'no_target' | 'met' | 'partial' | 'below' | 'off_plan' | 'error'
+
+export type AnalyticsPrimitive =
+  | 'set_load' | 'load_at_rpe' | 'rounds' | 'duration' | 'distance' | 'hold_seconds'
+  | 'rate' | 'zone_minutes' | 'aerobic_efficiency' | 'unlocks' | 'benchmark_level' | 'session_completion'
+
+export interface AnalyticsSeriesPoint {
+  week: number | null
+  x: number
+  value: number | null
+  date?: string
+  isDeload: boolean
+  [extra: string]: unknown
+}
+
+export interface AnalyticsExpectedPoint { week: number | null; x: number; value: number | null }
+
+export interface AnalyticsCoverage {
+  inScope: number
+  measured: number
+  pct: number
+  reason: string | null
+}
+
+export interface AnalyticsTrend { direction: 'improving' | 'stable' | 'declining' | 'insufficient_data'; slopePct: number; pointsUsed: number }
+
+export interface AnalyticsExerciseResult {
+  exerciseId: string
+  name: string
+  series: AnalyticsSeriesPoint[]
+  expected: AnalyticsExpectedPoint[]
+  trend: AnalyticsTrend
+  status: AnalyticsStatus
+  stalled?: boolean
+  increment?: number
+  prescribedNow?: number | null
+  targetRpe?: number | null
+  latest?: AnalyticsSeriesPoint | null
+  bestEst1rm?: number | null
+}
+
+export interface AnalyticsProgressEntry {
+  id: string
+  label: string
+  primitive: AnalyticsPrimitive
+  philosophy: string
+  weight: number
+  headline: boolean
+  source: 'declared' | 'default'
+  metric: string
+  unit: string
+  series: AnalyticsSeriesPoint[]
+  expected: AnalyticsExpectedPoint[]
+  status: AnalyticsStatus
+  trend: AnalyticsTrend
+  coverage: AnalyticsCoverage
+  evidence: string[]
+  exercises?: AnalyticsExerciseResult[]
+  leadExerciseId?: string | null
+  weeks?: Array<Record<string, unknown>>
+  byFramework?: Array<Record<string, unknown>>
+  benchmarks?: Array<Record<string, unknown>>
+  practised?: Array<{ exerciseId: string; name: string; sessions: number }>
+  available?: Array<{ exerciseId: string; name: string; requires: string[] }>
+  totals?: Record<string, number | null>
+  [extra: string]: unknown
+}
+
+export interface AnalyticsMethodology {
+  philosophy: string
+  weight: number
+  analytics: 'declared' | 'default'
+  headlineId: string | null
+  entryIds: string[]
+  measurable: number
+  total: number
+}
+
+export interface AnalyticsScorecardRow {
+  modality: ModalityId
+  family: string
+  tier: 'committed' | 'core' | 'supplementary' | 'unscheduled'
+  priority: number
+  plannedSessions: number
+  completedSessions: number
+  completionPct: number | null
+  plannedMinutes: number
+  actualMinutes: number
+  weeklyPlannedMinutes: number
+  weeklyActualMinutes: number
+  minWeeklyMinutes: number | null
+  maxWeeklyMinutes: number | null
+  doseStatus: 'under' | 'on' | 'over' | 'unknown'
+  planDoseStatus: 'under' | 'on' | 'over' | 'unknown'
+}
+
+export interface AnalyticsScorecard {
+  headline: 'on_plan' | 'off_plan' | 'not_started'
+  overallPct: number | null
+  tiers: Record<string, { planned: number; completed: number; pct: number | null }>
+  elapsedWeeks: number
+  modalities: AnalyticsScorecardRow[]
+}
+
+export interface AnalyticsFrame {
+  status: 'not_started' | 'active' | 'complete'
+  startDate: string
+  today: string
+  plannedWeeks: number
+  elapsedWeeks: number
+  deloadWeeks: number[]
+  philosophies: Array<{
+    id: string; name: string; progressionPhilosophy: string | null; intensityModel: string | null
+    corePrinciples: string[]; weight: number; analytics: 'declared' | 'default'
+  }>
+  framework: {
+    id: string; name: string; progressionModel: string
+    intensityDistribution: Record<string, number> | null
+    sessionsPerWeek: Record<string, number> | null
+    modalityPriority: Record<string, string[]> | null
+    notes: string | null
+  } | null
+  phase: { name: string; weekInPhase: number | null; weekInProgram: number; totalWeeks: number; focus: string | null; isDeload: boolean } | null
+  phaseSequence: Array<{ phase: string; weeks: number; frameworkId: string | null; focus: string | null }>
+  planFidelity: Array<{ field: string; ideal: number; minimum: number | null; actual: number; unit: string; status: 'below_minimum' | 'below_ideal' | 'meets_ideal' }>
+}
+
+export interface AnalyticsIntensityWeek {
+  week: number
+  isDeload: boolean
+  frameworkId: string | null
+  zone1_2_pct: number
+  zone3_pct: number
+  zone4_5_pct: number
+  max_effort_pct: number
+  unclassified: number
+  sessions: number
+  classifiedMinutes: number
+  actualPct: Record<string, number | null>
+  plannedPct: Record<string, number> | null
+}
+
+export interface AnalyticsIntensity {
+  status: AnalyticsStatus
+  coverage: AnalyticsCoverage
+  maxHr: number | null
+  methods: Record<string, number>
+  weeks: AnalyticsIntensityWeek[]
+  byFramework: Array<{ frameworkId: string | null; classifiedMinutes: number; actualPct: Record<string, number | null>; plannedPct: Record<string, number> | null; deviationPts: Record<string, number> | null }>
+  maxDeviationPts: number | null
+  pct1rm?: { sessions: number; meanPct: number | null; rows: Array<{ week: number; exerciseId: string; pctOf1rm: number; targetPct: number | null }> }
+}
+
+export interface AnalyticsMovement {
+  sets: { patterns: Array<{ pattern: string; planned: number; done: number }>; rollups: Record<string, { planned: number; done: number }> }
+  minutes: { patterns: Array<{ pattern: string; planned: number; done: number }>; rollups: Record<string, { planned: number; done: number }>; assumed: number }
+  unilateralShare: { planned: number | null; done: number | null }
+  balance: Array<{ a: string; b: string; ratio: number | null; min: number; max: number; level: 'info' | 'warning'; outside: boolean; declared: boolean }>
+  byArchetypeCategory: Record<string, { plannedSessions: number; completedSessions: number }>
+}
+
+export interface AnalyticsArchetypeRow {
+  archetypeId: string
+  name: string
+  category: string | null
+  modality: ModalityId
+  scheduled: number
+  completed: number
+  matched: number
+  prescribedMinutes: number
+  completionPct: number | null
+  meanDurationDeltaPct: number | null
+  hr: { avg: number; max: number } | null
+  leadLift: { exerciseId: string; firstEst1rm: number; latestEst1rm: number; sessions: number } | null
+  slotTypes: string[]
+}
+
+export interface AnalyticsBenchmarkRow {
+  benchmarkId: string
+  name: string
+  category: string
+  domain: string | null
+  unit: string
+  metricType: string
+  lowerIsBetter: boolean
+  why: Array<'philosophy' | 'priority_modality' | 'declared'>
+  standards: Record<string, number>
+  latest: number | null
+  latestDate: string | null
+  derived: { value: number | null; est1rm: number; bodyweightKg: number | null; date?: string; reason?: string } | null
+  value: number | null
+  valueSource: 'logged' | 'derived' | null
+  level: string | null
+  levelIndex: number
+  next: string | null
+  gapToNext: number | null
+  history: Array<{ date: string; value: number }>
+}
+
+export interface ProgramAnalytics {
+  status: 'ok' | 'no_program'
+  revision?: string | null
+  generatedAt?: string
+  frame: AnalyticsFrame
+  scorecard: AnalyticsScorecard
+  intensity: AnalyticsIntensity
+  methodologies: AnalyticsMethodology[]
+  progress: AnalyticsProgressEntry[]
+  movement: AnalyticsMovement
+  archetypes: AnalyticsArchetypeRow[]
+  benchmarks: { sex: string; bodyweightKg: number | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
+  load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
+}
+
+// ─── Analytics specs (what a philosophy tracks, described) ───────────────────
+// GET /api/analytics/specs — src/analytics/describe.py. Static: the composed
+// spec of every package (declared analytics.yaml or synthesised default),
+// resolved to names, for the Explore tab. No program, no user.
+
+export interface SpecNamed { id: string; name: string }
+
+export interface ProgressSpecScope {
+  modalities: SpecNamed[]
+  archetypes: SpecNamed[]
+  frameworks: SpecNamed[]
+  exercises: SpecNamed[]
+  movementPatterns: string[]
+  slotTypes: string[]
+  slotRoles: string[]
+  excludeSlotRoles: string[]
+}
+
+export type ProgressSpecExpected =
+  | { kind: 'prescribed' | 'achieved_plus_increment' | 'none' }
+  | { kind: 'load_field' | 'framework_field'; field: string }
+  | { kind: 'constant'; value: number; unit?: string }
+
+export interface ProgressSpecEntry {
+  id: string
+  label: string
+  primitive: AnalyticsPrimitive
+  headline: boolean
+  source: 'declared' | 'default'
+  scope: ProgressSpecScope
+  expected: ProgressSpecExpected
+  stall: { sessions: number; tolerancePct: number } | null
+  benchmarks: Array<{ id: string; name: string; unit: string; category: string | null }>
+  targetLevel: string | null
+  rpmTarget: number | null
+  minSessions: number
+  notes: string | null
+}
+
+export interface SpecNeed {
+  field: string
+  label: string
+  where: string
+  entries: string[]
+}
+
+export interface PhilosophySpec {
+  philosophy: string
+  name: string
+  source: 'declared' | 'default'
+  file: string | null
+  progressionPhilosophy: string | null
+  headlineId: string | null
+  progress: ProgressSpecEntry[]
+  movement: { balance: Array<{ a: string; b: string; min: number; max: number }>; declared: boolean }
+  benchmarks: Array<{ id: string; name: string; category: string; domain: string | null; unit: string; why: 'declared' | 'entry' | 'source' }>
+  needs: SpecNeed[]
+}
+
+export interface PrimitiveVocabulary {
+  label: string
+  measures: string
+  unit: string
+  needs: string[]
+  expectedKinds: string[]
+}
+
+export interface AnalyticsSpecs {
+  vocabulary: {
+    primitives: Record<AnalyticsPrimitive, PrimitiveVocabulary>
+    needs: Record<string, { label: string; where: string }>
+  }
+  philosophies: Record<string, PhilosophySpec>
 }

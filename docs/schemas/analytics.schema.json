@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analytics.schema.json",
+  "title": "Package Analytics",
+  "description": "What progress means for one methodology. A package ships this file beside its philosophy.yaml to declare which metric primitives constitute progress for it, over which sessions, against what target. The engine (src/analytics) is a generic interpreter over these declarations; a package with no file gets a spec synthesised from its frameworks' progression models. Every id referenced here must be owned or borrowed by the package — tools/check_provenance.py enforces it.",
+  "type": "object",
+  "required": ["id", "progress"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Must equal the package directory name and the philosophy id."
+    },
+    "progress": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered. The methodology's own progress signals, first is the most important unless one is marked `headline`.",
+      "items": { "$ref": "#/definitions/progressEntry" }
+    },
+    "movement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "balance": {
+          "type": "array",
+          "description": "Movement-pattern ratios this methodology cares about. Declared ratios are reported as warnings when outside [min, max]; undeclared ratios are information only — a push:pull warning on a program that deliberately has no pull slot is noise.",
+          "items": {
+            "type": "object",
+            "required": ["a", "b"],
+            "additionalProperties": false,
+            "properties": {
+              "a":   { "type": "string", "description": "Pattern rollup: push, pull, hinge, squat, carry, locomotion, or a raw pattern id." },
+              "b":   { "type": "string" },
+              "min": { "type": "number", "minimum": 0, "default": 0.6 },
+              "max": { "type": "number", "minimum": 0, "default": 1.6 }
+            }
+          }
+        }
+      }
+    },
+    "benchmarks": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "description": "Benchmark ids to show for this methodology, in addition to any whose `sources` name this package."
+    },
+    "notes": { "type": "string" }
+  },
+  "definitions": {
+    "primitive": {
+      "type": "string",
+      "enum": [
+        "set_load", "load_at_rpe", "rounds", "duration", "distance", "hold_seconds",
+        "rate", "zone_minutes", "aerobic_efficiency", "unlocks", "benchmark_level",
+        "session_completion"
+      ],
+      "description": "One of the engine's metric primitives (src/analytics/primitives). Adding a primitive is an engine change; declaring one is not."
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Which sessions and which assignments within them feed this entry. Session-level selectors (modalities, archetypes, frameworks) narrow sessions; assignment-level selectors (slot_roles, slot_types, exercises, movement_patterns) narrow the exercises inside them. Empty means everything the program schedules.",
+      "properties": {
+        "modalities":        { "type": "array", "items": { "type": "string" } },
+        "archetypes":        { "type": "array", "items": { "type": "string" } },
+        "frameworks":        { "type": "array", "items": { "type": "string" }, "description": "Apply only in weeks governed by these frameworks — how a phased program (Uphill) scopes an entry to one phase." },
+        "slot_roles":        { "type": "array", "items": { "type": "string" }, "description": "fnmatch globs over the archetype slot role, e.g. \"primary_*\". Roles are free-form (144 distinct across the packages), so prefer exclude_slot_roles unless you own the archetypes." },
+        "exclude_slot_roles": { "type": "array", "items": { "type": "string" }, "description": "fnmatch globs for roles to leave out, e.g. \"*warm*\", \"*accessory*\"." },
+        "slot_types":        { "type": "array", "items": { "type": "string" } },
+        "exercises":         { "type": "array", "items": { "type": "string" } },
+        "movement_patterns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "expected": {
+      "description": "Where the target comes from. Never a re-run of the generator: the stored program cannot be replayed (api._clean_exercise_assignment strips the slot).",
+      "oneOf": [
+        { "type": "string", "enum": ["prescribed", "achieved_plus_increment", "none"] },
+        { "type": "object", "required": ["load_field"], "additionalProperties": false,
+          "properties": { "load_field": { "type": "string", "description": "A key of the stored ea.load, e.g. target_rounds, duration_minutes, hold_seconds." } } },
+        { "type": "object", "required": ["framework_field"], "additionalProperties": false,
+          "properties": { "framework_field": { "type": "string", "enum": ["intensity_distribution", "sessions_per_week"] } } },
+        { "type": "object", "required": ["constant"], "additionalProperties": false,
+          "properties": { "constant": { "type": "number" }, "unit": { "type": "string" } } }
+      ]
+    },
+    "progressEntry": {
+      "type": "object",
+      "required": ["id", "primitive"],
+      "additionalProperties": false,
+      "properties": {
+        "id":        { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "label":     { "type": "string" },
+        "primitive": { "$ref": "#/definitions/primitive" },
+        "scope":     { "$ref": "#/definitions/scope" },
+        "expected":  { "$ref": "#/definitions/expected" },
+        "headline":  { "type": "boolean", "description": "The entry the methodology section leads with. At most one; otherwise chosen from the philosophy's progression_philosophy." },
+        "stall": {
+          "type": "object",
+          "required": ["sessions"],
+          "additionalProperties": false,
+          "properties": {
+            "sessions":      { "type": "integer", "minimum": 1, "description": "Consecutive non-deload sessions without improvement that constitute a stall. Starting Strength: 3." },
+            "tolerance_pct": { "type": "number", "minimum": 0, "default": 1 }
+          }
+        },
+        "benchmarks":   { "type": "array", "items": { "type": "string" }, "description": "For benchmark_level: which standards." },
+        "target_level": { "type": "string", "enum": ["entry", "intermediate", "advanced", "elite"], "description": "For benchmark_level: the level this methodology considers its end state." },
+        "rpm_target":   { "type": "number", "minimum": 0, "description": "For rate: reps per minute the methodology trains toward." },
+        "min_sessions": { "type": "integer", "minimum": 1, "default": 2, "description": "For unlocks: sessions before an exercise counts as practised." },
+        "notes":        { "type": "string" }
+      }
+    }
+  }
+}

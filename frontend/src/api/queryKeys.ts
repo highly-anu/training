@@ -26,6 +26,10 @@ export const queryKeys = {
   programs: {
     current: ['programs', 'current'] as const,
   },
+  analytics: {
+    program: ['analytics', 'program'] as const,
+    specs: ['analytics', 'specs'] as const,
+  },
   philosophies: {
     all: ['philosophies'] as const,
   },

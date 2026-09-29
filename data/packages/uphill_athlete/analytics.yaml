@@ -1,0 +1,48 @@
+# What progress means for Uphill Athlete. Volume-based: more easy aerobic time,
+# a longer long day, and muscular endurance that survives the mountain — with
+# the intensity split policed against the 80/20 the framework declares.
+id: uphill_athlete
+
+progress:
+  - id: aerobic_volume
+    label: Aerobic volume
+    primitive: duration
+    headline: true
+    scope: {modalities: [aerobic_base]}
+    expected: {load_field: duration_minutes}
+
+  - id: intensity_split
+    label: Intensity split vs plan
+    primitive: zone_minutes
+    expected: {framework_field: intensity_distribution}
+
+  - id: long_day
+    label: Long day
+    primitive: duration
+    scope: {archetypes: [long_zone_2, long_mountain_day, weighted_ruck_z2]}
+    expected: {load_field: duration_minutes}
+
+  - id: muscular_endurance
+    label: Muscular endurance (weighted step-ups)
+    primitive: duration
+    scope:
+      archetypes: [me_weighted_box_step_ups, uphill_weighted_carry_session]
+      frameworks: [uphill_base_phase, uphill_specific_phase]
+    expected: {load_field: duration_minutes}
+
+  - id: aerobic_efficiency
+    label: Aerobic efficiency
+    primitive: aerobic_efficiency
+    scope: {modalities: [aerobic_base]}
+
+  - id: strength_base
+    label: Strength base
+    primitive: set_load
+    scope:
+      modalities: [max_strength]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*warm*", "*accessory*"]
+      frameworks: [uphill_transition_phase, uphill_base_phase]
+    expected: prescribed
+
+benchmarks: [run_3mile_minutes]

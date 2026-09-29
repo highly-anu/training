@@ -1,8 +1,16 @@
 import type { GPSPoint, HRSample, HRZoneDistribution } from '@/api/types'
+import hrZonesData from '@shared/commons/hr_zones.json'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
 
-// Friel/Coggan zone upper boundaries as fraction of max HR
-// Z1: <60%, Z2: 60-70%, Z3: 70-80%, Z4: 80-90%, Z5: 90%+
-export const DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
+/**
+ * Zone upper boundaries as fractions of max HR — read from
+ * data/commons/hr_zones.json, the same file the server buckets with. This used
+ * to be a local Friel 60/70/80/90 copy; under those edges honest Zone 2 work at
+ * 72% was counted as Z3, inverting Uphill Athlete's 80/20 diagnostic. Change the
+ * edges in the JSON (and bump its version), never here.
+ */
+export const DEFAULT_ZONE_BOUNDARIES: number[] = hrZonesData.upper_bounds
+export const HR_ZONES_VERSION: number = hrZonesData.version
 
 /**
  * The five-zone ramp — single source of truth for zone colour and naming.
@@ -14,12 +22,34 @@ export const DEFAULT_ZONE_BOUNDARIES = [0.60, 0.70, 0.80, 0.90]
  *
  * `bg` is the faint band fill used behind timeline plots.
  */
-export const ZONES = [
-  { key: 'z1', label: 'Z1', description: 'Recovery',  color: '#94a3b8', bg: 'rgba(148,163,184,0.06)' },
-  { key: 'z2', label: 'Z2', description: 'Aerobic',   color: '#38bdf8', bg: 'rgba(56,189,248,0.06)'  },
-  { key: 'z3', label: 'Z3', description: 'Tempo',     color: '#fbbf24', bg: 'rgba(251,191,36,0.06)'  },
-  { key: 'z4', label: 'Z4', description: 'Threshold', color: '#f97316', bg: 'rgba(249,115,22,0.06)'  },
-  { key: 'z5', label: 'Z5', description: 'Max',       color: '#ef4444', bg: 'rgba(239,68,68,0.06)'   },
+const ZONE_COLOURS = [
+  { color: '#94a3b8', bg: 'rgba(148,163,184,0.06)' },
+  { color: '#38bdf8', bg: 'rgba(56,189,248,0.06)'  },
+  { color: '#fbbf24', bg: 'rgba(251,191,36,0.06)'  },
+  { color: '#f97316', bg: 'rgba(249,115,22,0.06)'  },
+  { color: '#ef4444', bg: 'rgba(239,68,68,0.06)'   },
+] as const
+
+export const ZONES = hrZonesData.zones.map((z, i) => ({
+  key: z.key as 'z1' | 'z2' | 'z3' | 'z4' | 'z5',
+  label: z.label,
+  description: z.description,
+  lowerPct: z.lower_pct,
+  upperPct: z.upper_pct,
+  ...ZONE_COLOURS[i],
+}))
+
+/**
+ * A framework's intensity_distribution buckets → colour. The three HR buckets
+ * take the zone ramp (Z2, Z3, Z4 steps); max-effort is strength work and wears
+ * the strength colour. Read by the Program tab's IntensitySplit and the Explore
+ * setup card, so a planned split looks the same wherever it is drawn.
+ */
+export const INTENSITY_BUCKETS = [
+  { key: 'zone1_2_pct', label: 'Z1–2', color: ZONES[1].color },
+  { key: 'zone3_pct',   label: 'Z3',   color: ZONES[2].color },
+  { key: 'zone4_5_pct', label: 'Z4–5', color: ZONES[3].color },
+  { key: 'max_effort_pct', label: 'Max effort', color: MODALITY_COLORS.max_strength.hex },
 ] as const
 
 /** Zone colours, indexed 0-4 (Z1–Z5). Derived from ZONES — do not re-declare locally. */
@@ -57,7 +87,7 @@ export function isZoneCompliant(zones: HRZoneDistribution, prescribedZone: numbe
  * Banister zone-minute weights for the 5-zone Friel model.
  * Non-linear: higher zones impose disproportionately more physiological stress.
  */
-export const BANISTER_ZONE_WEIGHTS = [1.0, 1.5, 2.0, 3.0, 4.5] as const
+export const BANISTER_ZONE_WEIGHTS: readonly number[] = hrZonesData.banister_weights
 
 /**
  * Compute TRIMP (Training Impulse) using Banister zone-minute weighting.

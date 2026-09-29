@@ -1,0 +1,32 @@
+# What progress means for Ido Portal's practice. Complexity-based: progress is a
+# movement you could not do before, and the practice time that earned it.
+id: ido_portal
+
+progress:
+  - id: skills
+    label: Movements earned
+    primitive: unlocks
+    headline: true
+    scope: {modalities: [movement_skill]}
+    min_sessions: 2
+
+  - id: practice_time
+    label: Practice time
+    primitive: duration
+    scope: {archetypes: [movement_flow, skill_ladder]}
+    expected: {load_field: duration_minutes}
+
+  - id: holds
+    label: Holds
+    primitive: hold_seconds
+    scope: {slot_types: [static_hold]}
+    expected: {load_field: hold_seconds}
+
+  - id: attendance
+    label: Practice attendance
+    primitive: session_completion
+    scope: {modalities: [movement_skill, mobility]}
+
+movement:
+  balance:
+    - {a: push, b: pull, min: 0.7, max: 1.4}
