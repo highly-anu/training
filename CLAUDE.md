@@ -21,6 +21,12 @@ A training logic system that algorithmically generates periodized training progr
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
   falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
   runs as the same `local-dev-user`.
+- **npm 11.4.2 cannot rebuild this lockfile's ideal tree** (`npm update`, `npm audit fix`
+  and plain `npm install <pkg>` die with `Cannot read properties of null (reading 'edgesOut')`
+  in arborist's peer-set loader). `npm ci`, `npm ls` and `npm audit` are fine. To change
+  dependencies, run the command through a newer npm without changing the global one:
+  `npx -y npm@12 update <pkg…>`. Dependabot's alerts all point at `frontend/package-lock.json`
+  and are cleared by bumping within the ranges package.json already declares.
 
 ## Repository Structure
 
@@ -356,6 +362,19 @@ The script boots `iPhone 17 Pro` (override with `SIM_DEVICE=`) if nothing is
 booted, and always terminates the old copy first so the running app is the code
 that was just built.
 
+The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
+the `TrainingCompanionTests` target, so a new test file needs no project edit:
+
+```bash
+./ios/run_tests.sh                        # the whole bundle, same simulator rules
+./ios/run_tests.sh ProgramCodableTests    # one class, or Class/testMethod
+```
+
+A test that lets an `AppState` go out of scope must be `async`: the class is
+`@MainActor`, its deinit is isolated, and the Xcode 26.2 runtime aborts an
+isolated deinit that runs outside a Task — which is where a synchronous XCTest
+method runs. `CurrentWeekIndexTests.swift` explains it at the top.
+
 To drive the UI, the simulator maps device points to screen coordinates through
 `group 1 of window 1` — its AX position is the top-left of the device screen and
 its size is the screen in points (a screenshot's pixels ÷ the device scale):
@@ -391,6 +410,12 @@ Run these after touching engine code or package data:
 .venv/bin/python test_provenance.py                      # source-policy rules
 ```
 
+Run this after touching anything under `ios/` (in addition to the simulator):
+
+```bash
+./ios/run_tests.sh                         # TrainingCompanionTests on the booted sim
+```
+
 Run these after touching program history, the matcher or the session-log path:
 
 ```bash
@@ -419,8 +444,6 @@ brew services start postgresql@14 && createdb training_test
 
 ## Known Gaps / Next Work
 
-- Non-blocking scope gaps remain: some packages declare a modality in `scope` that
-  their own frameworks never prescribe and that has no archetype (e.g. `power` and
-  `relative_strength` in several packages). `check_provenance.py --coverage` lists
-  them. These do not affect generation — nothing schedules them — so they are
-  authoring backlog rather than bugs.
+The ranked backlog is `docs/roadmap.md` — one document, priority and complexity
+per item, verified against production on 2026-09-30. Read it before planning
+work; add new items there rather than to a fresh planning doc.
