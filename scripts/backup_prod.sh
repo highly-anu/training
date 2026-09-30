@@ -44,7 +44,7 @@ createdb "$SCRATCH"
 restore_log=$(mktemp)
 "$PG_BIN/pg_restore" -d "$SCRATCH" --no-owner --no-privileges "$OUT" >"$restore_log" 2>&1 || true
 if grep 'error' "$restore_log" \
-     | grep -v 'transaction_timeout\|schema "public" already exists\|schema "auth" does not exist' \
+     | grep -v 'transaction_timeout\|schema "public" already exists\|schema "auth" does not exist\|errors ignored on restore' \
      | grep -q .; then
   grep -v '^Command was:' "$restore_log" >&2
   echo "restore reported unexpected errors above" >&2
