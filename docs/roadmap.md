@@ -252,6 +252,14 @@ server; watch modality colours match `modalityColors.ts`; program history on
 the Program tab; `AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`,
 `AppSubTabs`.
 
+**Dependabot**: the 64 open alerts on 2026-09-30 (29 high) were all in
+`frontend/package-lock.json`, sixteen packages, every one fixable inside the
+ranges `package.json` already declared. Cleared by a lockfile-only update;
+`npm audit` reports zero. Of the runtime-scoped ones, only React Router's
+open redirect through a backslash in `<Link>` and `useNavigate` was reachable
+from a browser SPA; `ws`, `form-data` and `follow-redirects` are the Node
+adapters of Supabase and axios and never ship in the bundle.
+
 **Program history**: migrations 005 and 006 applied to production; archiving on
 read and write; the union matcher index; `session_uid` on every match writer.
 The backfill was run in dry-run mode against production on 2026-09-30 and

@@ -21,6 +21,12 @@ A training logic system that algorithmically generates periodized training progr
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
   falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
   runs as the same `local-dev-user`.
+- **npm 11.4.2 cannot rebuild this lockfile's ideal tree** (`npm update`, `npm audit fix`
+  and plain `npm install <pkg>` die with `Cannot read properties of null (reading 'edgesOut')`
+  in arborist's peer-set loader). `npm ci`, `npm ls` and `npm audit` are fine. To change
+  dependencies, run the command through a newer npm without changing the global one:
+  `npx -y npm@12 update <pkg…>`. Dependabot's alerts all point at `frontend/package-lock.json`
+  and are cleared by bumping within the ranges package.json already declares.
 
 ## Repository Structure
 
