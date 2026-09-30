@@ -50,7 +50,8 @@ final class ProgramCodableTests: XCTestCase {
             programStartDate: "2025-01-06",
             eventDate: nil,
             sourceGoalIds: ["strength_base"],
-            sourceGoalWeights: ["strength_base": 1.0]
+            sourceGoalWeights: ["strength_base": 1.0],
+            baseRevision: nil
         )
         let data = try JSONEncoder().encode(payload)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -75,7 +76,8 @@ final class ProgramCodableTests: XCTestCase {
             programStartDate: "2025-01-06",
             eventDate: "2025-06-01",
             sourceGoalIds: ["strength_base"],
-            sourceGoalWeights: ["strength_base": 1.0]
+            sourceGoalWeights: ["strength_base": 1.0],
+            baseRevision: nil
         )
         // Simulate: iOS encodes → server stores → server returns → iOS decodes
         let encoded = try JSONEncoder().encode(payload)

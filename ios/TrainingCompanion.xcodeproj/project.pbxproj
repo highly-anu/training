@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		401655C74AC37B0699E7F6EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35B080D8CE316FB444FAD768 /* Foundation.framework */; };
 		E09E7C7D2F80E37500CEE326 /* TrainingCompanionWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E0D79A122FA758D600CFB293 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0D79A112FA758D600CFB293 /* WidgetKit.framework */; };
 		E0D79A142FA758D600CFB293 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0D79A132FA758D600CFB293 /* SwiftUI.framework */; };
@@ -25,6 +26,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		137D5AE72EBFA580D63633EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E025C87E2F803C7A00041E62 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E025C8852F803C7A00041E62;
+			remoteInfo = TrainingCompanion;
+		};
 		E09E7C7B2F80E37500CEE326 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E025C87E2F803C7A00041E62 /* Project object */;
@@ -85,6 +93,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		35B080D8CE316FB444FAD768 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		D2759DF9B1D437816CE5B3D3 /* TrainingCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainingCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E025C8862F803C7A00041E62 /* TrainingCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainingCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TrainingCompanionWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0D79A0F2FA758D600CFB293 /* TrainingWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrainingWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -129,6 +139,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		305555CEB9F4939D34406CA1 /* TrainingCompanionTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TrainingCompanionTests;
+			sourceTree = "<group>";
+		};
 		E025C8882F803C7A00041E62 /* TrainingCompanion */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -162,6 +177,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B504E97C38A72C92025A00B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				401655C74AC37B0699E7F6EB /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E025C8832F803C7A00041E62 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -197,6 +220,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B07975A260395CEA73EE4B8C /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				35B080D8CE316FB444FAD768 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		E025C87D2F803C7A00041E62 = {
 			isa = PBXGroup;
 			children = (
@@ -210,6 +241,7 @@
 				E025C8872F803C7A00041E62 /* Products */,
 				E0D79A2D2FA75BF100CFB293 /* WidgetDataStore.swift */,
 				E0D79A2E2FA75BF100CFB293 /* WidgetSharedModels.swift */,
+				305555CEB9F4939D34406CA1 /* TrainingCompanionTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -220,6 +252,7 @@
 				E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */,
 				E0D79A0F2FA758D600CFB293 /* TrainingWidgetsExtension.appex */,
 				E0D79A392FA75D6A00CFB293 /* TrainingWatchWidgetsExtension.appex */,
+				D2759DF9B1D437816CE5B3D3 /* TrainingCompanionTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -229,6 +262,7 @@
 			children = (
 				E0D79A112FA758D600CFB293 /* WidgetKit.framework */,
 				E0D79A132FA758D600CFB293 /* SwiftUI.framework */,
+				B07975A260395CEA73EE4B8C /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -256,8 +290,6 @@
 				E025C8882F803C7A00041E62 /* TrainingCompanion */,
 			);
 			name = TrainingCompanion;
-			packageProductDependencies = (
-			);
 			productName = TrainingCompanion;
 			productReference = E025C8862F803C7A00041E62 /* TrainingCompanion.app */;
 			productType = "com.apple.product-type.application";
@@ -280,8 +312,6 @@
 				E09E7C742F80E37400CEE326 /* TrainingCompanionWatch Watch App */,
 			);
 			name = "TrainingCompanionWatch Watch App";
-			packageProductDependencies = (
-			);
 			productName = "TrainingCompanionWatch Watch App";
 			productReference = E09E7C732F80E37400CEE326 /* TrainingCompanionWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
@@ -302,8 +332,6 @@
 				E0D79A152FA758D600CFB293 /* TrainingWidgets */,
 			);
 			name = TrainingWidgetsExtension;
-			packageProductDependencies = (
-			);
 			productName = TrainingWidgetsExtension;
 			productReference = E0D79A0F2FA758D600CFB293 /* TrainingWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -324,11 +352,30 @@
 				E0D79A3C2FA75D6B00CFB293 /* TrainingWatchWidgets */,
 			);
 			name = TrainingWatchWidgetsExtension;
-			packageProductDependencies = (
-			);
 			productName = TrainingWatchWidgetsExtension;
 			productReference = E0D79A392FA75D6A00CFB293 /* TrainingWatchWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		FBAC3C8F72CD7C13F8EE5909 /* TrainingCompanionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5AB2DB3A11F1064BE2699C67 /* Build configuration list for PBXNativeTarget "TrainingCompanionTests" */;
+			buildPhases = (
+				9B088D533383B3ACCBECAAAB /* Sources */,
+				B504E97C38A72C92025A00B5 /* Frameworks */,
+				CDC70DCD9679AFED06D0EF32 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A452B1691F8E8FD9CFBC3ED7 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				305555CEB9F4939D34406CA1 /* TrainingCompanionTests */,
+			);
+			name = TrainingCompanionTests;
+			productName = TrainingCompanionTests;
+			productReference = D2759DF9B1D437816CE5B3D3 /* TrainingCompanionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -352,6 +399,10 @@
 					E0D79A382FA75D6A00CFB293 = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					FBAC3C8F72CD7C13F8EE5909 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = E025C8852F803C7A00041E62;
+					};
 				};
 			};
 			buildConfigurationList = E025C8812F803C7A00041E62 /* Build configuration list for PBXProject "TrainingCompanion" */;
@@ -372,11 +423,19 @@
 				E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */,
 				E0D79A0E2FA758D600CFB293 /* TrainingWidgetsExtension */,
 				E0D79A382FA75D6A00CFB293 /* TrainingWatchWidgetsExtension */,
+				FBAC3C8F72CD7C13F8EE5909 /* TrainingCompanionTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CDC70DCD9679AFED06D0EF32 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E025C8842F803C7A00041E62 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -408,6 +467,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		9B088D533383B3ACCBECAAAB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E025C8822F803C7A00041E62 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -447,6 +513,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		A452B1691F8E8FD9CFBC3ED7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TrainingCompanion;
+			target = E025C8852F803C7A00041E62 /* TrainingCompanion */;
+			targetProxy = 137D5AE72EBFA580D63633EC /* PBXContainerItemProxy */;
+		};
 		E09E7C7C2F80E37500CEE326 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;
@@ -465,6 +537,28 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		8AFB3C0EDDFCD86F91BEA73B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC8NZU8U3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TrainingCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TrainingCompanion";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		E025C88F2F803C7B00041E62 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -869,9 +963,39 @@
 			};
 			name = Release;
 		};
+		EE2E996EE571231D42B8DF2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC8NZU8U3U;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TrainingCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TrainingCompanion";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5AB2DB3A11F1064BE2699C67 /* Build configuration list for PBXNativeTarget "TrainingCompanionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8AFB3C0EDDFCD86F91BEA73B /* Release */,
+				EE2E996EE571231D42B8DF2D /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E025C8812F803C7A00041E62 /* Build configuration list for PBXProject "TrainingCompanion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

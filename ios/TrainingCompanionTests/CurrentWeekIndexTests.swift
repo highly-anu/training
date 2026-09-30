@@ -3,6 +3,14 @@ import XCTest
 
 /// Tests for AppState.currentWeekIndex — the calculation that maps today's date
 /// to a week index in the program. Edge cases here cause crashes or wrong content.
+///
+/// Every test here is `async` on purpose. `AppState` is `@MainActor`, and under
+/// Swift 6.2's approachable concurrency its deinit is main-actor isolated, which
+/// the runtime performs through `swift_task_deinitOnExecutor`. A synchronous
+/// XCTest method is invoked on the main thread with no current Task, and the
+/// Xcode 26.2 runtime aborts there ("pointer being freed was not allocated")
+/// the moment the test's `AppState` goes out of scope. An `async` test method
+/// runs inside a Task, where the same deallocation is fine.
 final class CurrentWeekIndexTests: XCTestCase {
 
     private let dayFmt: DateFormatter = {
@@ -29,13 +37,13 @@ final class CurrentWeekIndexTests: XCTestCase {
     }
 
     @MainActor
-    func testCurrentWeekIndexReturnsZeroForProgramStartingToday() {
+    func testCurrentWeekIndexReturnsZeroForProgramStartingToday() async {
         let state = makeAppState(startDate: Date(), weekCount: 4)
         XCTAssertEqual(state.currentWeekIndex, 0)
     }
 
     @MainActor
-    func testCurrentWeekIndexReturnsZeroForFutureStartDate() {
+    func testCurrentWeekIndexReturnsZeroForFutureStartDate() async {
         // Program starts next week — must not return negative or crash
         let futureStart = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
         let state = makeAppState(startDate: futureStart, weekCount: 4)
@@ -44,7 +52,7 @@ final class CurrentWeekIndexTests: XCTestCase {
     }
 
     @MainActor
-    func testCurrentWeekIndexReturnsCorrectWeekMidProgram() {
+    func testCurrentWeekIndexReturnsCorrectWeekMidProgram() async {
         // Program started 14 days ago → should be week index 2
         let start = Calendar.current.date(byAdding: .day, value: -14, to: Date())!
         let state = makeAppState(startDate: start, weekCount: 6)
@@ -52,7 +60,7 @@ final class CurrentWeekIndexTests: XCTestCase {
     }
 
     @MainActor
-    func testCurrentWeekIndexReturnsNilWhenProgramEnded() {
+    func testCurrentWeekIndexReturnsNilWhenProgramEnded() async {
         // Program started 8 weeks ago, only 4 weeks long → past the end
         let start = Calendar.current.date(byAdding: .day, value: -56, to: Date())!
         let state = makeAppState(startDate: start, weekCount: 4)
@@ -61,7 +69,7 @@ final class CurrentWeekIndexTests: XCTestCase {
     }
 
     @MainActor
-    func testCurrentWeekIndexNilWhenNoProgramStartDate() {
+    func testCurrentWeekIndexNilWhenNoProgramStartDate() async {
         let state = AppState()
         state.serverProgram = ServerProgram(
             currentProgram: GeneratedProgram(weeks: [
@@ -75,7 +83,7 @@ final class CurrentWeekIndexTests: XCTestCase {
     }
 
     @MainActor
-    func testCurrentWeekNeverReturnsNegativeIndex() {
+    func testCurrentWeekNeverReturnsNegativeIndex() async {
         // Safety: currentWeekIndex must never return a value that would crash weeks[idx]
         let futureStart = Calendar.current.date(byAdding: .day, value: 30, to: Date())!
         let state = makeAppState(startDate: futureStart, weekCount: 4)
