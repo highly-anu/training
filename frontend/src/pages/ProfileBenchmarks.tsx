@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut, Heart, RotateCcw, Plug } from 'lucide-react'
+import { User, Dumbbell, AlertTriangle, Trophy, Calendar, Heart, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LevelBar } from '@/components/benchmarks/LevelBar'
 import { useProfileStore } from '@/store/profileStore'
-import { useAuthStore } from '@/store/authStore'
 import { useBioStore } from '@/store/bioStore'
 import { useBenchmarks } from '@/api/benchmarks'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
@@ -20,7 +18,7 @@ import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, Training
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'athlete' | 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate' | 'connections'
+type SubTab = 'athlete' | 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate'
 
 interface SubTabItem {
   id: SubTab
@@ -35,7 +33,6 @@ const SUB_TABS: SubTabItem[] = [
   { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
   { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
   { id: 'heartrate',  label: 'Heart Rate', Icon: Heart         },
-  { id: 'connections', label: 'Connections', Icon: Plug         },
 ]
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
@@ -805,7 +802,6 @@ function HRSettingsOverview() {
  * every athlete was scored against the male tables.
  */
 function AthleteOverview() {
-  const navigate = useNavigate()
   const trainingLevel = useProfileStore((s) => s.trainingLevel)
   const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
   const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
@@ -814,8 +810,6 @@ function AthleteOverview() {
   const setSex = useProfileStore((s) => s.setSex)
   const timezone = useProfileStore((s) => s.timezone)
   const setTimezone = useProfileStore((s) => s.setTimezone)
-  const { user, savedAccounts, signOutCurrent, switchToAccount } = useAuthStore()
-  const [switching, setSwitching] = useState(false)
   const deviceZone = (() => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return null }
   })()
@@ -911,40 +905,12 @@ function AthleteOverview() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">account</h3>
-          <div className="rounded-lg border border-border/30 bg-card/40 p-4 flex items-center justify-between gap-3">
-            {user && savedAccounts.length > 1 ? (
-              <Select
-                value={user.email ?? ''}
-                onValueChange={async (val) => {
-                  if (val === '__add__') { navigate('/login'); return }
-                  if (val === user.email) return
-                  setSwitching(true)
-                  try { await switchToAccount(val) } finally { setSwitching(false) }
-                }}
-                disabled={switching}
-              >
-                <SelectTrigger className="w-56 h-8 text-xs font-mono"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {savedAccounts.map((a) => (
-                    <SelectItem key={a.email} value={a.email} className="text-xs font-mono">{a.email}</SelectItem>
-                  ))}
-                  <SelectSeparator />
-                  <SelectItem value="__add__" className="text-xs text-muted-foreground">Add account →</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : user ? (
-              <span className="text-xs font-mono text-muted-foreground">{user.email}</span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Local development — no account.</span>
-            )}
-            {user && (
-              <Button variant="ghost" size="sm" onClick={signOutCurrent} className="h-8 text-xs text-muted-foreground hover:text-destructive">
-                <LogOut className="size-3.5 mr-1.5" /> Sign out
-              </Button>
-            )}
-          </div>
+        {/* The account moved to Settings ▸ Account: configuration, not the athlete. */}
+        <div className="rounded-lg border border-border/30 bg-card/40 p-4 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-muted-foreground">Account, sign-out, connected services and appearance live in Settings.</p>
+          <Link to="/settings?tab=account" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline shrink-0">
+            <SettingsIcon className="size-3.5" /> Open Settings
+          </Link>
         </div>
 
       </div>
@@ -997,6 +963,12 @@ export function ProfileBenchmarks() {
   const [activeTab, setActiveTab] = useState<SubTab>(
     requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
   )
+  // Connections moved to Settings on 2026-10-01. Old links and any OAuth
+  // callback still pointing here land on the new home with their query intact.
+  if (searchParams.get('tab') === 'connections') {
+    const qs = searchParams.toString()
+    return <Navigate to={{ pathname: '/settings', search: qs ? `?${qs}` : '' }} replace />
+  }
   return (
     <motion.div
       key="profile"
@@ -1022,7 +994,7 @@ export function ProfileBenchmarks() {
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* A change here that the active program was not built for offers a
             regenerate from the current week — every tab that feeds constraints. */}
-        {['athlete', 'equipment', 'injuries', 'schedule'].includes(activeTab) && <RegenerateFromWeekBanner />}
+        {(['athlete', 'equipment', 'injuries', 'schedule'] as SubTab[]).includes(activeTab) && <RegenerateFromWeekBanner />}
         <div className="flex-1 overflow-hidden">
           {activeTab === 'athlete'    && <AthleteOverview />}
           {activeTab === 'equipment'  && <EquipmentOverview />}
@@ -1030,7 +1002,6 @@ export function ProfileBenchmarks() {
           {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
           {activeTab === 'schedule'   && <ScheduleOverview />}
           {activeTab === 'heartrate'  && <HRSettingsOverview />}
-          {activeTab === 'connections' && <ConnectionsSettings />}
         </div>
       </div>
     </motion.div>

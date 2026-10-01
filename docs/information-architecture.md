@@ -61,7 +61,8 @@ Rules the layout must satisfy:
 | Train | **Log** | `/log` | Workouts · Suggestions (count badge) | Import (sheet) |
 | Insight | **Analytics** | `/analytics` | Program · Progress · Load · Recovery | — (period selector is a control strip) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| You | **Profile** | `/profile` | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate · Connections | — |
+| You | **Profile** | `/profile` | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | — |
+| You | **Settings** | `/settings` | Connections · Account · Appearance (· Developer in dev builds) | — |
 | Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
 
 Flows and details, not nav items: `/program/new` (the builder, launched from the Home
@@ -72,9 +73,12 @@ Explore CTAs; its header gains a back link to `/program`), `/program/:week/:day`
 Redirects, query and `location.state` preserved: `/builder` → `/program/new`,
 `/import` → `/log`, `/import/:id` → `/log/:id`, `/bio` → `/analytics?tab=recovery`,
 `/exercises` → `/explore?topic=exercises`, `/philosophies` → `/explore?topic=philosophies`.
-`/profile?tab=connections` stays where it is: the OAuth landing URL is a server-side
-string (`api.py` `_integrations_redirect`), so a `/settings` split waits until Profile's
-sub-tab row overflows or a web Devices UI exists.
+`/profile?tab=connections` → `/settings?tab=connections` (query intact, so an OAuth
+callback still pointing at the old tab keeps its outcome); the server's landing URL
+(`api.py` `_integrations_redirect`) now names Settings directly. The split was deferred
+until Profile's sub-tab row overflowed or a web Devices UI existed — both happened on
+2026-10-01, and Settings mirrors the phone's: the services connected, the account, the
+look, and the developer switches.
 
 **Home** is the only page that mixes blocks, deliberately: today's session(s) with the
 side panel, readiness plus a one-tap check-in, the week strip with drag-and-drop, a

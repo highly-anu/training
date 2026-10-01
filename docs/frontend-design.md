@@ -1729,7 +1729,9 @@ Two non-Recharts geospatial views:
 
 The sidebar is grouped by the journey in `docs/information-architecture.md`,
 not by feature age. Each group has an eyebrow label in the §13.6 style; the
-items under it are plain `NavLink`s.
+items under it are plain `NavLink`s. The "You" group is Profile (the athlete)
+and Settings (the configuration: connections, account, appearance) — the
+phone keeps the same split with Settings pushed from Profile's gear.
 
 ```tsx
 <nav className="p-2 space-y-3" aria-label="Primary">
@@ -2355,7 +2357,8 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Log** | `ClipboardList` | "Log" | None | Workouts · Suggestions (count) | Import (opens a sheet) | ✅ |
 | **Analytics** | `BarChart3` | "Analytics" | None | Program · Progress · Load · Recovery (`?tab=`) | None (the period selector is content-level) | ✅ |
 | **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |
-| **Profile** | `User` | "Profile" | None | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate · Connections | None | ✅ |
+| **Profile** | `User` | "Profile" | None | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | None | ✅ |
+| **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
 | **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell |

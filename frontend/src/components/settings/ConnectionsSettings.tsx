@@ -1,5 +1,5 @@
 /**
- * Profile → Connections.
+ * Settings → Connections (Profile → Connections until 2026-10-01).
  *
  * Where the athlete connects a service and decides what imports automatically.
  * The toggles are server-backed rather than local, because the Garmin webhook

@@ -7,8 +7,7 @@ import {
   Compass,
   User,
   Activity,
-  Terminal,
-} from 'lucide-react'
+  Terminal, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -49,7 +48,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: 'You',
-    items: [{ to: '/profile', label: 'Profile', icon: User }],
+    items: [
+      { to: '/profile', label: 'Profile', icon: User },
+      { to: '/settings', label: 'Settings', icon: SettingsIcon },
+    ],
   },
   // Developer tooling: present in dev builds, absent from production unless
   // the build sets VITE_DEVLAB=1 (src/lib/featureFlags.ts).

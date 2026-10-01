@@ -74,8 +74,6 @@ scheduled ahead of the ranked list.
   would keep the numbers monotonic.
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
-- **`/settings`** — the web Devices card now sits under Profile ▸ Connections;
-  a separate settings page only when Profile's sub-tab row overflows.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -112,6 +110,14 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *Web Settings page*: `/settings` (Connections · Account · Appearance ·
+  Developer in dev builds), URL-driven like the phone's Settings screen.
+  Connections (integration toggles, Garmin and Strava accounts, devices) and
+  the account switcher and sign-out moved there from Profile, which keeps
+  the athlete: six tabs again. The OAuth landing URL names Settings, and
+  `/profile?tab=connections` redirects with its query intact. The theme list
+  is one export (`THEMES`) shared by the sidebar toggle and
+  Settings ▸ Appearance. `settings.test.tsx` pins the tabs and the redirect.
 - *"About this methodology" on the phone*: Program ▸ Current shows the
   methodology the plan was generated from under the phase bar (a menu for a
   blend) and opens `PhilosophyDetailSheet` — extracted from the builder, where

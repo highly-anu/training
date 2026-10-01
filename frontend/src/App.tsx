@@ -11,6 +11,7 @@ import { ProgramView } from '@/pages/ProgramView'
 import { ProgramHistoryDetail } from '@/pages/ProgramHistoryDetail'
 import { SessionDetail } from '@/pages/SessionDetail'
 import { ProfileBenchmarks } from '@/pages/ProfileBenchmarks'
+import { Settings } from '@/pages/Settings'
 import { Explore } from '@/pages/Explore'
 import { Log } from '@/pages/Log'
 import { WorkoutDetail } from '@/pages/WorkoutDetail'
@@ -78,6 +79,7 @@ export default function App() {
                     <Route path="explore" element={<Explore />} />
                     {/* You */}
                     <Route path="profile" element={<ProfileBenchmarks />} />
+                    <Route path="settings" element={<Settings />} />
                     {/* Dev */}
                     {DEVLAB_ENABLED && <Route path="dev" element={<DevLab />} />}
                     {/* Old addresses. Query and router state survive the hop. */}

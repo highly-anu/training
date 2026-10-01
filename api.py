@@ -1365,7 +1365,8 @@ def strava_sync():
 
 def _integrations_redirect(provider: str, outcome: str, reason: str = '') -> str:
     frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
-    url = f'{frontend_url}/profile?tab=connections&{provider}={outcome}'
+    # Settings ▸ Connections; the old Profile tab redirects here as well.
+    url = f'{frontend_url}/settings?tab=connections&{provider}={outcome}'
     if reason:
         url += f'&reason={reason}'
     return url
