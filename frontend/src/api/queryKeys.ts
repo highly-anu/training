@@ -32,6 +32,7 @@ export const queryKeys = {
   },
   analytics: {
     program: ['analytics', 'program'] as const,
+    development: ['analytics', 'development'] as const,
     specs: ['analytics', 'specs'] as const,
   },
   philosophies: {

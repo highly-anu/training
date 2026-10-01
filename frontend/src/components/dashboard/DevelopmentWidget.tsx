@@ -106,6 +106,12 @@ export function DevelopmentWidget() {
         >
           Import workouts &rarr;
         </Link>
+        <Link
+          to="/analytics?tab=development"
+          className="block text-[10px] text-muted-foreground hover:text-primary transition-colors"
+        >
+          Development across programs →
+        </Link>
       </div>
     )
   }
@@ -206,6 +212,14 @@ export function DevelopmentWidget() {
           ))}
         </div>
       )}
+
+      {/* This card is the current program; the span of every program is a tab. */}
+      <Link
+        to="/analytics?tab=development"
+        className="block text-[10px] text-muted-foreground hover:text-primary transition-colors"
+      >
+        Development across programs →
+      </Link>
     </div>
   )
 }

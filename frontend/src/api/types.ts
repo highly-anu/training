@@ -1327,6 +1327,90 @@ export interface ProgramAnalytics {
   load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
 }
 
+// ─── Development across programs ─────────────────────────────────────────────
+// GET /api/analytics/development — src/analytics/development.py. The history
+// tables read as one document: blocks (the activation timeline), per-lift
+// series across the span, currencies, load with each week's block, and the
+// standards ladder over time.
+
+export interface DevelopmentBlock {
+  id: number
+  versionId: string
+  label: string
+  methodologies: Array<{ id: string; name: string }>
+  from: string
+  to: string | null
+  isActive: boolean
+  weeks: number
+  plannedTotal: number
+  planned: number
+  completed: number
+  completionPct: number | null
+  source: string | null
+}
+
+export interface DevelopmentLiftPoint {
+  date: string
+  blockId: number | null
+  weight: number
+  reps: number | null
+  est1rm: number | null
+  isDeload: boolean
+}
+
+export interface DevelopmentPerBlock {
+  blockId: number
+  sessions: number
+  first: number
+  last: number
+  best: number
+  delta: number
+}
+
+export interface DevelopmentLift {
+  exerciseId: string
+  name: string
+  unit: string
+  points: DevelopmentLiftPoint[]
+  perBlock: DevelopmentPerBlock[]
+  trend: AnalyticsTrend
+  blocks: number
+}
+
+export interface DevelopmentCurrency {
+  exerciseId: string
+  name: string
+  metric: 'rounds' | 'minutes' | 'km'
+  points: Array<{ date: string; blockId: number | null; value: number; isDeload: boolean }>
+  perBlock: DevelopmentPerBlock[]
+  trend: AnalyticsTrend
+}
+
+export interface DevelopmentBenchmark {
+  benchmarkId: string
+  name: string
+  unit: string
+  lowerIsBetter: boolean
+  history: Array<{ date: string; value: number; level: string | null; levelIndex: number }>
+  latestLevel: string | null
+  latestLevelIndex: number
+  levelsGained: number
+}
+
+export interface DevelopmentAnalytics {
+  status: 'ok' | 'no_history'
+  window: { from: string; to: string }
+  blocks: DevelopmentBlock[]
+  lifts: DevelopmentLift[]
+  currencies: DevelopmentCurrency[]
+  load: {
+    weekly: Array<WeeklyLoad & { blockId: number | null }>
+    pmc: Array<PMCEntry & { blockId: number | null }>
+  }
+  benchmarks: DevelopmentBenchmark[]
+  generatedAt?: string
+}
+
 // ─── Analytics specs (what a philosophy tracks, described) ───────────────────
 // GET /api/analytics/specs — src/analytics/describe.py. Static: the composed
 // spec of every package (declared analytics.yaml or synthesised default),
