@@ -100,17 +100,25 @@ def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: st
 
 
 def _build_phase_entries(
-    phase_seq: list, start_phase: str, start_wip: int, num_weeks: int
+    phase_seq: list, start_phase: str, start_wip: int, num_weeks: int,
+    first_week_number: int = 1,
 ) -> list[dict]:
-    """Expand phase_sequence into per-week entries starting at start_phase/start_wip."""
+    """Expand phase_sequence into per-week entries starting at start_phase/start_wip.
+
+    `first_week_number` is the `week_in_program` of the first entry. A partial
+    regenerate passes the kept head's length + 1 so its tail continues the
+    numbering; until it did, every partial regenerate numbered its tail from
+    1 again and a program read 1, 1, 2, 3.
+    """
+    first = max(1, int(first_week_number or 1))
     if not phase_seq:
         return [
-            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': i + 1}
+            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': first + i}
             for i in range(num_weeks)
         ]
 
     entries: list[dict] = []
-    week_in_program = 1
+    week_in_program = first
     found = False
 
     for phase_entry in phase_seq:
@@ -142,7 +150,7 @@ def _build_phase_entries(
     # start_phase not found (manual override) — fall back to flat list
     if not entries:
         return [
-            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': i + 1}
+            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': first + i}
             for i in range(num_weeks)
         ]
 
@@ -273,6 +281,7 @@ def generate(
     goal_dict: dict | None = None,
     include_trace: bool = False,
     policy: 'provenance.SourcePolicy | None' = None,
+    start_week_number: int | None = None,
 ) -> str | dict:
     """
     Generate a training program.
@@ -281,6 +290,9 @@ def generate(
         goal_id:        Identifier for logging/trace only; goal_dict supplies the content.
         constraints:    Dict matching constraints.schema.json
         num_weeks:      Weeks to generate (default 4); ignored when phase_schedule provided
+        start_week_number: `week_number` of the first generated week (default 1).
+                        A partial regenerate passes the kept head's length + 1.
+                        Ignored with phase_schedule, which carries absolute weeks.
         output_format:  'markdown' (default) or 'dict'
         phase_schedule: Optional list of {phase, week_in_phase, week_in_program} dicts.
                         When provided, generates exactly these weeks spanning phases.
@@ -348,7 +360,8 @@ def generate(
         base_phase = constraints.get('training_phase', first_phase)
         start_week = constraints.get('periodization_week', 1)
         entries = _build_phase_entries(
-            phase_seq, base_phase, start_week, num_weeks
+            phase_seq, base_phase, start_week, num_weeks,
+            first_week_number=start_week_number or 1,
         )
 
     program = {'weeks': []}

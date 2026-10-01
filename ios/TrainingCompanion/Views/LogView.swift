@@ -1,49 +1,80 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// The Log tab's sections. Internal so `AppRouter` can name one.
+enum LogTab: Int, AppSubTab {
+    case workouts, suggestions, sessions
+
+    var label: String {
+        switch self {
+        case .workouts: return "Workouts"
+        case .suggestions: return "Suggestions"
+        case .sessions: return "Sessions"
+        }
+    }
+}
+
+/// The record and the decision queue — the phone's counterpart to the web's
+/// Log area (design-system §6.19). Workouts is the recorded-activity list
+/// that used to be a section of Analytics, with the `.fit` importer;
+/// Suggestions is the inbox of server matches to accept, review or dismiss;
+/// Sessions is what was logged against planned sessions, across the program.
 struct LogView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var router: AppRouter
 
-    @State private var selectedSegment = 0   // 0 = Workouts, 1 = Bio
-    @State private var showBioEntry = false
-    @State private var showImportPicker = false
+    @State private var selectedSegment: LogTab = .workouts
+    @State private var period: AnalyticsPeriod = .thirtyDays
     @State private var selectedWorkout: ImportedWorkout? = nil
+    @State private var selectedSession: AppState.LocatedSession? = nil
+    @State private var showImportPicker = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("", selection: $selectedSegment) {
-                    Text("Workouts").tag(0)
-                    Text("Bio").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .onChange(of: selectedSegment) { _ in AppHaptics.selection() }
+                AppSubTabPicker(selection: $selectedSegment)
 
-                if selectedSegment == 0 { workoutsTab } else { bioTab }
+                AppSubTabContent(selection: $selectedSegment) { tab in
+                    switch tab {
+                    case .workouts:
+                        LogWorkoutsTab(period: $period, selectedWorkout: $selectedWorkout)
+                            .environmentObject(appState)
+                    case .suggestions:
+                        LogSuggestionsTab(reviewWorkout: $selectedWorkout)
+                            .environmentObject(appState)
+                    case .sessions:
+                        LogSessionsTab(selectedSession: $selectedSession)
+                            .environmentObject(appState)
+                    }
+                }
             }
             .navigationTitle("Log")
             .appTabStyle()
+            .onAppear { applyRequestedSection() }
+            .onChange(of: router.logSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if selectedSegment == 1 {
-                        Button { showBioEntry = true } label: {
-                            Label("Add Entry", systemImage: "plus")
-                        }
-                    } else {
-                        Button { showImportPicker = true } label: {
+                    if selectedSegment == .workouts {
+                        Button {
+                            showImportPicker = true
+                        } label: {
                             Label("Import .fit", systemImage: "square.and.arrow.down")
                         }
                     }
                 }
             }
-            .sheet(item: $selectedWorkout) { workout in
+            // Pushed, not presented: a workout detail is a place you go and
+            // come back from. Attached here rather than inside the paged
+            // content — a destination on an off-screen page is not reliably
+            // found.
+            .navigationDestination(item: $selectedWorkout) { workout in
                 WorkoutDetailView(workout: workout)
                     .environmentObject(appState)
             }
-            .sheet(isPresented: $showBioEntry) {
-                BioCheckInView()
+            .sheet(item: $selectedSession) { found in
+                SessionDetailView(session: found.session, sessionKey: found.key,
+                                  weekIndex: found.weekIndex, dayName: found.dayName,
+                                  sessionIndex: found.sessionIndex)
                     .environmentObject(appState)
             }
             .fileImporter(
@@ -57,658 +88,130 @@ struct LogView: View {
         }
     }
 
-    // MARK: - Workouts Tab
+    private func applyRequestedSection() {
+        guard let requested = router.logSection else { return }
+        if selectedSegment != requested {
+            withAnimation(AppAnimation.springStandard) { selectedSegment = requested }
+        }
+        router.clearLogSection()
+    }
+}
 
-    private var workoutsTab: some View {
+// MARK: - Suggestions
+
+struct LogSuggestionsTab: View {
+    @EnvironmentObject var appState: AppState
+    @Binding var reviewWorkout: ImportedWorkout?
+
+    var body: some View {
+        let pending = appState.pendingMatchSuggestions()
         Group {
-            if appState.isLoadingWorkouts && appState.importedWorkouts.isEmpty {
-                VStack { Spacer(); ProgressView().scaleEffect(1.2); Spacer() }
-            } else if appState.importedWorkouts.isEmpty {
-                emptyState(
-                    icon: "figure.run.circle",
-                    title: "No Workouts",
-                    subtitle: "Import a .fit file or complete a Watch session."
-                )
+            if pending.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer()
+                    Image(systemName: "tray")
+                        .font(.system(size: 48)).foregroundStyle(.secondary)
+                    Text("Nothing to decide").font(.headline)
+                    Text("When a recorded workout looks like a planned session but the server is not sure, it lands here for you to accept, review or dismiss.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center).padding(.horizontal, 24)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(pending, id: \.suggestion.id) { item in
+                            SuggestionRowView(
+                                suggestion: item.suggestion, workout: item.workout,
+                                planned: appState.locateSession(key: item.suggestion.sessionKey)?.session,
+                                onAccept: {
+                                    Task { try? await appState.matchAndComplete(workout: item.workout,
+                                                                                sessionKey: item.suggestion.sessionKey) }
+                                },
+                                onReview: { reviewWorkout = item.workout },
+                                onDismiss: { Task { await appState.dismissSuggestion(workoutId: item.workout.id) } })
+                        }
+                    }
+                    .padding()
+                }
+            }
+        }
+        .refreshable {
+            await AppRefresh.perform {
+                await appState.loadMatchSuggestions()
+                await appState.loadWorkouts()
+            }
+        }
+    }
+}
+
+// MARK: - Sessions
+
+struct LogSessionsTab: View {
+    @EnvironmentObject var appState: AppState
+    @Binding var selectedSession: AppState.LocatedSession?
+
+    private var rows: [LogSessionRow] {
+        LogSessions.rows(logs: Array(appState.sessionLogs.values),
+                         locate: { appState.locateSession(key: $0) },
+                         exerciseNames: appState.exerciseCatalog.mapValues(\.name))
+    }
+
+    var body: some View {
+        let rows = rows
+        Group {
+            if rows.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer()
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 48)).foregroundStyle(.secondary)
+                    Text("Nothing logged yet").font(.headline)
+                    Text("Open a session and swipe right on an exercise to log what you did. Completed sessions appear here too.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center).padding(.horizontal, 24)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
             } else {
                 List {
-                    ForEach(appState.importedWorkouts) { workout in
-                        workoutRow(workout)
+                    ForEach(rows) { row in
+                        Button {
+                            guard let found = appState.locateSession(key: row.key) else { return }
+                            AppHaptics.selection()
+                            selectedSession = found
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(row.title).font(.subheadline).fontWeight(.medium)
+                                    Spacer()
+                                    if row.isComplete {
+                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.caption)
+                                    }
+                                    if row.isLocatable {
+                                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                                    }
+                                }
+                                if !row.subtitle.isEmpty {
+                                    Text(row.subtitle).font(.caption).foregroundStyle(.secondary)
+                                }
+                                ForEach(row.lines, id: \.self) { line in
+                                    Text(line).font(.caption).foregroundStyle(.primary).monospacedDigit()
+                                }
+                            }
+                            .padding(.vertical, 2)
                             .contentShape(Rectangle())
-                            .onTapGesture { selectedWorkout = workout }
-                    }
-                    .onDelete { indexSet in
-                        for idx in indexSet {
-                            let w = appState.importedWorkouts[idx]
-                            Task { try? await appState.deleteWorkout(id: w.id) }
                         }
+                        .buttonStyle(.plain)
+                        .disabled(!row.isLocatable)
                     }
                 }
                 .listStyle(.insetGrouped)
-                .refreshable {
-                    AppHaptics.light()
-                    await appState.loadWorkouts()
-                    AppHaptics.success()
-                }
             }
         }
-    }
-
-    private func workoutRow(_ workout: ImportedWorkout) -> some View {
-        let isLinked = appState.sessionLogs.values.contains { $0.matchedWorkoutId == workout.id }
-        let modality = workout.inferredModalityId ?? linkedProgramSession(for: workout)?.modality
-        let iconName  = modality.map { ModalityStyle.icon(for: $0) } ?? ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId)
-        let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? (isLinked ? .green : Color.blue)
-        let title = workoutDisplayName(workout)
-        return HStack(spacing: 12) {
-            Image(systemName: iconName)
-                .foregroundStyle(iconColor)
-                .font(.title3)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.body)
-
-                HStack(spacing: 8) {
-                    Text(workoutDateLabel(workout.date))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let dur = workout.durationMinutes {
-                        Text("\(Int(dur)) min")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-
-                let hasDist = workout.distance != nil
-                let hasHR   = workout.heartRate?.avg != nil
-                if hasDist && hasHR {
-                    HStack(spacing: 12) {
-                        logStatPill(icon: "arrow.forward",
-                                    value: String(format: "%.1f", workout.distance!.value),
-                                    unit: workout.distance!.unit,
-                                    color: .secondary)
-                        logStatPill(icon: "heart.fill",
-                                    value: "\(workout.heartRate!.avg!)",
-                                    unit: "bpm",
-                                    color: .red)
-                    }
-                } else {
-                    HStack(spacing: 8) {
-                        if let dist = workout.distance {
-                            Label(String(format: "%.1f %@", dist.value, dist.unit),
-                                  systemImage: "arrow.forward")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        if let avg = workout.heartRate?.avg {
-                            Label("\(avg) bpm", systemImage: "heart.fill")
-                                .font(.caption).foregroundStyle(.red)
-                        }
-                    }
-                }
-            }
-
-            Spacer()
-
-            if isLinked {
-                Image(systemName: "link")
-                    .font(.caption).foregroundStyle(.green)
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.caption).foregroundStyle(.tertiary)
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func logStatPill(icon: String, value: String, unit: String, color: Color) -> some View {
-        VStack(spacing: 1) {
-            Image(systemName: icon).font(.caption2).foregroundStyle(color)
-            Text(value).font(.caption).fontWeight(.medium)
-            Text(unit).font(.caption2).foregroundStyle(.secondary)
-        }
-    }
-
-    private func workoutDisplayName(_ workout: ImportedWorkout) -> String {
-        let raw = workout.activityType
-        // If activityType was set to an archetype name (not a generic watch source string), use it.
-        let genericSources = ["apple_watch_live", "watch"]
-        if !genericSources.contains(raw) && !raw.hasPrefix("watch_") {
-            return raw.replacingOccurrences(of: "_", with: " ").capitalized
-        }
-        // Fall back to the linked program session's archetype/modality name.
-        if let session = linkedProgramSession(for: workout) {
-            return session.archetype?.name ?? ModalityStyle.label(for: session.modality)
-        }
-        return raw.replacingOccurrences(of: "_", with: " ").capitalized
-    }
-
-    /// Finds the ProgramSession matched to this workout, if any.
-    private func linkedProgramSession(for workout: ImportedWorkout) -> ProgramSession? {
-        guard let sessionKey = appState.sessionLogs.values
-            .first(where: { $0.matchedWorkoutId == workout.id })?.sessionKey else { return nil }
-        let parts = sessionKey.split(separator: "-")
-        guard parts.count == 3,
-              let weekNum = Int(parts[0]),
-              let idx = Int(parts[2]) else { return nil }
-        let dayName = String(parts[1])
-        guard let week = appState.serverProgram?.currentProgram?.weeks
-            .first(where: { $0.weekNumber == weekNum }),
-              let sessions = week.schedule[dayName],
-              idx < sessions.count else { return nil }
-        return sessions[idx]
-    }
-
-    private func workoutDateLabel(_ dateStr: String) -> String {
-        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
-        guard let date = df.date(from: dateStr) else { return dateStr }
-        let out = DateFormatter(); out.dateFormat = "EEE, MMM d"
-        return out.string(from: date)
-    }
-
-    // MARK: - Bio Tab
-
-    private var bioTab: some View {
-        List {
-            if appState.recentBioLogs.isEmpty {
-                Section {
-                    emptyState(
-                        icon: "waveform.path.ecg",
-                        title: "No Bio Data",
-                        subtitle: "Sync from your Apple Watch or add a manual entry."
-                    )
-                    .listRowBackground(Color.clear)
-                }
-            } else {
-                Section {
-                    readinessSummaryRow
-                }
-                Section("Last 14 Days") {
-                    ForEach(appState.recentBioLogs.prefix(14)) { log in
-                        bioRow(log)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
+        .task { await appState.loadExercisesIfNeeded() }
         .refreshable {
-            AppHaptics.light()
-            await appState.loadRecentBioLogs()
-            await appState.loadReadiness()
-            AppHaptics.success()
-        }
-    }
-
-    private var readinessSummaryRow: some View {
-        HStack(spacing: 16) {
-            if let info = appState.readinessInfo(from: appState.recentBioLogs) {
-                VStack(spacing: 4) {
-                    Circle()
-                        .fill(info.signalColor.gradient)
-                        .frame(width: 44, height: 44)
-                        .overlay(
-                            Image(systemName: info.signalIcon)
-                                .foregroundStyle(.white)
-                                .font(.headline)
-                        )
-                    Text("Readiness")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            if let latest = appState.recentBioLogs.first {
-                VStack(alignment: .leading, spacing: 4) {
-                    if let hrv = latest.hrv {
-                        bioMetric(label: "HRV", value: "\(Int(hrv)) ms")
-                    }
-                    if let hr = latest.restingHR {
-                        bioMetric(label: "Resting HR", value: "\(Int(hr)) bpm")
-                    }
-                    if let sleep = latest.sleepDurationMin, sleep > 0 {
-                        let h = sleep / 60; let m = sleep % 60
-                        bioMetric(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
-                    }
-                }
-            }
-            Spacer()
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func bioMetric(label: String, value: String) -> some View {
-        HStack(spacing: 4) {
-            Text(label + ":").font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.caption).fontWeight(.medium)
-        }
-    }
-
-    private func bioRow(_ log: DailyBioLog) -> some View {
-        HStack {
-            Text(log.date)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .frame(width: 90, alignment: .leading)
-            Spacer()
-            if let hrv = log.hrv {
-                bioChip(value: "\(Int(hrv))", unit: "ms", color: .cyan)
-            }
-            if let hr = log.restingHR {
-                bioChip(value: "\(Int(hr))", unit: "bpm", color: .red)
-            }
-            if let sleep = log.sleepDurationMin, sleep > 0 {
-                let h = sleep / 60
-                bioChip(value: "\(h)h", unit: "", color: .indigo)
-            }
-        }
-    }
-
-    private func bioChip(value: String, unit: String, color: Color) -> some View {
-        HStack(spacing: 2) {
-            Text(value).font(.caption).fontWeight(.medium).foregroundStyle(color)
-            if !unit.isEmpty { Text(unit).font(.caption2).foregroundStyle(.secondary) }
-        }
-        .frame(width: 52, alignment: .trailing)
-    }
-
-    // MARK: - Helpers
-
-    private func emptyState(icon: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(title).font(.headline)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-}
-
-// MARK: - Supporting Types
-
-struct SessionWithKey: Identifiable {
-    let id = UUID()
-    let session: ProgramSession
-    let key: String
-    var dateLabel: String = ""
-    var sessionIndex: Int = 0
-}
-
-// MARK: - Session Log Detail
-
-struct SessionLogDetailView: View {
-    @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
-
-    let sessionWithKey: SessionWithKey
-
-    @State private var matchedWorkout: ImportedWorkout? = nil
-
-    private var log: SessionLogEntry? { appState.sessionLogs[sessionWithKey.key] }
-    private var session: ProgramSession { sessionWithKey.session }
-
-    // Derived convenience
-    private var gps: [GPSPoint] { matchedWorkout?.gpsTrack ?? [] }
-    private var hrSamples: [HRSample] { matchedWorkout?.heartRate?.samples ?? [] }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                headerSection
-                if let log {
-                    heroStatsSection(log: log)
-                    WorkoutRouteSection(points: gps)
-                    if let matchedWorkout {
-                        WorkoutChartsSection(workout: matchedWorkout,
-                                             hrConfig: appState.profile.hrConfig)
-                    }
-                    metricsSection(log: log)
-                    if let fatigue = log.fatigueRating { effortSection(fatigue: fatigue) }
-                    if let notes = log.notes, !notes.isEmpty { notesSection(notes: notes) }
-                } else {
-                    Section {
-                        Label("Not yet completed", systemImage: "circle")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-            .navigationTitle("Session Log")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .task {
-                if let workoutId = log?.matchedWorkoutId {
-                    matchedWorkout = try? await appState.api?.fetchWorkout(id: workoutId)
-                }
-            }
-        }
-    }
-
-    // MARK: - Sections
-
-    private var headerSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                let color = ModalityStyle.color(for: session.modality)
-                Label(ModalityStyle.label(for: session.modality),
-                      systemImage: ModalityStyle.icon(for: session.modality))
-                    .font(.caption).foregroundStyle(color)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(color.opacity(0.12)).clipShape(Capsule())
-                Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
-                    .font(.headline)
-                if !sessionWithKey.dateLabel.isEmpty {
-                    Text(sessionWithKey.dateLabel)
-                        .font(.subheadline).foregroundStyle(.secondary)
-                }
-            }
-            .padding(.vertical, 4)
-        }
-    }
-
-    private func heroStatsSection(log: SessionLogEntry) -> some View {
-        let w = matchedWorkout
-        let dur   = w?.durationMinutes
-        let dist  = w?.distance
-        let cal   = w?.calories
-        let pace  = avgPaceString(dist: dist, durMin: dur)
-        let avgHR = w?.heartRate?.avg ?? log.avgHR
-
-        return Section {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                if let d = dur  { heroChip(value: "\(Int(d))", unit: "min", icon: "clock") }
-                if let d = dist { heroChip(value: String(format: "%.2f", d.value), unit: d.unit, icon: "arrow.forward") }
-                if let p = pace { heroChip(value: p, unit: "/km", icon: "figure.run") }
-                if let c = cal  { heroChip(value: "\(Int(c))", unit: "kcal", icon: "flame") }
-                if let h = avgHR, dur == nil && dist == nil { heroChip(value: "\(h)", unit: "bpm", icon: "heart.fill") }
-            }
-            .padding(.vertical, 4)
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-        }
-    }
-
-    private func metricsSection(log: SessionLogEntry) -> some View {
-        let w = matchedWorkout
-        let avgHR  = w?.heartRate?.avg ?? log.avgHR
-        let maxHR  = w?.heartRate?.max ?? log.peakHR
-        let dist   = w?.distance
-        let elev   = w?.elevation
-        let cal    = w?.calories
-        let pace   = avgPaceString(dist: dist, durMin: w?.durationMinutes)
-        let bestP  = bestPaceString(gps: gps)
-        let source = log.source
-
-        let hasHR       = avgHR != nil || maxHR != nil
-        let hasActivity = dist != nil || elev != nil || cal != nil || pace != nil
-
-        return Group {
-            if hasHR {
-                Section("Heart Rate") {
-                    if let avg = avgHR {
-                        LabeledContent("Average") {
-                            Label("\(avg) bpm", systemImage: "heart.fill").foregroundStyle(.red)
-                        }
-                    }
-                    if let peak = maxHR {
-                        LabeledContent("Peak") {
-                            Label("\(peak) bpm", systemImage: "heart.fill").foregroundStyle(.orange)
-                        }
-                    }
-                }
-            }
-            if hasActivity {
-                Section("Activity") {
-                    if let d = dist {
-                        LabeledContent("Distance", value: String(format: "%.2f %@", d.value, d.unit))
-                    }
-                    if let p = pace {
-                        LabeledContent("Avg Pace", value: "\(p) /km")
-                    }
-                    if let b = bestP {
-                        LabeledContent("Best Pace", value: "\(b) /km")
-                    }
-                    if let gain = elev?.gain, gain > 0 {
-                        LabeledContent("Elevation Gain", value: "\(Int(gain)) m")
-                    }
-                    if let loss = elev?.loss, loss > 0 {
-                        LabeledContent("Elevation Loss", value: "\(Int(loss)) m")
-                    }
-                    if let c = cal {
-                        LabeledContent("Calories", value: "\(Int(c)) kcal")
-                    }
-                }
-            }
-            if let src = source, !src.isEmpty {
-                Section("Source") {
-                    Text(src.replacingOccurrences(of: "_", with: " ").capitalized)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-    }
-
-    private func effortSection(fatigue: Int) -> some View {
-        Section("Effort") {
-            LabeledContent("Fatigue Rating", value: "\(fatigue) / 10")
-        }
-    }
-
-    private func notesSection(notes: String) -> some View {
-        Section("Notes") {
-            Text(notes).font(.body)
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func heroChip(value: String, unit: String, icon: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(value)
-                    .font(.title3).fontWeight(.semibold)
-                Text(unit)
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-        .padding(10)
-        .background(.quaternary.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-    }
-
-    private func avgPaceString(dist: WorkoutDistance?, durMin: Double?) -> String? {
-        guard let km = dist?.value, km > 0, let min = durMin, min > 0 else { return nil }
-        let secPerKm = (min * 60.0) / km
-        return formatPace(secPerKm)
-    }
-
-    private func bestPaceString(gps: [GPSPoint]) -> String? {
-        // Sliding 60-second window average to find fastest sustained km pace
-        let speeds = gps.compactMap { $0.speed }.filter { $0 > 0.5 }
-        guard speeds.count >= 10 else { return nil }
-        // Best rolling 30-point average speed → best pace
-        let window = min(30, speeds.count / 3)
-        guard window > 0 else { return nil }
-        var best = 0.0
-        for i in 0...(speeds.count - window) {
-            let avg = speeds[i..<(i + window)].reduce(0, +) / Double(window)
-            if avg > best { best = avg }
-        }
-        guard best > 0.5 else { return nil }
-        return formatPace(1000.0 / best)
-    }
-
-    private func formatPace(_ secPerKm: Double) -> String {
-        let m = Int(secPerKm) / 60
-        let s = Int(secPerKm) % 60
-        return String(format: "%d:%02d", m, s)
-    }
-
-    private func formattedDate(_ iso: String) -> String {
-        let parser = ISO8601DateFormatter()
-        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let date = parser.date(from: iso) ?? ISO8601DateFormatter().date(from: iso)
-        guard let date else { return iso }
-        let fmt = DateFormatter()
-        fmt.dateFormat = "EEE, MMM d · h:mm a"
-        return fmt.string(from: date)
-    }
-}
-
-// MARK: - Bio Check-In Sheet
-
-struct BioCheckInView: View {
-    @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var restingHR: String = ""
-    @State private var hrv: String = ""
-    @State private var notes: String = ""
-    @State private var isSaving = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Today's Metrics") {
-                    HStack {
-                        Text("Resting HR")
-                        Spacer()
-                        TextField("bpm", text: $restingHR)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                    HStack {
-                        Text("HRV")
-                        Spacer()
-                        TextField("ms", text: $hrv)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                }
-
-                Section("Notes") {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 60)
-                }
-
-                if let latest = appState.recentBioLogs.first {
-                    Section("Last Night's Sleep") {
-                        if let sleep = latest.sleepDurationMin, sleep > 0 {
-                            let h = sleep / 60; let m = sleep % 60
-                            LabeledContent("Total Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
-                        }
-                        if let deep = latest.deepSleepMin, deep > 0 {
-                            LabeledContent("Deep", value: "\(deep / 60)h \(deep % 60)m")
-                        }
-                        if let rem = latest.remSleepMin, rem > 0 {
-                            LabeledContent("REM", value: "\(rem / 60)h \(rem % 60)m")
-                        }
-                        if let spo2 = latest.spo2Avg {
-                            LabeledContent("SpO₂", value: String(format: "%.1f%%", spo2))
-                        }
-                        if let rr = latest.respiratoryRateAvg {
-                            LabeledContent("Respiratory Rate", value: String(format: "%.1f /min", rr))
-                        }
-                        if let source = latest.source {
-                            LabeledContent("Source", value: source.replacingOccurrences(of: "_", with: " ").capitalized)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Bio Check-In")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
-                        Task { await save() }
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(restingHR.isEmpty && hrv.isEmpty)
-                }
-            }
-        }
-    }
-
-    private func save() async {
-        isSaving = true
-        defer { isSaving = false }
-
-        let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
-        let today = dayFmt.string(from: Date())
-
-        let payload = DailyBioPayload(
-            restingHR: Double(restingHR),
-            hrv: Double(hrv),
-            sleepDurationMin: nil,
-            deepSleepMin: nil,
-            remSleepMin: nil,
-            lightSleepMin: nil,
-            awakeMins: nil,
-            sleepStart: nil,
-            sleepEnd: nil,
-            spo2Avg: nil,
-            respiratoryRateAvg: nil
-        )
-
-        try? await appState.api?.pushBio(date: today, payload: payload)
-        await appState.loadRecentBioLogs()
-        await appState.loadReadiness()
-        dismiss()
-    }
-}
-
-// MARK: - ReadinessInfo color helpers (used by Watch connectivity display)
-
-extension ReadinessInfo {
-    var signalColor: Color {
-        switch signal {
-        case "green":  return .green
-        case "yellow": return .yellow
-        default:       return .red
-        }
-    }
-    var signalIcon: String {
-        switch signal {
-        case "green":  return "bolt.heart.fill"
-        case "yellow": return "exclamationmark.heart.fill"
-        default:       return "heart.slash.fill"
-        }
-    }
-}
-
-// MARK: - ReadinessResult display helpers (API-computed score)
-
-extension ReadinessResult {
-    var statusColor: Color {
-        switch status {
-        case "green":  return .green
-        case "yellow": return .yellow
-        default:       return .red
-        }
-    }
-    var statusLabel: String {
-        switch status {
-        case "green":  return "Ready"
-        case "yellow": return "Moderate"
-        default:       return "Low"
+            await AppRefresh.perform { await appState.loadRecentSessionLogs() }
         }
     }
 }

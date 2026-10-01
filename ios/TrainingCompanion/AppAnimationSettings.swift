@@ -18,6 +18,22 @@ enum AppHaptics {
     static func success()   { UINotificationFeedbackGenerator().notificationOccurred(.success) }
 }
 
+/// Pull-to-refresh with one contract (design system §7): a light haptic when
+/// the gesture triggers, the spinner shown for at least 600 ms so a fast reply
+/// never flashes it, and a success haptic when the work is done. Every
+/// `.refreshable` goes through here so no screen has to remember the recipe.
+enum AppRefresh {
+    static let minimumDisplayNanoseconds: UInt64 = 600_000_000
+
+    static func perform(_ work: () async -> Void) async {
+        AppHaptics.light()
+        async let delay: () = Task.sleep(nanoseconds: minimumDisplayNanoseconds)
+        await work()
+        _ = try? await delay
+        AppHaptics.success()
+    }
+}
+
 enum AppMetrics {
     static let cardCornerRadius: CGFloat = 16
     static let cardPadding: CGFloat = 16

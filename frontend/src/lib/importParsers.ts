@@ -198,6 +198,8 @@ interface StravaActivity {
   id?: number
   name?: string
   start_date?: string
+  /** Local wall-clock start, ISO without a real offset; its first ten characters are the local date. */
+  start_date_local?: string
   elapsed_time?: number // seconds
   sport_type?: string
   type?: string // older field
@@ -229,7 +231,7 @@ export function parseStravaJson(json: unknown): ImportedWorkout[] {
       return {
         id: deterministicId('strava', startTime, sportType, durationMinutes),
         source: 'strava',
-        date: new Date(a.start_date).toLocaleDateString('en-CA'),
+        date: a.start_date_local?.slice(0, 10) ?? new Date(a.start_date).toLocaleDateString('en-CA'),
         startTime,
         endTime,
         durationMinutes,

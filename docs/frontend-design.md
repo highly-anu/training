@@ -1727,24 +1727,53 @@ Two non-Recharts geospatial views:
 
 ### 13.2 Sidebar Navigation
 
+The sidebar is grouped by the journey in `docs/information-architecture.md`,
+not by feature age. Each group has an eyebrow label in the §13.6 style; the
+items under it are plain `NavLink`s. The "You" group is Profile (the athlete)
+and Settings (the configuration: connections, account, appearance) — the
+phone keeps the same split with Settings pushed from Profile's gear.
+
 ```tsx
-<nav className="p-2 space-y-0.5">
-  {navItems.map(item => (
-    <NavLink
-      to={item.path}
-      className={({ isActive }) => cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-        isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-      )}
-    >
-      <item.icon className="size-4 shrink-0" />
-      {item.label}
-    </NavLink>
+<nav className="p-2 space-y-3" aria-label="Primary">
+  {NAV_GROUPS.map(group => (
+    <div key={group.label} className="space-y-0.5">
+      <p className="px-3 pt-2 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 select-none">
+        {group.label}
+      </p>
+      {group.items.map(item => (
+        <NavLink
+          to={item.to}
+          end={item.end}
+          className={({ isActive }) => cn(
+            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            isActive
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+          )}
+        >
+          <item.icon className="size-4 shrink-0" />
+          {item.label}
+        </NavLink>
+      ))}
+    </div>
   ))}
 </nav>
 ```
+
+| Group | Items | Why it is a group |
+|---|---|---|
+| Train | Home `/` · Program `/program` · Log `/log` | Where the athlete lives day to day: today, the plan, the record |
+| Insight | Analytics `/analytics` | Interprets what Train recorded |
+| Library | Explore `/explore` | Reference and inspiration; its CTAs start the builder |
+| You | Profile `/profile` | Configuration — visited to change something |
+| Dev | Dev Lab `/dev` | Developer tooling; dev builds only (`src/lib/featureFlags.ts`) |
+
+The builder is **not** a nav item. It is a flow at `/program/new`, launched from
+Program's header, the Home and Program empty states, the settings sheet's
+Rebuild / New, and Explore's "Build with this". Old paths (`/builder`, `/import`,
+`/bio`, `/exercises`, `/philosophies`, `/program/history`) redirect through
+`components/layout/LegacyRedirect.tsx`, which preserves the query and router
+state; anything else lands on `pages/NotFound.tsx`.
 
 Active state: primary-tinted background + primary text. Inactive: muted text that brightens on hover.
 
@@ -2318,39 +2347,46 @@ Action buttons live at the far right, separated from navigation with `ml-auto` (
 
 ### 17.8 Per-Page Reference
 
-Status as of 2026-07-30. ✅ = matches the spec in code; ⚠️ = documented divergence.
+Status as of 2026-10-01, after the information-architecture restructure
+(`docs/information-architecture.md`). ✅ = matches the spec in code; ⚠️ = documented divergence.
 
 | Page | Icon | Title | Inline subtitle | Sub-tabs | Actions | Status |
 |---|---|---|---|---|---|---|
-| **Dashboard** | `LayoutDashboard` | "Dashboard" | None | Week · Overview (`TabSelector`) | Program settings sheet | ✅ — see §17.9 |
-| **Bio Log** | `Activity` | "Bio Log" | "Readiness · Sleep · HRV" | None | None | ✅ |
-| **Philosophies** | `BookOpen` | "Philosophies" | None | None | None | ✅ |
-| **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant |
-| **Program View** | `CalendarDays` | Program name | "{N}-week program" | Overview · Calendar | Injury flags | ⚠️ two-row (`space-y-3`) — see §17.2 |
-| **Profile** | `User` | "Profile" | None | Setup · Benchmarks | None | ✅ |
-| **Exercises** | `Dumbbell` | "Exercises" | "{count} exercises" | None | None | ⚠️ two-row (`space-y-3`) — search row below |
-| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector (two tiers) | None | ✅ two-tier variant — see below |
-| **Analytics** | `BarChart3` | "Analytics" | None | None | None | ✅ |
-| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology | None | ✅ |
-| **Import Workouts** | `ArrowDownToLine` | "Import Workouts" | None | None | None | ✅ |
+| **Home** | `House` | "Home" | None | None | Program settings sheet | ✅ — see §17.9 |
+| **Program** | `CalendarDays` | Program name | None | Calendar · Overview · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
+| **Log** | `ClipboardList` | "Log" | None | Workouts · Suggestions (count) | Import (opens a sheet) | ✅ |
+| **Analytics** | `BarChart3` | "Analytics" | None | Program · Progress · Load · Recovery (`?tab=`) | None (the period selector is content-level) | ✅ |
+| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |
+| **Profile** | `User` | "Profile" | None | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | None | ✅ |
+| **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
+| **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
-| **Workout Detail** | Back-nav | Workout type | — | — | — | Back-nav pattern, not tab header |
+| **Workout Detail** | Back-nav | Workout type | — | — | — | Back-nav pattern |
+| **Program History Detail** | Back-nav | Program name | — | — | — | Back-nav pattern (`/program/history/:versionId`) |
+| **Not Found** | — | — | — | — | — | `EmptyState` with a Home action |
 
-**On the two-row headers (Program View, Exercises).** §17.2 says a primary header is always one row. Both of these break it to host a secondary control strip — a search input, a week selector. The rule holds for the *identity row*; what these pages actually demonstrate is a legitimate second pattern:
+Retired pages: Bio Log (→ Analytics ▸ Recovery), Import Workouts (→ Log, with
+Import as a sheet), Exercises and Philosophies (both duplicated by Explore
+topics; their routes redirect), Program History as a page (→ Program ▸ History).
+
+**On the two-row header (Program).** §17.2 says a primary header is always one
+row. Program breaks it to host the `PhaseBar` — a strip that orients the
+page's own content. The rule holds for the *identity row*; the strip below is
+content-scoped chrome:
 
 ```tsx
 <div className="border-b px-6 py-4 space-y-3 shrink-0">
   <div className="flex items-center gap-2">{/* identity row — §17.2 exactly */}</div>
-  <div>{/* control strip: search, week nav, filters */}</div>
+  <PhaseBar … />                                 {/* control strip */}
 </div>
 ```
 
-The identity row keeps its contract; the strip below is content-scoped chrome. **Use it only for controls that filter or navigate the page's own content.** Page-level actions still belong in the identity row per §17.7.
+**Use it only for controls that filter or navigate the page's own content.**
+Page-level actions still belong in the identity row per §17.7.
 
-Exercises is the clean example: identity row, then `<ExerciseSearch>`, then `<ExerciseFilters>`, all inside one `space-y-3` header block.
-
-**Two-tier navigation (Explore).** Explore carries *two* levels of sub-tab — section pills (Explorer / Ontology / …), then a topic selector within the Explorer section — and stays on one row using `gap-3 flex-wrap` with `shrink-0` on each group:
+**Two-tier navigation (Explore).** Explore carries *two* levels of sub-tab — section pills (Explorer / Ontology), then a topic selector within the Explorer section — and stays on one row using `gap-3 flex-wrap` with `shrink-0` on each group:
 
 ```tsx
 <div className="flex items-center gap-3 border-b px-6 py-4 shrink-0 flex-wrap">
@@ -2368,43 +2404,48 @@ Exercises is the clean example: identity row, then `<ExerciseSearch>`, then `<Ex
 
 This is a legitimate third variant, not a violation. The rules it follows: `gap-3` (not `gap-2`) because two tab groups need more air between them than an icon needs from its title; `shrink-0` on every group so tabs never compress into illegibility; `flex-wrap` as the overflow behavior of last resort; and the second tier appears **conditionally**, only when its parent section is active — never two permanent tab rows.
 
-**The `w-px h-4 bg-border/60` hairline is the established tier separator.** It appears in both Explore and Dashboard. Use it wherever a header holds two distinct control groups.
+**The `w-px h-4 bg-border/60` hairline is the established tier separator.** It appears in Explore, Program, Log and Analytics. Use it wherever a header holds two distinct control groups.
 
-**On Dev Lab.** It remains the reference implementation for the header pattern, and now also carries the standard §9.1 page transition — so it is a valid whole-page reference again.
+**Sub-tabs are URL-driven where another page links to them.** Program, Log and
+Analytics read `?tab=` (Home's cards land on `/analytics?tab=progress`, the
+`/bio` redirect on `?tab=recovery`, the builder's Rebuild dialog on
+`/program?tab=history`). A sub-tab nobody deep-links to may stay in local state.
+
+**On Dev Lab.** It remains the reference implementation for the header pattern, and carries the standard §9.1 page transition — so it is a valid whole-page reference. It exists only in dev builds.
 
 **Login is exempt.** It renders pre-auth, outside `RootLayout` and outside the router's `AnimatePresence`, so it has no sibling to transition against. It uses a centered card rather than a tab header. Intentional, not a gap.
 
-### 17.9 Dashboard: Standard Header (revised)
+### 17.9 Home: Standard Header, No Sub-tabs
 
-> **Code diverges — code is correct.** This section previously declared Dashboard *exempt* from the tab header and prohibited a page-identity icon or "Dashboard" label. `Dashboard.tsx:351-353` now uses the standard header, with a `LayoutDashboard` icon and an h1 reading "Dashboard". **The code made the better call and the rule below is rewritten to match.**
->
-> The exemption was written when Dashboard was a single view whose only meaningful title was the program name. It has since gained a Week/Overview sub-tab switcher. Once a page has sub-tabs, §17.5 governs where they live — immediately right of the identity block — and an identity block is exactly what the old rule forbade. The alternative would have been sub-tabs floating with no anchor, which reads as a detached control rather than page navigation.
->
-> The old rule also over-weighted redundancy with the sidebar. The sidebar is hidden on mobile (§14.2), so on the layout where wayfinding is *most* fragile the h1 is the only page identity present. "Redundant on desktop" was the wrong axis to optimize.
-
-**Dashboard uses the standard tab header.** As shipped:
+Home (`pages/Dashboard.tsx`, route `/`) uses the standard tab header — a `House`
+icon, an h1 reading "Home", and the program settings sheet at the far right —
+and **no sub-tabs**. It had Week · Analytics · Progress until 2026-10-01; the
+Analytics tab described the program's *shape* and moved to Program ▸ Overview
+(priority mix beside the phases and volume), and the Progress tab was the whole
+progression review and moved to Analytics ▸ Progress. Home keeps compact cards
+whose entire surface opens those destinations (`ProgressionWidget`,
+`DevelopmentWidget`, `ReadinessWidget`), which is the §6.9-style rule the iOS
+design system states explicitly: a card that navigates says so.
 
 ```tsx
 <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-  <LayoutDashboard className="size-5 text-primary" />
-  <h1 className="text-lg font-semibold">Dashboard</h1>
-  <div className="ml-4 flex items-center gap-2">
-    <div className="w-px h-4 bg-border/60 shrink-0" />   {/* vertical rule before sub-tabs */}
-    <TabSelector active={activeTab} onChange={setActiveTab} />
-  </div>
+  <House className="size-5 text-primary" />
+  <h1 className="text-lg font-semibold">Home</h1>
   <div className="ml-auto">
     <ProgramSettingsSheet program={program} />
   </div>
 </div>
 ```
 
-One refinement here is worth promoting to a general rule: **a `w-px h-4 bg-border/60` vertical rule between the identity block and the sub-tabs.** §17.5 specifies `ml-4` alone; the hairline reads more clearly when a page has both sub-tabs and right-aligned actions, because `ml-4` on its own is ambiguous against the `ml-auto` gap. Optional, but preferred on pages carrying both.
+**Program identity stays in the content area.** The program name renders as
+`h1 text-2xl font-bold tracking-tight` at the top of the content, with the week
+selector beneath it — instance context scrolls with the instance it describes;
+the header is page identity only. The h1 exists because the sidebar is hidden on
+mobile (§14.2), where it is the only page identity present.
 
-**Program identity moves into the content area.** The program name renders as `h1 text-2xl font-bold tracking-tight` at the top of the Week tab (`Dashboard.tsx:100`), with the week selector and phase bar beneath it. This is a better split than the old rule produced:
-
-- **Header = page identity + page navigation.** Stable, always in the same place, matches every other tab.
-- **Content = instance context.** The program name, week nav, and phase bar all describe *the program*, and they scroll with the program they describe.
-
-The old design put instance context in fixed page chrome, which meant a user on the Overview tab still had week-navigation controls pinned above them that did nothing for that view.
-
-**The "Program View Header" variant is retired.** Pages dedicated to one instance (Program View, Session Detail, Workout Detail) use either the standard header with the instance name as title, or the back-nav pattern (§13). There is no third variant.
+Home is the one page that mixes blocks on purpose: today's session with the
+side panel, the week strip, readiness with the check-in, a Suggestions card
+that renders only when workouts are waiting for a match decision, and the
+compact development and progression cards. The "Program View Header" variant
+stays retired: pages dedicated to one instance use the standard header with the
+instance name as title, or the back-nav pattern.

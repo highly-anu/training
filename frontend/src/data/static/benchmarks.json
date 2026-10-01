@@ -154,6 +154,348 @@
     "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences."
   },
   {
+    "id": "kb_pentathlon_jerk_reps",
+    "name": "KB Pentathlon — Jerk (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 60,
+      "intermediate": 90,
+      "advanced": 120,
+      "elite": 144
+    },
+    "lower_is_better": false,
+    "notes": "Reps, not points: the pentathlon's coefficient scoring depends on bell weight and is better read from the competition sheet. These tiers are the archetype's RPM targets held for the full event."
+  },
+  {
+    "id": "kb_pentathlon_snatch_reps",
+    "name": "KB Pentathlon — Snatch (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 42,
+      "intermediate": 63,
+      "advanced": 84,
+      "elite": 100
+    },
+    "lower_is_better": false,
+    "notes": "The Secret Service Snatch Test (ssst_reps) is the ten-minute, free-switch cousin of this event."
+  },
+  {
+    "id": "kb_pentathlon_half_snatch_reps",
+    "name": "KB Pentathlon — Half Snatch (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 48,
+      "intermediate": 72,
+      "advanced": 96,
+      "elite": 115
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "kb_pentathlon_push_press_reps",
+    "name": "KB Pentathlon — Push Press (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 60,
+      "intermediate": 90,
+      "advanced": 120,
+      "elite": 144
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "kb_pentathlon_long_cycle_reps",
+    "name": "KB Pentathlon — Long Cycle Clean & Jerk (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 27,
+      "intermediate": 40,
+      "advanced": 54,
+      "elite": 66
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "ruck_12mi_40lb_minutes",
+    "name": "12-Mile Ruck, 40 lb (time in minutes)",
+    "category": "tactical",
+    "unit": " min",
+    "standards": {
+      "entry": 240,
+      "intermediate": 200,
+      "advanced": 180,
+      "elite": 150
+    },
+    "lower_is_better": true,
+    "notes": "Pack weight for the selection ruck has moved between 35 and 45 lb over the years; 40 lb is the figure the programs here train to. Time, not pace, because the course is fixed."
+  },
+  {
+    "id": "pack_vertical_ft_per_hour",
+    "name": "Pack Carry — Vertical Pace, 20 % BW (ft per hour)",
+    "category": "tactical",
+    "unit": " ft/h",
+    "standards": {
+      "entry": 500,
+      "intermediate": 1000,
+      "advanced": 1500,
+      "elite": 2000
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "pt_push_ups_3min_reps",
+    "name": "PT Test — Push-ups (reps in 3 min)",
+    "category": "tactical",
+    "unit": " reps",
+    "standards": {
+      "entry": 40,
+      "intermediate": 60,
+      "advanced": 80,
+      "elite": 100
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "pt_sit_ups_3min_reps",
+    "name": "PT Test — Sit-ups (reps in 3 min)",
+    "category": "tactical",
+    "unit": " reps",
+    "standards": {
+      "entry": 45,
+      "intermediate": 65,
+      "advanced": 90,
+      "elite": 110
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "swim_800m_minutes",
+    "name": "PT Test — 800 m Swim (time in minutes)",
+    "category": "tactical",
+    "unit": " min",
+    "standards": {
+      "entry": 22.0,
+      "intermediate": 17.5,
+      "advanced": 14.5,
+      "elite": 12.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "run_5mile_minutes",
+    "name": "PT Test II — 5-Mile Run (time in minutes)",
+    "category": "tactical",
+    "unit": " min",
+    "standards": {
+      "entry": 55.0,
+      "intermediate": 44.0,
+      "advanced": 35.0,
+      "elite": 31.0
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "bench_press_bodyweight_reps",
+    "name": "PT Test II — Bench Press at Bodyweight (reps)",
+    "category": "tactical",
+    "unit": " reps",
+    "standards": {
+      "entry": 1,
+      "intermediate": 5,
+      "advanced": 10,
+      "elite": 15
+    },
+    "lower_is_better": false,
+    "notes": "Women lift the same bar — their own bodyweight — so the rep tiers sit lower; the strength ratio behind them is the same."
+  },
+  {
+    "id": "pull_ups_weighted_25lb_reps",
+    "name": "PT Test II — Pull-ups with 25 lb (reps)",
+    "category": "tactical",
+    "unit": " reps",
+    "standards": {
+      "entry": 3,
+      "intermediate": 8,
+      "advanced": 15,
+      "elite": 20
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "wod_fran_minutes",
+    "name": "Fran (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 12.0,
+      "intermediate": 8.0,
+      "advanced": 5.0,
+      "elite": 3.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_grace_minutes",
+    "name": "Grace (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 7.0,
+      "intermediate": 5.0,
+      "advanced": 3.5,
+      "elite": 2.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_helen_minutes",
+    "name": "Helen (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 16.0,
+      "intermediate": 13.0,
+      "advanced": 11.0,
+      "elite": 9.0
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_diane_minutes",
+    "name": "Diane (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 12.0,
+      "intermediate": 8.0,
+      "advanced": 5.0,
+      "elite": 3.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_isabel_minutes",
+    "name": "Isabel (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 8.0,
+      "intermediate": 5.5,
+      "advanced": 3.5,
+      "elite": 2.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_annie_minutes",
+    "name": "Annie (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 14.0,
+      "intermediate": 10.0,
+      "advanced": 7.0,
+      "elite": 5.5
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_elizabeth_minutes",
+    "name": "Elizabeth (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 14.0,
+      "intermediate": 10.0,
+      "advanced": 7.0,
+      "elite": 5.0
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_murph_minutes",
+    "name": "Murph (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 65.0,
+      "intermediate": 50.0,
+      "advanced": 40.0,
+      "elite": 33.0
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "wod_cindy_rounds",
+    "name": "Cindy (rounds in 20 min)",
+    "category": "benchmark_wod",
+    "unit": " rounds",
+    "standards": {
+      "entry": 10,
+      "intermediate": 15,
+      "advanced": 20,
+      "elite": 26
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "wod_dt_minutes",
+    "name": "DT (time in minutes)",
+    "category": "benchmark_wod",
+    "unit": " min",
+    "standards": {
+      "entry": 16.0,
+      "intermediate": 11.0,
+      "advanced": 8.0,
+      "elite": 6.0
+    },
+    "lower_is_better": true
+  },
+  {
+    "id": "turkish_get_up_bw_ratio",
+    "name": "Turkish Get-Up (bodyweight ratio)",
+    "category": "skill",
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.2,
+      "intermediate": 0.3,
+      "advanced": 0.4,
+      "elite": 0.5
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "handstand_hold_wall_seconds",
+    "name": "Handstand Hold, Wall (seconds)",
+    "category": "skill",
+    "unit": " s",
+    "standards": {
+      "entry": 15,
+      "intermediate": 30,
+      "advanced": 60,
+      "elite": 120
+    },
+    "lower_is_better": false
+  },
+  {
+    "id": "handstand_hold_free_seconds",
+    "name": "Freestanding Handstand Hold (seconds)",
+    "category": "skill",
+    "unit": " s",
+    "standards": {
+      "entry": 3,
+      "intermediate": 10,
+      "advanced": 30,
+      "elite": 60
+    },
+    "lower_is_better": false
+  },
+  {
     "id": "cell_hips_back_squat",
     "name": "Back Squat",
     "category": "cell",

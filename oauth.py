@@ -227,7 +227,8 @@ def _activity_to_workout(a: dict) -> dict | None:
     return {
         'id':              workout_id,
         'source':          'strava',
-        'date':            start_dt.strftime('%Y-%m-%d'),
+        # start_date_local is the athlete's wall clock; its trailing 'Z' is a lie.
+        'date':            (a.get('start_date_local') or '')[:10] or start_dt.strftime('%Y-%m-%d'),
         'startTime':       start_dt.isoformat(),
         'endTime':         end_dt.isoformat(),
         'durationMinutes': round(elapsed / 60),

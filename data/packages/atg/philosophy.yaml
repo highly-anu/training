@@ -12,7 +12,6 @@ scope:
   - durability
   - mobility
   - rehab
-  - relative_strength
 bias:
   - rehab
   - durability

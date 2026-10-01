@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ModalityDonut } from '@/components/dashboard/ModalityDonut'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { PHASE_COLORS } from '@/lib/phaseColors'
@@ -287,8 +289,14 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Built from the <span className="font-medium text-foreground">{phil.name}</span> philosophy.
                 </p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
+                <div className="flex flex-wrap items-center gap-3 mt-3">
                   <Badge variant="secondary" className="text-xs">{phil.id}</Badge>
+                  <Link
+                    to={`/explore?topic=philosophies&id=${phil.id}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    About this methodology →
+                  </Link>
                 </div>
               </>
             ) : null
@@ -702,12 +710,30 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
         </div>
       )}
 
+      {/* 3b. Priority mix — the modality weights the schedule was built from.
+          Lived on the Dashboard's Analytics tab; it describes the program, so
+          it belongs with the program. */}
+      {goal.priorities && Object.keys(goal.priorities).length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold mb-1">Priority Mix</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            The modality weights the schedule was allocated from.
+          </p>
+          <div className="rounded-xl border bg-card p-4 max-w-md">
+            <ModalityDonut priorities={goal.priorities} />
+          </div>
+        </div>
+      )}
+
       {/* 4. Entry standards */}
       {Object.keys(prerequisites).length > 0 && (
         <div>
           <h2 className="text-sm font-semibold mb-1">Entry Standards</h2>
           <p className="text-xs text-muted-foreground mb-3">
-            Minimum benchmarks recommended before starting this program.
+            Minimum benchmarks recommended before starting this program.{' '}
+            <Link to="/explore?topic=standards" className="text-primary hover:underline">
+              Compare against the standards →
+            </Link>
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {Object.entries(prerequisites).map(([key, val]) => (

@@ -5,6 +5,7 @@ import type {
   DailyBioLog,
   WorkoutMatch,
   PendingMatch,
+  MatchSuggestion,
   SetPerformance,
   FatigueRating,
   MatchConfidence,
@@ -13,6 +14,7 @@ import * as healthApi from '@/api/health'
 import type { HealthSnapshot } from '@/api/health'
 import { useProfileStore } from '@/store/profileStore'
 import { findSessionMatch } from '@/lib/sessionMatching'
+import { parseSessionKey } from '@/lib/sessionKeys'
 import { useProgramStore } from '@/store/programStore'
 
 interface BioStore {
@@ -34,10 +36,23 @@ interface BioStore {
   addAutoMatch: (importedWorkoutId: string, sessionKey: string) => void
   confirmMatch: (importedWorkoutId: string, sessionKey: string) => void
   rejectMatch: (importedWorkoutId: string) => void
+  /**
+   * Server-side weak matches (Garmin webhook, iOS Apple Health relay) merged
+   * into the pending list. Browser state is not persisted, so these are the
+   * only pending matches that survive a reload.
+   */
+  mergeServerSuggestions: (suggestions: MatchSuggestion[]) => void
+  /** Drop a suggestion without deciding the workout; the server forgets it too. */
+  dismissSuggestion: (importedWorkoutId: string) => void
   dismissPending: (importedWorkoutId: string) => void
 
   // Session performance
   upsertSessionPerformance: (log: SessionPerformanceLog) => void
+  /**
+   * Undo "mark complete". The server's upsert keeps the later completed_at,
+   * so this is its own route; sets, notes and HR stay.
+   */
+  clearSessionCompletion: (sessionKey: string) => void
   setSetPerformance: (sessionKey: string, exerciseId: string, setPerf: SetPerformance) => void
   /** Outcome of a non-set slot — rounds, minutes, kilometres — the fields the analytics engine reads. */
   setExerciseOutcome: (sessionKey: string, exerciseId: string,
@@ -69,15 +84,11 @@ function emptyLog(sessionKey: string): SessionPerformanceLog {
   return { sessionKey, exercises: {}, notes: '', completedAt: '' }
 }
 
-// Parse "weekNum-DayName-sessionIdx" → { dayKey: "weekNum-DayName", sessionIdx: N }
-// Returns null for legacy day-level keys like "weekNum-DayName"
+// "weekNum-DayName-sessionIdx" → { dayKey, sessionIdx }; null for a day-level key.
 function parsePerSessionKey(key: string): { dayKey: string; sessionIdx: number } | null {
-  const lastDash = key.lastIndexOf('-')
-  if (lastDash < 0) return null
-  const tail = key.slice(lastDash + 1)
-  const idx = parseInt(tail, 10)
-  if (isNaN(idx) || String(idx) !== tail) return null
-  return { dayKey: key.slice(0, lastDash), sessionIdx: idx }
+  const parsed = parseSessionKey(key)
+  if (!parsed || parsed.sessionIndex == null) return null
+  return { dayKey: parsed.dayKey, sessionIdx: parsed.sessionIndex }
 }
 
 // Prevents concurrent recalculation calls if init() fires multiple times
@@ -221,6 +232,45 @@ export const useBioStore = create<BioStore>()((set, get) => ({
     set((s) => ({
       pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
     })),
+
+  mergeServerSuggestions: (suggestions) =>
+    set((s) => {
+      // The server already drops suggestions for decided workouts, but the
+      // local lists can be ahead of it by one round-trip.
+      const decided = new Set(s.workoutMatches.map((m) => m.importedWorkoutId))
+      const pending = new Set(s.pendingMatches.map((p) => p.importedWorkout.id))
+      const byId = new Map(s.importedWorkouts.map((w) => [w.id, w]))
+      const added: PendingMatch[] = []
+      for (const sug of suggestions) {
+        if (decided.has(sug.importedWorkoutId) || pending.has(sug.importedWorkoutId)) continue
+        const workout = byId.get(sug.importedWorkoutId)
+        if (!workout) continue
+        pending.add(sug.importedWorkoutId)
+        added.push({ importedWorkout: workout, candidateSessionKeys: [sug.sessionKey] })
+      }
+      return added.length > 0 ? { pendingMatches: [...s.pendingMatches, ...added] } : {}
+    }),
+
+  dismissSuggestion: (importedWorkoutId) => {
+    healthApi.dismissMatchSuggestion(importedWorkoutId)
+    set((s) => ({
+      pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
+    }))
+  },
+
+  clearSessionCompletion: (sessionKey) => {
+    healthApi.clearSessionCompletion(sessionKey)
+    set((s) => {
+      const existing = s.sessionPerformanceLogs[sessionKey]
+      if (!existing) return {}
+      return {
+        sessionPerformanceLogs: {
+          ...s.sessionPerformanceLogs,
+          [sessionKey]: { ...existing, completedAt: '' },
+        },
+      }
+    })
+  },
 
   upsertSessionPerformance: (log) => {
     healthApi.saveSessionLog(log)

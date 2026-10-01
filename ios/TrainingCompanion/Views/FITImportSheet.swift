@@ -51,7 +51,11 @@ struct FITImportSheet: View {
         VStack(spacing: 20) {
             Spacer()
             ProgressView().scaleEffect(1.5)
-            Text("Parsing workout…").font(.headline)
+            Text("Uploading workout…").font(.headline)
+            Text("The server parses the file, merges copies from other sources and looks for the planned session.")
+                .font(.caption).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
             if let url = appState.pendingFITURL {
                 Text(url.lastPathComponent).font(.caption).foregroundStyle(.secondary)
             }
@@ -321,7 +325,7 @@ struct FITImportSheet: View {
         guard let url = appState.pendingFITURL else { return }
         importState = .uploading
         do {
-            let workout = try await appState.parseFITFile(url: url)
+            let workout = try await appState.importWorkoutFile(url: url)
             let sessions = appState.sessionsForDate(workout.date)
             importState = .matching(workout, sessions)
         } catch {

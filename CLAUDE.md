@@ -16,6 +16,11 @@ A training logic system that algorithmically generates periodized training progr
   and points local dev at the local `training_test` Postgres with Supabase unset, so the
   API runs as `local-dev-user` and `FRONTEND_URL=http://localhost:5173` for CORS. Fly gets
   its config from `fly secrets`; neither file is committed or copied into the image.
+  The YAML authoring routes (`POST/PUT/DELETE /api/exercises`, `/api/archetypes`,
+  `POST /api/modalities`, `PUT /api/frameworks/<id>`) require a signed-in user and
+  `AUTHORING_ENABLED=1`; an empty `SUPABASE_URL` (local dev) enables them without it. They
+  validate against `docs/schemas/*.schema.json` (422 with the error list) and DELETE only
+  touches the `custom` package.
   Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
   (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
@@ -66,7 +71,9 @@ training/
 │   │   └── constraints/
 │   │       ├── injury_flags.yaml    # 12 flags with patterns + substitutions
 │   │       └── equipment_profiles.yaml
-│   └── benchmarks/           # Strength + conditioning + cell standards
+│   └── benchmarks/           # Six list files (strength, conditioning, kettlebell
+│                             #   pentathlon, ruck & PT tests, benchmark WODs, skill)
+│                             #   + the Cell standards; `benchmarks_data.BENCHMARK_FILES`
 ├── docs/plan.md              # Original design document (ontology reference)
 └── frontend/                 # React app (see below)
 ```
@@ -81,23 +88,64 @@ All prefixed `/api/`:
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
+| GET | `/benchmarks?sex=` | `BenchmarkStandard[]` (47; female or male tables) |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
-| POST | `/programs/generate` | `GeneratedProgram` |
+| POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
+| POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
+| POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
+| GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
+
+**Adjust and swap edit the stored program, never regenerate it.** `POST /programs/adjust`
+mutates `weeks[start:]` in place (`apply_adjustment_to_weeks`, pure, tested without a DB):
+`hold_load` freezes each lift at the start week's kg; `reduce_volume_10pct` cuts discrete
+quantities *per week* (one set off nine weekly sets — 10 % of three sets per session rounds
+back to three and would never change anything) and continuous ones ×0.9; `early_deload`
+flags the start week and its sessions and applies the deload scalings; `increase_increment`
+adds the exercise's `weekly_increment_kg` per week cumulatively after the start week. Targets
+are the tracker's display strings (`all`, `schedule`, or comma-joined exercise names) matched
+against id and name. Loads and slots are outside the version skeleton hash, so an adjustment
+never mints a program version; it bumps the revision like a PUT. `POST /exercises/substitute`
+runs `selector.select_exercise(..., return_trace=True)` for one slot with the session's other
+exercises excluded and returns complete assignments with `calculate_load` for the week; the
+client replaces the entry (`programStore.replaceExercise`) and saves through the
+revision-checked PUT — nothing is persisted by the endpoint.
 
 ## Frontend (frontend/)
 
 React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanStack Query, Zustand, Recharts, MSW v2, React Router v7.
 
-**Pages:** Dashboard, ProgramBuilder (3-step wizard), ProgramView (week calendar), SessionDetail, ExerciseCatalog, ProfileBenchmarks
+**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** Train — Home `/`
+(`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
+History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
+Suggestions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+`/analytics` (Program · Progress · Load · Recovery via `?tab=`). Library — Explore
+`/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
+with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete · Equipment ·
+Injuries · Schedule · Benchmarks · Heart Rate) and Settings `/settings` (Connections · Account ·
+Appearance · Developer in dev builds; the Garmin and Strava OAuth callbacks land on
+`/settings?tab=connections`, and `/profile?tab=connections` redirects there). Dev Lab `/dev` exists in dev
+builds only (`src/lib/featureFlags.ts`). Old paths (`/builder`, `/import`, `/bio`,
+`/exercises`, `/philosophies`, `/program/history`) redirect through
+`components/layout/LegacyRedirect.tsx`; unknown paths render `pages/NotFound.tsx`.
+Session detail (page and Home side panel) renders one `components/session/SessionPanel.tsx`;
+recorded-workout lists render one `components/workout/WorkoutRow.tsx`; session keys are
+parsed by `lib/sessionKeys.ts` only.
 
-**State:** `builderStore` (wizard state + constraints form), `profileStore` (persisted: level, equipment, injuries, perf logs), `uiStore` (sidebar, filters)
+**State:** `builderStore` (wizard state; persisted), `uiStore` (selected week; persisted),
+`programStore` (server-backed, `revision` 409 protocol), `profileStore` (server-synced
+through `PUT /api/profile`), `bioStore` (hydrated by `HealthDataProvider` from
+`/api/health/snapshot` plus `/api/health/matches/suggestions`), `authStore`.
+
+**Information architecture:** the target layout for both clients, the connectivity map and
+the reasoning are in `docs/information-architecture.md`; the work is ranked in
+`docs/roadmap.md` (items tagged *IA*).
 
 **API hooks:** `src/api/` — goals.ts, exercises.ts, programs.ts, constraints.ts, modalities.ts, benchmarks.ts
 
@@ -126,6 +174,13 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
 - **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: auto-triggered every N weeks (per framework) or when `fatigue_state: overreached`.
+- **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
+  (keyed by days per week, several patterns rotating week to week) is the only source of
+  day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of
+  loads (`progression._DEFAULT_INCREMENT_KG` is the sole code default). A framework may
+  declare `recovery.allow_consecutive: [[a, b], …]` (+ `phases`) to let a modality pair sit
+  on back-to-back days despite the recovery windows — Uphill's specific phase does, for
+  its two ME long days (`scheduler.consecutive_allowances`).
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
 - **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
 - **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
@@ -141,7 +196,13 @@ is the source of the patterns, not the neighbouring screen:
   same change, then document it in §6. Profile and Analytics each grew their
   own sub-tab selector before that rule existed; both now use
   `AppSubTabs.swift` (§6.8).
-- **Web**: `docs/frontend-design.md`.
+- **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
+- **iOS tabs**: Today · Program · Log · Analytics · Profile (`AppRouter.Tab`); Settings
+  (connections, devices & sync, notifications, appearance, account) is pushed from
+  Profile's gear, never a tab — design-system §6.13. The exercise reference on the phone
+  is `ExerciseDetailSheet` (§6.14), presented from any session row and from the swap
+  list; prescriptions are formatted by `LoadFormat` only. Local session reminders come
+  from `NotificationManager` (`NotificationPlan` is pure and tested); there is no push.
 
 Shared iOS style primitives live in `AppAnimationSettings.swift`
 (`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
@@ -153,8 +214,14 @@ component rather than in instructions at the call site.
 ## Workout Import
 
 Activities reach the `workouts` table from five places: a manual `.fit`/`.xml`/`.json`
-upload (`POST /api/workouts/parse`), the Strava OAuth sync, the Connect IQ watch app,
-the iOS Apple Health relay, and the Garmin Connect webhook.
+upload (`POST /api/workouts/parse`, from the web Log page and the iOS `FITImportSheet`
+alike), the Strava OAuth sync, the Connect IQ watch app, the iOS Apple Health relay, and
+the Garmin Connect webhook. The Apple Watch companion posts through the same two routes
+(`WatchUpload` builds the payloads; `WatchUploadTests` pins the keys): no client writes a
+workout or a match to Supabase directly any more, so every copy meets dedup, the matcher
+and `session_uid` resolution. The phone reads them back through `GET /health/snapshot`
+and `GET /health/workouts/<id>` too — nothing in the iOS app speaks PostgREST for
+training data; only sign-in goes to Supabase.
 
 - **One FIT parser** — `src/fit_import.py`, extracted from the upload handler so the
   Garmin webhook can parse the same format. `parse_fit(stream, source=...)` is pure:
@@ -162,6 +229,11 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
 - **Deterministic ids** — `src/workout_ids.py`. The formula is mirrored in
   `frontend/src/lib/importParsers.ts` and `ios/.../WorkoutID.swift`. **Do not change
   it**: `workout_matches.imported_workout_id` references the ids it produces.
+- **Dates are the athlete's day, ids stay UTC.** `fit_import.local_date` derives a
+  workout's `date` from the FIT activity message's local timestamp, else the profile's
+  `timezone` (IANA; Profile ▸ Athlete on the web, filled from the device on iOS), else
+  UTC; the Garmin webhook passes `startTimeOffsetInSeconds`, Strava uses
+  `start_date_local`. `startTime` and the deterministic id never move.
 - **Cross-source dedup** — because the id embeds the source, one activity arriving
   four ways makes four ids. `src/workout_dedupe.py` decides whether two records are the
   same activity (±5 min start, duration within 3 min or 10%, same modality family) and
@@ -186,7 +258,13 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
   `garmin_webhook_events` queue, because gunicorn runs `--workers 1`.
 - **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
   carries. It used to rebuild the blob, which is why every iOS save wiped
-  `activeGoalId`.
+  `activeGoalId`. `performanceLogs` is not a profile key: PRs and the
+  `bodyweight_kg` series go through `POST /api/health/performance` on both
+  clients (iOS used to send them with the profile, where the whitelist dropped
+  them).
+- **iOS builds from philosophies.** `GET /api/goals` was removed on 2026-04-25;
+  the iOS builder and settings sheet pick a methodology from
+  `GET /api/philosophies` and send it as `philosophy_id`.
 
 ## Program Analytics
 
@@ -261,13 +339,28 @@ writes.
   comparison is what the Program History tables (below) exist for.
 - **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
   durationSec / distanceKm` — the keys the tracker always read and nothing
-  wrote; `ExerciseRow` dispatches on `slot_type`, not `load.sets`. Bodyweight
+  wrote. `ExerciseRow` dispatches on `slot_type` through `lib/outcomeFields.ts`
+  (sets × reps → `PerformanceLogger`, anything with a currency →
+  `OutcomeLogger`); `ExerciseRow.test.tsx` pins it, because the logger was once
+  written and never mounted, which left every rounds/duration/distance
+  primitive at zero coverage. The phone logs from the session detail
+  (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
+  (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
+  carries `exercises` so it can read back. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
   iOS app had been posting notes into a phantom key — and fatigue is folded to
   1–5 at the boundary (iOS sends 1–10).
 - `GET /api/progression/review` keeps its shape for iOS but takes its
   `exercise_findings` from the engine.
+- **iOS load charts are server-side.** Analytics ▸ Overview reads
+  `/health/load/pmc` and `/health/load/weekly`; `AnalyticsEngine` is the
+  fallback when the request fails, and the footnote says which was used, so
+  the phone and the web cannot quietly disagree. Analytics ▸ Program
+  (`Views/AnalyticsProgramTab.swift`) lays out the same `/analytics/program`
+  document the web does; `ProgramAnalyticsModels.swift` decodes every section
+  on its own, and `AnalyticsStatusStyle` is the phone's copy of
+  `components/analytics/status.ts`.
 
 ## Program History
 
@@ -291,7 +384,10 @@ another's row.
   date, `phase_calendar.build_remaining_schedule` starts that at the athlete's
   *absolute* week — so a 16-week generate legitimately yields weeks[0..15]
   numbered 16..31, and a partial regenerate splices that onto the kept head. One
-  `week_number` then sits at two array indices. `legacy_key` ('3-Monday-0') is
+  `week_number` then sits at two array indices. (Without an event date a partial
+  regenerate used to number its tail from 1 again, so a program read 1, 1, 2, 3;
+  since 2026-10-01 the three regenerate paths pass `week_in_program` = kept head
+  length + 1 and the tail continues the numbering.) `legacy_key` ('3-Monday-0') is
   descriptive and **not unique**; resolve it as `(user_id, legacy_key, date)`.
 - **Dates come from `workout_matcher.session_calendar_date`**, called rather
   than reimplemented: `PUT /api/user/program` does not Monday-align (only
@@ -305,7 +401,12 @@ another's row.
   iterated in fixed order because Swift re-encodes the schedule dictionary
   arbitrarily. `content_hash` is separate: same skeleton, different content means
   the snapshot is stale, and it is refreshed in place — but only by a copy at
-  least as *rich*, because an iOS save strips `goal` and every `slot`.
+  least as *rich*, because an iOS save used to strip `goal` and every `slot`.
+  Since 2026-10-01 the phone round-trips every key it does not model
+  (`JSONValue` extras on each program struct in `WatchModels.swift`, pinned by
+  `ProgramRoundTripTests`) and echoes the blend's weights; the richness guard and
+  the PUT handler's goal/constraints/validation/coverage_report back-fill stay
+  for older builds.
 - **Intervals are DATEs computed in Python**, never `activated_at::date` — that
   cast uses the server's TimeZone (UTC on fly.io) and is a day out every evening
   west of Greenwich. The **first** activation runs from the program's own
@@ -362,6 +463,28 @@ The script boots `iPhone 17 Pro` (override with `SIM_DEVICE=`) if nothing is
 booted, and always terminates the old copy first so the running app is the code
 that was just built.
 
+**Point the simulator at the local API to see screens with data.** The build
+talks to production unless told otherwise, and production is not always
+reachable; the local Flask server has the local dev program and needs no
+account. The target is the app's `apiBaseURLOverride` default (`APITarget.swift`;
+`API_BASE_URL` in the launch environment wins for one launch), and it persists
+in the simulator until cleared. Deep links open any section without tapping —
+the Simulator window is not scriptable:
+
+```bash
+LOCAL_API=1 ./ios/run_sim.sh /tmp/today.png                                            # local API, Today
+LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.sh /tmp/p.png
+LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
+```
+
+Routes: `today`, `program`, `analytics?section=program|overview|workouts|progress|
+recovery`, `profile` (`DeepLink.swift`, routed through `AppRouter`). The route travels
+in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
+iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
+(the swap sheet, the exercise sheet) are still out of reach; test their models.
+Settings ▸ API target shows the current target and, in debug builds, the switch.
+Never generate, adjust or swap from a simulator pointed at production.
+
 The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
 the `TrainingCompanionTests` target, so a new test file needs no project edit:
 
@@ -408,6 +531,7 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
+SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 ```
 
 Run this after touching anything under `ios/` (in addition to the simulator):

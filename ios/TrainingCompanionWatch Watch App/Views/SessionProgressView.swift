@@ -8,7 +8,11 @@ struct SessionProgressView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(session.exercises.enumerated()), id: \.offset) { idx, ex in
+                // Index + exercise id: the same movement can appear twice in a session.
+                let keyed = session.exercises.enumerated().map { (id: "\($0.offset)-\($0.element.exerciseId)", idx: $0.offset, ex: $0.element) }
+                ForEach(keyed, id: \.id) { item in
+                    let idx = item.idx
+                    let ex = item.ex
                     HStack(spacing: 8) {
                         Image(systemName: sessionState.completedExerciseIds.contains(ex.exerciseId)
                               ? "checkmark.circle.fill" : "circle")
@@ -27,6 +31,7 @@ struct SessionProgressView: View {
                     }
                     .padding(.vertical, 2)
                 }
+                .animation(.spring(response: 0.5, dampingFraction: 0.88), value: keyed.map(\.id))
 
             }
             .padding(.horizontal)

@@ -6,7 +6,7 @@ import Combine
 @MainActor
 final class BuilderState: ObservableObject {
     // Step 1
-    @Published var selectedGoalId: String? = nil
+    @Published var selectedPhilosophyId: String? = nil
 
     // Step 2
     @Published var numWeeks: Int = 12
@@ -21,7 +21,7 @@ final class BuilderState: ObservableObject {
     @Published var generationError: String? = nil
     @Published var didSucceed = false
 
-    var isStep1Valid: Bool { selectedGoalId != nil }
+    var isStep1Valid: Bool { selectedPhilosophyId != nil }
     var isStep3Valid: Bool { !constraints.equipment.isEmpty }
 }
 
@@ -38,7 +38,7 @@ struct ProgramBuilderFlow: View {
         NavigationStack {
             Group {
                 switch step {
-                case 1: BuilderStep1GoalView(builder: builder)
+                case 1: BuilderStep1PhilosophyView(builder: builder)
                 case 2: BuilderStep2ScheduleView(builder: builder)
                 case 3: BuilderStep3ConstraintsView(builder: builder)
                 case 4: BuilderStep4ReviewView(builder: builder, onGenerate: generateProgram)
@@ -65,7 +65,7 @@ struct ProgramBuilderFlow: View {
             }
         }
         .task {
-            await appState.loadGoalsIfNeeded()
+            await appState.loadPhilosophiesIfNeeded()
             await appState.loadInjuryFlagsIfNeeded()
             // Pre-fill constraints from profile
             builder.constraints.trainingLevel = appState.profile.trainingLevel
@@ -87,7 +87,7 @@ struct ProgramBuilderFlow: View {
     }
 
     private func generateProgram() async {
-        guard let goalId = builder.selectedGoalId else { return }
+        guard let philosophyId = builder.selectedPhilosophyId else { return }
         builder.isGenerating = true
         builder.generationError = nil
 
@@ -96,7 +96,7 @@ struct ProgramBuilderFlow: View {
         let eventStr = builder.eventDate.map { dayFmt.string(from: $0) }
 
         let request = GenerateProgramRequest(
-            goalId: goalId,
+            philosophyId: philosophyId,
             constraints: builder.constraints,
             numWeeks: builder.numWeeks,
             startDate: startStr,
@@ -116,27 +116,54 @@ struct ProgramBuilderFlow: View {
     }
 }
 
-// MARK: - Step 1: Goal Selection
+// MARK: - Step 1: Methodology
 
-struct BuilderStep1GoalView: View {
+/// Picks the philosophy the program is generated from.
+///
+/// This was a "goal" grid fed by `GET /api/goals`, a route removed on
+/// 2026-04-25 when programs became philosophy-driven. The grid never
+/// populated, so Next stayed disabled and no program could be generated from
+/// the phone. The request has sent `philosophy_id` all along; this is the
+/// picker that matches it.
+struct BuilderStep1PhilosophyView: View {
     @ObservedObject var builder: BuilderState
     @EnvironmentObject var appState: AppState
+    @State private var detail: PhilosophyCard? = nil
+    @State private var loadFailed = false
 
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Choose a training goal")
-                    .font(.headline)
-                    .padding(.horizontal)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Choose a methodology")
+                        .font(.headline)
+                    Text("The training philosophy the program is built from. Tap ⓘ to read what it believes and how it trains.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
 
-                if appState.goals.isEmpty {
-                    ProgressView().padding()
+                if appState.philosophies.isEmpty {
+                    if loadFailed {
+                        VStack(spacing: 8) {
+                            Text("Couldn't load methodologies.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Button("Retry") { Task { await load() } }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    }
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(appState.goals) { goal in
-                            goalCard(goal)
+                        ForEach(appState.philosophies) { philosophy in
+                            philosophyCard(philosophy)
                         }
                     }
                     .padding(.horizontal)
@@ -144,20 +171,30 @@ struct BuilderStep1GoalView: View {
             }
             .padding(.vertical)
         }
+        .task { await load() }
+        .sheet(item: $detail) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
     }
 
-    private func goalCard(_ goal: GoalProfile) -> some View {
-        let selected = builder.selectedGoalId == goal.id
-        let topModality = goal.priorities.sorted { $0.value > $1.value }.first
+    private func load() async {
+        loadFailed = false
+        await appState.loadPhilosophiesIfNeeded()
+        loadFailed = appState.philosophies.isEmpty
+    }
+
+    private func philosophyCard(_ philosophy: PhilosophyCard) -> some View {
+        let selected = builder.selectedPhilosophyId == philosophy.id
+        let topModality = philosophy.bias?.first
 
         return Button {
-            builder.selectedGoalId = selected ? nil : goal.id
+            builder.selectedPhilosophyId = selected ? nil : philosophy.id
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     if let mod = topModality {
-                        Image(systemName: ModalityStyle.icon(for: mod.key))
-                            .foregroundStyle(ModalityStyle.color(for: mod.key))
+                        Image(systemName: ModalityStyle.icon(for: mod))
+                            .foregroundStyle(ModalityStyle.color(for: mod))
                     }
                     Spacer()
                     if selected {
@@ -165,12 +202,13 @@ struct BuilderStep1GoalView: View {
                             .foregroundStyle(.blue)
                     }
                 }
-                Text(goal.name)
+                .padding(.trailing, 28)   // room for the ⓘ overlay
+                Text(philosophy.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .multilineTextAlignment(.leading)
                     .foregroundStyle(.primary)
-                Text(goal.description)
+                Text(philosophy.summary ?? "")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(3)
@@ -186,9 +224,23 @@ struct BuilderStep1GoalView: View {
             )
         }
         .buttonStyle(.plain)
+        .overlay(alignment: .topTrailing) {
+            Button {
+                detail = philosophy
+            } label: {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(.secondary)
+                    .padding(10)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("About \(philosophy.name)")
+        }
     }
 }
 
+/// What a methodology believes and how it trains — the phone's slice of the
+/// web Explore philosophy detail, shown from the builder so the choice is
+/// informed rather than a name on a card.
 // MARK: - Step 2: Schedule
 
 struct BuilderStep2ScheduleView: View {
@@ -315,10 +367,10 @@ struct BuilderStep4ReviewView: View {
 
     var body: some View {
         List {
-            Section("Goal") {
-                if let goalId = builder.selectedGoalId,
-                   let goal = appState.goals.first(where: { $0.id == goalId }) {
-                    LabeledContent("Goal", value: goal.name)
+            Section("Methodology") {
+                if let id = builder.selectedPhilosophyId,
+                   let philosophy = appState.philosophies.first(where: { $0.id == id }) {
+                    LabeledContent("Methodology", value: philosophy.name)
                 }
             }
 
@@ -387,7 +439,7 @@ extension AppState {
 
 @MainActor
 private final class SettingsState: ObservableObject {
-    @Published var selectedGoalId: String
+    @Published var selectedPhilosophyId: String
     @Published var numWeeks: Int
     @Published var startDate: Date
     @Published var eventDate: Date?
@@ -399,7 +451,9 @@ private final class SettingsState: ObservableObject {
 
     init(program: ServerProgram, weeks: [ProgramWeek], profile: UserProfile) {
         let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
-        selectedGoalId = program.sourceGoalIds.first ?? ""
+        // sourceGoalIds holds philosophy ids — the name predates the removal
+        // of the goals layer. A blend collapses to its first source here.
+        selectedPhilosophyId = program.sourceGoalIds.first ?? ""
         numWeeks = weeks.count
         startDate = program.programStartDate.flatMap { dayFmt.date(from: $0) } ?? Date()
         eventDate = program.eventDate.flatMap { dayFmt.date(from: $0) }
@@ -423,14 +477,16 @@ struct ProgramSettingsSheet: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var settings: SettingsState = {
-        // Placeholder — real init happens in .task below via onAppear trick.
-        SettingsState(program: ServerProgram(currentProgram: nil, programStartDate: nil,
-                                             eventDate: nil, sourceGoalIds: []),
-                      weeks: [], profile: .default)
-    }()
-    @State private var isInitialized = false
+    @StateObject private var settings: SettingsState
     @State private var showConfirm = false
+    @State private var isRegeneratingTail = false
+
+    /// Seeded from the live program once, at construction. This replaces a
+    /// placeholder state object built from an empty program and field-copied
+    /// in `.task`, which showed a spinner before the form every time.
+    init(program: ServerProgram, weeks: [ProgramWeek], profile: UserProfile) {
+        _settings = StateObject(wrappedValue: SettingsState(program: program, weeks: weeks, profile: profile))
+    }
 
     private let weekOptions = [4, 6, 8, 10, 12, 16, 20, 24]
     private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
@@ -438,43 +494,30 @@ struct ProgramSettingsSheet: View {
 
     var body: some View {
         NavigationStack {
-            if !isInitialized {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Form {
-                    goalSection
-                    scheduleSection
-                    constraintsSection
-                    generateSection
-                    if let err = settings.generationError {
-                        Section {
-                            Label(err, systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.orange).font(.footnote)
-                        }
+            // The title and Cancel button belong to the stack's content, not to
+            // the NavigationStack itself — attached outside they never rendered,
+            // and swipe-down was the only way out of this sheet.
+            Form {
+                methodologySection
+                scheduleSection
+                constraintsSection
+                generateSection
+                if let err = settings.generationError {
+                    Section {
+                        Label(err, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange).font(.footnote)
                     }
                 }
             }
-        }
-        .navigationTitle("Program Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
+            .navigationTitle("Program Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
+            }
         }
         .task {
-            await appState.loadGoalsIfNeeded()
+            await appState.loadPhilosophiesIfNeeded()
             await appState.loadInjuryFlagsIfNeeded()
-            if let prog = appState.serverProgram {
-                let fresh = SettingsState(program: prog,
-                                          weeks: appState.allWeeks,
-                                          profile: appState.profile)
-                settings.selectedGoalId = fresh.selectedGoalId
-                settings.numWeeks = fresh.numWeeks
-                settings.startDate = fresh.startDate
-                settings.eventDate = fresh.eventDate
-                settings.constraints = fresh.constraints
-            }
-            isInitialized = true
         }
         .onChange(of: settings.didSucceed) { _, succeeded in
             if succeeded { dismiss() }
@@ -483,14 +526,14 @@ struct ProgramSettingsSheet: View {
 
     // MARK: - Sections
 
-    private var goalSection: some View {
-        Section("Goal") {
-            if appState.goals.isEmpty {
+    private var methodologySection: some View {
+        Section("Methodology") {
+            if appState.philosophies.isEmpty {
                 ProgressView()
             } else {
-                Picker("Goal", selection: $settings.selectedGoalId) {
-                    ForEach(appState.goals) { goal in
-                        Text(goal.name).tag(goal.id)
+                Picker("Methodology", selection: $settings.selectedPhilosophyId) {
+                    ForEach(appState.philosophies) { philosophy in
+                        Text(philosophy.name).tag(philosophy.id)
                     }
                 }
                 .pickerStyle(.menu)
@@ -570,6 +613,24 @@ struct ProgramSettingsSheet: View {
 
     private var generateSection: some View {
         Section {
+            // The non-destructive option: keeps the weeks already behind the
+            // athlete, rebuilds the rest with the profile's current settings
+            // (level, equipment, injuries, schedule).
+            Button {
+                Task { await regenerateFromThisWeek() }
+            } label: {
+                HStack {
+                    Spacer()
+                    if isRegeneratingTail {
+                        ProgressView()
+                    } else {
+                        Label("Regenerate from this week", systemImage: "arrow.uturn.forward")
+                    }
+                    Spacer()
+                }
+            }
+            .buttonStyle(.bordered)
+            .disabled(settings.isGenerating || isRegeneratingTail)
             Button {
                 showConfirm = true
             } label: {
@@ -585,7 +646,7 @@ struct ProgramSettingsSheet: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .disabled(settings.isGenerating || settings.selectedGoalId.isEmpty)
+            .disabled(settings.isGenerating || settings.selectedPhilosophyId.isEmpty)
         } footer: {
             Text("This replaces your current program. Completed sessions are preserved.")
                 .font(.caption)
@@ -610,12 +671,24 @@ struct ProgramSettingsSheet: View {
 
     // MARK: - Generation
 
+    private func regenerateFromThisWeek() async {
+        isRegeneratingTail = true
+        settings.generationError = nil
+        do {
+            try await appState.regenerateFromCurrentWeek()
+            settings.didSucceed = true
+        } catch {
+            settings.generationError = error.localizedDescription
+        }
+        isRegeneratingTail = false
+    }
+
     private func regenerate() async {
         settings.isGenerating = true
         settings.generationError = nil
         let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
         let request = GenerateProgramRequest(
-            goalId: settings.selectedGoalId,
+            philosophyId: settings.selectedPhilosophyId,
             constraints: settings.constraints,
             numWeeks: settings.numWeeks,
             startDate: dayFmt.string(from: settings.startDate),

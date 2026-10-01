@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Upload, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fetchProgressionReview, fetchExerciseHistory, fetchMatchedSessions } from '@/api/progression'
+import { useApplyAdjustment } from '@/api/programs'
+import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { fetchHealthSnapshot } from '@/api/health'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
 import { MatchedSessionCard } from './MatchedSessionCard'
@@ -11,7 +13,8 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { findSessionMatch } from '@/lib/sessionMatching'
-import type { ExerciseFinding } from '@/api/types'
+import { parseSessionKey } from '@/lib/sessionKeys'
+import type { ExerciseFinding, ProgressionAdjustment } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
 type Period = 'weekly' | 'biweekly'
@@ -88,9 +91,9 @@ export function ProgressionTab() {
     return Object.entries(sessionLogs)
       .filter(([, completions]) => completions.some((c) => c === true))
       .map(([key]) => {
-        const dashIdx = key.indexOf('-')
-        const weekNumber = parseInt(key.slice(0, dashIdx), 10)
-        const dayName = key.slice(dashIdx + 1)
+        const parsed = parseSessionKey(key)
+        const weekNumber = parsed?.weekNumber ?? NaN
+        const dayName = parsed?.dayName ?? ''
         const weekData = currentProgram.weeks.find((w) => w.week_number === weekNumber)
         const daySessions = weekData?.schedule[dayName] ?? []
         const archetypeName =
@@ -120,6 +123,7 @@ export function ProgressionTab() {
   const isInsufficient =
     !review || review.overall_score === null || review.flags.includes('insufficient_data')
   const recommendations = isInsufficient ? [] : (review?.recommendations ?? [])
+  const adjustments = isInsufficient ? [] : (review?.adjustments ?? [])
 
   return (
     <div className="space-y-6">
@@ -276,7 +280,7 @@ export function ProgressionTab() {
                             <CheckCircle2 className={cn('size-3.5 shrink-0', COMPLETION.text)} />
                           </div>
                           <Link
-                            to={`/import?linkTo=${s.sessionKey}`}
+                            to={`/log?linkTo=${s.sessionKey}`}
                             className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
                           >
                             <Upload className="size-3" />
@@ -304,6 +308,11 @@ export function ProgressionTab() {
         </div>
       )}
 
+      {/* Suggested adjustments — applied to the stored program from this week on */}
+      {adjustments.length > 0 && (
+        <AdjustmentList adjustments={adjustments} />
+      )}
+
       {/* Recommendations (only when sufficient data) */}
       {recommendations.length > 0 && (
         <div className="space-y-1 border-t border-border/40 pt-4">
@@ -315,6 +324,91 @@ export function ProgressionTab() {
         </div>
       )}
 
+    </div>
+  )
+}
+
+// ── Adjustments ────────────────────────────────────────────────────────────────
+
+const ADJUSTMENT_LABEL: Record<string, string> = {
+  hold_load: 'Hold the load',
+  reduce_volume_10pct: 'Reduce volume 10 %',
+  early_deload: 'Deload this week',
+  increase_increment: 'Raise the increment',
+  rebuild_habit: 'Rebuild the habit',
+}
+// rebuild_habit is about consistency, not the plan — the server refuses it.
+const APPLIABLE = new Set(['hold_load', 'reduce_volume_10pct', 'early_deload', 'increase_increment'])
+
+/**
+ * The review's adjustments were advice nothing could act on. Each appliable
+ * one edits the stored program from the current week on, under the revision
+ * check, and reloads it.
+ */
+function AdjustmentList({ adjustments }: { adjustments: ProgressionAdjustment[] }) {
+  const apply = useApplyAdjustment()
+  const programStartDate = useProgramStore((s) => s.programStartDate)
+  const weekCount = useProgramStore((s) => s.currentProgram?.weeks.length ?? 0)
+  const [appliedType, setAppliedType] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  const fromWeekIndex = (() => {
+    if (!programStartDate || weekCount === 0) return null
+    const days = differenceInCalendarDays(new Date(), parseISO(programStartDate))
+    return Math.max(0, Math.min(Math.floor(days / 7), weekCount - 1))
+  })()
+
+  function run(adj: ProgressionAdjustment) {
+    setMessage(null)
+    apply.mutate(
+      { adjustment: adj, fromWeekIndex },
+      {
+        onSuccess: (res) => {
+          setAppliedType(adj.type)
+          const weeks = res.applied.weeks.map((w) => w + 1)
+          setMessage(
+            res.applied.exercises > 0
+              ? `Applied to ${res.applied.exercises} exercise${res.applied.exercises === 1 ? '' : 's'} in week${weeks.length === 1 ? '' : 's'} ${weeks.join(', ')}.`
+              : 'Nothing in the remaining weeks matched this adjustment.'
+          )
+        },
+        onError: (err) => {
+          setMessage(err instanceof Error && err.message === 'stale_revision'
+            ? 'Your program changed elsewhere — reloaded; try again.'
+            : (err instanceof Error ? err.message : 'Could not apply'))
+        },
+      }
+    )
+  }
+
+  return (
+    <div className="space-y-2 border-t border-border/40 pt-4">
+      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggested adjustments</h3>
+      {adjustments.map((adj, i) => (
+        <div key={`${adj.type}-${i}`} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-card px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{ADJUSTMENT_LABEL[adj.type] ?? adj.type}
+              {adj.target && adj.target !== 'all' && adj.target !== 'schedule' && (
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {adj.target}</span>
+              )}
+            </p>
+            <p className="text-[11px] text-muted-foreground">{adj.reason}</p>
+          </div>
+          {APPLIABLE.has(adj.type) ? (
+            <button
+              type="button"
+              disabled={apply.isPending || appliedType === adj.type}
+              onClick={() => run(adj)}
+              className="shrink-0 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-50 transition-colors"
+            >
+              {appliedType === adj.type ? 'Applied' : apply.isPending ? 'Applying…' : `Apply from week ${(fromWeekIndex ?? 0) + 1}`}
+            </button>
+          ) : (
+            <span className="shrink-0 text-[11px] text-muted-foreground/70">advice</span>
+          )}
+        </div>
+      ))}
+      {message && <p className="text-[11px] text-muted-foreground">{message}</p>}
     </div>
   )
 }

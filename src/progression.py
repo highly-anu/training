@@ -2,37 +2,10 @@
 from __future__ import annotations
 from typing import Optional
 
-# ---------------------------------------------------------------------------
-# Starting loads by exercise and training level (kg)
-# ---------------------------------------------------------------------------
-_STARTING_LOADS: dict[str, dict] = {
-    'back_squat':     {'novice': 40,  'intermediate': 70,  'advanced': 100, 'elite': 130},
-    'front_squat':    {'novice': 30,  'intermediate': 55,  'advanced': 80,  'elite': 110},
-    'deadlift':       {'novice': 50,  'intermediate': 90,  'advanced': 130, 'elite': 170},
-    'strict_press':   {'novice': 25,  'intermediate': 40,  'advanced': 60,  'elite': 80},
-    'bench_press':    {'novice': 35,  'intermediate': 60,  'advanced': 90,  'elite': 120},
-    'power_clean':    {'novice': 30,  'intermediate': 50,  'advanced': 75,  'elite': 100},
-    'hang_power_clean': {'novice': 25, 'intermediate': 45, 'advanced': 70,  'elite': 95},
-    'romanian_deadlift': {'novice': 40, 'intermediate': 75, 'advanced': 110, 'elite': 140},
-    'trap_bar_deadlift': {'novice': 50, 'intermediate': 90, 'advanced': 130, 'elite': 170},
-    'sumo_deadlift':     {'novice': 50, 'intermediate': 90,  'advanced': 130, 'elite': 170},
-    'floor_press':       {'novice': 35, 'intermediate': 50,  'advanced': 75,  'elite': 100},
-}
-
-# Linear increment per session (kg)
-_LINEAR_INCREMENTS: dict[str, float] = {
-    'back_squat':     2.5,
-    'front_squat':    2.5,
-    'deadlift':       5.0,
-    'romanian_deadlift': 2.5,
-    'trap_bar_deadlift': 5.0,
-    'strict_press':   1.25,
-    'bench_press':    2.5,
-    'power_clean':    2.5,
-    'hang_power_clean': 2.5,
-    'floor_press':    2.5,
-    '_default':       2.5,
-}
+# Loads come from the exercise YAML: `starting_load_kg` by level and
+# `weekly_increment_kg`. The Python tables that used to shadow them are gone —
+# every exercise they named carries the fields in its package.
+_DEFAULT_INCREMENT_KG = 2.5
 
 # Sessions/week that drive load progression for each exercise (approx)
 _SESSIONS_PER_WEEK: dict[str, int] = {
@@ -67,14 +40,8 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 def _linear_load(exercise: dict, slot: dict, week: int,
                  level: str, is_deload: bool) -> dict:
     ex_id = exercise.get('id', '')
-    start = (
-        exercise.get('starting_load_kg', {}).get(level)
-        or _STARTING_LOADS.get(ex_id, {}).get(level)
-    )
-    increment = (
-        exercise.get('weekly_increment_kg')
-        or _LINEAR_INCREMENTS.get(ex_id, _LINEAR_INCREMENTS['_default'])
-    )
+    start = (exercise.get('starting_load_kg') or {}).get(level)
+    increment = exercise.get('weekly_increment_kg') or _DEFAULT_INCREMENT_KG
     sessions_pw = _SESSIONS_PER_WEEK.get(ex_id, _SESSIONS_PER_WEEK['_default'])
 
     sets = slot.get('sets', 3)
@@ -113,10 +80,7 @@ def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool)
     target_rpe = 6 if is_deload else int(slot.get('rpe_target', 8))
     rir = 10 - target_rpe  # reps in reserve
 
-    base_load = (
-        exercise.get('starting_load_kg', {}).get(level)
-        or _STARTING_LOADS.get(exercise.get('id', ''), {}).get(level)
-    )
+    base_load = (exercise.get('starting_load_kg') or {}).get(level)
 
     result: dict = {
         'sets': sets,

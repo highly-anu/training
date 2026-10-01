@@ -164,7 +164,9 @@ def process_activity_notification(notification: dict) -> dict:
 
         data = garmin_connect.fetch_activity_bytes(user_id, callback_url)
         try:
-            workouts = fit_import.parse_fit(io.BytesIO(data), source='garmin')
+            workouts = fit_import.parse_fit(
+                io.BytesIO(data), source='garmin',
+                utc_offset_seconds=notification.get('startTimeOffsetInSeconds'))
         except Exception as e:
             # A real Garmin response that isn't a FIT file — use the summary.
             log.warning('garmin activity %s did not parse as FIT (%s); '

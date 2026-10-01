@@ -9,7 +9,8 @@ their own persistence.
 """
 from __future__ import annotations
 
-from datetime import datetime as _dt, timezone as _tz
+from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+from zoneinfo import ZoneInfo
 
 from src.workout_ids import deterministic_id
 
@@ -127,7 +128,31 @@ class FitNotAvailable(RuntimeError):
     """`fitparse` is not installed."""
 
 
-def parse_fit(stream, source: str = 'fit_file') -> list[dict]:
+def local_date(start_utc: _dt, *, utc_offset_seconds: int | None = None,
+               tz: str | None = None) -> str:
+    """The calendar day the workout started on, where the athlete was.
+
+    Preference: an explicit UTC offset (the FIT activity message's
+    `local_timestamp − timestamp`, or Garmin's `startTimeOffsetInSeconds`),
+    then an IANA zone from the profile, then UTC — which is what every FIT
+    import used to get, and is a day late for every evening workout west of
+    Greenwich. `startTime` itself stays UTC: the deterministic id is built
+    from it, and stored matches reference those ids.
+    """
+    if start_utc.tzinfo is None:
+        start_utc = start_utc.replace(tzinfo=_tz.utc)
+    if utc_offset_seconds is not None:
+        return (start_utc + _td(seconds=int(utc_offset_seconds))).strftime('%Y-%m-%d')
+    if tz:
+        try:
+            return start_utc.astimezone(ZoneInfo(tz)).strftime('%Y-%m-%d')
+        except Exception:
+            pass
+    return start_utc.strftime('%Y-%m-%d')
+
+
+def parse_fit(stream, source: str = 'fit_file', *, tz: str | None = None,
+              utc_offset_seconds: int | None = None) -> list[dict]:
     """Parse a FIT activity into ImportedWorkout-shaped dicts.
 
     `stream` is anything `fitparse.FitFile` accepts — a file object, a path, or
@@ -136,6 +161,10 @@ def parse_fit(stream, source: str = 'fit_file') -> list[dict]:
     `source` tags the resulting rows and feeds the deterministic id, so the same
     file imported by hand (`fit_file`) and pushed by Garmin (`garmin`) produces
     distinct ids. That is intentional; the dedup layer collapses them.
+
+    `utc_offset_seconds` (a caller who knows better — Garmin's summary) or
+    `tz` (the athlete's profile zone) date the workout when the file's own
+    activity message carries no local timestamp; see `local_date`.
 
     Raises FitNotAvailable when the library is missing; lets fitparse's own
     exceptions through so the caller can decide between a 422 and a retry.
@@ -146,6 +175,19 @@ def parse_fit(stream, source: str = 'fit_file') -> list[dict]:
         raise FitNotAvailable('fitparse library not installed — run pip install fitparse') from exc
 
     fit = _fitparse.FitFile(stream)
+
+    # The activity message carries the device's local wall-clock time beside
+    # UTC; their difference is the offset the athlete trained in.
+    fit_offset: int | None = None
+    for act in fit.get_messages('activity'):
+        ts, lts = act.get_value('timestamp'), act.get_value('local_timestamp')
+        if ts is None or lts is None:
+            continue
+        ts = ts.replace(tzinfo=None) if ts.tzinfo else ts
+        lts = lts.replace(tzinfo=None) if lts.tzinfo else lts
+        fit_offset = int(round((lts - ts).total_seconds()))
+        break
+    offset = utc_offset_seconds if utc_offset_seconds is not None else fit_offset
 
     # ── Collect all record-level data (GPS, HR, altitude, cadence, power) ──
     records = []
@@ -241,7 +283,7 @@ def parse_fit(stream, source: str = 'fit_file') -> list[dict]:
         results.append({
             'id':                deterministic_id(source, start_time.isoformat(), display_type, fit_dur),
             'source':            source,
-            'date':              start_time.strftime('%Y-%m-%d'),
+            'date':              local_date(start_time, utc_offset_seconds=offset, tz=tz),
             'startTime':         start_time.isoformat(),
             'endTime':           end_time.isoformat(),
             'durationMinutes':   fit_dur,
@@ -257,7 +299,7 @@ def parse_fit(stream, source: str = 'fit_file') -> list[dict]:
             'distance':  {'value': round(float(dist_m) / 1000, 3), 'unit': 'km'} if dist_m else None,
             'gpsTrack':  gps_track if gps_track else None,
             'elevation': {'gain': round(elev_gain), 'loss': round(elev_loss)} if elev_gain or elev_loss else None,
-            'rawData':   {'sport': sport, 'sub_sport': sub_sport},
+            'rawData':   {'sport': sport, 'sub_sport': sub_sport, 'utc_offset_seconds': offset},
         })
 
     return results

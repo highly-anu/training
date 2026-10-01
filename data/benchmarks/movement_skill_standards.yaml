@@ -1,0 +1,108 @@
+# Movement and skill standards: loaded get-ups and handstands. The get-up
+# tiers follow the kettlebell tradition (StrongFirst's Simple standard is a
+# 32 kg / 16 kg get-up; Wildman uses the get-up as the shoulder's daily
+# assessment). The handstand tiers follow Ido Portal's and CrossFit's
+# progressions: wall first, then free.
+
+- id: turkish_get_up_bw_ratio
+  name: Turkish Get-Up (bodyweight ratio)
+  category: skill
+  domain: movement_skill
+  metric_type: bw_ratio
+  lower_is_better: false
+  description: >
+    Heaviest kettlebell for a full get-up, each side, as a fraction of
+    bodyweight. Shoulder stability, hip mobility and the ability to own a
+    load overhead through every position between the floor and standing.
+  test_protocol: >
+    Bell pressed from the floor, all five positions each way, elbow locked
+    throughout, both sides at the same weight. Divide bell weight by
+    bodyweight.
+  levels:
+    entry:
+      male: 0.20
+      female: 0.15
+      note: A 16 kg get-up for an 80 kg man.
+    intermediate:
+      male: 0.30
+      female: 0.25
+    advanced:
+      male: 0.40
+      female: 0.33
+      note: The 32 kg / 16 kg "Simple" standard for most bodyweights.
+    elite:
+      male: 0.50
+      female: 0.40
+      note: Half-bodyweight get-up.
+  goal_relevance:
+    - kettlebell_sport
+    - general_gpp
+    - movement_practice
+  sources:
+    - wildman_kettlebell
+    - kelly_starrett
+
+- id: handstand_hold_wall_seconds
+  name: Handstand Hold, Wall (seconds)
+  category: skill
+  domain: movement_skill
+  metric_type: time_seconds
+  lower_is_better: false
+  description: >
+    Chest-to-wall handstand hold. The shoulder's overhead endurance and the
+    line of the body before any free balance is attempted.
+  test_protocol: >
+    Chest facing the wall, heels touching, elbows locked, ribs down. Time
+    from a stable position until the first break of form.
+  levels:
+    entry:
+      male: 15
+      female: 15
+    intermediate:
+      male: 30
+      female: 30
+    advanced:
+      male: 60
+      female: 60
+      note: One minute with the hips stacked — the prerequisite for free work.
+    elite:
+      male: 120
+      female: 120
+  goal_relevance:
+    - movement_practice
+    - crossfit_performance
+  sources:
+    - ido_portal
+    - crossfit
+
+- id: handstand_hold_free_seconds
+  name: Freestanding Handstand Hold (seconds)
+  category: skill
+  domain: movement_skill
+  metric_type: time_seconds
+  lower_is_better: false
+  description: >
+    Freestanding handstand, kicked or pressed to, held still. Balance is a
+    skill with its own currency: seconds, not reps.
+  test_protocol: >
+    Enter any way; time starts when the feet are together and still and ends
+    when a foot touches the floor or a step is taken.
+  levels:
+    entry:
+      male: 3
+      female: 3
+      note: Found the balance point.
+    intermediate:
+      male: 10
+      female: 10
+    advanced:
+      male: 30
+      female: 30
+    elite:
+      male: 60
+      female: 60
+      note: A minute free; the press and the one-arm are the next skills.
+  goal_relevance:
+    - movement_practice
+  sources:
+    - ido_portal

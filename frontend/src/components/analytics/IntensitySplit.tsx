@@ -44,7 +44,7 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
           <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barCategoryGap={4}>
             <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} unit=" min" />
-            <Tooltip content={<WeekTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+            <Tooltip content={<WeekTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
             {BUCKETS.map((b, i) => (
               <Bar key={b.key} dataKey={b.key} name={b.label} stackId="split" fill={b.color}

@@ -52,7 +52,7 @@ export function ReadinessWidget() {
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Readiness
         </h2>
-        <Link to="/bio" className="text-[10px] text-primary hover:text-primary/80 transition-colors">
+        <Link to="/analytics?tab=recovery" className="text-[10px] text-primary hover:text-primary/80 transition-colors">
           Log →
         </Link>
       </div>

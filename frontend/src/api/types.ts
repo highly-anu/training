@@ -532,10 +532,13 @@ export interface TracedProgram extends GeneratedProgram {
 
 export type BenchmarkLevel = 'entry' | 'intermediate' | 'advanced' | 'elite'
 
+/** Drives which benchmark standards the athlete is scored against. */
+export type Sex = 'male' | 'female'
+
 export interface BenchmarkStandard {
   id: string
   name: string
-  category: 'strength' | 'conditioning' | 'cell'
+  category: 'strength' | 'conditioning' | 'kettlebell' | 'tactical' | 'benchmark_wod' | 'skill' | 'cell'
   domain?: string
   unit: string
   standards: Record<BenchmarkLevel, number>
@@ -722,9 +725,17 @@ export interface IntegrationSettings {
 }
 
 /** A workout the server matched too weakly to confirm on its own. */
+/**
+ * A weak match the server could not confirm on its own, written by the
+ * automatic import paths (Garmin webhook, iOS Apple Health relay). Shown as a
+ * pending match for the athlete to confirm or dismiss; deciding the workout
+ * either way (POST /health/matches) deletes the suggestion server-side.
+ */
 export interface MatchSuggestion {
   importedWorkoutId: string
   sessionKey: string
+  /** Durable id of the planned session when the server could resolve one. */
+  sessionUid?: string | null
   score: number
   createdAt: string
 }
@@ -959,6 +970,29 @@ export interface ProgressionAdjustment {
   direction: string
   reason: string
   magnitude: string | null
+}
+
+/** One ranked alternative for a slot, as POST /api/exercises/substitute returns it. */
+export interface ExerciseAlternative {
+  assignment: ExerciseAssignment
+  score: number
+  reasons: string[]
+}
+
+/** What POST /api/programs/adjust changed. */
+export interface AdjustResult {
+  saved: boolean
+  revision: string | null
+  programVersionId?: string | null
+  applied: { type: string; from_week_index: number; weeks: number[]; exercises: number }
+}
+
+/** A Connect IQ watch bound to this account (GET /api/devices). */
+export interface PairedDevice {
+  deviceToken: string
+  deviceName: string | null
+  claimedAt: string | null
+  lastUsedAt: string | null
 }
 
 export interface ProgressionReview {

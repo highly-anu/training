@@ -17,7 +17,7 @@ from __future__ import annotations
 from src.analytics import trend as trend_mod
 from src.analytics.primitives import (coverage, primitive, result, scoped_hits, series_point,
                                       trend_dict)
-from src.progression import _LINEAR_INCREMENTS
+from src.progression import _DEFAULT_INCREMENT_KG
 
 DEFAULT_STALL_SESSIONS = 3
 EPLEY = 0.0333
@@ -48,11 +48,13 @@ def best_completed_set(ex_log: dict | None) -> dict | None:
 
 
 def increment_for(ctx, exercise_id: str) -> float:
+    """The exercise's own `weekly_increment_kg`, else the generator's default —
+    the same two places progression.py reads."""
     ex = ctx.exercise_def(exercise_id)
     inc = ex.get('weekly_increment_kg')
     if isinstance(inc, (int, float)) and inc > 0:
         return float(inc)
-    return float(_LINEAR_INCREMENTS.get(exercise_id, _LINEAR_INCREMENTS['_default']))
+    return float(_DEFAULT_INCREMENT_KG)
 
 
 @primitive('set_load')

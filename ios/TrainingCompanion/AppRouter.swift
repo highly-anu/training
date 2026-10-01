@@ -15,9 +15,10 @@ import SwiftUI
 /// site (§1.7 of `ios/docs/design-system.md`).
 @MainActor
 final class AppRouter: ObservableObject {
-    /// The five root tabs, in `MainTabView` order.
+    /// The four root tabs, in `MainTabView` order. `.dashboard` is the Today
+    /// tab (the case name predates the rename; the widgets deep-link to it).
     enum Tab: Int, Hashable {
-        case dashboard, program, analytics, profile, sync
+        case dashboard, program, log, analytics, profile
     }
 
     @Published var tab: Tab = .dashboard
@@ -42,5 +43,42 @@ final class AppRouter: ObservableObject {
     /// Called by Analytics when it has applied a requested section.
     func clearAnalyticsSection() {
         analyticsSection = nil
+    }
+
+    /// A Log section asked for from outside, cleared once applied.
+    @Published var logSection: LogTab? = nil
+
+    func showLog(_ section: LogTab) {
+        logSection = section
+        show(.log)
+    }
+
+    func clearLogSection() {
+        logSection = nil
+    }
+
+    /// A Profile section asked for from outside, cleared once applied.
+    @Published var profileSection: ProfileTab? = nil
+
+    func showProfile(_ section: ProfileTab) {
+        profileSection = section
+        show(.profile)
+    }
+
+    func clearProfileSection() {
+        profileSection = nil
+    }
+
+    /// A session key Today should open, set by a widget or a deep link;
+    /// Today clears it once the sheet is up.
+    @Published var pendingSessionKey: String? = nil
+
+    func openSession(_ key: String) {
+        pendingSessionKey = key
+        show(.dashboard)
+    }
+
+    func clearPendingSession() {
+        pendingSessionKey = nil
     }
 }

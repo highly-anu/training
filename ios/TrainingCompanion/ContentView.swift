@@ -4,7 +4,6 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
-    @StateObject private var programStore = ProgramStore()
     @StateObject private var router = AppRouter()
 
     var body: some View {
@@ -13,7 +12,6 @@ struct ContentView: View {
                 .environmentObject(router)
                 .environmentObject(sync)
                 .environmentObject(appState)
-                .environmentObject(programStore)
                 .onAppear {
                     sync.configure(auth: auth, appState: appState)
                     appState.configure(auth: auth)
@@ -47,6 +45,8 @@ struct ContentView: View {
                         }
                     }
                     scheduleNextSync()
+                    // A section asked for at launch (run_sim.sh ROUTE=…).
+                    if let link = DeepLink.fromLaunchEnvironment() { router.open(link) }
                 }
                 .onOpenURL { url in
                     // .fit file import
@@ -54,9 +54,9 @@ struct ContentView: View {
                         appState.pendingFITURL = url
                         return
                     }
-                    // Widget deep links — trainingcompanion://today or trainingcompanion://session?key=...
-                    guard url.scheme == "trainingcompanion" else { return }
-                    router.tab = .dashboard     // always land on the Dashboard tab
+                    // trainingcompanion://today | session?key=… (widgets) | program |
+                    // analytics?section=… | profile — through the router (§6.9).
+                    if let link = DeepLink.parse(url) { router.open(link) }
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },
@@ -73,19 +73,27 @@ struct ContentView: View {
 
 // MARK: - Main Tab View
 
+/// Five tabs: Today, Program, Log, Analytics, Profile. Connections, devices,
+/// sync status and sign-out live under Profile ▸ Settings — the old "Sync"
+/// tab was a debug screen holding the only sign-out and the integration
+/// toggles. Log (2026-10-01) is the record: recorded workouts, the
+/// suggestions inbox, and what was logged against planned sessions.
 struct MainTabView: View {
-    @EnvironmentObject var sync: SyncManager
     @EnvironmentObject var router: AppRouter
 
     var body: some View {
         TabView(selection: $router.tab) {
             TodayView()
-                .tabItem { Label("Dashboard", systemImage: "house") }
+                .tabItem { Label("Today", systemImage: "sun.max") }
                 .tag(AppRouter.Tab.dashboard)
 
             ProgramView()
                 .tabItem { Label("Program", systemImage: "calendar") }
                 .tag(AppRouter.Tab.program)
+
+            LogView()
+                .tabItem { Label("Log", systemImage: "list.clipboard") }
+                .tag(AppRouter.Tab.log)
 
             AnalyticsView()
                 .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }
@@ -94,15 +102,6 @@ struct MainTabView: View {
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person") }
                 .tag(AppRouter.Tab.profile)
-
-            SyncStatusView()
-                .tabItem {
-                    Label(
-                        sync.isSyncing ? "Syncing…" : "Sync",
-                        systemImage: sync.isSyncing ? "arrow.clockwise.circle.fill" : "arrow.triangle.2.circlepath"
-                    )
-                }
-                .tag(AppRouter.Tab.sync)
         }
     }
 }

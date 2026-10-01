@@ -1,15 +1,18 @@
 # Roadmap
 
 The single backlog for this project. Last verified against the code and the
-production database on 2026-09-30.
+production database on 2026-09-30; the information-architecture items were added
+from the functionality review of 2026-10-01 (`information-architecture.md`).
 
 This replaces the phased build roadmap (phases 0–8, all complete), and absorbs
-`next_features.md` (March), `model-generalization-gaps.md` (April) and
-`programming-improvements.md` (April), all of which are deleted — their shipped
-items are listed under *Done* below and their open items are ranked here. Two
-planning documents remain because they carry rationale, not backlog:
-`frontend-fix-plan.md` (design decisions, plus the *Explicitly not doing* table)
-and `program-history-release.md` (the release runbook).
+`next_features.md` (March), `model-generalization-gaps.md` (April),
+`programming-improvements.md` (April) and `ios/docs/phone-app-plan.md` (the
+unbuilt four-tab iOS plan), all of which are deleted — their shipped items are
+listed under *Done* below and their open items are ranked here. Three planning
+documents remain because they carry rationale, not backlog:
+`frontend-fix-plan.md` (design decisions, plus the *Explicitly not doing* table),
+`program-history-release.md` (the release runbook) and
+`information-architecture.md` (the target layout of both clients and why).
 
 ## How items are ranked
 
@@ -22,162 +25,49 @@ and `program-history-release.md` (the release runbook).
 **Complexity** is the size of the change, not the value: **S** under a day,
 **M** a few days, **L** a week or more of mostly content work.
 
-Within a priority band, cheaper items come first.
+Within a priority band, cheaper items come first. The information-architecture
+restructure of 2026-10-01 is complete on both clients (see *Done*); what it
+deferred is under *Later*.
 
 ## Ranked backlog
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | FIT import dates workouts from UTC; no user timezone | P1 | M | import |
-| 2 | iOS interactive design: refreshable min-time and stable ForEach ids | P2 | S | ios |
-| 3 | Twenty hand-rolled empty states bypass `EmptyState` (FIX-5) | P2 | S | web |
-| 4 | Chart chrome partially hardcoded (FIX-6) | P2 | S | web |
-| 5 | Female benchmark values served, never shown | P2 | S–M | web / api |
-| 6 | Missing benchmark families | P2 | M | data |
-| 7 | Exercise animations (Lottie + SVG CSS) | P2 | L | web / content |
-| 8 | Finish moving cadence and load tables from Python into YAML | P3 | S | engine |
-| 9 | Scope declares modalities nothing schedules | P3 | S | packages |
-| 10 | Configurable back-to-back recovery relaxation | P3 | M | engine |
-| 11 | Authoring API completeness | P3 | M | api / web |
+| 1 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
 
 ---
 
-### 1. FIT import dates workouts from UTC; no user timezone — P1 · M
-
-`src/fit_import.py` takes the session `start_time` as a UTC-naive datetime and
-derives the workout's date from it, so an evening workout west of Greenwich is
-dated a day late. No source stores a user timezone. `resolve_session` has a
-±1-day widening used only when displaying an existing match, never for scoring,
-because the matcher's golden fixtures pin that behaviour.
-
-Do: read the FIT `activity` message's `local_timestamp` where present and
-derive the date from it; add a `timezone` field to the profile blob for the
-other sources (Strava and Apple Health carry their own offsets; Garmin's
-summary carries `startTimeOffsetInSeconds`). Any change to the date a workout
-carries must keep `test_workout_matcher.py` and the vitest half green — change
-`data/matcher_fixtures.json` deliberately if the contract moves.
-
-### 2. iOS interactive design, remaining steps — P2 · S
-
-Of the six steps in the interactive design plan, steps 1, 2, 3 and 5 shipped:
-named `AppAnimation` springs, velocity-aware swipe commit, `AppHaptics` in 14
-files, `appTabStyle()` on every tab root. Two remain:
-
-- **Step 4** — `.refreshable` with a light haptic on trigger, a 600 ms minimum
-  display time so the spinner does not flash, and a success haptic on
-  completion. No call site has the minimum-time pattern yet.
-- **Step 6** — seven `ForEach(... id: \.offset)` sites remain. Offset identity
-  makes SwiftUI recreate rows instead of animating them. Use the day name,
-  session key or phase as the id, and add `.animation(AppAnimation.layoutChange,
-  value:)` where the layout changes with data.
-
-Per `CLAUDE.md`, each change ends in the simulator with a screenshot.
-
-### 3. Hand-rolled empty states (FIX-5) — P2 · S
-
-Eight screens use the shared `EmptyState` component; twenty more render their
-own "No … yet" markup. Real UX cost: the hand-rolled ones lack the icon, the
-action slot and the consistent spacing. Sweep and convert. Rationale and
-the component contract are in `frontend-fix-plan.md` under FIX-5.
-
-### 4. Chart chrome partially hardcoded (FIX-6) — P2 · S
-
-Marks (bars, lines, cells) are correctly hardcoded to a §8 colour system. Some
-chrome — axis ticks, grid lines, tooltip surface, cursor fill, reference
-lines — is still a hex literal and reads wrong in the Military and Zen themes.
-The token table is under FIX-6 in `frontend-fix-plan.md`. Opportunistic: do it
-when touching a chart. `WorkoutAnalytics.tsx` defines series colours inline; new
-series there should read `MODALITY_COLORS` or `ZONE_COLORS`.
-
-### 5. Female benchmark values served, never shown — P2 · S–M
-
-`_all_benchmarks()` in `api.py` now carries the female values and the metric
-metadata; `ProfileBenchmarks.tsx` has no sex toggle and never reads them. Add
-the toggle, read the athlete's sex from the profile as the default, and pass the
-logged value to each `LevelBar` (the `userValue` prop exists and is never
-passed).
-
-### 6. Missing benchmark families — P2 · M
-
-Three files exist under `data/benchmarks/`: strength, conditioning and the
-Cell standards. Families referenced in the packages with no data behind them:
-
-| Family | Contents |
-|---|---|
-| Kettlebell pentathlon | Wildman five-lift scoring (snatch, clean and jerk, press, squat, pull) |
-| Ruck standards | SFAS pace (40 lb / 12 mi / sub-3 h), Horsemen PT Tests I and II |
-| CrossFit benchmark WODs | Girls (Fran, Grace, Helen, Diane, Isabel, Annie, Elizabeth) and Heroes (Murph, Cindy, DT) |
-| Movement and skill | Turkish get-up standard, handstand hold |
-
-Each is a YAML file in the existing list-of-objects schema plus one entry in the
-`_all_benchmarks()` loop and, for WODs, a `benchmark_wod` category. Content
-work; the sources are in `data/` and `docs/extracted/`.
-
-### 7. Exercise animations — P2 · L
+### 1. Exercise animation content — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
-`ExerciseAnimationPanel` already dispatches on `gif | lottie | svg_css | none`,
-so what remains is content and one dependency:
+The code half shipped on 2026-10-01: `@lottiefiles/dotlottie-react` is
+installed and `ExerciseAnimationPanel` renders `<DotLottieReact>` for
+`type: lottie`. What remains is content:
 
-1. `npm install @lottiefiles/dotlottie-react` and swap the placeholder branch
-   for `<DotLottieReact src=… loop autoplay />`.
-2. Lottie files at `frontend/public/animations/lottie/{exercise_id}.lottie`, in
+1. Lottie files at `frontend/public/animations/lottie/{exercise_id}.lottie`, in
    priority order: Kelly Starrett's top twenty mobility movements, Wildman
    kettlebell ballistics, Ido Portal locomotion (custom, After Effects or Rive).
-3. SVG CSS loops at `frontend/public/animations/svg/` for the bridge and
+2. SVG CSS loops at `frontend/public/animations/svg/` for the bridge and
    handstand progressions and the rehab movements with no Lottie match.
-4. Point each package's `exercise_media.yaml` entry at the file.
+3. Point each package's `exercise_media.yaml` entry at the file.
 
 Acceptance: Lottie renders in the drawer; ten Starrett movements, the two core
 KB ballistics and five Portal locomotion patterns animate; `type: none` still
 shows the category placeholder.
 
-### 8. Cadence and load tables still in Python — P3 · S
-
-Two of the three "knowledge in code" tables identified in April are half
-migrated:
-
-- `_CADENCE_OPTIONS` in `scheduler.py`: the framework yaml's `cadence_options`
-  is read first and the Python dict is the fallback. Move the remaining entries
-  into their frameworks, delete the dict.
-- `_STARTING_LOADS` and `_LINEAR_INCREMENTS` in `progression.py`: the exercise
-  yaml's `starting_load_kg` and `weekly_increment_kg` are read first and the
-  dicts are the fallback. Same treatment; the schema already has the fields.
-
-The third table, movement-pattern aliases, is done: `selector.py` loads
-`data/commons/movement_patterns.yaml`.
-
-### 9. Scope declares modalities nothing schedules — P3 · S per package
-
-Several packages declare `power` or `relative_strength` in `scope` with no
-framework that prescribes them and no archetype that serves them.
-`tools/check_provenance.py --coverage` lists each. Nothing schedules them, so
-generation is unaffected; either author the archetype and a framework line, or
-drop the modality from `scope`. One package per change.
-
-### 10. Configurable back-to-back recovery relaxation — P3 · M
-
-The scheduler's recovery rules forbid consecutive long days. Endurance build
-phases want them — Uphill Athlete's weekend back-to-back is a defining feature
-of the base phase. There is no framework or phase field to relax the rule; the
-only knobs are `sessions_per_week` and `modality_priority`. Add a per-framework
-`recovery` block (which modality pairs may sit on consecutive days, in which
-phases), read it in `allocate_sessions`, and make Uphill's base and specific
-phases use it. Verify with `check_styles.py` and by generating Uphill at five
-and six days.
-
-### 11. Authoring API completeness — P3 · M
-
-There are no POST, PUT or DELETE routes for any entity: packages are edited as
-YAML and validated with `tools/validate_entities.py`. Since the per-package
-restructure this is a reasonable steady state — a new package with its own
-`analytics.yaml` needs no engine change. If in-app authoring (DevLab) is
-revived, the order from the April analysis still holds: modality creation
-first, then goal creation, then edit and delete for exercises and archetypes,
-each behind the same schema validation the CLI uses.
-
 ---
+
+## Later
+
+Larger items from the IA review. Each needs a backend step first; none is
+scheduled ahead of the ranked list.
+
+- **Push notifications** — local session reminders exist
+  (`NotificationManager`); push would need a device-token table and a sender.
+- **iOS Library tab** — the contextual exercise sheet exists
+  (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
+  content to browse rather than look up.
 
 ## Parked
 
@@ -209,6 +99,292 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Follow-up tranche (2026-10-01)**:
+
+- *Partial regenerates continue the numbering*: `POST /programs/generate`
+  takes `week_in_program`, the `week_number` of the first generated week;
+  `generator._build_phase_entries` numbers from it (the event-date schedule,
+  which carries absolute weeks, is untouched). The web's three partial
+  regenerates (injuries sheet, "from tomorrow onwards", the profile offer)
+  and the phone's pass the kept head's length + 1, so a 4-week plan rebuilt
+  from week 2 reads 1, 2, 3, 4 instead of 1, 1, 2, 3, and session keys stay
+  unique. `test_week_numbering.py` and the client request tests pin it.
+- *iOS Log tab*: the third tab, `LogView` — Workouts (the list that was
+  Analytics ▸ Workouts, with the `.fit` importer), Suggestions (the full
+  inbox, `SuggestionRowView` with Accept, Review and Dismiss, shared with
+  Today's card) and Sessions (`LogSessions.rows`: what was logged against
+  planned sessions, newest first, one line per exercise with content; a row
+  that resolves opens the session). Analytics keeps Program · Overview ·
+  Progress · Recovery. `router.showLog(_:)` and `trainingcompanion://log?section=…`.
+  `LogSessionsTests` pins the ordering, the wording and the server's
+  timestamp forms.
+- *Web Settings page*: `/settings` (Connections · Account · Appearance ·
+  Developer in dev builds), URL-driven like the phone's Settings screen.
+  Connections (integration toggles, Garmin and Strava accounts, devices) and
+  the account switcher and sign-out moved there from Profile, which keeps
+  the athlete: six tabs again. The OAuth landing URL names Settings, and
+  `/profile?tab=connections` redirects with its query intact. The theme list
+  is one export (`THEMES`) shared by the sidebar toggle and
+  Settings ▸ Appearance. `settings.test.tsx` pins the tabs and the redirect.
+- *"About this methodology" on the phone*: Program ▸ Current shows the
+  methodology the plan was generated from under the phase bar (a menu for a
+  blend) and opens `PhilosophyDetailSheet` — extracted from the builder, where
+  it was private, into its own file so the program can explain itself
+  (design-system §6.18). `AppState.programMethodologies()` maps the envelope's
+  source ids to catalog cards, skipping the `_blended` marker.
+- *Regenerate from this week after a profile change*: both clients compare
+  the profile (level, equipment, days per week from the schedule, injuries)
+  with the active program's stored constraints — `lib/programConstraintsDiff.ts`
+  and `ProgramConstraintsDiff.swift`, the same rules — and offer "Regenerate
+  from week N" on the profile tabs that feed constraints (and, on the phone,
+  in the Program settings sheet beside the full regenerate). The web goes
+  through `useRegenerateFromWeek`; the phone gets `APIClient.generateProgramPreview`
+  (generate without persisting), `Regeneration.splice` (kept head + new tail,
+  the tail's goal/constraints/validation/coverage report, volume summary left
+  to the server) and `AppState.regenerateFromCurrentWeek`, saved through the
+  revision-checked PUT. `GenerateProgramRequest` now speaks blends
+  (`philosophy_ids` + weights) and `periodization_week`. Until now the web
+  offered this for injuries only and the phone only a full regenerate.
+- *Phone session logging*: `ExerciseLogSheet` on every session row (leading
+  swipe or context menu) — sets for sets × reps and hold slots, the slot's
+  currency for the rest, through `SessionLogging` (the web's outcome-field
+  table) and `AppState.logExercise` → `PUT /health/sessions/<key>` with
+  `{exercises: {<id>: …}}`; the server merges per exercise, so no
+  planned-sessions step was needed (it resolves the version id from the key
+  itself). `GET /health/sessions/recent` now carries `exercises`;
+  `ExercisePerformanceLog` is the web's shape. `trainingcompanion://session?key=…`
+  opens the session (the widget's link finally does what it says).
+  `SessionLoggingTests` pins the table, the payload and the read-back.
+- *Simulator against the local API*: `APITarget` (environment, then the
+  `apiBaseURLOverride` default, then the build's URL), a local target needs no
+  sign-in (`AuthManager.applyTargetChange`, no bearer sent), an ATS exception
+  for localhost, Settings ▸ API target, and `DeepLink` routes
+  (`trainingcompanion://today|program|analytics?section=…|profile`) through the
+  router. `LOCAL_API=1 ROUTE=… ./ios/run_sim.sh shot.png` builds, points the
+  simulator at the local server, opens a section and screenshots it — the
+  first way to look at a data screen on the phone without production.
+- *iOS saves round-trip the envelope*: the phone's program models decoded only
+  the keys they displayed, so every save from the phone (a move, a swap,
+  marking a session complete) stripped the goal, constraints, validation,
+  coverage report, each exercise's `slot` and every other unmodelled key, and
+  sent a blend's weights as `[:]`. `JSONValue` extras on each struct carry the
+  rest back untouched (integers stay integers), `ServerProgram` keeps
+  `sourceGoalWeights` and unknown envelope keys, and every rebuild in
+  `AppState` passes them through. The PUT handler's back-fill now covers
+  `coverage_report` too, for older builds. `ProgramRoundTripTests` pins it.
+
+**Adjust, swap, devices and the iOS "Later" tranche (2026-10-01)**:
+
+- *Apply adjustment*: `POST /api/programs/adjust` applies one of the review's
+  `adjustments[]` to the stored weeks from a week onward (default: the current
+  calendar week) under the same revision check as PUT, and returns the saved
+  envelope. `hold_load` freezes the kg at the start week; `reduce_volume_10pct`
+  cuts sets and AMRAP rounds per *week* (one off nine weekly sets — 10 % of
+  three sets per session rounds to nothing) and minutes/km ×0.9;
+  `early_deload` flags the start week and applies the deload scalings;
+  `increase_increment` adds the lift's `weekly_increment_kg` cumulatively after
+  the start week. `rebuild_habit` is answered 422 — it is about the athlete, not
+  the plan. The logic is `apply_adjustment_to_weeks`, pure and testable without
+  a DB; the web renders the list on Analytics ▸ Progress with an "Apply from
+  week N" button per appliable entry (`ProgressionTab`, `useApplyAdjustment`).
+- *Exercise-level swap*: `POST /api/exercises/substitute` runs the selector's
+  own filter and score for one archetype slot (`select_exercise(...,
+  return_trace=True)`, the session's other exercises excluded) and returns
+  ranked, complete assignments with the week's load and the reasons. The web
+  shows a swap icon on every exercise row (`SessionPanel` → `SwapExerciseSheet`);
+  picking one calls `programStore.replaceExercise` and saves through the
+  revision-checked PUT. Nothing is persisted by the endpoint.
+- *Web Devices card*: Profile ▸ Connections ▸ Devices lists paired Connect IQ
+  watches, claims a pairing code and revokes (`api/devices.ts`,
+  `DevicesCard`), against the routes the iOS Settings screen already used.
+- *Program header names the stored program*: `ProgramView` read the builder's
+  persisted selection for its title, so browsing a philosophy in the builder
+  renamed the program the athlete is on; it now reads the envelope's
+  `sourceGoalIds`.
+- *iOS swap and apply*: `SwapExerciseSheet` (context menu or swipe on a session
+  row) and `AdjustmentRow` on Analytics ▸ Progress use the two endpoints above
+  through `AppState.replaceExercise` / `applyAdjustment`; a 409 surfaces as
+  `programSaveConflict` and reloads. Models in `ProgramEditing.swift`.
+- *iOS exercise reference*: `ExerciseDetailSheet` (design-system §6.14) —
+  catalog entry, cues, prerequisites and `GET /exercises/<id>/media` — from
+  any session row and from the swap list.
+- *iOS FIT import through the server*: `FITImportSheet` posts to
+  `POST /workouts/parse` (`APIClient.uploadFITFile`) and matches through
+  `POST /health/matches`; the raw Supabase upserts `saveWorkoutDirect` /
+  `saveMatchDirect` are gone, so a phone upload meets dedup and the matcher.
+  (The watch path still bypasses them — ranked item 1.)
+- *iOS load analytics from the server*: Analytics ▸ Overview reads
+  `/health/load/pmc` and `/health/load/weekly`; the on-device engine is the
+  fallback only, and the footnote says which was used.
+- *iOS local notifications*: `NotificationManager` schedules one reminder per
+  training day over a 14-day horizon from the stored program (completed
+  sessions skipped, rescheduled on every program change); Settings ▸
+  Notifications holds the toggle and time. `NotificationPlan` is pure and
+  tested.
+- *`LoadFormat`*: the one prescription formatter on iOS (§1.7 extraction),
+  shared by the session, swap and exercise sheets.
+- *Watch uploads through the server*: `WatchSessionManager` posted a finished
+  watch workout, its match and a second session-log row straight into
+  Supabase. The row never met `workout_dedupe` (a Garmin or Apple Health
+  copy became a second workout), the match had no `session_uid`, elevation
+  loss stayed 0, the GPS enrichment re-upload wiped the heart-rate samples
+  and the session name, and the log upsert still targeted the pre-006
+  primary key. It now posts `WatchUpload.workoutPayload` to
+  `POST /api/health/workouts`, links through `POST /api/health/matches`
+  against the listed (canonical) row, and re-sends the whole workout with
+  the HealthKit route; `saveWatchWorkoutDirect` / `saveWatchMatchDirect` /
+  `supabaseUpsert` are gone. `WatchUploadTests` pins the keys.
+- *iOS program scorecard*: Analytics ▸ Program (first section) lays out
+  `GET /analytics/program` — frame, scorecard, intensity, a section per
+  methodology with a card per metric (status, coverage reason, exercise
+  picker, actual-vs-expected chart, stall line, evidence; unlocks and
+  benchmark-level bodies), movement balance and load. Tolerant models in
+  `ProgramAnalyticsModels.swift` (a failed section is reported, not fatal);
+  `AnalyticsStatusStyle` mirrors the web's status colours and copy;
+  `AnalyticsCard` is the one card the three analytics sections share
+  (design-system §6.15). `ProgramAnalyticsCodableTests` pins the shapes
+  against a real response. The archetype table and the benchmark ladder stay
+  web-only for now (benchmarks live under Profile on the phone).
+- *iOS workout reads through the API*: the list, the matches and the PRs come
+  from one `GET /health/snapshot` (`APIClient.HealthSnapshot`, lossy per row
+  so one odd workout cannot blank the list), the detail from
+  `GET /health/workouts/<id>`, the delete from `DELETE /health/workouts/<id>`.
+  The phone's own `canonical_id` filter, the `SupabaseValue` column decoding
+  and the JWT `userId` parsing are gone; nothing in the app speaks PostgREST
+  now (auth stays with Supabase). `WorkoutHRData` reads 142 or 142.0 — the
+  `hr_avg` columns are `real` — and a match confidence written as a number
+  reads as a string. `WorkoutReadsCodableTests` pins the shapes.
+
+**Content and engine tranche (2026-10-01)**:
+
+- *Benchmark families*: four new list files under `data/benchmarks/` —
+  `kettlebell_pentathlon.yaml` (the five 6-minute events, tiers from the
+  archetype's RPM targets), `ruck_and_pt_standards.yaml` (12-mile ruck,
+  Uphill's pack vertical pace, Horsemen PT Tests I and II),
+  `crossfit_benchmark_wods.yaml` (seven Girls, Murph, Cindy, DT; community
+  Rx distributions, flagged as such), `movement_skill_standards.yaml`
+  (get-up ×BW, wall and free handstand holds). Entries may set `category`
+  (kettlebell · tactical · benchmark_wod · skill) and `unit`;
+  `benchmarks_data.BENCHMARK_FILES` is the one list the loader and the static
+  dump read. Both web views group by the new categories; iOS grouped by
+  category already. 47 standards, up from 21.
+- *Cadence and load tables*: `scheduler._CADENCE_OPTIONS` and
+  `progression._STARTING_LOADS` / `_LINEAR_INCREMENTS` are gone. Every lift
+  already carried `starting_load_kg` / `weekly_increment_kg`, and every
+  framework in the table already carried the same `cadence_options`, so only
+  the orphaned `polarized_80_20` entry moved — into the four Uphill
+  frameworks, which now rotate their weekly pattern as the table intended.
+  Starting Strength, CrossFit and Wildman programs are byte-identical before
+  and after.
+- *Scope cleanup*: the modalities `check_provenance --coverage` listed as
+  declared-but-unserved were dropped from nine packages' `scope`; the report
+  is clean.
+- *Consecutive-day relaxation*: a framework may declare
+  `recovery.allow_consecutive` (+ `phases`); `scheduler.consecutive_allowances`
+  feeds `_recovery_safe` and `_score_days`. Uphill's specific phase allows
+  `[strength_endurance, strength_endurance]`, so at seven days its two ME
+  days sit back to back (they were forced apart before); at five and six days
+  the allocation holds one ME session, so nothing to relax. Base needs no
+  block: aerobic_base has no recovery window, which is why the weekend pair
+  was never blocked there.
+- *Authoring API*: the six write routes validate against `docs/schemas/*`
+  (422 with the error list), `PUT /api/frameworks/<id>` accepts `recovery`,
+  and `DELETE /api/exercises/<id>` / `DELETE /api/archetypes/<id>` exist for
+  the `custom` package only — authored packages stay YAML-edited.
+- *Exercise animations, code half*: the Lottie player is installed and wired;
+  the files are the open item above.
+
+**Wrong-data and cheap P2 tranche (2026-10-01)**:
+
+- *FIT dates are the athlete's day.* `fit_import.local_date` reads the FIT
+  activity message's `local_timestamp − timestamp`, else the profile's new
+  `timezone` key, else UTC; the Garmin webhook passes
+  `startTimeOffsetInSeconds`; Strava uses `start_date_local` on the server
+  and in the browser parser. `startTime` and the deterministic id stay UTC.
+  `test_fit_import.py` pins it. Profile ▸ Athlete sets the zone (one click
+  for the browser's); iOS fills it from the device when unset.
+- *iOS interactive design steps 4 and 6*: `AppRefresh.perform` carries the
+  pull-to-refresh contract (light haptic, 600 ms minimum, success haptic) for
+  all seven sites; zero `ForEach(id: \.offset)` remain, with layout animation
+  where rows change with data.
+- *FIX-5*: `EmptyState` gained a `compact` size; the six chart zero-data views,
+  Analytics ▸ Load's period empty state and Recovery's sleep card use it, with
+  an Import action where one resolves the state. The slot-sized day cell,
+  decorative dashed outlines and informational "not configured" cards stay, as
+  the fix plan sanctions. Eight orphan components deleted.
+- *FIX-6*: every cursor fill, the "all philosophies" radar reference series
+  and the ontology graph labels read tokens; marks are untouched.
+- *Female benchmark standards*: `GET /api/benchmarks?sex=`; the web hook
+  queries it from the profile's sex (bundled male JSON as the offline
+  fallback) and Benchmarks says which tables it shows; iOS has a Sex picker
+  and passes it. Multi-standard WODs and the other families are item 1.
+
+**Information-architecture restructure (2026-10-01)** — the layout in
+`information-architecture.md`, on both clients:
+
+- *Web*: grouped sidebar (Train / Insight / Library / You / Dev); the builder is
+  the flow `/program/new`; Log (`pages/Log.tsx`: Workouts with filters ·
+  Suggestions; Import as a sheet through `api/workouts.ts`, no hand-made auth
+  header, no manual start-date field); Analytics is Program · Progress · Load ·
+  Recovery with URL tabs (Bio Log folded into Recovery, the Dashboard's
+  Progress tab moved, Activity and Overview folded into Load); Home has no
+  sub-tabs and a compact `ProgressionWidget`; Program has Calendar · Overview ·
+  History tabs with "New program", the priority mix beside the phases and
+  methodology / standards links into Explore; Explore has a Standards topic,
+  "Build with this" on every philosophy (`components/explore/PhilosophyPanel.tsx`)
+  and framework (`builderStore.prefillFrom…`), and resolves exercise deep links
+  from a session row's "Open in Explore"; Profile has an Athlete tab (level,
+  date of birth, sex, bodyweight, account) and the API a writable `sex` key.
+  Old paths redirect (`LegacyRedirect`), unknown paths get a 404 page. One
+  `SessionPanel` serves the session page and the Home side panel; one
+  `WorkoutRow` serves every workout list; `lib/sessionKeys.ts` is the only
+  session-key parser; `ExerciseCatalog`, `Philosophies`, `BioLog`,
+  `WorkoutImport`, `ProgramHistory` (page), `ExerciseSearch`, `ExerciseDrawer`,
+  `PhaseTimeline` and `VolumeBar` are deleted.
+- *iOS*: four tabs (Today · Program · Analytics · Profile); the Sync tab
+  dissolved into Settings pushed from Profile (`Views/SettingsView.swift`), its
+  hidden `resetProgramStartToToday` mutation deleted; Profile ▸ Athlete (level,
+  DOB, bodyweight, editable HR zones); Analytics ▸ Progress hosts the
+  progression review; Today has a Suggestions card (`GET /health/matches/
+  suggestions`, dismiss, review through `WorkoutDetailView`) and a "Generate a
+  Program" empty-state button; `ContentView` routes through
+  `router.show(.dashboard)`. Defects fixed: settings-sheet init, debounced
+  notes, fatigue 1–5, stable sheet identity, check-in notes sent, undo-complete
+  through the new `DELETE /api/health/sessions/<key>/completion`, and a visible
+  banner on a 409 `stale_revision`. Dead code deleted: `LogView.swift`,
+  `DevicesView.swift`, `SyncStatusView.swift`, `ProgramStore.swift`, the stale
+  `ios/TrainingCompanionWatch/` folder, and the watch's unreferenced
+  `SettingsView` / `SessionOverviewView`.
+- *Docs*: `frontend-design.md` §13.2 / §17.8 / §17.9, `ios/docs/design-system.md`
+  §6.13, `ios/README.md` rewritten, `CLAUDE.md` updated.
+
+**Functionality & IA review, P1 tranche (2026-10-01)** — the five findings
+that were wrong data or let wrong data in, from `information-architecture.md`:
+
+- The iOS builder could not generate a program: step 1 fetched `GET /api/goals`,
+  removed on 2026-04-25 (`d079ace`), so the grid never populated and Next stayed
+  disabled — for five months. It now picks a methodology from
+  `GET /api/philosophies` with a detail sheet per card; the settings sheet's
+  picker, the Today header's goal name and `GenerateProgramRequest.philosophyId`
+  follow. The settings sheet also got its title and Cancel button, which were
+  attached to the `NavigationStack` instead of its content and never rendered.
+- iOS PRs were silently lost: Benchmarks appended to `profile.performanceLogs`
+  and sent it with the profile, whose server whitelist drops the key. They go
+  through `POST /api/health/performance` now, then re-read the series.
+- The web could not log rounds, minutes or kilometres: `OutcomeLogger` was
+  written in `2e84772` and never mounted. `ExerciseRow` dispatches on
+  `slot_type` through `lib/outcomeFields.ts`; `ExerciseRow.test.tsx` pins it.
+- Server match suggestions (Garmin webhook, iOS relay) were written and shown
+  nowhere. `HealthDataProvider` merges `GET /api/health/matches/suggestions`
+  into `bioStore.pendingMatches`; a Home card and an Import ▸ Suggestions tab
+  (`SuggestionRow`) let the athlete review or dismiss; `lib/sessionKeys.ts` and
+  `lib/activityType.ts` are the first shared helpers of item 12.
+- Six unauthenticated YAML-writing authoring routes and a Dev Lab in end-user
+  navigation: the routes require `require_auth` + `AUTHORING_ENABLED`
+  (`_authoring_enabled()` in `api.py`); Dev Lab's route and nav entry exist only
+  in dev builds (`src/lib/featureFlags.ts`, `VITE_DEVLAB=1` to opt a production
+  build in).
+
 **Build phases 0–8** (original roadmap): source extraction, schemas, data
 population, logic design, MVP generator, validation, KB-only strength
 archetypes, exercise variety scoring, methodology review, phase automation from
@@ -235,6 +411,12 @@ goal modality alignment (`check_provenance.py --coverage`).
 contrast regression guard in CI), FIX-2 (reduced motion), FIX-3 (theme-aware
 basemap), FIX-4 (one HR-zone colour source), FIX-7 (page transitions), FIX-8
 (accessible names on icon buttons).
+
+**From `ios/docs/phone-app-plan.md`**: the Today, Program and Profile tabs,
+`SessionDetailView` shared between Today and Program, the builder sheet, the
+bio check-in, pull-to-refresh and background refresh, and the Apple Health
+relay. Its Library tab, phone session logging and notifications are under
+*Later*; its four-tab structure is superseded by `information-architecture.md`.
 
 **iOS tests**: `TrainingCompanionTests` is a real unit-test target as of
 2026-09-30, hosted by the app, backed by a synchronized folder so new test

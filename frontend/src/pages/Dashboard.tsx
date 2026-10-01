@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Wand2, ChevronRight, Flag, CloudOff } from 'lucide-react'
+import { House, Wand2, ChevronRight, Flag, CloudOff } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -9,65 +9,28 @@ import { TodaySession } from '@/components/dashboard/TodaySession'
 import { WeekOverview } from '@/components/dashboard/WeekOverview'
 import { DayWorkoutPanel } from '@/components/dashboard/DayWorkoutPanel'
 import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
-import { ModalityDonut } from '@/components/dashboard/ModalityDonut'
-import { PhaseTimeline } from '@/components/dashboard/PhaseTimeline'
-import { VolumeBar } from '@/components/dashboard/VolumeBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { DumbbellLoader } from '@/components/shared/DumbbellLoader'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { DevelopmentWidget } from '@/components/dashboard/DevelopmentWidget'
-import { ProgressionTab } from '@/components/progression/ProgressionTab'
+import { SuggestionsCard } from '@/components/dashboard/SuggestionsCard'
+import { ProgressionWidget } from '@/components/dashboard/ProgressionWidget'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
-import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import type { GeneratedProgram } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-
-type SubTab = 'week' | 'analytics' | 'progress'
-
-const SUB_TABS: { id: SubTab; label: string }[] = [
-  { id: 'week',      label: 'Week'      },
-  { id: 'analytics', label: 'Analytics' },
-  { id: 'progress',  label: 'Progress'  },
-]
+// Home is the one page that mixes blocks on purpose: today's session, the
+// week, readiness, and compact development and progression cards that open
+// Analytics. The program's shape (priority mix, phases, volume) lives under
+// Program ▸ Overview and the progression review under Analytics ▸ Progress —
+// both used to be sub-tabs here.
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-// ── Tab Selector ───────────────────────────────────────────────────────────────
-
-function TabSelector({
-  active,
-  onChange,
-}: {
-  active: SubTab
-  onChange: (t: SubTab) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {SUB_TABS.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            'px-3 py-1 text-xs rounded border transition-colors',
-            tab.id === active
-              ? 'bg-primary/15 border-primary/40 text-primary'
-              : 'border-border text-muted-foreground hover:bg-muted'
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ── Week Tab ───────────────────────────────────────────────────────────────────
+// ── Week ───────────────────────────────────────────────────────────────────────
 
 function WeekTab({
   program,
@@ -168,8 +131,11 @@ function WeekTab({
         </div>
       </div>
 
-      {/* Today + Readiness + Development */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:items-stretch">
+      {/* Workouts waiting for a match decision — only when there are any */}
+      <SuggestionsCard />
+
+      {/* Today + Readiness + Development + Progression */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:items-stretch">
         <div className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today</h2>
           <div className="flex-1 flex flex-col">
@@ -186,6 +152,12 @@ function WeekTab({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Development</h2>
           <div className="flex-1 flex flex-col">
             <DevelopmentWidget />
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Progress</h2>
+          <div className="flex-1 flex flex-col">
+            <ProgressionWidget />
           </div>
         </div>
       </div>
@@ -214,53 +186,6 @@ function WeekTab({
   )
 }
 
-// ── Analytics Tab ──────────────────────────────────────────────────────────────
-
-function AnalyticsTab({
-  program,
-  weekIndex,
-}: {
-  program: GeneratedProgram
-  weekIndex: number
-}) {
-  return (
-    <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Goal Priority Mix
-          </h2>
-          <div className="rounded-xl border bg-card p-4">
-            <ModalityDonut priorities={program.goal?.priorities ?? {}} />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Phase Timeline
-          </h2>
-          <div className="rounded-xl border bg-card p-4">
-            <PhaseTimeline goal={program.goal} currentWeek={weekIndex + 1} />
-          </div>
-        </div>
-      </div>
-
-      {program.volume_summary && program.volume_summary.length > 0 && (
-        <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Weekly Volume (min)
-          </h2>
-          <div className="rounded-xl border bg-card p-4">
-            <VolumeBar summaries={program.volume_summary} />
-          </div>
-        </div>
-      )}
-
-    </div>
-  )
-}
-
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
@@ -273,7 +198,6 @@ export function Dashboard() {
   const eventDate = useProgramStore((s) => s.eventDate)
   const programStartDate = useProgramStore((s) => s.programStartDate)
 
-  const [activeTab, setActiveTab] = useState<SubTab>('week')
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   useEffect(() => {
@@ -287,7 +211,6 @@ export function Dashboard() {
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
 
   const currentWeek = program?.weeks[weekIndex]
-  const { totalWeeks: _totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
 
   const weekComplete = useMemo(() => {
     if (!currentWeek) return false
@@ -343,7 +266,7 @@ export function Dashboard() {
         <EmptyState
           title="No program yet"
           description="Build your first training program to see your dashboard and today's session."
-          action={{ label: 'Build a Program', onClick: () => navigate('/builder') }}
+          action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
           className="max-w-md"
         />
@@ -370,12 +293,8 @@ export function Dashboard() {
     >
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <LayoutDashboard className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Dashboard</h1>
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} />
-        </div>
+        <House className="size-5 text-primary" />
+        <h1 className="text-lg font-semibold">Home</h1>
         <div className="ml-auto">
           <ProgramSettingsSheet program={program} />
         </div>
@@ -386,30 +305,17 @@ export function Dashboard() {
 
         {/* Scrollable main column */}
         <div className="flex-1 min-w-0 overflow-y-auto">
-          {activeTab === 'week' && (
-            <WeekTab
-              program={program}
-              weekIndex={weekIndex}
-              selectedDay={selectedDay}
-              setSelectedDay={setSelectedDay}
-              handleWeekChange={handleWeekChange}
-              canAdvance={canAdvance}
-              daysToEvent={daysToEvent}
-              weeksToEvent={weeksToEvent}
-              eventDate={eventDate}
-            />
-          )}
-          {activeTab === 'analytics' && (
-            <AnalyticsTab
-              program={program}
-              weekIndex={weekIndex}
-            />
-          )}
-          {activeTab === 'progress' && (
-            <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
-              <ProgressionTab />
-            </div>
-          )}
+          <WeekTab
+            program={program}
+            weekIndex={weekIndex}
+            selectedDay={selectedDay}
+            setSelectedDay={setSelectedDay}
+            handleWeekChange={handleWeekChange}
+            canAdvance={canAdvance}
+            daysToEvent={daysToEvent}
+            weeksToEvent={weeksToEvent}
+            eventDate={eventDate}
+          />
         </div>
 
         {/* Right panel — animated width */}

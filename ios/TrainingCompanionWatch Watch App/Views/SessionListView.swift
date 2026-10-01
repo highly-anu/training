@@ -122,7 +122,7 @@ struct SessionListView: View {
                                 .foregroundStyle(.green)
                         } else {
                             HStack(spacing: 4) {
-                                ForEach(Array(day.modalityIds.prefix(2).enumerated()), id: \.offset) { _, mod in
+                                ForEach(Array(day.modalityIds.prefix(2).enumerated()), id: \.element) { _, mod in
                                     Circle()
                                         .fill(ModalityStyle.color(for: mod))
                                         .frame(width: 6, height: 6)

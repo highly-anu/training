@@ -8,21 +8,21 @@ import { RootLayout } from '@/components/layout/RootLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { ProgramBuilder } from '@/pages/ProgramBuilder'
 import { ProgramView } from '@/pages/ProgramView'
-import { ProgramHistory } from '@/pages/ProgramHistory'
 import { ProgramHistoryDetail } from '@/pages/ProgramHistoryDetail'
 import { SessionDetail } from '@/pages/SessionDetail'
-import { ExerciseCatalog } from '@/pages/ExerciseCatalog'
 import { ProfileBenchmarks } from '@/pages/ProfileBenchmarks'
-import { Philosophies } from '@/pages/Philosophies'
+import { Settings } from '@/pages/Settings'
 import { Explore } from '@/pages/Explore'
-import { WorkoutImport } from '@/pages/WorkoutImport'
+import { Log } from '@/pages/Log'
 import { WorkoutDetail } from '@/pages/WorkoutDetail'
-import { BioLog } from '@/pages/BioLog'
 import { WorkoutAnalytics } from '@/pages/WorkoutAnalytics'
 import { DevLab } from '@/pages/DevLab'
 import { LoginPage } from '@/pages/LoginPage'
+import { NotFound } from '@/pages/NotFound'
+import { LegacyRedirect } from '@/components/layout/LegacyRedirect'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { DEVLAB_ENABLED } from '@/lib/featureFlags'
 import { useAuthStore } from '@/store/authStore'
 
 const queryClient = new QueryClient({
@@ -62,22 +62,34 @@ export default function App() {
                       <RootLayout />
                     </ProtectedRoute>
                   }>
+                    {/* Train */}
                     <Route index element={<Dashboard />} />
-                    <Route path="builder" element={<ProgramBuilder />} />
                     <Route path="program" element={<ProgramView />} />
+                    {/* The builder is a flow under Program, not a destination. */}
+                    <Route path="program/new" element={<ProgramBuilder />} />
                     {/* Before the :week/:day route, or "history" is read as a week. */}
-                    <Route path="program/history" element={<ProgramHistory />} />
+                    <Route path="program/history" element={<LegacyRedirect to="/program" params={{ tab: 'history' }} />} />
                     <Route path="program/history/:versionId" element={<ProgramHistoryDetail />} />
                     <Route path="program/:week/:day" element={<SessionDetail />} />
-                    <Route path="exercises" element={<ExerciseCatalog />} />
-                    <Route path="profile" element={<ProfileBenchmarks />} />
-                    <Route path="philosophies" element={<Philosophies />} />
-                    <Route path="explore" element={<Explore />} />
-                    <Route path="import" element={<WorkoutImport />} />
-                    <Route path="import/:workoutId" element={<WorkoutDetail />} />
-                    <Route path="bio" element={<BioLog />} />
+                    <Route path="log" element={<Log />} />
+                    <Route path="log/:workoutId" element={<WorkoutDetail />} />
+                    {/* Insight */}
                     <Route path="analytics" element={<WorkoutAnalytics />} />
-                    <Route path="dev" element={<DevLab />} />
+                    {/* Library */}
+                    <Route path="explore" element={<Explore />} />
+                    {/* You */}
+                    <Route path="profile" element={<ProfileBenchmarks />} />
+                    <Route path="settings" element={<Settings />} />
+                    {/* Dev */}
+                    {DEVLAB_ENABLED && <Route path="dev" element={<DevLab />} />}
+                    {/* Old addresses. Query and router state survive the hop. */}
+                    <Route path="builder" element={<LegacyRedirect to="/program/new" />} />
+                    <Route path="import" element={<LegacyRedirect to="/log" />} />
+                    <Route path="import/:workoutId" element={<LegacyRedirect to={(p) => `/log/${encodeURIComponent(p.workoutId ?? '')}`} />} />
+                    <Route path="bio" element={<LegacyRedirect to="/analytics" params={{ tab: 'recovery' }} />} />
+                    <Route path="exercises" element={<LegacyRedirect to="/explore" params={{ topic: 'exercises' }} />} />
+                    <Route path="philosophies" element={<LegacyRedirect to="/explore" params={{ topic: 'philosophies' }} />} />
+                    <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
               </HealthDataProvider>

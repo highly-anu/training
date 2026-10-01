@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
 
     @State private var weekIndex: Int = 0
 
@@ -12,6 +11,7 @@ struct ProgramView: View {
 
     @State private var showBuilder = false
     @State private var showSettings = false
+    @State private var methodologySheet: PhilosophyCard? = nil
     @State private var selectedDay: DaySelection? = nil
     @State private var section: ProgramSection = .current
 
@@ -77,12 +77,14 @@ struct ProgramView: View {
                 ProgramBuilderFlow().environmentObject(appState)
             }
             .sheet(isPresented: $showSettings) {
-                ProgramSettingsSheet().environmentObject(appState)
+                if let program = appState.serverProgram {
+                    ProgramSettingsSheet(program: program, weeks: appState.allWeeks, profile: appState.profile)
+                        .environmentObject(appState)
+                }
             }
             .sheet(item: $selectedDay) { sel in
                 DaySessionsSheet(weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
-                    .environmentObject(programStore)
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
@@ -96,10 +98,21 @@ struct ProgramView: View {
     private var programContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if let conflict = appState.programSaveConflict {
+                    conflictBanner(conflict)
+                        .padding(.horizontal)
+                        .padding(.top, 4)
+                        .padding(.bottom, 12)
+                }
+
                 phaseProgressBar
                     .padding(.horizontal)
                     .padding(.top, 4)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 12)
+
+                methodologyRow
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
 
                 Divider().padding(.bottom, 12)
 
@@ -111,13 +124,92 @@ struct ProgramView: View {
             .padding(.top, 4)
         }
         .refreshable {
-            AppHaptics.light()
             weekIndex = appState.currentWeekIndex ?? 0
-            async let delay: () = Task.sleep(nanoseconds: 600_000_000)
-            await appState.loadProgram()
-            _ = try? await delay
-            AppHaptics.success()
+            await AppRefresh.perform { await appState.loadProgram() }
         }
+        .task { await appState.loadPhilosophiesIfNeeded() }
+        .sheet(item: $methodologySheet) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
+    }
+
+    // MARK: - Methodology
+
+    /// "About this methodology" — the program explains itself (§6.18). A
+    /// blend offers one entry per source.
+    @ViewBuilder
+    private var methodologyRow: some View {
+        let cards = appState.programMethodologies()
+        if cards.count == 1, let card = cards.first {
+            Button {
+                AppHaptics.light()
+                methodologySheet = card
+            } label: {
+                methodologyLabel(card.name)
+            }
+            .buttonStyle(.plain)
+        } else if cards.count > 1 {
+            Menu {
+                ForEach(cards) { card in
+                    Button(card.name) { methodologySheet = card }
+                }
+            } label: {
+                methodologyLabel(cards.map(\.name).joined(separator: " + "))
+            }
+        }
+    }
+
+    private func methodologyLabel(_ name: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "book")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("About this methodology")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+    }
+
+    /// A save that lost to a newer copy on the server (409). The reload has
+    /// already happened; this tells the user their last move or replace is
+    /// not in it, where before the edit vanished without a word.
+    private func conflictBanner(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button {
+                AppHaptics.light()
+                appState.programSaveConflict = nil
+            } label: {
+                Image(systemName: "xmark").font(.caption)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
     }
 
     // MARK: - Phase Progress Bar
@@ -434,7 +526,6 @@ private struct DaySessionsSheet: View {
     let dayName: String
 
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
     @State private var selectedSession: SessionWithKey? = nil
 
@@ -466,7 +557,6 @@ private struct DaySessionsSheet: View {
                                   weekIndex: weekIndex, dayName: dayName,
                                   sessionIndex: item.sessionIndex)
                     .environmentObject(appState)
-                    .environmentObject(programStore)
             }
         }
     }

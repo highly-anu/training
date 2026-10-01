@@ -1,0 +1,312 @@
+# The CrossFit benchmark workouts — the Girls and three Heroes — as timed
+# standards. Formats from docs/extracted/crossfit-journal.md (Fran, Grace,
+# Elizabeth, Helen, Annie, Murph) and the CrossFit Journal's published Girls
+# and Heroes (Diane, Isabel, Cindy, DT). The tiers are community-wide
+# distributions of Rx results, not a package's own numbers: "entry" is a first
+# Rx finish, "elite" is Games-regional pace. Men at Rx loads, women at the
+# standard Rx' loads (65/95/85 lb etc.), so times are comparable.
+
+- id: wod_fran_minutes
+  name: Fran (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    21-15-9 thrusters (95 lb / 65 lb) and pull-ups, for time. The benchmark
+    of benchmarks: a measure of how hard you can go for three to ten minutes.
+  test_protocol: >
+    Thrusters from the floor, full squat to lockout; pull-ups chin over bar,
+    kipping allowed. Record total time.
+  levels:
+    entry:
+      male: 12.0
+      female: 13.0
+      note: A first unbroken-ish Rx finish.
+    intermediate:
+      male: 8.0
+      female: 9.0
+    advanced:
+      male: 5.0
+      female: 6.0
+    elite:
+      male: 3.5
+      female: 4.0
+      note: Sub-3:00 is the record territory.
+  goal_relevance:
+    - crossfit_performance
+    - general_gpp
+  sources:
+    - crossfit
+
+- id: wod_grace_minutes
+  name: Grace (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    30 clean and jerks (135 lb / 95 lb) for time. Barbell cycling under
+    fatigue; the test of whether the technique survives the clock.
+  test_protocol: >
+    Ground to overhead, any style, each rep from the floor. Record total time.
+  levels:
+    entry:
+      male: 7.0
+      female: 8.0
+    intermediate:
+      male: 5.0
+      female: 6.0
+    advanced:
+      male: 3.5
+      female: 4.0
+    elite:
+      male: 2.5
+      female: 3.0
+  goal_relevance:
+    - crossfit_performance
+  sources:
+    - crossfit
+
+- id: wod_helen_minutes
+  name: Helen (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Three rounds: 400 m run, 21 kettlebell swings (53 lb / 35 lb), 12 pull-ups.
+    The aerobic Girl — pacing across three rounds matters more than any one.
+  test_protocol: >
+    Measured 400 m, swings to overhead (American), pull-ups chin over bar.
+    Record total time.
+  levels:
+    entry:
+      male: 16.0
+      female: 17.0
+    intermediate:
+      male: 13.0
+      female: 14.0
+    advanced:
+      male: 11.0
+      female: 12.0
+    elite:
+      male: 9.0
+      female: 10.0
+  goal_relevance:
+    - crossfit_performance
+    - general_gpp
+  sources:
+    - crossfit
+
+- id: wod_diane_minutes
+  name: Diane (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    21-15-9 deadlifts (225 lb / 155 lb) and handstand push-ups, for time.
+    Heavy posterior chain against a gymnastics press.
+  test_protocol: >
+    Deadlifts to full lockout, handstand push-ups head to the floor with full
+    lockout. Record total time.
+  levels:
+    entry:
+      male: 12.0
+      female: 13.0
+    intermediate:
+      male: 8.0
+      female: 9.0
+    advanced:
+      male: 5.0
+      female: 6.0
+    elite:
+      male: 3.5
+      female: 4.0
+  goal_relevance:
+    - crossfit_performance
+  sources:
+    - crossfit
+
+- id: wod_isabel_minutes
+  name: Isabel (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    30 snatches (135 lb / 95 lb) for time. Grace's harder sibling: the same
+    thirty reps with a longer bar path.
+  test_protocol: >
+    Ground to overhead in one movement, power or full. Record total time.
+  levels:
+    entry:
+      male: 8.0
+      female: 9.0
+    intermediate:
+      male: 5.5
+      female: 6.5
+    advanced:
+      male: 3.5
+      female: 4.0
+    elite:
+      male: 2.5
+      female: 3.0
+  goal_relevance:
+    - crossfit_performance
+  sources:
+    - crossfit
+
+- id: wod_annie_minutes
+  name: Annie (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    50-40-30-20-10 double-unders and sit-ups, for time. No load; the whole
+    workout is skill under a rising heart rate.
+  test_protocol: >
+    Double-unders consecutive or not, sit-ups shoulders to floor and hands
+    past the feet. Record total time.
+  levels:
+    entry:
+      male: 14.0
+      female: 15.0
+    intermediate:
+      male: 10.0
+      female: 11.0
+    advanced:
+      male: 7.0
+      female: 8.0
+    elite:
+      male: 5.5
+      female: 6.0
+  goal_relevance:
+    - crossfit_performance
+    - general_gpp
+  sources:
+    - crossfit
+
+- id: wod_elizabeth_minutes
+  name: Elizabeth (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    21-15-9 cleans (135 lb / 95 lb) and ring dips, for time.
+  test_protocol: >
+    Cleans from the floor, squat or power; ring dips with the shoulder below
+    the elbow at the bottom and full lockout. Record total time.
+  levels:
+    entry:
+      male: 14.0
+      female: 15.0
+    intermediate:
+      male: 10.0
+      female: 11.0
+    advanced:
+      male: 7.0
+      female: 8.0
+    elite:
+      male: 5.0
+      female: 6.0
+  goal_relevance:
+    - crossfit_performance
+  sources:
+    - crossfit
+
+- id: wod_murph_minutes
+  name: Murph (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    1-mile run, 100 pull-ups, 200 push-ups, 300 squats, 1-mile run. Partition
+    the middle as you like. The Hero WOD everyone has a time for.
+  test_protocol: >
+    Unvested here; a 20 lb / 14 lb vest is the full Rx and adds roughly 20 %.
+    Record total time.
+  levels:
+    entry:
+      male: 65.0
+      female: 70.0
+    intermediate:
+      male: 50.0
+      female: 55.0
+    advanced:
+      male: 40.0
+      female: 45.0
+    elite:
+      male: 33.0
+      female: 38.0
+  goal_relevance:
+    - crossfit_performance
+    - sof_operator
+    - general_gpp
+  sources:
+    - crossfit
+    - gym_jones
+
+- id: wod_cindy_rounds
+  name: Cindy (rounds in 20 min)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: score
+  unit: " rounds"
+  lower_is_better: false
+  description: >
+    AMRAP 20 minutes: 5 pull-ups, 10 push-ups, 15 air squats. Bodyweight
+    work capacity — the only Girl scored by rounds here.
+  test_protocol: >
+    Record complete rounds; a partial round counts as its reps (e.g. 20 + 7).
+  levels:
+    entry:
+      male: 10
+      female: 9
+    intermediate:
+      male: 15
+      female: 13
+    advanced:
+      male: 20
+      female: 18
+    elite:
+      male: 26
+      female: 23
+  goal_relevance:
+    - crossfit_performance
+    - general_gpp
+  sources:
+    - crossfit
+
+- id: wod_dt_minutes
+  name: DT (time in minutes)
+  category: benchmark_wod
+  domain: mixed_modal_conditioning
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Five rounds: 12 deadlifts, 9 hang power cleans, 6 push jerks, all at
+    155 lb / 105 lb. Barbell cycling with no place to hide.
+  test_protocol: >
+    One bar, all reps from the same bar; drops allowed. Record total time.
+  levels:
+    entry:
+      male: 16.0
+      female: 17.0
+    intermediate:
+      male: 11.0
+      female: 12.0
+    advanced:
+      male: 8.0
+      female: 9.0
+    elite:
+      male: 6.0
+      female: 7.0
+  goal_relevance:
+    - crossfit_performance
+  sources:
+    - crossfit

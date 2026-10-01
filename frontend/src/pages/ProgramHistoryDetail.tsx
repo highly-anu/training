@@ -117,7 +117,7 @@ export function ProgramHistoryDetail() {
   return (
     <div className="space-y-6 p-5">
       <Link
-        to="/program/history"
+        to="/program?tab=history"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />

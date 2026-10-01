@@ -1,4 +1,6 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
+import { parseSessionKey } from '@/lib/sessionKeys'
+import { formatActivityType } from '@/lib/activityType'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -188,15 +190,9 @@ export function WorkoutDetail() {
   // Session keys are "weekNum-DayName-sessionIdx" (per-session) or legacy "weekNum-DayName"
   const matchedSessions = useMemo(() => {
     if (!match || !program) return null
-    const key = match.sessionKey
-    // Check if last segment is a pure integer (per-session key)
-    const lastDash = key.lastIndexOf('-')
-    const tail = key.slice(lastDash + 1)
-    const isPerSession = lastDash > 0 && !isNaN(parseInt(tail, 10)) && String(parseInt(tail, 10)) === tail
-    const dayKey = isPerSession ? key.slice(0, lastDash) : key
-    const firstDash = dayKey.indexOf('-')
-    const weekNum = parseInt(dayKey.slice(0, firstDash), 10)
-    const dayName = dayKey.slice(firstDash + 1)
+    const parsed = parseSessionKey(match.sessionKey)
+    if (!parsed) return null
+    const { weekNumber: weekNum, dayName } = parsed
     const week = program.weeks.find((w) => w.week_number === weekNum)
     return week?.schedule[dayName] ?? null
   }, [match, program])
@@ -299,7 +295,7 @@ export function WorkoutDetail() {
     )
   }
 
-  const displayType = workout.activityType.replace(/HKWorkoutActivityType/, '')
+  const displayType = formatActivityType(workout.activityType)
   const modColor = workout.inferredModalityId
     ? MODALITY_COLORS[workout.inferredModalityId]
     : null

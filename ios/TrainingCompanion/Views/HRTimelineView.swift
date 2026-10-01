@@ -13,6 +13,10 @@ struct HRTimelineView: View {
     }
 
     @State private var chartData: [HRPoint] = []
+    /// Identity is index + elapsed: two samples can share an elapsed second.
+    private var keyedPoints: [(id: String, pt: HRPoint)] {
+        chartData.enumerated().map { (id: "\($0.offset)-\($0.element.elapsed)", pt: $0.element) }
+    }
     @State private var yLo: Int = 60
     @State private var yHi: Int = 180
 
@@ -65,7 +69,8 @@ struct HRTimelineView: View {
             }
 
             // HR line
-            ForEach(Array(chartData.enumerated()), id: \.offset) { _, point in
+            ForEach(keyedPoints, id: \.id) { item in
+                let point = item.pt
                 LineMark(
                     x: .value("Time", point.elapsed),
                     y: .value("HR", point.bpm)

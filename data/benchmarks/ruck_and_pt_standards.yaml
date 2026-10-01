@@ -1,0 +1,275 @@
+# Load carriage and the tactical PT tests.
+# Sources: docs/extracted/horsemen.md (PT Test I and II numbers); SFAS ruck
+# standard as published for selection (12 miles with a ~40 lb dry pack, under
+# three hours is the pass line); Uphill Athlete's pack-carry vertical pace test
+# (Training for the Uphill Athlete, Ch. 5 — the 1,000 ft/hour aerobic-base check
+# with ~20 % bodyweight). Female tiers for the military tests keep the same
+# loads and distances; the tiers are the distribution, not a different test.
+
+- id: ruck_12mi_40lb_minutes
+  name: 12-Mile Ruck, 40 lb (time in minutes)
+  category: tactical
+  domain: durability
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Twelve miles on roads or trail with a 40 lb dry pack. The selection ruck;
+    sub-3:00 is the pass line, and everything in Horsemen GPP's load-carriage
+    work points here.
+  test_protocol: >
+    Measured 12-mile course, pack weighed dry at 40 lb (water on top). No
+    running required but allowed. Record total time to the minute. Rested
+    (no hard session within 48 h).
+  levels:
+    entry:
+      male: 240
+      female: 270
+      note: Four hours — a 20-minute mile. Can finish; cannot yet pass.
+    intermediate:
+      male: 200
+      female: 230
+      note: 16:40 pace. Within reach of the pass line with one build block.
+    advanced:
+      male: 180
+      female: 200
+      note: The sub-3:00 SFAS pass line (15:00 miles).
+    elite:
+      male: 150
+      female: 170
+      note: 12:30 miles — a shuffle for twelve miles under load.
+  goal_relevance:
+    - sof_operator
+    - alpine_climbing
+  sources:
+    - horsemen_gpp
+    - uphill_athlete
+  notes: >
+    Pack weight for the selection ruck has moved between 35 and 45 lb over the
+    years; 40 lb is the figure the programs here train to. Time, not pace,
+    because the course is fixed.
+
+- id: pack_vertical_ft_per_hour
+  name: Pack Carry — Vertical Pace, 20 % BW (ft per hour)
+  category: tactical
+  domain: aerobic_base
+  metric_type: score
+  unit: " ft/h"
+  lower_is_better: false
+  description: >
+    How much vertical you can climb in an hour, aerobically, with a pack of a
+    fifth of your bodyweight. Uphill Athlete's check that the aerobic base is
+    real: 1,000 ft/hour at a conversational pace is the base-phase standard
+    for a mountain objective.
+  test_protocol: >
+    A steady climb of at least 1,000 ft, pack at 20 % bodyweight, nose
+    breathing or conversational effort throughout (Zone 2 — this is an
+    aerobic test, not a race). Record vertical gain divided by moving time.
+  levels:
+    entry:
+      male: 500
+      female: 450
+      note: A hiker's pace under load.
+    intermediate:
+      male: 1000
+      female: 900
+      note: The Uphill Athlete base standard — 1,000 ft/hour aerobically.
+    advanced:
+      male: 1500
+      female: 1300
+      note: Guide pace; sustainable all day.
+    elite:
+      male: 2000
+      female: 1800
+      note: Competitive skimo / fast-and-light alpinist territory.
+  goal_relevance:
+    - alpine_climbing
+    - sof_operator
+  sources:
+    - uphill_athlete
+
+- id: pt_push_ups_3min_reps
+  name: PT Test — Push-ups (reps in 3 min)
+  category: tactical
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Maximum strict push-ups in three minutes. Horsemen PT Test I: 80+.
+  test_protocol: >
+    Chest to a fist on the floor, full lockout, hands under shoulders. Rest
+    only in the top position. Three minutes.
+  levels:
+    entry:
+      male: 40
+      female: 20
+    intermediate:
+      male: 60
+      female: 35
+    advanced:
+      male: 80
+      female: 50
+      note: Horsemen PT Test I standard.
+    elite:
+      male: 100
+      female: 65
+  goal_relevance:
+    - sof_operator
+    - general_gpp
+  sources:
+    - horsemen_gpp
+
+- id: pt_sit_ups_3min_reps
+  name: PT Test — Sit-ups (reps in 3 min)
+  category: tactical
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Maximum sit-ups in three minutes, feet held. Horsemen PT Test I: 90+.
+  test_protocol: >
+    Feet anchored, knees bent, hands crossed on chest; elbows to thighs,
+    shoulder blades to the floor. Three minutes.
+  levels:
+    entry:
+      male: 45
+      female: 40
+    intermediate:
+      male: 65
+      female: 58
+    advanced:
+      male: 90
+      female: 80
+      note: Horsemen PT Test I standard.
+    elite:
+      male: 110
+      female: 100
+  goal_relevance:
+    - sof_operator
+  sources:
+    - horsemen_gpp
+
+- id: swim_800m_minutes
+  name: PT Test — 800 m Swim (time in minutes)
+  category: tactical
+  domain: aerobic_base
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    800 m freestyle or combat sidestroke, no fins. Horsemen PT Test I:
+    under 14:30.
+  test_protocol: >
+    Pool, push off the wall, any stroke, continuous. Record time to the second
+    and convert to decimal minutes.
+  levels:
+    entry:
+      male: 22.0
+      female: 24.0
+    intermediate:
+      male: 17.5
+      female: 19.0
+    advanced:
+      male: 14.5
+      female: 16.0
+      note: Horsemen PT Test I standard (sub-14:30).
+    elite:
+      male: 12.5
+      female: 14.0
+  goal_relevance:
+    - sof_operator
+  sources:
+    - horsemen_gpp
+
+- id: run_5mile_minutes
+  name: PT Test II — 5-Mile Run (time in minutes)
+  category: tactical
+  domain: aerobic_base
+  metric_type: time_minutes
+  lower_is_better: true
+  description: >
+    Timed five-mile run on flat ground. Horsemen PT Test II: under 35:00.
+  test_protocol: >
+    Flat, measured course. Maximum sustainable effort. Record time to the
+    second and convert to decimal minutes.
+  levels:
+    entry:
+      male: 55.0
+      female: 62.0
+    intermediate:
+      male: 44.0
+      female: 50.0
+    advanced:
+      male: 35.0
+      female: 40.0
+      note: Horsemen PT Test II standard (sub-35:00, 7:00 miles).
+    elite:
+      male: 31.0
+      female: 36.0
+  goal_relevance:
+    - sof_operator
+  sources:
+    - horsemen_gpp
+
+- id: bench_press_bodyweight_reps
+  name: PT Test II — Bench Press at Bodyweight (reps)
+  category: tactical
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Maximum reps at a bar loaded to bodyweight. Horsemen PT Test II: 10.
+  test_protocol: >
+    Bar weight equal to bodyweight on the day, touch-and-go not allowed —
+    pause the bar on the chest. Count full lockouts.
+  levels:
+    entry:
+      male: 1
+      female: 1
+      note: One rep at bodyweight — the ×1.0 standard.
+    intermediate:
+      male: 5
+      female: 3
+    advanced:
+      male: 10
+      female: 6
+      note: Horsemen PT Test II standard.
+    elite:
+      male: 15
+      female: 10
+  goal_relevance:
+    - sof_operator
+  sources:
+    - horsemen_gpp
+  notes: >
+    Women lift the same bar — their own bodyweight — so the rep tiers sit
+    lower; the strength ratio behind them is the same.
+
+- id: pull_ups_weighted_25lb_reps
+  name: PT Test II — Pull-ups with 25 lb (reps)
+  category: tactical
+  domain: relative_strength
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Strict pull-ups with 25 lb on a belt. Horsemen PT Test II: 15.
+  test_protocol: >
+    Dead hang start, chin over the bar, no kip, 25 lb on a dip belt. Count
+    reps to failure.
+  levels:
+    entry:
+      male: 3
+      female: 1
+    intermediate:
+      male: 8
+      female: 4
+    advanced:
+      male: 15
+      female: 8
+      note: Horsemen PT Test II standard.
+    elite:
+      male: 20
+      female: 12
+  goal_relevance:
+    - sof_operator
+    - alpine_climbing
+  sources:
+    - horsemen_gpp

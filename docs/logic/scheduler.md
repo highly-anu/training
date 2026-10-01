@@ -128,6 +128,17 @@ APPLY_PHASE_OVERRIDE(base_priorities, phase_sequence, current_phase):
 
 ## Step 4: Day Assignment (Recovery-Aware Scheduling)
 
+> **Framework relaxations (2026-10-01).** A framework may declare
+> `recovery.allow_consecutive: [[a, b], …]` (and `recovery.phases: [...]`) to
+> let named modality pairs sit on consecutive days despite the rules below —
+> `[strength_endurance, strength_endurance]` is how Uphill Athlete's specific
+> phase keeps its two ME long days on the weekend. `scheduler.consecutive_allowances`
+> reads it; `_recovery_safe` and `_score_days` skip the window and the 48 h
+> rule for an allowed pair at a 24 h gap and nothing else. Cadence patterns
+> live only in each framework's `cadence_options` now; the Python fallback
+> table is gone.
+
+
 This is the most complex step. Modalities must be assigned to specific days respecting recovery constraints and session compatibility.
 
 ```

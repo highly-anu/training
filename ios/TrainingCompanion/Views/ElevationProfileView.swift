@@ -11,13 +11,18 @@ struct ElevationProfileView: View {
     }
 
     @State private var chartData: [AltPoint] = []
+    /// Identity is index + elapsed: two samples can share an elapsed second.
+    private var keyedPoints: [(id: String, pt: AltPoint)] {
+        chartData.enumerated().map { (id: "\($0.offset)-\($0.element.elapsed)", pt: $0.element) }
+    }
     @State private var yLo: Double = 0
     @State private var yHi: Double = 500
 
     var body: some View {
         let base = yLo  // local copy — never recomputed inside the loop
         Chart {
-            ForEach(Array(chartData.enumerated()), id: \.offset) { _, pt in
+            ForEach(keyedPoints, id: \.id) { item in
+                let pt = item.pt
                 AreaMark(
                     x: .value("Time", pt.elapsed),
                     yStart: .value("Base", base),

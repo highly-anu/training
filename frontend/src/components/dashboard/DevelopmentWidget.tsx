@@ -101,7 +101,7 @@ export function DevelopmentWidget() {
           Import workouts and match them to sessions to track your development.
         </p>
         <Link
-          to="/import"
+          to="/log?import=1"
           className="text-[10px] text-primary hover:text-primary/80 transition-colors"
         >
           Import workouts &rarr;
@@ -124,7 +124,7 @@ export function DevelopmentWidget() {
           Development
         </h2>
         <Link
-          to="/import?tab=history"
+          to="/log"
           className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
         >
           {matchedCount} session{matchedCount !== 1 ? 's' : ''} tracked →

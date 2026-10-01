@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   BarChart3,
@@ -8,8 +8,6 @@ import {
   Footprints,
   Flame,
   ArrowDownToLine,
-  FileText,
-  ChevronRight,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react'
@@ -29,26 +27,32 @@ import { cn } from '@/lib/utils'
 import { WeeklyLoadChart } from '@/components/bio/WeeklyLoadChart'
 import { PMCChart } from '@/components/bio/PMCChart'
 import { ProgramTab } from '@/components/analytics/ProgramTab'
+import { ProgressionTab } from '@/components/progression/ProgressionTab'
+import { RecoveryTab } from '@/components/bio/RecoveryTab'
 import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import { Badge } from '@/components/ui/badge'
 import type { ImportedWorkout, ModalityId } from '@/api/types'
-import { sourceShortLabel } from '@/lib/workoutSource'
+import { formatActivityType } from '@/lib/activityType'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'program' | 'overview' | 'load' | 'activity'
+type SubTab = 'program' | 'progress' | 'load' | 'recovery'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
+// Analytics is the interpretation: what the program is for (Program), how the
+// athlete is progressing against it (Progress), what the body has been asked
+// to absorb (Load) and how it is coping (Recovery). The record itself — every
+// recorded workout — lives under Log.
 const SUB_TABS: { id: SubTab; label: string }[] = [
-  // Program first: what the training is for, before what the watch recorded.
   { id: 'program',  label: 'Program'  },
-  { id: 'overview', label: 'Overview' },
+  { id: 'progress', label: 'Progress' },
   { id: 'load',     label: 'Load'     },
-  { id: 'activity', label: 'Activity' },
+  { id: 'recovery', label: 'Recovery' },
 ]
+const SUB_TAB_IDS = new Set<string>(SUB_TABS.map((t) => t.id))
 
 const PERIODS: { id: Period; label: string; days: number | null }[] = [
   { id: '7d',  label: '7d',   days: 7   },
@@ -59,10 +63,6 @@ const PERIODS: { id: Period; label: string; days: number | null }[] = [
 ]
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function formatActivityType(raw: string): string {
-  return raw.replace(/HKWorkoutActivityType/g, '').replace(/([a-z])([A-Z])/g, '$1 $2').trim() || raw
-}
 
 function fmtHours(minutes: number): string {
   const h = minutes / 60
@@ -174,7 +174,12 @@ function KpiCard({
 
 // ── Overview Tab ───────────────────────────────────────────────────────────────
 
-function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+/**
+ * Period totals, what kinds of training they were, and week-by-week
+ * consistency — the first half of the Load tab.
+ */
+function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+  const navigate = useNavigate()
   const filtered = useFilteredWorkouts(period)
   const allWorkouts = useBioStore((s) => s.importedWorkouts)
 
@@ -270,7 +275,7 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
   const dominantModality = modalityBreakdown[0]
 
   return (
-    <div className="max-w-3xl mx-auto px-8 py-8 space-y-8">
+    <>
       {/* Period selector */}
       <div className="flex items-center gap-3">
         <span className="text-xs text-muted-foreground">Period</span>
@@ -294,11 +299,12 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
       </div>
 
       {filtered.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border p-12 flex flex-col items-center gap-3 text-center text-muted-foreground">
-          <ArrowDownToLine className="size-8 opacity-40" />
-          <p className="text-sm">No workouts in this period.</p>
-          <p className="text-xs">Import files on the Import tab or select a longer period.</p>
-        </div>
+        <EmptyState
+          icon={<ArrowDownToLine className="size-8 opacity-40" />}
+          title="No workouts in this period"
+          description="Connected sources import on their own; a file can be imported under Log. Or pick a longer period."
+          action={{ label: 'Import a file', onClick: () => navigate('/log?import=1') }}
+        />
       )}
 
       {filtered.length > 0 && (
@@ -331,7 +337,7 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
                       tickLine={false}
                     />
                     <RechartTooltip
-                      cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                      cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                       contentStyle={{
                         backgroundColor: 'var(--card)',
                         border: '1px solid var(--border)',
@@ -426,7 +432,7 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
                   />
                   <YAxis hide />
                   <RechartTooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',
@@ -452,13 +458,13 @@ function OverviewTab({ period, onPeriodChange }: { period: Period; onPeriodChang
           </div>
         </>
       )}
-    </div>
+    </>
   )
 }
 
 // ── Load Tab ───────────────────────────────────────────────────────────────────
 
-function LoadTab({ period }: { period: Period }) {
+function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
   const filtered = useFilteredWorkouts(period)
   const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
   const hrConfig = useProfileStore((s) => s.hrConfig)
@@ -492,6 +498,8 @@ function LoadTab({ period }: { period: Period }) {
 
   return (
     <div className="max-w-3xl mx-auto px-8 py-8 space-y-8">
+
+      <VolumeSection period={period} onPeriodChange={onPeriodChange} />
 
       <div>
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Weekly Training Load</h2>
@@ -534,7 +542,7 @@ function LoadTab({ period }: { period: Period }) {
                     unit="m"
                   />
                   <RechartTooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',
@@ -569,198 +577,22 @@ function LoadTab({ period }: { period: Period }) {
   )
 }
 
-// ── Activity Tab ───────────────────────────────────────────────────────────────
-
-type SortKey = 'date' | 'duration' | 'distance' | 'hr'
-
-function ActivityTab({ period }: { period: Period }) {
-  const navigate = useNavigate()
-  const filtered = useFilteredWorkouts(period)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const pendingMatches = useBioStore((s) => s.pendingMatches)
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
-  const [sourceFilter, setSourceFilter] = useState<string | null>(null)
-  const [sortKey, setSortKey] = useState<SortKey>('date')
-
-  const activityTypes = useMemo(() => {
-    const set = new Set(filtered.map((w) => formatActivityType(w.activityType)))
-    return Array.from(set).sort()
-  }, [filtered])
-
-  const sources = useMemo(() => {
-    const set = new Set(filtered.map((w) => w.source))
-    return Array.from(set).sort()
-  }, [filtered])
-
-  const sourceLabel = sourceShortLabel
-
-  const displayed = useMemo(() => {
-    let list = filtered
-    if (typeFilter) list = list.filter((w) => formatActivityType(w.activityType) === typeFilter)
-    if (sourceFilter) list = list.filter((w) => w.source === sourceFilter)
-    return [...list].sort((a, b) => {
-      if (sortKey === 'date')     return b.date.localeCompare(a.date)
-      if (sortKey === 'duration') return b.durationMinutes - a.durationMinutes
-      if (sortKey === 'distance') {
-        const toKm = (w: ImportedWorkout) => w.distance ? (w.distance.unit === 'm' ? w.distance.value / 1000 : w.distance.value) : 0
-        return toKm(b) - toKm(a)
-      }
-      if (sortKey === 'hr')       return (b.heartRate.avg ?? 0) - (a.heartRate.avg ?? 0)
-      return 0
-    })
-  }, [filtered, typeFilter, sourceFilter, sortKey])
-
-  function matchStatus(id: string): 'matched' | 'pending' | 'unmatched' {
-    const m = workoutMatches.find((m) => m.importedWorkoutId === id)
-    if (m && m.matchConfidence !== 'rejected') return 'matched'
-    if (pendingMatches.some((p) => p.importedWorkout.id === id)) return 'pending'
-    return 'unmatched'
-  }
-
-  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-    { key: 'date',     label: 'Date'     },
-    { key: 'duration', label: 'Duration' },
-    { key: 'distance', label: 'Distance' },
-    { key: 'hr',       label: 'Avg HR'   },
-  ]
-
-  return (
-    <div className="max-w-3xl mx-auto px-8 py-8 space-y-5">
-
-      {/* Filters + sort */}
-      <div className="space-y-2.5">
-        {activityTypes.length > 1 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground shrink-0">Type</span>
-            <button
-              type="button"
-              onClick={() => setTypeFilter(null)}
-              className={cn('px-2.5 py-0.5 rounded-full border text-xs transition-colors', typeFilter === null ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}
-            >
-              All
-            </button>
-            {activityTypes.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTypeFilter(t === typeFilter ? null : t)}
-                className={cn('px-2.5 py-0.5 rounded-full border text-xs transition-colors', typeFilter === t ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        )}
-        {sources.length > 1 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground shrink-0">Source</span>
-            <button
-              type="button"
-              onClick={() => setSourceFilter(null)}
-              className={cn('px-2.5 py-0.5 rounded-full border text-xs transition-colors', sourceFilter === null ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}
-            >
-              All
-            </button>
-            {sources.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSourceFilter(s === sourceFilter ? null : s)}
-                className={cn('px-2.5 py-0.5 rounded-full border text-xs transition-colors', sourceFilter === s ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}
-              >
-                {sourceLabel(s)}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground shrink-0">Sort</span>
-          {SORT_OPTIONS.map((o) => (
-            <button
-              key={o.key}
-              type="button"
-              onClick={() => setSortKey(o.key)}
-              className={cn('px-2.5 py-0.5 rounded-full border text-xs transition-colors', sortKey === o.key ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* List */}
-      {displayed.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-12 flex flex-col items-center gap-3 text-center text-muted-foreground">
-          <ArrowDownToLine className="size-8 opacity-40" />
-          <p className="text-sm">No workouts match these filters.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {displayed.map((w) => {
-            const ms = matchStatus(w.id)
-            const fmtDate = (() => { try { return format(parseISO(w.startTime), 'EEE, MMM d') } catch { return w.date } })()
-            const distText = w.distance ? (() => {
-              const v = w.distance.unit === 'm' ? w.distance.value / 1000 : w.distance.value
-              return `${v.toFixed(1)} km`
-            })() : null
-            const modalityId = w.inferredModalityId
-            const modalityColor = modalityId ? MODALITY_COLORS[modalityId] : null
-
-            return (
-              <div
-                key={w.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/import/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/import/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
-                className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
-              >
-                <FileText className="size-4 shrink-0 text-muted-foreground" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium">{formatActivityType(w.activityType)}</p>
-                    {modalityColor && (
-                      <Badge
-                        variant="outline"
-                        className={cn('text-[10px] shrink-0', modalityColor.border, modalityColor.text)}
-                      >
-                        {modalityColor.label}
-                      </Badge>
-                    )}
-                    {ms === 'matched' && (
-                      <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shrink-0">
-                        matched
-                      </Badge>
-                    )}
-                    {ms === 'pending' && (
-                      <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300 shrink-0">
-                        pending
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {fmtDate}
-                    {' · '}{w.durationMinutes} min
-                    {distText && ` · ${distText}`}
-                    {w.heartRate.avg != null && ` · ${Math.round(w.heartRate.avg)} bpm`}
-                    {w.elevation?.gain ? ` · ↑${Math.round(w.elevation.gain)}m` : ''}
-                    {w.elevation?.loss ? ` ↓${Math.round(w.elevation.loss)}m` : ''}
-                  </p>
-                </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
-
 export function WorkoutAnalytics() {
-  const [activeTab, setActiveTab] = useState<SubTab>('program')
+  // URL-driven so Home cards and the /bio redirect can land on a tab.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const activeTab: SubTab = tabParam && SUB_TAB_IDS.has(tabParam) ? (tabParam as SubTab) : 'program'
+  function setActiveTab(tab: SubTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab === 'program') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true }
+    )
+  }
   const [period, setPeriod] = useState<Period>('30d')
 
   return (
@@ -783,10 +615,14 @@ export function WorkoutAnalytics() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'program'   && <ProgramTab />}
-        {activeTab === 'overview'  && <OverviewTab  period={period} onPeriodChange={setPeriod} />}
-        {activeTab === 'load'      && <LoadTab      period={period} />}
-        {activeTab === 'activity'  && <ActivityTab  period={period} />}
+        {activeTab === 'program'  && <ProgramTab />}
+        {activeTab === 'progress' && (
+          <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
+            <ProgressionTab />
+          </div>
+        )}
+        {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
+        {activeTab === 'recovery' && <RecoveryTab />}
       </div>
     </motion.div>
   )

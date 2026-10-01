@@ -65,17 +65,36 @@ final class AuthManager: ObservableObject {
     }
 
     init() {
-        // Restore persisted session; refresh if expired
+        applyTargetChange()
+    }
+
+    /// True while the app is pointed at a local server (`APITarget`), which
+    /// needs no account: the gate is open and no token is sent.
+    var isLocalTarget: Bool { APITarget.isLocal }
+
+    /// Re-evaluate the sign-in gate for the current API target: a local target
+    /// is signed in by definition; production restores the persisted session,
+    /// refreshing it if expired.
+    func applyTargetChange() {
+        if APITarget.isLocal {
+            isSignedIn = true
+            return
+        }
         if let data = UserDefaults.standard.data(forKey: sessionKey),
            let session = try? JSONDecoder().decode(StoredSession.self, from: data) {
             if session.expiresAt > Date() {
-                self.accessToken = session.accessToken
-                self.isSignedIn = true
+                accessToken = session.accessToken
+                isSignedIn = true
+                return
             } else if let refreshToken = session.refreshToken {
                 // Token expired — attempt silent refresh on first use
+                isSignedIn = false
                 Task { await self.refreshSession(refreshToken: refreshToken) }
+                return
             }
         }
+        accessToken = nil
+        isSignedIn = false
     }
 
     /// Silently refreshes the token if it expires within 60 seconds.

@@ -475,6 +475,10 @@ Text("THIS WEEK")
 ### 6.5 Load Prescription Text
 
 Load specs are always monospace + amber. Makes them scannable at a glance.
+The words come from one place: `LoadFormat.describe(_:)` (`LoadFormat.swift`)
+turns an assignment into "3×5 @ 80 kg" / "45 min · Z2" / "AMRAP 12 min" for
+the session sheet, the swap sheet and the exercise reference alike; never
+re-derive the string at a call site.
 
 ```swift
 Text(exercise.loadDescription)
@@ -749,6 +753,88 @@ answer.
 
 ---
 
+### 6.13 Tab Structure
+
+**Five tabs, and configuration is not one of them.**
+
+| Tab | Root | Sections (`AppSubTabs`) |
+|---|---|---|
+| **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
+| **Program** | `ProgramView` | Current · History |
+| **Log** | `LogView` | Workouts · Suggestions · Sessions |
+| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Recovery |
+| **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+
+`AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
+selection from the router (§6.9). The first case is still named `.dashboard`
+because the widgets deep-link to it; its label is "Today".
+
+**Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`):
+Connections (integration toggles), Devices & Sync (pairing, Sync Now, last
+sync, sync details, debug log), Notifications (local session reminders —
+`NotificationManager.swift`, rescheduled from the stored program on every
+program change), Appearance, Account (sign out). Until
+2026-10-01 these lived on a fifth "Sync" tab — a debug screen that held the
+only sign-out, the integration switches and a hidden program mutation. A tab
+is a place the athlete goes every day; a setting is something they change once.
+
+**Rules**
+
+- A new top-level destination needs a case in `AppRouter.Tab` and a `show…`
+  method on the router; nothing else moves the user between tabs (§6.9).
+- Sections within a tab use `AppSubTabs` (§6.8), two to five of them.
+- Developer diagnostics (sync log, device status) live under Settings ▸ Devices
+  & Sync, never on a tab.
+- The web app's layout is the same journey with a sidebar
+  (`docs/information-architecture.md`): Home / Program / Log / Analytics /
+  Explore / Profile. The phone's Log tab (§6.19) is the same area as the
+  web's: the record (recorded workouts, with the `.fit` importer), the
+  decision queue (the suggestions inbox) and what was logged against planned
+  sessions. Logging itself stays on the session (§6.16).
+
+---
+
+### 6.14 Exercise Detail Sheet
+
+**The phone's exercise reference.** `Views/ExerciseDetailSheet.swift` — what a
+movement is, how to do it, what it needs and what it leads to: category and
+effort chips, movement patterns, the package's demo (`GET
+/api/exercises/<id>/media`, a GIF rendered with `AsyncImage`; the source link
+opens Safari), description, coaching focus, cues, common errors, and from the
+catalog (`GET /api/exercises`, cached in `AppState.exerciseCatalog`) the
+equipment, prerequisites and unlocks with ids resolved to names. When opened
+from a prescription it shows that session's load (§6.5) and notes first.
+
+```swift
+.sheet(item: $exerciseSheet) { item in
+    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
+        .environmentObject(appState)
+}
+```
+
+**Who presents it**
+
+- A planned session's exercise rows (`SessionDetailView`) — tap. The row
+  carries a tertiary `info.circle` so the tap has an affordance, and the same
+  row's context menu and trailing swipe offer **Swap** (`SwapExerciseSheet`,
+  `POST /api/exercises/substitute`), which lists alternatives for the same
+  slot with their load for the week; each alternative's `info.circle` opens
+  this sheet too.
+- Nothing else yet. Workout detail shows what was recorded, not a
+  prescription; the builder's step 1 is about methodologies, not movements.
+
+**Rules**
+
+- Every field is optional and the sheet renders whatever the package ships;
+  an exercise with no media still shows its catalog entry. Never block on the
+  media request.
+- The sheet is a reference, not an editor: no logging, no swapping from
+  inside it. Swap lives on the row that owns the slot.
+- It is the component the roadmap's "iOS Library tab" would promote; a
+  Library tab is not worth adding until there is more than this to put in it.
+
+---
+
 ## 7. Motion & Animation
 
 ### 7.1 Rules
@@ -849,3 +935,136 @@ extension Color {
     }
 }
 ```
+
+---
+
+### 6.15 Analytics Card, Status and the Program Section
+
+**One card, one status vocabulary.** `AppCard.swift` holds `AnalyticsCard`
+(uppercase caption header over content, secondary background, the app's card
+radius); Overview and Recovery each carried a private copy until the Program
+section became the third user. `AnalyticsStatus.swift` holds
+`AnalyticsStatusStyle` — the engine's statuses folded onto green / yellow /
+red / neutral and put into words, the same mapping as the web's
+`components/analytics/status.ts` — `AnalyticsStatusBadge` (the capsule), and
+the coverage reason copy. `ProgressionView` reads its colours from it.
+
+**Analytics ▸ Program** (`Views/AnalyticsProgramTab.swift`) lays out the
+server's `GET /api/analytics/program` document — how the athlete is doing
+against what the program is *for*, per methodology, in its own currency
+(`ProgramAnalyticsModels.swift`, every section decoded on its own so a failed
+or future section cannot blank the screen):
+
+- *Where you are*: methodology, framework, phase and week, plan fidelity.
+- *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
+  row per modality with completion against the plan to date and the weekly
+  dose against the framework's range.
+- *Intensity*: status, coverage and the weekly zone split when there is one.
+- A section per methodology: its measurable count, then a `ProgressEntryCard`
+  per metric — status badge, `CoverageNoticeView` ("not measurable yet, and
+  why"), the exercise picker, the actual-against-expected chart (actual green,
+  expected indigo dashed, deload points hollow), the stall line, the evidence.
+  Unlocks and benchmark-level entries render their own bodies.
+- *Movement balance* and *Load* (TSB read in the phase's terms).
+
+Rules: nothing is computed on the phone; the chart's two colours are the
+web's; a status the engine adds later shows neutral, never a missing style.
+The section reloads when the stored program's revision changes and on
+pull-to-refresh (`fresh=1` forces the server to recompute).
+
+---
+
+### 6.16 Session Logging
+
+**Log what you did on the session it belongs to.** `Views/ExerciseLogSheet.swift`,
+reached from a session row's leading swipe ("Log") or its context menu. The
+sheet dispatches on the slot type through `SessionLogging` (the phone's copy
+of the web's `lib/outcomeFields.ts`): a sets × reps or hold slot gets one row
+per set — reps or seconds, kg, RPE, done — prefilled from the prescription or
+from what was logged before; every other slot gets its currency fields
+(rounds, minutes, kilometres, reps). Saving goes through
+`AppState.logExercise`, which writes `{exercises: {<id>: …}}` to
+`PUT /health/sessions/<key>`; the server merges per exercise and keeps the
+completion, notes and fatigue it already has, so logging before or after
+"Mark Session Complete" is the same. The row then shows "Logged: 3 sets · 3×5
+@ 80 kg" in green under the prescription.
+
+`ExercisePerformanceLog` is the web's `ExercisePerformance`
+(`sets[].setIndex/repsActual/weightKg/rpe/completed/durationSeconds`,
+`rounds`, `durationSec`, `distanceKm`) — the keys `progression_tracker.py`
+and the analytics primitives read. `GET /health/sessions/recent` carries
+`exercises` so the phone reads back what any client logged. The watch keeps
+its own set logger (digital crown) and writes the same shape.
+
+Rules: never log into a different session than the one on screen; the sheet
+is the one place sets are entered on the phone; a logged row never changes
+the prescription.
+
+---
+
+### 6.17 Regenerate Offer
+
+**A changed profile offers to rebuild the plan from this week, never
+silently.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete,
+Equipment, Injuries and Schedule tabs whenever `AppState.constraintDifferences`
+is non-empty — `ProgramConstraintsDiff` (the phone's copy of the web's
+`lib/programConstraintsDiff.ts`) compares the profile's level, equipment, days
+per week and injuries with the `constraints` the active program was built for,
+which the envelope carries since saves round-trip it. The card names each
+difference ("Equipment: 5 items → 1 added, 1 removed"), and one tap runs
+`AppState.regenerateFromCurrentWeek`: a non-persisting generate for the
+remaining weeks with the merged constraints (continuing the phase and
+week-in-phase), spliced onto the weeks already behind the athlete
+(`Regeneration.splice`) and saved through the revision-checked PUT, so the
+old plan stays in Program ▸ History. The Program settings sheet offers the same
+action above its destructive full regenerate.
+
+Rules: the comparison is the shared one, never a per-screen heuristic; the
+card appears only where a constraint is edited; a blend regenerates as a
+blend (`philosophy_ids` + weights), not as its first source.
+
+---
+
+### 6.18 Methodology Sheet
+
+**The program explains itself.** `Views/PhilosophyDetailSheet.swift` — a
+methodology's summary, emphasis (modalities), core principles and how it
+trains (intensity model, progression philosophy). Two presenters: the
+builder's philosophy cards (step 1) and Program ▸ Current's "About this
+methodology" row under the phase bar, which a blend turns into a menu with
+one entry per source (`AppState.programMethodologies()`). It was private to
+the builder until 2026-10-01, which left the plan the athlete was on with no
+way to say what it was for — the web's equivalent is the Program overview's
+link into Explore.
+
+Rules: the row reads the envelope's `sourceGoalIds`, never the builder's
+selection; the sheet is the one methodology reference on the phone.
+
+---
+
+### 6.19 Log Tab
+
+**The record and the decision queue, apart from the interpretation.**
+`Views/LogView.swift`, the third tab, three sections:
+
+- *Workouts* (`LogWorkoutsTab`, the list that was Analytics ▸ Workouts until
+  2026-10-01): recorded activities with the period filter, sort, activity
+  filter, swipe-to-delete and the TRIMP badge; the `.fit` importer is the
+  toolbar action; a row pushes `WorkoutDetailView`.
+- *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
+  as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
+  first three of the same list (`AppState.pendingMatchSuggestions()`) with
+  Review and Dismiss, and links here when there are more.
+- *Sessions* (`LogSessionsTab`): what was logged against planned sessions
+  across the program, newest completion first — `LogSessions.rows` builds
+  the rows from the server's session logs: the session's name when the key
+  resolves in the current program, the date and source, and one line per
+  exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
+  resolves opens the session detail.
+
+Analytics keeps Program · Overview · Progress · Recovery: it interprets, it
+no longer lists. `router.showLog(_:)` and `trainingcompanion://log?section=…`
+name the sections (§6.9).
+
+Rules: the record is listed once, here; Analytics never grows a list again;
+a suggestion is decided here or on Today, through the same row.

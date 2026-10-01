@@ -1,25 +1,24 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Dumbbell, AlertTriangle, Trophy, Calendar, LogOut, Heart, RotateCcw, Plug } from 'lucide-react'
+import { User, Dumbbell, AlertTriangle, Trophy, Calendar, Heart, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LevelBar } from '@/components/benchmarks/LevelBar'
 import { useProfileStore } from '@/store/profileStore'
-import { useAuthStore } from '@/store/authStore'
 import { useBioStore } from '@/store/bioStore'
 import { useBenchmarks } from '@/api/benchmarks'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
+import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel } from '@/api/types'
+import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel, Sex } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate' | 'connections'
+type SubTab = 'athlete' | 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate'
 
 interface SubTabItem {
   id: SubTab
@@ -28,12 +27,12 @@ interface SubTabItem {
 }
 
 const SUB_TABS: SubTabItem[] = [
+  { id: 'athlete',     label: 'Athlete',     Icon: User },
   { id: 'equipment',  label: 'Equipment',  Icon: Dumbbell      },
   { id: 'injuries',   label: 'Injuries',   Icon: AlertTriangle },
   { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
   { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
   { id: 'heartrate',  label: 'Heart Rate', Icon: Heart         },
-  { id: 'connections', label: 'Connections', Icon: Plug         },
 ]
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
@@ -276,18 +275,21 @@ function PrInput({ benchId, unit }: PrInputProps) {
   )
 }
 
-function BenchmarksOverview() {
+function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const { data: benchmarks = [], isLoading } = useBenchmarks()
   const logs = useProfileStore((s) => s.performanceLogs)
+  const sex = useProfileStore((s) => s.sex)
 
   if (isLoading) return <LoadingCard />
 
-  const categories = ['strength', 'conditioning', 'cell'] as const
-  const byCategory = {
-    strength: benchmarks.filter(b => b.category === 'strength'),
-    conditioning: benchmarks.filter(b => b.category === 'conditioning'),
-    cell: benchmarks.filter(b => b.category === 'cell'),
+  const categories = ['strength', 'conditioning', 'kettlebell', 'tactical', 'benchmark_wod', 'skill', 'cell'] as const
+  const categoryLabel: Record<(typeof categories)[number], string> = {
+    strength: 'strength', conditioning: 'conditioning', kettlebell: 'kettlebell pentathlon',
+    tactical: 'ruck & PT tests', benchmark_wod: 'benchmark workouts', skill: 'movement & skill', cell: 'cell standards',
   }
+  const byCategory = Object.fromEntries(
+    categories.map((cat) => [cat, benchmarks.filter((b) => b.category === cat)])
+  ) as Record<(typeof categories)[number], typeof benchmarks>
 
   return (
     <div className="h-full overflow-y-auto">
@@ -303,6 +305,14 @@ function BenchmarksOverview() {
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
             Track your personal records against standardized benchmarks. Your PRs are saved to your profile and used to calculate training loads.
           </p>
+          {sex ? (
+            <p className="text-[11px] text-muted-foreground/70">Showing the {sex} standards.</p>
+          ) : (
+            <p className="text-[11px] text-amber-700 dark:text-amber-300">
+              Showing the male standards until you set your sex under{' '}
+              <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">Athlete</button>.
+            </p>
+          )}
         </div>
 
         {/* Bodyweight is a benchmark series, not a profile field: logged here
@@ -330,7 +340,7 @@ function BenchmarksOverview() {
           byCategory[cat].length > 0 && (
             <div key={cat} className="space-y-3">
               <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-                {cat}
+                {categoryLabel[cat]}
               </h3>
               <div className="grid gap-3">
                 {byCategory[cat].map((bench) => {
@@ -782,6 +792,132 @@ function HRSettingsOverview() {
   )
 }
 
+// ── Athlete ───────────────────────────────────────────────────────────────────
+
+/**
+ * Who is training: the facts the generator and the analytics read — level,
+ * date of birth (max HR), sex (which benchmark standards apply), bodyweight
+ * (the ×BW standards) — and the account. Level, account switcher and sign-out
+ * used to sit in the page header; sex was never writable from any client, so
+ * every athlete was scored against the male tables.
+ */
+function AthleteOverview() {
+  const trainingLevel = useProfileStore((s) => s.trainingLevel)
+  const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
+  const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
+  const setDateOfBirth = useProfileStore((s) => s.setDateOfBirth)
+  const sex = useProfileStore((s) => s.sex)
+  const setSex = useProfileStore((s) => s.setSex)
+  const timezone = useProfileStore((s) => s.timezone)
+  const setTimezone = useProfileStore((s) => s.setTimezone)
+  const deviceZone = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return null }
+  })()
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+
+        <div className="space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+            Athlete
+          </p>
+          <h2 className="text-2xl font-semibold leading-snug">Who is training.</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+            The generator reads your level; the analytics read your date of birth for max heart rate,
+            your sex for which benchmark standards apply, and your bodyweight for the ×BW standards.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border/30 bg-card/40 divide-y divide-border/30">
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Training level</p>
+              <p className="text-[11px] text-muted-foreground">Sets starting loads, progressions and which exercises are unlocked.</p>
+            </div>
+            <Select value={trainingLevel} onValueChange={(v) => setTrainingLevel(v as TrainingLevel)}>
+              <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="novice">Novice</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+                <SelectItem value="elite">Elite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Date of birth</p>
+              <p className="text-[11px] text-muted-foreground">Estimates max heart rate unless you set one under Heart Rate.</p>
+            </div>
+            <input
+              type="date"
+              value={dateOfBirth ?? ''}
+              onChange={(e) => setDateOfBirth(e.target.value || null)}
+              aria-label="Date of birth"
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Sex</p>
+              <p className="text-[11px] text-muted-foreground">Chooses the benchmark standards you are scored against.</p>
+            </div>
+            <Select value={sex ?? 'unset'} onValueChange={(v) => setSex(v === 'unset' ? null : (v as Sex))}>
+              <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unset">Not set</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="male">Male</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Time zone</p>
+              <p className="text-[11px] text-muted-foreground">
+                Dates imported .fit files that carry no local time. {timezone ? `Currently ${timezone}.` : 'Not set — such files are dated in UTC.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {deviceZone && deviceZone !== timezone && (
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setTimezone(deviceZone)}>
+                  Use {deviceZone}
+                </Button>
+              )}
+              {timezone && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={() => setTimezone(null)}>
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Bodyweight</p>
+              <p className="text-[11px] text-muted-foreground">A benchmark series with its own history; turns a logged lift into ×BW.</p>
+            </div>
+            <PrInput benchId="bodyweight_kg" unit="kg" />
+          </div>
+        </div>
+
+        {/* The account moved to Settings ▸ Account: configuration, not the athlete. */}
+        <div className="rounded-lg border border-border/30 bg-card/40 p-4 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-muted-foreground">Account, sign-out, connected services and appearance live in Settings.</p>
+          <Link to="/settings?tab=account" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline shrink-0">
+            <SettingsIcon className="size-3.5" /> Open Settings
+          </Link>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── Tab Selector (like Explore) ───────────────────────────────────────────────
 
 function TabSelector({
@@ -820,20 +956,19 @@ function TabSelector({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function ProfileBenchmarks() {
-  const navigate = useNavigate()
-  const trainingLevel = useProfileStore((s) => s.trainingLevel)
-  const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
-  const { user, savedAccounts, signOutCurrent, switchToAccount } = useAuthStore()
-
   // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
   // straight on Connections — they redirect to /profile?tab=connections.
   const [searchParams] = useSearchParams()
   const requestedTab = searchParams.get('tab') as SubTab | null
   const [activeTab, setActiveTab] = useState<SubTab>(
-    requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'equipment'
+    requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
   )
-  const [switching, setSwitching] = useState(false)
-
+  // Connections moved to Settings on 2026-10-01. Old links and any OAuth
+  // callback still pointing here land on the new home with their query intact.
+  if (searchParams.get('tab') === 'connections') {
+    const qs = searchParams.toString()
+    return <Navigate to={{ pathname: '/settings', search: qs ? `?${qs}` : '' }} replace />
+  }
   return (
     <motion.div
       key="profile"
@@ -853,73 +988,21 @@ export function ProfileBenchmarks() {
           <TabSelector active={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* Account & Level */}
-        <div className="ml-auto flex items-center gap-3">
-          {user && savedAccounts.length > 1 ? (
-            <Select
-              value={user.email ?? ''}
-              onValueChange={async (val) => {
-                if (val === '__add__') { navigate('/login'); return }
-                if (val === user.email) return
-                setSwitching(true)
-                try { await switchToAccount(val) } finally { setSwitching(false) }
-              }}
-              disabled={switching}
-            >
-              <SelectTrigger className="w-48 h-8 text-xs font-mono">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {savedAccounts.map((a) => (
-                  <SelectItem key={a.email} value={a.email} className="text-xs font-mono">
-                    {a.email}
-                  </SelectItem>
-                ))}
-                <SelectSeparator />
-                <SelectItem value="__add__" className="text-xs text-muted-foreground">
-                  Add account →
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          ) : user ? (
-            <span className="text-xs font-mono text-muted-foreground">
-              {user.email}
-            </span>
-          ) : null}
-
-          <Select value={trainingLevel} onValueChange={(v) => setTrainingLevel(v as TrainingLevel)}>
-            <SelectTrigger className="w-32 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="novice">Novice</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-              <SelectItem value="elite">Elite</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {user && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={signOutCurrent}
-              className="h-8 text-xs text-muted-foreground hover:text-destructive"
-            >
-              <LogOut className="size-3.5" />
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {activeTab === 'equipment'  && <EquipmentOverview />}
-        {activeTab === 'injuries'   && <InjuriesOverview />}
-        {activeTab === 'benchmarks' && <BenchmarksOverview />}
-        {activeTab === 'schedule'   && <ScheduleOverview />}
-        {activeTab === 'heartrate'  && <HRSettingsOverview />}
-        {activeTab === 'connections' && <ConnectionsSettings />}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* A change here that the active program was not built for offers a
+            regenerate from the current week — every tab that feeds constraints. */}
+        {(['athlete', 'equipment', 'injuries', 'schedule'] as SubTab[]).includes(activeTab) && <RegenerateFromWeekBanner />}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === 'athlete'    && <AthleteOverview />}
+          {activeTab === 'equipment'  && <EquipmentOverview />}
+          {activeTab === 'injuries'   && <InjuriesOverview />}
+          {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
+          {activeTab === 'schedule'   && <ScheduleOverview />}
+          {activeTab === 'heartrate'  && <HRSettingsOverview />}
+        </div>
       </div>
     </motion.div>
   )

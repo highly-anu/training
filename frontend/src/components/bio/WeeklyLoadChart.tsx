@@ -13,6 +13,8 @@ import {
 import { startOfISOWeek, format, addDays } from 'date-fns'
 import { fetchWeeklyLoad } from '@/api/userdata'
 import type { WeeklyLoad } from '@/api/types'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { useNavigate } from 'react-router-dom'
 
 interface TooltipProps {
   active?: boolean
@@ -58,6 +60,7 @@ function barColor(trimp: number, median: number): string {
 }
 
 export function WeeklyLoadChart() {
+  const navigate = useNavigate()
   const { data: raw = [] } = useQuery({
     queryKey: ['weeklyLoad'],
     queryFn: fetchWeeklyLoad,
@@ -78,9 +81,13 @@ export function WeeklyLoadChart() {
 
   if (data.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border">
-        <p className="text-sm text-muted-foreground">No workout data yet</p>
-      </div>
+      <EmptyState
+        size="compact"
+        className="h-40"
+        title="No weekly load yet"
+        description="Load is the TRIMP of recorded workouts with heart rate."
+        action={{ label: 'Import a workout', onClick: () => navigate('/log?import=1') }}
+      />
     )
   }
 
@@ -106,7 +113,7 @@ export function WeeklyLoadChart() {
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
           {median > 0 && (
             <ReferenceLine
               y={median}

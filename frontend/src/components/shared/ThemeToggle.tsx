@@ -2,13 +2,8 @@ import { useTheme } from 'next-themes'
 import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { THEMES } from '@/lib/themes'
 
-const THEMES = [
-  { id: 'light',    label: 'Light',    bg: '#ffffff',  primary: '#f59e0b' },
-  { id: 'dark',     label: 'Dark',     bg: '#1c1b27',  primary: '#f59e0b' },
-  { id: 'military', label: 'Military', bg: '#1e2318',  primary: '#5b8a3c' },
-  { id: 'zen',      label: 'Zen',      bg: '#f7f5f0',  primary: '#4a8c70' },
-] as const
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()

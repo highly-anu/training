@@ -2,11 +2,12 @@ import SwiftUI
 
 // MARK: - Tab definition
 
-private enum ProfileTab: Int, AppSubTab {
-    case equipment, injuries, benchmarks, schedule
+enum ProfileTab: Int, AppSubTab {
+    case athlete, equipment, injuries, benchmarks, schedule
 
     var label: String {
         switch self {
+        case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
         case .injuries:   return "Injuries"
         case .benchmarks: return "Benchmarks"
@@ -81,6 +82,9 @@ private struct EquipmentTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Available equipment.")
@@ -139,6 +143,9 @@ private struct InjuriesTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Active injury flags.")
@@ -255,9 +262,6 @@ private struct BenchmarksTab: View {
                 }
             }
 
-            Section("Max HR") {
-                dobRows
-            }
         }
         .listStyle(.insetGrouped)
         .sheet(isPresented: Binding(
@@ -270,10 +274,14 @@ private struct BenchmarksTab: View {
                     benchmark: benchmark,
                     currentValue: appState.profile.performanceLogs?[id]?.last?.value,
                     onSave: { value in
+                        // Shown immediately; savePerformanceEntry then re-reads the
+                        // server's series, which keeps this entry only if the write
+                        // landed. The profile PUT never carried PRs — the server's
+                        // merge whitelist drops `performanceLogs`.
                         let entry = PerformanceEntry(value: value, date: todayString())
                         if appState.profile.performanceLogs == nil { appState.profile.performanceLogs = [:] }
                         appState.profile.performanceLogs![id, default: []].append(entry)
-                        Task { await appState.saveProfile() }
+                        Task { await appState.savePerformanceEntry(benchmarkId: id, value: value) }
                         editingBenchmarkId = nil
                     }
                 )
@@ -307,39 +315,6 @@ private struct BenchmarksTab: View {
         .onTapGesture { editingBenchmarkId = benchmark.id }
     }
 
-    private var dobRows: some View {
-        Group {
-            DatePicker(
-                "Date of Birth",
-                selection: Binding(
-                    get: {
-                        if let dob = appState.profile.dateOfBirth {
-                            return dobDate(dob) ?? Date()
-                        }
-                        return Date()
-                    },
-                    set: { d in
-                        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                        appState.profile.dateOfBirth = f.string(from: d)
-                        Task { await appState.saveProfile() }
-                    }
-                ),
-                displayedComponents: .date
-            )
-            if let dob = appState.profile.dateOfBirth, let age = computeAge(dob) {
-                LabeledContent("Estimated Max HR", value: "\(220 - age) bpm")
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private func dobDate(_ string: String) -> Date? {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.date(from: string)
-    }
-    private func computeAge(_ dob: String) -> Int? {
-        guard let date = dobDate(dob) else { return nil }
-        return Calendar.current.dateComponents([.year], from: date, to: Date()).year
-    }
     private func todayString() -> String {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
     }
@@ -358,6 +333,208 @@ private struct BenchmarksTab: View {
         case "Intermediate": return .green
         default:             return .secondary
         }
+    }
+}
+
+// MARK: - Athlete Tab
+
+/// Who is training: the facts the generator and the analytics read before any
+/// equipment or injury — level, age (max HR), bodyweight (the ×BW standards)
+/// and the heart-rate zones every HR chart and TRIMP calculation uses.
+private struct AthleteTab: View {
+    @EnvironmentObject var appState: AppState
+    @State private var bodyweightInput: String = ""
+    @State private var maxHRInput: String = ""
+
+    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let zoneNames = ["Zone 1 ends", "Zone 2 ends", "Zone 3 ends", "Zone 4 ends"]
+
+    private var boundaries: [Double] {
+        let stored = appState.profile.hrConfig?.zoneBoundaries ?? []
+        return stored.count == 4 ? stored : AnalyticsEngine.defaultZoneBoundaries
+    }
+
+    /// Override → 220 − age → 190, the same priority AnalyticsEngine uses.
+    private var effectiveMaxHR: Int {
+        if let o = appState.profile.hrConfig?.maxHROverride, o > 0 { return o }
+        if let dob = appState.profile.dateOfBirth, let age = computeAge(dob) { return 220 - age }
+        return 190
+    }
+
+    private var latestBodyweight: Double? {
+        appState.profile.performanceLogs?["bodyweight_kg"]?.last?.value
+    }
+
+    var body: some View {
+        List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
+            Section {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("About you.")
+                        .font(.headline)
+                    Text("Level and age shape every program; bodyweight and heart-rate zones shape how your training is measured.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section("Training level") {
+                Picker("Level", selection: Binding(
+                    get: { appState.profile.trainingLevel },
+                    set: { appState.profile.trainingLevel = $0; Task { await appState.saveProfile() } }
+                )) {
+                    ForEach(trainingLevels, id: \.self) { Text($0.capitalized).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Body") {
+                // Which benchmark standards apply. Clearing the cached ladder
+                // makes the Benchmarks section re-fetch the right table.
+                Picker("Sex", selection: Binding(
+                    get: { appState.profile.sex ?? "unset" },
+                    set: { value in
+                        appState.profile.sex = value == "unset" ? nil : value
+                        appState.benchmarks = []
+                        Task { await appState.saveProfile() }
+                    }
+                )) {
+                    Text("Not set").tag("unset")
+                    Text("Female").tag("female")
+                    Text("Male").tag("male")
+                }
+                .pickerStyle(.menu)
+                DatePicker("Date of Birth", selection: dobBinding, displayedComponents: .date)
+                if let dob = appState.profile.dateOfBirth, let age = computeAge(dob) {
+                    LabeledContent("Age", value: "\(age)")
+                }
+                LabeledContent("Bodyweight",
+                               value: latestBodyweight.map { String(format: "%.1f kg", $0) } ?? "—")
+                HStack {
+                    TextField("New weight (kg)", text: $bodyweightInput)
+                        .keyboardType(.decimalPad)
+                    Button("Log") { logBodyweight() }
+                        .disabled(Double(bodyweightInput) == nil)
+                }
+            }
+
+            Section {
+                HStack {
+                    Text("Max HR")
+                    Spacer()
+                    TextField("\(effectiveMaxHR)", text: $maxHRInput)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                        .onSubmit { saveMaxHROverride() }
+                    Text("bpm").foregroundStyle(.secondary)
+                }
+                if appState.profile.hrConfig?.maxHROverride != nil {
+                    Button("Use the estimate from age instead") { clearMaxHROverride() }
+                        .font(.footnote)
+                }
+                ForEach(0..<4, id: \.self) { i in
+                    Stepper(value: Binding(
+                        get: { Int((boundaries[i] * 100).rounded()) },
+                        set: { setBoundary(i, percent: $0) }
+                    ), in: 40...97) {
+                        HStack {
+                            Text(zoneNames[i])
+                            Spacer()
+                            Text("\(Int((boundaries[i] * 100).rounded()))% · \(Int((Double(effectiveMaxHR) * boundaries[i]).rounded())) bpm")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                }
+                Button("Reset zones to defaults") { resetZones() }
+                    .font(.footnote)
+            } header: {
+                Text("Heart rate zones")
+            } footer: {
+                Text("Max HR defaults to 220 − age. Zone edges are percentages of max HR and stay at least 3% apart — the same rule the web app enforces.")
+            }
+        }
+        .listStyle(.insetGrouped)
+        .onAppear {
+            if let o = appState.profile.hrConfig?.maxHROverride { maxHRInput = String(o) }
+        }
+    }
+
+    private var dobBinding: Binding<Date> {
+        Binding(
+            get: {
+                if let dob = appState.profile.dateOfBirth, let d = dobDate(dob) { return d }
+                return Date()
+            },
+            set: { d in
+                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                appState.profile.dateOfBirth = f.string(from: d)
+                Task { await appState.saveProfile() }
+            }
+        )
+    }
+
+    /// Bodyweight is a benchmark series, not a profile field: the ×BW strength
+    /// standards read `bodyweight_kg` from performance logs on both clients.
+    private func logBodyweight() {
+        guard let value = Double(bodyweightInput), value > 0 else { return }
+        AppHaptics.success()
+        let entry = PerformanceEntry(value: value, date: todayString())
+        if appState.profile.performanceLogs == nil { appState.profile.performanceLogs = [:] }
+        appState.profile.performanceLogs!["bodyweight_kg", default: []].append(entry)
+        bodyweightInput = ""
+        Task { await appState.savePerformanceEntry(benchmarkId: "bodyweight_kg", value: value) }
+    }
+
+    private func saveMaxHROverride() {
+        guard let v = Int(maxHRInput), (100...250).contains(v) else { return }
+        var cfg = appState.profile.hrConfig ?? HRConfig()
+        cfg.maxHROverride = v
+        appState.profile.hrConfig = cfg
+        Task { await appState.saveProfile() }
+    }
+
+    private func clearMaxHROverride() {
+        maxHRInput = ""
+        var cfg = appState.profile.hrConfig ?? HRConfig()
+        cfg.maxHROverride = nil
+        appState.profile.hrConfig = cfg
+        Task { await appState.saveProfile() }
+    }
+
+    /// Minimum 3% gap between neighbours, first edge ≥ 40%, last ≤ 97% — the
+    /// web's HRSettingsOverview rule, so both clients accept the same values.
+    private func setBoundary(_ i: Int, percent: Int) {
+        var next = boundaries
+        let lower = i == 0 ? 0.40 : next[i - 1] + 0.03
+        let upper = i == 3 ? 0.97 : next[i + 1] - 0.03
+        next[i] = min(upper, max(lower, Double(percent) / 100))
+        var cfg = appState.profile.hrConfig ?? HRConfig()
+        cfg.zoneBoundaries = next
+        appState.profile.hrConfig = cfg
+        Task { await appState.saveProfile() }
+    }
+
+    private func resetZones() {
+        maxHRInput = ""
+        appState.profile.hrConfig = HRConfig()
+        Task { await appState.saveProfile() }
+    }
+
+    private func dobDate(_ string: String) -> Date? {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.date(from: string)
+    }
+    private func computeAge(_ dob: String) -> Int? {
+        guard let date = dobDate(dob) else { return nil }
+        return Calendar.current.dateComponents([.year], from: date, to: Date()).year
+    }
+    private func todayString() -> String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
     }
 }
 
@@ -511,6 +688,9 @@ private struct ScheduleTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Weekly availability.")
@@ -561,18 +741,19 @@ private struct ScheduleTab: View {
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: ProfileTab = .equipment
-    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
-
-    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    @State private var selectedTab: ProfileTab = .athlete
+    @EnvironmentObject private var router: AppRouter
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 AppSubTabPicker(selection: $selectedTab)
+                    .onAppear { applyRequestedSection() }
+                    .onChange(of: router.profileSection) { applyRequestedSection() }
 
                 AppSubTabContent(selection: $selectedTab) { tab in
                     switch tab {
+                    case .athlete:    AthleteTab()
                     case .equipment:  EquipmentTab()
                     case .injuries:   InjuriesTab()
                     case .benchmarks: BenchmarksTab()
@@ -583,29 +764,17 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .appTabStyle()
             .toolbar {
-                // Appearance. Dark is the default (see AppAppearance);
-                // "System" hands control back to iOS.
+                // Configuration lives one push away: connections, devices and
+                // sync status, appearance, sign-out. The training level moved
+                // into the Athlete section, where the rest of "who is
+                // training" lives.
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("Appearance", selection: $appearanceRaw) {
-                            ForEach(AppAppearance.allCases) { option in
-                                Label(option.label, systemImage: option.symbol)
-                                    .tag(option.rawValue)
-                            }
-                        }
+                    NavigationLink {
+                        SettingsView()
                     } label: {
-                        Image(systemName: (AppAppearance(rawValue: appearanceRaw) ?? .fallback).symbol)
+                        Image(systemName: "gearshape")
                     }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Picker("Level", selection: Binding(
-                        get: { appState.profile.trainingLevel },
-                        set: { appState.profile.trainingLevel = $0; Task { await appState.saveProfile() } }
-                    )) {
-                        ForEach(trainingLevels, id: \.self) { Text($0.capitalized).tag($0) }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
+                    .accessibilityLabel("Settings")
                 }
             }
             .task {
@@ -661,5 +830,17 @@ private struct BenchmarkEditSheet: View {
             }
             .onAppear { if let c = currentValue { inputText = "\(c)" } }
         }
+    }
+}
+
+extension ProfileView {
+    /// Move to the section the router asked for (a deep link), then clear it
+    /// so a later visit keeps the user's own last choice.
+    fileprivate func applyRequestedSection() {
+        guard let requested = router.profileSection else { return }
+        if selectedTab != requested {
+            withAnimation(AppAnimation.springStandard) { selectedTab = requested }
+        }
+        router.clearProfileSection()
     }
 }

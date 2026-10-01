@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Network, Search, X, Zap } from 'lucide-react'
+import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Network, Search, X, Zap, Trophy, Wand2 } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -17,7 +17,10 @@ import { useExercises } from '@/api/exercises'
 import { useDebounce } from '@/hooks/useDebounce'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
-import { PhilosophyExplorerPanel, ArchetypeCard } from '@/components/devlab/PhilosophyExplorerPanel'
+import { PhilosophyPanel, ArchetypeCard } from '@/components/explore/PhilosophyPanel'
+import { StandardsLanding } from '@/components/explore/StandardsLanding'
+import { useBuilderStore } from '@/store/builderStore'
+import { Button } from '@/components/ui/button'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { useSimilarity } from '@/api/similarity'
@@ -122,7 +125,7 @@ function SortToggle({ sort, onChange }: {
 
 // ─── Topic Selector ───────────────────────────────────────────────────────────
 
-type Topic = 'philosophies' | 'modalities' | 'exercises' | 'archetypes' | 'frameworks'
+type Topic = 'philosophies' | 'modalities' | 'exercises' | 'archetypes' | 'frameworks' | 'standards'
 
 interface TopicTab {
   id: Topic
@@ -136,6 +139,7 @@ const TOPICS: TopicTab[] = [
   { id: 'modalities',   label: 'Modalities',   Icon: Zap },
   { id: 'archetypes',   label: 'Archetypes',   Icon: Layers },
   { id: 'exercises',    label: 'Exercises',     Icon: Dumbbell },
+  { id: 'standards',    label: 'Standards',     Icon: Trophy },
 ]
 
 // ─── Archetype category colors ────────────────────────────────────────────────
@@ -1402,6 +1406,23 @@ function FrameworkOverview({
 
 // ─── Framework Explorer detail ────────────────────────────────────────────────
 
+/** Explore → Builder with this framework fixed (see PhilosophyPanel's twin). */
+function BuildWithFramework({ fw, phil, frameworks }: { fw: Framework; phil: Philosophy; frameworks: Framework[] }) {
+  const navigate = useNavigate()
+  const prefill = useBuilderStore((s) => s.prefillFromFramework)
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+      <p className="text-xs text-muted-foreground">
+        Start a program on {phil.name} with this framework fixed for every phase.
+      </p>
+      <Button size="sm" onClick={() => { prefill(fw, phil, frameworks); navigate('/program/new') }}>
+        <Wand2 className="size-3.5 mr-1.5" />
+        Build with this framework
+      </Button>
+    </div>
+  )
+}
+
 function FrameworkExplorerDetail({
   fw,
   philosophies,
@@ -1460,6 +1481,8 @@ function FrameworkExplorerDetail({
           <ArrowLeft className="size-3" />
           All frameworks
         </button>
+
+        {sourcePhil && <BuildWithFramework fw={fw} phil={sourcePhil} frameworks={frameworks} />}
 
         {/* Header card */}
         <div
@@ -1751,6 +1774,14 @@ export function Explore() {
     setSelectedPhilState(philosophies.find((p) => p.id === wantedPhilId) ?? null)
   }
 
+  // Likewise an exercise deep link — a session row's "Open in Explore".
+  const wantedExerciseId = topic === 'exercises' ? searchParams.get('id') : null
+  const [resolvedExerciseId, setResolvedExerciseId] = useState<string | null>(null)
+  if (wantedExerciseId && wantedExerciseId !== resolvedExerciseId && allExercises.length) {
+    setResolvedExerciseId(wantedExerciseId)
+    setSelectedExercise(allExercises.find((e) => e.id === wantedExerciseId) ?? null)
+  }
+
   function setSelectedPhil(p: Philosophy | null) {
     setSelectedPhilState(p)
     setResolvedWantedId(p?.id ?? null)
@@ -1822,7 +1853,7 @@ export function Explore() {
             <div className="flex-1 min-h-0 overflow-hidden">
                 {topic === 'philosophies' && (
                   selectedPhil
-                    ? <PhilosophyExplorerPanel
+                    ? <PhilosophyPanel
                         controlledId={selectedPhil.id}
                         onBack={() => setSelectedPhil(null)}
                       />
@@ -1879,6 +1910,7 @@ export function Explore() {
                       />
                     : <ExerciseLanding allExercises={allExercises} onSelect={setSelectedExercise} />
                 )}
+                {topic === 'standards' && <StandardsLanding />}
             </div>
           )
       )}

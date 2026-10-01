@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { fetchHealthSnapshot } from '@/api/health'
+import { fetchHealthSnapshot, fetchMatchSuggestions } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
+import { parseSessionKey } from '@/lib/sessionKeys'
 import { useAuthStore } from '@/store/authStore'
 
 /**
@@ -12,6 +13,7 @@ import { useAuthStore } from '@/store/authStore'
 export function HealthDataProvider({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   const initBio = useBioStore((s) => s.init)
+  const mergeServerSuggestions = useBioStore((s) => s.mergeServerSuggestions)
   const initPerformanceLogs = useProfileStore((s) => s.initPerformanceLogs)
   const initSessionLogs = useProfileStore((s) => s.initSessionLogs)
   const loadProfile = useProfileStore((s) => s.loadFromServer)
@@ -35,18 +37,23 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
         const completionFlags: Record<string, boolean[]> = {}
         for (const [key, log] of Object.entries(snapshot.sessionLogs)) {
           if (!log.completedAt) continue
-          const match = key.match(/^(.+)-(\d+)$/)
-          if (match) {
-            const dayKey = match[1]
-            const idx = parseInt(match[2], 10)
-            if (!completionFlags[dayKey]) completionFlags[dayKey] = []
-            completionFlags[dayKey][idx] = true
+          const parsed = parseSessionKey(key)
+          if (parsed && parsed.sessionIndex != null) {
+            if (!completionFlags[parsed.dayKey]) completionFlags[parsed.dayKey] = []
+            completionFlags[parsed.dayKey][parsed.sessionIndex] = true
           } else {
             // Legacy day-level key — restore at index 0
             completionFlags[key] = [true]
           }
         }
         initSessionLogs(completionFlags)
+
+        // Weak matches the server-side importers (Garmin webhook, iOS relay)
+        // could not confirm alone. Merged after the snapshot so each one can
+        // be paired with its workout; shown on Home and under Import.
+        return fetchMatchSuggestions()
+          .then((suggestions) => mergeServerSuggestions(suggestions))
+          .catch(() => {})
       })
       .catch(() => {
         // Backend not running — stores stay empty, app continues

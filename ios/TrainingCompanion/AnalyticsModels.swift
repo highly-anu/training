@@ -43,6 +43,52 @@ struct WeeklyLoadEntry: Identifiable {
     var sessions: Double
 }
 
+// MARK: - Server-computed load (GET /api/health/load/pmc, /weekly)
+
+/// One day of the server's Performance Management Chart. The web reads the
+/// same endpoint, so phone and web agree on fitness, fatigue and form; the
+/// on-device `AnalyticsEngine.computePMC` is the offline fallback.
+struct ServerPMCEntry: Decodable, Equatable {
+    let date: String      // "yyyy-MM-dd"
+    let ctl: Double
+    let atl: Double
+    let tsb: Double
+    let trimp: Double
+
+    /// Local midnight of `date`, for the chart's day axis.
+    func pmcEntry(calendar: Calendar = .current) -> PMCEntry? {
+        let f = DateFormatter()
+        f.calendar = calendar
+        f.timeZone = calendar.timeZone
+        f.dateFormat = "yyyy-MM-dd"
+        guard let d = f.date(from: date) else { return nil }
+        return PMCEntry(date: d, ctl: ctl, atl: atl, tsb: tsb, trimp: trimp)
+    }
+}
+
+/// One ISO week of TRIMP and session count, "2026-W35".
+struct ServerWeeklyLoadEntry: Decodable, Equatable, Identifiable {
+    let week: String
+    let trimp: Double
+    let sessions: Int
+
+    var id: String { week }
+
+    /// The Monday the ISO week key names, or nil for a malformed key.
+    var weekStart: Date? {
+        let parts = week.split(separator: "-")
+        guard parts.count == 2, let year = Int(parts[0]),
+              parts[1].hasPrefix("W"), let number = Int(parts[1].dropFirst()) else { return nil }
+        var cal = Calendar(identifier: .iso8601)
+        cal.timeZone = TimeZone.current
+        var comps = DateComponents()
+        comps.yearForWeekOfYear = year
+        comps.weekOfYear = number
+        comps.weekday = 2
+        return cal.date(from: comps)
+    }
+}
+
 // Garmin-style: Z1+Z2 = Base, Z3 = Threshold, Z4+Z5 = Anaerobic
 struct TrainingLoadFocus {
     var baseMinutes: Double

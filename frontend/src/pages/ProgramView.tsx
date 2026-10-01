@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { CalendarDays, Wand2, ShieldAlert, History } from 'lucide-react'
+import { CalendarDays, Wand2, ShieldAlert, Plus } from 'lucide-react'
 import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { PhaseBar } from '@/components/program/PhaseBar'
 import { ProgramOverview } from '@/components/program/ProgramOverview'
+import { ProgramHistoryList } from '@/components/program/ProgramHistoryList'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
 import { InjuryPicker } from '@/components/builder/InjuryPicker'
@@ -17,16 +18,32 @@ import { Separator } from '@/components/ui/separator'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
-import { useBuilderStore } from '@/store/builderStore'
 import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
+
+type ProgramTab = 'calendar' | 'overview' | 'history'
+const PROGRAM_TABS: ProgramTab[] = ['calendar', 'overview', 'history']
 
 export function ProgramView() {
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const [weekIndex, setWeekIndex] = useState(0)
-  const [activeTab, setActiveTab] = useState<'calendar' | 'overview'>('overview')
+  // URL-driven so History can be linked to directly (it was its own page).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const activeTab: ProgramTab = PROGRAM_TABS.includes(tabParam as ProgramTab) ? (tabParam as ProgramTab) : 'calendar'
+  function setActiveTab(tab: ProgramTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab === 'calendar') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true }
+    )
+  }
   const [injurySheetOpen, setInjurySheetOpen] = useState(false)
   const [localFlags, setLocalFlags] = useState<InjuryFlagId[]>([])
   const [localCustom, setLocalCustom] = useState<CustomInjuryFlag[]>([])
@@ -39,24 +56,20 @@ export function ProgramView() {
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
-  const sourceMode = useBuilderStore((s) => s.sourceMode)
-  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds)
   const { data: philosophies } = usePhilosophies()
 
+  // The title is the STORED program's methodology. It used to read the
+  // builder's persisted selection, so browsing a philosophy in the builder
+  // (or landing there from Explore) renamed the program the athlete is on.
   const programTitle = (() => {
-    if (sourceMode === 'philosophy') {
-      const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-      return phil?.name ?? 'Training Program'
-    }
-    if (sourceMode === 'blend') {
-      const names = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)).map((p) => p.name) ?? []
-      return names.length > 0 ? names.join(' + ') : 'Blended Program'
-    }
-    if (sourceMode === 'custom') return 'Custom Program'
+    const ids = sourceGoalIds.filter((id) => id !== '_blended')
+    const names = philosophies?.filter((p) => ids.includes(p.id)).map((p) => p.name) ?? []
+    if (names.length > 0) return names.join(' + ')
     return program?.goal?.name ?? 'Training Program'
   })()
   const currentWeekData = program?.weeks[weekIndex]
-  const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
+  const { segments, totalWeeks } = usePhaseCalendar(program ?? undefined, weekIndex + 1)
   const regenerate = useRegenerateFromWeek()
 
   // Which array index is the real current calendar week?
@@ -101,7 +114,10 @@ export function ProgramView() {
           injury_flags: localFlags,
           periodization_week: currentWeekData.week_in_phase,
         },
-        numWeeks: totalWeeks - weekIndex,
+        // The stored program's length, never the methodology's canonical
+        // plan: sizing from the latter asked for 18 weeks on a 4-week plan.
+        numWeeks: program.weeks.length - weekIndex,
+        weekInProgram: weekIndex + 1,
         customInjuryFlags: localCustom,
       },
       { onSuccess: () => setInjurySheetOpen(false) }
@@ -120,7 +136,7 @@ export function ProgramView() {
         <EmptyState
           title="No program generated yet"
           description="Use the builder to pick a philosophy and generate a personalized program."
-          action={{ label: 'Build a Program', onClick: () => navigate('/builder') }}
+          action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
         />
       </motion.div>
@@ -143,7 +159,7 @@ export function ProgramView() {
           <div className="ml-4 flex items-center gap-2">
             <div className="w-px h-4 bg-border/60 shrink-0" />
             <div className="flex items-center gap-1">
-              {(['overview', 'calendar'] as const).map((tab) => (
+              {PROGRAM_TABS.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -160,13 +176,14 @@ export function ProgramView() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Link
-              to="/program/history"
+            <button
+              type="button"
+              onClick={() => navigate('/program/new')}
               className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
             >
-              <History className="size-3.5" aria-hidden="true" />
-              History
-            </Link>
+              <Plus className="size-3.5" aria-hidden="true" />
+              New program
+            </button>
             <button
               type="button"
               onClick={() => setInjurySheetOpen(true)}
@@ -193,7 +210,9 @@ export function ProgramView() {
           </div>
         </div>
 
-        <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
+        {activeTab !== 'history' && (
+          <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
+        )}
       </div>
 
       {/* Body */}
@@ -224,8 +243,10 @@ export function ProgramView() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : activeTab === 'overview' ? (
           <ProgramOverview program={program} segments={segments} />
+        ) : (
+          <ProgramHistoryList />
         )}
       </div>
 

@@ -12,13 +12,15 @@ final class AppState: ObservableObject {
     @Published var serverProgram: ServerProgram? = nil
     @Published var isLoadingProgram = false
     @Published var programError: String? = nil
+    /// Set when a save lost to a newer copy on the server (409). The program
+    /// is re-pulled; this is what tells the user their last edit is gone,
+    /// which used to happen silently.
+    @Published var programSaveConflict: String? = nil
 
     /// Every plan this athlete has trained, newest first.
     ///
-    /// Lives on AppState rather than on ProgramStore: that type already keeps a
-    /// second `serverProgram` of its own with no stale-revision recovery and no
-    /// widget refresh, and a third copy of the program's state is not what this
-    /// needed.
+    /// Lives here with the rest of the program state; a second store for it
+    /// (the old `ProgramStore`) only ever held a stale copy.
     @Published var programHistory: [ProgramHistoryEntry] = []
     @Published var isLoadingHistory = false
 
@@ -47,6 +49,8 @@ final class AppState: ObservableObject {
     @Published var isLoadingWorkouts = false
     /// Confirmed `workout_matches` rows, keyed by imported workout id.
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
+    /// Weak server-side matches still waiting for a decision (Today card).
+    @Published var matchSuggestions: [MatchSuggestion] = []
 
     // MARK: - Bio Logs (last 30 days)
 
@@ -56,13 +60,27 @@ final class AppState: ObservableObject {
     // MARK: - Progression
 
     @Published var progressionReview: ProgressionReview? = nil
+    /// `GET /analytics/program` — the methodology scorecard (Analytics ▸ Program).
+    @Published var programAnalytics: ProgramAnalytics? = nil
+    @Published var isLoadingProgramAnalytics = false
+    @Published var programAnalyticsError: String? = nil
 
     // MARK: - Catalog (lazy-loaded)
 
-    @Published var goals: [GoalProfile] = []
     @Published var benchmarks: [AppBenchmark] = []
     @Published var philosophies: [PhilosophyCard] = []
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
+    /// Every exercise the API knows, by id — the reference the exercise sheet
+    /// and the swap list read names and prerequisites from.
+    @Published var exerciseCatalog: [String: AppExercise] = [:]
+
+    // MARK: - Training load (server-computed)
+
+    /// The server's PMC and weekly TRIMP — the same numbers the web shows.
+    /// nil until fetched, or when the request failed and the Overview falls
+    /// back to the on-device engine.
+    @Published var serverPMC: [PMCEntry]? = nil
+    @Published var serverWeeklyLoad: [ServerWeeklyLoadEntry]? = nil
 
     // MARK: - Internal
 
@@ -91,6 +109,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadReadiness() }
             group.addTask { await self.loadWorkouts() }
             group.addTask { await self.loadProgressionReview() }
+            group.addTask { await self.loadMatchSuggestions() }
         }
     }
 
@@ -113,20 +132,41 @@ final class AppState: ObservableObject {
         isLoadingWorkouts = true
         defer { isLoadingWorkouts = false }
         do {
-            importedWorkouts = try await api.fetchWorkouts()
+            // One snapshot carries both: the list, and the matches that come
+            // from their own table rather than from session logs — see
+            // `matchedSessionKey(for:)`.
+            let snapshot = try await api.fetchHealthSnapshot()
+            importedWorkouts = snapshot.workouts
+            workoutMatches = APIClient.matchesByWorkout(snapshot.matches)
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
-        // Matches come from their own table rather than from session logs —
-        // see `matchedSessionKey(for:)`. A failure here costs badges, not the
-        // list, so it never fails the load.
-        do {
-            workoutMatches = try await api.fetchWorkoutMatches()
-        } catch {
-            if (error as? URLError)?.code == .cancelled { return }
-            print("⚠️ fetchWorkoutMatches failed: \(error)")
+    }
+
+    // MARK: - Match suggestions
+
+    func loadMatchSuggestions() async {
+        guard let api else { return }
+        matchSuggestions = (try? await api.fetchMatchSuggestions()) ?? []
+    }
+
+    /// Suggestions still to decide: the server's weak matches whose workout is
+    /// in the list and has not been linked since. Today shows the first three,
+    /// Log ▸ Suggestions all of them.
+    func pendingMatchSuggestions() -> [(suggestion: MatchSuggestion, workout: ImportedWorkout)] {
+        matchSuggestions.compactMap { suggestion in
+            guard matchedSessionKey(for: suggestion.importedWorkoutId) == nil,
+                  let workout = importedWorkouts.first(where: { $0.id == suggestion.importedWorkoutId })
+            else { return nil }
+            return (suggestion, workout)
         }
+    }
+
+    /// Forget a suggestion without deciding the workout; the server forgets it too.
+    func dismissSuggestion(workoutId: String) async {
+        matchSuggestions.removeAll { $0.importedWorkoutId == workoutId }
+        try? await api?.dismissMatchSuggestion(workoutId: workoutId)
     }
 
     /// The planned session an imported workout is linked to, if any.
@@ -204,6 +244,23 @@ final class AppState: ObservableObject {
             )
         }
         WidgetDataStore.write(WidgetTodayData(date: dateStr, sessions: sessions, updatedAt: Date()))
+        rescheduleNotifications()
+    }
+
+    // MARK: - Session reminders
+
+    /// Re-derive the local reminders from the stored program. Called from
+    /// every path that changes the program (load, move, replace, swap, adjust)
+    /// through `writeWidgetData`, and from Settings when the athlete changes
+    /// the time. Does nothing while reminders are off, so neither the tests
+    /// nor an athlete who never enabled them touch the notification center.
+    func rescheduleNotifications() {
+        let manager = NotificationManager.shared
+        guard manager.isEnabled else { return }
+        let program = serverProgram?.currentProgram
+        let startDate = serverProgram?.programStartDate
+        let completed = Set(sessionLogs.values.filter { $0.completedAt != nil }.map(\.sessionKey))
+        Task { await manager.reschedule(program: program, startDate: startDate, completedKeys: completed) }
     }
 
     // MARK: - Profile
@@ -222,7 +279,15 @@ final class AppState: ObservableObject {
             profile.customInjuryFlags = p.customInjuryFlags
             profile.dateOfBirth    = p.dateOfBirth
             profile.weeklySchedule = p.weeklySchedule
+            profile.sex            = p.sex
+            profile.timezone       = p.timezone
             lastProfileSyncAt = Date()
+            // The device knows its zone; the server needs it to date FIT files
+            // that carry no local timestamp. Set once, never overwritten.
+            if p.timezone == nil {
+                profile.timezone = TimeZone.current.identifier
+                try? await api.saveUserProfile(profile)
+            }
             logger.log("profile: loaded — level:\(p.trainingLevel) equip:\(p.equipment.count) injuries:\(p.injuryFlags.count)")
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
@@ -244,8 +309,28 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Records a PR through `POST /api/health/performance`, then re-reads the
+    /// series so the list shows what the server kept — the optimistic entry the
+    /// caller appended is replaced by the stored one, or dropped if the write
+    /// failed. Returns whether the write succeeded.
+    @discardableResult
+    func savePerformanceEntry(benchmarkId: String, value: Double) async -> Bool {
+        guard let api else { return false }
+        var saved = false
+        do {
+            try await api.addPerformanceEntry(benchmarkId: benchmarkId, value: value,
+                                              loggedAt: ISO8601DateFormatter().string(from: Date()))
+            saved = true
+        } catch {
+            logger.log("profile: performance entry ERROR — \(error)")
+        }
+        await loadPerformanceLogs()
+        return saved
+    }
+
     func saveProfile() async {
         guard let api else { return }
+        if profile.timezone == nil { profile.timezone = TimeZone.current.identifier }
         try? await api.saveUserProfile(profile)
         // Keep dateOfBirth in UserDefaults for WatchSessionManager
         if let dob = profile.dateOfBirth {
@@ -260,6 +345,7 @@ final class AppState: ObservableObject {
         do {
             let logs = try await api.fetchRecentSessionLogs()
             sessionLogs = Dictionary(logs.map { ($0.sessionKey, $0) }, uniquingKeysWith: { _, last in last })
+            rescheduleNotifications()   // a session completed elsewhere cancels its reminder
         } catch {}
     }
 
@@ -278,13 +364,58 @@ final class AppState: ObservableObject {
             matchedWorkoutId: nil
         )
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
+        rescheduleNotifications()
     }
 
-    func undoSessionComplete(sessionKey: String) {
+    /// Store what was done for one exercise of a session — sets, or the
+    /// slot's currency — locally first, then through the API. A session that
+    /// has no log yet gets one without a completion; completing it later
+    /// keeps the sets (the server merges per exercise).
+    func logExercise(sessionKey: String, exerciseId: String, performance: ExercisePerformanceLog) async {
+        var entry = sessionLogs[sessionKey] ?? SessionLogEntry(
+            sessionKey: sessionKey, completedAt: nil, source: "manual", notes: nil,
+            fatigueRating: nil, avgHR: nil, peakHR: nil, matchedWorkoutId: nil)
+        entry.exercises[exerciseId] = performance
+        sessionLogs[sessionKey] = entry
+        guard let api else { return }
+        do {
+            try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId, performance: performance)
+        } catch {
+            AppLogger.shared.logFromBackground("session log: save failed — \(error.localizedDescription)")
+        }
+    }
+
+    /// A planned session located by its key ("<week number>-<Day>-<index>"),
+    /// for a deep link or a widget. The first week carrying that number wins,
+    /// which is what every other reader of the key does.
+    struct LocatedSession: Identifiable {
+        var id: String { key }
+        let session: ProgramSession
+        let key: String
+        let weekIndex: Int
+        let dayName: String
+        let sessionIndex: Int
+    }
+
+    func locateSession(key: String) -> LocatedSession? {
+        guard let weeks = serverProgram?.currentProgram?.weeks else { return nil }
+        for (wi, week) in weeks.enumerated() {
+            for (day, sessions) in week.schedule {
+                for (si, session) in sessions.enumerated()
+                where "\(week.weekNumber)-\(day)-\(si)" == key {
+                    return LocatedSession(session: session, key: key, weekIndex: wi, dayName: day, sessionIndex: si)
+                }
+            }
+        }
+        return nil
+    }
+
+    func undoSessionComplete(sessionKey: String) async {
         sessionLogs.removeValue(forKey: sessionKey)
-        // Note: no undo API endpoint — the server keeps the log but completion is removed client-side
-        // until next sync. A proper undo would call DELETE /health/sessions/:key which isn't in the
-        // current API spec; for now optimistic removal is sufficient for the daily use case.
+        // The server keeps the sets and notes and clears only the completion;
+        // without this call the completion came back on the next sync.
+        try? await api?.clearSessionCompletion(sessionKey: sessionKey)
+        rescheduleNotifications()
     }
 
     // MARK: - Bio Logs
@@ -310,6 +441,23 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// The program analytics document. Loaded when the section is shown, and
+    /// again on pull-to-refresh; the server recomputes only when the program
+    /// or the logs changed.
+    func loadProgramAnalytics(fresh: Bool = false) async {
+        guard let api else { return }
+        isLoadingProgramAnalytics = true
+        defer { isLoadingProgramAnalytics = false }
+        do {
+            programAnalytics = try await api.fetchProgramAnalytics(fresh: fresh)
+            programAnalyticsError = nil
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            programAnalyticsError = error.localizedDescription
+            AppLogger.shared.logFromBackground("analytics: program fetch failed — \(error.localizedDescription)")
+        }
+    }
+
     func loadProgressionReview() async {
         guard let api else { return }
         do {
@@ -322,14 +470,9 @@ final class AppState: ObservableObject {
 
     // MARK: - Catalog (lazy)
 
-    func loadGoalsIfNeeded() async {
-        guard let api, goals.isEmpty else { return }
-        goals = (try? await api.fetchGoals()) ?? []
-    }
-
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
-        benchmarks = (try? await api.fetchBenchmarks()) ?? []
+        benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
     }
 
     func loadPhilosophiesIfNeeded() async {
@@ -340,6 +483,28 @@ final class AppState: ObservableObject {
     func loadInjuryFlagsIfNeeded() async {
         guard let api, injuryFlagDefs.isEmpty else { return }
         injuryFlagDefs = (try? await api.fetchInjuryFlags()) ?? []
+    }
+
+    func loadExercisesIfNeeded() async {
+        guard let api, exerciseCatalog.isEmpty else { return }
+        let list = (try? await api.fetchExercises()) ?? []
+        exerciseCatalog = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Fetch the server's PMC and weekly load. On failure the previous values
+    /// stay, or nil on the first load, and the Overview computes on-device.
+    func loadLoadAnalytics() async {
+        guard let api else { return }
+        async let pmc = api.fetchLoadPMC()
+        async let weekly = api.fetchLoadWeekly()
+        if let entries = try? await pmc {
+            serverPMC = entries.compactMap { $0.pmcEntry() }
+        } else {
+            AppLogger.shared.logFromBackground("load: server PMC unavailable — computing on device")
+        }
+        if let weeks = try? await weekly {
+            serverWeeklyLoad = weeks
+        }
     }
 
     // MARK: - Helpers
@@ -402,8 +567,8 @@ final class AppState: ObservableObject {
     // MARK: - Program Mutations
 
     func replaceSession(weekIndex: Int, day: String, sessionIndex: Int, session: ProgramSession) {
-        guard var sp = serverProgram,
-              var program = sp.currentProgram else { return }
+        guard let sp = serverProgram,
+              let program = sp.currentProgram else { return }
         var weeks = program.weeks
         guard weekIndex < weeks.count else { return }
         var week = weeks[weekIndex]
@@ -413,20 +578,119 @@ final class AppState: ObservableObject {
         var schedule = week.schedule
         schedule[day] = sessions
         week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                           extra: week.extra)
         weeks[weekIndex] = week
-        program = GeneratedProgram(weeks: weeks)
-        sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
-                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
-                           revision: sp.revision)
-        serverProgram = sp
+        commit(weeks: weeks, to: sp)
+    }
+
+    /// Swap one exercise for an alternative the server ranked for its slot —
+    /// the smallest program edit. Saves through the revision-checked PUT like
+    /// move and replace.
+    func replaceExercise(weekIndex: Int, day: String, sessionIndex: Int,
+                         exerciseIndex: Int, assignment: ProgramExerciseAssignment) {
+        guard let sp = serverProgram, let program = sp.currentProgram else { return }
+        var weeks = program.weeks
+        guard weekIndex < weeks.count else { return }
+        let week = weeks[weekIndex]
+        var sessions = week.schedule[day] ?? []
+        guard sessionIndex < sessions.count else { return }
+        let session = sessions[sessionIndex]
+        var exercises = session.exercises
+        guard exerciseIndex < exercises.count else { return }
+        exercises[exerciseIndex] = assignment
+        sessions[sessionIndex] = ProgramSession(modality: session.modality, archetype: session.archetype,
+                                                isDeload: session.isDeload, exercises: exercises,
+                                                extra: session.extra)
+        var schedule = week.schedule
+        schedule[day] = sessions
+        weeks[weekIndex] = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
+                                       isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                                       extra: week.extra)
+        commit(weeks: weeks, to: sp)
+    }
+
+    /// Store an edited copy of the weeks, keep the widgets and reminders in
+    /// step, and save. The envelope's identity (`revision`,
+    /// `programVersionId`) is carried over so the save is checked against the
+    /// copy that was read.
+    private func commit(weeks: [ProgramWeek], to sp: ServerProgram, extra: [String: JSONValue]? = nil) {
+        serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: weeks,
+                                                                       extra: extra ?? sp.currentProgram?.extra ?? [:]),
+                                      programStartDate: sp.programStartDate,
+                                      eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
+                                      sourceGoalWeights: sp.sourceGoalWeights,
+                                      revision: sp.revision, programVersionId: sp.programVersionId,
+                                      extra: sp.extra)
         writeWidgetData()
         Task { try? await saveProgramToServer() }
     }
 
+    /// Ranked alternatives for one exercise of one planned session, under the
+    /// program's methodology and the athlete's current profile.
+    func substituteAlternatives(weekIndex: Int, day: String, sessionIndex: Int,
+                                exerciseIndex: Int) async throws -> [ExerciseAlternative] {
+        guard let api else { throw APIError.unauthenticated }
+        guard let week = serverProgram?.currentProgram?.weeks[safe: weekIndex],
+              let session = week.schedule[day]?[safe: sessionIndex],
+              let archetype = session.archetype,
+              let current = session.exercises[safe: exerciseIndex],
+              let exercise = current.exercise,
+              let slotRole = current.slotRole else {
+            throw APIError.serverErrorDetail(404, "This exercise has no slot to swap within.")
+        }
+        let request = SubstituteRequest(
+            archetypeId: archetype.id,
+            slotRole: slotRole,
+            exerciseId: exercise.id,
+            modality: session.modality,
+            constraints: SubstituteRequest.Constraints(
+                trainingLevel: profile.trainingLevel,
+                equipment: profile.equipment,
+                injuryFlags: profile.injuryFlags,
+                sessionTimeMinutes: archetype.durationEstimateMinutes ?? 60),
+            philosophyIds: (serverProgram?.sourceGoalIds ?? []).filter { $0 != "_blended" },
+            phase: week.phase,
+            weekInPhase: week.weekInPhase ?? (weekIndex + 1),
+            isDeload: week.isDeload,
+            exclude: session.exercises.compactMap { $0.exercise?.id })
+        return try await api.substituteExercise(request)
+    }
+
+    /// Apply one of the review's adjustments from the current calendar week
+    /// on. The server edits the stored weeks under the revision check and
+    /// returns the saved envelope, which replaces this copy. A 409 is handled
+    /// like a stale save: reload, and say so.
+    @discardableResult
+    func applyAdjustment(_ adjustment: ProgressionAdjustment) async throws -> AppliedAdjustment {
+        guard let api, let sp = serverProgram else { throw APIError.unauthenticated }
+        let weekCount = sp.currentProgram?.weeks.count ?? 0
+        let fromWeek = currentWeekIndex ?? max(0, weekCount - 1)
+        let request = AdjustRequest(
+            adjustment: AdjustRequest.Adjustment(type: adjustment.type, target: adjustment.target,
+                                                 magnitude: adjustment.magnitude),
+            fromWeekIndex: fromWeek,
+            baseRevision: sp.revision)
+        do {
+            let result = try await api.applyAdjustment(request)
+            if let program = result.program {
+                serverProgram = program
+                writeWidgetData()
+            } else {
+                await loadProgram()
+            }
+            programSaveConflict = nil
+            return result.applied
+        } catch is APIClient.StaleProgramRevision {
+            await loadProgram()
+            programSaveConflict = "Your program changed elsewhere — reloaded. Apply the adjustment again if it still fits."
+            throw APIError.serverErrorDetail(409, "Your program changed elsewhere; it was reloaded.")
+        }
+    }
+
     func moveSession(weekIndex: Int, fromDay: String, toDay: String, sessionIndex: Int) {
-        guard var sp = serverProgram,
-              var program = sp.currentProgram else { return }
+        guard let sp = serverProgram,
+              let program = sp.currentProgram else { return }
         var weeks = program.weeks
         guard weekIndex < weeks.count else { return }
         var week = weeks[weekIndex]
@@ -439,15 +703,59 @@ final class AppState: ObservableObject {
         schedule[fromDay] = fromSessions
         schedule[toDay] = toSessions
         week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                           extra: week.extra)
         weeks[weekIndex] = week
-        program = GeneratedProgram(weeks: weeks)
-        sp = ServerProgram(currentProgram: program, programStartDate: sp.programStartDate,
-                           eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
-                           revision: sp.revision)
-        serverProgram = sp
-        writeWidgetData()
-        Task { try? await saveProgramToServer() }
+        commit(weeks: weeks, to: sp)
+    }
+
+    /// The methodologies the stored program was generated from, as catalog
+    /// cards, in the envelope's order; `_blended` is a marker, not a source.
+    /// Empty until the philosophies are loaded or when none match.
+    func programMethodologies() -> [PhilosophyCard] {
+        guard let ids = serverProgram?.sourceGoalIds else { return [] }
+        return ids.filter { $0 != "_blended" }.compactMap { id in philosophies.first { $0.id == id } }
+    }
+
+    /// The stored program's `constraints` object, kept in the envelope's extras.
+    var programConstraints: [String: JSONValue] {
+        if case .object(let o)? = serverProgram?.currentProgram?.extra["constraints"] { return o }
+        return [:]
+    }
+
+    /// Where the profile has moved on from what the program was built for.
+    var constraintDifferences: [ConstraintDifference] {
+        ProgramConstraintsDiff.differences(program: programConstraints, profile: profile)
+    }
+
+    /// Rebuild the remaining weeks from the current calendar week with the
+    /// profile's current settings, keeping the weeks already behind the
+    /// athlete; saved through the revision-checked PUT, so the old plan stays
+    /// in history. Returns how many weeks were regenerated.
+    @discardableResult
+    func regenerateFromCurrentWeek() async throws -> Int {
+        guard let api, let sp = serverProgram, let program = sp.currentProgram, !program.weeks.isEmpty else {
+            throw APIError.serverErrorDetail(400, "No program to regenerate")
+        }
+        let start = min(currentWeekIndex ?? 0, program.weeks.count - 1)
+        let remaining = program.weeks.count - start
+        let ids = sp.sourceGoalIds.filter { $0 != "_blended" }
+        guard !ids.isEmpty else {
+            throw APIError.serverErrorDetail(400, "This program has no methodology to regenerate from")
+        }
+        let week = program.weeks[start]
+        let constraints = ProgramConstraintsDiff.merged(program: programConstraints, profile: profile,
+                                                        weekInPhase: week.weekInPhase, phase: week.phase)
+        let request = GenerateProgramRequest(
+            philosophyId: ids.count == 1 ? ids[0] : nil,
+            philosophyIds: ids.count > 1 ? ids : nil,
+            philosophyWeights: ids.count > 1 ? sp.sourceGoalWeights : nil,
+            constraints: constraints, numWeeks: remaining, weekInProgram: start + 1,
+            startDate: nil, eventDate: sp.eventDate, persist: false)
+        let generated = try await api.generateProgramPreview(request)
+        let spliced = Regeneration.splice(current: program, from: start, generated: generated)
+        commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
+        return remaining
     }
 
     func saveProgramToServer() async throws {
@@ -457,14 +765,18 @@ final class AppState: ObservableObject {
             programStartDate: sp.programStartDate,
             eventDate: sp.eventDate,
             sourceGoalIds: sp.sourceGoalIds,
-            sourceGoalWeights: [:],
-            baseRevision: sp.revision
+            sourceGoalWeights: sp.sourceGoalWeights,
+            baseRevision: sp.revision,
+            extra: sp.extra
         )
         do {
             try await api.saveProgram(payload)
+            programSaveConflict = nil
         } catch is APIClient.StaleProgramRevision {
-            // Someone (the web) has newer work. Take theirs.
+            // Someone (the web) has newer work. Take theirs — and say so: the
+            // move or replace the user just made is not in the copy we reload.
             await loadProgram()
+            programSaveConflict = "Your program changed elsewhere — reloaded; your last edit was not saved."
         }
     }
 
@@ -551,31 +863,58 @@ final class AppState: ObservableObject {
         return results
     }
 
-    /// Parse a .fit file on-device and save the workout directly to Supabase.
-    /// No server round-trip required.
-    func parseFITFile(url: URL) async throws -> ImportedWorkout {
+    /// Upload a .fit file through `POST /workouts/parse` and re-read the list.
+    ///
+    /// This used to parse on-device and upsert straight into Supabase, which
+    /// skipped the server's dating, cross-source dedup and matcher — so a ride
+    /// the Garmin webhook had already delivered appeared twice. The server
+    /// may fold the upload into a row that was already there, under that
+    /// row's id; the workout handed back is the one the list now shows.
+    func importWorkoutFile(url: URL) async throws -> ImportedWorkout {
         guard let api else { throw APIError.unauthenticated }
         let accessed = url.startAccessingSecurityScopedResource()
         defer { if accessed { url.stopAccessingSecurityScopedResource() } }
         let data = try Data(contentsOf: url)
-        let (session, records) = try FITFileParser.parse(data: data)
-        let workout = FITFileParser.toImportedWorkout(session: session, records: records)
-        try await api.saveWorkoutDirect(workout)
-        // Add/update in local list (prepend if new, replace if existing)
-        if let idx = importedWorkouts.firstIndex(where: { $0.id == workout.id }) {
-            importedWorkouts[idx] = workout
-        } else {
-            importedWorkouts.insert(workout, at: 0)
+        let parsed = try await api.uploadFITFile(data: data, filename: url.lastPathComponent)
+        guard let uploaded = parsed.first else {
+            throw APIError.serverErrorDetail(422, "The file held no activity.")
         }
-        return workout
+        await loadWorkouts()
+        await loadMatchSuggestions()
+        return canonicalWorkout(for: uploaded) ?? uploaded
     }
 
-    /// Save match + mark session complete directly to Supabase.
+    /// The listed row an upload became: the same id, or — when the server
+    /// merged it into another source's copy — the row that starts within five
+    /// minutes of it on the same day, the dedup rule's own window.
+    func canonicalWorkout(for uploaded: ImportedWorkout) -> ImportedWorkout? {
+        if let exact = importedWorkouts.first(where: { $0.id == uploaded.id }) { return exact }
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let plain = ISO8601DateFormatter()
+        func parse(_ s: String?) -> Date? {
+            guard let s else { return nil }
+            return iso.date(from: s) ?? plain.date(from: s)
+        }
+        guard let start = parse(uploaded.startTime) else { return nil }
+        return importedWorkouts.first { candidate in
+            guard candidate.date == uploaded.date, let other = parse(candidate.startTime) else { return false }
+            return abs(other.timeIntervalSince(start)) <= 5 * 60
+        }
+    }
+
+    /// Link a recorded workout to a planned session and mark the session
+    /// complete, through the API (which also clears any suggestion for it).
     func matchAndComplete(workout: ImportedWorkout, sessionKey: String) async throws {
         guard let api else { throw APIError.unauthenticated }
-        try await api.saveMatchDirect(workout: workout, sessionKey: sessionKey)
         let completedAt = workout.startTime ?? ISO8601DateFormatter().string(from: Date())
-        // Optimistic local update
+        try await api.linkWorkout(workoutId: workout.id, sessionKey: sessionKey)
+        try await api.saveSessionWithWorkout(sessionKey: sessionKey, completedAt: completedAt,
+                                             workoutId: workout.id,
+                                             avgHR: workout.heartRate?.avg, peakHR: workout.heartRate?.max)
+        workoutMatches[workout.id] = WorkoutMatch(workoutId: workout.id, sessionKey: sessionKey,
+                                                  confidence: "manual")
+        matchSuggestions.removeAll { $0.importedWorkoutId == workout.id }
         sessionLogs[sessionKey] = SessionLogEntry(
             sessionKey: sessionKey,
             completedAt: completedAt,

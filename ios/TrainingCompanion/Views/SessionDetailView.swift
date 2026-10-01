@@ -8,15 +8,34 @@ struct SessionDetailView: View {
     var sessionIndex: Int? = nil
 
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
 
     @State private var notes: String = ""
-    @State private var fatigueRating: Double = 5
+    /// 1–5, the scale the server stores and WorkoutDetailView renders; the
+    /// slider used to run 1–10 and the server folded it, so "7" showed as "4/5".
+    @State private var fatigueRating: Double = 3
     @State private var showFatigue = false
     @State private var isSaving = false
     @State private var showMove = false
     @State private var showReplace = false
+    @State private var saveTask: Task<Void, Never>? = nil
+    @State private var exerciseSheet: ExerciseRowItem? = nil
+    @State private var swapTarget: SwapTarget? = nil
+    @State private var logTarget: ExerciseRowItem? = nil
+
+    /// A row's identity is its position plus the exercise: the same movement
+    /// can appear twice in a session, and a swap must animate only its row.
+    private struct ExerciseRowItem: Identifiable {
+        /// Position in the session's full `exercises` array — what a swap edits.
+        let index: Int
+        let assignment: ProgramExerciseAssignment
+        var id: String { "\(index)-\(assignment.exercise?.id ?? "slot")" }
+    }
+
+    private struct SwapTarget: Identifiable {
+        let exerciseIndex: Int
+        var id: Int { exerciseIndex }
+    }
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -65,9 +84,34 @@ struct SessionDetailView: View {
                         .environmentObject(appState)
                 }
             }
+            // The exercise reference (§6.14): what the movement is and how to
+            // do it, without leaving the session.
+            .sheet(item: $exerciseSheet) { item in
+                if let ex = item.assignment.exercise {
+                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
+                        .environmentObject(appState)
+                }
+            }
+            .sheet(item: $swapTarget) { target in
+                if let wi = weekIndex, let dn = dayName, let si = sessionIndex {
+                    SwapExerciseSheet(weekIndex: wi, dayName: dn, sessionIndex: si,
+                                      exerciseIndex: target.exerciseIndex)
+                        .environmentObject(appState)
+                }
+            }
+            // What was done (§6.16): sets for a sets × reps slot, the slot's
+            // currency for the rest — the inputs the web's loggers offer.
+            .sheet(item: $logTarget) { item in
+                ExerciseLogSheet(sessionKey: sessionKey, assignment: item.assignment)
+                    .environmentObject(appState)
+            }
             .task {
                 if let log = appState.sessionLogs[sessionKey] {
                     notes = log.notes ?? ""
+                    if let f = log.fatigueRating {
+                        fatigueRating = Double(min(max(f, 1), 5))
+                        showFatigue = true
+                    }
                 }
             }
         }
@@ -137,16 +181,87 @@ struct SessionDetailView: View {
     // MARK: - Exercises
 
     private var exercisesSection: some View {
-        let exercises = currentSession.exercises.filter { !$0.injurySkip && $0.exercise != nil }
-        return Section("Exercises") {
-            if exercises.isEmpty {
+        let rows = currentSession.exercises.enumerated()
+            .filter { !$0.element.injurySkip && $0.element.exercise != nil }
+            .map { ExerciseRowItem(index: $0.offset, assignment: $0.element) }
+        return Section {
+            if rows.isEmpty {
                 Text("No exercises").foregroundStyle(.secondary)
             } else {
-                ForEach(Array(exercises.enumerated()), id: \.offset) { _, ea in
-                    exerciseRow(ea)
+                ForEach(rows) { item in
+                    Button {
+                        AppHaptics.selection()
+                        exerciseSheet = item
+                    } label: {
+                        exerciseRow(item.assignment)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button {
+                            logTarget = item
+                        } label: {
+                            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
+                        }
+                        Button {
+                            exerciseSheet = item
+                        } label: {
+                            Label("About this exercise", systemImage: "info.circle")
+                        }
+                        if canSwap(item.assignment) {
+                            Button {
+                                swapTarget = SwapTarget(exerciseIndex: item.index)
+                            } label: {
+                                Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
+                            }
+                        }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                        Button {
+                            logTarget = item
+                        } label: {
+                            Label("Log", systemImage: "square.and.pencil")
+                        }
+                        .tint(.green)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        if canSwap(item.assignment) {
+                            Button {
+                                swapTarget = SwapTarget(exerciseIndex: item.index)
+                            } label: {
+                                Label("Swap", systemImage: "arrow.left.arrow.right")
+                            }
+                            .tint(.blue)
+                        }
+                    }
                 }
+                .animation(AppAnimation.layoutChange, value: rows.map(\.id))
+            }
+        } header: {
+            Text("Exercises")
+        } footer: {
+            if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
+                Text("Tap an exercise for cues and a demo. Swipe right to log what you did, left to swap it for an alternative that fits the same slot.")
+            } else if !rows.isEmpty {
+                Text("Tap an exercise for cues and a demo. Swipe right to log what you did.")
             }
         }
+    }
+
+    private func logLabel(_ ea: ProgramExerciseAssignment) -> String {
+        SessionLogging.logsSets(LoadFormat.resolvedSlotType(ea)) ? "Log sets" : "Log result"
+    }
+
+    /// "Logged: 3 sets · 5×80 kg" under the prescription, once there is one.
+    private func loggedSummary(_ ea: ProgramExerciseAssignment) -> String? {
+        guard let id = ea.exercise?.id,
+              let perf = appState.sessionLogs[sessionKey]?.exercises[id] else { return nil }
+        return SessionLogging.summary(perf, slotType: LoadFormat.resolvedSlotType(ea))
+    }
+
+    /// A swap needs the slot the exercise fills; a meta entry or a slot the
+    /// server did not name has nothing to rank alternatives for.
+    private func canSwap(_ ea: ProgramExerciseAssignment) -> Bool {
+        canEditProgram && currentSession.archetype != nil && ea.slotRole != nil && !ea.meta
     }
 
     private func exerciseRow(_ ea: ProgramExerciseAssignment) -> some View {
@@ -158,18 +273,27 @@ struct SessionDetailView: View {
                     .fontWeight(.medium)
                 Spacer()
                 if let slotType = ea.slotType {
-                    Text(slotTypeLabel(slotType))
+                    Text(LoadFormat.slotTypeLabel(slotType))
                         .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(.quaternary)
                         .clipShape(Capsule())
                 }
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             }
-            Text(formatLoad(ea))
+            Text(LoadFormat.describe(ea))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+            if let logged = loggedSummary(ea) {
+                Label(logged, systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                    .monospacedDigit()
+            }
             if let note = ea.notes ?? ex.notes {
                 Text(note)
                     .font(.caption)
@@ -178,6 +302,7 @@ struct SessionDetailView: View {
             }
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 
     // MARK: - Notes Section
@@ -195,11 +320,11 @@ struct SessionDetailView: View {
             if showFatigue {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("Fatigue: \(Int(fatigueRating))/10")
+                        Text("Fatigue: \(Int(fatigueRating))/5")
                         Spacer()
                     }
                     .font(.caption)
-                    Slider(value: $fatigueRating, in: 1...10, step: 1)
+                    Slider(value: $fatigueRating, in: 1...5, step: 1)
                         .onChange(of: fatigueRating) { _, _ in debouncedSaveNotes() }
                 }
             }
@@ -213,7 +338,7 @@ struct SessionDetailView: View {
             Task {
                 isSaving = true
                 if isDone {
-                    appState.undoSessionComplete(sessionKey: sessionKey)
+                    await appState.undoSessionComplete(sessionKey: sessionKey)
                 } else {
                     await appState.markSessionComplete(sessionKey: sessionKey)
                     AppHaptics.success()
@@ -247,77 +372,19 @@ struct SessionDetailView: View {
         return out.string(from: date)
     }
 
-    private func slotTypeLabel(_ slotType: String) -> String {
-        switch slotType {
-        case "sets_reps":     return "Sets × Reps"
-        case "time_domain":   return "Duration"
-        case "emom":          return "EMOM"
-        case "amrap":         return "AMRAP"
-        case "for_time":      return "For Time"
-        case "distance":      return "Distance"
-        case "static_hold":   return "Static Hold"
-        case "skill_practice":return "Skill"
-        default:              return slotType
-        }
-    }
-
-    private func resolvedSlotType(_ ea: ProgramExerciseAssignment) -> String {
-        let known = ["sets_reps", "time_domain", "skill_practice", "emom",
-                     "amrap", "amrap_movement", "for_time", "distance", "static_hold"]
-        if let st = ea.slotType, known.contains(st) { return st }
-        let load = ea.load
-        if load.distanceKm    != nil { return "distance" }
-        if load.holdSeconds   != nil { return "static_hold" }
-        if load.format        != nil { return "emom" }
-        if load.durationMinutes != nil { return "time_domain" }
-        if load.timeMinutes != nil && load.targetRounds != nil { return "amrap" }
-        if load.targetRounds  != nil { return "for_time" }
-        return "sets_reps"
-    }
-
-    private func formatLoad(_ ea: ProgramExerciseAssignment) -> String {
-        let load = ea.load
-        let slotType = resolvedSlotType(ea)
-        switch slotType {
-        case "sets_reps":
-            let sets = load.sets.map { "\($0)" } ?? "?"
-            let reps = load.reps?.displayString ?? "?"
-            if let kg = load.weightKg { return "\(sets)×\(reps) @ \(kg) kg" }
-            if let rpe = load.targetRpe { return "\(sets)×\(reps) @ RPE \(rpe)" }
-            return "\(sets)×\(reps)"
-        case "time_domain", "skill_practice":
-            if let min = load.durationMinutes {
-                return "\(min) min\(load.zoneTarget.map { " · \($0)" } ?? "")"
-            }
-            return "Duration TBD"
-        case "emom":
-            if let min = load.timeMinutes, let rounds = load.targetRounds {
-                return "\(min) min · \(rounds) rounds"
-            }
-            return load.format ?? "EMOM"
-        case "amrap":
-            return load.timeMinutes.map { "AMRAP \($0) min" } ?? "AMRAP"
-        case "for_time":
-            return load.targetRounds.map { "\($0) rounds for time" } ?? "For time"
-        case "distance":
-            return load.distanceKm.map { "\($0) km" } ?? "Distance"
-        case "static_hold":
-            let sets = load.sets.map { "\($0)×" } ?? ""
-            let secs = load.holdSeconds.map { "\($0)s" } ?? "?"
-            return "\(sets)\(secs) hold"
-        default:
-            return ""
-        }
-    }
-
+    /// One PUT per pause in typing, not one per keystroke: each change cancels
+    /// the pending save and waits 600 ms before sending the latest values.
     private func debouncedSaveNotes() {
-        // Save notes via the API on each change (idempotent PUT).
-        // In a production app this would be debounced to avoid rapid-fire API calls.
-        Task {
+        saveTask?.cancel()
+        let notesSnapshot = notes
+        let fatigue = showFatigue ? Int(fatigueRating) : nil
+        saveTask = Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
             try? await appState.api?.saveSessionNotes(
                 sessionKey: sessionKey,
-                notes: notes,
-                fatigueRating: showFatigue ? Int(fatigueRating) : nil
+                notes: notesSnapshot,
+                fatigueRating: fatigue
             )
         }
     }
