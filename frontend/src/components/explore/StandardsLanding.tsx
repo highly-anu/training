@@ -9,8 +9,13 @@ import type { BenchmarkStandard } from '@/api/types'
 const CATEGORY_LABEL: Record<BenchmarkStandard['category'], string> = {
   strength: 'Strength',
   conditioning: 'Conditioning',
+  kettlebell: 'Kettlebell pentathlon',
+  tactical: 'Ruck & PT tests',
+  benchmark_wod: 'Benchmark workouts',
+  skill: 'Movement & skill',
   cell: 'Cell standards',
 }
+const CATEGORY_ORDER = ['strength', 'conditioning', 'kettlebell', 'tactical', 'benchmark_wod', 'skill', 'cell'] as const
 
 /**
  * Explore ▸ Standards — the benchmark ladders the methodologies measure
@@ -23,7 +28,7 @@ export function StandardsLanding() {
 
   if (isLoading) return <div className="p-6"><LoadingCard /></div>
 
-  const categories = (['strength', 'conditioning', 'cell'] as const)
+  const categories = CATEGORY_ORDER
     .map((cat) => ({ cat, items: benchmarks.filter((b) => b.category === cat) }))
     .filter((g) => g.items.length > 0)
 

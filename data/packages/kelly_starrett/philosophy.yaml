@@ -10,9 +10,7 @@ core_principles:
   - motor_control_must_be_established_before_adding_load
 scope:
   - mobility
-  - durability
   - rehab
-  - max_strength
 bias:
   - mobility
   - rehab

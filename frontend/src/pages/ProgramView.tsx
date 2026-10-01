@@ -18,7 +18,6 @@ import { Separator } from '@/components/ui/separator'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
-import { useBuilderStore } from '@/store/builderStore'
 import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
@@ -57,20 +56,16 @@ export function ProgramView() {
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
-  const sourceMode = useBuilderStore((s) => s.sourceMode)
-  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds)
   const { data: philosophies } = usePhilosophies()
 
+  // The title is the STORED program's methodology. It used to read the
+  // builder's persisted selection, so browsing a philosophy in the builder
+  // (or landing there from Explore) renamed the program the athlete is on.
   const programTitle = (() => {
-    if (sourceMode === 'philosophy') {
-      const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-      return phil?.name ?? 'Training Program'
-    }
-    if (sourceMode === 'blend') {
-      const names = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)).map((p) => p.name) ?? []
-      return names.length > 0 ? names.join(' + ') : 'Blended Program'
-    }
-    if (sourceMode === 'custom') return 'Custom Program'
+    const ids = sourceGoalIds.filter((id) => id !== '_blended')
+    const names = philosophies?.filter((p) => ids.includes(p.id)).map((p) => p.name) ?? []
+    if (names.length > 0) return names.join(' + ')
     return program?.goal?.name ?? 'Training Program'
   })()
   const currentWeekData = program?.weeks[weekIndex]

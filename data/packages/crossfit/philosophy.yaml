@@ -10,13 +10,9 @@ core_principles:
   - benchmark_testing_tracks_adaptation
   - cfe_applies_cf_principles_to_monostructural_domains
 scope:
-  - max_strength
   - strength_endurance
-  - aerobic_base
   - anaerobic_intervals
   - mixed_modal_conditioning
-  - power
-  - relative_strength
 bias:
   - mixed_modal_conditioning
   - anaerobic_intervals

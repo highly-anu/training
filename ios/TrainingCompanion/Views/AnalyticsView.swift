@@ -4,10 +4,11 @@ import UniformTypeIdentifiers
 /// Internal rather than private: `AppRouter` names a section so another screen
 /// can send the user to one (the Dashboard's readiness card → Recovery).
 enum AnalyticsTab: Int, AppSubTab {
-    case overview, workouts, progress, recovery
+    case program, overview, workouts, progress, recovery
 
     var label: String {
         switch self {
+        case .program: return "Program"
         case .overview: return "Overview"
         case .workouts: return "Workouts"
         case .progress: return "Progress"
@@ -36,6 +37,9 @@ struct AnalyticsView: View {
 
                 AppSubTabContent(selection: $selectedSegment) { tab in
                     switch tab {
+                    case .program:
+                        AnalyticsProgramTab()
+                            .environmentObject(appState)
                     case .overview:
                         AnalyticsOverviewTab(period: $period)
                             .environmentObject(appState)

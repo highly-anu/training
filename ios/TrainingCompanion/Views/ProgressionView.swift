@@ -165,31 +165,25 @@ struct ProgressionView: View {
 
     // MARK: - Adjustments section
 
+    /// The review's adjustments were advice nothing could act on. The ones the
+    /// server can apply edit the stored program from the current week on, under
+    /// the revision check, and this copy is replaced with what was saved.
     private func adjustmentsSection(adjustments: [ProgressionAdjustment]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("Suggested Adjustments")
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 ForEach(adjustments) { adj in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                            .frame(width: 16)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(adj.target.capitalized)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.orange)
-                            Text(adj.reason)
-                                .font(.subheadline)
-                                .foregroundStyle(.primary)
-                        }
-                    }
+                    AdjustmentRow(adjustment: adj)
                 }
             }
-            .padding(12)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            if let conflict = appState.programSaveConflict {
+                Label(conflict, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+            Text("Applied to the stored program from this week on; the web sees the same change.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
     }
 
@@ -247,12 +241,7 @@ struct ProgressionView: View {
     }
 
     private func statusColor(_ status: String) -> Color {
-        switch status {
-        case "ahead", "on_track": return .green
-        case "behind":            return .yellow
-        case "stalled":           return .red
-        default:                  return .secondary
-        }
+        AnalyticsStatusStyle.color(status)
     }
 
     private func statusIcon(_ status: String) -> String {
@@ -269,5 +258,87 @@ struct ProgressionView: View {
         v.truncatingRemainder(dividingBy: 1) == 0
             ? String(Int(v))
             : String(format: "%.1f", v)
+    }
+}
+
+/// One suggested adjustment and, where the server can apply it, the button
+/// that does. Owns its own in-flight and outcome state so one tap never
+/// blocks the others.
+private struct AdjustmentRow: View {
+    let adjustment: ProgressionAdjustment
+
+    @EnvironmentObject var appState: AppState
+    @State private var isApplying = false
+    @State private var applied = false
+    @State private var outcome: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: adjustment.isAppliable ? "slider.horizontal.3" : "lightbulb")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .frame(width: 16)
+                    .padding(.top, 2)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(adjustment.label)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        if let target = adjustment.targetLabel {
+                            Text("· \(target)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    Text(adjustment.reason)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                }
+                Spacer(minLength: 8)
+                if adjustment.isAppliable {
+                    Button {
+                        Task { await apply() }
+                    } label: {
+                        if isApplying {
+                            ProgressView().scaleEffect(0.8)
+                        } else {
+                            Text(applied ? "Applied" : "Apply")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(applied ? .green : .orange)
+                    .disabled(isApplying || applied)
+                } else {
+                    Text("advice")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            if let outcome {
+                Text(outcome)
+                    .font(.caption)
+                    .foregroundStyle(applied ? Color.green : Color.orange)
+            }
+        }
+        .padding(12)
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func apply() async {
+        isApplying = true
+        defer { isApplying = false }
+        do {
+            let result = try await appState.applyAdjustment(adjustment)
+            applied = true
+            AppHaptics.success()
+            outcome = result.summary { appState.allWeeks[safe: $0]?.weekNumber }
+        } catch {
+            outcome = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
     }
 }

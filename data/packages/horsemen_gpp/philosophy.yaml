@@ -13,11 +13,8 @@ scope:
   - max_strength
   - strength_endurance
   - aerobic_base
-  - anaerobic_intervals
   - mixed_modal_conditioning
-  - power
   - durability
-  - relative_strength
 bias:
   - durability
   - strength_endurance

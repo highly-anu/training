@@ -110,23 +110,29 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    /// Store workouts the watch recorded (`WatchUpload.workoutPayload`). No
+    /// `autoMatch`: the watch knows which session it ran, and the match is
+    /// posted explicitly with `saveWorkoutMatch`. The server recomputes
+    /// elevation from the track and folds duplicates from other sources.
     func saveWatchWorkouts(_ workouts: [[String: Any]]) async throws {
-        guard let body = try? JSONSerialization.data(withJSONObject: ["workouts": workouts]) else { return }
+        let body = try JSONSerialization.data(withJSONObject: ["workouts": workouts])
         _ = try await postRaw("/health/workouts", body: body)
     }
 
+    /// `POST /health/matches` with a `WatchUpload.matchPayload`.
     func saveWorkoutMatch(_ match: [String: Any]) async throws {
-        guard let body = try? JSONSerialization.data(withJSONObject: match) else { return }
+        let body = try JSONSerialization.data(withJSONObject: match)
         _ = try await postRaw("/health/matches", body: body)
     }
 
     /// Upload automatically imported workouts.
     ///
-    /// Goes through Flask rather than `saveWorkoutDirect`'s Supabase REST call
-    /// on purpose: this endpoint recomputes elevation from the GPS track,
-    /// folds together copies of the same activity from other sources, and runs
-    /// the server-side matcher. Writing straight to Supabase skips all three —
-    /// and this app has no matcher of its own.
+    /// Goes through Flask rather than a Supabase REST upsert on purpose: this
+    /// endpoint recomputes elevation from the GPS track, folds together copies
+    /// of the same activity from other sources, and runs the server-side
+    /// matcher. Writing straight to Supabase skips all three — and this app
+    /// has no matcher of its own. (The .fit import used to do exactly that;
+    /// it goes through `uploadFITFile` now.)
     @discardableResult
     func saveImportedWorkouts(_ workouts: [ImportedWorkout]) async throws -> Int {
         guard !workouts.isEmpty else { return 0 }
@@ -162,10 +168,7 @@ final class APIClient {
     }
 
     func fetchPerformanceLogs() async throws -> [String: [PerformanceEntry]] {
-        let data = try await get("/health/snapshot")
-        struct Snapshot: Decodable { let performanceLogs: [String: [PerformanceEntry]]? }
-        let snapshot = try JSONDecoder().decode(Snapshot.self, from: data)
-        return snapshot.performanceLogs ?? [:]
+        try await fetchHealthSnapshot().performanceLogs
     }
 
     /// Logs a benchmark value — a PR, or the `bodyweight_kg` series the ×BW
@@ -310,466 +313,187 @@ final class APIClient {
         _ = try await postRaw("/programs/generate", body: body)
     }
 
-    // MARK: - Direct Supabase writes (bypasses Python backend for .fit import)
+    // MARK: - Workout file import
 
-    private static let supabaseURL = AuthManager.supabaseURL
-    private static let anonKey     = AuthManager.supabaseAnonKey
-
-    /// Decode the user ID from the JWT `sub` claim.
-    var userId: String? {
-        guard let token = auth.accessToken else { return nil }
-        let parts = token.split(separator: ".")
-        guard parts.count == 3 else { return nil }
-        var b64 = String(parts[1])
-        b64 = b64.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        let pad = (4 - b64.count % 4) % 4
-        b64 += String(repeating: "=", count: pad)
-        guard let d = Data(base64Encoded: b64),
-              let json = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return nil }
-        return json["sub"] as? String
-    }
-
-    /// Upsert a workout row directly to Supabase (no server round-trip).
-    func saveWorkoutDirect(_ workout: ImportedWorkout) async throws {
-        guard let uid = userId else { throw APIError.unauthenticated }
-
-        var row: [String: Any] = [
-            "id":            workout.id,
-            "user_id":       uid,
-            "source":        workout.source,
-            "date":          workout.date,
-            "activity_type": workout.activityType,
-        ]
-        if let s = workout.startTime {
-            row["start_time"] = s
-            if let d = workout.durationMinutes {
-                let isoFmt = DateFormatter()
-                isoFmt.dateFormat = "yyyy-MM-dd'T'HH:mm:ssxxx"
-                isoFmt.timeZone = TimeZone(identifier: "UTC")
-                if let startDate = isoFmt.date(from: s) {
-                    let endDate = startDate.addingTimeInterval(d * 60)
-                    row["end_time"] = isoFmt.string(from: endDate)
-                }
-            }
-        }
-        if let d = workout.durationMinutes    { row["duration_minutes"]     = Int(d.rounded()) }
-        if let m = workout.inferredModalityId { row["inferred_modality_id"] = m }
-        if let c = workout.calories           { row["calories"]             = Int(c) }
-        if let hr = workout.heartRate {
-            if let avg = hr.avg { row["hr_avg"] = avg }
-            if let max = hr.max { row["hr_max"] = max }
-            // jsonb column — send as array of objects, not a string
-            if !hr.samples.isEmpty {
-                row["hr_samples"] = hr.samples.map { ["timestamp": $0.timestamp, "bpm": $0.bpm] }
-            }
-        }
-        if let dist = workout.distance {
-            row["distance_value"] = dist.value
-            row["distance_unit"]  = dist.unit
-        }
-        if let elev = workout.elevation {
-            if let g = elev.gain { row["elevation_gain"] = Int(g.rounded()) }
-            if let l = elev.loss { row["elevation_loss"] = Int(l.rounded()) }
-        }
-        if let gps = workout.gpsTrack {
-            // jsonb column — send as array of objects, not a string
-            row["gps_track"] = gps.map { pt -> [String: Any] in
-                var d: [String: Any] = ["lat": pt.lat, "lng": pt.lng, "timestamp": pt.timestamp]
-                if let a = pt.altitude { d["altitude"] = a }
-                if let b = pt.bpm     { d["bpm"] = b }
-                if let s = pt.speed   { d["speed"] = s }
-                return d
-            }
-        }
-
-        try await supabaseUpsert(table: "workouts", onConflict: "id,user_id", body: row)
-    }
-
-    /// Save match + mark session complete directly to Supabase.
-    func saveMatchDirect(workout: ImportedWorkout, sessionKey: String) async throws {
-        guard let uid = userId else { throw APIError.unauthenticated }
-
-        let now = ISO8601DateFormatter().string(from: Date())
-        let completedAt = workout.startTime ?? now
-
-        // 1. workout_matches
-        let matchRow: [String: Any] = [
-            "imported_workout_id": workout.id,
-            "user_id":             uid,
-            "session_key":         sessionKey,
-            "match_confidence":    1.0,
-            "matched_at":          now,
-        ]
-        try await supabaseUpsert(table: "workout_matches",
-                                 onConflict: "imported_workout_id,user_id", body: matchRow)
-
-        // 2. session_logs — exercises is jsonb, send as object not string
-        var logRow: [String: Any] = [
-            "session_key":  sessionKey,
-            "user_id":      uid,
-            "completed_at": completedAt,
-            "source":       "fit_file",
-            "exercises":    [String: Any](),  // empty jsonb object
-        ]
-        if let avg = workout.heartRate?.avg { logRow["avg_hr"]  = avg }
-        if let max = workout.heartRate?.max { logRow["peak_hr"] = max }
-        try await supabaseUpsert(table: "session_logs",
-                                 onConflict: "session_key,user_id", body: logRow)
-    }
-
-    /// Save a watch workout dict directly to Supabase (maps camelCase keys → snake_case columns).
-    /// Called from WatchSessionManager so Flask doesn't need to be running.
-    func saveWatchWorkoutDirect(_ w: [String: Any]) async throws {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        var row: [String: Any] = [
-            "id":            w["id"] as? String ?? "",
-            "user_id":       uid,
-            "source":        w["source"] as? String ?? "watch",
-            "date":          w["date"] as? String ?? "",
-            "activity_type": w["activityType"] as? String ?? "watch",
-        ]
-        if let m = w["inferredModalityId"] as? String { row["inferred_modality_id"] = m }
-        if let s = w["startTime"]       as? String { row["start_time"]       = s }
-        if let e = w["endTime"]         as? String { row["end_time"]         = e }
-        if let d = w["durationMinutes"] as? Int        { row["duration_minutes"] = d }
-        else if let d = w["durationMinutes"] as? Double { row["duration_minutes"] = Int(d.rounded()) }
-        if let c = w["calories"]        as? Double { row["calories"]         = Int(c) }
-        if let c = w["calories"]        as? Int    { row["calories"]         = c }
-        if let hr = w["heartRate"] as? [String: Any] {
-            if let avg     = hr["avg"]     as? Int  { row["hr_avg"] = avg }
-            if let mx      = hr["max"]     as? Int  { row["hr_max"] = mx }
-            if let samples = hr["samples"] as? [[String: Any]], !samples.isEmpty {
-                row["hr_samples"] = samples
-            }
-        }
-        if let dist = w["distance"] as? [String: Any] {
-            if let v = dist["value"] as? Double { row["distance_value"] = v }
-            if let u = dist["unit"]  as? String { row["distance_unit"]  = u }
-        }
-        if let elev = w["elevation"] as? [String: Any] {
-            if let g = elev["gain"] as? Int { row["elevation_gain"] = g }
-            if let l = elev["loss"] as? Int { row["elevation_loss"] = l }
-        }
-        if let gps = w["gpsTrack"] as? [[String: Any]], !gps.isEmpty {
-            row["gps_track"] = gps
-        }
-        try await supabaseUpsert(table: "workouts", onConflict: "id,user_id", body: row)
-    }
-
-    /// Save a watch workout_match + session_log row directly to Supabase.
-    func saveWatchMatchDirect(workoutId: String, sessionKey: String, startTime: String,
-                               avgHR: Int?, peakHR: Int?, exercises: [String: Any]) async throws {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        let now = ISO8601DateFormatter().string(from: Date())
-
-        let matchRow: [String: Any] = [
-            "imported_workout_id": workoutId,
-            "user_id":             uid,
-            "session_key":         sessionKey,
-            "match_confidence":    "manual",
-            "matched_at":          now,
-        ]
-        try await supabaseUpsert(table: "workout_matches",
-                                 onConflict: "imported_workout_id,user_id", body: matchRow)
-
-        var logRow: [String: Any] = [
-            "session_key":  sessionKey,
-            "user_id":      uid,
-            "completed_at": startTime,
-            "source":       "watch",
-            "exercises":    exercises,
-        ]
-        if let avg  = avgHR  { logRow["avg_hr"]  = avg }
-        if let peak = peakHR { logRow["peak_hr"] = peak }
-        try await supabaseUpsert(table: "session_logs",
-                                 onConflict: "session_key,user_id", body: logRow)
-    }
-
-    private func supabaseUpsert(table: String, onConflict: String, body: [String: Any]) async throws {
-        let urlStr = "\(APIClient.supabaseURL)/rest/v1/\(table)?on_conflict=\(onConflict)"
-        guard let url = URL(string: urlStr) else { throw APIError.decodingError }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("resolution=merge-duplicates,return=minimal", forHTTPHeaderField: "Prefer")
-        let bodyData = try JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
-        request.httpBody = bodyData
-        print("⬆️ supabaseUpsert \(table) body:\n\(String(data: bodyData, encoding: .utf8) ?? "(nil)")")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            let bodyStr = String(data: data, encoding: .utf8) ?? "(no body)"
-            print("❌ supabaseUpsert \(table) → \(http.statusCode): \(bodyStr)")
-            throw APIError.serverErrorDetail(http.statusCode, bodyStr)
-        }
-    }
-
-    // MARK: - FIT File Import
-
-    /// Upload a .fit file via multipart POST /workouts/parse.
-    /// Returns the first parsed workout (saved to DB by the server).
-    func uploadFITFile(data: Data, filename: String) async throws -> ImportedWorkout {
+    /// Upload a .fit file through `POST /workouts/parse` — the same path the
+    /// web uses. The server parses, dates the activity by the athlete's zone,
+    /// folds duplicates from other sources into the row already there and runs
+    /// the matcher; the on-device parser plus a raw Supabase upsert skipped
+    /// all of that. Returns every activity the file held (a FIT file holds
+    /// one). The server's async job accepts only Apple Health XML, so a FIT
+    /// upload is always synchronous; the timeout covers a long GPS track.
+    func uploadFITFile(data: Data, filename: String) async throws -> [ImportedWorkout] {
         let boundary = UUID().uuidString
         let url = URL(string: APIClient.baseURL + "/workouts/parse")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 300
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         try await addAuth(to: &request)
         request.httpBody = multipartBody(data: data, filename: filename, mimeType: "application/octet-stream", boundary: boundary)
         let (responseData, response) = try await URLSession.shared.data(for: request)
-        try validateStatus(response)
-        let decoder = JSONDecoder()
-        let workouts = try decoder.decode([ImportedWorkout].self, from: responseData)
-        guard let first = workouts.first else { throw APIError.decodingError }
-        return first
-    }
-
-    /// Fetch full workout details (GPS track + HR samples) directly from Supabase.
-    func fetchWorkout(id: String) async throws -> ImportedWorkout {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        let urlStr = "\(APIClient.supabaseURL)/rest/v1/workouts?id=eq.\(id)&user_id=eq.\(uid)&select=*"
-        guard let url = URL(string: urlStr) else { throw APIError.decodingError }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw APIError.serverError(http.statusCode)
+            throw APIError.serverErrorDetail(http.statusCode, Self.detail(from: responseData) ?? "Upload failed")
         }
-        // Supabase returns an array even for single-row queries
-        let rows = try JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
-        guard let row = rows.first else { throw APIError.decodingError }
-        return try workoutFromSupabaseRow(row)
+        return try JSONDecoder().decode([ImportedWorkout].self, from: responseData)
     }
 
-    private enum SupabaseValue: Decodable {
-        case string(String), int(Int), double(Double), bool(Bool)
-        case array([[String: SupabaseValue]]), dict([String: SupabaseValue]), null
+    /// Link a recorded workout to a planned session. Deciding a workout this
+    /// way also clears any suggestion the server had for it.
+    func linkWorkout(workoutId: String, sessionKey: String) async throws {
+        struct Body: Encodable {
+            let importedWorkoutId: String
+            let sessionKey: String
+            let matchConfidence: String
+            let matchedAt: String
+        }
+        let body = try JSONEncoder().encode(Body(importedWorkoutId: workoutId, sessionKey: sessionKey,
+                                                 matchConfidence: "manual",
+                                                 matchedAt: ISO8601DateFormatter().string(from: Date())))
+        _ = try await postRaw("/health/matches", body: body)
+    }
+
+    // MARK: - Program analytics (the methodology scorecard, server-computed)
+
+    /// How the athlete is doing against what the program is for. The server
+    /// caches the document by program revision and log digest; `fresh` forces
+    /// a recompute.
+    func fetchProgramAnalytics(fresh: Bool = false) async throws -> ProgramAnalytics {
+        let data = try await get(fresh ? "/analytics/program?fresh=1" : "/analytics/program")
+        return try JSONDecoder().decode(ProgramAnalytics.self, from: data)
+    }
+
+    // MARK: - Training load (server-computed, the same numbers the web shows)
+
+    func fetchLoadPMC() async throws -> [ServerPMCEntry] {
+        let data = try await get("/health/load/pmc")
+        return try JSONDecoder().decode([ServerPMCEntry].self, from: data)
+    }
+
+    func fetchLoadWeekly() async throws -> [ServerWeeklyLoadEntry] {
+        let data = try await get("/health/load/weekly")
+        return try JSONDecoder().decode([ServerWeeklyLoadEntry].self, from: data)
+    }
+
+    // MARK: - Exercise reference
+
+    /// The package's media for one exercise: demo, description, cues, errors.
+    /// An exercise without media answers `{}`, which decodes to an empty entry.
+    func fetchExerciseMedia(id: String) async throws -> ExerciseMedia? {
+        let escaped = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let data = try await get("/exercises/\(escaped)/media")
+        let media = try JSONDecoder().decode(ExerciseMedia.self, from: data)
+        return media.isEmpty ? nil : media
+    }
+
+    // MARK: - Program editing
+
+    /// Ranked alternatives for one slot. 422 — nothing fits — is an empty
+    /// list with the server's reason, not an error.
+    func substituteExercise(_ request: SubstituteRequest) async throws -> [ExerciseAlternative] {
+        let body = try JSONEncoder().encode(request)
+        let (data, status) = try await postForStatus("/exercises/substitute", body: body)
+        switch status {
+        case 200..<300:
+            return try JSONDecoder().decode(SubstituteResponse.self, from: data).alternatives
+        case 422:
+            return []
+        default:
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not find alternatives")
+        }
+    }
+
+    /// Apply one of the review's adjustments to the stored weeks. 409 means
+    /// the stored program moved on since this copy was read — the same
+    /// contract as `saveProgram`.
+    func applyAdjustment(_ request: AdjustRequest) async throws -> AdjustResult {
+        let body = try JSONEncoder().encode(request)
+        let (data, status) = try await postForStatus("/programs/adjust", body: body)
+        switch status {
+        case 200..<300:
+            return try JSONDecoder().decode(AdjustResult.self, from: data)
+        case 409:
+            AppLogger.shared.logFromBackground("program: adjust rejected (stale revision) — re-pulling")
+            throw StaleProgramRevision()
+        default:
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not apply the adjustment")
+        }
+    }
+
+    /// The `detail` string the API puts in an error body, when there is one.
+    private static func detail(from data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let detail = json["detail"] as? String, !detail.isEmpty else { return nil }
+        return detail
+    }
+
+    // MARK: - Workouts (the server's list, detail, matches and delete)
+
+    /// What `GET /health/snapshot` carries that this app reads. Workouts are
+    /// summaries — no track, no samples — the detail is fetched on demand.
+    struct HealthSnapshot: Decodable {
+        let workouts: [ImportedWorkout]
+        let matches: [WorkoutMatchRecord]
+        let performanceLogs: [String: [PerformanceEntry]]
 
         init(from decoder: Decoder) throws {
-            let c = try decoder.singleValueContainer()
-            if c.decodeNil()                               { self = .null; return }
-            if let v = try? c.decode(Bool.self)            { self = .bool(v); return }
-            if let v = try? c.decode(Int.self)             { self = .int(v); return }
-            if let v = try? c.decode(Double.self)          { self = .double(v); return }
-            if let v = try? c.decode(String.self)          { self = .string(v); return }
-            if let v = try? c.decode([[String: SupabaseValue]].self) { self = .array(v); return }
-            if let v = try? c.decode([String: SupabaseValue].self)   { self = .dict(v); return }
-            self = .null
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            // One malformed row must not blank the whole list.
+            workouts = ((try? c.decodeIfPresent([Lossy<ImportedWorkout>].self, forKey: .workouts)) ?? [])?
+                .compactMap(\.value) ?? []
+            matches = ((try? c.decodeIfPresent([Lossy<WorkoutMatchRecord>].self, forKey: .matches)) ?? [])?
+                .compactMap(\.value) ?? []
+            performanceLogs = (try? c.decodeIfPresent([String: [PerformanceEntry]].self, forKey: .performanceLogs)) ?? [:]
         }
 
-        var stringValue: String?  { if case .string(let s) = self { return s }; return nil }
-        var intValue:    Int?     { if case .int(let i) = self { return i }; if case .double(let d) = self { return Int(d) }; return nil }
-        var doubleValue: Double?  { if case .double(let d) = self { return d }; if case .int(let i) = self { return Double(i) }; return nil }
-        var dictValue:   [String: SupabaseValue]? { if case .dict(let d) = self { return d }; return nil }
-        var arrayValue:  [[String: SupabaseValue]]? { if case .array(let a) = self { return a }; return nil }
+        private enum CodingKeys: String, CodingKey { case workouts, matches, performanceLogs }
     }
 
-    /// Parse a SupabaseValue that may be either a native JSONB array or a JSON-encoded string.
-    /// Supabase/Flask sometimes stores jsonb columns as text (stringified JSON), so we handle both.
-    private func supabaseArray(_ val: SupabaseValue?) -> [[String: SupabaseValue]]? {
-        if let arr = val?.arrayValue { return arr }
-        guard let str = val?.stringValue,
-              let data = str.data(using: .utf8),
-              let arr = try? JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
-        else { return nil }
-        return arr
+    /// The server's view of the athlete's recorded training. This app used to
+    /// read `workouts` and `workout_matches` straight from PostgREST, with its
+    /// own `canonical_id` filter and column-by-column decoding; the server
+    /// list applies the dedup filter itself and speaks the same camelCase
+    /// shape every other client reads.
+    func fetchHealthSnapshot() async throws -> HealthSnapshot {
+        let data = try await get("/health/snapshot")
+        return try JSONDecoder().decode(HealthSnapshot.self, from: data)
     }
 
-    private func workoutFromSupabaseRow(_ row: [String: SupabaseValue]) throws -> ImportedWorkout {
-        guard let id   = row["id"]?.stringValue,
-              let src  = row["source"]?.stringValue,
-              let date = row["date"]?.stringValue,
-              let type = row["activity_type"]?.stringValue
-        else { throw APIError.decodingError }
-
-        let hrAvg  = row["hr_avg"]?.intValue
-        let hrMax  = row["hr_max"]?.intValue
-
-        // hr_samples: may be a native JSONB array or a JSON-encoded string
-        let hrSamples: [HRSample] = (supabaseArray(row["hr_samples"]) ?? []).compactMap { s in
-            guard let ts = s["timestamp"]?.stringValue, let bpm = s["bpm"]?.intValue else { return nil }
-            return HRSample(timestamp: ts, bpm: bpm)
-        }
-
-        // gps_track: may be a native JSONB array or a JSON-encoded string
-        let gpsTrack: [GPSPoint]? = supabaseArray(row["gps_track"]).map { pts in
-            pts.compactMap { p -> GPSPoint? in
-                guard let lat = p["lat"]?.doubleValue, let lng = p["lng"]?.doubleValue,
-                      let ts = p["timestamp"]?.stringValue else { return nil }
-                return GPSPoint(lat: lat, lng: lng, altitude: p["altitude"]?.doubleValue,
-                                timestamp: ts, bpm: p["bpm"]?.intValue,
-                                speed: p["speed"]?.doubleValue)
-            }
-        }.flatMap { $0.isEmpty ? nil : $0 }
-
-        let dist: WorkoutDistance? = {
-            guard let v = row["distance_value"]?.doubleValue else { return nil }
-            return WorkoutDistance(value: v, unit: row["distance_unit"]?.stringValue ?? "km")
-        }()
-
-        let elev: WorkoutElevation? = {
-            let g = row["elevation_gain"]?.doubleValue
-            let l = row["elevation_loss"]?.doubleValue
-            guard g != nil || l != nil else { return nil }
-            return WorkoutElevation(gain: g, loss: l)
-        }()
-
-        return ImportedWorkout(
-            id: id,
-            source: src,
-            date: date,
-            startTime: row["start_time"]?.stringValue,
-            endTime: row["end_time"]?.stringValue,
-            durationMinutes: row["duration_minutes"]?.doubleValue,
-            activityType: type,
-            inferredModalityId: row["inferred_modality_id"]?.stringValue,
-            heartRate: WorkoutHRData(avg: hrAvg, max: hrMax, samples: hrSamples),
-            calories: row["calories"]?.doubleValue,
-            distance: dist,
-            gpsTrack: gpsTrack,
-            elevation: elev
-        )
-    }
-
-    /// Fetch all workouts for the current user directly from Supabase.
-    /// Set once a request proves whether this database has been migrated for
-    /// dedup, so an un-migrated database costs one extra request per launch
-    /// rather than one per refresh.
-    private static var canonicalIdSupported: Bool? = nil
-
+    /// Workout summaries — GPS track and HR samples are loaded on demand by
+    /// `fetchWorkout(id:)`. Rows dedup folded into another source's copy are
+    /// already hidden by the server.
     func fetchWorkouts() async throws -> [ImportedWorkout] {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        // Fetch metadata only — GPS track and HR samples are loaded on demand in the detail sheet.
-        // Fetching select=* for large GPS tracks causes payload timeouts that silently drop the list.
-        let cols = "id,source,date,start_time,end_time,duration_minutes,activity_type,inferred_modality_id,hr_avg,hr_max,calories,distance_value,distance_unit,elevation_gain,elevation_loss"
-
-        // canonical_id IS NULL hides rows folded into another source's copy of
-        // the same activity — the same filter the server list applies
-        // (src/health_store.py). Without it the phone shows duplicates the web
-        // does not. Older databases predate the column and PostgREST answers
-        // 400 for it, so fall back once and say so rather than showing an
-        // empty list.
-        var data: Data
-        if APIClient.canonicalIdSupported != false {
-            do {
-                data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: true)
-                APIClient.canonicalIdSupported = true
-            } catch APIError.serverError(400) {
-                APIClient.canonicalIdSupported = false
-                AppLogger.shared.log("workouts: canonical_id unavailable — showing unmerged list")
-                data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: false)
-            }
-        } else {
-            data = try await fetchWorkoutRows(uid: uid, cols: cols, dedupedOnly: false)
-        }
-
-        let rows = try JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
-        print("📋 fetchWorkouts: \(rows.count) rows from Supabase")
-        let decoded = rows.compactMap { row -> ImportedWorkout? in
-            do { return try workoutFromSupabaseRow(row) }
-            catch { print("⚠️ workoutFromSupabaseRow dropped row \(row["id"]?.stringValue ?? "?"): \(error)"); return nil }
-        }
-        print("📋 fetchWorkouts: \(decoded.count) decoded successfully")
-        return decoded
+        try await fetchHealthSnapshot().workouts
     }
 
-    private func fetchWorkoutRows(uid: String, cols: String, dedupedOnly: Bool) async throws -> Data {
-        var urlStr = "\(APIClient.supabaseURL)/rest/v1/workouts?user_id=eq.\(uid)"
-            + "&select=\(cols)&order=date.desc,start_time.desc"
-        if dedupedOnly { urlStr += "&canonical_id=is.null" }
-        guard let url = URL(string: urlStr) else { throw APIError.decodingError }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw APIError.serverError(http.statusCode)
-        }
-        return data
-    }
-
-    /// Every confirmed match for this athlete, keyed by imported workout id.
-    ///
-    /// Read from `workout_matches` rather than inferred from `session_logs`:
-    /// the server-side matcher writes only `workout_matches`, so a workout it
-    /// matched automatically had no session log and therefore read as
-    /// unmatched on the phone while the web showed it linked.
+    /// Workout → planned session, keyed by workout id; a rejected decision is
+    /// not a match. Read from `workout_matches` (not inferred from session
+    /// logs): the server-side matcher writes only that table, so an
+    /// auto-matched workout has no log and would read as unmatched.
     func fetchWorkoutMatches() async throws -> [String: WorkoutMatch] {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        let urlStr = "\(APIClient.supabaseURL)/rest/v1/workout_matches?user_id=eq.\(uid)"
-            + "&select=imported_workout_id,session_key,match_confidence"
-        guard let url = URL(string: urlStr) else { throw APIError.decodingError }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw APIError.serverError(http.statusCode)
-        }
-        let rows = try JSONDecoder().decode([[String: SupabaseValue]].self, from: data)
+        Self.matchesByWorkout(try await fetchHealthSnapshot().matches)
+    }
 
+    static func matchesByWorkout(_ records: [WorkoutMatchRecord]) -> [String: WorkoutMatch] {
         var result: [String: WorkoutMatch] = [:]
-        for row in rows {
-            guard let workoutId = row["imported_workout_id"]?.stringValue,
-                  let sessionKey = row["session_key"]?.stringValue else { continue }
-            // The writers disagree on this column's type — this app has written
-            // the number 1.0 and the string "manual", the server writes "auto"
-            // — so read either and compare only against "rejected".
-            let confidence = row["match_confidence"]?.stringValue
-                ?? row["match_confidence"]?.doubleValue.map { String($0) }
-                ?? ""
-            guard confidence != "rejected" else { continue }
-            result[workoutId] = WorkoutMatch(workoutId: workoutId,
-                                             sessionKey: sessionKey,
-                                             confidence: confidence)
+        for record in records {
+            guard let match = record.asMatch else { continue }
+            result[match.workoutId] = match
         }
         return result
     }
 
-    /// Delete a workout (and its match) directly from Supabase.
-    func deleteWorkout(id: String) async throws {
-        guard let uid = userId else { throw APIError.unauthenticated }
-        // Delete match first (no cascade in all environments)
-        let matchURL = "\(APIClient.supabaseURL)/rest/v1/workout_matches?imported_workout_id=eq.\(id)&user_id=eq.\(uid)"
-        try await supabaseDelete(urlStr: matchURL)
-        // Then delete the workout row
-        let workoutURL = "\(APIClient.supabaseURL)/rest/v1/workouts?id=eq.\(id)&user_id=eq.\(uid)"
-        try await supabaseDelete(urlStr: workoutURL)
-        // Clear matched_workout_id on any session_log that references this workout
-        let logPatch: [String: Any?] = ["matched_workout_id": nil]
-        let patchURL = "\(APIClient.supabaseURL)/rest/v1/session_logs?matched_workout_id=eq.\(id)&user_id=eq.\(uid)"
-        if let body = try? JSONSerialization.data(withJSONObject: logPatch) {
-            var req = URLRequest(url: URL(string: patchURL)!)
-            req.httpMethod = "PATCH"
-            req.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-            req.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            req.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-            req.httpBody = body
-            _ = try? await URLSession.shared.data(for: req)
-        }
+    /// The full workout: GPS track, HR samples, elevation.
+    func fetchWorkout(id: String) async throws -> ImportedWorkout {
+        let escaped = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        let data = try await get("/health/workouts/\(escaped)")
+        return try JSONDecoder().decode(ImportedWorkout.self, from: data)
     }
 
-    private func supabaseDelete(urlStr: String) async throws {
-        guard let url = URL(string: urlStr) else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue(APIClient.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(auth.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            let body = String(data: data, encoding: .utf8) ?? ""
-            throw APIError.serverErrorDetail(http.statusCode, body)
-        }
+    /// Delete a workout; the server removes its match with it.
+    func deleteWorkout(id: String) async throws {
+        let escaped = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+        _ = try await deleteRaw("/health/workouts/\(escaped)")
     }
 
     /// Mark a session complete with workout HR data and link to imported workout.
@@ -879,6 +603,19 @@ final class APIClient {
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)
         return data
+    }
+
+    /// Like `postRaw`, but returns the status instead of throwing on it, for
+    /// endpoints whose non-2xx answers carry meaning (409 stale, 422 nothing fits).
+    private func postForStatus(_ path: String, body: Data) async throws -> (Data, Int) {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuth(to: &request)
+        request.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
     }
 
     private func putRaw(_ path: String, body: Data) async throws -> Data {

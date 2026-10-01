@@ -105,6 +105,35 @@ struct ProgramExerciseAssignment: Codable {
         case loadNote   = "load_note"
         case notes
     }
+
+    init(exercise: ProgramExercise?, load: ProgramLoad, slotRole: String?, slotType: String?,
+         restSec: Int?, meta: Bool, injurySkip: Bool, loadNote: String?, notes: String?) {
+        self.exercise = exercise
+        self.load = load
+        self.slotRole = slotRole
+        self.slotType = slotType
+        self.restSec = restSec
+        self.meta = meta
+        self.injurySkip = injurySkip
+        self.loadNote = loadNote
+        self.notes = notes
+    }
+
+    /// The server writes `meta` and `injury_skip` on every assignment, but a
+    /// copy that has been through another client, or a substitute alternative,
+    /// may not carry them; absent means false, not an undecodable session.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        exercise   = try c.decodeIfPresent(ProgramExercise.self, forKey: .exercise)
+        load       = try c.decodeIfPresent(ProgramLoad.self, forKey: .load) ?? ProgramLoad.empty
+        slotRole   = try c.decodeIfPresent(String.self, forKey: .slotRole)
+        slotType   = try c.decodeIfPresent(String.self, forKey: .slotType)
+        restSec    = try c.decodeIfPresent(Int.self, forKey: .restSec)
+        meta       = try c.decodeIfPresent(Bool.self, forKey: .meta) ?? false
+        injurySkip = try c.decodeIfPresent(Bool.self, forKey: .injurySkip) ?? false
+        loadNote   = try c.decodeIfPresent(String.self, forKey: .loadNote)
+        notes      = try c.decodeIfPresent(String.self, forKey: .notes)
+    }
 }
 
 struct ProgramExercise: Codable {
@@ -128,6 +157,12 @@ struct ProgramLoad: Codable {
     let holdSeconds: Int?
     let distanceKm: Double?
     let intensity: String?
+
+    /// A slot with no prescription yet (an unfilled or coverage-gap entry).
+    static let empty = ProgramLoad(sets: nil, reps: nil, weightKg: nil, targetRpe: nil,
+                                   durationMinutes: nil, zoneTarget: nil, timeMinutes: nil,
+                                   targetRounds: nil, format: nil, holdSeconds: nil,
+                                   distanceKm: nil, intensity: nil)
 
     enum CodingKeys: String, CodingKey {
         case sets

@@ -9,8 +9,6 @@ core_principles:
   - form_mastery_before_load_increase
 scope:
   - max_strength
-  - relative_strength
-  - power
 bias:
   - max_strength
 avoid_with:

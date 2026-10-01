@@ -12,6 +12,7 @@ struct SettingsView: View {
     @EnvironmentObject var sync: SyncManager
     @EnvironmentObject var appState: AppState
     @ObservedObject private var logger = AppLogger.shared
+    @ObservedObject private var notifications = NotificationManager.shared
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
 
     @State private var showDebugLog = false
@@ -42,6 +43,7 @@ struct SettingsView: View {
             connectionsSection
             devicesSection
             pairGarminSection
+            notificationsSection
             appearanceSection
             syncCategoriesSection
             debugLogSection
@@ -50,6 +52,55 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadGarminDevices() }
+    }
+
+    // MARK: - Notifications
+
+    /// Local reminders, scheduled on this phone from the stored program.
+    /// Enabling asks the system once; a refusal turns the switch back off and
+    /// the footer says where to change it.
+    private var notificationsSection: some View {
+        Section {
+            Toggle("Session reminders", isOn: Binding(
+                get: { notifications.isEnabled },
+                set: { on in Task { await setReminders(on) } }
+            ))
+            if notifications.isEnabled {
+                DatePicker("Reminder time", selection: Binding(
+                    get: { reminderDate },
+                    set: { date in
+                        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+                        notifications.reminderMinutes = (c.hour ?? 7) * 60 + (c.minute ?? 0)
+                        appState.rescheduleNotifications()
+                    }
+                ), displayedComponents: .hourAndMinute)
+            }
+        } header: {
+            Text("Notifications")
+        } footer: {
+            if notifications.authorizationDenied {
+                Text("Notifications are off for Training Companion. Turn them on in Settings → Notifications, then enable reminders again.")
+            } else {
+                Text("One reminder on each day with a planned session, at the time you pick. A moved session moves its reminder; a completed one cancels it.")
+            }
+        }
+    }
+
+    private var reminderDate: Date {
+        let minutes = notifications.reminderMinutes
+        return Calendar.current.date(bySettingHour: minutes / 60, minute: minutes % 60,
+                                     second: 0, of: Date()) ?? Date()
+    }
+
+    private func setReminders(_ on: Bool) async {
+        if on {
+            let granted = await notifications.requestAuthorization()
+            notifications.isEnabled = granted
+            if granted { appState.rescheduleNotifications() }
+        } else {
+            notifications.isEnabled = false
+            await notifications.cancelAll()
+        }
     }
 
     // MARK: - Appearance

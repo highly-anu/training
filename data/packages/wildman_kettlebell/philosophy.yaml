@@ -12,7 +12,6 @@ scope:
   - aerobic_base
   - relative_strength
   - movement_skill
-  - mobility
 bias:
   - power
   - strength_endurance

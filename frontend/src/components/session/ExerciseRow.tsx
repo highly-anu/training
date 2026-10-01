@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play, ExternalLink } from 'lucide-react'
+import { Play, ExternalLink, ArrowLeftRight } from 'lucide-react'
 import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
 import { MetaSlot } from './MetaSlot'
@@ -18,6 +18,8 @@ interface ExerciseRowProps {
   index: number
   sessionKey: string
   sessionIdx?: number
+  /** Opens the swap sheet for this exercise; absent where swapping is not possible. */
+  onSwap?: () => void
 }
 
 function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerciseId: string; exerciseName: string; category?: string }) {
@@ -70,7 +72,7 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
   )
 }
 
-export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: ExerciseRowProps) {
+export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap }: ExerciseRowProps) {
   const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
 
   if (assignment.meta) {
@@ -123,7 +125,20 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h4 className="text-sm font-semibold text-foreground">{assignment.exercise.name}</h4>
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-sm font-semibold text-foreground">{assignment.exercise.name}</h4>
+              {onSwap && (
+                <button
+                  type="button"
+                  onClick={onSwap}
+                  className="rounded p-0.5 text-muted-foreground/60 hover:text-primary transition-colors"
+                  aria-label={`Swap ${assignment.exercise.name}`}
+                  title="Swap for an alternative"
+                >
+                  <ArrowLeftRight className="size-3" />
+                </button>
+              )}
+            </div>
             {loadStr && (
               <p className="mt-0.5 text-xs font-mono text-primary">{loadStr}</p>
             )}

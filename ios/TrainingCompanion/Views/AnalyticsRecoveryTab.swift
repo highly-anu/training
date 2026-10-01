@@ -29,7 +29,7 @@ struct AnalyticsRecoveryTab: View {
     // MARK: - Readiness Card
 
     private var readinessCard: some View {
-        cardContainer(header: "Today's Readiness") {
+        AnalyticsCard(header: "Today's Readiness") {
             HStack(spacing: 16) {
                 if let info = appState.readinessInfo(from: appState.recentBioLogs) {
                     VStack(spacing: 4) {
@@ -91,7 +91,7 @@ struct AnalyticsRecoveryTab: View {
         let debtHours = Double(debtMin) / 60.0
         let maxDebt = Double(targetPerNight * 7) / 60.0
 
-        return AnyView(cardContainer(header: "Sleep Debt") {
+        return AnyView(AnalyticsCard(header: "Sleep Debt") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -120,7 +120,7 @@ struct AnalyticsRecoveryTab: View {
     private var lastNightSleepCard: some View {
         if let latest = appState.recentBioLogs.first,
            let sleep = latest.sleepDurationMin, sleep > 0 {
-            cardContainer(header: "Last Night") {
+            AnalyticsCard(header: "Last Night") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
@@ -186,7 +186,7 @@ struct AnalyticsRecoveryTab: View {
     private var sleepStagesCard: some View {
         let hasData = appState.recentBioLogs.contains { $0.deepSleepMin != nil || $0.remSleepMin != nil }
         if hasData {
-            cardContainer(header: "Sleep Stages") {
+            AnalyticsCard(header: "Sleep Stages") {
                 SleepStagesChartView(logs: appState.recentBioLogs)
             }
         }
@@ -198,7 +198,7 @@ struct AnalyticsRecoveryTab: View {
     private var hrvCard: some View {
         let hasHRV = appState.recentBioLogs.contains { $0.hrv != nil }
         if hasHRV {
-            cardContainer(header: "HRV Trend") {
+            AnalyticsCard(header: "HRV Trend") {
                 HRVTrendChartView(logs: appState.recentBioLogs)
             }
         }
@@ -210,7 +210,7 @@ struct AnalyticsRecoveryTab: View {
     private var rhrCard: some View {
         let hasRHR = appState.recentBioLogs.contains { $0.restingHR != nil }
         if hasRHR {
-            cardContainer(header: "Resting Heart Rate") {
+            AnalyticsCard(header: "Resting Heart Rate") {
                 RHRTrendChartView(logs: appState.recentBioLogs)
             }
         }
@@ -219,7 +219,7 @@ struct AnalyticsRecoveryTab: View {
     // MARK: - Check-in History
 
     private var checkInHistoryCard: some View {
-        cardContainer(header: "Check-in History") {
+        AnalyticsCard(header: "Check-in History") {
             VStack(spacing: 0) {
                 if appState.recentBioLogs.isEmpty {
                     VStack(spacing: 12) {
@@ -278,20 +278,6 @@ struct AnalyticsRecoveryTab: View {
     }
 
     // MARK: - Card Container
-
-    private func cardContainer<Content: View>(header: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(header)
-                .font(.footnote).fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .tracking(0.5)
-            content()
-        }
-        .padding(AppMetrics.cardPadding)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
-    }
 
     // MARK: - Helpers
 

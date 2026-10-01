@@ -405,90 +405,49 @@ extension WatchSessionManager: WCSessionDelegate {
             AppLogger.shared.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
         }
 
-        // 2. Build and save ImportedWorkout (enables HRTimeline + GPSMap on the frontend)
-        let iso = ISO8601DateFormatter()
-        // Try default format first; fall back to fractional-seconds variant (Watch may include milliseconds).
-        let isoFractional: ISO8601DateFormatter = {
-            let f = ISO8601DateFormatter()
-            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            return f
-        }()
-        guard let startDate = iso.date(from: summary.startedAt) ?? isoFractional.date(from: summary.startedAt) else {
+        // 2. Store the workout through the server. Elevation comes from the
+        //    track's altitudes, copies of the same activity from other sources
+        //    fold into one row, and a write that fails is reported rather
+        //    than lost — none of which the raw Supabase upsert this path used
+        //    to do could offer (see WatchUpload).
+        guard let startDate = WatchUpload.parseStart(summary.startedAt) else {
             AppLogger.shared.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
             return
         }
-
-        let workoutId = "watch_live_\(sessionKey)_\(summary.startedAt)"
-            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? UUID().uuidString
-
-        let hrSamples = summary.hrSamples?.map { point -> [String: Any] in
-            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
-            return ["timestamp": ts, "bpm": point.b]
-        }
-        let gpsTrack = summary.gpsTrack?.map { point -> [String: Any] in
-            let ts = iso.string(from: startDate.addingTimeInterval(Double(point.t)))
-            var p: [String: Any] = ["lat": point.lat, "lng": point.lng, "timestamp": ts]
-            if let alt = point.alt { p["altitude"] = alt }
-            if let bpm = point.b  { p["bpm"] = bpm }
-            return p
-        }
-
-        var workout: [String: Any] = [
-            "id":              workoutId,
-            "source":          summary.source,
-            "date":            summary.date,
-            "startTime":       summary.startedAt,
-            "endTime":         summary.endedAt,
-            "durationMinutes": summary.durationMinutes,
-            "activityType":    cachedSession?.name ?? summary.source,
-            "rawData":         [:] as [String: Any],
-            "heartRate":       [
-                "avg": summary.avgHR as Any,
-                "max": summary.peakHR as Any,
-                "samples": hrSamples as Any,
-            ] as [String: Any],
-        ]
-        if let modality = cachedSession?.modality { workout["inferredModalityId"] = modality }
-        if let gps = gpsTrack { workout["gpsTrack"] = gps }
-        if let dist = summary.distanceMeters { workout["distance"] = ["value": dist / 1000.0, "unit": "km"] }
-        if let gain = summary.elevationGainMeters { workout["elevation"] = ["gain": Int(gain), "loss": 0] }
-        if let cal = log["calories"] { workout["calories"] = cal }
-
+        let workoutId = WatchUpload.workoutId(sessionKey: sessionKey, startedAt: summary.startedAt)
+        let workout = WatchUpload.workoutPayload(summary: summary, workoutId: workoutId, startDate: startDate,
+                                                 sessionName: cachedSession?.name, modality: cachedSession?.modality)
         do {
-            try await api.saveWatchWorkoutDirect(workout)
+            try await api.saveWatchWorkouts([workout])
             AppLogger.shared.logFromBackground("API: saved watch workout \(workoutId) ✓")
-            // Safe to discard the local buffer now that Supabase has the row.
+            // Safe to discard the local buffer now that the server has the row.
             WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
         } catch {
             AppLogger.shared.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
             return
         }
 
-        // 3. Link workout to session + upsert session log directly to Supabase
-        let exercises = summary.setLogs.mapValues { ["sets": $0] } as [String: Any]
+        // 3. Link the workout to the session. The server resolves the
+        //    program version's session_uid and clears any suggestion. If dedup
+        //    folded this upload into a copy that was already there, the match
+        //    goes to that listed row, not to the hidden duplicate.
+        let listed = (try? await api.fetchWorkouts()) ?? []
+        let linkId = WatchUpload.canonicalId(for: workoutId, date: summary.date,
+                                             startedAt: summary.startedAt, in: listed)
         do {
-            try await api.saveWatchMatchDirect(
-                workoutId: workoutId,
-                sessionKey: sessionKey,
-                startTime: summary.startedAt,
-                avgHR: summary.avgHR,
-                peakHR: summary.peakHR,
-                exercises: exercises
-            )
-            AppLogger.shared.logFromBackground("API: saved workout match \(workoutId) → \(sessionKey) ✓")
+            try await api.saveWorkoutMatch(WatchUpload.matchPayload(workoutId: linkId, sessionKey: sessionKey))
+            AppLogger.shared.logFromBackground("API: saved workout match \(linkId) → \(sessionKey) ✓")
         } catch {
             AppLogger.shared.logFromBackground("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
         }
 
         // 4. Async GPS enrichment: try to fetch the full HKWorkoutRoute after a short delay
         //    (HealthKit sync from Watch → iPhone takes ~5–30 s)
+        let existingGPSCount = (workout["gpsTrack"] as? [[String: Any]])?.count ?? 0
         Task {
             try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 s
-            await enrichWorkoutWithHKRoute(
-                workoutId: workoutId,
-                startDate: startDate,
-                existingGPSCount: gpsTrack?.count ?? 0
-            )
+            await enrichWorkoutWithHKRoute(workout: workout, startDate: startDate,
+                                           existingGPSCount: existingGPSCount)
         }
     }
 
@@ -502,18 +461,18 @@ extension WatchSessionManager: WCSessionDelegate {
         }
     }
 
-    private func enrichWorkoutWithHKRoute(workoutId: String, startDate: Date, existingGPSCount: Int) async {
+    private func enrichWorkoutWithHKRoute(workout: [String: Any], startDate: Date, existingGPSCount: Int) async {
         guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else {
             // Retry once at 60 s
             try? await Task.sleep(nanoseconds: 50_000_000_000)
             guard let hkWorkout = await HealthKitManager.shared.findHKWorkout(near: startDate) else { return }
-            await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+            await uploadRoute(from: hkWorkout, workout: workout, existingGPSCount: existingGPSCount)
             return
         }
-        await uploadRoute(from: hkWorkout, workoutId: workoutId, existingGPSCount: existingGPSCount, startDate: startDate)
+        await uploadRoute(from: hkWorkout, workout: workout, existingGPSCount: existingGPSCount)
     }
 
-    private func uploadRoute(from hkWorkout: HKWorkout, workoutId: String, existingGPSCount: Int, startDate: Date) async {
+    private func uploadRoute(from hkWorkout: HKWorkout, workout: [String: Any], existingGPSCount: Int) async {
         let locations = await HealthKitManager.shared.fetchWorkoutRoute(for: hkWorkout)
         guard locations.count > existingGPSCount else { return }
         let iso = ISO8601DateFormatter()
@@ -526,20 +485,9 @@ extension WatchSessionManager: WCSessionDelegate {
             if loc.altitude > 0 { p["altitude"] = loc.altitude }
             return p
         }
-        let enriched: [String: Any] = [
-            "id":              workoutId,
-            "source":          "apple_watch_live",
-            "date":            iso.string(from: startDate).prefix(10).description,
-            "startTime":       iso.string(from: hkWorkout.startDate),
-            "endTime":         iso.string(from: hkWorkout.endDate),
-            "durationMinutes": Int(hkWorkout.duration / 60),
-            "activityType":    "apple_watch_live",
-            "gpsTrack":        gpsTrack,
-            "rawData":         [:] as [String: Any],
-            "heartRate":       [:] as [String: Any],
-        ]
+        let workoutId = workout["id"] as? String ?? "?"
         do {
-            try await api.saveWatchWorkoutDirect(enriched)
+            try await api.saveWatchWorkouts([WatchUpload.enriched(workout, gpsTrack: gpsTrack)])
             AppLogger.shared.logFromBackground("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
         } catch {
             AppLogger.shared.logFromBackground("API: GPS enrichment FAILED — \(error.localizedDescription)")

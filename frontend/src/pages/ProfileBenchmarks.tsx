@@ -284,12 +284,14 @@ function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
 
   if (isLoading) return <LoadingCard />
 
-  const categories = ['strength', 'conditioning', 'cell'] as const
-  const byCategory = {
-    strength: benchmarks.filter(b => b.category === 'strength'),
-    conditioning: benchmarks.filter(b => b.category === 'conditioning'),
-    cell: benchmarks.filter(b => b.category === 'cell'),
+  const categories = ['strength', 'conditioning', 'kettlebell', 'tactical', 'benchmark_wod', 'skill', 'cell'] as const
+  const categoryLabel: Record<(typeof categories)[number], string> = {
+    strength: 'strength', conditioning: 'conditioning', kettlebell: 'kettlebell pentathlon',
+    tactical: 'ruck & PT tests', benchmark_wod: 'benchmark workouts', skill: 'movement & skill', cell: 'cell standards',
   }
+  const byCategory = Object.fromEntries(
+    categories.map((cat) => [cat, benchmarks.filter((b) => b.category === cat)])
+  ) as Record<(typeof categories)[number], typeof benchmarks>
 
   return (
     <div className="h-full overflow-y-auto">
@@ -340,7 +342,7 @@ function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
           byCategory[cat].length > 0 && (
             <div key={cat} className="space-y-3">
               <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-                {cat}
+                {categoryLabel[cat]}
               </h3>
               <div className="grid gap-3">
                 {byCategory[cat].map((bench) => {

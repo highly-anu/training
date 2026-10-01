@@ -12,8 +12,6 @@ core_principles:
 scope:
   - mobility
   - movement_skill
-  - relative_strength
-  - durability
 bias:
   - movement_skill
   - mobility

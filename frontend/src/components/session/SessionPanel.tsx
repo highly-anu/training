@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SessionHeader } from '@/components/session/SessionHeader'
 import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
+import { SwapExerciseSheet } from '@/components/session/SwapExerciseSheet'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
@@ -47,6 +48,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const programVersionId = useProgramStore((s) => s.programVersionId)
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
+  const [swapTarget, setSwapTarget] = useState<{ si: number; ei: number } | null>(null)
 
   function getSessionMatch(si: number) {
     const entry = findSessionMatch(
@@ -148,6 +150,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                     index={i}
                     sessionKey={sessionKey}
                     sessionIdx={si}
+                    onSwap={assignment.exercise && session.archetype ? () => setSwapTarget({ si, ei: i }) : undefined}
                   />
                 ))}
               </div>
@@ -200,6 +203,19 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
         {/* Session notes + fatigue rating */}
         <SessionNotes sessionKey={sessionKey} />
       </div>
+
+      {swapTarget && (
+        <SwapExerciseSheet
+          open={true}
+          onOpenChange={(open) => { if (!open) setSwapTarget(null) }}
+          program={program}
+          weekData={weekData}
+          weekIndex={weekIndex}
+          day={day}
+          sessionIndex={swapTarget.si}
+          exerciseIndex={swapTarget.ei}
+        />
+      )}
 
       {replaceTarget && (
         <ReplaceSessionSheet

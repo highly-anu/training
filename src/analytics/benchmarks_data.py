@@ -23,7 +23,21 @@ CATEGORY_OF_DOMAIN = {
     'anaerobic_intervals': 'conditioning',
 }
 UNIT_OF_METRIC = {'bw_ratio': '×BW', 'reps': ' reps', 'time_minutes': ' min',
-                  'metres': ' m', 'time_sec': ' s', 'kg': ' kg'}
+                  'metres': ' m', 'time_sec': ' s', 'time_seconds': ' s', 'kg': ' kg',
+                  'score': ''}
+
+# The list-of-entries files under data/benchmarks. A file may set `category`
+# per entry (kettlebell, tactical, benchmark_wod, skill) where the domain's
+# default grouping would be misleading, and `unit` where the metric's default
+# unit is not the one the standard is read in.
+BENCHMARK_FILES = (
+    'strength_standards.yaml',
+    'conditioning_standards.yaml',
+    'kettlebell_pentathlon.yaml',
+    'ruck_and_pt_standards.yaml',
+    'crossfit_benchmark_wods.yaml',
+    'movement_skill_standards.yaml',
+)
 
 # (domain, exercise_key) -> (value_key, unit, lower_is_better, display_name, metric_type)
 _CELL_EXTRACT = {
@@ -61,7 +75,7 @@ def parse_time(t) -> float:
 @lru_cache(maxsize=1)
 def load_benchmarks() -> tuple:
     out: list[dict] = []
-    for fname in ('strength_standards.yaml', 'conditioning_standards.yaml'):
+    for fname in BENCHMARK_FILES:
         path = os.path.join(_DATA_DIR, 'benchmarks', fname)
         if not os.path.exists(path):
             continue
@@ -80,9 +94,9 @@ def load_benchmarks() -> tuple:
             metric = item.get('metric_type', '')
             out.append({
                 'id': item['id'], 'name': item['name'],
-                'category': CATEGORY_OF_DOMAIN.get(item.get('domain', ''), 'conditioning'),
+                'category': item.get('category') or CATEGORY_OF_DOMAIN.get(item.get('domain', ''), 'conditioning'),
                 'domain': item.get('domain'), 'metric_type': metric,
-                'unit': UNIT_OF_METRIC.get(metric, ''),
+                'unit': item.get('unit') if item.get('unit') is not None else UNIT_OF_METRIC.get(metric, ''),
                 'lower_is_better': bool(item.get('lower_is_better', False)),
                 'levels': norm,
                 'goal_relevance': list(item.get('goal_relevance') or []),

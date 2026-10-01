@@ -7,6 +7,39 @@ struct AnalyticsOverviewTab: View {
 
     @State private var pmcEntries: [PMCEntry] = []
     @State private var isLoadingPMC = false
+    /// Where the load numbers came from. The server is the source of truth —
+    /// the web reads the same endpoints — and the on-device engine is the
+    /// fallback when it cannot be reached, so the chart says which it was.
+    @State private var loadSource: LoadSource = .server
+
+    private enum LoadSource { case server, device }
+
+    private struct WeeklyLoadBar: Identifiable {
+        let id: String
+        let weekStart: Date
+        let trimp: Double
+        let sessions: Int
+    }
+
+    private var weeklyLoadBars: [WeeklyLoadBar] {
+        if let server = appState.serverWeeklyLoad, !server.isEmpty {
+            return server.compactMap { entry in
+                entry.weekStart.map { WeeklyLoadBar(id: entry.week, weekStart: $0,
+                                                    trimp: entry.trimp, sessions: entry.sessions) }
+            }
+        }
+        let cal = Calendar.current
+        return AnalyticsEngine.weeklyLoad(workouts: appState.importedWorkouts,
+                                          hrConfig: appState.profile.hrConfig,
+                                          dateOfBirth: appState.profile.dateOfBirth)
+            .enumerated().compactMap { offset, entry in
+                guard let ref = cal.date(byAdding: .weekOfYear, value: offset - 11, to: Date()),
+                      let monday = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: ref))
+                else { return nil }
+                return WeeklyLoadBar(id: entry.week, weekStart: monday, trimp: entry.trimp,
+                                     sessions: Int(entry.sessions))
+            }
+    }
 
     private var filtered: [ImportedWorkout] {
         AnalyticsEngine.filter(appState.importedWorkouts, withinDays: period.days)
@@ -43,6 +76,7 @@ struct AnalyticsOverviewTab: View {
                 if !modalities.isEmpty { modalityDonutCard }
                 if !activities.isEmpty { activityBarCard }
                 consistencyCard
+                if weeklyLoadBars.contains(where: { $0.trimp > 0 }) { weeklyLoadCard }
                 if !pmcEntries.isEmpty { pmcCard }
             }
             .padding(.horizontal)
@@ -62,7 +96,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - KPI Grid (Apple Fitness-style with trend arrows)
 
     private var kpiGrid: some View {
-        cardContainer(header: "Totals") {
+        AnalyticsCard(header: "Totals") {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 kpiCell(
                     label: "Sessions",
@@ -152,7 +186,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Training Load Focus (Garmin-style)
 
     private var loadFocusCard: some View {
-        cardContainer(header: "Training Load Focus") {
+        AnalyticsCard(header: "Training Load Focus") {
             VStack(spacing: 10) {
                 let total = loadFocus.total
                 let rows: [(label: String, minutes: Double, color: Color)] = [
@@ -187,7 +221,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Modality Donut
 
     private var modalityDonutCard: some View {
-        cardContainer(header: "By Modality") {
+        AnalyticsCard(header: "By Modality") {
             ZStack {
                 Chart(modalities) { share in
                     SectorMark(
@@ -226,7 +260,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Activity Bar
 
     private var activityBarCard: some View {
-        cardContainer(header: "By Activity") {
+        AnalyticsCard(header: "By Activity") {
             Chart(activities) { entry in
                 BarMark(
                     x: .value("Hours", entry.hours),
@@ -257,7 +291,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Weekly Consistency
 
     private var consistencyCard: some View {
-        cardContainer(header: "Weekly Volume") {
+        AnalyticsCard(header: "Weekly Volume") {
             Chart(consistency) { entry in
                 BarMark(
                     x: .value("Week", entry.weekStart, unit: .weekOfYear),
@@ -314,10 +348,51 @@ struct AnalyticsOverviewTab: View {
         }
     }
 
+    // MARK: - Weekly Load (TRIMP)
+
+    private var weeklyLoadCard: some View {
+        AnalyticsCard(header: "Weekly Load") {
+            Chart(weeklyLoadBars) { bar in
+                BarMark(
+                    x: .value("Week", bar.weekStart, unit: .weekOfYear),
+                    y: .value("TRIMP", bar.trimp)
+                )
+                .foregroundStyle(Color.orange.gradient)
+                .cornerRadius(4)
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .month, count: 1)) { value in
+                    AxisValueLabel {
+                        if let d = value.as(Date.self) {
+                            Text(d, format: .dateTime.month(.abbreviated))
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    AxisValueLabel {
+                        if let v = value.as(Double.self) {
+                            Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(height: 130)
+            Text("TRIMP per week · last 12 weeks · \(sourceNote)")
+                .font(.caption2).foregroundStyle(.tertiary)
+        }
+    }
+
+    private var sourceNote: String {
+        loadSource == .server ? "server-computed, as on the web" : "computed on this phone"
+    }
+
     // MARK: - PMC Chart
 
     private var pmcCard: some View {
-        cardContainer(header: "Performance Management") {
+        AnalyticsCard(header: "Performance Management") {
             if isLoadingPMC {
                 ProgressView().frame(maxWidth: .infinity, minHeight: 160)
             } else {
@@ -365,6 +440,10 @@ struct AnalyticsOverviewTab: View {
                         legendLine(color: .green,  label: "TSB (form)")
                     }
                     .font(.caption2)
+                    Text(loadSource == .server
+                         ? "Server-computed — the same numbers as the web."
+                         : "Computed on this phone — the server could not be reached.")
+                        .font(.caption2).foregroundStyle(.tertiary)
                 }
             }
         }
@@ -379,24 +458,19 @@ struct AnalyticsOverviewTab: View {
 
     // MARK: - Card Container
 
-    private func cardContainer<Content: View>(header: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(header)
-                .font(.footnote).fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .tracking(0.5)
-            content()
-        }
-        .padding(AppMetrics.cardPadding)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
-    }
-
     // MARK: - PMC Computation
 
+    /// The server first; the on-device engine only when it cannot answer.
     private func recomputePMC() async {
         isLoadingPMC = true
+        await appState.loadLoadAnalytics()
+        if let server = appState.serverPMC, !server.isEmpty {
+            pmcEntries = server
+            loadSource = .server
+            isLoadingPMC = false
+            return
+        }
+        loadSource = .device
         let workouts = appState.importedWorkouts
         let hrConfig = appState.profile.hrConfig
         let dob = appState.profile.dateOfBirth

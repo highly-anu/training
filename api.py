@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import glob
+import json
 import os
 import re
 import sys
@@ -49,6 +50,32 @@ def _authoring_enabled() -> bool:
     if os.environ.get('AUTHORING_ENABLED', '').strip().lower() in ('1', 'true', 'yes', 'on'):
         return True
     return not os.environ.get('SUPABASE_URL')
+
+
+_SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'schemas')
+
+
+def _schema_errors(kind: str, obj: dict) -> list[str]:
+    """Validate an authored entity against docs/schemas/<kind>.schema.json —
+    the contract tools/validate_entities.py enforces on the YAML, applied to
+    the API before it writes. Returns human-readable error lines."""
+    import jsonschema
+    with open(os.path.join(_SCHEMA_DIR, f'{kind}.schema.json'), encoding='utf-8') as fh:
+        schema = json.load(fh)
+    validator = jsonschema.validators.validator_for(schema)(schema)
+    errors = sorted(validator.iter_errors(obj), key=lambda e: list(e.absolute_path))
+    return [f"{'/'.join(str(p) for p in e.absolute_path) or '<root>'}: {e.message}" for e in errors]
+
+
+def _invalid(kind: str, errors: list[str]):
+    return jsonify({'detail': f'{kind} does not match docs/schemas/{kind}.schema.json',
+                    'errors': errors}), 422
+
+
+def _is_custom_package_path(path: str) -> bool:
+    """Only the `custom` package is the API's to delete from; authored packages
+    are edited as YAML and validated with the CLI."""
+    return os.path.join('packages', 'custom') in os.path.normpath(path)
 
 
 def require_authoring(f):
@@ -396,6 +423,9 @@ def create_modality():
         return jsonify({'detail': 'id and name are required'}), 400
     if body.get('recovery_cost') not in ('high', 'medium', 'low'):
         return jsonify({'detail': 'recovery_cost must be high, medium, or low'}), 400
+    errors = _schema_errors('modality', body)
+    if errors:
+        return _invalid('modality', errors)
     existing_ids = {m['id'] for m in _all_modalities()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Modality id '{body['id']}' already exists"}), 409
@@ -532,6 +562,9 @@ def create_exercise():
     body = request.get_json(silent=True) or {}
     if not body.get('id') or not body.get('name'):
         return jsonify({'detail': 'id and name are required'}), 400
+    errors = _schema_errors('exercise', body)
+    if errors:
+        return _invalid('exercise', errors)
     existing_ids = {ex['id'] for ex in _all_exercises()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
@@ -566,10 +599,31 @@ def update_exercise(ex_id: str):
     path, idx, data = _find_exercise_file_and_index(ex_id)
     if path is None:
         return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
-    data['exercises'][idx].update({k: v for k, v in body.items() if k != 'id'})
+    merged = {**data['exercises'][idx], **{k: v for k, v in body.items() if k != 'id'}}
+    errors = _schema_errors('exercise', merged)
+    if errors:
+        return _invalid('exercise', errors)
+    data['exercises'][idx] = merged
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(data['exercises'][idx]), 200
+
+
+@app.delete('/api/exercises/<ex_id>')
+@require_auth
+@require_authoring
+def delete_exercise(ex_id: str):
+    """Removes an exercise the API created (the `custom` package only)."""
+    path, idx, data = _find_exercise_file_and_index(ex_id)
+    if path is None:
+        return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': 'only exercises in the custom package can be deleted through the API; '
+                                  'authored packages are edited as YAML'}), 403
+    del data['exercises'][idx]
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify({'deleted': ex_id}), 200
 
 
 def _find_archetype_file(arch_id: str) -> str | None:
@@ -596,10 +650,28 @@ def update_archetype(arch_id: str):
     if not path:
         return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
     data = _load_yaml(path)
-    data.update({k: v for k, v in body.items() if v is not None})
+    merged = {**data, **{k: v for k, v in body.items() if v is not None}}
+    errors = _schema_errors('archetype', merged)
+    if errors:
+        return _invalid('archetype', errors)
     with open(path, 'w', encoding='utf-8') as f:
-        yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-    return jsonify(data), 200
+        yaml.dump(merged, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return jsonify(merged), 200
+
+
+@app.delete('/api/archetypes/<arch_id>')
+@require_auth
+@require_authoring
+def delete_archetype(arch_id: str):
+    """Removes an archetype the API created (the `custom` package only)."""
+    path = _find_archetype_file(arch_id)
+    if not path:
+        return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': 'only archetypes in the custom package can be deleted through the API; '
+                                  'authored packages are edited as YAML'}), 403
+    os.remove(path)
+    return jsonify({'deleted': arch_id}), 200
 
 
 @app.put('/api/frameworks/<fw_id>')
@@ -613,10 +685,13 @@ def update_framework(fw_id: str):
     path = matches[0]
     data = _load_yaml(path)
     allowed = {'name', 'source_philosophy', 'sessions_per_week', 'cadence_options',
-               'deload_protocol', 'applicable_when', 'notes'}
+               'deload_protocol', 'applicable_when', 'notes', 'recovery'}
     for k, v in body.items():
         if k in allowed and v is not None:
             data[k] = v
+    errors = _schema_errors('framework', data)
+    if errors:
+        return _invalid('framework', errors)
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return jsonify(data), 200
@@ -632,6 +707,9 @@ def create_archetype():
     arch_id = body['id']
     if not re.fullmatch(r'[A-Za-z0-9_-]+', arch_id):
         return jsonify({'detail': 'id must contain only letters, digits, underscores, and hyphens'}), 400
+    errors = _schema_errors('archetype', body)
+    if errors:
+        return _invalid('archetype', errors)
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
     if arch_id in existing_ids:
         return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
@@ -1121,6 +1199,101 @@ def _generate_session_inner(body):
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
         'exercises': [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])],
     })
+
+
+@app.post('/api/exercises/substitute')
+@require_auth
+def substitute_exercise():
+    """Ranked alternatives for one exercise in one archetype slot.
+
+    The smallest regenerable unit used to be a session, so swapping one
+    exercise meant regenerating all of them. This runs the selector's own
+    candidate filter and score for the slot — the same unlock, equipment,
+    injury and package rules a generate applies — and returns each
+    alternative as a complete assignment with its load for the week, so a
+    client replaces the entry in place and saves through the revision-checked
+    PUT. Nothing is persisted here.
+    """
+    from src import selector as _selector
+    body = request.get_json(silent=True) or {}
+    archetype_id = body.get('archetype_id')
+    slot_role = body.get('slot_role')
+    if not archetype_id or not slot_role:
+        return jsonify({'detail': 'archetype_id and slot_role are required'}), 400
+
+    constraints = dict(body.get('constraints') or {})
+    constraints.setdefault('session_time_minutes', 75)
+    constraints.setdefault('training_level', 'intermediate')
+    constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
+                                          'pull_up_bar', 'ruck_pack', 'open_space'])
+    constraints.setdefault('injury_flags', [])
+    goal = {'primary_sources': list(body.get('philosophy_ids') or [])}
+
+    data = loader.load_all_data()
+    policy = provenance.resolve_source_policy(goal)
+    lib = provenance.scope(data, policy)
+
+    arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
+    if arch is None:
+        return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
+    slot_index, slot = next(((i, sl) for i, sl in enumerate(arch.get('slots') or [])
+                             if sl.get('role') == slot_role), (None, None))
+    if slot is None:
+        return jsonify({'detail': f'Slot {slot_role!r} not in archetype {archetype_id!r}'}), 404
+
+    modality = body.get('modality') or arch.get('modality')
+    phase = body.get('phase') or 'base'
+    week_in_phase = int(body.get('week_in_phase') or 1)
+    is_deload = bool(body.get('is_deload'))
+    level = constraints['training_level']
+    exclude = set(body.get('exclude') or [])
+    if body.get('exercise_id'):
+        exclude.add(body['exercise_id'])
+    limit = max(1, min(int(body.get('limit') or 8), 10))
+
+    excl_patterns, excl_ids = _selector._injury_exclusions(constraints, data['injury_flags'])
+    unlocked = _selector._get_unlocked(level, lib['exercises'], lib.get('level_seeds')) - excl_ids
+    _selected, trace = _selector.select_exercise(
+        slot, constraints, lib['exercises'], unlocked, excl_patterns, excl_ids,
+        recent_ex_ids=None, phase=phase, session_used_ids=list(exclude),
+        return_trace=True, primary_sources=set(goal['primary_sources']),
+        policy=policy, modality=modality,
+    )
+    prog_model = data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+    pattern = (slot.get('exercise_filter') or {}).get('movement_pattern')
+    alternatives = []
+    for cand in (trace or {}).get('candidates') or []:
+        if cand['id'] in exclude:
+            continue
+        ex = lib['exercises'].get(cand['id']) or data['exercises'].get(cand['id'])
+        if ex is None:
+            continue
+        load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
+                              session_time_minutes=constraints.get('session_time_minutes', 75))
+        ea = {'slot_index': slot_index, 'slot_role': slot_role,
+              'slot_type': slot.get('slot_type', 'sets_reps'),
+              'exercise': ex, 'slot': slot, 'load': load}
+        breakdown = cand.get('breakdown') or {}
+        reasons = []
+        if pattern:
+            reasons.append(f'fits the {str(pattern).replace("_", " ")} pattern')
+        if cand.get('package'):
+            reasons.append(f"from the {str(cand['package']).replace('_', ' ')} package")
+        if breakdown.get('unlocks_bonus'):
+            reasons.append('unlocks further movements')
+        if breakdown.get('recency_penalty'):
+            reasons.append('used recently')
+        alternatives.append({
+            'assignment': _clean_exercise_assignment(ea),
+            'score': cand.get('score', 0),
+            'reasons': reasons,
+        })
+        if len(alternatives) >= limit:
+            break
+    if not alternatives:
+        return jsonify({'detail': "No alternative fits this slot under the program's packages, "
+                                  'your equipment and injury flags', 'alternatives': []}), 422
+    return jsonify({'alternatives': alternatives})
 
 
 @app.get('/api/oauth/strava/status')
@@ -2109,6 +2282,246 @@ def save_user_program_endpoint():
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
+
+
+# ---------------------------------------------------------------------------
+# Applying a progression adjustment
+# ---------------------------------------------------------------------------
+# progression_tracker.suggest_adjustments has always emitted hold_load,
+# reduce_volume_10pct, early_deload, increase_increment and rebuild_habit as
+# advice, and nothing applied them. These edit the stored weeks in place, from a
+# week onward, under the same revision check as PUT. rebuild_habit is about the
+# athlete's consistency, not the plan, so it stays advice.
+
+def _adjust_round_kg(kg: float, step: float = 2.5) -> float:
+    return round(kg / step) * step
+
+
+def _adjust_target_matcher(target):
+    """The tracker names targets as 'all', 'schedule', or a display list of
+    exercise names ('Back Squat, Deadlift'); match ids and names, case-insensitively."""
+    if not target or str(target).strip().lower() in ('all', 'schedule'):
+        return lambda ex: True
+    wanted = {t.strip().lower() for t in str(target).split(',') if t.strip()}
+    return lambda ex: (str(ex.get('id', '')).lower() in wanted
+                       or str(ex.get('name', '')).lower() in wanted)
+
+
+def _adjust_each(weeks: list, start: int, matches):
+    for wi in range(start, len(weeks)):
+        for sessions in (weeks[wi].get('schedule') or {}).values():
+            for session in sessions or []:
+                for ea in session.get('exercises') or []:
+                    ex = ea.get('exercise')
+                    if ex and matches(ex):
+                        yield wi, session, ea
+
+
+def _adjust_hold_load(weeks, start, adj, exercises):
+    matches = _adjust_target_matcher(adj.get('target'))
+    held: dict = {}
+    touched_weeks, n = set(), 0
+    for wi, _session, ea in _adjust_each(weeks, start, matches):
+        load = ea.get('load') or {}
+        if load.get('weight_kg') is None:
+            continue
+        ex_id = ea['exercise']['id']
+        held.setdefault(ex_id, load['weight_kg'])     # the first week's load is the one held
+        if load['weight_kg'] != held[ex_id] or wi == start:
+            load['weight_kg'] = held[ex_id]
+            ea['load'] = load
+            ea['load_note'] = f"Load held at {held[ex_id]:g} kg — adjustment applied"
+            touched_weeks.add(wi); n += 1
+    return {'weeks': sorted(touched_weeks), 'exercises': n}
+
+
+_CONTINUOUS_VOLUME_KEYS = ('duration_minutes', 'time_minutes', 'distance_km', 'hold_seconds')
+
+
+def _week_assignments_ordered(week: dict):
+    """(session, assignment) pairs of a week in calendar order, so a cut that
+    trims 'the last session first' is the same on every client — iOS re-encodes
+    the schedule dictionary in arbitrary order."""
+    schedule = week.get('schedule') or {}
+    days = sorted(schedule, key=lambda d: _DAY_NAMES.index(d) if d in _DAY_NAMES else 99)
+    for day in days:
+        for session in schedule.get(day) or []:
+            for ea in session.get('exercises') or []:
+                yield session, ea
+
+
+def _adjust_reduce_volume(weeks, start, adj, exercises):
+    """Ten percent off each exercise's weekly volume.
+
+    Discrete quantities (sets, AMRAP rounds) are cut per week, not per session:
+    10% of three sets rounds back to three and nothing would ever change, while
+    one set off nine weekly sets is the cut a coach makes. The last session of
+    the week loses it first. Continuous ones (minutes, km, hold seconds) take
+    ×0.9 directly.
+    """
+    matches = _adjust_target_matcher(adj.get('target'))
+    touched_weeks, touched = set(), set()
+
+    def mark(wi, ea, note):
+        ea['load_note'] = note
+        touched_weeks.add(wi); touched.add(id(ea))
+
+    for wi in range(start, len(weeks)):
+        by_ex: dict = {}
+        for _session, ea in _week_assignments_ordered(weeks[wi]):
+            ex = ea.get('exercise')
+            if ex and matches(ex) and ea.get('load'):
+                by_ex.setdefault(ex['id'], []).append(ea)
+        for eas in by_ex.values():
+            for ea in eas:
+                load = ea['load']
+                for key in _CONTINUOUS_VOLUME_KEYS:
+                    v = load.get(key)
+                    if isinstance(v, (int, float)) and v > 0:
+                        new = round(v * 0.9, 1) if key == 'distance_km' else max(1, int(round(v * 0.9)))
+                        if new != v:
+                            load[key] = new
+                            mark(wi, ea, 'Volume −10% — adjustment applied')
+            for key in ('sets', 'target_rounds'):
+                have = [ea for ea in eas if isinstance(ea['load'].get(key), (int, float))]
+                total = sum(ea['load'][key] for ea in have)
+                cut = max(1, int(round(total * 0.1))) if total >= 3 else 0
+                for ea in reversed(have):            # last session of the week first
+                    if cut <= 0:
+                        break
+                    if ea['load'][key] > 1:
+                        ea['load'][key] = int(ea['load'][key]) - 1
+                        mark(wi, ea, 'Volume −10% — adjustment applied')
+                        cut -= 1
+    return {'weeks': sorted(touched_weeks), 'exercises': len(touched)}
+
+
+def _adjust_early_deload(weeks, start, adj, exercises):
+    week = weeks[start]
+    week['is_deload'] = True
+    n = 0
+    for sessions in (week.get('schedule') or {}).values():
+        for session in sessions or []:
+            session['is_deload'] = True
+            for ea in session.get('exercises') or []:
+                load = ea.get('load') or {}
+                if not ea.get('exercise') or not load:
+                    continue
+                if isinstance(load.get('weight_kg'), (int, float)):
+                    load['weight_kg'] = _adjust_round_kg(load['weight_kg'] * 0.9)
+                if isinstance(load.get('sets'), (int, float)) and load['sets'] > 1:
+                    load['sets'] = max(1, int(round(load['sets'] * 0.6)))
+                for key in ('duration_minutes', 'time_minutes'):
+                    if isinstance(load.get(key), (int, float)) and load[key] > 0:
+                        load[key] = max(1, int(round(load[key] * 0.6)))
+                ea['load'] = load
+                ea['load_note'] = 'Deload — reduced intensity (adjustment applied)'
+                n += 1
+    return {'weeks': [start], 'exercises': n}
+
+
+def _adjust_increase_increment(weeks, start, adj, exercises):
+    """One extra increment step per week after the current one, cumulatively —
+    the exercise's own weekly_increment_kg, else the generator's default."""
+    from src.progression import _DEFAULT_INCREMENT_KG
+    matches = _adjust_target_matcher(adj.get('target'))
+    touched_weeks, n = set(), 0
+    for wi, _session, ea in _adjust_each(weeks, start + 1, matches):
+        load = ea.get('load') or {}
+        if not isinstance(load.get('weight_kg'), (int, float)):
+            continue
+        ex_def = exercises.get(ea['exercise']['id']) or {}
+        inc = ex_def.get('weekly_increment_kg') or _DEFAULT_INCREMENT_KG
+        extra = inc * (wi - start)
+        load['weight_kg'] = _adjust_round_kg(load['weight_kg'] + extra)
+        ea['load'] = load
+        ea['load_note'] = f'+{extra:g} kg over the plan — increment raised'
+        touched_weeks.add(wi); n += 1
+    return {'weeks': sorted(touched_weeks), 'exercises': n}
+
+
+_ADJUSTERS = {
+    'hold_load': _adjust_hold_load,
+    'reduce_volume_10pct': _adjust_reduce_volume,
+    'early_deload': _adjust_early_deload,
+    'increase_increment': _adjust_increase_increment,
+}
+
+
+def _current_week_index(start_date: str | None, n_weeks: int) -> int:
+    """Array index of the calendar week the athlete is in, clamped to the plan."""
+    from datetime import date as _date
+    if not start_date or n_weeks <= 0:
+        return 0
+    try:
+        days = (_date.today() - _date.fromisoformat(str(start_date)[:10])).days
+    except Exception:
+        return 0
+    return max(0, min(days // 7, n_weeks - 1))
+
+
+def apply_adjustment_to_weeks(weeks: list, start: int, adjustment: dict, exercises: dict) -> dict:
+    """Pure: mutates `weeks` from index `start` and reports what changed."""
+    kind = (adjustment or {}).get('type')
+    if kind not in _ADJUSTERS:
+        raise ValueError(f'unsupported adjustment type {kind!r}')
+    stats = _ADJUSTERS[kind](weeks, start, adjustment, exercises)
+    return {'type': kind, 'from_week_index': start, **stats}
+
+
+@app.post('/api/programs/adjust')
+@require_auth
+def adjust_program():
+    """Apply one suggested adjustment to the stored program from a week onward.
+
+    Body: {adjustment: {type, target, magnitude}, from_week_index?, baseRevision?}.
+    Answers 409 stale_revision like PUT /api/user/program, 422 for an adjustment
+    that is advice rather than a plan edit, and returns the saved envelope so
+    the client can replace its copy without a second round trip.
+    """
+    from src.db import get_user_program, save_user_program, get_program_revision
+    body = request.get_json(silent=True) or {}
+    adjustment = body.get('adjustment') or {}
+    kind = adjustment.get('type')
+    if kind not in _ADJUSTERS:
+        return jsonify({'detail': f'adjustment type {kind!r} is advice, not a plan edit',
+                        'supported': sorted(_ADJUSTERS)}), 422
+    user_id = g.user_id
+    envelope = get_user_program(user_id)
+    if not isinstance(envelope, dict):
+        return jsonify({'detail': 'no program'}), 404
+    envelope = _normalize_program_keys(envelope)
+    current = envelope.get('currentProgram') or {}
+    weeks = current.get('weeks') or []
+    if not weeks:
+        return jsonify({'detail': 'no program'}), 404
+
+    base_rev = body.get('baseRevision')
+    if base_rev is not None:
+        current_rev = get_program_revision(user_id)
+        if current_rev is not None and str(base_rev) != str(current_rev):
+            return jsonify({'saved': False, 'detail': 'stale_revision',
+                            'currentRevision': current_rev}), 409
+
+    start = body.get('from_week_index')
+    start = _current_week_index(envelope.get('programStartDate'), len(weeks)) if start is None \
+        else max(0, min(int(start), len(weeks) - 1))
+    exercises, _ = loader.load_all_exercises()
+    applied = apply_adjustment_to_weeks(weeks, start, adjustment, exercises)
+    current['weeks'] = weeks
+    try:
+        current['volume_summary'] = [_week_volume(w) for w in weeks]
+    except Exception:
+        pass
+    envelope['currentProgram'] = current
+
+    save_user_program(user_id, envelope)
+    revision = get_program_revision(user_id)
+    history = _record_program_history(user_id, envelope, 'adjust', revision)
+    program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId')}
+    return jsonify({'saved': True, 'revision': revision,
+                    'programVersionId': history.get('versionId'),
+                    'applied': applied, 'program': program})
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dumbbell, Wind, Footprints, Heart, Flame, Layers } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -86,15 +87,12 @@ export function ExerciseAnimationPanel({
   }
 
   if (showLottie) {
-    // Placeholder until @lottiefiles/dotlottie-react is installed and files exist.
-    // To activate: npm install @lottiefiles/dotlottie-react
-    //   import { DotLottieReact } from '@lottiefiles/dotlottie-react'
-    //   return <div className={wrapperCn}><DotLottieReact src={animation!.lottie_path} loop autoplay /></div>
+    // Files live at frontend/public/animations/lottie/{exercise_id}.lottie and
+    // are pointed at by each package's exercise_media.yaml; authoring them is
+    // the open content item (docs/roadmap.md).
     return (
-      <div className={cn(wrapperCn, 'flex items-center justify-center')}>
-        <span className="text-[10px] text-muted-foreground text-center px-2">
-          Animation coming soon
-        </span>
+      <div className={wrapperCn}>
+        <DotLottieReact src={animation!.lottie_path} loop autoplay />
       </div>
     )
   }

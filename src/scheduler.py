@@ -386,8 +386,30 @@ def _recovery_cost_rank(mod_id: str, modalities: dict) -> int:
     )
 
 
+def consecutive_allowances(framework: dict | None, phase: str) -> frozenset:
+    """Modality pairs this framework lets sit on consecutive days in this phase.
+
+    A framework's `recovery.allow_consecutive` lists `[a, b]` pairs (`a == b`
+    for the same modality on back-to-back days); `recovery.phases` limits them
+    to named phases, default every phase. The scheduler otherwise keeps a
+    modality's `recovery_hours_min` from itself and 48 h between two high-cost
+    modalities — which is right for strength and wrong for an endurance build:
+    Uphill Athlete's specific phase puts its two ME long days on the weekend to
+    simulate the objective, and strength_endurance needs 48 h from itself.
+    """
+    rec = (framework or {}).get('recovery') or {}
+    phases = rec.get('phases')
+    if phases and phase not in phases:
+        return frozenset()
+    return frozenset(
+        frozenset(pair) for pair in rec.get('allow_consecutive') or []
+        if isinstance(pair, (list, tuple)) and len(pair) == 2
+    )
+
+
 def _recovery_safe(day: int, modality: str, mod_data: dict,
-                   schedule: dict, modalities: dict) -> bool:
+                   schedule: dict, modalities: dict,
+                   allowed: frozenset = frozenset()) -> bool:
     """Return True if placing modality on day respects recovery windows."""
     recovery_needed = mod_data.get('recovery_hours_min', 24)
     my_cost = _RECOVERY_COST_RANK.get(mod_data.get('recovery_cost', 'low'), 1)
@@ -395,6 +417,9 @@ def _recovery_safe(day: int, modality: str, mod_data: dict,
     for prev_day in range(max(1, day - 3), day):
         hours = (day - prev_day) * 24
         for prev_mod in schedule.get(prev_day, []):
+            # The framework may have cleared this pair for adjacent days.
+            if hours <= 24 and frozenset((prev_mod, modality)) in allowed:
+                continue
             # Same modality: enforce its recovery window
             if prev_mod == modality and hours < recovery_needed:
                 return False
@@ -422,7 +447,8 @@ def _session_compatible(day: int, new_mod: str, mod_data: dict,
 
 
 def _score_days(days: list, schedule: dict, modality: str,
-                mod_data: dict, modalities: dict, day_configs: dict | None = None) -> list:
+                mod_data: dict, modalities: dict, day_configs: dict | None = None,
+                allowed: frozenset = frozenset()) -> list:
     """Return days sorted by placement desirability (best first).
 
     Considers recovery windows and (optionally) duration matching.
@@ -438,6 +464,8 @@ def _score_days(days: list, schedule: dict, modality: str,
         for prev_day in range(max(1, day - 4), day):
             hours = (day - prev_day) * 24
             for prev_mod in schedule.get(prev_day, []):
+                if hours <= 24 and frozenset((prev_mod, modality)) in allowed:
+                    continue
                 if prev_mod == modality:
                     needed = mod_data.get('recovery_hours_min', 24)
                     gap_score -= max(0, needed - hours)
@@ -477,54 +505,6 @@ _DEFAULT_SPREAD: Dict[int, List[int]] = {
     7: [1, 2, 3, 4, 5, 6, 7],
 }
 
-# Framework-specific cadence patterns (1=Mon … 7=Sun).
-# Multiple options per (framework, N) rotate week-to-week via week_in_phase % len(options).
-# First option in each list is most spread-out — used for taper/deload/rehab phases.
-_CADENCE_OPTIONS: Dict[str, Dict[int, List[List[int]]]] = {
-    'linear_progression': {
-        # Classic alternating rest — Mon/Wed/Fri and shifted variants
-        2: [[1, 4], [2, 5], [1, 5]],
-        3: [[1, 3, 5], [2, 4, 6], [1, 3, 6]],
-        4: [[1, 2, 4, 6], [1, 3, 4, 6], [2, 3, 5, 7]],
-    },
-    'concurrent_training': {
-        # Index 0 = most spread-out (used for taper/deload); others are 2-on-1-off variants
-        3: [[1, 4, 7], [1, 3, 6], [2, 4, 7]],
-        4: [[1, 3, 5, 7], [1, 2, 4, 6], [2, 3, 5, 7]],
-        5: [[1, 2, 4, 6, 7], [1, 2, 4, 5, 7], [1, 3, 4, 6, 7]],
-        6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]],
-    },
-    'gpp_circuits': {
-        3: [[1, 3, 5], [2, 4, 6], [1, 4, 6]],
-        4: [[1, 2, 4, 6], [1, 3, 5, 6], [2, 3, 5, 7]],
-        5: [[1, 2, 3, 5, 7], [1, 2, 4, 5, 7], [1, 3, 4, 6, 7]],
-    },
-    'polarized_80_20': {
-        # Uphill Athlete: large recovery gaps between hard sessions
-        3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]],
-        4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]],
-        5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7], [1, 2, 3, 5, 7]],
-        6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]],
-    },
-    'high_frequency_skill': {
-        # Clusters of consecutive days for daily practice
-        4: [[1, 2, 3, 5], [2, 3, 4, 6], [1, 2, 4, 5]],
-        5: [[1, 2, 3, 4, 6], [1, 2, 3, 5, 7], [2, 3, 4, 5, 7]],
-        6: [[1, 2, 3, 4, 5, 7], [2, 3, 4, 5, 6, 7]],
-    },
-    'block_periodization': {
-        3: [[1, 3, 5], [1, 3, 6], [2, 4, 6]],
-        4: [[1, 2, 4, 6], [1, 3, 5, 7], [2, 3, 5, 7]],
-        5: [[1, 2, 3, 5, 7], [1, 2, 4, 5, 7], [1, 3, 4, 6, 7]],
-    },
-    'rpe_autoregulation': {
-        3: [[1, 3, 5], [2, 4, 6], [1, 4, 7]],
-        4: [[1, 2, 4, 6], [1, 3, 5, 7], [2, 3, 5, 7]],
-        5: [[1, 2, 4, 5, 7], [1, 2, 3, 6, 7], [1, 3, 4, 6, 7]],
-    },
-    # emom_amrap, kb_pentathlon → fall back to _DEFAULT_SPREAD
-}
-
 # Phases that prefer the most evenly-distributed pattern (maximum recovery between sessions)
 _SPREAD_PHASES = {'taper', 'deload', 'rehab'}
 
@@ -542,9 +522,16 @@ def _spread_pick(candidates: List[int], n: int) -> List[int]:
 
 def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int,
                     framework: dict | None = None) -> List[int]:
-    """Return the day-of-week pattern for this framework/volume/phase/week combo."""
-    yaml_options = (framework or {}).get('cadence_options', {})
-    options = yaml_options.get(days) or _CADENCE_OPTIONS.get(framework_id, {}).get(days)
+    """Return the day-of-week pattern for this framework/volume/phase/week combo.
+
+    Patterns come from the framework's `cadence_options` (keyed by days per
+    week, several options rotating week to week); a framework without them
+    gets the evenly spread default. The Python fallback table that used to
+    shadow the YAML is gone — every framework that had an entry there carries
+    the same patterns in its own file.
+    """
+    del framework_id  # kept for call-site compatibility; the framework dict is the source
+    options = ((framework or {}).get('cadence_options') or {}).get(days)
     if not options:
         return _DEFAULT_SPREAD.get(days, list(range(1, days + 1)))
     if phase in _SPREAD_PHASES:
@@ -586,7 +573,8 @@ def _build_day_pool(days_per_week: int,
 def assign_to_days(allocation: dict, modalities: dict,
                    days_per_week: int,
                    day_pool: List[int] | None = None,
-                   constraints: dict | None = None) -> Dict[int, List[str]]:
+                   constraints: dict | None = None,
+                   allowed_consecutive: frozenset = frozenset()) -> Dict[int, List[str]]:
     """Place modalities on specific days with recovery-awareness and duration matching.
 
     day_pool: pre-computed ordered day numbers (1=Mon … 7=Sun).
@@ -611,12 +599,13 @@ def assign_to_days(allocation: dict, modalities: dict,
     for modality, count in sorted_mods:
         mod_data = modalities.get(modality, {})
         placed = 0
-        ordered_days = _score_days(days, schedule, modality, mod_data, modalities, day_configs)
+        ordered_days = _score_days(days, schedule, modality, mod_data, modalities, day_configs,
+                                   allowed_consecutive)
 
         for day in ordered_days:
             if placed >= count:
                 break
-            if (_recovery_safe(day, modality, mod_data, schedule, modalities) and
+            if (_recovery_safe(day, modality, mod_data, schedule, modalities, allowed_consecutive) and
                     _session_compatible(day, modality, mod_data, schedule, modalities)):
                 schedule[day].append(modality)
                 placed += 1
@@ -815,7 +804,8 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
     if constraints.get('fatigue_state') == 'overreached':
         is_deload = True
 
-    raw = assign_to_days(allocation, data['modalities'], len(pool), pool, constraints)
+    raw = assign_to_days(allocation, data['modalities'], len(pool), pool, constraints,
+                         allowed_consecutive=consecutive_allowances(framework, phase))
 
     if constraints.get('allow_split_sessions'):
         _add_split_sessions(raw, data['modalities'], constraints)

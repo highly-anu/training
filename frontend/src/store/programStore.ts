@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GeneratedProgram, Session } from '@/api/types'
+import type { ExerciseAssignment, GeneratedProgram, Session } from '@/api/types'
 import { fetchUserProgram, saveUserProgram, lastProgramSaveError } from '@/api/userdata'
 
 interface ProgramStore {
@@ -46,6 +46,8 @@ interface ProgramStore {
   moveSession: (weekIndex: number, fromDay: string, toDay: string, sessionIndex: number) => void
   /** Replace a single session at the given position with a new one. */
   replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
+  /** Replace one exercise inside a session (the swap flow). */
+  replaceExercise: (weekIndex: number, day: string, sessionIndex: number, exerciseIndex: number, assignment: ExerciseAssignment) => void
   /** Load program from server (called on login). */
   loadFromServer: (userId?: string) => Promise<void>
 }
@@ -168,6 +170,33 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         const sessions = [...(week.schedule[day] ?? [])]
         if (sessionIndex < 0 || sessionIndex >= sessions.length) return week
         sessions[sessionIndex] = newSession
+        return { ...week, schedule: { ...week.schedule, [day]: sessions } }
+      })
+      return { currentProgram: { ...state.currentProgram, weeks } }
+    })
+    const s = get()
+    if (s.currentProgram) {
+      void persistProgram(set, {
+        currentProgram:    s.currentProgram,
+        programStartDate:  s.programStartDate,
+        eventDate:         s.eventDate,
+        sourceGoalIds:     s.sourceGoalIds,
+        sourceGoalWeights: s.sourceGoalWeights,
+      })
+    }
+  },
+
+  replaceExercise: (weekIndex, day, sessionIndex, exerciseIndex, assignment) => {
+    set((state) => {
+      if (!state.currentProgram) return {}
+      const weeks = state.currentProgram.weeks.map((week, i) => {
+        if (i !== weekIndex) return week
+        const sessions = [...(week.schedule[day] ?? [])]
+        const session = sessions[sessionIndex]
+        if (!session || exerciseIndex < 0 || exerciseIndex >= session.exercises.length) return week
+        const exercises = [...session.exercises]
+        exercises[exerciseIndex] = assignment
+        sessions[sessionIndex] = { ...session, exercises }
         return { ...week, schedule: { ...week.schedule, [day]: sessions } }
       })
       return { currentProgram: { ...state.currentProgram, weeks } }

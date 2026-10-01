@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { StravaConnect } from '@/components/bio/StravaConnect'
+import { DevicesCard } from '@/components/settings/DevicesCard'
 import { useProfileStore } from '@/store/profileStore'
 import {
   useGarminStatus,
@@ -270,6 +271,14 @@ export function ConnectionsSettings() {
           </h3>
           <GarminConnect />
           <StravaConnect />
+        </div>
+
+        {/* Devices */}
+        <div className="space-y-4">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
+            Devices
+          </h3>
+          <DevicesCard />
         </div>
       </div>
     </div>

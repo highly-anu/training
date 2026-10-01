@@ -10,10 +10,8 @@ core_principles:
   - concurrent_training_managed_through_fatigue_awareness
 scope:
   - max_strength
-  - strength_endurance
   - relative_strength
   - mixed_modal_conditioning
-  - durability
   - rehab
 bias:
   - strength_endurance

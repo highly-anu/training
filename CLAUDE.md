@@ -16,9 +16,11 @@ A training logic system that algorithmically generates periodized training progr
   and points local dev at the local `training_test` Postgres with Supabase unset, so the
   API runs as `local-dev-user` and `FRONTEND_URL=http://localhost:5173` for CORS. Fly gets
   its config from `fly secrets`; neither file is committed or copied into the image.
-  The six YAML authoring routes (`POST/PUT /api/exercises`, `/api/archetypes`,
+  The YAML authoring routes (`POST/PUT/DELETE /api/exercises`, `/api/archetypes`,
   `POST /api/modalities`, `PUT /api/frameworks/<id>`) require a signed-in user and
-  `AUTHORING_ENABLED=1`; an empty `SUPABASE_URL` (local dev) enables them without it.
+  `AUTHORING_ENABLED=1`; an empty `SUPABASE_URL` (local dev) enables them without it. They
+  validate against `docs/schemas/*.schema.json` (422 with the error list) and DELETE only
+  touches the `custom` package.
   Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
   (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
@@ -69,7 +71,9 @@ training/
 │   │   └── constraints/
 │   │       ├── injury_flags.yaml    # 12 flags with patterns + substitutions
 │   │       └── equipment_profiles.yaml
-│   └── benchmarks/           # Strength + conditioning + cell standards
+│   └── benchmarks/           # Six list files (strength, conditioning, kettlebell
+│                             #   pentathlon, ruck & PT tests, benchmark WODs, skill)
+│                             #   + the Cell standards; `benchmarks_data.BENCHMARK_FILES`
 ├── docs/plan.md              # Original design document (ontology reference)
 └── frontend/                 # React app (see below)
 ```
@@ -84,6 +88,7 @@ All prefixed `/api/`:
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
+| GET | `/benchmarks?sex=` | `BenchmarkStandard[]` (47; female or male tables) |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
@@ -91,8 +96,26 @@ All prefixed `/api/`:
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` |
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
+| POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
+| POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
+| GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
+
+**Adjust and swap edit the stored program, never regenerate it.** `POST /programs/adjust`
+mutates `weeks[start:]` in place (`apply_adjustment_to_weeks`, pure, tested without a DB):
+`hold_load` freezes each lift at the start week's kg; `reduce_volume_10pct` cuts discrete
+quantities *per week* (one set off nine weekly sets — 10 % of three sets per session rounds
+back to three and would never change anything) and continuous ones ×0.9; `early_deload`
+flags the start week and its sessions and applies the deload scalings; `increase_increment`
+adds the exercise's `weekly_increment_kg` per week cumulatively after the start week. Targets
+are the tracker's display strings (`all`, `schedule`, or comma-joined exercise names) matched
+against id and name. Loads and slots are outside the version skeleton hash, so an adjustment
+never mints a program version; it bumps the revision like a PUT. `POST /exercises/substitute`
+runs `selector.select_exercise(..., return_trace=True)` for one slot with the session's other
+exercises excluded and returns complete assignments with `calculate_load` for the week; the
+client replaces the entry (`programStore.replaceExercise`) and saves through the
+revision-checked PUT — nothing is persisted by the endpoint.
 
 ## Frontend (frontend/)
 
@@ -149,6 +172,13 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
 - **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: auto-triggered every N weeks (per framework) or when `fatigue_state: overreached`.
+- **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
+  (keyed by days per week, several patterns rotating week to week) is the only source of
+  day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of
+  loads (`progression._DEFAULT_INCREMENT_KG` is the sole code default). A framework may
+  declare `recovery.allow_consecutive: [[a, b], …]` (+ `phases`) to let a modality pair sit
+  on back-to-back days despite the recovery windows — Uphill's specific phase does, for
+  its two ME long days (`scheduler.consecutive_allowances`).
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
 - **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
 - **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
@@ -166,8 +196,11 @@ is the source of the patterns, not the neighbouring screen:
   `AppSubTabs.swift` (§6.8).
 - **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
 - **iOS tabs**: Today · Program · Analytics · Profile (`AppRouter.Tab`); Settings
-  (connections, devices & sync, appearance, account) is pushed from Profile's gear, never a
-  tab — design-system §6.13.
+  (connections, devices & sync, notifications, appearance, account) is pushed from
+  Profile's gear, never a tab — design-system §6.13. The exercise reference on the phone
+  is `ExerciseDetailSheet` (§6.14), presented from any session row and from the swap
+  list; prescriptions are formatted by `LoadFormat` only. Local session reminders come
+  from `NotificationManager` (`NotificationPlan` is pure and tested); there is no push.
 
 Shared iOS style primitives live in `AppAnimationSettings.swift`
 (`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
@@ -179,8 +212,14 @@ component rather than in instructions at the call site.
 ## Workout Import
 
 Activities reach the `workouts` table from five places: a manual `.fit`/`.xml`/`.json`
-upload (`POST /api/workouts/parse`), the Strava OAuth sync, the Connect IQ watch app,
-the iOS Apple Health relay, and the Garmin Connect webhook.
+upload (`POST /api/workouts/parse`, from the web Log page and the iOS `FITImportSheet`
+alike), the Strava OAuth sync, the Connect IQ watch app, the iOS Apple Health relay, and
+the Garmin Connect webhook. The Apple Watch companion posts through the same two routes
+(`WatchUpload` builds the payloads; `WatchUploadTests` pins the keys): no client writes a
+workout or a match to Supabase directly any more, so every copy meets dedup, the matcher
+and `session_uid` resolution. The phone reads them back through `GET /health/snapshot`
+and `GET /health/workouts/<id>` too — nothing in the iOS app speaks PostgREST for
+training data; only sign-in goes to Supabase.
 
 - **One FIT parser** — `src/fit_import.py`, extracted from the upload handler so the
   Garmin webhook can parse the same format. `parse_fit(stream, source=...)` is pure:
@@ -309,6 +348,14 @@ writes.
   1–5 at the boundary (iOS sends 1–10).
 - `GET /api/progression/review` keeps its shape for iOS but takes its
   `exercise_findings` from the engine.
+- **iOS load charts are server-side.** Analytics ▸ Overview reads
+  `/health/load/pmc` and `/health/load/weekly`; `AnalyticsEngine` is the
+  fallback when the request fails, and the footnote says which was used, so
+  the phone and the web cannot quietly disagree. Analytics ▸ Program
+  (`Views/AnalyticsProgramTab.swift`) lays out the same `/analytics/program`
+  document the web does; `ProgramAnalyticsModels.swift` decodes every section
+  on its own, and `AnalyticsStatusStyle` is the phone's copy of
+  `components/analytics/status.ts`.
 
 ## Program History
 

@@ -24,10 +24,74 @@ struct AppExercise: Codable, Identifiable {
     let movementPatterns: [String]?
     let notes: String?
     let difficulty: String?
+    let equipment: [String]?
+    /// Concept or exercise ids the athlete should know first.
+    let requires: [String]?
+    let unlocks: [String]?
+    let effort: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, category, notes, difficulty
+        case id, name, category, notes, difficulty, equipment, requires, unlocks, effort
         case movementPatterns = "movement_patterns"
+    }
+}
+
+/// A package's demo and coaching notes for one exercise
+/// (`GET /api/exercises/<id>/media`, merged from `exercise_media.yaml`).
+/// Every field is optional and decoded on its own, so one odd entry cannot
+/// blank the sheet.
+struct ExerciseMedia: Decodable {
+    struct Animation: Decodable {
+        let type: String?
+        let gifUrl: String?
+        let gifAlt: String?
+        let gifSource: String?
+
+        enum CodingKeys: String, CodingKey {
+            case type
+            case gifUrl    = "gif_url"
+            case gifAlt    = "gif_alt"
+            case gifSource = "gif_source"
+        }
+    }
+
+    let animation: Animation?
+    let description: String?
+    let coachingFocus: String?
+    let cuePoints: [String]?
+    let commonErrors: [String]?
+    let musclesPrimary: [String]?
+    let musclesSecondary: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case animation, description
+        case coachingFocus    = "coaching_focus"
+        case cuePoints        = "cue_points"
+        case commonErrors     = "common_errors"
+        case musclesPrimary   = "muscles_primary"
+        case musclesSecondary = "muscles_secondary"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        animation        = try? c.decodeIfPresent(Animation.self, forKey: .animation)
+        description      = try? c.decodeIfPresent(String.self, forKey: .description)
+        coachingFocus    = try? c.decodeIfPresent(String.self, forKey: .coachingFocus)
+        cuePoints        = try? c.decodeIfPresent([String].self, forKey: .cuePoints)
+        commonErrors     = try? c.decodeIfPresent([String].self, forKey: .commonErrors)
+        musclesPrimary   = try? c.decodeIfPresent([String].self, forKey: .musclesPrimary)
+        musclesSecondary = try? c.decodeIfPresent([String].self, forKey: .musclesSecondary)
+    }
+
+    /// The demo, when the package ships one (`type: gif`).
+    var gifURL: URL? {
+        guard animation?.type == "gif", let s = animation?.gifUrl else { return nil }
+        return URL(string: s)
+    }
+
+    var isEmpty: Bool {
+        gifURL == nil && (description ?? "").isEmpty && (coachingFocus ?? "").isEmpty
+            && (cuePoints ?? []).isEmpty && (commonErrors ?? []).isEmpty
     }
 }
 
@@ -252,10 +316,86 @@ struct WorkoutMatch {
     let confidence: String
 }
 
+/// One row of `GET /health/snapshot`'s `matches`, as the server emits it.
+/// The writers have disagreed on the confidence column's type — this app once
+/// wrote the number 1.0, the web writes "manual", the server "auto" — so it
+/// is read as a string or a number and compared only against "rejected".
+struct WorkoutMatchRecord: Decodable, Equatable {
+    let importedWorkoutId: String
+    let sessionKey: String
+    let sessionUid: String?
+    let matchConfidence: String
+    let matchedAt: String?
+
+    enum CodingKeys: String, CodingKey { case importedWorkoutId, sessionKey, sessionUid, matchConfidence, matchedAt }
+
+    init(importedWorkoutId: String, sessionKey: String, sessionUid: String? = nil,
+         matchConfidence: String, matchedAt: String? = nil) {
+        self.importedWorkoutId = importedWorkoutId
+        self.sessionKey = sessionKey
+        self.sessionUid = sessionUid
+        self.matchConfidence = matchConfidence
+        self.matchedAt = matchedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        importedWorkoutId = try c.decode(String.self, forKey: .importedWorkoutId)
+        sessionKey = try c.decode(String.self, forKey: .sessionKey)
+        sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
+        if let s = try? c.decodeIfPresent(String.self, forKey: .matchConfidence) {
+            matchConfidence = s
+        } else if let d = try? c.decodeIfPresent(Double.self, forKey: .matchConfidence) {
+            matchConfidence = String(d)
+        } else {
+            matchConfidence = ""
+        }
+        matchedAt = try? c.decodeIfPresent(String.self, forKey: .matchedAt)
+    }
+
+    /// The app's match, or nil for a rejected decision.
+    var asMatch: WorkoutMatch? {
+        guard matchConfidence != "rejected" else { return nil }
+        return WorkoutMatch(workoutId: importedWorkoutId, sessionKey: sessionKey, confidence: matchConfidence)
+    }
+}
+
+/// Decodes to nil instead of failing, so one bad element of a server list
+/// does not throw the whole list away.
+struct Lossy<T: Decodable>: Decodable {
+    let value: T?
+    init(from decoder: Decoder) throws {
+        value = try? T(from: decoder)
+    }
+}
+
 struct WorkoutHRData: Codable {
     let avg: Int?
     let max: Int?
     let samples: [HRSample]
+
+    init(avg: Int?, max: Int?, samples: [HRSample]) {
+        self.avg = avg
+        self.max = max
+        self.samples = samples
+    }
+
+    private enum CodingKeys: String, CodingKey { case avg, max, samples }
+
+    /// Averages may arrive as 142 or 142.0 depending on which path wrote the
+    /// row; a summary carries no samples at all.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        avg = Self.wholeNumber(c, .avg)
+        max = Self.wholeNumber(c, .max)
+        samples = (try? c.decodeIfPresent([Lossy<HRSample>].self, forKey: .samples))??.compactMap(\.value) ?? []
+    }
+
+    private static func wholeNumber(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Int? {
+        if let i = try? c.decodeIfPresent(Int.self, forKey: key) { return i }
+        if let d = try? c.decodeIfPresent(Double.self, forKey: key) { return Int(d.rounded()) }
+        return nil
+    }
 }
 
 struct HRSample: Codable {

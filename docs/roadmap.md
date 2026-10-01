@@ -33,97 +33,28 @@ deferred is under *Later*.
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | Missing benchmark families | P2 | M | data |
-| 2 | Exercise animations (Lottie + SVG CSS) | P2 | L | web / content |
-| 3 | Finish moving cadence and load tables from Python into YAML | P3 | S | engine |
-| 4 | Scope declares modalities nothing schedules | P3 | S | packages |
-| 5 | Configurable back-to-back recovery relaxation | P3 | M | engine |
-| 6 | Authoring API completeness | P3 | M | api / web |
+| 1 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
 
 ---
 
-### 1. Missing benchmark families — P2 · M
-
-Three files exist under `data/benchmarks/`: strength, conditioning and the
-Cell standards. Families referenced in the packages with no data behind them:
-
-| Family | Contents |
-|---|---|
-| Kettlebell pentathlon | Wildman five-lift scoring (snatch, clean and jerk, press, squat, pull) |
-| Ruck standards | SFAS pace (40 lb / 12 mi / sub-3 h), Horsemen PT Tests I and II |
-| CrossFit benchmark WODs | Girls (Fran, Grace, Helen, Diane, Isabel, Annie, Elizabeth) and Heroes (Murph, Cindy, DT) |
-| Movement and skill | Turkish get-up standard, handstand hold |
-
-Each is a YAML file in the existing list-of-objects schema plus one entry in the
-`_all_benchmarks()` loop and, for WODs, a `benchmark_wod` category. Content
-work; the sources are in `data/` and `docs/extracted/`.
-
-### 2. Exercise animations — P2 · L
+### 1. Exercise animation content — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
-`ExerciseAnimationPanel` already dispatches on `gif | lottie | svg_css | none`,
-so what remains is content and one dependency:
+The code half shipped on 2026-10-01: `@lottiefiles/dotlottie-react` is
+installed and `ExerciseAnimationPanel` renders `<DotLottieReact>` for
+`type: lottie`. What remains is content:
 
-1. `npm install @lottiefiles/dotlottie-react` and swap the placeholder branch
-   for `<DotLottieReact src=… loop autoplay />`.
-2. Lottie files at `frontend/public/animations/lottie/{exercise_id}.lottie`, in
+1. Lottie files at `frontend/public/animations/lottie/{exercise_id}.lottie`, in
    priority order: Kelly Starrett's top twenty mobility movements, Wildman
    kettlebell ballistics, Ido Portal locomotion (custom, After Effects or Rive).
-3. SVG CSS loops at `frontend/public/animations/svg/` for the bridge and
+2. SVG CSS loops at `frontend/public/animations/svg/` for the bridge and
    handstand progressions and the rehab movements with no Lottie match.
-4. Point each package's `exercise_media.yaml` entry at the file.
+3. Point each package's `exercise_media.yaml` entry at the file.
 
 Acceptance: Lottie renders in the drawer; ten Starrett movements, the two core
 KB ballistics and five Portal locomotion patterns animate; `type: none` still
 shows the category placeholder.
-
-### 3. Cadence and load tables still in Python — P3 · S
-
-Two of the three "knowledge in code" tables identified in April are half
-migrated:
-
-- `_CADENCE_OPTIONS` in `scheduler.py`: the framework yaml's `cadence_options`
-  is read first and the Python dict is the fallback. Move the remaining entries
-  into their frameworks, delete the dict.
-- `_STARTING_LOADS` and `_LINEAR_INCREMENTS` in `progression.py`: the exercise
-  yaml's `starting_load_kg` and `weekly_increment_kg` are read first and the
-  dicts are the fallback. Same treatment; the schema already has the fields.
-
-The third table, movement-pattern aliases, is done: `selector.py` loads
-`data/commons/movement_patterns.yaml`.
-
-### 4. Scope declares modalities nothing schedules — P3 · S per package
-
-Several packages declare `power` or `relative_strength` in `scope` with no
-framework that prescribes them and no archetype that serves them.
-`tools/check_provenance.py --coverage` lists each. Nothing schedules them, so
-generation is unaffected; either author the archetype and a framework line, or
-drop the modality from `scope`. One package per change.
-
-### 5. Configurable back-to-back recovery relaxation — P3 · M
-
-The scheduler's recovery rules forbid consecutive long days. Endurance build
-phases want them — Uphill Athlete's weekend back-to-back is a defining feature
-of the base phase. There is no framework or phase field to relax the rule; the
-only knobs are `sessions_per_week` and `modality_priority`. Add a per-framework
-`recovery` block (which modality pairs may sit on consecutive days, in which
-phases), read it in `allocate_sessions`, and make Uphill's base and specific
-phases use it. Verify with `check_styles.py` and by generating Uphill at five
-and six days.
-
-### 6. Authoring API completeness — P3 · M
-
-Six authoring routes exist — `POST/PUT /api/exercises`, `POST/PUT
-/api/archetypes`, `POST /api/modalities`, `PUT /api/frameworks/<id>` — and
-since 2026-10-01 they require a signed-in user and `AUTHORING_ENABLED` (local
-development gets both for free). None validates against `docs/schemas/`, and
-there is no DELETE for any entity; packages are edited as YAML and validated
-with `tools/validate_entities.py`. Since the per-package restructure this is a
-reasonable steady state — a new package with its own `analytics.yaml` needs no
-engine change. If in-app authoring (Dev Lab) is revived, the order from the
-April analysis still holds: schema validation on the existing routes first,
-then modality creation, then edit and delete for exercises and archetypes.
 
 ---
 
@@ -136,24 +67,13 @@ scheduled ahead of the ranked list.
   writer exist; needs `session_uid` from `GET /programs/planned-sessions` for
   unambiguous keys; reuse the watch `SetLoggerSheetView` slot views. Then
   promote iOS Analytics ▸ Workouts to a Log tab.
-- **Notifications** — local `UNUserNotificationCenter` scheduling from
-  `WidgetDataStore` needs no backend (daily session, deload week, program
-  complete); push would need a device-token table.
-- **Apply adjustment** — `suggest_adjustments` (`src/progression_tracker.py`)
-  emits `hold_load`, `reduce_volume_10pct`, `rebuild_habit`, `early_deload`,
-  `increase_increment` and nothing applies them. Either `POST /api/programs/adjust`
-  under the revision check, or map `early_deload` onto regenerate-from-week with
-  `fatigue_state: overreached`.
-- **Exercise-level swap** — `POST /sessions/generate` is session-level; needs
-  `POST /api/exercises/substitute` over `selector.py` scoring.
-- **iOS server-side analytics** — replace `AnalyticsEngine`'s local PMC with
-  `/health/load/pmc` and add `/analytics/program`, or the two platforms disagree.
-- **iOS FIT import through `POST /workouts/parse`** — gets server dedup and the
-  matcher instead of a raw Supabase upsert.
-- **`/settings` and a web Devices UI** — `GET /api/devices` exists; only when
-  Profile's sub-tab row overflows.
-- **iOS Library tab** — after a contextual exercise sheet exists and has content
-  to promote; needs `GET /exercises/<id>/media`.
+- **Push notifications** — local session reminders exist
+  (`NotificationManager`); push would need a device-token table and a sender.
+- **`/settings`** — the web Devices card now sits under Profile ▸ Connections;
+  a separate settings page only when Profile's sub-tab row overflows.
+- **iOS Library tab** — the contextual exercise sheet exists
+  (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
+  content to browse rather than look up.
 
 ## Parked
 
@@ -184,6 +104,127 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Adjust, swap, devices and the iOS "Later" tranche (2026-10-01)**:
+
+- *Apply adjustment*: `POST /api/programs/adjust` applies one of the review's
+  `adjustments[]` to the stored weeks from a week onward (default: the current
+  calendar week) under the same revision check as PUT, and returns the saved
+  envelope. `hold_load` freezes the kg at the start week; `reduce_volume_10pct`
+  cuts sets and AMRAP rounds per *week* (one off nine weekly sets — 10 % of
+  three sets per session rounds to nothing) and minutes/km ×0.9;
+  `early_deload` flags the start week and applies the deload scalings;
+  `increase_increment` adds the lift's `weekly_increment_kg` cumulatively after
+  the start week. `rebuild_habit` is answered 422 — it is about the athlete, not
+  the plan. The logic is `apply_adjustment_to_weeks`, pure and testable without
+  a DB; the web renders the list on Analytics ▸ Progress with an "Apply from
+  week N" button per appliable entry (`ProgressionTab`, `useApplyAdjustment`).
+- *Exercise-level swap*: `POST /api/exercises/substitute` runs the selector's
+  own filter and score for one archetype slot (`select_exercise(...,
+  return_trace=True)`, the session's other exercises excluded) and returns
+  ranked, complete assignments with the week's load and the reasons. The web
+  shows a swap icon on every exercise row (`SessionPanel` → `SwapExerciseSheet`);
+  picking one calls `programStore.replaceExercise` and saves through the
+  revision-checked PUT. Nothing is persisted by the endpoint.
+- *Web Devices card*: Profile ▸ Connections ▸ Devices lists paired Connect IQ
+  watches, claims a pairing code and revokes (`api/devices.ts`,
+  `DevicesCard`), against the routes the iOS Settings screen already used.
+- *Program header names the stored program*: `ProgramView` read the builder's
+  persisted selection for its title, so browsing a philosophy in the builder
+  renamed the program the athlete is on; it now reads the envelope's
+  `sourceGoalIds`.
+- *iOS swap and apply*: `SwapExerciseSheet` (context menu or swipe on a session
+  row) and `AdjustmentRow` on Analytics ▸ Progress use the two endpoints above
+  through `AppState.replaceExercise` / `applyAdjustment`; a 409 surfaces as
+  `programSaveConflict` and reloads. Models in `ProgramEditing.swift`.
+- *iOS exercise reference*: `ExerciseDetailSheet` (design-system §6.14) —
+  catalog entry, cues, prerequisites and `GET /exercises/<id>/media` — from
+  any session row and from the swap list.
+- *iOS FIT import through the server*: `FITImportSheet` posts to
+  `POST /workouts/parse` (`APIClient.uploadFITFile`) and matches through
+  `POST /health/matches`; the raw Supabase upserts `saveWorkoutDirect` /
+  `saveMatchDirect` are gone, so a phone upload meets dedup and the matcher.
+  (The watch path still bypasses them — ranked item 1.)
+- *iOS load analytics from the server*: Analytics ▸ Overview reads
+  `/health/load/pmc` and `/health/load/weekly`; the on-device engine is the
+  fallback only, and the footnote says which was used.
+- *iOS local notifications*: `NotificationManager` schedules one reminder per
+  training day over a 14-day horizon from the stored program (completed
+  sessions skipped, rescheduled on every program change); Settings ▸
+  Notifications holds the toggle and time. `NotificationPlan` is pure and
+  tested.
+- *`LoadFormat`*: the one prescription formatter on iOS (§1.7 extraction),
+  shared by the session, swap and exercise sheets.
+- *Watch uploads through the server*: `WatchSessionManager` posted a finished
+  watch workout, its match and a second session-log row straight into
+  Supabase. The row never met `workout_dedupe` (a Garmin or Apple Health
+  copy became a second workout), the match had no `session_uid`, elevation
+  loss stayed 0, the GPS enrichment re-upload wiped the heart-rate samples
+  and the session name, and the log upsert still targeted the pre-006
+  primary key. It now posts `WatchUpload.workoutPayload` to
+  `POST /api/health/workouts`, links through `POST /api/health/matches`
+  against the listed (canonical) row, and re-sends the whole workout with
+  the HealthKit route; `saveWatchWorkoutDirect` / `saveWatchMatchDirect` /
+  `supabaseUpsert` are gone. `WatchUploadTests` pins the keys.
+- *iOS program scorecard*: Analytics ▸ Program (first section) lays out
+  `GET /analytics/program` — frame, scorecard, intensity, a section per
+  methodology with a card per metric (status, coverage reason, exercise
+  picker, actual-vs-expected chart, stall line, evidence; unlocks and
+  benchmark-level bodies), movement balance and load. Tolerant models in
+  `ProgramAnalyticsModels.swift` (a failed section is reported, not fatal);
+  `AnalyticsStatusStyle` mirrors the web's status colours and copy;
+  `AnalyticsCard` is the one card the three analytics sections share
+  (design-system §6.15). `ProgramAnalyticsCodableTests` pins the shapes
+  against a real response. The archetype table and the benchmark ladder stay
+  web-only for now (benchmarks live under Profile on the phone).
+- *iOS workout reads through the API*: the list, the matches and the PRs come
+  from one `GET /health/snapshot` (`APIClient.HealthSnapshot`, lossy per row
+  so one odd workout cannot blank the list), the detail from
+  `GET /health/workouts/<id>`, the delete from `DELETE /health/workouts/<id>`.
+  The phone's own `canonical_id` filter, the `SupabaseValue` column decoding
+  and the JWT `userId` parsing are gone; nothing in the app speaks PostgREST
+  now (auth stays with Supabase). `WorkoutHRData` reads 142 or 142.0 — the
+  `hr_avg` columns are `real` — and a match confidence written as a number
+  reads as a string. `WorkoutReadsCodableTests` pins the shapes.
+
+**Content and engine tranche (2026-10-01)**:
+
+- *Benchmark families*: four new list files under `data/benchmarks/` —
+  `kettlebell_pentathlon.yaml` (the five 6-minute events, tiers from the
+  archetype's RPM targets), `ruck_and_pt_standards.yaml` (12-mile ruck,
+  Uphill's pack vertical pace, Horsemen PT Tests I and II),
+  `crossfit_benchmark_wods.yaml` (seven Girls, Murph, Cindy, DT; community
+  Rx distributions, flagged as such), `movement_skill_standards.yaml`
+  (get-up ×BW, wall and free handstand holds). Entries may set `category`
+  (kettlebell · tactical · benchmark_wod · skill) and `unit`;
+  `benchmarks_data.BENCHMARK_FILES` is the one list the loader and the static
+  dump read. Both web views group by the new categories; iOS grouped by
+  category already. 47 standards, up from 21.
+- *Cadence and load tables*: `scheduler._CADENCE_OPTIONS` and
+  `progression._STARTING_LOADS` / `_LINEAR_INCREMENTS` are gone. Every lift
+  already carried `starting_load_kg` / `weekly_increment_kg`, and every
+  framework in the table already carried the same `cadence_options`, so only
+  the orphaned `polarized_80_20` entry moved — into the four Uphill
+  frameworks, which now rotate their weekly pattern as the table intended.
+  Starting Strength, CrossFit and Wildman programs are byte-identical before
+  and after.
+- *Scope cleanup*: the modalities `check_provenance --coverage` listed as
+  declared-but-unserved were dropped from nine packages' `scope`; the report
+  is clean.
+- *Consecutive-day relaxation*: a framework may declare
+  `recovery.allow_consecutive` (+ `phases`); `scheduler.consecutive_allowances`
+  feeds `_recovery_safe` and `_score_days`. Uphill's specific phase allows
+  `[strength_endurance, strength_endurance]`, so at seven days its two ME
+  days sit back to back (they were forced apart before); at five and six days
+  the allocation holds one ME session, so nothing to relax. Base needs no
+  block: aerobic_base has no recovery window, which is why the weekend pair
+  was never blocked there.
+- *Authoring API*: the six write routes validate against `docs/schemas/*`
+  (422 with the error list), `PUT /api/frameworks/<id>` accepts `recovery`,
+  and `DELETE /api/exercises/<id>` / `DELETE /api/archetypes/<id>` exist for
+  the `custom` package only — authored packages stay YAML-edited.
+- *Exercise animations, code half*: the Lottie player is installed and wired;
+  the files are the open item above.
 
 **Wrong-data and cheap P2 tranche (2026-10-01)**:
 

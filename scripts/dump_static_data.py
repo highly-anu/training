@@ -51,7 +51,7 @@ _BENCHMARK_CATEGORY_MAP = {
     'strength_endurance': 'conditioning', 'aerobic_base': 'conditioning',
     'anaerobic_intervals': 'conditioning',
 }
-_BENCHMARK_UNIT_MAP = {'bw_ratio': '×BW', 'reps': ' reps', 'time_minutes': ' min'}
+_BENCHMARK_UNIT_MAP = {'bw_ratio': '×BW', 'reps': ' reps', 'time_minutes': ' min', 'time_seconds': ' s', 'score': ''}
 _CELL_EXTRACT = {
     ('hips', 'back_squat'):           ('male_bw_pct', '×BW',   False, 'Back Squat'),
     ('hips', 'broad_jump'):           ('metres',      ' m',    False, 'Broad Jump'),
@@ -99,9 +99,10 @@ def _cell_benchmarks() -> list[dict]:
 
 def _all_benchmarks() -> list[dict]:
     result = []
-    for fname in ('strength_standards.yaml', 'conditioning_standards.yaml'):
+    from src.analytics.benchmarks_data import BENCHMARK_FILES
+    for fname in BENCHMARK_FILES:
         path = os.path.join(_DATA_DIR, 'benchmarks', fname)
-        items = _load_yaml(path) or []
+        items = _load_yaml(path) or [] if os.path.exists(path) else []
         for item in items:
             domain = item.get('domain', '')
             metric_type = item.get('metric_type', '')
@@ -116,8 +117,8 @@ def _all_benchmarks() -> list[dict]:
                 continue
             b: dict = {
                 'id': item['id'], 'name': item['name'],
-                'category': _BENCHMARK_CATEGORY_MAP.get(domain, 'conditioning'),
-                'unit': _BENCHMARK_UNIT_MAP.get(metric_type, ''),
+                'category': item.get('category') or _BENCHMARK_CATEGORY_MAP.get(domain, 'conditioning'),
+                'unit': item['unit'] if item.get('unit') is not None else _BENCHMARK_UNIT_MAP.get(metric_type, ''),
                 'standards': standards,
                 'lower_is_better': bool(item.get('lower_is_better', False)),
             }

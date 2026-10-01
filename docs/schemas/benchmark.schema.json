@@ -16,6 +16,15 @@
       "type": "string",
       "description": "Human-readable name. e.g. 'Back Squat (bodyweight ratio)', '3-Mile Run', 'Secret Service Snatch Test'"
     },
+    "category": {
+      "type": "string",
+      "enum": ["strength", "conditioning", "kettlebell", "tactical", "benchmark_wod", "skill"],
+      "description": "How the standard is grouped for the athlete. Optional; derived from the domain when absent (strength modalities → strength, everything else → conditioning)."
+    },
+    "unit": {
+      "type": "string",
+      "description": "Display unit when the metric_type's default is not the one the standard is read in, e.g. ' rounds' for an AMRAP score or ' ft/h' for a pace."
+    },
     "domain": {
       "type": "string",
       "enum": [

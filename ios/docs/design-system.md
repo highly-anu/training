@@ -475,6 +475,10 @@ Text("THIS WEEK")
 ### 6.5 Load Prescription Text
 
 Load specs are always monospace + amber. Makes them scannable at a glance.
+The words come from one place: `LoadFormat.describe(_:)` (`LoadFormat.swift`)
+turns an assignment into "3×5 @ 80 kg" / "45 min · Z2" / "AMRAP 12 min" for
+the session sheet, the swap sheet and the exercise reference alike; never
+re-derive the string at a call site.
 
 ```swift
 Text(exercise.loadDescription)
@@ -757,7 +761,7 @@ answer.
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Current · History |
-| **Analytics** | `AnalyticsView` | Overview · Workouts · Progress · Recovery |
+| **Analytics** | `AnalyticsView` | Program · Overview · Workouts · Progress · Recovery |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
 
 `AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
@@ -766,7 +770,9 @@ because the widgets deep-link to it; its label is "Today".
 
 **Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`):
 Connections (integration toggles), Devices & Sync (pairing, Sync Now, last
-sync, sync details, debug log), Appearance, Account (sign out). Until
+sync, sync details, debug log), Notifications (local session reminders —
+`NotificationManager.swift`, rescheduled from the stored program on every
+program change), Appearance, Account (sign out). Until
 2026-10-01 these lived on a fifth "Sync" tab — a debug screen that held the
 only sign-out, the integration switches and a hidden program mutation. A tab
 is a place the athlete goes every day; a setting is something they change once.
@@ -782,6 +788,47 @@ is a place the athlete goes every day; a setting is something they change once.
   (`docs/information-architecture.md`): Home / Program / Log / Analytics /
   Explore / Profile. The phone has no Log tab because it has no session
   logging yet; recorded workouts stay a section of Analytics until that ships.
+
+---
+
+### 6.14 Exercise Detail Sheet
+
+**The phone's exercise reference.** `Views/ExerciseDetailSheet.swift` — what a
+movement is, how to do it, what it needs and what it leads to: category and
+effort chips, movement patterns, the package's demo (`GET
+/api/exercises/<id>/media`, a GIF rendered with `AsyncImage`; the source link
+opens Safari), description, coaching focus, cues, common errors, and from the
+catalog (`GET /api/exercises`, cached in `AppState.exerciseCatalog`) the
+equipment, prerequisites and unlocks with ids resolved to names. When opened
+from a prescription it shows that session's load (§6.5) and notes first.
+
+```swift
+.sheet(item: $exerciseSheet) { item in
+    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
+        .environmentObject(appState)
+}
+```
+
+**Who presents it**
+
+- A planned session's exercise rows (`SessionDetailView`) — tap. The row
+  carries a tertiary `info.circle` so the tap has an affordance, and the same
+  row's context menu and trailing swipe offer **Swap** (`SwapExerciseSheet`,
+  `POST /api/exercises/substitute`), which lists alternatives for the same
+  slot with their load for the week; each alternative's `info.circle` opens
+  this sheet too.
+- Nothing else yet. Workout detail shows what was recorded, not a
+  prescription; the builder's step 1 is about methodologies, not movements.
+
+**Rules**
+
+- Every field is optional and the sheet renders whatever the package ships;
+  an exercise with no media still shows its catalog entry. Never block on the
+  media request.
+- The sheet is a reference, not an editor: no logging, no swapping from
+  inside it. Swap lives on the row that owns the slot.
+- It is the component the roadmap's "iOS Library tab" would promote; a
+  Library tab is not worth adding until there is more than this to put in it.
 
 ---
 
@@ -885,3 +932,39 @@ extension Color {
     }
 }
 ```
+
+---
+
+### 6.15 Analytics Card, Status and the Program Section
+
+**One card, one status vocabulary.** `AppCard.swift` holds `AnalyticsCard`
+(uppercase caption header over content, secondary background, the app's card
+radius); Overview and Recovery each carried a private copy until the Program
+section became the third user. `AnalyticsStatus.swift` holds
+`AnalyticsStatusStyle` — the engine's statuses folded onto green / yellow /
+red / neutral and put into words, the same mapping as the web's
+`components/analytics/status.ts` — `AnalyticsStatusBadge` (the capsule), and
+the coverage reason copy. `ProgressionView` reads its colours from it.
+
+**Analytics ▸ Program** (`Views/AnalyticsProgramTab.swift`) lays out the
+server's `GET /api/analytics/program` document — how the athlete is doing
+against what the program is *for*, per methodology, in its own currency
+(`ProgramAnalyticsModels.swift`, every section decoded on its own so a failed
+or future section cannot blank the screen):
+
+- *Where you are*: methodology, framework, phase and week, plan fidelity.
+- *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
+  row per modality with completion against the plan to date and the weekly
+  dose against the framework's range.
+- *Intensity*: status, coverage and the weekly zone split when there is one.
+- A section per methodology: its measurable count, then a `ProgressEntryCard`
+  per metric — status badge, `CoverageNoticeView` ("not measurable yet, and
+  why"), the exercise picker, the actual-against-expected chart (actual green,
+  expected indigo dashed, deload points hollow), the stall line, the evidence.
+  Unlocks and benchmark-level entries render their own bodies.
+- *Movement balance* and *Load* (TSB read in the phase's terms).
+
+Rules: nothing is computed on the phone; the chart's two colours are the
+web's; a status the engine adds later shows neutral, never a missing style.
+The section reloads when the stored program's revision changes and on
+pull-to-refresh (`fresh=1` forces the server to recompute).

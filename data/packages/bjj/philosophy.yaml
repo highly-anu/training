@@ -13,8 +13,6 @@ scope:
   - strength_endurance
   - anaerobic_intervals
   - mobility
-  - durability
-  - relative_strength
 bias:
   - combat_sport
   - strength_endurance

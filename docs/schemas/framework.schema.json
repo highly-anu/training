@@ -215,6 +215,26 @@
         }
       }
     },
+    "recovery": {
+      "type": "object",
+      "description": "Relaxations of the scheduler's consecutive-day rules. allow_consecutive lists modality pairs that may sit on back-to-back days (a pair of the same id allows that modality twice in a row); phases limits them to named phases, default all.",
+      "properties": {
+        "allow_consecutive": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "phases": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
     "expectations": {
       "type": "object",
       "description": "Time and volume requirements for this framework. Required for all frameworks.",

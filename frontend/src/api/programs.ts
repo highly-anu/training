@@ -3,7 +3,7 @@ import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
-import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram } from './types'
+import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
 
 function getMondayOf(date: Date): string {
   const d = new Date(date)
@@ -163,5 +163,67 @@ export function useGenerateWithTrace() {
   return useMutation({
     mutationFn: (params: GenerateParams) =>
       apiClient.post('/programs/generate?trace=1', buildPostBody(params)) as unknown as Promise<TracedProgram>,
+  })
+}
+
+// ── Exercise-level swap ────────────────────────────────────────────────────────
+
+export interface SubstituteParams {
+  archetypeId: string
+  slotRole: string
+  exerciseId: string
+  modality: string
+  constraints: AthleteConstraints
+  philosophyIds: string[]
+  phase: string
+  weekInPhase: number
+  isDeload: boolean
+  exclude?: string[]
+  limit?: number
+}
+
+/**
+ * Ranked alternatives for one exercise in one slot. The server runs the
+ * selector's own filter and score, so a swap respects the same package,
+ * equipment, injury and level rules as a generate; the client replaces the
+ * assignment and saves through the revision-checked PUT.
+ */
+export function useSubstituteExercise() {
+  return useMutation({
+    mutationFn: (p: SubstituteParams) =>
+      apiClient.post('/exercises/substitute', {
+        archetype_id: p.archetypeId,
+        slot_role: p.slotRole,
+        exercise_id: p.exerciseId,
+        modality: p.modality,
+        constraints: p.constraints,
+        philosophy_ids: p.philosophyIds,
+        phase: p.phase,
+        week_in_phase: p.weekInPhase,
+        is_deload: p.isDeload,
+        exclude: p.exclude ?? [],
+        limit: p.limit ?? 8,
+      }) as unknown as Promise<{ alternatives: ExerciseAlternative[] }>,
+  })
+}
+
+// ── Applying a progression adjustment ──────────────────────────────────────────
+
+/**
+ * Apply one of the review's suggested adjustments to the stored program from
+ * a week onward. Sends the loaded revision so a stale copy is refused (409)
+ * rather than overwriting newer work; reloads the program on success.
+ */
+export function useApplyAdjustment() {
+  return useMutation({
+    mutationFn: (p: { adjustment: ProgressionAdjustment; fromWeekIndex: number | null }) =>
+      apiClient.post('/programs/adjust', {
+        adjustment: { type: p.adjustment.type, target: p.adjustment.target, magnitude: p.adjustment.magnitude },
+        from_week_index: p.fromWeekIndex,
+        baseRevision: useProgramStore.getState().revision,
+      }) as unknown as Promise<AdjustResult>,
+    onSuccess: () => {
+      void useProgramStore.getState().loadFromServer()
+    },
   })
 }
