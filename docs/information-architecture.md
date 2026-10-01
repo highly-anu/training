@@ -59,7 +59,7 @@ Rules the layout must satisfy:
 | Train | **Home** | `/` | — | Program settings sheet |
 | Train | **Program** | `/program` | Calendar · Overview · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
 | Train | **Log** | `/log` | Workouts · Suggestions (count badge) | Import (sheet) |
-| Insight | **Analytics** | `/analytics` | Program · Progress · Load · Recovery | — (period selector is a control strip) |
+| Insight | **Analytics** | `/analytics` | Program · Progress · Development · Load · Recovery | — (period selector is a control strip) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | You | **Profile** | `/profile` | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | — |
 | You | **Settings** | `/settings` | Connections · Account · Appearance (· Developer in dev builds) | — |
@@ -103,10 +103,15 @@ Session Log inside Progress, and a second list would be a fourth workout-list
 implementation.
 
 **Analytics** is the interpretation: Program (methodology scorecard, server-side),
-Progress (the current ProgressionTab), Load (weekly TRIMP, PMC, zones — the single load
-surface), Recovery (readiness, sleep, HRV, RHR, check-in and history — the current
-Bio Log). The Overview KPIs fold into Load; Activity is deleted in favour of
-Log ▸ Workouts. Tabs are URL-driven (`?tab=`) so Home cards and redirects can land on one.
+Progress (the current ProgressionTab), Development (every block, not just this one —
+the history tables read as one document, `GET /api/analytics/development`: the
+activation timeline, each lift across the span with the blocks as bands and per-block
+deltas, weekly load by block, the standards ladder over time), Load (weekly TRIMP, PMC,
+zones — the single load surface), Recovery (readiness, sleep, HRV, RHR, check-in and
+history — the current Bio Log). The Overview KPIs fold into Load; Activity is deleted
+in favour of Log ▸ Workouts. Tabs are URL-driven (`?tab=`) so Home cards and redirects
+can land on one. Home's Development card stays about the current program and links to
+the tab.
 
 **Explore** gains a Standards topic (benchmarks) and one CTA per topic where it makes
 sense: philosophy → "Build a program with this" (prefills source and priorities),
@@ -125,8 +130,8 @@ Benchmarks), sex (a new profile key; unblocks the female benchmark standards), b
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Current · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Current gains "About this methodology". |
-| **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program. |
-| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard. |
+| **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
+| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Blocks · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = the web's Development (the label fits five segments; design system §6.20). |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
@@ -157,6 +162,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | Recorded workout | Planned session | "Link to session" | ✓ / ✓ |
 | Home readiness card | Analytics ▸ Recovery | whole-card link | ✓ / ✓ |
 | Home progression widget | Analytics ▸ Progress | whole-card link | ✓ / ✓ |
+| Home development card (the current program) | Analytics ▸ Development (every program) | footer link | ✓ / n.a. (Today has no development card; Analytics ▸ Blocks) |
 | Progress recommendation | The stored program, from this week on | "Apply from week N" (`POST /api/programs/adjust`) | ✓ Analytics ▸ Progress / ✓ Analytics ▸ Progress |
 | Session exercise | A ranked alternative for the same slot | "Swap" (`POST /api/exercises/substitute`) | ✓ swap icon on every exercise row / ✓ context menu or swipe on a session row |
 | Analytics ▸ Program methodology | Explore philosophy | link | ✓ / n.a. |

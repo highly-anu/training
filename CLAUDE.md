@@ -86,6 +86,7 @@ All prefixed `/api/`:
 |--------|------|---------|
 | GET | `/philosophies` | `Philosophy[]` |
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
+| GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
 | GET | `/benchmarks?sex=` | `BenchmarkStandard[]` (47; female or male tables) |
@@ -338,7 +339,17 @@ writes.
 - **Window.** Session logs, matches and workouts are keyed program-relatively
   and a regenerate leaves the last block's rows under the same keys, so
   `context.py` filters every input to the program's own date span. Cross-block
-  comparison is what the Program History tables (below) exist for.
+  comparison is what the Program History tables (below) exist for, and
+  `GET /api/analytics/development` (`src/analytics/development.py`) is where
+  they are read: `blocks` (the activation timeline with each block's planned
+  and completed sessions), `lifts` and `currencies` (every logged series over
+  the whole span, keyed to its block through `session_uid`, with per-block
+  first / last / best / Δ and a trend), `load` (weekly TRIMP with the week's
+  block) and `benchmarks` (the level ladder per PR date). Pure over its
+  inputs — `test_development_analytics.py` runs it on a throwaway two-block
+  history — and cached in `progression_snapshots` on a digest of everything
+  it read. The web's Analytics ▸ Development and the phone's Analytics ▸
+  Blocks lay it out; the Program tab stays the current block.
 - **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
   durationSec / distanceKm` — the keys the tracker always read and nothing
   wrote. `ExerciseRow` dispatches on `slot_type` through `lib/outcomeFields.ts`
@@ -362,7 +373,18 @@ writes.
   (`Views/AnalyticsProgramTab.swift`) lays out the same `/analytics/program`
   document the web does; `ProgramAnalyticsModels.swift` decodes every section
   on its own, and `AnalyticsStatusStyle` is the phone's copy of
-  `components/analytics/status.ts`.
+  `components/analytics/status.ts`. Analytics ▸ Blocks
+  (`Views/AnalyticsDevelopmentTab.swift`, `DevelopmentModels.swift`) lays out
+  `/analytics/development` the same way; the section is called Blocks because
+  five segments truncate "Development".
+- **Earlier programs' logs are named by the server.** `GET /health/sessions/recent`
+  resolves each log's `session_uid` through `planned_sessions`
+  (`program_history.planned_rows_for_uids`) and adds `planned_name`,
+  `planned_modality`, `planned_date`, `program_version_id`, `week_index` and
+  `day_name`. The phone's Log ▸ Sessions uses them for logs whose legacy key
+  resolves to nothing — or to the wrong session: "3-Friday-0" exists in the
+  current program too, so a planned date before the current program's start
+  overrides the key lookup (`LogSessions.rows`).
 
 ## Program History
 
@@ -517,6 +539,7 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
+.venv/bin/python test_development_analytics.py               # development across programs, on a throwaway history (no DB)
 ```
 
 Before anything that changes production structure (a migration, a backfill):

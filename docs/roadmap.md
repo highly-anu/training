@@ -33,73 +33,11 @@ deferred is under *Later*.
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | Development across programs (Analytics ▸ Development, both clients) | P2 | L | analytics |
-| 2 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
+| 1 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
 
 ---
 
-### 1. Development across programs — P2 · L
-
-Every analytics surface is scoped to the program in hand. Analytics ▸ Program
-windows its inputs to the current program's span by design; Analytics ▸
-Progress (the progression review) reads the current program's weeks; Home's
-Development card is the current program against its matches; Load and
-Recovery are time-based but know nothing about blocks; Program ▸ History
-lists each version with counts and a per-version detail. Nothing answers
-"how have I developed across programs" — the question the history tables
-were built to make answerable (`program_versions`, `program_activations`,
-`planned_sessions`, logs and matches carrying `session_uid`,
-`health_store.get_session_logs_by_uid`).
-
-*Server.* `GET /api/analytics/development` (`src/analytics/development.py`,
-pure over its inputs, cached like `/analytics/program` on a digest of
-activations and log counts):
-
-- `blocks`: the activation timeline — version id, label, methodology names,
-  effective interval, weeks, planned / completed sessions, completion %,
-  active flag (from `program_history.list_activations` and
-  `sessions_for_version`).
-- `lifts`: per exercise with sets logged in two or more blocks (or enough
-  points), the series of best completed sets across the whole span — date,
-  block, weight, reps, est-1RM via `primitives/load.best_completed_set` —
-  with per-block first / last / best est-1RM and the delta, and a trend
-  over the span (`trend.py`). Names from the catalog.
-- `currencies`: the same for rounds, minutes and kilometres from
-  `ExercisePerformance.rounds / durationSec / distanceKm`.
-- `load`: weekly TRIMP and the PMC over the span (the existing
-  `_compute_pmc` and weekly rollup) with each week's block id, so the charts
-  can shade block boundaries.
-- `benchmarks`: each standard's PR history with the level reached per date
-  (the benchmarks section's ladder logic over `performance_logs`).
-- Window: all history by default, capped at the last twelve months, `from`
-  and `to` optional.
-
-*Web.* Analytics ▸ Development (`components/analytics/DevelopmentTab.tsx`):
-a block timeline strip across the top (methodology colour, completion %,
-the active block highlighted); "Lifts across blocks" — est-1RM per lead
-lift over time with block shading and a lift picker, plus a per-block
-table of first → last est-1RM and Δ; "Load across blocks" — the weekly
-TRIMP chart with block bands; "Standards over time" — the level ladder per
-date. With fewer than two blocks the tab says so and links to Progress.
-Home's Development card stays about the current program and links here.
-
-*iOS.* Analytics gains a Development section (five sections: Program ·
-Overview · Progress · Development · Recovery, within §6.13's limit) laying
-out the same document with Swift Charts; tolerant models like
-`ProgramAnalyticsModels`; `router.showAnalytics(.development)`.
-
-*Also in this tranche.* `GET /health/sessions/recent` resolves each log's
-`session_uid` through `planned_sessions` and returns the planned session's
-name, modality and date, so Log ▸ Sessions on the phone names sessions from
-earlier plans instead of showing their key.
-
-*Verify.* A Python test with a throwaway history (two versions, logs with
-uids, a lift in both) pins the blocks, the lift deltas and the window;
-vitest for the chart data shaping; iOS Codable tests against the real
-response; screenshots of both clients against the local API (which now has
-two versions in its history after today's regenerate).
-
-### 2. Exercise animation content — P2 · L
+### 1. Exercise animation content — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
@@ -160,6 +98,33 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Development across programs (2026-10-01)**:
+
+- *Server*: `GET /api/analytics/development` (`src/analytics/development.py`,
+  pure over its inputs, cached in `progression_snapshots` on a digest of the
+  activations, logs, matches, workouts and PRs it read; last 365 days by
+  default, `from`/`to` optional). `blocks` is the activation timeline with
+  each block's planned and completed sessions and completion %; `lifts` and
+  `currencies` are every logged series across the whole span, each point
+  keyed to its block through `session_uid`, with per-block first / last /
+  best / Δ and a trend over non-deload points; `load` is weekly TRIMP with
+  the week's block; `benchmarks` the level ladder per PR date.
+  `test_development_analytics.py` runs it on a throwaway two-block history.
+- *Web*: Analytics ▸ Development (`components/analytics/DevelopmentTab.tsx`,
+  `lib/developmentShaping.ts` with its test): the block strip and cards, lifts
+  across blocks with a picker, block bands (`ReferenceArea`) and the per-block
+  table, weekly TRIMP coloured by block, standards over time; one block says
+  so and points at Progress. Home's Development card links to it.
+- *iOS*: Analytics ▸ Blocks (`Views/AnalyticsDevelopmentTab.swift`,
+  `DevelopmentModels.swift`, Swift Charts) — the same document; "Blocks"
+  because five segments truncate "Development" (design-system §6.20).
+  `DevelopmentCodableTests` decodes a real response with a malformed lift.
+- *Also*: `GET /health/sessions/recent` names each log from the
+  `planned_sessions` row its `session_uid` resolves to, and the phone's
+  Log ▸ Sessions shows earlier programs' logs by name — a planned date before
+  the current program's start overrides a legacy key that resolves to the
+  wrong session (`LogSessionsTests`).
 
 **Follow-up tranche (2026-10-01)**:
 
