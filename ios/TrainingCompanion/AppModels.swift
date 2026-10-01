@@ -312,10 +312,22 @@ struct SessionLogEntry: Codable, Identifiable {
     let matchedWorkoutId: String?
     /// Per exercise, what was logged (`GET /health/sessions/recent` carries it).
     var exercises: [String: ExercisePerformanceLog]
+    /// What the log was logged against, from the `planned_sessions` row its
+    /// `session_uid` names (`GET /health/sessions/recent` annotates it). Set
+    /// for logs of earlier programs too, whose keys resolve to nothing in the
+    /// current one — so the Log tab can still say what the session was.
+    let plannedName: String?
+    let plannedModality: String?
+    let plannedDate: String?           // YYYY-MM-DD
+    let programVersionId: String?
+    let weekIndex: Int?
+    let dayName: String?
 
     init(sessionKey: String, completedAt: String?, source: String?, notes: String?,
          fatigueRating: Int?, avgHR: Int?, peakHR: Int?, matchedWorkoutId: String?,
-         exercises: [String: ExercisePerformanceLog] = [:]) {
+         exercises: [String: ExercisePerformanceLog] = [:],
+         plannedName: String? = nil, plannedModality: String? = nil, plannedDate: String? = nil,
+         programVersionId: String? = nil, weekIndex: Int? = nil, dayName: String? = nil) {
         self.sessionKey = sessionKey
         self.completedAt = completedAt
         self.source = source
@@ -325,6 +337,12 @@ struct SessionLogEntry: Codable, Identifiable {
         self.peakHR = peakHR
         self.matchedWorkoutId = matchedWorkoutId
         self.exercises = exercises
+        self.plannedName = plannedName
+        self.plannedModality = plannedModality
+        self.plannedDate = plannedDate
+        self.programVersionId = programVersionId
+        self.weekIndex = weekIndex
+        self.dayName = dayName
     }
 
     enum CodingKeys: String, CodingKey {
@@ -335,6 +353,12 @@ struct SessionLogEntry: Codable, Identifiable {
         case avgHR = "avg_hr"
         case peakHR = "peak_hr"
         case matchedWorkoutId = "matched_workout_id"
+        case plannedName = "planned_name"
+        case plannedModality = "planned_modality"
+        case plannedDate = "planned_date"
+        case programVersionId = "program_version_id"
+        case weekIndex = "week_index"
+        case dayName = "day_name"
     }
 
     init(from decoder: Decoder) throws {
@@ -349,6 +373,12 @@ struct SessionLogEntry: Codable, Identifiable {
         matchedWorkoutId = try? c.decodeIfPresent(String.self, forKey: .matchedWorkoutId)
         exercises = (try? c.decodeIfPresent([String: Lossy<ExercisePerformanceLog>].self, forKey: .exercises))??
             .compactMapValues(\.value) ?? [:]
+        plannedName = try? c.decodeIfPresent(String.self, forKey: .plannedName)
+        plannedModality = try? c.decodeIfPresent(String.self, forKey: .plannedModality)
+        plannedDate = try? c.decodeIfPresent(String.self, forKey: .plannedDate)
+        programVersionId = try? c.decodeIfPresent(String.self, forKey: .programVersionId)
+        weekIndex = try? c.decodeIfPresent(Int.self, forKey: .weekIndex)
+        dayName = try? c.decodeIfPresent(String.self, forKey: .dayName)
     }
 }
 

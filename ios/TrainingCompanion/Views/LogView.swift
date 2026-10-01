@@ -155,7 +155,8 @@ struct LogSessionsTab: View {
     private var rows: [LogSessionRow] {
         LogSessions.rows(logs: Array(appState.sessionLogs.values),
                          locate: { appState.locateSession(key: $0) },
-                         exerciseNames: appState.exerciseCatalog.mapValues(\.name))
+                         exerciseNames: appState.exerciseCatalog.mapValues(\.name),
+                         currentProgramStart: LogSessions.parseServerDate(appState.serverProgram?.programStartDate))
     }
 
     var body: some View {

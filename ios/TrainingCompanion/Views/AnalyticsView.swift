@@ -3,13 +3,16 @@ import SwiftUI
 /// Internal rather than private: `AppRouter` names a section so another screen
 /// can send the user to one (the Dashboard's readiness card → Recovery).
 enum AnalyticsTab: Int, AppSubTab {
-    case program, overview, progress, recovery
+    case program, overview, progress, development, recovery
 
     var label: String {
         switch self {
         case .program: return "Program"
         case .overview: return "Overview"
         case .progress: return "Progress"
+        // "Development" on the web; five segments share the width here and
+        // the segmented control truncates anything longer (§6.8).
+        case .development: return "Blocks"
         case .recovery: return "Recovery"
         }
     }
@@ -18,7 +21,8 @@ enum AnalyticsTab: Int, AppSubTab {
 /// Root container for the Analytics tab. Owns shared state: period selector
 /// and the bio entry sheet. Progress (the progression review) lives here as a
 /// section rather than as a push from Today, so the review has one home.
-/// Recorded workouts moved to the Log tab on 2026-10-01 (§6.19).
+/// Recorded workouts moved to the Log tab on 2026-10-01 (§6.19); Development
+/// (every block, not just this one) was added the same day (§6.20).
 struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
@@ -42,6 +46,9 @@ struct AnalyticsView: View {
                             .environmentObject(appState)
                     case .progress:
                         ProgressionView()
+                            .environmentObject(appState)
+                    case .development:
+                        AnalyticsDevelopmentTab()
                             .environmentObject(appState)
                     case .recovery:
                         AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
