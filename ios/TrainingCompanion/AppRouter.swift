@@ -44,4 +44,17 @@ final class AppRouter: ObservableObject {
     func clearAnalyticsSection() {
         analyticsSection = nil
     }
+
+    /// A session key Today should open, set by a widget or a deep link;
+    /// Today clears it once the sheet is up.
+    @Published var pendingSessionKey: String? = nil
+
+    func openSession(_ key: String) {
+        pendingSessionKey = key
+        show(.dashboard)
+    }
+
+    func clearPendingSession() {
+        pendingSessionKey = nil
+    }
 }

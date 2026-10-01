@@ -238,6 +238,20 @@ final class APIClient {
         )
     }
 
+    /// Log what was done for one exercise. The server merges `exercises` per
+    /// key and keeps the completion, notes and fatigue it already has, so a
+    /// log before "Mark Session Complete" is fine and so is one after.
+    func saveExerciseLog(sessionKey: String, exerciseId: String,
+                         performance: ExercisePerformanceLog) async throws {
+        struct Body: Encodable {
+            let exercises: [String: ExercisePerformanceLog]
+            let source: String
+        }
+        let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
+        _ = try await put("/health/sessions/\(escaped)",
+                          body: Body(exercises: [exerciseId: performance], source: "manual"))
+    }
+
     func saveSessionNotes(sessionKey: String, notes: String, fatigueRating: Int?) async throws {
         struct Body: Encodable {
             let sessionKey: String

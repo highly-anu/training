@@ -128,7 +128,7 @@ the Sync tab — is deleted; a start-date repair, if still wanted, belongs under
 settings behind a confirmation.
 
 Why four tabs and not five: a Log tab would be one list moved, because the phone has no
-session logging yet — revisit when it ships. A Library tab has no content to show; the
+session logging until 2026-10-01; it logs from the session detail now, and the log stays on the session rather than in a tab. A Library tab has no content to show; the
 exercise reference is contextual (a detail sheet from any session row) and philosophy
 detail sits inside the builder's step 1.
 
@@ -154,7 +154,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | Session exercise | A ranked alternative for the same slot | "Swap" (`POST /api/exercises/substitute`) | ✓ swap icon on every exercise row / ✓ context menu or swipe on a session row |
 | Analytics ▸ Program methodology | Explore philosophy | link | ✓ / n.a. |
 | Profile change with an active program | Regenerate from this week | inline offer | injuries only / full regenerate only |
-| Session with a rounds / minutes / km currency | Outcome logger | inputs beside the prescription | ✓ / watch only (Later: phone session logging) |
+| Session with a rounds / minutes / km currency | Outcome logger | inputs beside the prescription | ✓ / ✓ (`ExerciseLogSheet`, design-system §6.16) |
 
 ## 5. Decisions and why
 

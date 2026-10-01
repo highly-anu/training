@@ -549,7 +549,7 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
                 cur.execute(
                     '''SELECT sl.session_key, sl.session_uid, sl.completed_at,
                               sl.source, sl.notes, sl.fatigue_rating,
-                              sl.avg_hr, sl.peak_hr,
+                              sl.avg_hr, sl.peak_hr, sl.exercises,
                               wm.imported_workout_id AS matched_workout_id
                        FROM session_logs sl
                        LEFT JOIN workout_matches wm
@@ -576,11 +576,24 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
                 'avg_hr':             row.get('avg_hr'),
                 'peak_hr':            row.get('peak_hr'),
                 'matched_workout_id': row.get('matched_workout_id'),
+                # The sets and outcomes, so a phone can show and extend what
+                # was logged (the web reads them from the snapshot).
+                'exercises':          _exercises_dict(row.get('exercises')),
             }
             for row in rows
         ]
     except RuntimeError:
         return []
+
+
+def _exercises_dict(raw) -> dict:
+    if isinstance(raw, dict):
+        return raw
+    try:
+        parsed = json.loads(raw or '{}')
+        return parsed if isinstance(parsed, dict) else {}
+    except (json.JSONDecodeError, TypeError):
+        return {}
 
 
 def get_session_logs(user_id: str) -> dict:

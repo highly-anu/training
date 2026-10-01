@@ -705,7 +705,7 @@ struct WatchWorkoutSummary: Codable {
     let exerciseTimeline: [ExerciseTimelineEntry]?
 }
 
-struct WatchSetLog: Codable {
+struct WatchSetLog: Codable, Equatable {
     let setIndex: Int
     let repsActual: Int?
     let weightKg: Double?

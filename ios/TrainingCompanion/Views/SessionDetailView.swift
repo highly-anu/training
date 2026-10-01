@@ -21,6 +21,7 @@ struct SessionDetailView: View {
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var exerciseSheet: ExerciseRowItem? = nil
     @State private var swapTarget: SwapTarget? = nil
+    @State private var logTarget: ExerciseRowItem? = nil
 
     /// A row's identity is its position plus the exercise: the same movement
     /// can appear twice in a session, and a swap must animate only its row.
@@ -97,6 +98,12 @@ struct SessionDetailView: View {
                                       exerciseIndex: target.exerciseIndex)
                         .environmentObject(appState)
                 }
+            }
+            // What was done (§6.16): sets for a sets × reps slot, the slot's
+            // currency for the rest — the inputs the web's loggers offer.
+            .sheet(item: $logTarget) { item in
+                ExerciseLogSheet(sessionKey: sessionKey, assignment: item.assignment)
+                    .environmentObject(appState)
             }
             .task {
                 if let log = appState.sessionLogs[sessionKey] {
@@ -191,6 +198,11 @@ struct SessionDetailView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button {
+                            logTarget = item
+                        } label: {
+                            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
+                        }
+                        Button {
                             exerciseSheet = item
                         } label: {
                             Label("About this exercise", systemImage: "info.circle")
@@ -202,6 +214,14 @@ struct SessionDetailView: View {
                                 Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
                             }
                         }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                        Button {
+                            logTarget = item
+                        } label: {
+                            Label("Log", systemImage: "square.and.pencil")
+                        }
+                        .tint(.green)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if canSwap(item.assignment) {
@@ -220,9 +240,22 @@ struct SessionDetailView: View {
             Text("Exercises")
         } footer: {
             if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
-                Text("Tap an exercise for cues and a demo. Swipe left to swap it for an alternative that fits the same slot.")
+                Text("Tap an exercise for cues and a demo. Swipe right to log what you did, left to swap it for an alternative that fits the same slot.")
+            } else if !rows.isEmpty {
+                Text("Tap an exercise for cues and a demo. Swipe right to log what you did.")
             }
         }
+    }
+
+    private func logLabel(_ ea: ProgramExerciseAssignment) -> String {
+        SessionLogging.logsSets(LoadFormat.resolvedSlotType(ea)) ? "Log sets" : "Log result"
+    }
+
+    /// "Logged: 3 sets · 5×80 kg" under the prescription, once there is one.
+    private func loggedSummary(_ ea: ProgramExerciseAssignment) -> String? {
+        guard let id = ea.exercise?.id,
+              let perf = appState.sessionLogs[sessionKey]?.exercises[id] else { return nil }
+        return SessionLogging.summary(perf, slotType: LoadFormat.resolvedSlotType(ea))
     }
 
     /// A swap needs the slot the exercise fills; a meta entry or a slot the
@@ -255,6 +288,12 @@ struct SessionDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+            if let logged = loggedSummary(ea) {
+                Label(logged, systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                    .monospacedDigit()
+            }
             if let note = ea.notes ?? ex.notes {
                 Text(note)
                     .font(.caption)

@@ -786,8 +786,10 @@ is a place the athlete goes every day; a setting is something they change once.
   & Sync, never on a tab.
 - The web app's layout is the same journey with a sidebar
   (`docs/information-architecture.md`): Home / Program / Log / Analytics /
-  Explore / Profile. The phone has no Log tab because it has no session
-  logging yet; recorded workouts stay a section of Analytics until that ships.
+  Explore / Profile. The phone logs sessions from the session detail (§6.16)
+  and has no Log tab: recorded workouts stay a section of Analytics, and the
+  log lives on the session it belongs to. Revisit a Log tab only if the
+  athlete needs a list of what was logged across sessions.
 
 ---
 
@@ -968,3 +970,31 @@ Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.
 The section reloads when the stored program's revision changes and on
 pull-to-refresh (`fresh=1` forces the server to recompute).
+
+---
+
+### 6.16 Session Logging
+
+**Log what you did on the session it belongs to.** `Views/ExerciseLogSheet.swift`,
+reached from a session row's leading swipe ("Log") or its context menu. The
+sheet dispatches on the slot type through `SessionLogging` (the phone's copy
+of the web's `lib/outcomeFields.ts`): a sets × reps or hold slot gets one row
+per set — reps or seconds, kg, RPE, done — prefilled from the prescription or
+from what was logged before; every other slot gets its currency fields
+(rounds, minutes, kilometres, reps). Saving goes through
+`AppState.logExercise`, which writes `{exercises: {<id>: …}}` to
+`PUT /health/sessions/<key>`; the server merges per exercise and keeps the
+completion, notes and fatigue it already has, so logging before or after
+"Mark Session Complete" is the same. The row then shows "Logged: 3 sets · 3×5
+@ 80 kg" in green under the prescription.
+
+`ExercisePerformanceLog` is the web's `ExercisePerformance`
+(`sets[].setIndex/repsActual/weightKg/rpe/completed/durationSeconds`,
+`rounds`, `durationSec`, `distanceKm`) — the keys `progression_tracker.py`
+and the analytics primitives read. `GET /health/sessions/recent` carries
+`exercises` so the phone reads back what any client logged. The watch keeps
+its own set logger (digital crown) and writes the same shape.
+
+Rules: never log into a different session than the one on screen; the sheet
+is the one place sets are entered on the phone; a logged row never changes
+the prescription.

@@ -63,6 +63,12 @@ struct TodayView: View {
             .sheet(isPresented: $showBuilder) {
                 ProgramBuilderFlow().environmentObject(appState)
             }
+            // A session asked for from outside (a widget, a deep link): both
+            // hooks, because the router may set it before this view exists or
+            // while it is on screen, and the program may still be loading.
+            .onAppear { openPendingSession() }
+            .onChange(of: router.pendingSessionKey) { openPendingSession() }
+            .onChange(of: appState.serverProgram?.revision) { openPendingSession() }
             // A suggestion's "Review" lands on the workout, whose Link to
             // Session flow is the one matching UI the app has.
             .navigationDestination(item: $reviewWorkout) { workout in
@@ -918,6 +924,17 @@ private extension Collection where Element == Double {
 
 /// Identity is the session key: a fresh `UUID()` on every body evaluation made
 /// the sheet re-present itself on unrelated state changes.
+extension TodayView {
+    /// Present the session the router holds, once the program can locate it.
+    fileprivate func openPendingSession() {
+        guard let key = router.pendingSessionKey,
+              let found = appState.locateSession(key: key) else { return }
+        selectedSession = (session: found.session, key: found.key, weekIndex: found.weekIndex,
+                           dayName: found.dayName, sessionIndex: found.sessionIndex)
+        router.clearPendingSession()
+    }
+}
+
 private struct SessionSheetItem: Identifiable {
     var id: String { key }
     let session: ProgramSession

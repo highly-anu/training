@@ -242,6 +242,64 @@ struct UserProfile: Codable {
 
 // MARK: - Session Logs
 
+/// What the athlete logged for one exercise of a session — the web's
+/// `ExercisePerformance`: sets for sets × reps (and hold) slots, the slot's
+/// own currency — rounds, seconds, kilometres — for the rest, which is what
+/// the analytics primitives read. Written through `PUT /health/sessions/<key>`
+/// as `{exercises: {<exercise id>: …}}`; the server merges per exercise.
+struct ExercisePerformanceLog: Codable, Equatable {
+    var sets: [WatchSetLog]
+    var rounds: Int?
+    var durationSec: Int?
+    var distanceKm: Double?
+    var rpe: Int?
+    var notes: String?
+
+    init(sets: [WatchSetLog] = [], rounds: Int? = nil, durationSec: Int? = nil,
+         distanceKm: Double? = nil, rpe: Int? = nil, notes: String? = nil) {
+        self.sets = sets
+        self.rounds = rounds
+        self.durationSec = durationSec
+        self.distanceKm = distanceKm
+        self.rpe = rpe
+        self.notes = notes
+    }
+
+    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes }
+
+    /// Rows were written by three clients over time; a malformed set is
+    /// dropped and a number stored as 1800.0 reads as 1800.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        sets = ((try? c.decodeIfPresent([Lossy<WatchSetLog>].self, forKey: .sets)) ?? [])?.compactMap(\.value) ?? []
+        rounds = Self.whole(c, .rounds)
+        durationSec = Self.whole(c, .durationSec)
+        distanceKm = try? c.decodeIfPresent(Double.self, forKey: .distanceKm)
+        rpe = Self.whole(c, .rpe)
+        notes = try? c.decodeIfPresent(String.self, forKey: .notes)
+    }
+
+    private static func whole(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Int? {
+        if let i = try? c.decodeIfPresent(Int.self, forKey: key) { return i }
+        if let d = try? c.decodeIfPresent(Double.self, forKey: key) { return Int(d.rounded()) }
+        return nil
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(sets, forKey: .sets)
+        try c.encodeIfPresent(rounds, forKey: .rounds)
+        try c.encodeIfPresent(durationSec, forKey: .durationSec)
+        try c.encodeIfPresent(distanceKm, forKey: .distanceKm)
+        try c.encodeIfPresent(rpe, forKey: .rpe)
+        try c.encodeIfPresent(notes, forKey: .notes)
+    }
+
+    var isEmpty: Bool {
+        sets.isEmpty && rounds == nil && durationSec == nil && distanceKm == nil
+    }
+}
+
 struct SessionLogEntry: Codable, Identifiable {
     var id: String { sessionKey }
     let sessionKey: String
@@ -252,15 +310,45 @@ struct SessionLogEntry: Codable, Identifiable {
     let avgHR: Int?
     let peakHR: Int?
     let matchedWorkoutId: String?
+    /// Per exercise, what was logged (`GET /health/sessions/recent` carries it).
+    var exercises: [String: ExercisePerformanceLog]
+
+    init(sessionKey: String, completedAt: String?, source: String?, notes: String?,
+         fatigueRating: Int?, avgHR: Int?, peakHR: Int?, matchedWorkoutId: String?,
+         exercises: [String: ExercisePerformanceLog] = [:]) {
+        self.sessionKey = sessionKey
+        self.completedAt = completedAt
+        self.source = source
+        self.notes = notes
+        self.fatigueRating = fatigueRating
+        self.avgHR = avgHR
+        self.peakHR = peakHR
+        self.matchedWorkoutId = matchedWorkoutId
+        self.exercises = exercises
+    }
 
     enum CodingKeys: String, CodingKey {
         case sessionKey = "session_key"
         case completedAt = "completed_at"
-        case source, notes
+        case source, notes, exercises
         case fatigueRating = "fatigue_rating"
         case avgHR = "avg_hr"
         case peakHR = "peak_hr"
         case matchedWorkoutId = "matched_workout_id"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        sessionKey = try c.decode(String.self, forKey: .sessionKey)
+        completedAt = try? c.decodeIfPresent(String.self, forKey: .completedAt)
+        source = try? c.decodeIfPresent(String.self, forKey: .source)
+        notes = try? c.decodeIfPresent(String.self, forKey: .notes)
+        fatigueRating = try? c.decodeIfPresent(Int.self, forKey: .fatigueRating)
+        avgHR = try? c.decodeIfPresent(Int.self, forKey: .avgHR)
+        peakHR = try? c.decodeIfPresent(Int.self, forKey: .peakHR)
+        matchedWorkoutId = try? c.decodeIfPresent(String.self, forKey: .matchedWorkoutId)
+        exercises = (try? c.decodeIfPresent([String: Lossy<ExercisePerformanceLog>].self, forKey: .exercises))??
+            .compactMapValues(\.value) ?? [:]
     }
 }
 

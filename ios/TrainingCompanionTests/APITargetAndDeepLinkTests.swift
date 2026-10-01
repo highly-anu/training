@@ -37,7 +37,8 @@ final class APITargetAndDeepLinkTests: XCTestCase {
     func testDeepLinksRouteToTabsAndSections() throws {
         func parse(_ s: String) -> DeepLink? { DeepLink.parse(URL(string: s)!) }
         XCTAssertEqual(parse("trainingcompanion://today"), .tab(.dashboard))
-        XCTAssertEqual(parse("trainingcompanion://session?key=3-Monday-0"), .tab(.dashboard), "the widget's link")
+        XCTAssertEqual(parse("trainingcompanion://session?key=3-Monday-0"), .session("3-Monday-0"),
+                       "the widget's link opens that session")
         XCTAssertEqual(parse("trainingcompanion://program"), .tab(.program))
         XCTAssertEqual(parse("trainingcompanion://profile"), .tab(.profile))
         XCTAssertEqual(parse("trainingcompanion://analytics"), .tab(.analytics))

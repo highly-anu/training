@@ -63,10 +63,8 @@ shows the category placeholder.
 Larger items from the IA review. Each needs a backend step first; none is
 scheduled ahead of the ranked list.
 
-- **Phone session logging** — `PUT /health/sessions/<key>` and the `by-uid`
-  writer exist; needs `session_uid` from `GET /programs/planned-sessions` for
-  unambiguous keys; reuse the watch `SetLoggerSheetView` slot views. Then
-  promote iOS Analytics ▸ Workouts to a Log tab.
+- **iOS Log tab** — the phone logs from the session detail now; a tab only if
+  a cross-session list of what was logged turns out to be needed.
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
 - **`/settings`** — the web Devices card now sits under Profile ▸ Connections;
@@ -107,6 +105,16 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *Phone session logging*: `ExerciseLogSheet` on every session row (leading
+  swipe or context menu) — sets for sets × reps and hold slots, the slot's
+  currency for the rest, through `SessionLogging` (the web's outcome-field
+  table) and `AppState.logExercise` → `PUT /health/sessions/<key>` with
+  `{exercises: {<id>: …}}`; the server merges per exercise, so no
+  planned-sessions step was needed (it resolves the version id from the key
+  itself). `GET /health/sessions/recent` now carries `exercises`;
+  `ExercisePerformanceLog` is the web's shape. `trainingcompanion://session?key=…`
+  opens the session (the widget's link finally does what it says).
+  `SessionLoggingTests` pins the table, the payload and the read-back.
 - *Simulator against the local API*: `APITarget` (environment, then the
   `apiBaseURLOverride` default, then the build's URL), a local target needs no
   sign-in (`AuthManager.applyTargetChange`, no bearer sent), an ATS exception

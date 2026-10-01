@@ -13,6 +13,8 @@ import Foundation
 enum DeepLink: Equatable {
     case tab(AppRouter.Tab)
     case analytics(AnalyticsTab)
+    /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
+    case session(String)
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -28,7 +30,12 @@ enum DeepLink: Equatable {
         let host = (url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))).lowercased()
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         switch host {
-        case "", "today", "dashboard", "session":
+        case "", "today", "dashboard":
+            return .tab(.dashboard)
+        case "session":
+            if let key = query.first(where: { $0.name == "key" })?.value, !key.isEmpty {
+                return .session(key)
+            }
             return .tab(.dashboard)
         case "program":
             return .tab(.program)
@@ -52,6 +59,7 @@ extension AppRouter {
         switch link {
         case .tab(let tab): show(tab)
         case .analytics(let section): showAnalytics(section)
+        case .session(let key): openSession(key)
         }
     }
 }

@@ -355,6 +355,48 @@ final class AppState: ObservableObject {
         rescheduleNotifications()
     }
 
+    /// Store what was done for one exercise of a session — sets, or the
+    /// slot's currency — locally first, then through the API. A session that
+    /// has no log yet gets one without a completion; completing it later
+    /// keeps the sets (the server merges per exercise).
+    func logExercise(sessionKey: String, exerciseId: String, performance: ExercisePerformanceLog) async {
+        var entry = sessionLogs[sessionKey] ?? SessionLogEntry(
+            sessionKey: sessionKey, completedAt: nil, source: "manual", notes: nil,
+            fatigueRating: nil, avgHR: nil, peakHR: nil, matchedWorkoutId: nil)
+        entry.exercises[exerciseId] = performance
+        sessionLogs[sessionKey] = entry
+        guard let api else { return }
+        do {
+            try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId, performance: performance)
+        } catch {
+            AppLogger.shared.logFromBackground("session log: save failed — \(error.localizedDescription)")
+        }
+    }
+
+    /// A planned session located by its key ("<week number>-<Day>-<index>"),
+    /// for a deep link or a widget. The first week carrying that number wins,
+    /// which is what every other reader of the key does.
+    struct LocatedSession {
+        let session: ProgramSession
+        let key: String
+        let weekIndex: Int
+        let dayName: String
+        let sessionIndex: Int
+    }
+
+    func locateSession(key: String) -> LocatedSession? {
+        guard let weeks = serverProgram?.currentProgram?.weeks else { return nil }
+        for (wi, week) in weeks.enumerated() {
+            for (day, sessions) in week.schedule {
+                for (si, session) in sessions.enumerated()
+                where "\(week.weekNumber)-\(day)-\(si)" == key {
+                    return LocatedSession(session: session, key: key, weekIndex: wi, dayName: day, sessionIndex: si)
+                }
+            }
+        }
+        return nil
+    }
+
     func undoSessionComplete(sessionKey: String) async {
         sessionLogs.removeValue(forKey: sessionKey)
         // The server keeps the sets and notes and clears only the completion;

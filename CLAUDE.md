@@ -341,7 +341,10 @@ writes.
   (sets × reps → `PerformanceLogger`, anything with a currency →
   `OutcomeLogger`); `ExerciseRow.test.tsx` pins it, because the logger was once
   written and never mounted, which left every rounds/duration/distance
-  primitive at zero coverage. Bodyweight
+  primitive at zero coverage. The phone logs from the session detail
+  (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
+  (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
+  carries `exercises` so it can read back. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
   iOS app had been posting notes into a phantom key — and fatigue is folded to
