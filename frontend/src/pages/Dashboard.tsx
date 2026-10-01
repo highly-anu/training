@@ -19,7 +19,6 @@ import { ProgressionWidget } from '@/components/dashboard/ProgressionWidget'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
-import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
 import type { GeneratedProgram } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
@@ -212,7 +211,6 @@ export function Dashboard() {
   const weeksToEvent = eventDate ? differenceInWeeks(parseISO(eventDate), new Date()) : null
 
   const currentWeek = program?.weeks[weekIndex]
-  const { totalWeeks: _totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
 
   const weekComplete = useMemo(() => {
     if (!currentWeek) return false

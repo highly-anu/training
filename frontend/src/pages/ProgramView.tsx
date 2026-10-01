@@ -69,7 +69,7 @@ export function ProgramView() {
     return program?.goal?.name ?? 'Training Program'
   })()
   const currentWeekData = program?.weeks[weekIndex]
-  const { segments, totalWeeks } = usePhaseCalendar(program?.goal, weekIndex + 1)
+  const { segments, totalWeeks } = usePhaseCalendar(program ?? undefined, weekIndex + 1)
   const regenerate = useRegenerateFromWeek()
 
   // Which array index is the real current calendar week?
@@ -114,7 +114,9 @@ export function ProgramView() {
           injury_flags: localFlags,
           periodization_week: currentWeekData.week_in_phase,
         },
-        numWeeks: totalWeeks - weekIndex,
+        // The stored program's length, never the methodology's canonical
+        // plan: sizing from the latter asked for 18 weeks on a 4-week plan.
+        numWeeks: program.weeks.length - weekIndex,
         weekInProgram: weekIndex + 1,
         customInjuryFlags: localCustom,
       },
