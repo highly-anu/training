@@ -11,6 +11,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { findSessionMatch } from '@/lib/sessionMatching'
+import { parseSessionKey } from '@/lib/sessionKeys'
 import type { ExerciseFinding } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
@@ -88,9 +89,9 @@ export function ProgressionTab() {
     return Object.entries(sessionLogs)
       .filter(([, completions]) => completions.some((c) => c === true))
       .map(([key]) => {
-        const dashIdx = key.indexOf('-')
-        const weekNumber = parseInt(key.slice(0, dashIdx), 10)
-        const dayName = key.slice(dashIdx + 1)
+        const parsed = parseSessionKey(key)
+        const weekNumber = parsed?.weekNumber ?? NaN
+        const dayName = parsed?.dayName ?? ''
         const weekData = currentProgram.weeks.find((w) => w.week_number === weekNumber)
         const daySessions = weekData?.schedule[dayName] ?? []
         const archetypeName =
@@ -276,7 +277,7 @@ export function ProgressionTab() {
                             <CheckCircle2 className={cn('size-3.5 shrink-0', COMPLETION.text)} />
                           </div>
                           <Link
-                            to={`/import?linkTo=${s.sessionKey}`}
+                            to={`/log?linkTo=${s.sessionKey}`}
                             className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
                           >
                             <Upload className="size-3" />

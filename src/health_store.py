@@ -518,6 +518,28 @@ def upsert_session_log(user_id: str, log: dict) -> None:
         pass
 
 
+def clear_session_completion(user_id: str, session_key: str) -> None:
+    """Undo "mark complete": null `completed_at`, keep everything else.
+
+    Resolves the session uid before opening a connection, like
+    upsert_session_log. A row written before uid resolution existed has a
+    NULL uid and is keyed on the bare session_key, so match either.
+    """
+    from src.db import get_conn
+    session_uid = _log_session_uid(user_id, {'sessionKey': session_key})
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    UPDATE session_logs SET completed_at = NULL
+                    WHERE user_id = %s
+                      AND (log_key = %s OR (session_uid IS NULL AND session_key = %s))
+                ''', (user_id, session_uid or session_key, session_key))
+            conn.commit()
+    except Exception:
+        pass
+
+
 def get_recent_session_logs(user_id: str) -> list[dict]:
     """Return all session logs as a list with snake_case keys (matches iOS SessionLogEntry model)."""
     from src.db import get_conn

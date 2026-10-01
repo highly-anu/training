@@ -60,7 +60,7 @@ export function ProgramTab() {
           {data.load.phase && <> ({data.load.phase}{data.load.isDeload ? ', deload' : ''})</>}:
           {data.load.tsb != null && <> TSB <span className="font-semibold text-foreground">{data.load.tsb}</span></>}
           {data.load.readiness && <> · readiness <span className="font-semibold text-foreground">{data.load.readiness.score}</span></>}
-          {' '}<Link to="/bio" className="underline underline-offset-2">Recovery →</Link>
+          {' '}<Link to="/analytics?tab=recovery" className="underline underline-offset-2">Recovery →</Link>
         </div>
         {data.load.reading && <StatusBadge status={data.load.reading} />}
       </div>

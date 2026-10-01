@@ -1,19 +1,7 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { X, CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
-
-import { cn } from '@/lib/utils'
-import { SessionHeader } from '@/components/session/SessionHeader'
-import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
-import { ExerciseRow } from '@/components/session/ExerciseRow'
-import { SessionNotes } from '@/components/session/SessionNotes'
-import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
-import { useProfileStore } from '@/store/profileStore'
-import { useBioStore } from '@/store/bioStore'
+import { X } from 'lucide-react'
+import { SessionPanel } from '@/components/session/SessionPanel'
 import { useProgramStore } from '@/store/programStore'
 import type { WeekData } from '@/api/types'
-import { COMPLETION } from '@/lib/completionColors'
-import { findSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
 
 interface DayWorkoutPanelProps {
   weekData: WeekData
@@ -22,42 +10,12 @@ interface DayWorkoutPanelProps {
   onClose: () => void
 }
 
+/** Home's side panel: a sticky day header over the shared session body. */
 export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkoutPanelProps) {
   const sessions = weekData.schedule[day] ?? []
-  const sessionKey = `${weekData.week_number}-${day}`
-
-  const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const setSessionLog = useProfileStore((s) => s.setSessionLog)
-  const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const currentProgram = useProgramStore((s) => s.currentProgram)
-  const programVersionId = useProgramStore((s) => s.programVersionId)
-  const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
 
-  function getSessionMatch(si: number) {
-    const entry = findSessionMatch(
-      workoutMatches, sessionKeyVariants(sessionKey, si), programVersionId
-    )
-    return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
-  }
-
-  function toggleComplete(si: number) {
-    const current = sessionLogs[sessionKey] ?? []
-    const next = [...current]
-    next[si] = !next[si]
-    setSessionLog(sessionKey, next)
-    if (next[si]) {
-      upsertSessionPerformance({
-        sessionKey: `${sessionKey}-${si}`,
-        exercises: {},
-        notes: '',
-        completedAt: new Date().toISOString(),
-      })
-    }
-  }
-
-  if (sessions.length === 0) return null
+  if (sessions.length === 0 || !currentProgram) return null
 
   return (
     <>
@@ -67,11 +25,9 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
           <p className="text-sm font-semibold">{day}</p>
           <p className="text-[11px] text-muted-foreground">
             Week {weekData.week_number}
-            {sessions.length > 0 && (
-              <span className="ml-1 capitalize">
-                · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
-              </span>
-            )}
+            <span className="ml-1 capitalize">
+              · {sessions.filter((s) => s.archetype).map((s) => s.modality.replace(/_/g, ' ')).join(' + ')}
+            </span>
           </p>
         </div>
         <button
@@ -84,106 +40,7 @@ export function DayWorkoutPanel({ weekData, weekIndex, day, onClose }: DayWorkou
         </button>
       </div>
 
-      {/* Scrollable content */}
-      <div className="p-5 space-y-6">
-        {sessions.map((session, si) => {
-          if (!session.archetype) return (
-            <div key={si} className={cn('space-y-2', si > 0 && 'border-t border-border pt-6')}>
-              <p className="text-sm font-medium capitalize">{session.modality.replace(/_/g, ' ')}</p>
-              <div className="flex items-center gap-3 rounded-md border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-                <RefreshCw className="size-3.5 shrink-0" />
-                <span>No session could be generated for this slot. Use <strong>Replace</strong> to regenerate.</span>
-                <button
-                  type="button"
-                  onClick={() => setReplaceTarget({ idx: si })}
-                  className="ml-auto shrink-0 rounded border border-border px-2 py-1 text-[11px] hover:border-primary/40 hover:text-foreground transition-colors"
-                >
-                  Replace
-                </button>
-              </div>
-            </div>
-          )
-          const isComplete = sessionLogs[sessionKey]?.[si] === true
-          const matchedWorkout = getSessionMatch(si)
-          return (
-            <div key={si} className={cn('space-y-4', si > 0 && 'border-t border-border pt-6')}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <SessionHeader
-                    session={session}
-                    day={day}
-                    weekNumber={weekData.week_number}
-                    weekInPhase={weekData.week_in_phase}
-                    phase={weekData.phase}
-                  />
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0 mt-1">
-                  {matchedWorkout && (
-                    <Link
-                      to={`/import/${encodeURIComponent(matchedWorkout.id)}`}
-                      state={{ workout: matchedWorkout }}
-                      className="flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                    >
-                      <Activity className="size-3" />
-                      Workout
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setReplaceTarget({ idx: si })}
-                    className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
-                  >
-                    <RefreshCw className="size-3" />
-                    Replace
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {session.exercises.map((assignment, i) => (
-                  <ExerciseRow
-                    key={`${sessionKey}-${si}-${i}`}
-                    assignment={assignment}
-                    index={i}
-                    sessionKey={sessionKey}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => toggleComplete(si)}
-                className={cn(
-                  'w-full flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all',
-                  isComplete
-                    ? cn('border-emerald-500/40', COMPLETION.bgStrong, COMPLETION.text, COMPLETION.hover)
-                    : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                )}
-              >
-                {isComplete ? (
-                  <><CheckCircle2 className="size-4" /> Session Complete</>
-                ) : (
-                  <><Circle className="size-4" /> Mark Complete</>
-                )}
-              </button>
-            </div>
-          )
-        })}
-
-        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIndex} />
-        <SessionNotes sessionKey={sessionKey} />
-      </div>
-
-      {currentProgram && replaceTarget && (
-        <ReplaceSessionSheet
-          open={true}
-          onOpenChange={(open) => { if (!open) setReplaceTarget(null) }}
-          session={sessions[replaceTarget.idx]}
-          weekIndex={weekIndex}
-          weekData={weekData}
-          day={day}
-          sessionIndex={replaceTarget.idx}
-          program={currentProgram}
-        />
-      )}
+      <SessionPanel program={currentProgram} weekData={weekData} weekIndex={weekIndex} day={day} compact />
     </>
   )
 }

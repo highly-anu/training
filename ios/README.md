@@ -1,92 +1,71 @@
-# TrainingCompanion iOS App
+# TrainingCompanion — iOS and watchOS
 
-A minimal iPhone app that syncs Apple Watch health data to the training dashboard. That's its entire current scope — it is a data sync utility, not a full training app.
+The phone and watch clients of the training app. The phone shows the program
+the web app (or the phone itself) generated, logs completion and notes, relays
+Apple Health data to the server, and hosts the live-workout watch app.
 
-**What it does:** reads sleep stages, HRV, resting HR, SpO2, and respiratory rate from HealthKit and pushes them to the Flask backend via `PUT /api/health/bio/{date}`. The web app's BioLog tab then displays the synced data automatically with an "Apple Watch" badge.
+## What it does
 
-**What it does not do (yet):** show training programs, log sessions, display workouts, send reminders, or run on Apple Watch itself.
+**Today** — today's sessions (swipe for other days), readiness, workout
+suggestions waiting for a match decision, development and progression cards
+that open Analytics, and an empty state that starts the builder.
 
----
+**Program** — the current plan week by week with a phase bar; a four-step
+builder sheet (methodology from `GET /api/philosophies`, schedule, constraints,
+review); a settings sheet that regenerates with changed constraints or an event
+date; move and replace a session; **History** of every archived program version.
+
+**Analytics** — Overview (totals, load focus, modality mix, PMC), Workouts (the
+recorded-workout list with `.fit` import and suggestion accept/dismiss),
+Progress (the weekly progression review), Recovery (readiness, sleep, HRV,
+resting HR, check-ins).
+
+**Profile** — Athlete (level, date of birth, bodyweight, HR zones), Equipment,
+Injuries, Schedule, Benchmarks. The toolbar gear pushes **Settings**:
+Connections (auto-import toggles), Devices & Sync (Garmin pairing, Sync Now,
+sync log), Appearance, Account.
+
+**Watch app** — the live session: per-slot views (sets × reps, AMRAP, EMOM, for
+time, distance, static hold, time domain), rest timer, HR zones, GPS route; the
+summary flows back through the phone to `PUT /api/health/sessions/<key>`.
 
 ## Architecture
 
 ```
-HealthKitManager   — queries HealthKit for sleep stages, HRV, RHR, SpO2, resp rate
-SyncManager        — incremental sync: skips already-synced dates, walks 30-day backfill
-APIClient          — authenticated PUT /api/health/bio/{date} to Flask; GET synced-dates
-AuthManager        — Supabase email/password sign-in (same account as the web app), JWT refresh
-ContentView        — two screens: sign-in form + sync status with manual "Sync Now" button
-TrainingCompanionApp — registers BGAppRefreshTask for background sync every ~6 hours
+AppState            — the store: program, logs, profile, workouts, suggestions, readiness
+AppRouter           — tab selection and cross-tab routes (design-system.md §6.9)
+APIClient           — the Flask API (JWT) plus direct Supabase reads/writes for workouts
+SyncManager         — HealthKit relay: bio metrics (sleep, HRV, RHR, SpO2, respiratory
+                      rate) and workouts, anchored and background-delivered
+HealthKitManager    — HealthKit queries and authorization
+WatchSessionManager — phone ↔ watch: today's sessions out, workout summaries back
+AuthManager         — Supabase email/password sign-in, Face ID, token refresh
 ```
 
-### Data synced per day
+The server's contracts the phone depends on: `philosophy_id` on generate,
+`POST /api/health/performance` for PRs (never the profile blob),
+`DELETE /api/health/sessions/<key>/completion` to undo a completion,
+`GET /api/health/matches/suggestions` for the Today card.
 
-| Field | Source |
-|---|---|
-| Sleep total, deep, REM, light, awake (minutes) | HKCategoryType sleepAnalysis |
-| Sleep start / end times | First/last Apple Watch sample in window |
-| Resting heart rate (bpm) | HKQuantityType restingHeartRate |
-| HRV RMSSD (ms) | HKQuantityType heartRateVariabilitySDNN |
-| SpO2 average (%) | HKQuantityType oxygenSaturation |
-| Respiratory rate (breaths/min) | HKQuantityType respiratoryRate |
+## Running it
 
-Sleep window: previous evening 6 pm → current morning noon. Only Apple Watch samples are used (bundle ID filter: `com.apple`).
-
----
-
-## Files
-
-| File | Purpose |
-|---|---|
-| `TrainingCompanionApp.swift` | App entry point, background task registration |
-| `ContentView.swift` | Sign-in screen + sync status screen |
-| `AuthManager.swift` | Supabase auth (email/password → JWT, persisted to UserDefaults) |
-| `HealthKitManager.swift` | HealthKit queries for sleep + biometrics |
-| `APIClient.swift` | Authenticated HTTP client (`GET`, `PUT`) for Flask API |
-| `SyncManager.swift` | Incremental sync logic, last-sync anchor in UserDefaults |
-
----
-
-## Setup
-
-### 1. Create the Xcode project
-
-1. Open Xcode → New Project → iOS App
-2. Product name: `TrainingCompanion`, Bundle ID: `com.training.companion`
-3. Copy the Swift files from this directory into the project
-4. No Swift packages needed — auth and networking use URLSession directly
-
-### 2. Configure Info.plist
-
-```xml
-<key>SUPABASE_URL</key>
-<string>https://bophctdejctqekplwnvp.supabase.co</string>
-<key>SUPABASE_ANON_KEY</key>
-<string><!-- anon key from Supabase dashboard --></string>
-<key>API_BASE_URL</key>
-<string>https://training-api.fly.dev/api</string>
-
-<key>NSHealthShareUsageDescription</key>
-<string>TrainingCompanion reads your sleep, heart rate, and HRV data to sync with your training dashboard.</string>
-<key>NSHealthUpdateUsageDescription</key>
-<string>TrainingCompanion does not write health data.</string>
-
-<!-- Required for background sync -->
-<key>BGTaskSchedulerPermittedIdentifiers</key>
-<array>
-    <string>com.training.sync</string>
-</array>
+```bash
+./ios/run_sim.sh                      # build + install + relaunch on a booted simulator
+./ios/run_sim.sh /tmp/after.png       # …and screenshot the result
+./ios/run_tests.sh                    # TrainingCompanionTests on the booted simulator
 ```
 
-### 3. Enable capabilities in Xcode
+`API_BASE_URL` in `Info.plist` points at production; the simulator talks to the
+real backend with the signed-in account, so do not generate a program from it
+casually. Every change ends in the simulator with a screenshot (CLAUDE.md).
 
-- Signing & Capabilities → **HealthKit**
-- Signing & Capabilities → **Background Modes** → check **Background App Refresh**
+## Where things are specified
 
-### 4. Run the Supabase migration
-
-The `daily_bio` table needs a `source` column to distinguish `apple_watch` from `manual` entries. Run the migration block at the bottom of `supabase/schema.sql` in the Supabase SQL editor.
-
-### 5. Build and run on device
-
-HealthKit is unavailable in the simulator. Run on a physical iPhone paired with an Apple Watch.
+- `docs/design-system.md` — colour, type, spacing, the component catalogue
+  (§6, including §6.13 the tab structure) and the routing rule.
+- `docs/ios-interactive-design.md` — the interactive-polish plan (steps 4 and 6 open).
+- `docs/workout-guidance-plan.md` — the watch app plan and its remaining gaps.
+- `docs/widgets-setup.md` — wiring the iPhone and watch widget extensions.
+- `../docs/information-architecture.md` — the journey both clients implement.
+- `../docs/roadmap.md` — the ranked backlog (phone session logging,
+  notifications and a Library tab are under *Later*).

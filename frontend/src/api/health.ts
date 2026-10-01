@@ -4,6 +4,7 @@ import type {
   SessionPerformanceLog,
   DailyBioLog,
   WorkoutMatch,
+  MatchSuggestion,
 } from '@/api/types'
 import type { ReadinessResult } from '@/lib/readiness'
 
@@ -33,12 +34,27 @@ export function saveSessionLog(log: SessionPerformanceLog): void {
   void apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log)
 }
 
+/** Undo "mark complete" for one session; the upsert cannot clear completed_at. */
+export function clearSessionCompletion(sessionKey: string): void {
+  void apiClient.delete(`${BASE}/sessions/${encodeURIComponent(sessionKey)}/completion`)
+}
+
 export function saveDailyBio(entry: DailyBioLog): void {
   void apiClient.put(`${BASE}/bio/${entry.date}`, entry)
 }
 
 export function saveMatch(match: WorkoutMatch): void {
   void apiClient.post(`${BASE}/matches`, match)
+}
+
+/** Weak matches from the server-side importers, waiting for a decision. */
+export async function fetchMatchSuggestions(): Promise<MatchSuggestion[]> {
+  return apiClient.get(`${BASE}/matches/suggestions`) as unknown as Promise<MatchSuggestion[]>
+}
+
+/** Forget a suggestion without deciding the workout. */
+export function dismissMatchSuggestion(workoutId: string): void {
+  void apiClient.delete(`${BASE}/matches/suggestions/${encodeURIComponent(workoutId)}`)
 }
 
 export function savePerformanceEntry(

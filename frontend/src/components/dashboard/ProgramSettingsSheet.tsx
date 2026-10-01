@@ -88,13 +88,13 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     })
     setRebuildDialogOpen(false)
     setOpen(false)
-    navigate('/builder')
+    navigate('/program/new')
   }
 
   function handleNewProgram() {
     reset()
     setOpen(false)
-    navigate('/builder')
+    navigate('/program/new')
   }
 
   return (
@@ -278,7 +278,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
           </button>
 
           <Link
-            to="/program/history"
+            to="/program?tab=history"
             onClick={() => setRebuildDialogOpen(false)}
             className="block w-full rounded-lg border border-border px-4 py-3 text-left transition-colors hover:bg-muted"
           >

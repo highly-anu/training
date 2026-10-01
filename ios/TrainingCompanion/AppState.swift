@@ -12,13 +12,15 @@ final class AppState: ObservableObject {
     @Published var serverProgram: ServerProgram? = nil
     @Published var isLoadingProgram = false
     @Published var programError: String? = nil
+    /// Set when a save lost to a newer copy on the server (409). The program
+    /// is re-pulled; this is what tells the user their last edit is gone,
+    /// which used to happen silently.
+    @Published var programSaveConflict: String? = nil
 
     /// Every plan this athlete has trained, newest first.
     ///
-    /// Lives on AppState rather than on ProgramStore: that type already keeps a
-    /// second `serverProgram` of its own with no stale-revision recovery and no
-    /// widget refresh, and a third copy of the program's state is not what this
-    /// needed.
+    /// Lives here with the rest of the program state; a second store for it
+    /// (the old `ProgramStore`) only ever held a stale copy.
     @Published var programHistory: [ProgramHistoryEntry] = []
     @Published var isLoadingHistory = false
 
@@ -47,6 +49,8 @@ final class AppState: ObservableObject {
     @Published var isLoadingWorkouts = false
     /// Confirmed `workout_matches` rows, keyed by imported workout id.
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
+    /// Weak server-side matches still waiting for a decision (Today card).
+    @Published var matchSuggestions: [MatchSuggestion] = []
 
     // MARK: - Bio Logs (last 30 days)
 
@@ -59,7 +63,6 @@ final class AppState: ObservableObject {
 
     // MARK: - Catalog (lazy-loaded)
 
-    @Published var goals: [GoalProfile] = []
     @Published var benchmarks: [AppBenchmark] = []
     @Published var philosophies: [PhilosophyCard] = []
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
@@ -91,6 +94,7 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadReadiness() }
             group.addTask { await self.loadWorkouts() }
             group.addTask { await self.loadProgressionReview() }
+            group.addTask { await self.loadMatchSuggestions() }
         }
     }
 
@@ -127,6 +131,19 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ fetchWorkoutMatches failed: \(error)")
         }
+    }
+
+    // MARK: - Match suggestions
+
+    func loadMatchSuggestions() async {
+        guard let api else { return }
+        matchSuggestions = (try? await api.fetchMatchSuggestions()) ?? []
+    }
+
+    /// Forget a suggestion without deciding the workout; the server forgets it too.
+    func dismissSuggestion(workoutId: String) async {
+        matchSuggestions.removeAll { $0.importedWorkoutId == workoutId }
+        try? await api?.dismissMatchSuggestion(workoutId: workoutId)
     }
 
     /// The planned session an imported workout is linked to, if any.
@@ -244,6 +261,25 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Records a PR through `POST /api/health/performance`, then re-reads the
+    /// series so the list shows what the server kept — the optimistic entry the
+    /// caller appended is replaced by the stored one, or dropped if the write
+    /// failed. Returns whether the write succeeded.
+    @discardableResult
+    func savePerformanceEntry(benchmarkId: String, value: Double) async -> Bool {
+        guard let api else { return false }
+        var saved = false
+        do {
+            try await api.addPerformanceEntry(benchmarkId: benchmarkId, value: value,
+                                              loggedAt: ISO8601DateFormatter().string(from: Date()))
+            saved = true
+        } catch {
+            logger.log("profile: performance entry ERROR — \(error)")
+        }
+        await loadPerformanceLogs()
+        return saved
+    }
+
     func saveProfile() async {
         guard let api else { return }
         try? await api.saveUserProfile(profile)
@@ -280,11 +316,11 @@ final class AppState: ObservableObject {
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
     }
 
-    func undoSessionComplete(sessionKey: String) {
+    func undoSessionComplete(sessionKey: String) async {
         sessionLogs.removeValue(forKey: sessionKey)
-        // Note: no undo API endpoint — the server keeps the log but completion is removed client-side
-        // until next sync. A proper undo would call DELETE /health/sessions/:key which isn't in the
-        // current API spec; for now optimistic removal is sufficient for the daily use case.
+        // The server keeps the sets and notes and clears only the completion;
+        // without this call the completion came back on the next sync.
+        try? await api?.clearSessionCompletion(sessionKey: sessionKey)
     }
 
     // MARK: - Bio Logs
@@ -321,11 +357,6 @@ final class AppState: ObservableObject {
     }
 
     // MARK: - Catalog (lazy)
-
-    func loadGoalsIfNeeded() async {
-        guard let api, goals.isEmpty else { return }
-        goals = (try? await api.fetchGoals()) ?? []
-    }
 
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
@@ -462,9 +493,12 @@ final class AppState: ObservableObject {
         )
         do {
             try await api.saveProgram(payload)
+            programSaveConflict = nil
         } catch is APIClient.StaleProgramRevision {
-            // Someone (the web) has newer work. Take theirs.
+            // Someone (the web) has newer work. Take theirs — and say so: the
+            // move or replace the user just made is not in the copy we reload.
             await loadProgram()
+            programSaveConflict = "Your program changed elsewhere — reloaded; your last edit was not saved."
         }
     }
 

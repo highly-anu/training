@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
 
     @State private var weekIndex: Int = 0
 
@@ -77,12 +76,14 @@ struct ProgramView: View {
                 ProgramBuilderFlow().environmentObject(appState)
             }
             .sheet(isPresented: $showSettings) {
-                ProgramSettingsSheet().environmentObject(appState)
+                if let program = appState.serverProgram {
+                    ProgramSettingsSheet(program: program, weeks: appState.allWeeks, profile: appState.profile)
+                        .environmentObject(appState)
+                }
             }
             .sheet(item: $selectedDay) { sel in
                 DaySessionsSheet(weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
-                    .environmentObject(programStore)
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
@@ -96,6 +97,13 @@ struct ProgramView: View {
     private var programContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if let conflict = appState.programSaveConflict {
+                    conflictBanner(conflict)
+                        .padding(.horizontal)
+                        .padding(.top, 4)
+                        .padding(.bottom, 12)
+                }
+
                 phaseProgressBar
                     .padding(.horizontal)
                     .padding(.top, 4)
@@ -118,6 +126,33 @@ struct ProgramView: View {
             _ = try? await delay
             AppHaptics.success()
         }
+    }
+
+    /// A save that lost to a newer copy on the server (409). The reload has
+    /// already happened; this tells the user their last move or replace is
+    /// not in it, where before the edit vanished without a word.
+    private func conflictBanner(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button {
+                AppHaptics.light()
+                appState.programSaveConflict = nil
+            } label: {
+                Image(systemName: "xmark").font(.caption)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
     }
 
     // MARK: - Phase Progress Bar
@@ -434,7 +469,6 @@ private struct DaySessionsSheet: View {
     let dayName: String
 
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
     @State private var selectedSession: SessionWithKey? = nil
 
@@ -466,7 +500,6 @@ private struct DaySessionsSheet: View {
                                   weekIndex: weekIndex, dayName: dayName,
                                   sessionIndex: item.sessionIndex)
                     .environmentObject(appState)
-                    .environmentObject(programStore)
             }
         }
     }

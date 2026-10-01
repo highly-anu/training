@@ -340,15 +340,7 @@ struct AnalyticsWorkoutsTab: View {
     /// The planned session is still shown, as a badge, where it cannot be
     /// mistaken for the activity itself.
     private func recordedTitle(_ workout: ImportedWorkout) -> String {
-        let raw = workout.activityType
-        let placeholders = ["apple_watch_live", "watch", "workout"]
-        if !placeholders.contains(raw.lowercased()) && !raw.hasPrefix("watch_") {
-            return raw.replacingOccurrences(of: "_", with: " ").capitalized
-        }
-        if let modality = workout.inferredModalityId {
-            return ModalityStyle.label(for: modality)
-        }
-        return "Workout"
+        workout.recordedTitle
     }
 
     private static let timeDisplay: DateFormatter = {

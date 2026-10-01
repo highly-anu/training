@@ -4,7 +4,6 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
-    @StateObject private var programStore = ProgramStore()
     @StateObject private var router = AppRouter()
 
     var body: some View {
@@ -13,7 +12,6 @@ struct ContentView: View {
                 .environmentObject(router)
                 .environmentObject(sync)
                 .environmentObject(appState)
-                .environmentObject(programStore)
                 .onAppear {
                     sync.configure(auth: auth, appState: appState)
                     appState.configure(auth: auth)
@@ -56,7 +54,7 @@ struct ContentView: View {
                     }
                     // Widget deep links — trainingcompanion://today or trainingcompanion://session?key=...
                     guard url.scheme == "trainingcompanion" else { return }
-                    router.tab = .dashboard     // always land on the Dashboard tab
+                    router.show(.dashboard)     // always land on Today (§6.9: through the router)
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },
@@ -73,14 +71,16 @@ struct ContentView: View {
 
 // MARK: - Main Tab View
 
+/// Four tabs: Today, Program, Analytics, Profile. Connections, devices, sync
+/// status and sign-out live under Profile ▸ Settings — the fifth "Sync" tab
+/// was a debug screen holding the only sign-out and the integration toggles.
 struct MainTabView: View {
-    @EnvironmentObject var sync: SyncManager
     @EnvironmentObject var router: AppRouter
 
     var body: some View {
         TabView(selection: $router.tab) {
             TodayView()
-                .tabItem { Label("Dashboard", systemImage: "house") }
+                .tabItem { Label("Today", systemImage: "sun.max") }
                 .tag(AppRouter.Tab.dashboard)
 
             ProgramView()
@@ -94,15 +94,6 @@ struct MainTabView: View {
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person") }
                 .tag(AppRouter.Tab.profile)
-
-            SyncStatusView()
-                .tabItem {
-                    Label(
-                        sync.isSyncing ? "Syncing…" : "Sync",
-                        systemImage: sync.isSyncing ? "arrow.clockwise.circle.fill" : "arrow.triangle.2.circlepath"
-                    )
-                }
-                .tag(AppRouter.Tab.sync)
         }
     }
 }

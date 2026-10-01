@@ -1,4 +1,5 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
+import { parseSessionKey } from '@/lib/sessionKeys'
 import { Link } from 'react-router-dom'
 import { Upload, Heart, Clock, Flame, MapPin, CheckCircle2, Info, AlertTriangle, Zap, Link2, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -87,8 +88,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
   const suggestion = useMemo(() => {
     if (matched) return null
     if (!programStartDate || weekIndexProp == null) return null
-    const dashIdx = sessionKey.indexOf('-')
-    const dayName = sessionKey.slice(dashIdx + 1)
+    const dayName = parseSessionKey(sessionKey)?.dayName ?? ''
     const calDate = sessionCalendarDate(programStartDate, weekIndexProp, dayName)
     if (!calDate) return null
 
@@ -186,7 +186,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
                   </button>
                 )}
                 <Link
-                  to={`/import?linkTo=${sessionKey}`}
+                  to={`/log?linkTo=${sessionKey}`}
                   className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   <Upload className="size-3.5" />
@@ -245,7 +245,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
             {sourceText}
           </Badge>
           <Link
-            to={`/import/${encodeURIComponent(matched.id)}`}
+            to={`/log/${encodeURIComponent(matched.id)}`}
             state={{ workout: matched }}
             className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5"
           >

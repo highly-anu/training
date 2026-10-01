@@ -1,14 +1,17 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play } from 'lucide-react'
+import { Play, ExternalLink } from 'lucide-react'
 import { PerformanceLogger } from './PerformanceLogger'
+import { OutcomeLogger } from './OutcomeLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
+import { outcomeFieldsFor } from '@/lib/outcomeFields'
 import { useBioStore } from '@/store/bioStore'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
 import { useExerciseMedia } from '@/api/exercises'
-import type { ExerciseAssignment, SetPerformance } from '@/api/types'
+import type { ExerciseAssignment, ExercisePerformance, SetPerformance } from '@/api/types'
 
 interface ExerciseRowProps {
   assignment: ExerciseAssignment
@@ -56,6 +59,12 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
         {media?.description && (
           <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{media.description}</p>
         )}
+        <Link
+          to={`/explore?topic=exercises&id=${encodeURIComponent(exerciseId)}`}
+          className="mt-2 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+        >
+          Open in Explore <ExternalLink className="size-3" aria-hidden="true" />
+        </Link>
       </PopoverContent>
     </Popover>
   )
@@ -81,9 +90,16 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
 
   const loadStr = formatLoad(assignment.load)
   const hasSets = typeof assignment.load.sets === 'number' && assignment.load.sets > 0
+  // Sets × reps get the set logger. Everything else with a currency — rounds,
+  // minutes, kilometres, reps in a window — gets the outcome logger, keyed on
+  // slot_type via lib/outcomeFields. A slot with neither logs nothing. Until
+  // this dispatch existed the row showed a logger only when load.sets > 0, so
+  // every rounds/duration/distance analytics primitive had zero coverage.
+  const hasOutcome = !hasSets && outcomeFieldsFor(assignment.slot_type).length > 0
   const watchKey = sessionIdx != null ? `${sessionKey}-${sessionIdx}` : `${sessionKey}-0`
   const perfLog = getPerformanceLog(watchKey) ?? getPerformanceLog(sessionKey)
   const logged = perfLog?.exercises[assignment.exercise.id]
+  const outcomeLine = logged ? formatOutcomeLine(logged) : null
 
   return (
     <motion.div
@@ -124,6 +140,14 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
               prescribedWeightKg={assignment.load.weight_kg}
             />
           )}
+          {hasOutcome && (
+            <OutcomeLogger
+              slotType={assignment.slot_type!}
+              exerciseId={assignment.exercise.id}
+              sessionKey={sessionKey}
+              load={assignment.load}
+            />
+          )}
         </div>
         {assignment.notes && (
           <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">{assignment.notes}</p>
@@ -133,10 +157,13 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
             {assignment.exercise.notes}
           </p>
         )}
-        {logged && logged.sets.length > 0 && (
+        {logged && (logged.sets.length > 0 || outcomeLine) && (
           <div className="mt-2 border-t border-border/40 pt-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Logged</p>
             <div className="flex flex-col gap-0.5">
+              {outcomeLine && (
+                <p className="text-[11px] text-muted-foreground font-mono">{outcomeLine}</p>
+              )}
               {logged.sets.map((s: SetPerformance, i: number) => (
                 <p key={i} className="text-[11px] text-muted-foreground font-mono">
                   {formatSetLine(s, i)}
@@ -148,6 +175,15 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx }: Exerc
       </div>
     </motion.div>
   )
+}
+
+/** "12 rounds · 20 min · 5.2 km" from the outcome fields; null when none is logged. */
+function formatOutcomeLine(p: ExercisePerformance): string | null {
+  const parts: string[] = []
+  if (p.rounds != null) parts.push(`${p.rounds} rounds`)
+  if (p.durationSec != null) parts.push(`${Math.round(p.durationSec / 60)} min`)
+  if (p.distanceKm != null) parts.push(`${p.distanceKm} km`)
+  return parts.length > 0 ? parts.join(' · ') : null
 }
 
 function formatSetLine(s: SetPerformance, i: number): string {

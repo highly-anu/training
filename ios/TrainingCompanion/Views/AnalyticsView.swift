@@ -4,19 +4,21 @@ import UniformTypeIdentifiers
 /// Internal rather than private: `AppRouter` names a section so another screen
 /// can send the user to one (the Dashboard's readiness card → Recovery).
 enum AnalyticsTab: Int, AppSubTab {
-    case overview, workouts, recovery
+    case overview, workouts, progress, recovery
 
     var label: String {
         switch self {
         case .overview: return "Overview"
         case .workouts: return "Workouts"
+        case .progress: return "Progress"
         case .recovery: return "Recovery"
         }
     }
 }
 
 /// Root container for the Analytics tab. Owns shared state: period selector, selected workout
-/// sheet, and bio entry sheet. Replaces LogView at tab position 2 in ContentView.
+/// sheet, and bio entry sheet. Progress (the progression review) lives here as a
+/// section rather than as a push from Today, so the review has one home.
 struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
@@ -39,6 +41,9 @@ struct AnalyticsView: View {
                             .environmentObject(appState)
                     case .workouts:
                         AnalyticsWorkoutsTab(period: $period, selectedWorkout: $selectedWorkout)
+                            .environmentObject(appState)
+                    case .progress:
+                        ProgressionView()
                             .environmentObject(appState)
                     case .recovery:
                         AnalyticsRecoveryTab(showBioEntry: $showBioEntry)

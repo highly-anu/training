@@ -749,6 +749,42 @@ answer.
 
 ---
 
+### 6.13 Tab Structure
+
+**Four tabs, and configuration is not one of them.**
+
+| Tab | Root | Sections (`AppSubTabs`) |
+|---|---|---|
+| **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
+| **Program** | `ProgramView` | Current · History |
+| **Analytics** | `AnalyticsView` | Overview · Workouts · Progress · Recovery |
+| **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+
+`AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
+selection from the router (§6.9). The first case is still named `.dashboard`
+because the widgets deep-link to it; its label is "Today".
+
+**Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`):
+Connections (integration toggles), Devices & Sync (pairing, Sync Now, last
+sync, sync details, debug log), Appearance, Account (sign out). Until
+2026-10-01 these lived on a fifth "Sync" tab — a debug screen that held the
+only sign-out, the integration switches and a hidden program mutation. A tab
+is a place the athlete goes every day; a setting is something they change once.
+
+**Rules**
+
+- A new top-level destination needs a case in `AppRouter.Tab` and a `show…`
+  method on the router; nothing else moves the user between tabs (§6.9).
+- Sections within a tab use `AppSubTabs` (§6.8), two to five of them.
+- Developer diagnostics (sync log, device status) live under Settings ▸ Devices
+  & Sync, never on a tab.
+- The web app's layout is the same journey with a sidebar
+  (`docs/information-architecture.md`): Home / Program / Log / Analytics /
+  Explore / Profile. The phone has no Log tab because it has no session
+  logging yet; recorded workouts stay a section of Analytics until that ships.
+
+---
+
 ## 7. Motion & Animation
 
 ### 7.1 Rules

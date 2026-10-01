@@ -1,15 +1,18 @@
 # Roadmap
 
 The single backlog for this project. Last verified against the code and the
-production database on 2026-09-30.
+production database on 2026-09-30; the information-architecture items were added
+from the functionality review of 2026-10-01 (`information-architecture.md`).
 
 This replaces the phased build roadmap (phases 0–8, all complete), and absorbs
-`next_features.md` (March), `model-generalization-gaps.md` (April) and
-`programming-improvements.md` (April), all of which are deleted — their shipped
-items are listed under *Done* below and their open items are ranked here. Two
-planning documents remain because they carry rationale, not backlog:
-`frontend-fix-plan.md` (design decisions, plus the *Explicitly not doing* table)
-and `program-history-release.md` (the release runbook).
+`next_features.md` (March), `model-generalization-gaps.md` (April),
+`programming-improvements.md` (April) and `ios/docs/phone-app-plan.md` (the
+unbuilt four-tab iOS plan), all of which are deleted — their shipped items are
+listed under *Done* below and their open items are ranked here. Three planning
+documents remain because they carry rationale, not backlog:
+`frontend-fix-plan.md` (design decisions, plus the *Explicitly not doing* table),
+`program-history-release.md` (the release runbook) and
+`information-architecture.md` (the target layout of both clients and why).
 
 ## How items are ranked
 
@@ -22,7 +25,9 @@ and `program-history-release.md` (the release runbook).
 **Complexity** is the size of the change, not the value: **S** under a day,
 **M** a few days, **L** a week or more of mostly content work.
 
-Within a priority band, cheaper items come first.
+Within a priority band, cheaper items come first. The information-architecture
+restructure of 2026-10-01 is complete on both clients (see *Done*); what it
+deferred is under *Later*.
 
 ## Ranked backlog
 
@@ -91,11 +96,13 @@ series there should read `MODALITY_COLORS` or `ZONE_COLORS`.
 
 ### 5. Female benchmark values served, never shown — P2 · S–M
 
-`_all_benchmarks()` in `api.py` now carries the female values and the metric
-metadata; `ProfileBenchmarks.tsx` has no sex toggle and never reads them. Add
-the toggle, read the athlete's sex from the profile as the default, and pass the
-logged value to each `LevelBar` (the `userValue` prop exists and is never
-passed).
+`_all_benchmarks()` in `api.py` carries the female values and the metric
+metadata; the web reads neither. The profile now has a writable `sex` key
+(Profile ▸ Athlete, 2026-10-01), so what remains: `GET /api/benchmarks?sex=`
+(today it always serves the male tables), the static `data/static/benchmarks.json`
+regenerated with both sets, `ProfileBenchmarks.tsx` and `StandardsLanding.tsx`
+choosing the set from the profile's `sex`, and the logged value passed to each
+`LevelBar` (`userValue` is wired on the Standards topic, not yet on Benchmarks).
 
 ### 6. Missing benchmark families — P2 · M
 
@@ -169,15 +176,46 @@ and six days.
 
 ### 11. Authoring API completeness — P3 · M
 
-There are no POST, PUT or DELETE routes for any entity: packages are edited as
-YAML and validated with `tools/validate_entities.py`. Since the per-package
-restructure this is a reasonable steady state — a new package with its own
-`analytics.yaml` needs no engine change. If in-app authoring (DevLab) is
-revived, the order from the April analysis still holds: modality creation
-first, then goal creation, then edit and delete for exercises and archetypes,
-each behind the same schema validation the CLI uses.
+Six authoring routes exist — `POST/PUT /api/exercises`, `POST/PUT
+/api/archetypes`, `POST /api/modalities`, `PUT /api/frameworks/<id>` — and
+since 2026-10-01 they require a signed-in user and `AUTHORING_ENABLED` (local
+development gets both for free). None validates against `docs/schemas/`, and
+there is no DELETE for any entity; packages are edited as YAML and validated
+with `tools/validate_entities.py`. Since the per-package restructure this is a
+reasonable steady state — a new package with its own `analytics.yaml` needs no
+engine change. If in-app authoring (Dev Lab) is revived, the order from the
+April analysis still holds: schema validation on the existing routes first,
+then modality creation, then edit and delete for exercises and archetypes.
 
 ---
+
+## Later
+
+Larger items from the IA review. Each needs a backend step first; none is
+scheduled ahead of the ranked list.
+
+- **Phone session logging** — `PUT /health/sessions/<key>` and the `by-uid`
+  writer exist; needs `session_uid` from `GET /programs/planned-sessions` for
+  unambiguous keys; reuse the watch `SetLoggerSheetView` slot views. Then
+  promote iOS Analytics ▸ Workouts to a Log tab.
+- **Notifications** — local `UNUserNotificationCenter` scheduling from
+  `WidgetDataStore` needs no backend (daily session, deload week, program
+  complete); push would need a device-token table.
+- **Apply adjustment** — `suggest_adjustments` (`src/progression_tracker.py`)
+  emits `hold_load`, `reduce_volume_10pct`, `rebuild_habit`, `early_deload`,
+  `increase_increment` and nothing applies them. Either `POST /api/programs/adjust`
+  under the revision check, or map `early_deload` onto regenerate-from-week with
+  `fatigue_state: overreached`.
+- **Exercise-level swap** — `POST /sessions/generate` is session-level; needs
+  `POST /api/exercises/substitute` over `selector.py` scoring.
+- **iOS server-side analytics** — replace `AnalyticsEngine`'s local PMC with
+  `/health/load/pmc` and add `/analytics/program`, or the two platforms disagree.
+- **iOS FIT import through `POST /workouts/parse`** — gets server dedup and the
+  matcher instead of a raw Supabase upsert.
+- **`/settings` and a web Devices UI** — `GET /api/devices` exists; only when
+  Profile's sub-tab row overflows.
+- **iOS Library tab** — after a contextual exercise sheet exists and has content
+  to promote; needs `GET /exercises/<id>/media`.
 
 ## Parked
 
@@ -209,6 +247,72 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Information-architecture restructure (2026-10-01)** — the layout in
+`information-architecture.md`, on both clients:
+
+- *Web*: grouped sidebar (Train / Insight / Library / You / Dev); the builder is
+  the flow `/program/new`; Log (`pages/Log.tsx`: Workouts with filters ·
+  Suggestions; Import as a sheet through `api/workouts.ts`, no hand-made auth
+  header, no manual start-date field); Analytics is Program · Progress · Load ·
+  Recovery with URL tabs (Bio Log folded into Recovery, the Dashboard's
+  Progress tab moved, Activity and Overview folded into Load); Home has no
+  sub-tabs and a compact `ProgressionWidget`; Program has Calendar · Overview ·
+  History tabs with "New program", the priority mix beside the phases and
+  methodology / standards links into Explore; Explore has a Standards topic,
+  "Build with this" on every philosophy (`components/explore/PhilosophyPanel.tsx`)
+  and framework (`builderStore.prefillFrom…`), and resolves exercise deep links
+  from a session row's "Open in Explore"; Profile has an Athlete tab (level,
+  date of birth, sex, bodyweight, account) and the API a writable `sex` key.
+  Old paths redirect (`LegacyRedirect`), unknown paths get a 404 page. One
+  `SessionPanel` serves the session page and the Home side panel; one
+  `WorkoutRow` serves every workout list; `lib/sessionKeys.ts` is the only
+  session-key parser; `ExerciseCatalog`, `Philosophies`, `BioLog`,
+  `WorkoutImport`, `ProgramHistory` (page), `ExerciseSearch`, `ExerciseDrawer`,
+  `PhaseTimeline` and `VolumeBar` are deleted.
+- *iOS*: four tabs (Today · Program · Analytics · Profile); the Sync tab
+  dissolved into Settings pushed from Profile (`Views/SettingsView.swift`), its
+  hidden `resetProgramStartToToday` mutation deleted; Profile ▸ Athlete (level,
+  DOB, bodyweight, editable HR zones); Analytics ▸ Progress hosts the
+  progression review; Today has a Suggestions card (`GET /health/matches/
+  suggestions`, dismiss, review through `WorkoutDetailView`) and a "Generate a
+  Program" empty-state button; `ContentView` routes through
+  `router.show(.dashboard)`. Defects fixed: settings-sheet init, debounced
+  notes, fatigue 1–5, stable sheet identity, check-in notes sent, undo-complete
+  through the new `DELETE /api/health/sessions/<key>/completion`, and a visible
+  banner on a 409 `stale_revision`. Dead code deleted: `LogView.swift`,
+  `DevicesView.swift`, `SyncStatusView.swift`, `ProgramStore.swift`, the stale
+  `ios/TrainingCompanionWatch/` folder, and the watch's unreferenced
+  `SettingsView` / `SessionOverviewView`.
+- *Docs*: `frontend-design.md` §13.2 / §17.8 / §17.9, `ios/docs/design-system.md`
+  §6.13, `ios/README.md` rewritten, `CLAUDE.md` updated.
+
+**Functionality & IA review, P1 tranche (2026-10-01)** — the five findings
+that were wrong data or let wrong data in, from `information-architecture.md`:
+
+- The iOS builder could not generate a program: step 1 fetched `GET /api/goals`,
+  removed on 2026-04-25 (`d079ace`), so the grid never populated and Next stayed
+  disabled — for five months. It now picks a methodology from
+  `GET /api/philosophies` with a detail sheet per card; the settings sheet's
+  picker, the Today header's goal name and `GenerateProgramRequest.philosophyId`
+  follow. The settings sheet also got its title and Cancel button, which were
+  attached to the `NavigationStack` instead of its content and never rendered.
+- iOS PRs were silently lost: Benchmarks appended to `profile.performanceLogs`
+  and sent it with the profile, whose server whitelist drops the key. They go
+  through `POST /api/health/performance` now, then re-read the series.
+- The web could not log rounds, minutes or kilometres: `OutcomeLogger` was
+  written in `2e84772` and never mounted. `ExerciseRow` dispatches on
+  `slot_type` through `lib/outcomeFields.ts`; `ExerciseRow.test.tsx` pins it.
+- Server match suggestions (Garmin webhook, iOS relay) were written and shown
+  nowhere. `HealthDataProvider` merges `GET /api/health/matches/suggestions`
+  into `bioStore.pendingMatches`; a Home card and an Import ▸ Suggestions tab
+  (`SuggestionRow`) let the athlete review or dismiss; `lib/sessionKeys.ts` and
+  `lib/activityType.ts` are the first shared helpers of item 12.
+- Six unauthenticated YAML-writing authoring routes and a Dev Lab in end-user
+  navigation: the routes require `require_auth` + `AUTHORING_ENABLED`
+  (`_authoring_enabled()` in `api.py`); Dev Lab's route and nav entry exist only
+  in dev builds (`src/lib/featureFlags.ts`, `VITE_DEVLAB=1` to opt a production
+  build in).
+
 **Build phases 0–8** (original roadmap): source extraction, schemas, data
 population, logic design, MVP generator, validation, KB-only strength
 archetypes, exercise variety scoring, methodology review, phase automation from
@@ -235,6 +339,12 @@ goal modality alignment (`check_provenance.py --coverage`).
 contrast regression guard in CI), FIX-2 (reduced motion), FIX-3 (theme-aware
 basemap), FIX-4 (one HR-zone colour source), FIX-7 (page transitions), FIX-8
 (accessible names on icon buttons).
+
+**From `ios/docs/phone-app-plan.md`**: the Today, Program and Profile tabs,
+`SessionDetailView` shared between Today and Program, the builder sheet, the
+bio check-in, pull-to-refresh and background refresh, and the Apple Health
+relay. Its Library tab, phone session logging and notifications are under
+*Later*; its four-tab structure is superseded by `information-architecture.md`.
 
 **iOS tests**: `TrainingCompanionTests` is a real unit-test target as of
 2026-09-30, hosted by the app, backed by a synchronized folder so new test

@@ -16,6 +16,9 @@ A training logic system that algorithmically generates periodized training progr
   and points local dev at the local `training_test` Postgres with Supabase unset, so the
   API runs as `local-dev-user` and `FRONTEND_URL=http://localhost:5173` for CORS. Fly gets
   its config from `fly secrets`; neither file is committed or copied into the image.
+  The six YAML authoring routes (`POST/PUT /api/exercises`, `/api/archetypes`,
+  `POST /api/modalities`, `PUT /api/frameworks/<id>`) require a signed-in user and
+  `AUTHORING_ENABLED=1`; an empty `SUPABASE_URL` (local dev) enables them without it.
   Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
   (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
@@ -95,9 +98,29 @@ All prefixed `/api/`:
 
 React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanStack Query, Zustand, Recharts, MSW v2, React Router v7.
 
-**Pages:** Dashboard, ProgramBuilder (3-step wizard), ProgramView (week calendar), SessionDetail, ExerciseCatalog, ProfileBenchmarks
+**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** Train — Home `/`
+(`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
+History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
+Suggestions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+`/analytics` (Program · Progress · Load · Recovery via `?tab=`). Library — Explore
+`/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
+with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete · Equipment ·
+Injuries · Schedule · Benchmarks · Heart Rate · Connections). Dev Lab `/dev` exists in dev
+builds only (`src/lib/featureFlags.ts`). Old paths (`/builder`, `/import`, `/bio`,
+`/exercises`, `/philosophies`, `/program/history`) redirect through
+`components/layout/LegacyRedirect.tsx`; unknown paths render `pages/NotFound.tsx`.
+Session detail (page and Home side panel) renders one `components/session/SessionPanel.tsx`;
+recorded-workout lists render one `components/workout/WorkoutRow.tsx`; session keys are
+parsed by `lib/sessionKeys.ts` only.
 
-**State:** `builderStore` (wizard state + constraints form), `profileStore` (persisted: level, equipment, injuries, perf logs), `uiStore` (sidebar, filters)
+**State:** `builderStore` (wizard state; persisted), `uiStore` (selected week; persisted),
+`programStore` (server-backed, `revision` 409 protocol), `profileStore` (server-synced
+through `PUT /api/profile`), `bioStore` (hydrated by `HealthDataProvider` from
+`/api/health/snapshot` plus `/api/health/matches/suggestions`), `authStore`.
+
+**Information architecture:** the target layout for both clients, the connectivity map and
+the reasoning are in `docs/information-architecture.md`; the work is ranked in
+`docs/roadmap.md` (items tagged *IA*).
 
 **API hooks:** `src/api/` — goals.ts, exercises.ts, programs.ts, constraints.ts, modalities.ts, benchmarks.ts
 
@@ -141,7 +164,10 @@ is the source of the patterns, not the neighbouring screen:
   same change, then document it in §6. Profile and Analytics each grew their
   own sub-tab selector before that rule existed; both now use
   `AppSubTabs.swift` (§6.8).
-- **Web**: `docs/frontend-design.md`.
+- **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
+- **iOS tabs**: Today · Program · Analytics · Profile (`AppRouter.Tab`); Settings
+  (connections, devices & sync, appearance, account) is pushed from Profile's gear, never a
+  tab — design-system §6.13.
 
 Shared iOS style primitives live in `AppAnimationSettings.swift`
 (`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
@@ -186,7 +212,13 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
   `garmin_webhook_events` queue, because gunicorn runs `--workers 1`.
 - **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
   carries. It used to rebuild the blob, which is why every iOS save wiped
-  `activeGoalId`.
+  `activeGoalId`. `performanceLogs` is not a profile key: PRs and the
+  `bodyweight_kg` series go through `POST /api/health/performance` on both
+  clients (iOS used to send them with the profile, where the whitelist dropped
+  them).
+- **iOS builds from philosophies.** `GET /api/goals` was removed on 2026-04-25;
+  the iOS builder and settings sheet pick a methodology from
+  `GET /api/philosophies` and send it as `philosophy_id`.
 
 ## Program Analytics
 
@@ -261,7 +293,11 @@ writes.
   comparison is what the Program History tables (below) exist for.
 - **Capture.** `OutcomeLogger` (web) writes `ExercisePerformance.rounds /
   durationSec / distanceKm` — the keys the tracker always read and nothing
-  wrote; `ExerciseRow` dispatches on `slot_type`, not `load.sets`. Bodyweight
+  wrote. `ExerciseRow` dispatches on `slot_type` through `lib/outcomeFields.ts`
+  (sets × reps → `PerformanceLogger`, anything with a currency →
+  `OutcomeLogger`); `ExerciseRow.test.tsx` pins it, because the logger was once
+  written and never mounted, which left every rounds/duration/distance
+  primitive at zero coverage. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
   iOS app had been posting notes into a phantom key — and fatigue is folded to

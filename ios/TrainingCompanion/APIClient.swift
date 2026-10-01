@@ -12,7 +12,11 @@ struct DailyBioPayload: Encodable {
     let sleepEnd: String?
     let spo2Avg: Double?
     let respiratoryRateAvg: Double?
-    let source: String = "apple_watch"
+    /// Free text from the manual check-in; the relay never sets it.
+    var notes: String? = nil
+    /// "apple_watch" for the HealthKit relay, "manual" for a check-in. The relay
+    /// uses the stored source to decide which days it has already pushed.
+    var source: String = "apple_watch"
 }
 
 /// A watch/companion device paired to the account. Server truncates deviceToken.
@@ -164,12 +168,18 @@ final class APIClient {
         return snapshot.performanceLogs ?? [:]
     }
 
-    // MARK: - Goals / Catalog
-
-    func fetchGoals() async throws -> [GoalProfile] {
-        let data = try await get("/goals")
-        return (try? JSONDecoder().decode([GoalProfile].self, from: data)) ?? []
+    /// Logs a benchmark value — a PR, or the `bodyweight_kg` series the ×BW
+    /// standards need. PRs used to be appended to `profile.performanceLogs`
+    /// and sent with the profile, which the server's merge whitelist drops,
+    /// so every PR entered on the phone vanished on the next snapshot load.
+    /// This is the route the web app has always used.
+    func addPerformanceEntry(benchmarkId: String, value: Double, loggedAt: String) async throws {
+        struct Body: Encodable { let benchmarkId: String; let value: Double; let loggedAt: String }
+        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId, value: value, loggedAt: loggedAt))
+        _ = try await postRaw("/health/performance", body: body)
     }
+
+    // MARK: - Catalog
 
     func fetchExercises(search: String? = nil, category: String? = nil) async throws -> [AppExercise] {
         var path = "/exercises"
@@ -237,6 +247,28 @@ final class APIClient {
             "/health/sessions/\(sessionKey)/notes",
             body: Body(sessionKey: sessionKey, notes: notes, fatigueRating: fatigueRating)
         )
+    }
+
+    /// Un-completes a session: clears `completed_at` and keeps sets and notes.
+    /// Un-doing used to be client-only because the log upsert keeps the later
+    /// of the two timestamps, so the completion came back on the next sync.
+    func clearSessionCompletion(sessionKey: String) async throws {
+        _ = try await deleteRaw("/health/sessions/\(sessionKey)/completion")
+    }
+
+    // MARK: - Match suggestions
+
+    /// Workouts the server-side importers (Garmin webhook, Apple Health relay)
+    /// matched too weakly to confirm alone. Deciding the workout either way
+    /// through `POST /health/matches` clears its suggestion.
+    func fetchMatchSuggestions() async throws -> [MatchSuggestion] {
+        let data = try await get("/health/matches/suggestions")
+        return (try? JSONDecoder().decode([MatchSuggestion].self, from: data)) ?? []
+    }
+
+    func dismissMatchSuggestion(workoutId: String) async throws {
+        let encoded = workoutId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? workoutId
+        _ = try await deleteRaw("/health/matches/suggestions/\(encoded)")
     }
 
     // MARK: - Bio Logs
@@ -818,6 +850,16 @@ final class APIClient {
     private func get(_ path: String) async throws -> Data {
         let url = URL(string: APIClient.baseURL + path)!
         var request = URLRequest(url: url)
+        try await addAuth(to: &request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validateStatus(response)
+        return data
+    }
+
+    private func deleteRaw(_ path: String) async throws -> Data {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
         try await addAuth(to: &request)
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateStatus(response)

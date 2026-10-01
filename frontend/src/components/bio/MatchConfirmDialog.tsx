@@ -14,25 +14,23 @@ import { useBioStore } from '@/store/bioStore'
 import { useCurrentProgram } from '@/api/programs'
 import type { PendingMatch } from '@/api/types'
 import { sourceLabel } from '@/lib/workoutSource'
+import { parseSessionKey, sessionLabel } from '@/lib/sessionKeys'
+import { formatActivityType } from '@/lib/activityType'
 
 interface MatchConfirmDialogProps {
   match: PendingMatch | null
   onClose: () => void
 }
 
-function sessionLabel(sessionKey: string): string {
-  const parts = sessionKey.split('-')
-  if (parts.length < 2) return sessionKey
-  return `Week ${parts[0]} — ${parts.slice(1).join('-')}`
-}
-
 function sessionModality(sessionKey: string, program: ReturnType<typeof useCurrentProgram>): string {
   if (!program) return ''
-  const [week, ...dayParts] = sessionKey.split('-')
-  const dayName = dayParts.join('-')
-  const weekData = program.weeks.find((w) => w.week_number === parseInt(week, 10))
-  const sessions = weekData?.schedule[dayName] ?? []
-  return sessions.map((s) => s.modality.replace(/_/g, ' ')).join(', ')
+  const parsed = parseSessionKey(sessionKey)
+  if (!parsed) return ''
+  const weekData = program.weeks.find((w) => w.week_number === parsed.weekNumber)
+  const sessions = weekData?.schedule[parsed.dayName] ?? []
+  // A per-session key names one session of the day; a day key names them all.
+  const named = parsed.sessionIndex != null ? sessions.filter((_, i) => i === parsed.sessionIndex) : sessions
+  return named.map((s) => s.modality.replace(/_/g, ' ')).join(', ')
 }
 
 export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) {
@@ -97,7 +95,7 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
         <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">
-              {importedWorkout.activityType.replace(/HKWorkoutActivityType/, '')}
+              {formatActivityType(importedWorkout.activityType)}
             </span>
             <Badge variant="outline" className="text-[10px]">
               {sourceLabel(importedWorkout.source)}

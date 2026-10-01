@@ -36,6 +36,33 @@ from flask import g
 app = Flask(__name__)
 app.json.sort_keys = False   # preserve insertion order (days Mon→Sun)
 
+
+def _authoring_enabled() -> bool:
+    """Whether the six ontology authoring routes may write.
+
+    They append to and patch the YAML under data/ in the running process. They
+    are on when AUTHORING_ENABLED is set, and in local development — no
+    SUPABASE_URL means src.auth bypasses JWTs and every request is
+    'local-dev-user', which is the only place in-app authoring (Dev Lab) is
+    meant to run. Production leaves both unset and answers 403.
+    """
+    if os.environ.get('AUTHORING_ENABLED', '').strip().lower() in ('1', 'true', 'yes', 'on'):
+        return True
+    return not os.environ.get('SUPABASE_URL')
+
+
+def require_authoring(f):
+    """Gate for the authoring routes. Stack it under require_auth so an
+    unauthenticated caller gets 401 before a disabled server gets 403."""
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not _authoring_enabled():
+            return jsonify({'detail': 'authoring is disabled on this server'}), 403
+        return f(*args, **kwargs)
+    return wrapper
+
 _raw_origins = os.environ.get('FRONTEND_URL') or ''
 _allowed_origins = set(o.strip() for o in _raw_origins.split(',') if o.strip()) or {'*'}
 
@@ -361,6 +388,8 @@ def get_modalities():
 
 
 @app.post('/api/modalities')
+@require_auth
+@require_authoring
 def create_modality():
     body = request.get_json(silent=True) or {}
     if not body.get('id') or not body.get('name'):
@@ -494,6 +523,8 @@ def get_similarity():
 
 
 @app.post('/api/exercises')
+@require_auth
+@require_authoring
 def create_exercise():
     body = request.get_json(silent=True) or {}
     if not body.get('id') or not body.get('name'):
@@ -525,6 +556,8 @@ def _find_exercise_file_and_index(ex_id: str):
 
 
 @app.put('/api/exercises/<ex_id>')
+@require_auth
+@require_authoring
 def update_exercise(ex_id: str):
     body = request.get_json(silent=True) or {}
     path, idx, data = _find_exercise_file_and_index(ex_id)
@@ -552,6 +585,8 @@ def _find_archetype_file(arch_id: str) -> str | None:
 
 
 @app.put('/api/archetypes/<arch_id>')
+@require_auth
+@require_authoring
 def update_archetype(arch_id: str):
     body = request.get_json(silent=True) or {}
     path = _find_archetype_file(arch_id)
@@ -565,6 +600,8 @@ def update_archetype(arch_id: str):
 
 
 @app.put('/api/frameworks/<fw_id>')
+@require_auth
+@require_authoring
 def update_framework(fw_id: str):
     body = request.get_json(silent=True) or {}
     matches = glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'frameworks', f'{fw_id}.yaml'))
@@ -583,6 +620,8 @@ def update_framework(fw_id: str):
 
 
 @app.post('/api/archetypes')
+@require_auth
+@require_authoring
 def create_archetype():
     body = request.get_json(silent=True) or {}
     if not body.get('id') or not body.get('name'):
@@ -1712,6 +1751,10 @@ INTEGRATION_SOURCES = ('garmin', 'strava', 'appleHealth')
 _PROFILE_KEYS = (
     'trainingLevel', 'equipment', 'injuryFlags', 'customInjuryFlags',
     'activeGoalId', 'dateOfBirth', 'weeklySchedule', 'hrConfig', 'integrations',
+    # 'male' | 'female' | None. The analytics engine has always read it for the
+    # benchmark standards (and hashed it into the cache key); until it was
+    # writable every athlete was scored against the male tables.
+    'sex',
 )
 
 
@@ -1752,6 +1795,7 @@ def _default_profile() -> dict:
         'customInjuryFlags': [],
         'activeGoalId': None,
         'dateOfBirth': None,
+        'sex': None,
         'weeklySchedule': None,
         'hrConfig': {},
         'integrations': default_integrations(),
@@ -2641,6 +2685,21 @@ def health_upsert_session_notes(session_key: str):
         log['fatigueRating'] = body['fatigueRating']
     _health.upsert_session_log(g.user_id, log)
     return jsonify({'saved': session_key})
+
+
+@app.delete('/api/health/sessions/<path:session_key>/completion')
+@require_auth
+def health_clear_session_completion(session_key: str):
+    """Undo "mark complete" for one session.
+
+    The upsert keeps the later of the stored and incoming `completed_at`
+    (GREATEST), so a PUT can never clear it — which is why the iOS undo was
+    client-only and the session came back completed on the next sync. Clears
+    the timestamp and leaves sets, notes, fatigue and HR in place. Static
+    suffix for the same reason as `/notes` above.
+    """
+    _health.clear_session_completion(g.user_id, session_key)
+    return jsonify({'cleared': session_key})
 
 
 @app.put('/api/health/sessions/by-uid/<path:session_uid>')

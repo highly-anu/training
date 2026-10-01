@@ -8,15 +8,17 @@ struct SessionDetailView: View {
     var sessionIndex: Int? = nil
 
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var programStore: ProgramStore
     @Environment(\.dismiss) private var dismiss
 
     @State private var notes: String = ""
-    @State private var fatigueRating: Double = 5
+    /// 1–5, the scale the server stores and WorkoutDetailView renders; the
+    /// slider used to run 1–10 and the server folded it, so "7" showed as "4/5".
+    @State private var fatigueRating: Double = 3
     @State private var showFatigue = false
     @State private var isSaving = false
     @State private var showMove = false
     @State private var showReplace = false
+    @State private var saveTask: Task<Void, Never>? = nil
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -68,6 +70,10 @@ struct SessionDetailView: View {
             .task {
                 if let log = appState.sessionLogs[sessionKey] {
                     notes = log.notes ?? ""
+                    if let f = log.fatigueRating {
+                        fatigueRating = Double(min(max(f, 1), 5))
+                        showFatigue = true
+                    }
                 }
             }
         }
@@ -195,11 +201,11 @@ struct SessionDetailView: View {
             if showFatigue {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("Fatigue: \(Int(fatigueRating))/10")
+                        Text("Fatigue: \(Int(fatigueRating))/5")
                         Spacer()
                     }
                     .font(.caption)
-                    Slider(value: $fatigueRating, in: 1...10, step: 1)
+                    Slider(value: $fatigueRating, in: 1...5, step: 1)
                         .onChange(of: fatigueRating) { _, _ in debouncedSaveNotes() }
                 }
             }
@@ -213,7 +219,7 @@ struct SessionDetailView: View {
             Task {
                 isSaving = true
                 if isDone {
-                    appState.undoSessionComplete(sessionKey: sessionKey)
+                    await appState.undoSessionComplete(sessionKey: sessionKey)
                 } else {
                     await appState.markSessionComplete(sessionKey: sessionKey)
                     AppHaptics.success()
@@ -310,14 +316,19 @@ struct SessionDetailView: View {
         }
     }
 
+    /// One PUT per pause in typing, not one per keystroke: each change cancels
+    /// the pending save and waits 600 ms before sending the latest values.
     private func debouncedSaveNotes() {
-        // Save notes via the API on each change (idempotent PUT).
-        // In a production app this would be debounced to avoid rapid-fire API calls.
-        Task {
+        saveTask?.cancel()
+        let notesSnapshot = notes
+        let fatigue = showFatigue ? Int(fatigueRating) : nil
+        saveTask = Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
             try? await appState.api?.saveSessionNotes(
                 sessionKey: sessionKey,
-                notes: notes,
-                fatigueRating: showFatigue ? Int(fatigueRating) : nil
+                notes: notesSnapshot,
+                fatigueRating: fatigue
             )
         }
     }

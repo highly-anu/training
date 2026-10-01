@@ -4,22 +4,16 @@ import { BookOpen, GitMerge, Sliders, ChevronRight } from 'lucide-react'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useBuilderStore } from '@/store/builderStore'
-import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
+import {
+  MODALITY_ORDER, DEFAULT_PRIORITIES, derivePhilosophyPriorities,
+  philosophyHasSequentialPhases, primaryFrameworkFor,
+} from '@/lib/philosophyPriorities'
 import type { Framework, ModalityId, Philosophy } from '@/api/types'
 import type { SourceMode } from '@/store/builderStore'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const MODALITY_ORDER: ModalityId[] = [
-  'max_strength', 'relative_strength', 'strength_endurance', 'power',
-  'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning',
-  'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab',
-]
-
-const DEFAULT_PRIORITIES = Object.fromEntries(
-  MODALITY_ORDER.map((id) => [id, 1 / MODALITY_ORDER.length])
-) as Record<ModalityId, number>
 
 const MODES: { id: SourceMode; label: string; sub: string; color: string; Icon: React.FC<{ className?: string }> }[] = [
   {
@@ -46,34 +40,6 @@ const MODES: { id: SourceMode; label: string; sub: string; color: string; Icon: 
 ]
 
 // ─── Priority derivation ──────────────────────────────────────────────────────
-
-/**
- * Derive a normalized priority vector from a philosophy's primary framework.
- * Falls back to equal-weight bias modalities if no framework is found.
- */
-function derivePhilosophyPriorities(
-  phil: Philosophy,
-  frameworks: Framework[]
-): Record<ModalityId, number> {
-  const philFrameworks = frameworks.filter((f) => f.source_philosophy === phil.id)
-  const sessions = philFrameworks[0]?.sessions_per_week
-
-  if (sessions && Object.keys(sessions).length > 0) {
-    const total = Object.values(sessions).reduce((s, v) => s + (v ?? 0), 0)
-    if (total > 0) {
-      return Object.fromEntries(
-        MODALITY_ORDER.map((id) => [id, (sessions[id as ModalityId] ?? 0) / total])
-      ) as Record<ModalityId, number>
-    }
-  }
-
-  // Fallback: equal weight across bias modalities
-  const biasIds = (phil.bias ?? []).filter((b): b is ModalityId => b in MODALITY_COLORS)
-  const n = biasIds.length || 1
-  return Object.fromEntries(
-    MODALITY_ORDER.map((id) => [id, biasIds.includes(id) ? 1 / n : 0])
-  ) as Record<ModalityId, number>
-}
 
 /**
  * Weighted average of priorities across multiple philosophies.
@@ -313,9 +279,11 @@ function PriorityBuilder({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProgramSource() {
-  const [activeMode, setActiveMode] = useState<SourceMode | null>(null)
-  const [selectedPhilIds, setSelectedPhilIds] = useState<string[]>([])
-  const [philWeights, setPhilWeights] = useState<Record<string, number>>({})
+  // Seeded from the store so a prefilled wizard (Explore's "Build with this",
+  // a resumed draft) shows its selection instead of a blank step with Next lit.
+  const [activeMode, setActiveMode] = useState<SourceMode | null>(() => useBuilderStore.getState().sourceMode)
+  const [selectedPhilIds, setSelectedPhilIds] = useState<string[]>(() => useBuilderStore.getState().selectedPhilosophyIds)
+  const [philWeights, setPhilWeights] = useState<Record<string, number>>(() => useBuilderStore.getState().philosophyWeights)
   const [customPriorities, setCustomPriorities] = useState<Record<ModalityId, number>>(DEFAULT_PRIORITIES)
 
   const { data: philosophies = [], isLoading: philLoading } = usePhilosophies()
@@ -365,11 +333,8 @@ export function ProgramSource() {
     setSelectedPhilIds([phil.id])
 
     const priorities = derivePhilosophyPriorities(phil, frameworks)
-    const primaryFramework = frameworks.find((f) => f.source_philosophy === phil.id)
-
-    // Check if philosophy has sequential phases (Full Program mode)
-    const hasSequentialPhases = phil.framework_groups?.some((g) => g.type === 'sequential')
-      || (phil.canonical_phase_sequence && phil.canonical_phase_sequence.length > 0)
+    const primaryFramework = primaryFrameworkFor(phil, frameworks)
+    const hasSequentialPhases = philosophyHasSequentialPhases(phil)
 
     setGoalIds(['general_gpp'])
     setGoalWeightsBulk({})

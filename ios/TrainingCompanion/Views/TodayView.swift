@@ -3,7 +3,6 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var sync: SyncManager
-    @EnvironmentObject var programStore: ProgramStore
     @EnvironmentObject var router: AppRouter
 
     @State private var selectedSession: (session: ProgramSession, key: String, weekIndex: Int, dayName: String, sessionIndex: Int)? = nil
@@ -11,6 +10,8 @@ struct TodayView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var lockedAdjacentOffset: Int? = nil  // the peek card's day, locked at drag start
     @ScaledMetric(relativeTo: .body) private var sessionsListHeight: CGFloat = 256
+    @State private var showBuilder = false
+    @State private var reviewWorkout: ImportedWorkout? = nil
 
     private let dayFmt: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "EEEE, MMM d"; return f
@@ -56,9 +57,18 @@ struct TodayView: View {
                     dashboardContent
                 }
             }
-            .navigationTitle("Dashboard")
+            .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.large)
             .appTabStyle()
+            .sheet(isPresented: $showBuilder) {
+                ProgramBuilderFlow().environmentObject(appState)
+            }
+            // A suggestion's "Review" lands on the workout, whose Link to
+            // Session flow is the one matching UI the app has.
+            .navigationDestination(item: $reviewWorkout) { workout in
+                WorkoutDetailView(workout: workout)
+                    .environmentObject(appState)
+            }
             .sheet(item: Binding(
                 get: { selectedSession.map { SessionSheetItem(session: $0.session, key: $0.key) } },
                 set: { if $0 == nil { selectedSession = nil } }
@@ -68,7 +78,6 @@ struct TodayView: View {
                                       weekIndex: sel.weekIndex, dayName: sel.dayName,
                                       sessionIndex: sel.sessionIndex)
                         .environmentObject(appState)
-                        .environmentObject(programStore)
                 }
             }
             .task {
@@ -78,6 +87,9 @@ struct TodayView: View {
                 if appState.serverProgram == nil && !appState.isLoadingProgram {
                     await appState.loadAll()
                 }
+                // The header names the program's methodology; the catalog is
+                // static and small.
+                await appState.loadPhilosophiesIfNeeded()
             }
         }
     }
@@ -89,6 +101,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 24) {
                 programHeader
                 todaySection
+                suggestionsSection
                 readinessSection
                 developmentSection
                 progressionSection
@@ -338,6 +351,100 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(done ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
         )
+    }
+
+    // MARK: - Suggestions Section
+
+    /// Workouts the server matched to a planned session too weakly to confirm
+    /// on its own (Garmin webhook, Apple Health relay). They were written and
+    /// shown nowhere; this is where the decision gets made. A workout the
+    /// athlete has since linked drops out without waiting for the next load.
+    private var pendingSuggestions: [(suggestion: MatchSuggestion, workout: ImportedWorkout)] {
+        appState.matchSuggestions.compactMap { suggestion in
+            guard appState.matchedSessionKey(for: suggestion.importedWorkoutId) == nil,
+                  let workout = appState.importedWorkouts.first(where: { $0.id == suggestion.importedWorkoutId })
+            else { return nil }
+            return (suggestion, workout)
+        }
+    }
+
+    @ViewBuilder
+    private var suggestionsSection: some View {
+        let pending = pendingSuggestions
+        if !pending.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                sectionLabel(pending.count == 1
+                             ? "1 workout looks like a planned session"
+                             : "\(pending.count) workouts look like planned sessions")
+                VStack(spacing: 8) {
+                    ForEach(pending.prefix(3), id: \.suggestion.id) { item in
+                        suggestionRow(item.suggestion, workout: item.workout)
+                    }
+                }
+            }
+        }
+    }
+
+    private func suggestionRow(_ suggestion: MatchSuggestion, workout: ImportedWorkout) -> some View {
+        let planned = plannedSession(for: suggestion.sessionKey)
+        let modalityId = workout.inferredModalityId ?? planned?.modality ?? "aerobic_base"
+        return HStack(spacing: 12) {
+            Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
+                                                      modalityId: workout.inferredModalityId))
+                .foregroundStyle(ModalityStyle.color(for: modalityId))
+                .font(.title3)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(workout.recordedTitle)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                HStack(spacing: 4) {
+                    Text(workout.date)
+                    if let minutes = workout.durationMinutes {
+                        Text("· \(Int(minutes)) min")
+                    }
+                    Text("→")
+                    Text(planned.map { $0.archetype?.name ?? ModalityStyle.label(for: $0.modality) }
+                         ?? suggestion.sessionKey)
+                        .lineLimit(1)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Review") {
+                AppHaptics.light()
+                reviewWorkout = workout
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            Button {
+                AppHaptics.light()
+                Task { await appState.dismissSuggestion(workoutId: workout.id) }
+            } label: {
+                Image(systemName: "xmark")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .accessibilityLabel("Dismiss suggestion")
+        }
+        .padding(12)
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+        )
+    }
+
+    /// "3-Monday-0" → the planned session, from the loaded program.
+    private func plannedSession(for sessionKey: String) -> ProgramSession? {
+        let parts = sessionKey.split(separator: "-")
+        guard parts.count == 3, let weekNum = Int(parts[0]), let idx = Int(parts[2]) else { return nil }
+        let dayName = String(parts[1])
+        guard let week = appState.allWeeks.first(where: { $0.weekNumber == weekNum }),
+              let sessions = week.schedule[dayName], idx < sessions.count else { return nil }
+        return sessions[idx]
     }
 
     // MARK: - Readiness Section
@@ -631,7 +738,11 @@ struct TodayView: View {
         let score = review.overallScore
         let color: Color = score.map { complianceColor($0) } ?? .secondary
 
-        return NavigationLink(destination: ProgressionView().environmentObject(appState)) {
+        // The review lives in Analytics ▸ Progress; this card is the §6.9
+        // whole-card link to it, not a second copy of the screen.
+        return Button {
+            router.showAnalytics(.progress)
+        } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -700,6 +811,7 @@ struct TodayView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityHint("Opens Analytics, Progress")
     }
 
     private func progressionStatusIcon(_ status: String) -> String {
@@ -733,7 +845,7 @@ struct TodayView: View {
 
     private var programGoalName: String? {
         guard let ids = appState.serverProgram?.sourceGoalIds, let first = ids.first else { return nil }
-        return appState.goals.first(where: { $0.id == first })?.name
+        return appState.philosophies.first(where: { $0.id == first })?.name
     }
 
     private var eventCountdown: String? {
@@ -777,14 +889,21 @@ struct TodayView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// §6.3: an empty state offers the way forward, so the builder opens from
+    /// here as well as from the Program tab.
     private var noProgramView: some View {
         VStack(spacing: 20) {
             Image(systemName: "calendar.badge.exclamationmark")
                 .font(.system(size: 56)).foregroundStyle(.orange.gradient)
             Text("No Program").font(.title2).fontWeight(.medium)
-            Text("Generate a program from the Program tab.")
+            Text("Pick a methodology and generate your first program.")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            Button("Generate a Program") {
+                AppHaptics.light()
+                showBuilder = true
+            }
+            .buttonStyle(.borderedProminent)
         }
         .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -799,8 +918,10 @@ private extension Collection where Element == Double {
     }
 }
 
+/// Identity is the session key: a fresh `UUID()` on every body evaluation made
+/// the sheet re-present itself on unrelated state changes.
 private struct SessionSheetItem: Identifiable {
-    let id = UUID()
+    var id: String { key }
     let session: ProgramSession
     let key: String
 }

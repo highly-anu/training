@@ -1,39 +1,22 @@
-import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Wand2, CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
+import { ChevronLeft, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { SessionHeader } from '@/components/session/SessionHeader'
-import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
-import { ExerciseRow } from '@/components/session/ExerciseRow'
-import { SessionNotes } from '@/components/session/SessionNotes'
-import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
+import { SessionPanel } from '@/components/session/SessionPanel'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
-import { useProfileStore } from '@/store/profileStore'
-import { useBioStore } from '@/store/bioStore'
-import { useProgramStore } from '@/store/programStore'
-import { findSessionMatch, sessionKeyVariants } from '@/lib/sessionMatching'
-import type { ComplementaryExercise } from '@/api/types'
-import { COMPLETION_INTERACTIVE } from '@/lib/completionColors'
 
 export function SessionDetail() {
   const { week, day } = useParams<{ week: string; day: string }>()
   const navigate = useNavigate()
   const program = useCurrentProgram()
 
-  // Every hook must run before the early return below. They used to sit after
-  // it, so the render where `program` arrives called six more hooks than the
+  // Every hook runs before the early returns below. They used to sit after
+  // them, so the render where `program` arrived called more hooks than the
   // render before it — "Rendered more hooks than during the previous render",
-  // on the single most common transition this page has.
-  const { sessionLogs, setSessionLog } = useProfileStore()
-  const getPerformanceLog = useBioStore((s) => s.getPerformanceLog)
-  const upsertSessionPerformance = useBioStore((s) => s.upsertSessionPerformance)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
-  const programVersionId = useProgramStore((s) => s.programVersionId)
-  const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
+  // on the single most common transition this page has. The session body's
+  // own hooks live inside SessionPanel, which only mounts once there is a
+  // program to show.
 
   if (!program) {
     return (
@@ -47,41 +30,17 @@ export function SessionDetail() {
         <EmptyState
           title="No program loaded"
           description="Generate a program first to view session details."
-          action={{ label: 'Build a Program', onClick: () => navigate('/builder') }}
+          action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
         />
       </motion.div>
     )
   }
 
-
-  function getSessionMatch(si: number) {
-    const entry = findSessionMatch(
-      workoutMatches, sessionKeyVariants(sessionKey, si), programVersionId
-    )
-    return entry ? importedWorkouts.find(w => w.id === entry.importedWorkoutId) : undefined
-  }
-
   const weekNumber = parseInt(week ?? '1', 10)
   const weekIdx = program.weeks.findIndex((w) => w.week_number === weekNumber)
   const weekData = weekIdx >= 0 ? program.weeks[weekIdx] : undefined
   const sessions = weekData?.schedule[day ?? ''] ?? []
-
-  const sessionKey = `${weekNumber}-${day ?? ''}`
-  function toggleComplete(si: number) {
-    const current = sessionLogs[sessionKey] ?? []
-    const next = [...current]
-    next[si] = !next[si]
-    setSessionLog(sessionKey, next)
-    if (next[si]) {
-      upsertSessionPerformance({
-        sessionKey: `${sessionKey}-${si}`,
-        exercises: {},
-        notes: '',
-        completedAt: new Date().toISOString(),
-      })
-    }
-  }
 
   if (!weekData || sessions.length === 0) {
     return (
@@ -118,115 +77,9 @@ export function SessionDetail() {
         </Button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {sessions.map((session, sessionIdx) => {
-          const isComplete = sessionLogs[sessionKey]?.[sessionIdx] === true
-            || !!getPerformanceLog(sessionKey)?.completedAt
-            || !!getPerformanceLog(`${sessionKey}-${sessionIdx}`)?.completedAt
-          const sessionMatchedWorkout = getSessionMatch(sessionIdx)
-          return (
-            <div key={sessionIdx} className="space-y-4">
-              {sessionIdx > 0 && <Separator />}
-
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <SessionHeader
-                    session={session}
-                    day={day ?? ''}
-                    weekNumber={weekNumber}
-                    weekInPhase={weekData.week_in_phase}
-                    phase={weekData.phase}
-                  />
-                </div>
-                <div className="flex items-center gap-2 shrink-0 mt-1">
-                  {sessionMatchedWorkout && (
-                    <Link
-                      to={`/import/${encodeURIComponent(sessionMatchedWorkout.id)}`}
-                      state={{ workout: sessionMatchedWorkout }}
-                      className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-medium"
-                    >
-                      <Activity className="size-3.5" />
-                      Workout
-                    </Link>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setReplaceTarget({ idx: sessionIdx })}
-                  >
-                    <RefreshCw className="size-3.5 mr-1.5" />
-                    Replace
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {session.exercises.map((assignment, i) => (
-                  <ExerciseRow key={i} assignment={assignment} index={i} sessionKey={sessionKey} sessionIdx={sessionIdx} />
-                ))}
-              </div>
-
-              {session.complementary_work && session.complementary_work.length > 0 && (
-                <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Cool-down / Recovery
-                  </h4>
-                  <div className="space-y-2">
-                    {session.complementary_work.map((cw: ComplementaryExercise, i: number) => (
-                      <div key={i} className="flex items-start justify-between gap-3 rounded-md bg-background/60 px-3 py-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium leading-snug">{cw.exercise.name}</p>
-                          {cw.prescription.note && (
-                            <p className="text-xs text-muted-foreground mt-0.5 italic">{cw.prescription.note}</p>
-                          )}
-                        </div>
-                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums mt-0.5">
-                          {cw.prescription.sets}×{cw.prescription.duration_sec}s
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => toggleComplete(sessionIdx)}
-                className={`w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors ${
-                  isComplete
-                    ? `border ${COMPLETION_INTERACTIVE}`
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                }`}
-              >
-                {isComplete
-                  ? <><CheckCircle2 className="size-4" /> Completed — tap to undo</>
-                  : <><Circle className="size-4" /> Mark Session Complete</>
-                }
-              </button>
-            </div>
-          )
-        })}
-
-        {/* Workout summary (HR data if imported workout is matched) */}
-        <WorkoutSummaryCard sessionKey={sessionKey} sessions={sessions} weekIndex={weekIdx >= 0 ? weekIdx : undefined} />
-
-        {/* Session notes + fatigue rating */}
-        <SessionNotes sessionKey={sessionKey} />
+      <div className="flex-1 overflow-y-auto">
+        <SessionPanel program={program} weekData={weekData} weekIndex={weekIdx} day={day ?? ''} />
       </div>
-
-      {weekData && replaceTarget && (
-        <ReplaceSessionSheet
-          open={true}
-          onOpenChange={(open) => { if (!open) setReplaceTarget(null) }}
-          session={sessions[replaceTarget.idx]}
-          weekIndex={weekIdx >= 0 ? weekIdx : 0}
-          weekData={weekData}
-          day={day ?? ''}
-          sessionIndex={replaceTarget.idx}
-          program={program}
-        />
-      )}
     </motion.div>
   )
 }

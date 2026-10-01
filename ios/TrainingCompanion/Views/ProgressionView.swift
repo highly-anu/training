@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// The progression review — a section of Analytics (Progress), reached from
+/// the Today card through `router.showAnalytics(.progress)`. No title of its
+/// own: the Analytics container owns the navigation bar.
 struct ProgressionView: View {
     @EnvironmentObject var appState: AppState
 
@@ -11,8 +14,6 @@ struct ProgressionView: View {
                 emptyState
             }
         }
-        .navigationTitle("Progression")
-        .navigationBarTitleDisplayMode(.large)
         .refreshable {
             await appState.loadProgressionReview()
         }

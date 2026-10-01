@@ -532,6 +532,9 @@ export interface TracedProgram extends GeneratedProgram {
 
 export type BenchmarkLevel = 'entry' | 'intermediate' | 'advanced' | 'elite'
 
+/** Drives which benchmark standards the athlete is scored against. */
+export type Sex = 'male' | 'female'
+
 export interface BenchmarkStandard {
   id: string
   name: string
@@ -722,9 +725,17 @@ export interface IntegrationSettings {
 }
 
 /** A workout the server matched too weakly to confirm on its own. */
+/**
+ * A weak match the server could not confirm on its own, written by the
+ * automatic import paths (Garmin webhook, iOS Apple Health relay). Shown as a
+ * pending match for the athlete to confirm or dismiss; deciding the workout
+ * either way (POST /health/matches) deletes the suggestion server-side.
+ */
 export interface MatchSuggestion {
   importedWorkoutId: string
   sessionKey: string
+  /** Durable id of the planned session when the server could resolve one. */
+  sessionUid?: string | null
   score: number
   createdAt: string
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AthleteConstraints, ModalityId } from '@/api/types'
+import type { AthleteConstraints, Framework, ModalityId, Philosophy } from '@/api/types'
+import { derivePhilosophyPriorities, philosophyHasSequentialPhases, primaryFrameworkFor } from '@/lib/philosophyPriorities'
 
 type Step = 1 | 2 | 3 | 4
 type Direction = 'forward' | 'backward'
@@ -43,6 +44,14 @@ interface BuilderStore {
   setPriorityOverrides: (overrides: Partial<Record<ModalityId, number>> | null) => void
   setNumWeeks: (n: number | null) => void
   reset: () => void
+  /**
+   * Explore → Builder. Starts a fresh draft at step 2 with the philosophy as
+   * the source, exactly as picking it in step 1 would — the step is persisted,
+   * so a stale half-finished wizard is cleared first.
+   */
+  prefillFromPhilosophy: (phil: Philosophy, frameworks: Framework[]) => void
+  /** Same, with the framework fixed rather than left to the phase sequence. */
+  prefillFromFramework: (fw: Framework, phil: Philosophy, frameworks: Framework[]) => void
   loadFromProgram: (opts: {
     goalIds: string[]
     goalWeights: Record<string, number>
@@ -72,6 +81,37 @@ const defaultConstraints: Partial<AthleteConstraints> = {
   equipment: [],
   injury_flags: [],
   avoid_movements: [],
+}
+
+const freshState = () => ({
+  step: 1 as Step,
+  direction: 'forward' as Direction,
+  sourceMode: null as SourceMode | null,
+  selectedGoalIds: [] as string[],
+  goalWeights: {} as Record<string, number>,
+  selectedPhilosophyIds: [] as string[],
+  philosophyWeights: {} as Record<string, number>,
+  sourcePriorities: null as Partial<Record<ModalityId, number>> | null,
+  constraints: defaultConstraints,
+  eventDate: null as string | null,
+  startDate: null as string | null,
+  selectedFrameworkId: null as string | null,
+  priorityOverrides: null as Partial<Record<ModalityId, number>> | null,
+  numWeeks: null as number | null,
+})
+
+function prefilled(phil: Philosophy, frameworks: Framework[], frameworkId: string | null) {
+  const priorities = derivePhilosophyPriorities(phil, frameworks)
+  return {
+    ...freshState(),
+    step: 2 as Step,
+    sourceMode: 'philosophy' as SourceMode,
+    selectedGoalIds: ['general_gpp'],
+    selectedPhilosophyIds: [phil.id],
+    sourcePriorities: priorities,
+    priorityOverrides: priorities,
+    selectedFrameworkId: frameworkId,
+  }
 }
 
 export const useBuilderStore = create<BuilderStore>()(
@@ -118,23 +158,14 @@ export const useBuilderStore = create<BuilderStore>()(
       setFramework: (id) => set({ selectedFrameworkId: id }),
       setPriorityOverrides: (overrides) => set({ priorityOverrides: overrides }),
       setNumWeeks: (n) => set({ numWeeks: n }),
-      reset: () =>
-        set({
-          step: 1,
-          direction: 'forward',
-          sourceMode: null,
-          selectedGoalIds: [],
-          goalWeights: {},
-          selectedPhilosophyIds: [],
-          philosophyWeights: {},
-          sourcePriorities: null,
-          constraints: defaultConstraints,
-          eventDate: null,
-          startDate: null,
-          selectedFrameworkId: null,
-          priorityOverrides: null,
-          numWeeks: null,
-        }),
+      reset: () => set(freshState()),
+      prefillFromPhilosophy: (phil, frameworks) =>
+        set(prefilled(
+          phil, frameworks,
+          // A sequential-phase philosophy runs as a Full Program with no fixed framework.
+          philosophyHasSequentialPhases(phil) ? null : (primaryFrameworkFor(phil, frameworks)?.id ?? null),
+        )),
+      prefillFromFramework: (fw, phil, frameworks) => set(prefilled(phil, frameworks, fw.id)),
       loadFromProgram: ({ goalIds, goalWeights, constraints, numWeeks, eventDate }) =>
         set({
           step: goalIds.length > 1 ? 2 : 3,

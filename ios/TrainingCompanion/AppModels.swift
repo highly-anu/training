@@ -15,15 +15,6 @@ struct AppArchetype: Codable, Identifiable {
     }
 }
 
-// MARK: - Goals
-
-struct GoalProfile: Codable, Identifiable {
-    let id: String
-    let name: String
-    let description: String
-    let priorities: [String: Double]
-}
-
 // MARK: - Exercises
 
 struct AppExercise: Codable, Identifiable {
@@ -73,13 +64,18 @@ struct PhilosophyCard: Codable, Identifiable {
     let bias: [String]?
     let corePrinciples: [String]?
     let intensityModel: String?
-    let progressionStyle: String?
+    /// `progression_philosophy` in philosophy.yaml (`load_based`, `time_based`, …).
+    let progressionPhilosophy: String?
+
+    /// What a card shows under the name. Packages write a folded `notes`
+    /// paragraph; none has a `description`.
+    var summary: String? { description ?? notes }
 
     enum CodingKeys: String, CodingKey {
         case id, name, description, notes, bias
         case corePrinciples = "core_principles"
         case intensityModel = "intensity_model"
-        case progressionStyle = "progression_style"
+        case progressionPhilosophy = "progression_philosophy"
     }
 }
 
@@ -355,7 +351,10 @@ struct InjuryFlagDef: Codable, Identifiable {
 // MARK: - Program Generation
 
 struct GenerateProgramRequest: Encodable {
-    let goalId: String
+    /// The methodology the program is generated from. Programs have been
+    /// philosophy-driven since the goals layer was removed (2026-04-25); the
+    /// builder picks this from `GET /api/philosophies`.
+    let philosophyId: String
     let constraints: GenerateConstraints
     let numWeeks: Int?
     let startDate: String?
@@ -369,10 +368,8 @@ struct GenerateProgramRequest: Encodable {
 
     enum CodingKeys: String, CodingKey {
         // The backend requires `philosophy_id` and answers 400 to anything
-        // else (see _generate_program_inner), so every generate from this app
-        // failed before it reached the generator — which also meant the
-        // `persist` flag below could never take effect.
-        case goalId = "philosophy_id"
+        // else (see _generate_program_inner).
+        case philosophyId = "philosophy_id"
         case constraints
         case numWeeks = "num_weeks"
         case startDate = "start_date"
@@ -594,4 +591,46 @@ struct ProgramHistoryDetail: Codable {
     let weekCount: Int
     let activations: [ProgramHistoryEntry]
     let sessions: [PlannedSessionRecord]
+}
+
+extension ImportedWorkout {
+    /// What the device recorded — never the name of the session it was matched
+    /// to. The watch pipeline's placeholder activity types fall back to the
+    /// inferred modality. Shared by the workouts list and the Today card.
+    var recordedTitle: String {
+        let raw = activityType
+        let placeholders = ["apple_watch_live", "watch", "workout"]
+        if !placeholders.contains(raw.lowercased()) && !raw.hasPrefix("watch_") {
+            return raw.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+        if let modality = inferredModalityId {
+            return ModalityStyle.label(for: modality)
+        }
+        return "Workout"
+    }
+}
+
+// MARK: - Match suggestions
+
+/// A weak server-side match waiting for the athlete's decision. Keys are
+/// camelCase on the wire (`GET /api/health/matches/suggestions`).
+struct MatchSuggestion: Codable, Identifiable {
+    let importedWorkoutId: String
+    let sessionKey: String
+    let sessionUid: String?
+    let score: Double
+    let createdAt: String
+    var id: String { importedWorkoutId }
+}
+
+// MARK: - Sheet items
+
+/// A session plus the program-relative key and index a sheet needs to log
+/// against it. Identity is the key, so re-rendering does not re-present.
+struct SessionWithKey: Identifiable {
+    var id: String { key }
+    let session: ProgramSession
+    let key: String
+    var dateLabel: String = ""
+    var sessionIndex: Int = 0
 }
