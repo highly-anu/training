@@ -33,11 +33,73 @@ deferred is under *Later*.
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
+| 1 | Development across programs (Analytics ▸ Development, both clients) | P2 | L | analytics |
+| 2 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
 
 ---
 
-### 1. Exercise animation content — P2 · L
+### 1. Development across programs — P2 · L
+
+Every analytics surface is scoped to the program in hand. Analytics ▸ Program
+windows its inputs to the current program's span by design; Analytics ▸
+Progress (the progression review) reads the current program's weeks; Home's
+Development card is the current program against its matches; Load and
+Recovery are time-based but know nothing about blocks; Program ▸ History
+lists each version with counts and a per-version detail. Nothing answers
+"how have I developed across programs" — the question the history tables
+were built to make answerable (`program_versions`, `program_activations`,
+`planned_sessions`, logs and matches carrying `session_uid`,
+`health_store.get_session_logs_by_uid`).
+
+*Server.* `GET /api/analytics/development` (`src/analytics/development.py`,
+pure over its inputs, cached like `/analytics/program` on a digest of
+activations and log counts):
+
+- `blocks`: the activation timeline — version id, label, methodology names,
+  effective interval, weeks, planned / completed sessions, completion %,
+  active flag (from `program_history.list_activations` and
+  `sessions_for_version`).
+- `lifts`: per exercise with sets logged in two or more blocks (or enough
+  points), the series of best completed sets across the whole span — date,
+  block, weight, reps, est-1RM via `primitives/load.best_completed_set` —
+  with per-block first / last / best est-1RM and the delta, and a trend
+  over the span (`trend.py`). Names from the catalog.
+- `currencies`: the same for rounds, minutes and kilometres from
+  `ExercisePerformance.rounds / durationSec / distanceKm`.
+- `load`: weekly TRIMP and the PMC over the span (the existing
+  `_compute_pmc` and weekly rollup) with each week's block id, so the charts
+  can shade block boundaries.
+- `benchmarks`: each standard's PR history with the level reached per date
+  (the benchmarks section's ladder logic over `performance_logs`).
+- Window: all history by default, capped at the last twelve months, `from`
+  and `to` optional.
+
+*Web.* Analytics ▸ Development (`components/analytics/DevelopmentTab.tsx`):
+a block timeline strip across the top (methodology colour, completion %,
+the active block highlighted); "Lifts across blocks" — est-1RM per lead
+lift over time with block shading and a lift picker, plus a per-block
+table of first → last est-1RM and Δ; "Load across blocks" — the weekly
+TRIMP chart with block bands; "Standards over time" — the level ladder per
+date. With fewer than two blocks the tab says so and links to Progress.
+Home's Development card stays about the current program and links here.
+
+*iOS.* Analytics gains a Development section (five sections: Program ·
+Overview · Progress · Development · Recovery, within §6.13's limit) laying
+out the same document with Swift Charts; tolerant models like
+`ProgramAnalyticsModels`; `router.showAnalytics(.development)`.
+
+*Also in this tranche.* `GET /health/sessions/recent` resolves each log's
+`session_uid` through `planned_sessions` and returns the planned session's
+name, modality and date, so Log ▸ Sessions on the phone names sessions from
+earlier plans instead of showing their key.
+
+*Verify.* A Python test with a throwaway history (two versions, logs with
+uids, a lift in both) pins the blocks, the lift deltas and the window;
+vitest for the chart data shaping; iOS Codable tests against the real
+response; screenshots of both clients against the local API (which now has
+two versions in its history after today's regenerate).
+
+### 2. Exercise animation content — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
