@@ -920,6 +920,26 @@ def active_version_id(user_id: str) -> str | None:
     return rows[0]['program_version_id'] if rows else None
 
 
+def planned_rows_for_uids(user_id: str, uids: list[str]) -> dict[str, dict]:
+    """The flat `planned_sessions` rows for named sessions, keyed by uid —
+    name, modality, date and position, without loading any version snapshot.
+    What a list of logs needs to say which session each one was."""
+    wanted = sorted({u for u in (uids or []) if u})
+    if not wanted:
+        return {}
+    rows = _query(
+        'SELECT session_uid, program_version_id, date, week_index, week_number, '
+        'day_name, session_index, modality, archetype_id, archetype_name, phase, is_deload '
+        'FROM planned_sessions WHERE user_id = %s AND session_uid = ANY(%s::text[])',
+        (user_id, wanted))
+    out = {}
+    for row in rows:
+        record = dict(row)
+        record['date'] = str(row['date'])
+        out[row['session_uid']] = record
+    return out
+
+
 def session_lookup(user_id: str, uids: list[str]) -> list[dict]:
     """Full records for named sessions, including the session JSON itself.
 

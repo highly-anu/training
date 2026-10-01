@@ -3083,7 +3083,31 @@ def health_delete_workout(workout_id: str):
 @app.get('/api/health/sessions/recent')
 @require_auth
 def health_recent_sessions():
-    return jsonify(_health.get_recent_session_logs(g.user_id))
+    """Recent session logs, each naming the planned session it belongs to.
+
+    A log's `session_key` is program-relative and stops resolving once the
+    plan is replaced; its `session_uid` does not. The planned-sessions row
+    for that uid gives the archetype name, modality, date and position, so a
+    client can title a log from an earlier plan instead of showing its key.
+    """
+    from src import program_history
+    logs = _health.get_recent_session_logs(g.user_id)
+    try:
+        planned = program_history.planned_rows_for_uids(
+            g.user_id, [l.get('session_uid') for l in logs if l.get('session_uid')])
+    except Exception as exc:
+        app.logger.warning('recent sessions: planned lookup failed: %s', exc)
+        planned = {}
+    for log in logs:
+        row = planned.get(log.get('session_uid') or '')
+        if row:
+            log['planned_name'] = row.get('archetype_name')
+            log['planned_modality'] = row.get('modality')
+            log['planned_date'] = row.get('date')
+            log['program_version_id'] = row.get('program_version_id')
+            log['week_index'] = row.get('week_index')
+            log['day_name'] = row.get('day_name')
+    return jsonify(logs)
 
 
 @app.get('/api/health/bio/recent')
@@ -3591,6 +3615,83 @@ def analytics_specs():
     and measures, resolved to names. Static data — no user, no program."""
     from src.analytics.describe import describe_all
     return jsonify(describe_all())
+
+
+@app.get('/api/analytics/development')
+@require_auth
+def analytics_development():
+    """How the athlete has developed across programs — the history tables
+    read as one document (src/analytics/development.py). `from` / `to` bound
+    the window (default: the last twelve months); `fresh=1` recomputes."""
+    from datetime import date as _date, timedelta as _td
+    from src import program_history
+    from src.analytics import benchmarks_data as _bd
+    from src.analytics.development import DevelopmentInputs, compute_development
+
+    today = _date.today()
+    try:
+        to_date = _date.fromisoformat(request.args.get('to') or today.isoformat())
+        from_date = _date.fromisoformat(request.args.get('from') or (to_date - _td(days=365)).isoformat())
+    except ValueError:
+        return jsonify({'detail': 'bad_date'}), 400
+    if from_date > to_date:
+        from_date, to_date = to_date, from_date
+
+    user_id = g.user_id
+    activations = program_history.list_activations(user_id)
+    if not activations:
+        return jsonify({'status': 'no_history', 'window': {'from': from_date.isoformat(), 'to': to_date.isoformat()},
+                        'blocks': [], 'lifts': [], 'currencies': [],
+                        'load': {'weekly': [], 'pmc': []}, 'benchmarks': []})
+
+    logs = _health.get_session_logs_by_uid(user_id)
+    matches = _health.get_matches(user_id)
+    workouts = _health.get_workouts(user_id, summary_only=True)
+    performance = _health.get_performance_logs(user_id)
+
+    import hashlib as _h
+    import json as _j
+    digest = _h.sha256(_j.dumps([
+        [(a.get('activationId'), a.get('effectiveFrom'), a.get('effectiveTo')) for a in activations],
+        sorted((uid, v.get('completedAt'), len(v.get('exercises') or {})) for uid, v in logs.items()),
+        sorted((m.get('importedWorkoutId'), m.get('sessionUid'), m.get('matchConfidence')) for m in matches),
+        sorted((w.get('id'), w.get('date')) for w in workouts),
+        {k: len(v) for k, v in performance.items()},
+        today.isoformat(), from_date.isoformat(), to_date.isoformat(),
+    ], sort_keys=True, default=str).encode()).hexdigest()
+    period_key = f'development:{from_date.isoformat()}:{to_date.isoformat()}'
+    if not request.args.get('fresh'):
+        cached = _health.get_progression_snapshot(user_id, period_key, 'development')
+        if cached and cached.get('session_hash') == digest:
+            return jsonify(cached['data'])
+
+    max_hr = _get_user_max_hr(user_id)
+    try:
+        sex = (_db.get_user_profile(user_id) or {}).get('sex') or 'male'
+    except Exception:
+        sex = 'male'
+    exercises, _ = loader.load_all_exercises()
+    philosophies = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
+    planned = {vid: program_history.sessions_for_version(user_id, vid)
+               for vid in {a['versionId'] for a in activations}}
+    pmc_days = max(1, (to_date - from_date).days + 1)
+    try:
+        pmc = _compute_pmc(workouts, max_hr, days=pmc_days)
+    except Exception as exc:
+        app.logger.warning('development: pmc failed: %s', exc)
+        pmc = []
+
+    doc = compute_development(DevelopmentInputs(
+        today=today, window_from=from_date, window_to=to_date,
+        activations=activations, planned=planned, logs_by_uid=logs, matches=matches,
+        workouts=workouts, pmc=pmc, trimp_of=lambda w: _calc_workout_trimp(w, max_hr),
+        performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex,
+        exercise_names={eid: ex.get('name', eid) for eid, ex in exercises.items()},
+        philosophy_names=philosophies,
+    ))
+    doc['generatedAt'] = today.isoformat()
+    _health.save_progression_snapshot(user_id, period_key, 'development', digest, doc)
+    return jsonify(doc)
 
 
 @app.get('/api/analytics/program')
