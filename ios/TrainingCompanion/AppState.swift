@@ -696,6 +696,14 @@ final class AppState: ObservableObject {
         commit(weeks: weeks, to: sp)
     }
 
+    /// The methodologies the stored program was generated from, as catalog
+    /// cards, in the envelope's order; `_blended` is a marker, not a source.
+    /// Empty until the philosophies are loaded or when none match.
+    func programMethodologies() -> [PhilosophyCard] {
+        guard let ids = serverProgram?.sourceGoalIds else { return [] }
+        return ids.filter { $0 != "_blended" }.compactMap { id in philosophies.first { $0.id == id } }
+    }
+
     /// The stored program's `constraints` object, kept in the envelope's extras.
     var programConstraints: [String: JSONValue] {
         if case .object(let o)? = serverProgram?.currentProgram?.extra["constraints"] { return o }

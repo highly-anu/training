@@ -1021,3 +1021,20 @@ action above its destructive full regenerate.
 Rules: the comparison is the shared one, never a per-screen heuristic; the
 card appears only where a constraint is edited; a blend regenerates as a
 blend (`philosophy_ids` + weights), not as its first source.
+
+---
+
+### 6.18 Methodology Sheet
+
+**The program explains itself.** `Views/PhilosophyDetailSheet.swift` — a
+methodology's summary, emphasis (modalities), core principles and how it
+trains (intensity model, progression philosophy). Two presenters: the
+builder's philosophy cards (step 1) and Program ▸ Current's "About this
+methodology" row under the phase bar, which a blend turns into a menu with
+one entry per source (`AppState.programMethodologies()`). It was private to
+the builder until 2026-10-01, which left the plan the athlete was on with no
+way to say what it was for — the web's equivalent is the Program overview's
+link into Explore.
+
+Rules: the row reads the envelope's `sourceGoalIds`, never the builder's
+selection; the sheet is the one methodology reference on the phone.

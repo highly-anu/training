@@ -65,6 +65,13 @@ scheduled ahead of the ranked list.
 
 - **iOS Log tab** — the phone logs from the session detail now; a tab only if
   a cross-session list of what was logged turns out to be needed.
+- **Partial regenerates number their tail from 1** — a regenerate from week N
+  without an event date yields weeks numbered 1…, spliced after the kept
+  head, so a program reads 1, 1, 2, 3 (seen on 2026-10-01 after the profile
+  offer; the web's "from tomorrow" has always done this). Keys are array-index
+  based so nothing breaks, but the calendar and the "from week N" wording
+  go by position. A `week_in_program` offset on `POST /programs/generate`
+  would keep the numbers monotonic.
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
 - **`/settings`** — the web Devices card now sits under Profile ▸ Connections;
@@ -105,6 +112,12 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *"About this methodology" on the phone*: Program ▸ Current shows the
+  methodology the plan was generated from under the phase bar (a menu for a
+  blend) and opens `PhilosophyDetailSheet` — extracted from the builder, where
+  it was private, into its own file so the program can explain itself
+  (design-system §6.18). `AppState.programMethodologies()` maps the envelope's
+  source ids to catalog cards, skipping the `_blended` marker.
 - *Regenerate from this week after a profile change*: both clients compare
   the profile (level, equipment, days per week from the schedule, injuries)
   with the active program's stored constraints — `lib/programConstraintsDiff.ts`

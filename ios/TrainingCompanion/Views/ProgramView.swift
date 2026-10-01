@@ -11,6 +11,7 @@ struct ProgramView: View {
 
     @State private var showBuilder = false
     @State private var showSettings = false
+    @State private var methodologySheet: PhilosophyCard? = nil
     @State private var selectedDay: DaySelection? = nil
     @State private var section: ProgramSection = .current
 
@@ -107,7 +108,11 @@ struct ProgramView: View {
                 phaseProgressBar
                     .padding(.horizontal)
                     .padding(.top, 4)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 12)
+
+                methodologyRow
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
 
                 Divider().padding(.bottom, 12)
 
@@ -122,6 +127,62 @@ struct ProgramView: View {
             weekIndex = appState.currentWeekIndex ?? 0
             await AppRefresh.perform { await appState.loadProgram() }
         }
+        .task { await appState.loadPhilosophiesIfNeeded() }
+        .sheet(item: $methodologySheet) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
+    }
+
+    // MARK: - Methodology
+
+    /// "About this methodology" — the program explains itself (§6.18). A
+    /// blend offers one entry per source.
+    @ViewBuilder
+    private var methodologyRow: some View {
+        let cards = appState.programMethodologies()
+        if cards.count == 1, let card = cards.first {
+            Button {
+                AppHaptics.light()
+                methodologySheet = card
+            } label: {
+                methodologyLabel(card.name)
+            }
+            .buttonStyle(.plain)
+        } else if cards.count > 1 {
+            Menu {
+                ForEach(cards) { card in
+                    Button(card.name) { methodologySheet = card }
+                }
+            } label: {
+                methodologyLabel(cards.map(\.name).joined(separator: " + "))
+            }
+        }
+    }
+
+    private func methodologyLabel(_ name: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "book")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("About this methodology")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
     }
 
     /// A save that lost to a newer copy on the server (409). The reload has

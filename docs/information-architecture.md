@@ -143,7 +143,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | Explore philosophy / framework | Builder, prefilled | "Build with this" | ✓ / n.a. (no Explore on the phone) |
 | Home or Program empty state | Builder | primary button | ✓ / ✓ |
 | Session exercise | Exercise reference (cues, media, prereqs) | popover → "Open in Explore" / detail sheet | ✓ / ✓ (`ExerciseDetailSheet`, design-system §6.14) |
-| Program overview | Methodology detail | link | ✓ / missing |
+| Program overview | Methodology detail | link | ✓ / ✓ ("About this methodology" row under the phase bar → `PhilosophyDetailSheet`) |
 | Session detail | Recorded workout | "Workout" link | ✓ / ✓ |
 | Session detail | Import or link a workout | "Link existing" / "Import" | ✓ / ✓ |
 | Server suggestions | Accept / dismiss | Home card + Log ▸ Suggestions / Today card | ✓ / ✓ |

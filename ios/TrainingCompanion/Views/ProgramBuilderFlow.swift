@@ -241,57 +241,6 @@ struct BuilderStep1PhilosophyView: View {
 /// What a methodology believes and how it trains — the phone's slice of the
 /// web Explore philosophy detail, shown from the builder so the choice is
 /// informed rather than a name on a card.
-private struct PhilosophyDetailSheet: View {
-    let philosophy: PhilosophyCard
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                if let summary = philosophy.summary, !summary.isEmpty {
-                    Section {
-                        Text(summary)
-                    }
-                }
-                if let bias = philosophy.bias, !bias.isEmpty {
-                    Section("Emphasis") {
-                        ForEach(bias, id: \.self) { mod in
-                            Label(ModalityStyle.label(for: mod), systemImage: ModalityStyle.icon(for: mod))
-                                .foregroundStyle(ModalityStyle.color(for: mod))
-                        }
-                    }
-                }
-                if let principles = philosophy.corePrinciples, !principles.isEmpty {
-                    Section("Core principles") {
-                        ForEach(principles, id: \.self) { Text(humanised($0)) }
-                    }
-                }
-                if philosophy.intensityModel != nil || philosophy.progressionPhilosophy != nil {
-                    Section("How it trains") {
-                        if let model = philosophy.intensityModel {
-                            LabeledContent("Intensity", value: humanised(model))
-                        }
-                        if let progression = philosophy.progressionPhilosophy {
-                            LabeledContent("Progression", value: humanised(progression))
-                        }
-                    }
-                }
-            }
-            .navigationTitle(philosophy.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
-            }
-        }
-    }
-
-    /// `linear_progression_is_fastest_novice_path` → "Linear progression is fastest novice path".
-    private func humanised(_ identifier: String) -> String {
-        let words = identifier.replacingOccurrences(of: "_", with: " ")
-        return words.prefix(1).uppercased() + words.dropFirst()
-    }
-}
-
 // MARK: - Step 2: Schedule
 
 struct BuilderStep2ScheduleView: View {
