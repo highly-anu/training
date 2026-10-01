@@ -15,7 +15,7 @@ struct ProgressionView: View {
             }
         }
         .refreshable {
-            await appState.loadProgressionReview()
+            await AppRefresh.perform { await appState.loadProgressionReview() }
         }
     }
 
@@ -144,7 +144,8 @@ struct ProgressionView: View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("Recommendations")
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(Array(recommendations.enumerated()), id: \.offset) { _, rec in
+                // The text is the identity; a review never repeats a line.
+                ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb")
                             .font(.caption)

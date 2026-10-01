@@ -422,7 +422,10 @@ def get_injury_flags():
 
 @app.get('/api/benchmarks')
 def get_benchmarks():
-    return jsonify(_all_benchmarks())
+    """Benchmark standards. `?sex=female|male` picks the tables; the default is
+    the male set, which is what every client got before the profile could say."""
+    sex = (request.args.get('sex') or '').lower()
+    return jsonify(_all_benchmarks(sex if sex in ('male', 'female') else 'male'))
 
 
 @app.get('/api/frameworks')
@@ -1491,7 +1494,8 @@ def parse_workout_file():
             results.append({
                 'id': _deterministic_id('strava', start_dt.isoformat(), sport_type, dur_min),
                 'source': 'strava',
-                'date': start_dt.strftime('%Y-%m-%d'),
+                # start_date_local is the athlete's wall clock (its 'Z' is a lie).
+                'date': (a.get('start_date_local') or '')[:10] or start_dt.strftime('%Y-%m-%d'),
                 'startTime': start_dt.isoformat(),
                 'endTime': end_dt.isoformat(),
                 'durationMinutes': dur_min,
@@ -1513,7 +1517,14 @@ def parse_workout_file():
 
     elif filename.endswith('.fit'):
         try:
-            results = _fit_import.parse_fit(f.stream)
+            # The profile's zone dates a file whose activity message carries no
+            # local timestamp; the file's own offset wins when it has one. A
+            # profile lookup that fails must not fail the import.
+            try:
+                athlete_tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
+            except Exception:
+                athlete_tz = None
+            results = _fit_import.parse_fit(f.stream, tz=athlete_tz)
         except _fit_import.FitNotAvailable as e:
             return jsonify({'detail': str(e)}), 503
         except Exception as e:
@@ -1755,6 +1766,10 @@ _PROFILE_KEYS = (
     # benchmark standards (and hashed it into the cache key); until it was
     # writable every athlete was scored against the male tables.
     'sex',
+    # IANA zone, e.g. 'Europe/Zurich'. The fallback for dating a FIT file whose
+    # activity message carries no local timestamp; the other sources carry
+    # their own offsets. iOS fills it from the device when it is unset.
+    'timezone',
 )
 
 
@@ -1796,6 +1811,7 @@ def _default_profile() -> dict:
         'activeGoalId': None,
         'dateOfBirth': None,
         'sex': None,
+        'timezone': None,
         'weeklySchedule': None,
         'hrConfig': {},
         'integrations': default_integrations(),

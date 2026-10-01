@@ -160,7 +160,7 @@ function NodeInfoPanel({
                   className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border"
                   style={m.heat > 0
                     ? { borderColor: `${mColor}40`, color: mColor, backgroundColor: `${mColor}10` }
-                    : { borderColor: 'hsl(var(--border))', color: '#64748b' }
+                    : { borderColor: 'hsl(var(--border))', color: 'var(--color-muted-foreground)' }
                   }
                 >
                   {mName}

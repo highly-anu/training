@@ -119,12 +119,8 @@ struct ProgramView: View {
             .padding(.top, 4)
         }
         .refreshable {
-            AppHaptics.light()
             weekIndex = appState.currentWeekIndex ?? 0
-            async let delay: () = Task.sleep(nanoseconds: 600_000_000)
-            await appState.loadProgram()
-            _ = try? await delay
-            AppHaptics.success()
+            await AppRefresh.perform { await appState.loadProgram() }
         }
     }
 

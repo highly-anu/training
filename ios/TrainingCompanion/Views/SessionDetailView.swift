@@ -148,9 +148,14 @@ struct SessionDetailView: View {
             if exercises.isEmpty {
                 Text("No exercises").foregroundStyle(.secondary)
             } else {
-                ForEach(Array(exercises.enumerated()), id: \.offset) { _, ea in
-                    exerciseRow(ea)
+                // The same exercise can appear twice in a session, so the index
+                // is part of the identity; a replace then animates the rows that
+                // changed instead of recreating every one.
+                let keyed = exercises.enumerated().map { (id: "\($0.offset)-\($0.element.exercise?.id ?? "slot")", ea: $0.element) }
+                ForEach(keyed, id: \.id) { item in
+                    exerciseRow(item.ea)
                 }
+                .animation(AppAnimation.layoutChange, value: keyed.map(\.id))
             }
         }
     }

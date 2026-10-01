@@ -154,6 +154,11 @@ struct UserProfile: Codable {
     /// for a client to do.
     var activeGoalId: String?
     var integrations: IntegrationSettings?
+    /// "male" | "female" | nil — which benchmark standards apply.
+    var sex: String?
+    /// IANA zone, e.g. "Europe/Zurich". The server dates a FIT file by it when
+    /// the file carries no local timestamp; filled from the device when unset.
+    var timezone: String?
 
     static let `default` = UserProfile(
         trainingLevel: "intermediate",
@@ -165,7 +170,9 @@ struct UserProfile: Codable {
         weeklySchedule: nil,
         hrConfig: nil,
         activeGoalId: nil,
-        integrations: nil
+        integrations: nil,
+        sex: nil,
+        timezone: nil
     )
 }
 

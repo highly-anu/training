@@ -110,13 +110,11 @@ struct TodayView: View {
             .padding()
         }
         .refreshable {
-            AppHaptics.light()
-            async let delay: () = Task.sleep(nanoseconds: 600_000_000)
-            await sync.syncAll()
-            await appState.loadAll()
-            _ = try? await delay
+            await AppRefresh.perform {
+                await sync.syncAll()
+                await appState.loadAll()
+            }
             dayOffset = 0
-            AppHaptics.success()
         }
     }
 

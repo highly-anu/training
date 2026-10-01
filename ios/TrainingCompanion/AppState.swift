@@ -239,7 +239,15 @@ final class AppState: ObservableObject {
             profile.customInjuryFlags = p.customInjuryFlags
             profile.dateOfBirth    = p.dateOfBirth
             profile.weeklySchedule = p.weeklySchedule
+            profile.sex            = p.sex
+            profile.timezone       = p.timezone
             lastProfileSyncAt = Date()
+            // The device knows its zone; the server needs it to date FIT files
+            // that carry no local timestamp. Set once, never overwritten.
+            if p.timezone == nil {
+                profile.timezone = TimeZone.current.identifier
+                try? await api.saveUserProfile(profile)
+            }
             logger.log("profile: loaded — level:\(p.trainingLevel) equip:\(p.equipment.count) injuries:\(p.injuryFlags.count)")
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
@@ -282,6 +290,7 @@ final class AppState: ObservableObject {
 
     func saveProfile() async {
         guard let api else { return }
+        if profile.timezone == nil { profile.timezone = TimeZone.current.identifier }
         try? await api.saveUserProfile(profile)
         // Keep dateOfBirth in UserDefaults for WatchSessionManager
         if let dob = profile.dateOfBirth {
@@ -360,7 +369,7 @@ final class AppState: ObservableObject {
 
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
-        benchmarks = (try? await api.fetchBenchmarks()) ?? []
+        benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
     }
 
     func loadPhilosophiesIfNeeded() async {

@@ -294,7 +294,7 @@ export function HeatmapGraph({
             y={LAYER_Y[layer] + NODE_HEIGHT / 2}
             fontSize={9}
             fontFamily="ui-monospace, monospace"
-            fill="#64748b"
+            fill="var(--color-muted-foreground)"
             fillOpacity={0.5}
             dominantBaseline="central"
           >
@@ -307,7 +307,7 @@ export function HeatmapGraph({
             y={LAYER_Y.exercise_group + NODE_HEIGHT + LOCKED_EX_Y_OFFSET + EX_NODE_HEIGHT / 2}
             fontSize={9}
             fontFamily="ui-monospace, monospace"
-            fill="#64748b"
+            fill="var(--color-muted-foreground)"
             fillOpacity={0.5}
             dominantBaseline="central"
           >

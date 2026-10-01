@@ -277,9 +277,10 @@ function PrInput({ benchId, unit }: PrInputProps) {
   )
 }
 
-function BenchmarksOverview() {
+function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const { data: benchmarks = [], isLoading } = useBenchmarks()
   const logs = useProfileStore((s) => s.performanceLogs)
+  const sex = useProfileStore((s) => s.sex)
 
   if (isLoading) return <LoadingCard />
 
@@ -304,6 +305,14 @@ function BenchmarksOverview() {
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
             Track your personal records against standardized benchmarks. Your PRs are saved to your profile and used to calculate training loads.
           </p>
+          {sex ? (
+            <p className="text-[11px] text-muted-foreground/70">Showing the {sex} standards.</p>
+          ) : (
+            <p className="text-[11px] text-amber-700 dark:text-amber-300">
+              Showing the male standards until you set your sex under{' '}
+              <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">Athlete</button>.
+            </p>
+          )}
         </div>
 
         {/* Bodyweight is a benchmark series, not a profile field: logged here
@@ -800,8 +809,13 @@ function AthleteOverview() {
   const setDateOfBirth = useProfileStore((s) => s.setDateOfBirth)
   const sex = useProfileStore((s) => s.sex)
   const setSex = useProfileStore((s) => s.setSex)
+  const timezone = useProfileStore((s) => s.timezone)
+  const setTimezone = useProfileStore((s) => s.setTimezone)
   const { user, savedAccounts, signOutCurrent, switchToAccount } = useAuthStore()
   const [switching, setSwitching] = useState(false)
+  const deviceZone = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return null }
+  })()
 
   return (
     <div className="h-full overflow-y-auto">
@@ -862,6 +876,27 @@ function AthleteOverview() {
                 <SelectItem value="male">Male</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Time zone</p>
+              <p className="text-[11px] text-muted-foreground">
+                Dates imported .fit files that carry no local time. {timezone ? `Currently ${timezone}.` : 'Not set — such files are dated in UTC.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {deviceZone && deviceZone !== timezone && (
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setTimezone(deviceZone)}>
+                  Use {deviceZone}
+                </Button>
+              )}
+              {timezone && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={() => setTimezone(null)}>
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-3 p-4">
@@ -985,7 +1020,7 @@ export function ProfileBenchmarks() {
         {activeTab === 'athlete'    && <AthleteOverview />}
         {activeTab === 'equipment'  && <EquipmentOverview />}
         {activeTab === 'injuries'   && <InjuriesOverview />}
-        {activeTab === 'benchmarks' && <BenchmarksOverview />}
+        {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
         {activeTab === 'schedule'   && <ScheduleOverview />}
         {activeTab === 'heartrate'  && <HRSettingsOverview />}
         {activeTab === 'connections' && <ConnectionsSettings />}

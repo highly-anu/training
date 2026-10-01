@@ -13,6 +13,8 @@ export interface ServerProfile {
   activeGoalId: string | null
   dateOfBirth: string | null
   sex?: Sex | null
+  /** IANA zone; dates FIT files that carry no local timestamp. */
+  timezone?: string | null
   weeklySchedule?: Record<Day, DaySchedule> | null
   hrConfig?: HRConfig | null
   integrations?: IntegrationSettings | null

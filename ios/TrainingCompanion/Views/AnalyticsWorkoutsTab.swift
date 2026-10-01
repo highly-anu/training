@@ -58,9 +58,7 @@ struct AnalyticsWorkoutsTab: View {
                 }
                 .listStyle(.insetGrouped)
                 .refreshable {
-                    AppHaptics.light()
-                    await appState.loadWorkouts()
-                    AppHaptics.success()
+                    await AppRefresh.perform { await appState.loadWorkouts() }
                 }
                 .task(id: appState.importedWorkouts.map(\.id).joined()) {
                     let workouts = appState.importedWorkouts

@@ -96,7 +96,16 @@ def test_parse_fit() -> None:
                                           w['activityType'], w['durationMinutes']))
         check(f'{label}: has a GPS track', bool(w.get('gpsTrack')))
         check(f'{label}: has HR samples', bool(w['heartRate'].get('samples')))
-        check(f'{label}: date agrees with startTime', w['date'] == w['startTime'][:10])
+        # The date is the athlete's local day, derived from the activity
+        # message's offset when the file has one — never more than a day from UTC.
+        from datetime import datetime as _datetime
+        expected_date = fit_import.local_date(
+            _datetime.fromisoformat(w['startTime']),
+            utc_offset_seconds=w['rawData'].get('utc_offset_seconds'))
+        check(f'{label}: date is the local day of the start', w['date'] == expected_date,
+              f"{w['date']} vs {expected_date}")
+        check(f'{label}: date within a day of the UTC date',
+              abs((_datetime.fromisoformat(w['date']) - _datetime.fromisoformat(w['startTime'][:10])).days) <= 1)
         check(f'{label}: duration is positive', w['durationMinutes'] > 0)
 
     # The source parameter is what lets the Garmin webhook reuse this parser.
@@ -109,6 +118,25 @@ def test_parse_fit() -> None:
     with open(fits[0], 'rb') as fh:
         from_bytes = fit_import.parse_fit(io.BytesIO(fh.read()))
     check('parses from an in-memory buffer', from_bytes[0]['id'] == workouts_first_id(fits[0]))
+
+
+def test_local_date() -> None:
+    """An evening workout west of Greenwich used to be dated the next day."""
+    print('\nlocal_date')
+    from datetime import datetime, timezone
+    early_utc = datetime(2026, 3, 29, 3, 30, tzinfo=timezone.utc)   # 20:30 the night before in Denver
+    late_utc = datetime(2026, 3, 28, 23, 30, tzinfo=timezone.utc)   # 00:30 the next day in Zurich
+    check('UTC when nothing else is known', fit_import.local_date(late_utc) == '2026-03-28')
+    check('an explicit offset moves the day back (Denver, -7 h)',
+          fit_import.local_date(early_utc, utc_offset_seconds=-7 * 3600) == '2026-03-28')
+    check('a profile zone moves the day forward (Zurich)',
+          fit_import.local_date(late_utc, tz='Europe/Zurich') == '2026-03-29')
+    check('the offset wins over the zone',
+          fit_import.local_date(late_utc, utc_offset_seconds=0, tz='Europe/Zurich') == '2026-03-28')
+    check('an unknown zone falls back to UTC',
+          fit_import.local_date(late_utc, tz='Mars/Olympus') == '2026-03-28')
+    check('a naive start is read as UTC',
+          fit_import.local_date(datetime(2026, 3, 28, 23, 30), tz='Europe/Zurich') == '2026-03-29')
 
 
 def workouts_first_id(path: Path) -> str:
@@ -151,6 +179,7 @@ if __name__ == '__main__':
     test_id_formula()
     test_elevation()
     test_hr_cleaning()
+    test_local_date()
     test_parse_fit()
     test_endpoint_still_works()
 

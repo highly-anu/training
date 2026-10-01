@@ -11,6 +11,10 @@ struct PaceTimelineView: View {
     }
 
     @State private var chartData: [PacePoint] = []
+    /// Identity is index + elapsed: two samples can share an elapsed second.
+    private var keyedPoints: [(id: String, pt: PacePoint)] {
+        chartData.enumerated().map { (id: "\($0.offset)-\($0.element.elapsed)", pt: $0.element) }
+    }
     @State private var avgPace: Double? = nil
     @State private var yLo: Double = 180
     @State private var yHi: Double = 600
@@ -27,7 +31,8 @@ struct PaceTimelineView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Chart {
-                    ForEach(Array(chartData.enumerated()), id: \.offset) { _, pt in
+                    ForEach(keyedPoints, id: \.id) { item in
+                        let pt = item.pt
                         LineMark(
                             x: .value("Time", pt.elapsed),
                             y: .value("Pace", pt.paceSecPerKm)

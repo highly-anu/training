@@ -33,78 +33,16 @@ deferred is under *Later*.
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | FIT import dates workouts from UTC; no user timezone | P1 | M | import |
-| 2 | iOS interactive design: refreshable min-time and stable ForEach ids | P2 | S | ios |
-| 3 | Twenty hand-rolled empty states bypass `EmptyState` (FIX-5) | P2 | S | web |
-| 4 | Chart chrome partially hardcoded (FIX-6) | P2 | S | web |
-| 5 | Female benchmark values served, never shown | P2 | S–M | web / api |
-| 6 | Missing benchmark families | P2 | M | data |
-| 7 | Exercise animations (Lottie + SVG CSS) | P2 | L | web / content |
-| 8 | Finish moving cadence and load tables from Python into YAML | P3 | S | engine |
-| 9 | Scope declares modalities nothing schedules | P3 | S | packages |
-| 10 | Configurable back-to-back recovery relaxation | P3 | M | engine |
-| 11 | Authoring API completeness | P3 | M | api / web |
+| 1 | Missing benchmark families | P2 | M | data |
+| 2 | Exercise animations (Lottie + SVG CSS) | P2 | L | web / content |
+| 3 | Finish moving cadence and load tables from Python into YAML | P3 | S | engine |
+| 4 | Scope declares modalities nothing schedules | P3 | S | packages |
+| 5 | Configurable back-to-back recovery relaxation | P3 | M | engine |
+| 6 | Authoring API completeness | P3 | M | api / web |
 
 ---
 
-### 1. FIT import dates workouts from UTC; no user timezone — P1 · M
-
-`src/fit_import.py` takes the session `start_time` as a UTC-naive datetime and
-derives the workout's date from it, so an evening workout west of Greenwich is
-dated a day late. No source stores a user timezone. `resolve_session` has a
-±1-day widening used only when displaying an existing match, never for scoring,
-because the matcher's golden fixtures pin that behaviour.
-
-Do: read the FIT `activity` message's `local_timestamp` where present and
-derive the date from it; add a `timezone` field to the profile blob for the
-other sources (Strava and Apple Health carry their own offsets; Garmin's
-summary carries `startTimeOffsetInSeconds`). Any change to the date a workout
-carries must keep `test_workout_matcher.py` and the vitest half green — change
-`data/matcher_fixtures.json` deliberately if the contract moves.
-
-### 2. iOS interactive design, remaining steps — P2 · S
-
-Of the six steps in the interactive design plan, steps 1, 2, 3 and 5 shipped:
-named `AppAnimation` springs, velocity-aware swipe commit, `AppHaptics` in 14
-files, `appTabStyle()` on every tab root. Two remain:
-
-- **Step 4** — `.refreshable` with a light haptic on trigger, a 600 ms minimum
-  display time so the spinner does not flash, and a success haptic on
-  completion. No call site has the minimum-time pattern yet.
-- **Step 6** — seven `ForEach(... id: \.offset)` sites remain. Offset identity
-  makes SwiftUI recreate rows instead of animating them. Use the day name,
-  session key or phase as the id, and add `.animation(AppAnimation.layoutChange,
-  value:)` where the layout changes with data.
-
-Per `CLAUDE.md`, each change ends in the simulator with a screenshot.
-
-### 3. Hand-rolled empty states (FIX-5) — P2 · S
-
-Eight screens use the shared `EmptyState` component; twenty more render their
-own "No … yet" markup. Real UX cost: the hand-rolled ones lack the icon, the
-action slot and the consistent spacing. Sweep and convert. Rationale and
-the component contract are in `frontend-fix-plan.md` under FIX-5.
-
-### 4. Chart chrome partially hardcoded (FIX-6) — P2 · S
-
-Marks (bars, lines, cells) are correctly hardcoded to a §8 colour system. Some
-chrome — axis ticks, grid lines, tooltip surface, cursor fill, reference
-lines — is still a hex literal and reads wrong in the Military and Zen themes.
-The token table is under FIX-6 in `frontend-fix-plan.md`. Opportunistic: do it
-when touching a chart. `WorkoutAnalytics.tsx` defines series colours inline; new
-series there should read `MODALITY_COLORS` or `ZONE_COLORS`.
-
-### 5. Female benchmark values served, never shown — P2 · S–M
-
-`_all_benchmarks()` in `api.py` carries the female values and the metric
-metadata; the web reads neither. The profile now has a writable `sex` key
-(Profile ▸ Athlete, 2026-10-01), so what remains: `GET /api/benchmarks?sex=`
-(today it always serves the male tables), the static `data/static/benchmarks.json`
-regenerated with both sets, `ProfileBenchmarks.tsx` and `StandardsLanding.tsx`
-choosing the set from the profile's `sex`, and the logged value passed to each
-`LevelBar` (`userValue` is wired on the Standards topic, not yet on Benchmarks).
-
-### 6. Missing benchmark families — P2 · M
+### 1. Missing benchmark families — P2 · M
 
 Three files exist under `data/benchmarks/`: strength, conditioning and the
 Cell standards. Families referenced in the packages with no data behind them:
@@ -120,7 +58,7 @@ Each is a YAML file in the existing list-of-objects schema plus one entry in the
 `_all_benchmarks()` loop and, for WODs, a `benchmark_wod` category. Content
 work; the sources are in `data/` and `docs/extracted/`.
 
-### 7. Exercise animations — P2 · L
+### 2. Exercise animations — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
@@ -140,7 +78,7 @@ Acceptance: Lottie renders in the drawer; ten Starrett movements, the two core
 KB ballistics and five Portal locomotion patterns animate; `type: none` still
 shows the category placeholder.
 
-### 8. Cadence and load tables still in Python — P3 · S
+### 3. Cadence and load tables still in Python — P3 · S
 
 Two of the three "knowledge in code" tables identified in April are half
 migrated:
@@ -155,7 +93,7 @@ migrated:
 The third table, movement-pattern aliases, is done: `selector.py` loads
 `data/commons/movement_patterns.yaml`.
 
-### 9. Scope declares modalities nothing schedules — P3 · S per package
+### 4. Scope declares modalities nothing schedules — P3 · S per package
 
 Several packages declare `power` or `relative_strength` in `scope` with no
 framework that prescribes them and no archetype that serves them.
@@ -163,7 +101,7 @@ framework that prescribes them and no archetype that serves them.
 generation is unaffected; either author the archetype and a framework line, or
 drop the modality from `scope`. One package per change.
 
-### 10. Configurable back-to-back recovery relaxation — P3 · M
+### 5. Configurable back-to-back recovery relaxation — P3 · M
 
 The scheduler's recovery rules forbid consecutive long days. Endurance build
 phases want them — Uphill Athlete's weekend back-to-back is a defining feature
@@ -174,7 +112,7 @@ phases), read it in `allocate_sessions`, and make Uphill's base and specific
 phases use it. Verify with `check_styles.py` and by generating Uphill at five
 and six days.
 
-### 11. Authoring API completeness — P3 · M
+### 6. Authoring API completeness — P3 · M
 
 Six authoring routes exist — `POST/PUT /api/exercises`, `POST/PUT
 /api/archetypes`, `POST /api/modalities`, `PUT /api/frameworks/<id>` — and
@@ -246,6 +184,31 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Wrong-data and cheap P2 tranche (2026-10-01)**:
+
+- *FIT dates are the athlete's day.* `fit_import.local_date` reads the FIT
+  activity message's `local_timestamp − timestamp`, else the profile's new
+  `timezone` key, else UTC; the Garmin webhook passes
+  `startTimeOffsetInSeconds`; Strava uses `start_date_local` on the server
+  and in the browser parser. `startTime` and the deterministic id stay UTC.
+  `test_fit_import.py` pins it. Profile ▸ Athlete sets the zone (one click
+  for the browser's); iOS fills it from the device when unset.
+- *iOS interactive design steps 4 and 6*: `AppRefresh.perform` carries the
+  pull-to-refresh contract (light haptic, 600 ms minimum, success haptic) for
+  all seven sites; zero `ForEach(id: \.offset)` remain, with layout animation
+  where rows change with data.
+- *FIX-5*: `EmptyState` gained a `compact` size; the six chart zero-data views,
+  Analytics ▸ Load's period empty state and Recovery's sleep card use it, with
+  an Import action where one resolves the state. The slot-sized day cell,
+  decorative dashed outlines and informational "not configured" cards stay, as
+  the fix plan sanctions. Eight orphan components deleted.
+- *FIX-6*: every cursor fill, the "all philosophies" radar reference series
+  and the ontology graph labels read tokens; marks are untouched.
+- *Female benchmark standards*: `GET /api/benchmarks?sex=`; the web hook
+  queries it from the profile's sex (bundled male JSON as the offline
+  fallback) and Benchmarks says which tables it shows; iOS has a Sex picker
+  and passes it. Multi-standard WODs and the other families are item 1.
 
 **Information-architecture restructure (2026-10-01)** — the layout in
 `information-architecture.md`, on both clients:

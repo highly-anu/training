@@ -24,7 +24,7 @@ struct ProgramHistoryView: View {
             }
         }
         .task { await appState.loadProgramHistory() }
-        .refreshable { await appState.loadProgramHistory() }
+        .refreshable { await AppRefresh.perform { await appState.loadProgramHistory() } }
     }
 
     private var emptyState: some View {

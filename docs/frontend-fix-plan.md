@@ -20,8 +20,8 @@ Implemented 2026-07-30: FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8. Verified with 
 | FIX-2 | No reduced-motion support | **High** | ✅ **Done** |
 | FIX-3 | GPS map pinned to dark basemap | Medium | ✅ **Done** |
 | FIX-4 | HR zone colors triplicated | Medium | ✅ **Done** |
-| FIX-5 | Hand-rolled empty states bypass `EmptyState` | Medium | ⬜ Open — per-site judgment, do incrementally |
-| FIX-6 | Chart chrome partially hardcoded | Low | ⬜ Open — cleanup |
+| FIX-5 | Hand-rolled empty states bypass `EmptyState` | Medium | ✅ **Done** 2026-10-01 — zero-data views converted (compact size added); sanctioned exceptions remain |
+| FIX-6 | Chart chrome partially hardcoded | Low | ✅ **Done** 2026-10-01 — cursor fills, reference series and graph labels on tokens |
 | FIX-7 | Pages missing the standard page transition | Low | ✅ **Done** |
 | FIX-8 | Icon-only buttons have no accessible name | Medium | ✅ **Done** |
 | FIX-9 | Theme web fonts load unconditionally | Low | ✅ **Closed** — decided to leave; rationale below |

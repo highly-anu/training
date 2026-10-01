@@ -383,6 +383,21 @@ private struct AthleteTab: View {
             }
 
             Section("Body") {
+                // Which benchmark standards apply. Clearing the cached ladder
+                // makes the Benchmarks section re-fetch the right table.
+                Picker("Sex", selection: Binding(
+                    get: { appState.profile.sex ?? "unset" },
+                    set: { value in
+                        appState.profile.sex = value == "unset" ? nil : value
+                        appState.benchmarks = []
+                        Task { await appState.saveProfile() }
+                    }
+                )) {
+                    Text("Not set").tag("unset")
+                    Text("Female").tag("female")
+                    Text("Male").tag("male")
+                }
+                .pickerStyle(.menu)
                 DatePicker("Date of Birth", selection: dobBinding, displayedComponents: .date)
                 if let dob = appState.profile.dateOfBirth, let age = computeAge(dob) {
                     LabeledContent("Age", value: "\(age)")

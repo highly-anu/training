@@ -194,8 +194,11 @@ final class APIClient {
         return (try? JSONDecoder().decode([AppExercise].self, from: data)) ?? []
     }
 
-    func fetchBenchmarks() async throws -> [AppBenchmark] {
-        let data = try await get("/benchmarks")
+    /// `sex` picks the standards table; the endpoint serves the male one otherwise.
+    func fetchBenchmarks(sex: String? = nil) async throws -> [AppBenchmark] {
+        var path = "/benchmarks"
+        if let sex, sex == "male" || sex == "female" { path += "?sex=\(sex)" }
+        let data = try await get(path)
         return (try? JSONDecoder().decode([AppBenchmark].self, from: data)) ?? []
     }
 

@@ -188,6 +188,11 @@ the iOS Apple Health relay, and the Garmin Connect webhook.
 - **Deterministic ids** — `src/workout_ids.py`. The formula is mirrored in
   `frontend/src/lib/importParsers.ts` and `ios/.../WorkoutID.swift`. **Do not change
   it**: `workout_matches.imported_workout_id` references the ids it produces.
+- **Dates are the athlete's day, ids stay UTC.** `fit_import.local_date` derives a
+  workout's `date` from the FIT activity message's local timestamp, else the profile's
+  `timezone` (IANA; Profile ▸ Athlete on the web, filled from the device on iOS), else
+  UTC; the Garmin webhook passes `startTimeOffsetInSeconds`, Strava uses
+  `start_date_local`. `startTime` and the deterministic id never move.
 - **Cross-source dedup** — because the id embeds the source, one activity arriving
   four ways makes four ids. `src/workout_dedupe.py` decides whether two records are the
   same activity (±5 min start, duration within 3 min or 10%, same modality family) and

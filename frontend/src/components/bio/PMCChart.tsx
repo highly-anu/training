@@ -13,6 +13,8 @@ import {
 import { parseISO, format } from 'date-fns'
 import { fetchPMC } from '@/api/userdata'
 import type { PMCEntry } from '@/api/types'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { useNavigate } from 'react-router-dom'
 
 interface TooltipProps {
   active?: boolean
@@ -43,6 +45,7 @@ function formatXAxis(dateStr: string): string {
 }
 
 export function PMCChart() {
+  const navigate = useNavigate()
   const { data: raw = [] } = useQuery({
     queryKey: ['pmc'],
     queryFn: fetchPMC,
@@ -51,9 +54,13 @@ export function PMCChart() {
 
   if (raw.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border">
-        <p className="text-sm text-muted-foreground">No workout history yet</p>
-      </div>
+      <EmptyState
+        size="compact"
+        className="h-48"
+        title="No training load yet"
+        description="Fitness, fatigue and form build from recorded workouts with heart rate."
+        action={{ label: 'Import a workout', onClick: () => navigate('/log?import=1') }}
+      />
     )
   }
 
@@ -92,7 +99,7 @@ export function PMCChart() {
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
           <ReferenceLine y={0} stroke="var(--color-border)" strokeOpacity={0.6} />
           <Bar dataKey="tsb" name="TSB" barSize={4} radius={[1, 1, 0, 0]}>
             {raw.map((entry: PMCEntry, i: number) => (

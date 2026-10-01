@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import type { DailyBioLog } from '@/api/types'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 interface SleepStageChartProps {
   bioLogs: Record<string, DailyBioLog>
@@ -65,11 +66,12 @@ export function SleepStageChart({ bioLogs, days = 30 }: SleepStageChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border">
-        <p className="text-sm text-muted-foreground">
-          No sleep data yet — sync via the iOS app
-        </p>
-      </div>
+      <EmptyState
+        size="compact"
+        className="h-40"
+        title="No sleep data yet"
+        description="Sleep stages arrive through the iOS app's Apple Watch sync."
+      />
     )
   }
 

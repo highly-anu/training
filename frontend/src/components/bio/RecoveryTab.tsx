@@ -43,10 +43,12 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function LastNight({ log }: { log: DailyBioLog | undefined }) {
   if (!log) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-sm text-muted-foreground">
-        <Watch className="size-4 shrink-0" />
-        <span>No sleep data yet. Sync via the iOS companion app to see sleep stages here.</span>
-      </div>
+      <EmptyState
+        size="compact"
+        icon={<Watch className="size-6 opacity-50" />}
+        title="No sleep data yet"
+        description="Sleep stages arrive through the iOS app's Apple Watch sync."
+      />
     )
   }
   return (

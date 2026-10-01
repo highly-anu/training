@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   BarChart3,
@@ -35,6 +35,7 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import type { ImportedWorkout, ModalityId } from '@/api/types'
 import { formatActivityType } from '@/lib/activityType'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ function KpiCard({
  * consistency — the first half of the Load tab.
  */
 function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+  const navigate = useNavigate()
   const filtered = useFilteredWorkouts(period)
   const allWorkouts = useBioStore((s) => s.importedWorkouts)
 
@@ -297,11 +299,12 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
       </div>
 
       {filtered.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border p-12 flex flex-col items-center gap-3 text-center text-muted-foreground">
-          <ArrowDownToLine className="size-8 opacity-40" />
-          <p className="text-sm">No workouts in this period.</p>
-          <p className="text-xs">Import a file under Log, or select a longer period.</p>
-        </div>
+        <EmptyState
+          icon={<ArrowDownToLine className="size-8 opacity-40" />}
+          title="No workouts in this period"
+          description="Connected sources import on their own; a file can be imported under Log. Or pick a longer period."
+          action={{ label: 'Import a file', onClick: () => navigate('/log?import=1') }}
+        />
       )}
 
       {filtered.length > 0 && (
@@ -334,7 +337,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                       tickLine={false}
                     />
                     <RechartTooltip
-                      cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                      cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                       contentStyle={{
                         backgroundColor: 'var(--card)',
                         border: '1px solid var(--border)',
@@ -429,7 +432,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                   />
                   <YAxis hide />
                   <RechartTooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',
@@ -539,7 +542,7 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
                     unit="m"
                   />
                   <RechartTooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',

@@ -31,6 +31,8 @@ interface ProfileStore {
   dateOfBirth: string | null // YYYY-MM-DD, used for max HR estimation
   /** Which benchmark standards apply. Null until the athlete says. */
   sex: Sex | null
+  /** IANA zone used to date imported FIT files; null means UTC. */
+  timezone: string | null
   weeklySchedule: Record<Day, DaySchedule> | null
   hrConfig: HRConfig
   integrations: IntegrationSettings
@@ -46,6 +48,7 @@ interface ProfileStore {
   setSessionLog: (key: string, completed: boolean[]) => void
   setDateOfBirth: (dob: string | null) => void
   setSex: (sex: Sex | null) => void
+  setTimezone: (timezone: string | null) => void
   setWeeklySchedule: (schedule: Record<Day, DaySchedule>) => void
   setHRConfig: (config: HRConfig) => void
   setIntegrations: (settings: IntegrationSettings) => void
@@ -66,6 +69,7 @@ function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; initPe
     activeGoalId:       state.activeGoalId,
     dateOfBirth:        state.dateOfBirth,
     sex:                state.sex,
+    timezone:           state.timezone,
     weeklySchedule:     state.weeklySchedule,
     hrConfig:           state.hrConfig,
     integrations:       state.integrations,
@@ -82,6 +86,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   activeGoalId: null,
   dateOfBirth: null,
   sex: null,
+  timezone: null,
   weeklySchedule: null,
   hrConfig: {},
   integrations: DEFAULT_INTEGRATIONS,
@@ -143,6 +148,10 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     set({ sex })
     _sync({ ...get(), sex })
   },
+  setTimezone: (timezone) => {
+    set({ timezone })
+    _sync({ ...get(), timezone })
+  },
   setWeeklySchedule: (weeklySchedule) => {
     set({ weeklySchedule })
     _sync({ ...get(), weeklySchedule })
@@ -170,6 +179,7 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
       activeGoalId:      data.activeGoalId ?? null,
       dateOfBirth:       data.dateOfBirth ?? null,
       sex:               data.sex ?? null,
+      timezone:          data.timezone ?? null,
       weeklySchedule:    data.weeklySchedule ?? null,
       hrConfig:          data.hrConfig ?? {},
       integrations:      data.integrations ?? DEFAULT_INTEGRATIONS,

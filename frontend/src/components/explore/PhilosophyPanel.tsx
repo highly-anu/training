@@ -1095,8 +1095,8 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
                 {/* All philosophies — background reference */}
                 <Radar
                   dataKey="all"
-                  stroke="#64748b"
-                  fill="#64748b"
+                  stroke="var(--color-muted-foreground)"
+                  fill="var(--color-muted-foreground)"
                   fillOpacity={0.08}
                   strokeWidth={1}
                   strokeDasharray="3 2"
@@ -1119,7 +1119,7 @@ function BiasRadarChart({ phil, frameworks, allFrameworks }: {
               <span className="text-[9px] font-mono text-muted-foreground/70">{phil.name.split(' ')[0]}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke="#64748b" strokeWidth={1} strokeDasharray="3 2" /></svg>
+              <svg width={16} height={8}><line x1={0} y1={4} x2={16} y2={4} stroke="var(--color-muted-foreground)" strokeWidth={1} strokeDasharray="3 2" /></svg>
               <span className="text-[9px] font-mono text-muted-foreground/70">all</span>
             </div>
           </div>

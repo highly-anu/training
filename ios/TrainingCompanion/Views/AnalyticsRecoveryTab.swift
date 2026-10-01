@@ -19,10 +19,10 @@ struct AnalyticsRecoveryTab: View {
             .padding(.vertical, 12)
         }
         .refreshable {
-            AppHaptics.light()
-            await appState.loadRecentBioLogs()
-            await appState.loadReadiness()
-            AppHaptics.success()
+            await AppRefresh.perform {
+                await appState.loadRecentBioLogs()
+                await appState.loadReadiness()
+            }
         }
     }
 

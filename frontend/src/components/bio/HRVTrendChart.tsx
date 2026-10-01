@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import type { DailyBioLog } from '@/api/types'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 interface Props {
   bioLogs: Record<string, DailyBioLog>
@@ -90,9 +91,12 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
 
   if (data.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border">
-        <p className="text-sm text-muted-foreground">No HRV data yet</p>
-      </div>
+      <EmptyState
+        size="compact"
+        className="h-40"
+        title="No HRV yet"
+        description="Log it in the daily check-in, or let the iOS app sync it from Apple Watch."
+      />
     )
   }
 

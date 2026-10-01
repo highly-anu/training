@@ -52,10 +52,10 @@ struct AnalyticsOverviewTab: View {
             await recomputePMC()
         }
         .refreshable {
-            AppHaptics.light()
-            await appState.loadWorkouts()
-            await recomputePMC()
-            AppHaptics.success()
+            await AppRefresh.perform {
+                await appState.loadWorkouts()
+                await recomputePMC()
+            }
         }
     }
 
