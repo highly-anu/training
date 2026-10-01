@@ -393,7 +393,12 @@ another's row.
   iterated in fixed order because Swift re-encodes the schedule dictionary
   arbitrarily. `content_hash` is separate: same skeleton, different content means
   the snapshot is stale, and it is refreshed in place — but only by a copy at
-  least as *rich*, because an iOS save strips `goal` and every `slot`.
+  least as *rich*, because an iOS save used to strip `goal` and every `slot`.
+  Since 2026-10-01 the phone round-trips every key it does not model
+  (`JSONValue` extras on each program struct in `WatchModels.swift`, pinned by
+  `ProgramRoundTripTests`) and echoes the blend's weights; the richness guard and
+  the PUT handler's goal/constraints/validation/coverage_report back-fill stay
+  for older builds.
 - **Intervals are DATEs computed in Python**, never `activated_at::date` — that
   cast uses the server's TimeZone (UTC on fly.io) and is a day out every evening
   west of Greenwich. The **first** activation runs from the program's own

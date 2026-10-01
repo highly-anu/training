@@ -2237,7 +2237,7 @@ def save_user_program_endpoint():
             old_ids = existing.get('sourceGoalIds') or []
             same_goal = (sorted(new_ids) == sorted(old_ids))
 
-            for field in ('constraints', 'validation'):
+            for field in ('constraints', 'validation', 'coverage_report'):
                 if field in existing_cp and field not in current:
                     current[field] = existing_cp[field]
 

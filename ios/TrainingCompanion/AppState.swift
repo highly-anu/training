@@ -523,7 +523,8 @@ final class AppState: ObservableObject {
         var schedule = week.schedule
         schedule[day] = sessions
         week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                           extra: week.extra)
         weeks[weekIndex] = week
         commit(weeks: weeks, to: sp)
     }
@@ -544,11 +545,13 @@ final class AppState: ObservableObject {
         guard exerciseIndex < exercises.count else { return }
         exercises[exerciseIndex] = assignment
         sessions[sessionIndex] = ProgramSession(modality: session.modality, archetype: session.archetype,
-                                                isDeload: session.isDeload, exercises: exercises)
+                                                isDeload: session.isDeload, exercises: exercises,
+                                                extra: session.extra)
         var schedule = week.schedule
         schedule[day] = sessions
         weeks[weekIndex] = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                                       isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+                                       isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                                       extra: week.extra)
         commit(weeks: weeks, to: sp)
     }
 
@@ -557,10 +560,13 @@ final class AppState: ObservableObject {
     /// `programVersionId`) is carried over so the save is checked against the
     /// copy that was read.
     private func commit(weeks: [ProgramWeek], to sp: ServerProgram) {
-        serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: weeks),
+        serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: weeks,
+                                                                       extra: sp.currentProgram?.extra ?? [:]),
                                       programStartDate: sp.programStartDate,
                                       eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
-                                      revision: sp.revision, programVersionId: sp.programVersionId)
+                                      sourceGoalWeights: sp.sourceGoalWeights,
+                                      revision: sp.revision, programVersionId: sp.programVersionId,
+                                      extra: sp.extra)
         writeWidgetData()
         Task { try? await saveProgramToServer() }
     }
@@ -642,7 +648,8 @@ final class AppState: ObservableObject {
         schedule[fromDay] = fromSessions
         schedule[toDay] = toSessions
         week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                           isDeload: week.isDeload, phase: week.phase, schedule: schedule)
+                           isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                           extra: week.extra)
         weeks[weekIndex] = week
         commit(weeks: weeks, to: sp)
     }
@@ -654,8 +661,9 @@ final class AppState: ObservableObject {
             programStartDate: sp.programStartDate,
             eventDate: sp.eventDate,
             sourceGoalIds: sp.sourceGoalIds,
-            sourceGoalWeights: [:],
-            baseRevision: sp.revision
+            sourceGoalWeights: sp.sourceGoalWeights,
+            baseRevision: sp.revision,
+            extra: sp.extra
         )
         do {
             try await api.saveProgram(payload)

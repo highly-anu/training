@@ -105,6 +105,18 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Follow-up tranche (2026-10-01)**:
+
+- *iOS saves round-trip the envelope*: the phone's program models decoded only
+  the keys they displayed, so every save from the phone (a move, a swap,
+  marking a session complete) stripped the goal, constraints, validation,
+  coverage report, each exercise's `slot` and every other unmodelled key, and
+  sent a blend's weights as `[:]`. `JSONValue` extras on each struct carry the
+  rest back untouched (integers stay integers), `ServerProgram` keeps
+  `sourceGoalWeights` and unknown envelope keys, and every rebuild in
+  `AppState` passes them through. The PUT handler's back-fill now covers
+  `coverage_report` too, for older builds. `ProgramRoundTripTests` pins it.
+
 **Adjust, swap, devices and the iOS "Later" tranche (2026-10-01)**:
 
 - *Apply adjustment*: `POST /api/programs/adjust` applies one of the review's
