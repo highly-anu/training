@@ -197,7 +197,7 @@ is the source of the patterns, not the neighbouring screen:
   own sub-tab selector before that rule existed; both now use
   `AppSubTabs.swift` (§6.8).
 - **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
-- **iOS tabs**: Today · Program · Analytics · Profile (`AppRouter.Tab`); Settings
+- **iOS tabs**: Today · Program · Log · Analytics · Profile (`AppRouter.Tab`); Settings
   (connections, devices & sync, notifications, appearance, account) is pushed from
   Profile's gear, never a tab — design-system §6.13. The exercise reference on the phone
   is `ExerciseDetailSheet` (§6.14), presented from any session row and from the swap

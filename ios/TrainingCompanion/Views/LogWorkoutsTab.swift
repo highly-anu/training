@@ -1,6 +1,10 @@
 import SwiftUI
 
-struct AnalyticsWorkoutsTab: View {
+/// Log ▸ Workouts — the recorded-activity list (a section of Analytics until
+/// 2026-10-01; the record belongs with the log, the interpretation with
+/// Analytics). Period filter, sort, activity filter, delete, and the TRIMP
+/// badge; the `.fit` importer sits in the Log toolbar.
+struct LogWorkoutsTab: View {
     @EnvironmentObject var appState: AppState
     @Binding var period: AnalyticsPeriod
     @Binding var selectedWorkout: ImportedWorkout?

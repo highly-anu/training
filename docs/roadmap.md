@@ -63,8 +63,6 @@ shows the category placeholder.
 Larger items from the IA review. Each needs a backend step first; none is
 scheduled ahead of the ranked list.
 
-- **iOS Log tab** — the phone logs from the session detail now; a tab only if
-  a cross-session list of what was logged turns out to be needed.
 - **Partial regenerates number their tail from 1** — a regenerate from week N
   without an event date yields weeks numbered 1…, spliced after the kept
   head, so a program reads 1, 1, 2, 3 (seen on 2026-10-01 after the profile
@@ -110,6 +108,15 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *iOS Log tab*: the third tab, `LogView` — Workouts (the list that was
+  Analytics ▸ Workouts, with the `.fit` importer), Suggestions (the full
+  inbox, `SuggestionRowView` with Accept, Review and Dismiss, shared with
+  Today's card) and Sessions (`LogSessions.rows`: what was logged against
+  planned sessions, newest first, one line per exercise with content; a row
+  that resolves opens the session). Analytics keeps Program · Overview ·
+  Progress · Recovery. `router.showLog(_:)` and `trainingcompanion://log?section=…`.
+  `LogSessionsTests` pins the ordering, the wording and the server's
+  timestamp forms.
 - *Web Settings page*: `/settings` (Connections · Account · Appearance ·
   Developer in dev builds), URL-driven like the phone's Settings screen.
   Connections (integration toggles, Garmin and Strava accounts, devices) and

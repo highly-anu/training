@@ -151,6 +151,18 @@ final class AppState: ObservableObject {
         matchSuggestions = (try? await api.fetchMatchSuggestions()) ?? []
     }
 
+    /// Suggestions still to decide: the server's weak matches whose workout is
+    /// in the list and has not been linked since. Today shows the first three,
+    /// Log ▸ Suggestions all of them.
+    func pendingMatchSuggestions() -> [(suggestion: MatchSuggestion, workout: ImportedWorkout)] {
+        matchSuggestions.compactMap { suggestion in
+            guard matchedSessionKey(for: suggestion.importedWorkoutId) == nil,
+                  let workout = importedWorkouts.first(where: { $0.id == suggestion.importedWorkoutId })
+            else { return nil }
+            return (suggestion, workout)
+        }
+    }
+
     /// Forget a suggestion without deciding the workout; the server forgets it too.
     func dismissSuggestion(workoutId: String) async {
         matchSuggestions.removeAll { $0.importedWorkoutId == workoutId }
@@ -376,7 +388,8 @@ final class AppState: ObservableObject {
     /// A planned session located by its key ("<week number>-<Day>-<index>"),
     /// for a deep link or a widget. The first week carrying that number wins,
     /// which is what every other reader of the key does.
-    struct LocatedSession {
+    struct LocatedSession: Identifiable {
+        var id: String { key }
         let session: ProgramSession
         let key: String
         let weekIndex: Int

@@ -17,6 +17,8 @@ enum DeepLink: Equatable {
     case session(String)
     /// `profile?section=athlete|equipment|injuries|benchmarks|schedule`.
     case profile(ProfileTab)
+    /// `log?section=workouts|suggestions|sessions`.
+    case log(LogTab)
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -41,6 +43,12 @@ enum DeepLink: Equatable {
             return .tab(.dashboard)
         case "program":
             return .tab(.program)
+        case "log":
+            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
+               let section = LogTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
+                return .log(section)
+            }
+            return .tab(.log)
         case "profile":
             if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
                let section = ProfileTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
@@ -67,6 +75,7 @@ extension AppRouter {
         case .analytics(let section): showAnalytics(section)
         case .session(let key): openSession(key)
         case .profile(let section): showProfile(section)
+        case .log(let section): showLog(section)
         }
     }
 }

@@ -363,18 +363,10 @@ struct TodayView: View {
     /// on its own (Garmin webhook, Apple Health relay). They were written and
     /// shown nowhere; this is where the decision gets made. A workout the
     /// athlete has since linked drops out without waiting for the next load.
-    private var pendingSuggestions: [(suggestion: MatchSuggestion, workout: ImportedWorkout)] {
-        appState.matchSuggestions.compactMap { suggestion in
-            guard appState.matchedSessionKey(for: suggestion.importedWorkoutId) == nil,
-                  let workout = appState.importedWorkouts.first(where: { $0.id == suggestion.importedWorkoutId })
-            else { return nil }
-            return (suggestion, workout)
-        }
-    }
-
+    /// The first three live here; the full inbox is Log ▸ Suggestions.
     @ViewBuilder
     private var suggestionsSection: some View {
-        let pending = pendingSuggestions
+        let pending = appState.pendingMatchSuggestions()
         if !pending.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 sectionLabel(pending.count == 1
@@ -382,63 +374,30 @@ struct TodayView: View {
                              : "\(pending.count) workouts look like planned sessions")
                 VStack(spacing: 8) {
                     ForEach(pending.prefix(3), id: \.suggestion.id) { item in
-                        suggestionRow(item.suggestion, workout: item.workout)
+                        SuggestionRowView(
+                            suggestion: item.suggestion, workout: item.workout,
+                            planned: plannedSession(for: item.suggestion.sessionKey),
+                            onReview: { reviewWorkout = item.workout },
+                            onDismiss: { Task { await appState.dismissSuggestion(workoutId: item.workout.id) } })
+                    }
+                    if pending.count > 3 {
+                        Button {
+                            router.showLog(.suggestions)
+                        } label: {
+                            HStack {
+                                Text("All \(pending.count) in Log")
+                                Image(systemName: "chevron.right").font(.caption2)
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .accessibilityHint("Opens Log, Suggestions")
                     }
                 }
             }
         }
-    }
-
-    private func suggestionRow(_ suggestion: MatchSuggestion, workout: ImportedWorkout) -> some View {
-        let planned = plannedSession(for: suggestion.sessionKey)
-        let modalityId = workout.inferredModalityId ?? planned?.modality ?? "aerobic_base"
-        return HStack(spacing: 12) {
-            Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
-                                                      modalityId: workout.inferredModalityId))
-                .foregroundStyle(ModalityStyle.color(for: modalityId))
-                .font(.title3)
-                .frame(width: 24)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(workout.recordedTitle)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                HStack(spacing: 4) {
-                    Text(workout.date)
-                    if let minutes = workout.durationMinutes {
-                        Text("· \(Int(minutes)) min")
-                    }
-                    Text("→")
-                    Text(planned.map { $0.archetype?.name ?? ModalityStyle.label(for: $0.modality) }
-                         ?? suggestion.sessionKey)
-                        .lineLimit(1)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button("Review") {
-                AppHaptics.light()
-                reviewWorkout = workout
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            Button {
-                AppHaptics.light()
-                Task { await appState.dismissSuggestion(workoutId: workout.id) }
-            } label: {
-                Image(systemName: "xmark")
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .accessibilityLabel("Dismiss suggestion")
-        }
-        .padding(12)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.orange.opacity(0.35), lineWidth: 1)
-        )
     }
 
     /// "3-Monday-0" → the planned session, from the loaded program.

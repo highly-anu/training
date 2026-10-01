@@ -51,18 +51,20 @@ enum SessionLogging {
             if slotType == "static_hold" {
                 let secs = done.map { "\($0.durationSeconds ?? 0)" }
                 let uniform = Set(secs).count == 1
-                return uniform ? "\(done.count)×\(secs[0]) s hold" : "\(done.count) holds · \(secs.joined(separator: ", ")) s"
+                return uniform ? "\(done.count)×\(secs[0]) s hold"
+                    : "\(done.count) hold\(done.count == 1 ? "" : "s") · \(secs.joined(separator: ", ")) s"
             }
             let reps = done.map { $0.repsActual.map(String.init) ?? "?" }
             let kgs = done.map { $0.weightKg.map(LoadFormat.kilograms) }
             let uniform = Set(reps).count == 1 && Set(kgs.map { $0 ?? "" }).count == 1
+            let count = "\(done.count) set\(done.count == 1 ? "" : "s")"
             if uniform {
                 let kg = kgs[0].map { " @ \($0) kg" } ?? ""
-                return "\(done.count) sets · \(done.count)×\(reps[0])\(kg)"
+                return "\(count) · \(done.count)×\(reps[0])\(kg)"
             }
             let pairs = zip(reps, kgs).map { r, kg in kg.map { "\(r)×\($0)" } ?? r }
             let unit = kgs.contains { $0 != nil } ? " kg" : ""
-            return "\(done.count) sets · \(pairs.joined(separator: ", "))\(unit)"
+            return "\(count) · \(pairs.joined(separator: ", "))\(unit)"
         }
         var parts: [String] = []
         if let sec = perf.durationSec, sec > 0 { parts.append("\(Int((Double(sec) / 60).rounded())) min") }

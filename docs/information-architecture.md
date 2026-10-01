@@ -118,23 +118,25 @@ Dev Lab does not use it.
 Benchmarks), sex (a new profile key; unblocks the female benchmark standards), bodyweight
 (the `bodyweight_kg` benchmark series), and the account switcher and sign-out.
 
-## 3. iOS — four tabs
+## 3. iOS — five tabs
 
 | Tab | Root | Sections (`AppSubTabs`) | Notes |
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Current · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Current gains "About this methodology". |
-| **Analytics** | `AnalyticsView` | Overview · Workouts · Progress · Recovery | Progress = today's pushed `ProgressionView`; Workouts keeps the `.fit` importer and gains suggestion accept/dismiss. |
+| **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program. |
+| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
 the Sync tab — is deleted; a start-date repair, if still wanted, belongs under Program
 settings behind a confirmation.
 
-Why four tabs and not five: a Log tab would be one list moved, because the phone has no
-session logging until 2026-10-01; it logs from the session detail now, and the log stays on the session rather than in a tab. A Library tab has no content to show; the
-exercise reference is contextual (a detail sheet from any session row) and philosophy
-detail sits inside the builder's step 1.
+Why a Log tab now and not before: until 2026-10-01 the phone had no session logging, so a
+Log tab would have been one list moved. It logs from the session detail now, and the tab
+is the record across sessions — the same area as the web's Log. A Library tab still has
+no content to show; the exercise reference is contextual (a detail sheet from any session
+row) and philosophy detail sits inside the builder's step 1 and Program ▸ Current.
 
 Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnalytics(.progress)`,
 `showProgram()`; the direct `router.tab` write in `ContentView.onOpenURL` becomes

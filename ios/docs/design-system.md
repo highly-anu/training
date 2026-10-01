@@ -755,13 +755,14 @@ answer.
 
 ### 6.13 Tab Structure
 
-**Four tabs, and configuration is not one of them.**
+**Five tabs, and configuration is not one of them.**
 
 | Tab | Root | Sections (`AppSubTabs`) |
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Current · History |
-| **Analytics** | `AnalyticsView` | Program · Overview · Workouts · Progress · Recovery |
+| **Log** | `LogView` | Workouts · Suggestions · Sessions |
+| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Recovery |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
 
 `AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
@@ -786,10 +787,10 @@ is a place the athlete goes every day; a setting is something they change once.
   & Sync, never on a tab.
 - The web app's layout is the same journey with a sidebar
   (`docs/information-architecture.md`): Home / Program / Log / Analytics /
-  Explore / Profile. The phone logs sessions from the session detail (§6.16)
-  and has no Log tab: recorded workouts stay a section of Analytics, and the
-  log lives on the session it belongs to. Revisit a Log tab only if the
-  athlete needs a list of what was logged across sessions.
+  Explore / Profile. The phone's Log tab (§6.19) is the same area as the
+  web's: the record (recorded workouts, with the `.fit` importer), the
+  decision queue (the suggestions inbox) and what was logged against planned
+  sessions. Logging itself stays on the session (§6.16).
 
 ---
 
@@ -1038,3 +1039,32 @@ link into Explore.
 
 Rules: the row reads the envelope's `sourceGoalIds`, never the builder's
 selection; the sheet is the one methodology reference on the phone.
+
+---
+
+### 6.19 Log Tab
+
+**The record and the decision queue, apart from the interpretation.**
+`Views/LogView.swift`, the third tab, three sections:
+
+- *Workouts* (`LogWorkoutsTab`, the list that was Analytics ▸ Workouts until
+  2026-10-01): recorded activities with the period filter, sort, activity
+  filter, swipe-to-delete and the TRIMP badge; the `.fit` importer is the
+  toolbar action; a row pushes `WorkoutDetailView`.
+- *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
+  as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
+  first three of the same list (`AppState.pendingMatchSuggestions()`) with
+  Review and Dismiss, and links here when there are more.
+- *Sessions* (`LogSessionsTab`): what was logged against planned sessions
+  across the program, newest completion first — `LogSessions.rows` builds
+  the rows from the server's session logs: the session's name when the key
+  resolves in the current program, the date and source, and one line per
+  exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
+  resolves opens the session detail.
+
+Analytics keeps Program · Overview · Progress · Recovery: it interprets, it
+no longer lists. `router.showLog(_:)` and `trainingcompanion://log?section=…`
+name the sections (§6.9).
+
+Rules: the record is listed once, here; Analytics never grows a list again;
+a suggestion is decided here or on Today, through the same row.

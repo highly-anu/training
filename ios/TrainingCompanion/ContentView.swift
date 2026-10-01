@@ -73,9 +73,11 @@ struct ContentView: View {
 
 // MARK: - Main Tab View
 
-/// Four tabs: Today, Program, Analytics, Profile. Connections, devices, sync
-/// status and sign-out live under Profile ▸ Settings — the fifth "Sync" tab
-/// was a debug screen holding the only sign-out and the integration toggles.
+/// Five tabs: Today, Program, Log, Analytics, Profile. Connections, devices,
+/// sync status and sign-out live under Profile ▸ Settings — the old "Sync"
+/// tab was a debug screen holding the only sign-out and the integration
+/// toggles. Log (2026-10-01) is the record: recorded workouts, the
+/// suggestions inbox, and what was logged against planned sessions.
 struct MainTabView: View {
     @EnvironmentObject var router: AppRouter
 
@@ -88,6 +90,10 @@ struct MainTabView: View {
             ProgramView()
                 .tabItem { Label("Program", systemImage: "calendar") }
                 .tag(AppRouter.Tab.program)
+
+            LogView()
+                .tabItem { Label("Log", systemImage: "list.clipboard") }
+                .tag(AppRouter.Tab.log)
 
             AnalyticsView()
                 .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }

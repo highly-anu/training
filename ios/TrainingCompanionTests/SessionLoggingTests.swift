@@ -77,7 +77,7 @@ final class SessionLoggingTests: XCTestCase {
         XCTAssertEqual(SessionLogging.summary(ExercisePerformanceLog(sets: [set(0, 5, 80), set(1, 5, 82.5), set(2, 4, 82.5)]),
                                               slotType: "sets_reps"), "3 sets · 5×80, 5×82.5, 4×82.5 kg")
         XCTAssertEqual(SessionLogging.summary(ExercisePerformanceLog(sets: [set(0, 8, nil), set(1, 8, nil, done: false)]),
-                                              slotType: "sets_reps"), "1 sets · 1×8")
+                                              slotType: "sets_reps"), "1 set · 1×8")
         XCTAssertNil(SessionLogging.summary(ExercisePerformanceLog(sets: [set(0, 5, 80, done: false)]), slotType: "sets_reps"))
         XCTAssertEqual(SessionLogging.summary(ExercisePerformanceLog(sets: [set(0, nil, nil, secs: 30), set(1, nil, nil, secs: 30)]),
                                               slotType: "static_hold"), "2×30 s hold")

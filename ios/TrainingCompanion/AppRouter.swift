@@ -18,7 +18,7 @@ final class AppRouter: ObservableObject {
     /// The four root tabs, in `MainTabView` order. `.dashboard` is the Today
     /// tab (the case name predates the rename; the widgets deep-link to it).
     enum Tab: Int, Hashable {
-        case dashboard, program, analytics, profile
+        case dashboard, program, log, analytics, profile
     }
 
     @Published var tab: Tab = .dashboard
@@ -43,6 +43,18 @@ final class AppRouter: ObservableObject {
     /// Called by Analytics when it has applied a requested section.
     func clearAnalyticsSection() {
         analyticsSection = nil
+    }
+
+    /// A Log section asked for from outside, cleared once applied.
+    @Published var logSection: LogTab? = nil
+
+    func showLog(_ section: LogTab) {
+        logSection = section
+        show(.log)
+    }
+
+    func clearLogSection() {
+        logSection = nil
     }
 
     /// A Profile section asked for from outside, cleared once applied.
