@@ -46,6 +46,7 @@ struct SettingsView: View {
             notificationsSection
             appearanceSection
             syncCategoriesSection
+            apiTargetSection
             debugLogSection
             accountSection
         }
@@ -122,7 +123,48 @@ struct SettingsView: View {
 
     private var accountSection: some View {
         Section("Account") {
-            Button("Sign Out", role: .destructive) { auth.signOut() }
+            if auth.isLocalTarget {
+                Text("Local API — no account. Switch back to production to sign in.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Button("Sign Out", role: .destructive) { auth.signOut() }
+            }
+        }
+    }
+
+    // MARK: - API target (development)
+
+    /// Where this build sends its requests. The local server has the local
+    /// dev program and needs no account, so every screen can be checked
+    /// against it in the simulator; the choice persists until switched back.
+    private var apiTargetSection: some View {
+        Section {
+            #if DEBUG
+            Toggle(isOn: Binding(
+                get: { APITarget.isLocal },
+                set: { useLocal in
+                    APITarget.setOverride(useLocal ? APITarget.localBaseURL : nil)
+                    auth.applyTargetChange()
+                    Task { await appState.loadAll() }
+                }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Use local API")
+                    Text(APITarget.localBaseURL).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            #endif
+            LabeledContent("Current") {
+                Text(APITarget.baseURL)
+                    .font(.caption).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+            }
+        } header: {
+            Text("API target")
+        } footer: {
+            Text(APITarget.isLocal
+                 ? "Requests go to this Mac's Flask server as local-dev-user; nothing here reaches production."
+                 : "Production. A developer can point a simulator at the local server from here or with LOCAL_API=1 ./ios/run_sim.sh.")
         }
     }
 

@@ -45,9 +45,9 @@ enum APIError: LocalizedError {
 }
 
 final class APIClient {
-    // Loaded from Info.plist (set at build time)
-    private static let baseURL = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String
-        ?? "https://training-api.fly.dev/api"
+    /// Production from Info.plist, or the developer's override (`APITarget`).
+    /// Read per request so a target change needs no new client.
+    private static var baseURL: String { APITarget.baseURL }
 
     private let auth: AuthManager
     private let iso = ISO8601DateFormatter()
@@ -658,6 +658,9 @@ final class APIClient {
     }
 
     private func addAuth(to request: inout URLRequest) async throws {
+        // The local server runs with Supabase unset and answers as
+        // local-dev-user; a token would be ignored and there is none to send.
+        if APITarget.isLocal { return }
         await auth.refreshIfNeeded()
         guard let token = auth.accessToken else { throw APIError.unauthenticated }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

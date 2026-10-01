@@ -107,6 +107,14 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *Simulator against the local API*: `APITarget` (environment, then the
+  `apiBaseURLOverride` default, then the build's URL), a local target needs no
+  sign-in (`AuthManager.applyTargetChange`, no bearer sent), an ATS exception
+  for localhost, Settings ▸ API target, and `DeepLink` routes
+  (`trainingcompanion://today|program|analytics?section=…|profile`) through the
+  router. `LOCAL_API=1 ROUTE=… ./ios/run_sim.sh shot.png` builds, points the
+  simulator at the local server, opens a section and screenshots it — the
+  first way to look at a data screen on the phone without production.
 - *iOS saves round-trip the envelope*: the phone's program models decoded only
   the keys they displayed, so every save from the phone (a move, a swap,
   marking a session complete) stripped the goal, constraints, validation,

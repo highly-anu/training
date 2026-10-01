@@ -455,6 +455,28 @@ The script boots `iPhone 17 Pro` (override with `SIM_DEVICE=`) if nothing is
 booted, and always terminates the old copy first so the running app is the code
 that was just built.
 
+**Point the simulator at the local API to see screens with data.** The build
+talks to production unless told otherwise, and production is not always
+reachable; the local Flask server has the local dev program and needs no
+account. The target is the app's `apiBaseURLOverride` default (`APITarget.swift`;
+`API_BASE_URL` in the launch environment wins for one launch), and it persists
+in the simulator until cleared. Deep links open any section without tapping —
+the Simulator window is not scriptable:
+
+```bash
+LOCAL_API=1 ./ios/run_sim.sh /tmp/today.png                                            # local API, Today
+LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.sh /tmp/p.png
+LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
+```
+
+Routes: `today`, `program`, `analytics?section=program|overview|workouts|progress|
+recovery`, `profile` (`DeepLink.swift`, routed through `AppRouter`). The route travels
+in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
+iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
+(the swap sheet, the exercise sheet) are still out of reach; test their models.
+Settings ▸ API target shows the current target and, in debug builds, the switch.
+Never generate, adjust or swap from a simulator pointed at production.
+
 The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
 the `TrainingCompanionTests` target, so a new test file needs no project edit:
 

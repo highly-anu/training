@@ -45,6 +45,8 @@ struct ContentView: View {
                         }
                     }
                     scheduleNextSync()
+                    // A section asked for at launch (run_sim.sh ROUTE=…).
+                    if let link = DeepLink.fromLaunchEnvironment() { router.open(link) }
                 }
                 .onOpenURL { url in
                     // .fit file import
@@ -52,9 +54,9 @@ struct ContentView: View {
                         appState.pendingFITURL = url
                         return
                     }
-                    // Widget deep links — trainingcompanion://today or trainingcompanion://session?key=...
-                    guard url.scheme == "trainingcompanion" else { return }
-                    router.show(.dashboard)     // always land on Today (§6.9: through the router)
+                    // trainingcompanion://today | session?key=… (widgets) | program |
+                    // analytics?section=… | profile — through the router (§6.9).
+                    if let link = DeepLink.parse(url) { router.open(link) }
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },
