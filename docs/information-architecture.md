@@ -73,9 +73,10 @@ Explore CTAs; its header gains a back link to `/program`), `/program/:week/:day`
 Redirects, query and `location.state` preserved: `/builder` → `/program/new`,
 `/import` → `/log`, `/import/:id` → `/log/:id`, `/bio` → `/analytics?tab=recovery`,
 `/exercises` → `/explore?topic=exercises`, `/philosophies` → `/explore?topic=philosophies`.
-`/profile?tab=connections` → `/settings?tab=connections` (query intact, so an OAuth
-callback still pointing at the old tab keeps its outcome); the server's landing URL
-(`api.py` `_integrations_redirect`) now names Settings directly. The split was deferred
+`/profile?tab=connections` → `/settings?tab=connections` (query intact). The server's
+OAuth landing URL (`api.py` `_integrations_redirect`) keeps naming the old Profile tab on
+purpose: every frontend deployment knows it, and `FRONTEND_URL` may pin one that predates
+Settings — the client-side redirect is what lands the athlete on Settings. The split was deferred
 until Profile's sub-tab row overflowed or a web Devices UI existed — both happened on
 2026-10-01, and Settings mirrors the phone's: the services connected, the account, the
 look, and the developer switches.

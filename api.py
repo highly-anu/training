@@ -1372,8 +1372,13 @@ def strava_sync():
 
 def _integrations_redirect(provider: str, outcome: str, reason: str = '') -> str:
     frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
-    # Settings ▸ Connections; the old Profile tab redirects here as well.
-    url = f'{frontend_url}/settings?tab=connections&{provider}={outcome}'
+    # The landing is Profile ▸ Connections, which every frontend deployment
+    # knows: the current build forwards it to Settings ▸ Connections with the
+    # query intact (pages/ProfileBenchmarks.tsx), and a deployment that
+    # predates Settings — FRONTEND_URL may pin one — still shows the tab.
+    # Naming /settings here sent a fresh OAuth connect to a 404 on such a
+    # deployment.
+    url = f'{frontend_url}/profile?tab=connections&{provider}={outcome}'
     if reason:
         url += f'&reason={reason}'
     return url
