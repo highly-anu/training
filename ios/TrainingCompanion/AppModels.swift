@@ -595,6 +595,9 @@ struct GenerateProgramRequest: Encodable {
     let philosophyWeights: [String: Double]?
     let constraints: GenerateConstraints
     let numWeeks: Int?
+    /// `week_number` of the first generated week: a partial regenerate passes
+    /// the kept head's length + 1 so the tail continues the numbering.
+    let weekInProgram: Int?
     let startDate: String?
     let eventDate: String?
     /// Tells the server this generate is a commit and should replace the
@@ -605,13 +608,14 @@ struct GenerateProgramRequest: Encodable {
     var persist: Bool = true
 
     init(philosophyId: String? = nil, philosophyIds: [String]? = nil, philosophyWeights: [String: Double]? = nil,
-         constraints: GenerateConstraints, numWeeks: Int?, startDate: String?, eventDate: String?,
-         persist: Bool = true) {
+         constraints: GenerateConstraints, numWeeks: Int?, weekInProgram: Int? = nil,
+         startDate: String?, eventDate: String?, persist: Bool = true) {
         self.philosophyId = philosophyId
         self.philosophyIds = philosophyIds
         self.philosophyWeights = philosophyWeights
         self.constraints = constraints
         self.numWeeks = numWeeks
+        self.weekInProgram = weekInProgram
         self.startDate = startDate
         self.eventDate = eventDate
         self.persist = persist
@@ -625,6 +629,7 @@ struct GenerateProgramRequest: Encodable {
         case philosophyWeights = "philosophy_weights"
         case constraints
         case numWeeks = "num_weeks"
+        case weekInProgram = "week_in_program"
         case startDate = "start_date"
         case eventDate = "event_date"
         case persist

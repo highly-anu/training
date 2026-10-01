@@ -25,12 +25,18 @@ interface GenerateParams {
   eventDate?: string
   startDate?: string | null
   numWeeks?: number
+  /**
+   * `week_number` of the first generated week — a partial regenerate passes
+   * the kept head's length + 1 so its tail continues the numbering instead
+   * of restarting at 1 (which made a program read 1, 1, 2, 3).
+   */
+  weekInProgram?: number
   customInjuryFlags?: CustomInjuryFlag[]
   frameworkId?: string | null
   priorityOverrides?: Partial<Record<ModalityId, number>> | null
 }
 
-function buildPostBody(params: GenerateParams) {
+export function buildPostBody(params: GenerateParams) {
   const multiPhil = params.philosophyIds && params.philosophyIds.length > 1
 
   return {
@@ -42,6 +48,7 @@ function buildPostBody(params: GenerateParams) {
     ...(params.eventDate ? { event_date: params.eventDate } : {}),
     ...(params.startDate ? { start_date: params.startDate } : {}),
     ...(params.numWeeks ? { num_weeks: params.numWeeks } : {}),
+    ...(params.weekInProgram ? { week_in_program: params.weekInProgram } : {}),
     ...(params.frameworkId ? { framework_id: params.frameworkId } : {}),
     ...(params.priorityOverrides ? { priority_overrides: params.priorityOverrides } : {}),
     custom_injury_flags: params.customInjuryFlags ?? [],

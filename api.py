@@ -1054,6 +1054,12 @@ def _generate_program_inner(body):
 
     phase_total = sum(p.get('weeks', 0) for p in goal.get('phase_sequence', []))
     num_weeks = body.get('num_weeks', phase_total or 4)
+    # A partial regenerate numbers its tail from the kept head's length + 1;
+    # without this every tail restarted at 1 and week numbers repeated.
+    try:
+        start_week_number = max(1, int(body.get('week_in_program') or 1))
+    except (TypeError, ValueError):
+        start_week_number = 1
 
     include_trace = bool(body.get('include_trace')) or request.args.get('trace') == '1'
 
@@ -1072,6 +1078,7 @@ def _generate_program_inner(body):
             extra_injury_flags=extra_injury_flags or None,
             include_trace=include_trace,
             policy=policy,
+            start_week_number=start_week_number,
         )
 
     result = _transform_program(raw, goal, constraints, validation)

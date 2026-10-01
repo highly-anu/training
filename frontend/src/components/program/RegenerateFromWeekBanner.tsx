@@ -51,6 +51,7 @@ export function RegenerateFromWeekBanner() {
         philosophyWeights: ids.length > 1 ? sourceGoalWeights : undefined,
         constraints: mergedConstraints(program.constraints, profile, week?.week_in_phase ?? null),
         numWeeks: remaining,
+        weekInProgram: startIdx + 1,
         customInjuryFlags,
       },
       { onSuccess: () => setDone(true) }

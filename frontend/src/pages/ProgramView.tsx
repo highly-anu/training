@@ -115,6 +115,7 @@ export function ProgramView() {
           periodization_week: currentWeekData.week_in_phase,
         },
         numWeeks: totalWeeks - weekIndex,
+        weekInProgram: weekIndex + 1,
         customInjuryFlags: localCustom,
       },
       { onSuccess: () => setInjurySheetOpen(false) }

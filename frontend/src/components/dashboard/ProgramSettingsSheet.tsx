@@ -73,6 +73,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       philosophyWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
       constraints: program.constraints ?? {},
       numWeeks: weeksRemainingFromTomorrow,
+      weekInProgram: tomorrowWeekIdx + 1,
     })
     setRebuildDialogOpen(false)
     setOpen(false)

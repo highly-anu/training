@@ -78,19 +78,21 @@ final class ProgramConstraintsDiffTests: XCTestCase {
 
     func testBlendRequestEncodesIdsAndWeights() throws {
         let request = GenerateProgramRequest(philosophyIds: ["a", "b"], philosophyWeights: ["a": 0.6, "b": 0.4],
-                                             constraints: GenerateConstraints(), numWeeks: 3, startDate: nil,
-                                             eventDate: nil, persist: false)
+                                             constraints: GenerateConstraints(), numWeeks: 3, weekInProgram: 2,
+                                             startDate: nil, eventDate: nil, persist: false)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
         XCTAssertEqual(json["philosophy_ids"] as? [String], ["a", "b"])
         XCTAssertEqual((json["philosophy_weights"] as? [String: Double])?["a"], 0.6)
         XCTAssertNil(json["philosophy_id"])
         XCTAssertEqual(json["num_weeks"] as? Int, 3)
+        XCTAssertEqual(json["week_in_program"] as? Int, 2, "the tail continues the numbering")
         XCTAssertEqual(json["persist"] as? Bool, false)
         let single = GenerateProgramRequest(philosophyId: "starting_strength", constraints: GenerateConstraints(),
                                             numWeeks: nil, startDate: nil, eventDate: nil)
         let sj = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(single)) as? [String: Any])
         XCTAssertEqual(sj["philosophy_id"] as? String, "starting_strength")
         XCTAssertNil(sj["philosophy_ids"])
+        XCTAssertNil(sj["week_in_program"], "a full generate numbers from 1")
         XCTAssertEqual(sj["persist"] as? Bool, true)
     }
 

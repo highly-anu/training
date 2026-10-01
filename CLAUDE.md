@@ -94,7 +94,7 @@ All prefixed `/api/`:
 | GET | `/ontology` | Lightweight projection with counts |
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
-| POST | `/programs/generate` | `GeneratedProgram` |
+| POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
@@ -384,7 +384,10 @@ another's row.
   date, `phase_calendar.build_remaining_schedule` starts that at the athlete's
   *absolute* week — so a 16-week generate legitimately yields weeks[0..15]
   numbered 16..31, and a partial regenerate splices that onto the kept head. One
-  `week_number` then sits at two array indices. `legacy_key` ('3-Monday-0') is
+  `week_number` then sits at two array indices. (Without an event date a partial
+  regenerate used to number its tail from 1 again, so a program read 1, 1, 2, 3;
+  since 2026-10-01 the three regenerate paths pass `week_in_program` = kept head
+  length + 1 and the tail continues the numbering.) `legacy_key` ('3-Monday-0') is
   descriptive and **not unique**; resolve it as `(user_id, legacy_key, date)`.
 - **Dates come from `workout_matcher.session_calendar_date`**, called rather
   than reimplemented: `PUT /api/user/program` does not Monday-align (only
@@ -528,6 +531,7 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
+SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 ```
 
 Run this after touching anything under `ios/` (in addition to the simulator):

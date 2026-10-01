@@ -63,13 +63,6 @@ shows the category placeholder.
 Larger items from the IA review. Each needs a backend step first; none is
 scheduled ahead of the ranked list.
 
-- **Partial regenerates number their tail from 1** — a regenerate from week N
-  without an event date yields weeks numbered 1…, spliced after the kept
-  head, so a program reads 1, 1, 2, 3 (seen on 2026-10-01 after the profile
-  offer; the web's "from tomorrow" has always done this). Keys are array-index
-  based so nothing breaks, but the calendar and the "from week N" wording
-  go by position. A `week_in_program` offset on `POST /programs/generate`
-  would keep the numbers monotonic.
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
 - **iOS Library tab** — the contextual exercise sheet exists
@@ -108,6 +101,14 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *Partial regenerates continue the numbering*: `POST /programs/generate`
+  takes `week_in_program`, the `week_number` of the first generated week;
+  `generator._build_phase_entries` numbers from it (the event-date schedule,
+  which carries absolute weeks, is untouched). The web's three partial
+  regenerates (injuries sheet, "from tomorrow onwards", the profile offer)
+  and the phone's pass the kept head's length + 1, so a 4-week plan rebuilt
+  from week 2 reads 1, 2, 3, 4 instead of 1, 1, 2, 3, and session keys stay
+  unique. `test_week_numbering.py` and the client request tests pin it.
 - *iOS Log tab*: the third tab, `LogView` — Workouts (the list that was
   Analytics ▸ Workouts, with the `.fit` importer), Suggestions (the full
   inbox, `SuggestionRowView` with Accept, Review and Dismiss, shared with

@@ -750,8 +750,8 @@ final class AppState: ObservableObject {
             philosophyId: ids.count == 1 ? ids[0] : nil,
             philosophyIds: ids.count > 1 ? ids : nil,
             philosophyWeights: ids.count > 1 ? sp.sourceGoalWeights : nil,
-            constraints: constraints, numWeeks: remaining, startDate: nil, eventDate: sp.eventDate,
-            persist: false)
+            constraints: constraints, numWeeks: remaining, weekInProgram: start + 1,
+            startDate: nil, eventDate: sp.eventDate, persist: false)
         let generated = try await api.generateProgramPreview(request)
         let spliced = Regeneration.splice(current: program, from: start, generated: generated)
         commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
