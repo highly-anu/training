@@ -129,8 +129,10 @@ Suggestions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight —
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete · Equipment ·
 Injuries · Schedule · Benchmarks · Heart Rate) and Settings `/settings` (Connections · Account ·
-Appearance · Developer in dev builds; the Garmin and Strava OAuth callbacks land on
-`/settings?tab=connections`, and `/profile?tab=connections` redirects there). Dev Lab `/dev` exists in dev
+Appearance · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
+`/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
+intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
+that predates Settings. Dev Lab `/dev` exists in dev
 builds only (`src/lib/featureFlags.ts`). Old paths (`/builder`, `/import`, `/bio`,
 `/exercises`, `/philosophies`, `/program/history`) redirect through
 `components/layout/LegacyRedirect.tsx`; unknown paths render `pages/NotFound.tsx`.
