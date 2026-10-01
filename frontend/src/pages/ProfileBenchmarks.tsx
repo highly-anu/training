@@ -13,6 +13,7 @@ import { useBenchmarks } from '@/api/benchmarks'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
+import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel, Sex } from '@/api/types'
@@ -1018,14 +1019,19 @@ export function ProfileBenchmarks() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {activeTab === 'athlete'    && <AthleteOverview />}
-        {activeTab === 'equipment'  && <EquipmentOverview />}
-        {activeTab === 'injuries'   && <InjuriesOverview />}
-        {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
-        {activeTab === 'schedule'   && <ScheduleOverview />}
-        {activeTab === 'heartrate'  && <HRSettingsOverview />}
-        {activeTab === 'connections' && <ConnectionsSettings />}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* A change here that the active program was not built for offers a
+            regenerate from the current week — every tab that feeds constraints. */}
+        {['athlete', 'equipment', 'injuries', 'schedule'].includes(activeTab) && <RegenerateFromWeekBanner />}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === 'athlete'    && <AthleteOverview />}
+          {activeTab === 'equipment'  && <EquipmentOverview />}
+          {activeTab === 'injuries'   && <InjuriesOverview />}
+          {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
+          {activeTab === 'schedule'   && <ScheduleOverview />}
+          {activeTab === 'heartrate'  && <HRSettingsOverview />}
+          {activeTab === 'connections' && <ConnectionsSettings />}
+        </div>
       </div>
     </motion.div>
   )

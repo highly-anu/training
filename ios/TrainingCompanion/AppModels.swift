@@ -588,8 +588,11 @@ struct InjuryFlagDef: Codable, Identifiable {
 struct GenerateProgramRequest: Encodable {
     /// The methodology the program is generated from. Programs have been
     /// philosophy-driven since the goals layer was removed (2026-04-25); the
-    /// builder picks this from `GET /api/philosophies`.
-    let philosophyId: String
+    /// builder picks this from `GET /api/philosophies`. A blend sends
+    /// `philosophyIds` + `philosophyWeights` instead (the web's shape).
+    let philosophyId: String?
+    let philosophyIds: [String]?
+    let philosophyWeights: [String: Double]?
     let constraints: GenerateConstraints
     let numWeeks: Int?
     let startDate: String?
@@ -601,10 +604,25 @@ struct GenerateProgramRequest: Encodable {
     /// failed generate cannot silently replace an athlete's program.
     var persist: Bool = true
 
+    init(philosophyId: String? = nil, philosophyIds: [String]? = nil, philosophyWeights: [String: Double]? = nil,
+         constraints: GenerateConstraints, numWeeks: Int?, startDate: String?, eventDate: String?,
+         persist: Bool = true) {
+        self.philosophyId = philosophyId
+        self.philosophyIds = philosophyIds
+        self.philosophyWeights = philosophyWeights
+        self.constraints = constraints
+        self.numWeeks = numWeeks
+        self.startDate = startDate
+        self.eventDate = eventDate
+        self.persist = persist
+    }
+
     enum CodingKeys: String, CodingKey {
-        // The backend requires `philosophy_id` and answers 400 to anything
-        // else (see _generate_program_inner).
+        // The backend requires `philosophy_id` (or `philosophy_ids` with
+        // weights) and answers 400 to anything else (see _generate_program_inner).
         case philosophyId = "philosophy_id"
+        case philosophyIds = "philosophy_ids"
+        case philosophyWeights = "philosophy_weights"
         case constraints
         case numWeeks = "num_weeks"
         case startDate = "start_date"
@@ -620,6 +638,10 @@ struct GenerateConstraints: Encodable {
     var equipment: [String] = []
     var injuryFlags: [String] = []
     var phase: String? = nil
+    /// The web's name for the phase; sent alongside `phase`.
+    var trainingPhase: String? = nil
+    /// Week within the phase a partial regenerate continues from.
+    var periodizationWeek: Int? = nil
     var preferredDays: [String]? = nil
 
     enum CodingKeys: String, CodingKey {
@@ -629,6 +651,8 @@ struct GenerateConstraints: Encodable {
         case equipment
         case injuryFlags = "injury_flags"
         case phase
+        case trainingPhase = "training_phase"
+        case periodizationWeek = "periodization_week"
         case preferredDays = "preferred_days"
     }
 }

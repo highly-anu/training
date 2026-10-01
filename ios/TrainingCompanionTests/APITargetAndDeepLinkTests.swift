@@ -41,6 +41,8 @@ final class APITargetAndDeepLinkTests: XCTestCase {
                        "the widget's link opens that session")
         XCTAssertEqual(parse("trainingcompanion://program"), .tab(.program))
         XCTAssertEqual(parse("trainingcompanion://profile"), .tab(.profile))
+        XCTAssertEqual(parse("trainingcompanion://profile?section=equipment"), .profile(.equipment))
+        XCTAssertEqual(parse("trainingcompanion://profile?section=nope"), .tab(.profile))
         XCTAssertEqual(parse("trainingcompanion://analytics"), .tab(.analytics))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=program"), .analytics(.program))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=Recovery"), .analytics(.recovery))

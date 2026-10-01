@@ -998,3 +998,26 @@ its own set logger (digital crown) and writes the same shape.
 Rules: never log into a different session than the one on screen; the sheet
 is the one place sets are entered on the phone; a logged row never changes
 the prescription.
+
+---
+
+### 6.17 Regenerate Offer
+
+**A changed profile offers to rebuild the plan from this week, never
+silently.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete,
+Equipment, Injuries and Schedule tabs whenever `AppState.constraintDifferences`
+is non-empty — `ProgramConstraintsDiff` (the phone's copy of the web's
+`lib/programConstraintsDiff.ts`) compares the profile's level, equipment, days
+per week and injuries with the `constraints` the active program was built for,
+which the envelope carries since saves round-trip it. The card names each
+difference ("Equipment: 5 items → 1 added, 1 removed"), and one tap runs
+`AppState.regenerateFromCurrentWeek`: a non-persisting generate for the
+remaining weeks with the merged constraints (continuing the phase and
+week-in-phase), spliced onto the weeks already behind the athlete
+(`Regeneration.splice`) and saved through the revision-checked PUT, so the
+old plan stays in Program ▸ History. The Program settings sheet offers the same
+action above its destructive full regenerate.
+
+Rules: the comparison is the shared one, never a per-screen heuristic; the
+card appears only where a constraint is edited; a blend regenerates as a
+blend (`philosophy_ids` + weights), not as its first source.

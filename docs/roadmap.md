@@ -105,6 +105,19 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Follow-up tranche (2026-10-01)**:
 
+- *Regenerate from this week after a profile change*: both clients compare
+  the profile (level, equipment, days per week from the schedule, injuries)
+  with the active program's stored constraints — `lib/programConstraintsDiff.ts`
+  and `ProgramConstraintsDiff.swift`, the same rules — and offer "Regenerate
+  from week N" on the profile tabs that feed constraints (and, on the phone,
+  in the Program settings sheet beside the full regenerate). The web goes
+  through `useRegenerateFromWeek`; the phone gets `APIClient.generateProgramPreview`
+  (generate without persisting), `Regeneration.splice` (kept head + new tail,
+  the tail's goal/constraints/validation/coverage report, volume summary left
+  to the server) and `AppState.regenerateFromCurrentWeek`, saved through the
+  revision-checked PUT. `GenerateProgramRequest` now speaks blends
+  (`philosophy_ids` + weights) and `periodization_week`. Until now the web
+  offered this for injuries only and the phone only a full regenerate.
 - *Phone session logging*: `ExerciseLogSheet` on every session row (leading
   swipe or context menu) — sets for sets × reps and hold slots, the slot's
   currency for the rest, through `SessionLogging` (the web's outcome-field

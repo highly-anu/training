@@ -153,7 +153,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | Progress recommendation | The stored program, from this week on | "Apply from week N" (`POST /api/programs/adjust`) | ✓ Analytics ▸ Progress / ✓ Analytics ▸ Progress |
 | Session exercise | A ranked alternative for the same slot | "Swap" (`POST /api/exercises/substitute`) | ✓ swap icon on every exercise row / ✓ context menu or swipe on a session row |
 | Analytics ▸ Program methodology | Explore philosophy | link | ✓ / n.a. |
-| Profile change with an active program | Regenerate from this week | inline offer | injuries only / full regenerate only |
+| Profile change with an active program | Regenerate from this week | inline offer | ✓ `RegenerateFromWeekBanner` on Profile / ✓ `RegenerateOfferCard` on Profile and in the settings sheet |
 | Session with a rounds / minutes / km currency | Outcome logger | inputs beside the prescription | ✓ / ✓ (`ExerciseLogSheet`, design-system §6.16) |
 
 ## 5. Decisions and why

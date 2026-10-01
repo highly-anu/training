@@ -327,6 +327,17 @@ final class APIClient {
         _ = try await postRaw("/programs/generate", body: body)
     }
 
+    /// Generate without persisting and hand the result back — the tail of a
+    /// partial regenerate, which the caller splices onto the kept weeks and
+    /// saves through the revision-checked PUT.
+    func generateProgramPreview(_ request: GenerateProgramRequest) async throws -> GeneratedProgram {
+        var preview = request
+        preview.persist = false
+        let body = try JSONEncoder().encode(preview)
+        let data = try await postRaw("/programs/generate", body: body)
+        return try JSONDecoder().decode(GeneratedProgram.self, from: data)
+    }
+
     // MARK: - Workout file import
 
     /// Upload a .fit file through `POST /workouts/parse` — the same path the

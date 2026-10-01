@@ -45,6 +45,18 @@ final class AppRouter: ObservableObject {
         analyticsSection = nil
     }
 
+    /// A Profile section asked for from outside, cleared once applied.
+    @Published var profileSection: ProfileTab? = nil
+
+    func showProfile(_ section: ProfileTab) {
+        profileSection = section
+        show(.profile)
+    }
+
+    func clearProfileSection() {
+        profileSection = nil
+    }
+
     /// A session key Today should open, set by a widget or a deep link;
     /// Today clears it once the sheet is up.
     @Published var pendingSessionKey: String? = nil

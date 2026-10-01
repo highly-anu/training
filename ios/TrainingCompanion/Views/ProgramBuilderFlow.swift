@@ -530,6 +530,7 @@ struct ProgramSettingsSheet: View {
 
     @StateObject private var settings: SettingsState
     @State private var showConfirm = false
+    @State private var isRegeneratingTail = false
 
     /// Seeded from the live program once, at construction. This replaces a
     /// placeholder state object built from an empty program and field-copied
@@ -663,6 +664,24 @@ struct ProgramSettingsSheet: View {
 
     private var generateSection: some View {
         Section {
+            // The non-destructive option: keeps the weeks already behind the
+            // athlete, rebuilds the rest with the profile's current settings
+            // (level, equipment, injuries, schedule).
+            Button {
+                Task { await regenerateFromThisWeek() }
+            } label: {
+                HStack {
+                    Spacer()
+                    if isRegeneratingTail {
+                        ProgressView()
+                    } else {
+                        Label("Regenerate from this week", systemImage: "arrow.uturn.forward")
+                    }
+                    Spacer()
+                }
+            }
+            .buttonStyle(.bordered)
+            .disabled(settings.isGenerating || isRegeneratingTail)
             Button {
                 showConfirm = true
             } label: {
@@ -702,6 +721,18 @@ struct ProgramSettingsSheet: View {
     }
 
     // MARK: - Generation
+
+    private func regenerateFromThisWeek() async {
+        isRegeneratingTail = true
+        settings.generationError = nil
+        do {
+            try await appState.regenerateFromCurrentWeek()
+            settings.didSucceed = true
+        } catch {
+            settings.generationError = error.localizedDescription
+        }
+        isRegeneratingTail = false
+    }
 
     private func regenerate() async {
         settings.isGenerating = true

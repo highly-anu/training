@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Tab definition
 
-private enum ProfileTab: Int, AppSubTab {
+enum ProfileTab: Int, AppSubTab {
     case athlete, equipment, injuries, benchmarks, schedule
 
     var label: String {
@@ -82,6 +82,9 @@ private struct EquipmentTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Available equipment.")
@@ -140,6 +143,9 @@ private struct InjuriesTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Active injury flags.")
@@ -361,6 +367,9 @@ private struct AthleteTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("About you.")
@@ -679,6 +688,9 @@ private struct ScheduleTab: View {
 
     var body: some View {
         List {
+            if !appState.constraintDifferences.isEmpty {
+                Section { RegenerateOfferCard() }
+            }
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Weekly availability.")
@@ -730,11 +742,14 @@ private struct ScheduleTab: View {
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: ProfileTab = .athlete
+    @EnvironmentObject private var router: AppRouter
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 AppSubTabPicker(selection: $selectedTab)
+                    .onAppear { applyRequestedSection() }
+                    .onChange(of: router.profileSection) { applyRequestedSection() }
 
                 AppSubTabContent(selection: $selectedTab) { tab in
                     switch tab {
@@ -815,5 +830,17 @@ private struct BenchmarkEditSheet: View {
             }
             .onAppear { if let c = currentValue { inputText = "\(c)" } }
         }
+    }
+}
+
+extension ProfileView {
+    /// Move to the section the router asked for (a deep link), then clear it
+    /// so a later visit keeps the user's own last choice.
+    fileprivate func applyRequestedSection() {
+        guard let requested = router.profileSection else { return }
+        if selectedTab != requested {
+            withAnimation(AppAnimation.springStandard) { selectedTab = requested }
+        }
+        router.clearProfileSection()
     }
 }

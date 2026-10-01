@@ -601,9 +601,9 @@ final class AppState: ObservableObject {
     /// step, and save. The envelope's identity (`revision`,
     /// `programVersionId`) is carried over so the save is checked against the
     /// copy that was read.
-    private func commit(weeks: [ProgramWeek], to sp: ServerProgram) {
+    private func commit(weeks: [ProgramWeek], to sp: ServerProgram, extra: [String: JSONValue]? = nil) {
         serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: weeks,
-                                                                       extra: sp.currentProgram?.extra ?? [:]),
+                                                                       extra: extra ?? sp.currentProgram?.extra ?? [:]),
                                       programStartDate: sp.programStartDate,
                                       eventDate: sp.eventDate, sourceGoalIds: sp.sourceGoalIds,
                                       sourceGoalWeights: sp.sourceGoalWeights,
@@ -694,6 +694,47 @@ final class AppState: ObservableObject {
                            extra: week.extra)
         weeks[weekIndex] = week
         commit(weeks: weeks, to: sp)
+    }
+
+    /// The stored program's `constraints` object, kept in the envelope's extras.
+    var programConstraints: [String: JSONValue] {
+        if case .object(let o)? = serverProgram?.currentProgram?.extra["constraints"] { return o }
+        return [:]
+    }
+
+    /// Where the profile has moved on from what the program was built for.
+    var constraintDifferences: [ConstraintDifference] {
+        ProgramConstraintsDiff.differences(program: programConstraints, profile: profile)
+    }
+
+    /// Rebuild the remaining weeks from the current calendar week with the
+    /// profile's current settings, keeping the weeks already behind the
+    /// athlete; saved through the revision-checked PUT, so the old plan stays
+    /// in history. Returns how many weeks were regenerated.
+    @discardableResult
+    func regenerateFromCurrentWeek() async throws -> Int {
+        guard let api, let sp = serverProgram, let program = sp.currentProgram, !program.weeks.isEmpty else {
+            throw APIError.serverErrorDetail(400, "No program to regenerate")
+        }
+        let start = min(currentWeekIndex ?? 0, program.weeks.count - 1)
+        let remaining = program.weeks.count - start
+        let ids = sp.sourceGoalIds.filter { $0 != "_blended" }
+        guard !ids.isEmpty else {
+            throw APIError.serverErrorDetail(400, "This program has no methodology to regenerate from")
+        }
+        let week = program.weeks[start]
+        let constraints = ProgramConstraintsDiff.merged(program: programConstraints, profile: profile,
+                                                        weekInPhase: week.weekInPhase, phase: week.phase)
+        let request = GenerateProgramRequest(
+            philosophyId: ids.count == 1 ? ids[0] : nil,
+            philosophyIds: ids.count > 1 ? ids : nil,
+            philosophyWeights: ids.count > 1 ? sp.sourceGoalWeights : nil,
+            constraints: constraints, numWeeks: remaining, startDate: nil, eventDate: sp.eventDate,
+            persist: false)
+        let generated = try await api.generateProgramPreview(request)
+        let spliced = Regeneration.splice(current: program, from: start, generated: generated)
+        commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
+        return remaining
     }
 
     func saveProgramToServer() async throws {
