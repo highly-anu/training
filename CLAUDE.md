@@ -259,6 +259,17 @@ training data; only sign-in goes to Supabase.
   is an SSRF primitive). Always answers 200 except on a bad secret — Garmin disables
   endpoints that keep erroring. Work happens on a worker thread against the durable
   `garmin_webhook_events` queue, because gunicorn runs `--workers 1`.
+- **A match write must not touch a NOT NULL column it does not fill.**
+  `health_store.upsert_match` first inserts a stub `workouts` row `ON CONFLICT
+  DO NOTHING` so the FK holds. Postgres checks NOT NULL constraints *before*
+  conflict resolution, so a stub that left `start_time`, `end_time` and
+  `duration_minutes` NULL raised on every call — and the writer's `except`
+  swallowed it. Production wrote no match between 2026-06-10 and 2026-10-02
+  while the suggestions table (no stub) kept filling; every auto-match on
+  import and every confirm from either client was lost. The stub now fills
+  every NOT NULL column; `test_dedupe_sql.py` writes a match against the
+  production-shaped schema. When a store writer swallows exceptions, test it
+  against a schema with the real constraints.
 - **Load maths never reads a series.** `workouts.metrics`
   (`migrations/007_workout_metrics.sql`, lazily added by
   `health_store._ensure_metrics_column`) caches `zones.compute_metrics` — zone
@@ -479,6 +490,16 @@ another's row.
   test database has no `auth` schema. The migration is what adds the real
   per-user policies — these tables live in `public`, which Supabase exposes
   through PostgREST.
+- **The Uphill block of 2026-04-27 → 2026-09-20 is a replica** (activation
+  `source = 'replica'`, `backups/uphill_replica_2026-04-27.json`). The plan
+  trained on in spring was overwritten on 2026-09-28, before history existed;
+  on 2026-10-02 it was regenerated from the late-April generator (commit
+  `557fa98`, a 0.7/0.3 Uphill + Horsemen blend, event date 2026-08-16, the
+  weekly schedule Mon short+mobility · Tue short+mobility · Wed short+long ·
+  Thu short · Fri short · Sat long · Sun long+mobility) chosen because it
+  reproduces 34 of the 35 session keys the surviving matches carry. Its
+  exercises and loads are the generator's, not the athlete's; its sessions,
+  dates and the matches and logs attributed to it are real.
 - **History starts at deploy.** Programs already overwritten are unrecoverable.
   `scripts/backfill_program_history.py` archives each athlete's current program
   and attributes existing matches and logs where a key resolves unambiguously on

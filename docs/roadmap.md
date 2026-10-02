@@ -99,6 +99,19 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Match writes, and the Uphill replica (2026-10-02)**: `health_store.upsert_match`'s
+stub insert violated `workouts.start_time NOT NULL` before Postgres ever
+reached its `ON CONFLICT DO NOTHING`, and the swallowed error meant no match
+was written in production from 2026-06-10 on — auto-matches on import and
+confirms from both clients alike (suggestions, written without a stub, kept
+working). Fixed, with `test_dedupe_sql.py` writing a match against the
+production-shaped schema. The spring Uphill program, overwritten before
+history existed, was reconstructed from the late-April generator and
+recorded as a replica block (`source = 'replica'`, 2026-04-27 → 2026-09-20):
+33 of its 35 surviving matches and 32 of 33 logs attributed, 6 later
+workouts auto-matched, 30 queued as suggestions. The development document
+now treats `effectiveTo` as the exclusive end it is.
+
 **Workout metrics cache (2026-10-02)**: the readiness TSB component, the PMC,
 the weekly load, the progression routes and the program analytics all read
 every workout with its GPS track and HR series; with a year of watch

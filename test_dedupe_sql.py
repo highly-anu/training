@@ -89,7 +89,7 @@ def setup_schema() -> None:
         CREATE TABLE workout_matches (
           imported_workout_id TEXT NOT NULL, user_id UUID NOT NULL,
           session_key TEXT NOT NULL, match_confidence TEXT NOT NULL,
-          matched_at TIMESTAMPTZ NOT NULL,
+          matched_at TIMESTAMPTZ NOT NULL, session_uid TEXT,
           PRIMARY KEY (imported_workout_id, user_id)
         );
     ''')
@@ -126,6 +126,27 @@ def test_columns_are_created() -> None:
     check('canonical_id was added on first write', 'canonical_id' in cols)
     key = raw("SELECT dedupe_key FROM workouts WHERE id='strava-run1'")[0][0]
     check('dedupe_key is populated', bool(key), repr(key))
+
+
+def test_match_write_survives_not_null_columns() -> None:
+    print('\nA match for a workout that exists')
+    raw('DELETE FROM workout_matches WHERE user_id = %s', (USER,))
+    raw('DELETE FROM workouts WHERE user_id = %s', (USER,))
+    health_store.upsert_workouts(USER, [workout('strava')])
+    # upsert_match first inserts a stub row ON CONFLICT DO NOTHING so the FK
+    # holds. Postgres checks NOT NULL constraints before conflict resolution,
+    # so a stub without start_time/end_time/duration_minutes raised on every
+    # call — swallowed, and no match was ever written in production.
+    health_store.upsert_match(USER, {'importedWorkoutId': 'strava-run1', 'sessionKey': '1-Monday-0',
+                                     'matchConfidence': 'auto'})
+    rows = raw('SELECT session_key, match_confidence FROM workout_matches WHERE user_id = %s', (USER,))
+    check('the match row is written', rows == [('1-Monday-0', 'auto')], repr(rows))
+    stub = raw("SELECT source, activity_type, duration_minutes FROM workouts WHERE id='strava-run1'")[0]
+    check('the existing workout is untouched by the stub', stub == ('strava', 'Running', 60), repr(stub))
+    health_store.upsert_match(USER, {'importedWorkoutId': 'strava-run1', 'sessionKey': '1-Tuesday-0',
+                                     'matchConfidence': '1'})
+    rows = raw('SELECT session_key, match_confidence FROM workout_matches WHERE user_id = %s', (USER,))
+    check('a second write updates the same row', rows == [('1-Tuesday-0', '1')], repr(rows))
 
 
 def test_four_sources_collapse() -> None:
@@ -222,11 +243,13 @@ if __name__ == '__main__':
     setup_schema()
     try:
         test_columns_are_created()
+        test_match_write_survives_not_null_columns()
         test_four_sources_collapse()
         test_unrelated_and_idempotent()
         test_dedupe_can_be_disabled()
         test_raise_on_error()
     finally:
+        raw('DELETE FROM workout_matches WHERE user_id = %s', (USER,))
         raw('DELETE FROM workouts WHERE user_id = %s', (USER,))
 
     if _failures:
