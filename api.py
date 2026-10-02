@@ -3423,6 +3423,72 @@ def _calc_workout_trimp(workout: dict, max_hr: int = 190) -> float:
     return _zones.trimp(workout, float(max_hr))
 
 
+def _workouts_for_load(user_id: str, max_hr: int, since=None, backfill: int = 40) -> list[dict]:
+    """The library as summaries, each carrying its cached zone metrics.
+
+    TRIMP, the PMC and the weekly load used to read every workout with its
+    GPS track and HR series — ~40 MB of JSON for a year of watch activities,
+    several hundred MB once parsed — and the readiness score did it on every
+    Home open, which is what OOM-killed the 256 MB worker. Now the series are
+    read only for rows whose cache is missing or stale (a new zone-edge
+    version, a changed max HR), `backfill` of them per call, newest first,
+    and written back so the next call reads none. A row still waiting for its
+    turn is scored from its HR summary meanwhile, as summaries always were.
+    `since` drops rows the caller's window cannot use before any of that.
+    """
+    from datetime import date as _date
+    from src.analytics import zones as _zones
+
+    summaries = _health.get_workouts(user_id, summary_only=True)
+    if since is not None:
+        kept = []
+        for w in summaries:
+            try:
+                if _date.fromisoformat(str(w.get('date'))[:10]) >= since:
+                    kept.append(w)
+            except ValueError:
+                continue
+        summaries = kept
+    stale = [w for w in summaries if _zones.cached_metrics(w, max_hr) is None]
+    # A row with no HR summary has no series either: its metrics come from
+    # the summary alone, with nothing to read.
+    with_hr = [w for w in stale if (w.get('heartRate') or {}).get('avg')]
+    todo = {w['id'] for w in with_hr[:backfill]}          # summaries are newest first
+    by_id = {w['id']: w for w in summaries}
+    for row in _health.get_workouts_with_hr(user_id, sorted(todo)):
+        metrics = _zones.compute_metrics(row, max_hr)
+        by_id[row['id']]['metrics'] = metrics
+        _health.save_workout_metrics(user_id, row['id'], metrics)
+    for w in stale:
+        if w['id'] in todo or (w.get('heartRate') or {}).get('avg'):
+            continue
+        metrics = _zones.compute_metrics(w, max_hr)
+        w['metrics'] = metrics
+        _health.save_workout_metrics(user_id, w['id'], metrics)
+    return summaries
+
+
+def _matched_ids_in_window(matches: list, summaries: list, start, end) -> list[str]:
+    """Ids of the non-rejected matched workouts dated start <= date < end —
+    the window analytics/context.py applies — so only those rows are read
+    with their series."""
+    from datetime import date as _date
+    dates = {}
+    for w in summaries:
+        try:
+            dates[w['id']] = _date.fromisoformat(str(w.get('date'))[:10])
+        except (KeyError, TypeError, ValueError):
+            continue
+    out = []
+    for m in matches:
+        if m.get('matchConfidence') == 'rejected':
+            continue
+        d = dates.get(m.get('importedWorkoutId'))
+        if d is not None and start <= d < end:
+            out.append(m['importedWorkoutId'])
+    return out
+
+
 def _compute_pmc(workouts: list, max_hr: int, days: int = 90) -> list[dict]:
     """Compute CTL/ATL/TSB Performance Management Chart data."""
     import math as _math
@@ -3471,9 +3537,9 @@ def health_load_weekly():
     from collections import defaultdict
     from datetime import date as _date, timedelta as _td
 
-    workouts = _health.get_workouts(g.user_id)
     max_hr = _get_user_max_hr(g.user_id)
     cutoff = _date.today() - _td(weeks=12)
+    workouts = _workouts_for_load(g.user_id, max_hr, since=cutoff)
 
     weeks: dict = defaultdict(lambda: {'trimp': 0.0, 'sessions': 0})
     for w in workouts:
@@ -3498,8 +3564,9 @@ def health_load_weekly():
 @app.get('/api/health/load/pmc')
 @require_auth
 def health_load_pmc():
-    workouts = _health.get_workouts(g.user_id)
+    from datetime import date as _date, timedelta as _td
     max_hr = _get_user_max_hr(g.user_id)
+    workouts = _workouts_for_load(g.user_id, max_hr, since=_date.today() - _td(days=89))
     return jsonify(_compute_pmc(workouts, max_hr, days=90))
 
 
@@ -3510,8 +3577,10 @@ def health_load_pmc():
 def _score_tsb(user_id: str, flags: list[str]) -> int:
     """Score Training Stress Balance (form) as a readiness component (0–10 pts)."""
     try:
-        workouts = _health.get_workouts(user_id)
+        from datetime import date as _date, timedelta as _td
         max_hr = _get_user_max_hr(user_id)
+        # The 14-day PMC seeds from zero at its first day: nothing older counts.
+        workouts = _workouts_for_load(user_id, max_hr, since=_date.today() - _td(days=13))
         pmc = _compute_pmc(workouts, max_hr, days=14)
         if not pmc:
             return 5
@@ -3571,10 +3640,14 @@ def _program_analytics_inputs(user_id: str):
     if start is None:
         return None
 
+    from datetime import timedelta as _tdelta
     matches = _health.get_matches(user_id)
-    matched_ids = [m['importedWorkoutId'] for m in matches if m.get('matchConfidence') != 'rejected']
-    # Only matched workouts need their HR and GPS series; the rest of the
-    # library is summary-only. See health_store.get_workouts_by_ids.
+    # Only matched workouts inside the program's own span need their HR and
+    # GPS series (context.py windows everything to it anyway); the rest of
+    # the library is summary-only. Every match used to qualify, which read a
+    # spring's worth of long-run GPS tracks for an autumn program.
+    end = start + _tdelta(days=7 * len(program['weeks']))
+    matched_ids = _matched_ids_in_window(matches, _health.get_workouts(user_id, summary_only=True), start, end)
     workouts = _health.get_workouts_by_ids(user_id, matched_ids)
     profile = _db.get_user_profile(user_id) or {}
     return AnalyticsInputs(
@@ -3646,7 +3719,8 @@ def analytics_development():
 
     logs = _health.get_session_logs_by_uid(user_id)
     matches = _health.get_matches(user_id)
-    workouts = _health.get_workouts(user_id, summary_only=True)
+    max_hr = _get_user_max_hr(user_id)
+    workouts = _workouts_for_load(user_id, max_hr, since=from_date)
     performance = _health.get_performance_logs(user_id)
 
     import hashlib as _h
@@ -3655,7 +3729,7 @@ def analytics_development():
         [(a.get('activationId'), a.get('effectiveFrom'), a.get('effectiveTo')) for a in activations],
         sorted((uid, v.get('completedAt'), len(v.get('exercises') or {})) for uid, v in logs.items()),
         sorted((m.get('importedWorkoutId'), m.get('sessionUid'), m.get('matchConfidence')) for m in matches),
-        sorted((w.get('id'), w.get('date')) for w in workouts),
+        sorted((w.get('id'), w.get('date'), bool(w.get('metrics'))) for w in workouts),
         {k: len(v) for k, v in performance.items()},
         today.isoformat(), from_date.isoformat(), to_date.isoformat(),
     ], sort_keys=True, default=str).encode()).hexdigest()
@@ -3665,7 +3739,6 @@ def analytics_development():
         if cached and cached.get('session_hash') == digest:
             return jsonify(cached['data'])
 
-    max_hr = _get_user_max_hr(user_id)
     try:
         sex = (_db.get_user_profile(user_id) or {}).get('sex') or 'male'
     except Exception:
@@ -3853,7 +3926,8 @@ def progression_exercises():
 
     # Build matched-workout list for endurance exercise auto-population
     matches    = _health.get_matches(g.user_id)
-    workouts   = _health.get_workouts(g.user_id)
+    # Duration and the HR summary are all the tracker reads: no series.
+    workouts   = _health.get_workouts(g.user_id, summary_only=True)
     wo_map     = {wo['id']: wo for wo in workouts}
     matched_wos = [
         {'sessionKey': m['sessionKey'], 'sessionUid': m.get('sessionUid'),
@@ -3917,7 +3991,7 @@ def progression_sessions():
     program_data = _db.get_user_program(g.user_id) or {}
     program  = program_data.get('currentProgram') or program_data
     matches  = [m for m in _health.get_matches(g.user_id) if m['matchConfidence'] != 'rejected']
-    workouts = _health.get_workouts(g.user_id)
+    workouts = _health.get_workouts(g.user_id, summary_only=True)
     wo_map   = {wo['id']: wo for wo in workouts}
     ctx      = _progression_history(g.user_id, matches)
     return jsonify(_pt.compute_matched_sessions(

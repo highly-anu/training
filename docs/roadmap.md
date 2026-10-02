@@ -99,6 +99,17 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Workout metrics cache (2026-10-02)**: the readiness TSB component, the PMC,
+the weekly load, the progression routes and the program analytics all read
+every workout with its GPS track and HR series; with a year of watch
+activities that was a 327 MB peak on a 256 MB worker, an OOM kill per Home
+open, and a "CORS error" in the browser (Fly's proxy answers for the dead
+worker without headers). `workouts.metrics` (migration 007) caches each
+row's zone minutes and TRIMP per max HR and zone version;
+`api._workouts_for_load` fills it a few rows per request from the HR series
+alone; the program analytics read series only for matches inside the
+program's span. Peak is 93 MB on the same data. `test_workout_metrics.py`.
+
 **Development across programs (2026-10-01)**:
 
 - *Server*: `GET /api/analytics/development` (`src/analytics/development.py`,

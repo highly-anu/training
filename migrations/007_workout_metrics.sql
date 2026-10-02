@@ -1,0 +1,11 @@
+-- Per-workout metrics cache: what src/analytics/zones.compute_metrics
+-- produced for the row — zone minutes and TRIMP at one max HR and one
+-- zone-edge version ({"version", "maxHr", "method", "zoneMinutes", "totalMinutes", "trimp"}).
+-- Filled lazily by api._workouts_for_load, a few rows per request, and
+-- dropped by upsert_workouts when a re-import changes the series. The load
+-- routes used to read every HR series and GPS track to add up TRIMP; on a
+-- 256 MB worker that was an OOM kill per Home open once the library had a
+-- year of watch activities.
+-- health_store._ensure_metrics_column adds the column on first use for a
+-- deployment that got ahead of this file.
+ALTER TABLE workouts ADD COLUMN IF NOT EXISTS metrics JSONB;
