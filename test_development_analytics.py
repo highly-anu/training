@@ -19,7 +19,7 @@ def _history():
          'isActive': True, 'weekCount': 4, 'source': 'generate'},
         {'activationId': 1, 'versionId': 'vA', 'label': 'A', 'goalName': 'Wildman + SS',
          'sourceGoalIds': ['wildman_kettlebell', 'starting_strength', '_blended'],
-         'effectiveFrom': '2026-08-10', 'effectiveTo': '2026-09-06', 'isActive': False, 'weekCount': 6,
+         'effectiveFrom': '2026-08-10', 'effectiveTo': '2026-09-07', 'isActive': False, 'weekCount': 6,   # exclusive, like the store
          'source': 'put'},
     ]
     planned = {
