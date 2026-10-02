@@ -3,7 +3,7 @@ import Foundation
 /// `trainingcompanion://` URLs, parsed once, routed through `AppRouter`.
 ///
 /// The widgets open `today` and `session?key=…`; `program`, `analytics`
-/// (`?section=program|overview|workouts|progress|recovery`) and `profile`
+/// (`?section=program|overview|progress|blocks|recovery`) and `profile`
 /// exist so a simulator can be driven to any section from the command line
 /// and screenshotted — the Simulator window is not scriptable. Opening the
 /// URL from outside (`simctl openurl`) makes iOS ask "Open in Training

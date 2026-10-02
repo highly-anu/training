@@ -64,6 +64,10 @@ final class AppState: ObservableObject {
     @Published var programAnalytics: ProgramAnalytics? = nil
     @Published var isLoadingProgramAnalytics = false
     @Published var programAnalyticsError: String? = nil
+    /// `GET /analytics/development` — every block, not just this one (Analytics ▸ Development).
+    @Published var developmentAnalytics: DevelopmentAnalytics? = nil
+    @Published var isLoadingDevelopment = false
+    @Published var developmentError: String? = nil
 
     // MARK: - Catalog (lazy-loaded)
 
@@ -455,6 +459,22 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             programAnalyticsError = error.localizedDescription
             AppLogger.shared.logFromBackground("analytics: program fetch failed — \(error.localizedDescription)")
+        }
+    }
+
+    /// The development document. Loaded when the section is shown, and again
+    /// on pull-to-refresh; the server recomputes only when the history changed.
+    func loadDevelopmentAnalytics(fresh: Bool = false) async {
+        guard let api else { return }
+        isLoadingDevelopment = true
+        defer { isLoadingDevelopment = false }
+        do {
+            developmentAnalytics = try await api.fetchDevelopmentAnalytics(fresh: fresh)
+            developmentError = nil
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            developmentError = error.localizedDescription
+            AppLogger.shared.logFromBackground("analytics: development fetch failed — \(error.localizedDescription)")
         }
     }
 

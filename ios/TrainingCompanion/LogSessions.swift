@@ -38,28 +38,58 @@ enum LogSessions {
         return nil
     }
 
+    /// - Parameter currentProgramStart: the stored program's start date. A log
+    ///   whose planned date precedes it belongs to an earlier program even when
+    ///   its legacy key ("3-Friday-0") happens to resolve in this one — the key
+    ///   is program-relative and not unique across versions.
     static func rows(logs: [SessionLogEntry],
                      locate: (String) -> AppState.LocatedSession?,
                      exerciseNames: [String: String] = [:],
+                     currentProgramStart: Date? = nil,
                      now: Date = Date()) -> [LogSessionRow] {
         let dateFmt = DateFormatter()
         dateFmt.dateStyle = .medium
         dateFmt.timeStyle = .short
+        let dayFmt = DateFormatter()
+        dayFmt.dateStyle = .medium
+        dayFmt.timeStyle = .none
         let built: [LogSessionRow] = logs.compactMap { log in
             let logged = log.exercises.filter { !$0.value.isEmpty }
             let isComplete = log.completedAt != nil
             guard isComplete || !logged.isEmpty else { return nil }
-            let located = locate(log.sessionKey)
+            let plannedDay = log.plannedDate.flatMap(parseServerDate)
+            let precedesCurrent: Bool = {
+                guard let plannedDay, let currentProgramStart else { return false }
+                return plannedDay < currentProgramStart
+            }()
+            let located = precedesCurrent ? nil : locate(log.sessionKey)
             let session = located?.session
+            // Named by the current program when the key resolves there, else by
+            // the plan the server says it was logged against (an earlier
+            // program's session keeps its name after the program is replaced).
             let title = session.map { $0.archetype?.name ?? ModalityStyle.label(for: $0.modality) }
+                ?? log.plannedName
+                ?? log.plannedModality.map { ModalityStyle.label(for: $0) }
                 ?? "Session \(log.sessionKey)"
             let date = parseServerDate(log.completedAt)
             var parts: [String] = []
-            if let date { parts.append(dateFmt.string(from: date)) } else if !isComplete { parts.append("not completed") }
+            if let date {
+                parts.append(dateFmt.string(from: date))
+            } else if let plannedDay {
+                parts.append("planned \(dayFmt.string(from: plannedDay))")
+                if !isComplete { parts.append("not completed") }
+            } else if !isComplete {
+                parts.append("not completed")
+            }
             if let source = log.source, !source.isEmpty, source != "web", source != "manual" {
                 parts.append(source.replacingOccurrences(of: "_", with: " "))
             }
-            if let day = located?.dayName { parts.append("week \(located!.weekIndex + 1) · \(day)") }
+            if let day = located?.dayName {
+                parts.append("week \(located!.weekIndex + 1) · \(day)")
+            } else if log.plannedName != nil || log.plannedModality != nil {
+                parts.append("earlier program")
+                if let week = log.weekIndex, let day = log.dayName { parts.append("week \(week + 1) · \(day)") }
+            }
             let lines: [String] = logged.keys.sorted().compactMap { id in
                 guard let perf = logged[id] else { return nil }
                 let assignment = session?.exercises.first { $0.exercise?.id == id }

@@ -388,6 +388,14 @@ final class APIClient {
         return try JSONDecoder().decode(ProgramAnalytics.self, from: data)
     }
 
+    /// How the athlete has developed across programs — the history tables
+    /// read as one document. Twelve months by default; `fresh` forces a
+    /// recompute.
+    func fetchDevelopmentAnalytics(fresh: Bool = false) async throws -> DevelopmentAnalytics {
+        let data = try await get(fresh ? "/analytics/development?fresh=1" : "/analytics/development")
+        return try JSONDecoder().decode(DevelopmentAnalytics.self, from: data)
+    }
+
     // MARK: - Training load (server-computed, the same numbers the web shows)
 
     func fetchLoadPMC() async throws -> [ServerPMCEntry] {

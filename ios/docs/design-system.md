@@ -762,7 +762,7 @@ answer.
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Current · History |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
-| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Recovery |
+| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Blocks · Recovery |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
 
 `AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
@@ -1062,9 +1062,60 @@ selection; the sheet is the one methodology reference on the phone.
   exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
   resolves opens the session detail.
 
-Analytics keeps Program · Overview · Progress · Recovery: it interprets, it
-no longer lists. `router.showLog(_:)` and `trainingcompanion://log?section=…`
-name the sections (§6.9).
+Analytics keeps Program · Overview · Progress · Blocks · Recovery: it
+interprets, it no longer lists. `router.showLog(_:)` and
+`trainingcompanion://log?section=…` name the sections (§6.9).
+
+A log of an earlier program is named by the server (`planned_name`,
+`planned_modality`, `planned_date`, `week_index`, `day_name` on
+`GET /health/sessions/recent`, resolved through `planned_sessions`), so the
+row reads "Heavy/Light/Medium · 25 Sep · earlier program · week 3 · Friday"
+instead of "Session 3-Friday-0". The legacy key is program-relative and not
+unique across versions — "3-Friday-0" exists in the current program too — so
+a planned date before the current program's start overrides the key lookup:
+the row keeps the earlier plan's name and does not open this program's
+session of the same key (`LogSessionsTests`).
 
 Rules: the record is listed once, here; Analytics never grows a list again;
 a suggestion is decided here or on Today, through the same row.
+
+---
+
+### 6.20 Blocks (Development Across Programs)
+
+**Every block, not just this one.** `Views/AnalyticsDevelopmentTab.swift`,
+the fourth Analytics section. Program is the current block measured against
+what it is for; Blocks is how the athlete has developed across programs —
+the question the history tables exist to answer. The server reads them as
+one document (`GET /api/analytics/development`, `src/analytics/development.py`)
+and the web's Analytics ▸ Development lays out the same one; nothing is
+computed on the phone (`DevelopmentModels.swift` decodes it tolerantly,
+section by section, like `ProgramAnalyticsModels`).
+
+Four cards, each an `AnalyticsCard` (§6.15):
+
+- *Blocks*: a strip across the top — each activation's share of the span in
+  its colour — then a row per block: methodology names, span, weeks, sessions
+  completed of those the block reached, "never reached" for the rest, and a
+  `current` capsule on the active one.
+- *Lifts across blocks*: a chip row of every lift (and currency — rounds,
+  minutes, km) with points in the window; the chart plots the heaviest
+  completed set's est-1RM per session over real dates with the blocks as
+  `RectangleMark` bands; a deload point is hollow. Under it, the trend in
+  words and one row per block: sessions, first → last, best, Δ.
+- *Load across blocks*: weekly TRIMP as bars coloured by block; hidden
+  when no workout carried load.
+- *Standards over time*: each standard's PR history as "value (level, date)
+  → …" with the latest level and levels gained; hidden when no PR is logged.
+
+**Block colour is positional**: `DevelopmentAnalytics.palette` (indigo,
+emerald, amber, pink, sky — the web's `BLOCK_PALETTE`) indexed by the
+block's position in the timeline, so the strip, the bands, the bars and the
+per-block rows agree. One block shows the cards and a note pointing at
+Progress; no history shows an empty state pointing at Program.
+
+**The label is "Blocks", not "Development"**: five segments share the width
+and the segmented control truncates "Development" to "Develop…" (§6.8). The
+enum case is still `.development`; the deep link is
+`trainingcompanion://analytics?section=blocks`; `router.showAnalytics(.development)`
+from anywhere else (§6.9).

@@ -29,6 +29,7 @@ import { PMCChart } from '@/components/bio/PMCChart'
 import { ProgramTab } from '@/components/analytics/ProgramTab'
 import { ProgressionTab } from '@/components/progression/ProgressionTab'
 import { RecoveryTab } from '@/components/bio/RecoveryTab'
+import { DevelopmentTab } from '@/components/analytics/DevelopmentTab'
 import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -39,7 +40,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'program' | 'progress' | 'load' | 'recovery'
+type SubTab = 'program' | 'progress' | 'development' | 'load' | 'recovery'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
 // Analytics is the interpretation: what the program is for (Program), how the
@@ -49,6 +50,7 @@ type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'program',  label: 'Program'  },
   { id: 'progress', label: 'Progress' },
+  { id: 'development', label: 'Development' },
   { id: 'load',     label: 'Load'     },
   { id: 'recovery', label: 'Recovery' },
 ]
@@ -621,6 +623,7 @@ export function WorkoutAnalytics() {
             <ProgressionTab />
           </div>
         )}
+        {activeTab === 'development' && <DevelopmentTab />}
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}
       </div>

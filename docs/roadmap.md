@@ -99,6 +99,33 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Development across programs (2026-10-01)**:
+
+- *Server*: `GET /api/analytics/development` (`src/analytics/development.py`,
+  pure over its inputs, cached in `progression_snapshots` on a digest of the
+  activations, logs, matches, workouts and PRs it read; last 365 days by
+  default, `from`/`to` optional). `blocks` is the activation timeline with
+  each block's planned and completed sessions and completion %; `lifts` and
+  `currencies` are every logged series across the whole span, each point
+  keyed to its block through `session_uid`, with per-block first / last /
+  best / Δ and a trend over non-deload points; `load` is weekly TRIMP with
+  the week's block; `benchmarks` the level ladder per PR date.
+  `test_development_analytics.py` runs it on a throwaway two-block history.
+- *Web*: Analytics ▸ Development (`components/analytics/DevelopmentTab.tsx`,
+  `lib/developmentShaping.ts` with its test): the block strip and cards, lifts
+  across blocks with a picker, block bands (`ReferenceArea`) and the per-block
+  table, weekly TRIMP coloured by block, standards over time; one block says
+  so and points at Progress. Home's Development card links to it.
+- *iOS*: Analytics ▸ Blocks (`Views/AnalyticsDevelopmentTab.swift`,
+  `DevelopmentModels.swift`, Swift Charts) — the same document; "Blocks"
+  because five segments truncate "Development" (design-system §6.20).
+  `DevelopmentCodableTests` decodes a real response with a malformed lift.
+- *Also*: `GET /health/sessions/recent` names each log from the
+  `planned_sessions` row its `session_uid` resolves to, and the phone's
+  Log ▸ Sessions shows earlier programs' logs by name — a planned date before
+  the current program's start overrides a legacy key that resolves to the
+  wrong session (`LogSessionsTests`).
+
 **Follow-up tranche (2026-10-01)**:
 
 - *Partial regenerates continue the numbering*: `POST /programs/generate`
