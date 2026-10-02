@@ -259,6 +259,22 @@ training data; only sign-in goes to Supabase.
   is an SSRF primitive). Always answers 200 except on a bad secret — Garmin disables
   endpoints that keep erroring. Work happens on a worker thread against the durable
   `garmin_webhook_events` queue, because gunicorn runs `--workers 1`.
+- **Load maths never reads a series.** `workouts.metrics`
+  (`migrations/007_workout_metrics.sql`, lazily added by
+  `health_store._ensure_metrics_column`) caches `zones.compute_metrics` — zone
+  minutes and TRIMP at one max HR and one zone-edge version — per row.
+  `api._workouts_for_load` serves readiness (TSB), the PMC, the weekly load
+  and the development document from summaries, reading the HR series
+  (`get_workouts_with_hr`, never the GPS track) only for rows whose cache is
+  missing or stale, 40 per call, newest first, and writing them back; a
+  re-import that changes the series drops the row's cache. Before this the
+  TSB component of readiness read every workout with its GPS track on every
+  Home open — ~40 MB of JSON, a 327 MB peak once parsed — and OOM-killed the
+  256 MB worker, which the browser reports as a CORS error because Fly's
+  proxy answers the dead worker with a header-less 502. The program analytics
+  read full rows only for matches dated inside the program's own span
+  (`_matched_ids_in_window`); the progression routes read summaries.
+  `test_workout_metrics.py` pins all three.
 - **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
   carries. It used to rebuild the blob, which is why every iOS save wiped
   `activeGoalId`. `performanceLogs` is not a profile key: PRs and the
@@ -540,6 +556,7 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 ```bash
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
 .venv/bin/python test_development_analytics.py               # development across programs, on a throwaway history (no DB)
+SUPABASE_URL='' .venv/bin/python test_workout_metrics.py     # the per-workout metrics cache and the load routes' reader (no DB)
 ```
 
 Before anything that changes production structure (a migration, a backfill):

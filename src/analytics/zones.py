@@ -106,7 +106,21 @@ def zone_fractions(workout: dict, max_hr: float) -> dict:
 
 
 def zone_minutes(workout: dict, max_hr: float) -> dict:
-    """Minutes per zone for one workout, plus how they were obtained."""
+    """Minutes per zone for one workout, plus how they were obtained — from
+    the row's cached metrics when they were computed for this max HR and
+    these edges, else from the series (or the summary estimate)."""
+    cached = cached_metrics(workout, max_hr)
+    if cached is not None:
+        return {
+            'minutes': [float(x) for x in cached['zoneMinutes']],
+            'method': cached.get('method', 'samples'),
+            'total_minutes': float(cached.get('totalMinutes') or workout.get('durationMinutes') or 0),
+        }
+    return _zone_minutes_raw(workout, max_hr)
+
+
+def _zone_minutes_raw(workout: dict, max_hr: float) -> dict:
+    """Minutes per zone computed from what the row carries, cache ignored."""
     split = zone_fractions(workout, max_hr)
     minutes = float(workout.get('durationMinutes') or 0)
     return {
@@ -142,3 +156,44 @@ def _seconds_between(a: str, b: str) -> float:
 
 def _norm_cdf(x: float, mean: float, sigma: float) -> float:
     return 0.5 * (1.0 + math.erf((x - mean) / (sigma * math.sqrt(2))))
+
+
+# ── Per-workout cache ─────────────────────────────────────────────────────────
+# A workout's zone minutes depend on its HR series, the athlete's max HR and
+# the zone edges' version — nothing else. health_store keeps the result on
+# the row (`workouts.metrics`), so the load maths over a whole library reads
+# one small object per workout instead of every HR series and GPS track;
+# api._workouts_for_load fills the cache a few rows at a time.
+
+def compute_metrics(workout: dict, max_hr: float) -> dict:
+    """What to cache for one workout, computed from its series (or, without
+    one, from its summary) — never from an existing cache."""
+    zm = _zone_minutes_raw(workout, max_hr)
+    t = 0.0 if zm['method'] == 'none' else sum(m * w for m, w in zip(zm['minutes'], banister_weights()))
+    return {
+        'version': version(),
+        'maxHr': int(round(float(max_hr))),
+        'method': zm['method'],
+        'zoneMinutes': [round(m, 3) for m in zm['minutes']],
+        'totalMinutes': round(float(zm['total_minutes']), 3),
+        'trimp': round(t, 3),
+    }
+
+
+def cached_metrics(workout: dict, max_hr: float) -> dict | None:
+    """The row's cached metrics if they were computed for this max HR and
+    these zone edges; None when absent, stale or malformed."""
+    m = workout.get('metrics')
+    if not isinstance(m, dict):
+        return None
+    try:
+        if int(m.get('version', -1)) != version():
+            return None
+        if int(m.get('maxHr', -1)) != int(round(float(max_hr))):
+            return None
+        if not isinstance(m.get('zoneMinutes'), list) or len(m['zoneMinutes']) != 5:
+            return None
+        float(m.get('trimp', 0))
+    except (TypeError, ValueError):
+        return None
+    return m

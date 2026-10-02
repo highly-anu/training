@@ -12,6 +12,7 @@ def init_db() -> None:
 # ── Workouts ──────────────────────────────────────────────────────────────────
 
 _DEDUPE_COLUMNS_READY: bool | None = None   # None = not yet checked
+_METRICS_COLUMN_READY: bool | None = None   # None = not yet checked
 
 
 def _ensure_dedupe_columns(cur) -> bool:
@@ -36,6 +37,27 @@ def _ensure_dedupe_columns(cur) -> bool:
     except Exception:
         _DEDUPE_COLUMNS_READY = False
     return _DEDUPE_COLUMNS_READY
+
+
+def _ensure_metrics_column(cur) -> bool:
+    """Add the per-workout metrics cache column if it is missing.
+
+    Mirrors migrations/007_workout_metrics.sql the way _ensure_dedupe_columns
+    mirrors 003. `metrics` holds what src/analytics/zones.compute_metrics
+    produced for the row — zone minutes and TRIMP at one max HR and one
+    zone-edge version — so the load maths over a whole library reads one
+    small object per workout instead of its HR series and GPS track. Reads
+    fall back to the plain query when the DDL is not permitted.
+    """
+    global _METRICS_COLUMN_READY
+    if _METRICS_COLUMN_READY is not None:
+        return _METRICS_COLUMN_READY
+    try:
+        cur.execute('ALTER TABLE workouts ADD COLUMN IF NOT EXISTS metrics JSONB')
+        _METRICS_COLUMN_READY = True
+    except Exception:
+        _METRICS_COLUMN_READY = False
+    return _METRICS_COLUMN_READY
 
 
 def _load_dedupe_candidates(cur, user_id: str, workouts: list[dict]) -> list[dict]:
@@ -123,6 +145,8 @@ def _apply_merge(cur, user_id: str, canonical_id: str, updates: dict) -> None:
         if hr.get('samples'):
             sets.append('hr_samples = %s::jsonb')
             params.append(json.dumps(hr['samples']))
+            if _METRICS_COLUMN_READY:
+                sets.append('metrics = NULL')   # a new series, new zone minutes
 
     if not sets:
         return
@@ -156,6 +180,16 @@ def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
                 # deployment) we still store everything — just without folding
                 # duplicates together.
                 has_dedupe_columns = _ensure_dedupe_columns(cur)
+                has_metrics = _ensure_metrics_column(cur)
+                # A re-import with a different series or duration makes the
+                # cached zone minutes wrong; drop them and the next load read
+                # recomputes. Unchanged rows keep theirs.
+                metrics_set = (',\n                            '
+                               'metrics = CASE WHEN workouts.hr_samples IS DISTINCT FROM EXCLUDED.hr_samples '
+                               'OR workouts.duration_minutes IS DISTINCT FROM EXCLUDED.duration_minutes '
+                               'OR workouts.hr_avg IS DISTINCT FROM EXCLUDED.hr_avg '
+                               'THEN NULL ELSE workouts.metrics END'
+                               if has_metrics else '')
                 if dedupe and has_dedupe_columns:
                     existing = _load_dedupe_candidates(cur, user_id, workouts)
                     actions = workout_dedupe.plan_upserts(workouts, existing)
@@ -206,7 +240,7 @@ def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
                             gps_track            = EXCLUDED.gps_track,
                             elevation_gain       = EXCLUDED.elevation_gain,
                             elevation_loss       = EXCLUDED.elevation_loss,
-                            hr_samples           = EXCLUDED.hr_samples{dedupe_set}
+                            hr_samples           = EXCLUDED.hr_samples{metrics_set}{dedupe_set}
                     ''', [
                         # .get() for everything the client may legitimately omit:
                         # the iOS model carries no endTime, and a KeyError here
@@ -368,7 +402,8 @@ def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
                 # pulled every GPS track and HR series into memory to throw them
                 # away — 7 MB of JSON on a 256 MB box, which OOM-killed the
                 # worker once the library grew past a hundred workouts.
-                cols = SUMMARY_COLUMNS if summary_only else '*'
+                has_metrics = _ensure_metrics_column(cur)
+                cols = (SUMMARY_COLUMNS + (', metrics' if has_metrics else '')) if summary_only else '*'
                 cur.execute(
                     f'SELECT {cols} FROM workouts WHERE {where} ORDER BY date DESC',
                     (user_id,),
@@ -402,6 +437,46 @@ def get_workouts_by_ids(user_id: str, ids: list[str]) -> list[dict]:
         return []
 
 
+def get_workouts_with_hr(user_id: str, ids: list[str]) -> list[dict]:
+    """Summary columns plus the HR series — never the GPS track — for a named
+    set of workouts: what computing a workout's zone minutes needs and no
+    more. The load routes call it for the few rows whose metrics cache is
+    missing or stale (api._workouts_for_load). The GPS tracks are the bulk of
+    the library, and reading them to add up TRIMP is what the readiness score
+    did on every Home open."""
+    from src.db import get_conn
+    wanted = [i for i in (ids or []) if i]
+    if not wanted:
+        return []
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                has_metrics = _ensure_metrics_column(cur)
+                cols = SUMMARY_COLUMNS + ', hr_samples' + (', metrics' if has_metrics else '')
+                cur.execute(f'SELECT {cols} FROM workouts WHERE user_id = %s AND id = ANY(%s::text[])',
+                            (user_id, wanted))
+                rows = cur.fetchall()
+        return [_row_to_workout(row, summary_only=False) for row in rows]
+    except Exception:
+        return []
+
+
+def save_workout_metrics(user_id: str, workout_id: str, metrics: dict) -> bool:
+    """Cache one workout's computed metrics (zones.compute_metrics) on its row."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                if not _ensure_metrics_column(cur):
+                    return False
+                cur.execute('UPDATE workouts SET metrics = %s::jsonb WHERE id = %s AND user_id = %s',
+                            (json.dumps(metrics), workout_id, user_id))
+            conn.commit()
+        return True
+    except Exception:
+        return False
+
+
 def _row_to_workout(row, summary_only: bool = False) -> dict:
     dist = None
     if row['distance_value'] is not None:
@@ -414,13 +489,20 @@ def _row_to_workout(row, summary_only: bool = False) -> dict:
         hr_samples = []
         raw_data = {}
     else:
-        gps = row['gps_track'] if isinstance(row['gps_track'], list) else (
-            json.loads(row['gps_track']) if row['gps_track'] else None
-        )
-        hr_raw = row['hr_samples']
+        # .get: a series-limited read (get_workouts_with_hr) selects no
+        # gps_track or raw_data at all.
+        gps_raw = row.get('gps_track')
+        gps = gps_raw if isinstance(gps_raw, list) else (json.loads(gps_raw) if gps_raw else None)
+        hr_raw = row.get('hr_samples')
         hr_samples = hr_raw if isinstance(hr_raw, list) else (json.loads(hr_raw) if hr_raw else [])
-        raw_raw = row['raw_data']
+        raw_raw = row.get('raw_data')
         raw_data = raw_raw if isinstance(raw_raw, dict) else (json.loads(raw_raw or '{}'))
+    metrics = row.get('metrics')
+    if isinstance(metrics, str):
+        try:
+            metrics = json.loads(metrics)
+        except ValueError:
+            metrics = None
     return {
         'id':                 row['id'],
         'source':             row['source'],
@@ -441,6 +523,9 @@ def _row_to_workout(row, summary_only: bool = False) -> dict:
         'gpsTrack':  gps,
         'elevation': elev,
         'rawData':   raw_data,
+        # The cached zone metrics (zones.compute_metrics), when the row has
+        # them for some max HR and zone version; readers check both.
+        'metrics':   metrics if isinstance(metrics, dict) else None,
     }
 
 
