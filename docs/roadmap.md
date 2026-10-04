@@ -101,17 +101,21 @@ Shipped items from the absorbed documents, so nobody re-plans them.
 
 **Session logs (2026-10-04)**: production's `session_logs` never had
 `exercise_timeline`, the column `health_store.upsert_session_log` has inserted
-since 2026-04-04, so the server's INSERT died on `UndefinedColumn` and the
-swallowed error meant it stored no log at all — the web's, and the phone's
-since 2026-10-01, when it stopped upserting the table over PostgREST (which
-never named the column) — while the PUT routes answered `{saved: ...}`. The
-newest log in production is dated 2026-06-10. The column was added by hand
-after `scripts/backup_prod.sh` (additive; the 46 rows untouched);
-`migrations/008_session_log_timeline.sql` records it,
-`health_store._ensure_timeline_column` adds it on first use for any
+since 2026-04-04, so once that writer was live there its INSERT died on
+`UndefinedColumn` and the swallowed error meant it stored no log at all, while
+the PUT routes answered `{saved: ...}`. That was every completion, set log,
+note and watch timeline either client sent through the server. The last `web`
+or `manual` log in production is dated 2026-04-07; every later row, to
+2026-06-10, is a `fit_file` or `watch` one — the sources the phone's own
+PostgREST upserts wrote, which never named the column (`d38e401` removed them
+on 2026-10-01). The column was added by hand after `scripts/backup_prod.sh`
+(additive; the 46 rows untouched); `migrations/008_session_log_timeline.sql`
+records it, `health_store._ensure_timeline_column` adds it on first use for any
 deployment that is behind, and `test_program_history_sql.py` now builds its
 `session_logs` without the column, which is why it had stayed green. Logs sent
-while the column was missing are not on the server.
+while the column was missing are not on the server, and neither client keeps
+one it could not save (both hold them in memory and replace them from the
+server on load), so they have to be entered again.
 
 **Match writes, and the Uphill replica (2026-10-02)**: `health_store.upsert_match`'s
 stub insert violated `workouts.start_time NOT NULL` before Postgres ever
@@ -495,7 +499,8 @@ are `async` now, with the reason in the file.
 **Watch and iOS**: the full watch bio and GPS pipeline — `CLLocationManager`
 and `HKWorkoutRouteBuilder` on the watch, HR sample arrays, per-set
 `startOffset`, `transferFile` for large payloads, `exercise_timeline` on the
-server; watch modality colours match `modalityColors.ts`; program history on
+server (its production column only arrived on 2026-10-04, see Session logs);
+watch modality colours match `modalityColors.ts`; program history on
 the Program tab; `AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`,
 `AppSubTabs`.
 

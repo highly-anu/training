@@ -62,11 +62,12 @@ def _ensure_metrics_column(cur) -> bool:
 
 
 def _ensure_timeline_column(cur) -> bool:
-    """Add session_logs.exercise_timeline if it is missing; mirrors migrations/008.
+    """Add session_logs.exercise_timeline when missing; report whether it exists.
 
-    Production's table never had it, and upsert_session_log swallows errors, so
-    every log the server received was dropped while the PUT routes answered
-    {saved: ...}. Returns False when the DDL is not permitted.
+    Mirrors migrations/008_session_log_timeline.sql the way _ensure_metrics_column
+    mirrors 007. upsert_session_log always names the column and swallows errors,
+    so a table without it would drop every log without a sign. Returns False
+    when the DDL is not permitted.
     """
     global _TIMELINE_COLUMN_READY
     if _TIMELINE_COLUMN_READY is not None:
