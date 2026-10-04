@@ -980,10 +980,17 @@ def upsert_match(user_id: str, match: dict) -> None:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 # Ensure the workout row exists so FK constraints are satisfied.
-                # If the parse-time upsert failed silently, this creates a minimal stub.
+                # If the parse-time upsert failed silently, this creates a minimal
+                # stub. Every NOT NULL column must be given a value even though
+                # the row almost always exists: Postgres checks NOT NULL before
+                # it looks for the conflict, so a stub that left start_time NULL
+                # raised on every call — and the except below swallowed it, which
+                # is how no match was written in production from 2026-06-10 to
+                # 2026-10-02 while the suggestions table (no stub) kept filling.
                 cur.execute('''
-                    INSERT INTO workouts (id, user_id, source, date, activity_type)
-                    VALUES (%s, %s, 'fit_file', CURRENT_DATE, 'unknown')
+                    INSERT INTO workouts (id, user_id, source, date, start_time, end_time,
+                                          duration_minutes, activity_type)
+                    VALUES (%s, %s, 'fit_file', CURRENT_DATE, NOW(), NOW(), 0, 'unknown')
                     ON CONFLICT (id, user_id) DO NOTHING
                 ''', (workout_id, user_id))
                 # session_uid is the durable link: it names the session in the

@@ -109,7 +109,10 @@ def _blocks(inputs: DevelopmentInputs) -> list[dict]:
     for a in sorted(inputs.activations, key=lambda a: (str(a.get('effectiveFrom')), a.get('activationId') or 0)):
         vid = a['versionId']
         start = _as_date(a.get('effectiveFrom'))
-        end = _as_date(a.get('effectiveTo')) or inputs.today
+        # program_activations.effective_to is exclusive (the successor's
+        # effective_from); the block's own last day is the day before.
+        end_excl = _as_date(a.get('effectiveTo'))
+        end = (end_excl - timedelta(days=1)) if end_excl else inputs.today
         if start is None or end < inputs.window_from or start > inputs.window_to:
             continue
         rows = inputs.planned.get(vid) or []
@@ -128,7 +131,7 @@ def _blocks(inputs: DevelopmentInputs) -> list[dict]:
             'methodologies': [{'id': i, 'name': inputs.philosophy_names.get(i, i.replace('_', ' ').title())}
                               for i in ids],
             'from': start.isoformat(),
-            'to': (_as_date(a.get('effectiveTo')) or None) and end.isoformat(),
+            'to': end.isoformat() if end_excl else None,
             'isActive': bool(a.get('isActive')),
             'weeks': a.get('weekCount') or 0,
             'plannedTotal': len(rows),
