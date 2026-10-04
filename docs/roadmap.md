@@ -99,6 +99,20 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Session logs (2026-10-04)**: production's `session_logs` never had
+`exercise_timeline`, the column `health_store.upsert_session_log` has inserted
+since 2026-04-04, so the server's INSERT died on `UndefinedColumn` and the
+swallowed error meant it stored no log at all — the web's, and the phone's
+since 2026-10-01, when it stopped upserting the table over PostgREST (which
+never named the column) — while the PUT routes answered `{saved: ...}`. The
+newest log in production is dated 2026-06-10. The column was added by hand
+after `scripts/backup_prod.sh` (additive; the 46 rows untouched);
+`migrations/008_session_log_timeline.sql` records it,
+`health_store._ensure_timeline_column` adds it on first use for any
+deployment that is behind, and `test_program_history_sql.py` now builds its
+`session_logs` without the column, which is why it had stayed green. Logs sent
+while the column was missing are not on the server.
+
 **Match writes, and the Uphill replica (2026-10-02)**: `health_store.upsert_match`'s
 stub insert violated `workouts.start_time NOT NULL` before Postgres ever
 reached its `ON CONFLICT DO NOTHING`, and the swallowed error meant no match

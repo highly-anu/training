@@ -1,0 +1,11 @@
+-- session_logs.exercise_timeline: the per-exercise clock a watch session
+-- records, [{"exerciseId", "startOffset", "endOffset", "avgHRDuring"}].
+-- supabase/schema.sql has declared it since 2026-04-04 and
+-- health_store.upsert_session_log has inserted it ever since, but a table
+-- created before that never got an ALTER — production's didn't. Every write
+-- died on UndefinedColumn and the writer's `except` swallowed it, so the PUT
+-- routes answered {saved: ...} for logs nothing had stored. Applied to
+-- production by hand on 2026-10-04, after scripts/backup_prod.sh.
+-- health_store._ensure_timeline_column adds the column on first use for a
+-- deployment that got ahead of this file.
+ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS exercise_timeline JSONB;

@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS session_logs (
 -- ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'web';
 -- ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS avg_hr REAL;
 -- ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS peak_hr REAL;
--- ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS exercise_timeline JSONB;
+-- ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS exercise_timeline JSONB;   -- migrations/008
 
 ALTER TABLE session_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users access own session logs"

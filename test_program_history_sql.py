@@ -28,6 +28,7 @@ os.environ['DATABASE_URL'] = TEST_DSN
 os.environ['SUPABASE_URL'] = ''
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from src import health_store
 from src import program_history as ph
 from src import workout_matcher as wm
 
@@ -82,12 +83,14 @@ def reset() -> None:
                 exercises JSONB NOT NULL DEFAULT '{}', notes TEXT DEFAULT '',
                 fatigue_rating INTEGER, completed_at TIMESTAMPTZ,
                 source TEXT DEFAULT 'web', avg_hr REAL, peak_hr REAL,
-                exercise_timeline JSONB, session_uid TEXT,
+                -- no exercise_timeline: production never had it; the writer adds it
+                session_uid TEXT,
                 log_key TEXT GENERATED ALWAYS AS (COALESCE(session_uid, session_key)) STORED,
                 PRIMARY KEY (user_id, log_key));
         ''')
     ph._TABLES_CREATED = False
     ph._ensure_tables()
+    health_store._TIMELINE_COLUMN_READY = None
 
 
 def monday_of(d: date) -> date:
@@ -507,6 +510,55 @@ def test_manual_confirm_resolves_a_uid() -> None:
     check('a rejection clears the uid', row and row[0] is None, str(row))
 
 
+def test_session_log_timeline_column_is_added_on_demand() -> None:
+    """Production's session_logs never had exercise_timeline.
+
+    The writer inserts it and its `except` swallows the failure, so every log
+    the server received was dropped while the PUT routes answered {saved: ...}.
+    This suite's own DDL used to declare the column, which is why nothing here
+    noticed; reset() now builds the table the way production has it.
+    """
+    print('\nsession log timeline on a table that lacks the column')
+    reset()
+    timeline = [{'exerciseId': 'back_squat', 'startOffset': 0, 'endOffset': 600,
+                 'avgHRDuring': 128}]
+
+    def has_column() -> bool:
+        with conn.cursor() as c:
+            c.execute("SELECT 1 FROM information_schema.columns WHERE table_name = "
+                      "'session_logs' AND column_name = 'exercise_timeline'")
+            return c.fetchone() is not None
+
+    check('the test schema is production-shaped: no exercise_timeline', not has_column())
+
+    health_store.upsert_session_log(U, {
+        'sessionKey': '1-Monday-0',
+        'exercises': {'back_squat': {'sets': [{'completed': True, 'weightKg': 100,
+                                               'repsActual': 5}]}},
+        'notes': 'with a timeline', 'completedAt': '2026-06-01T10:00:00+00:00',
+        'exerciseTimeline': timeline,
+    })
+    with conn.cursor() as c:
+        c.execute('SELECT count(*) FROM session_logs WHERE user_id = %s', (U,))
+        stored = c.fetchone()[0]
+    check('the log was stored, not swallowed', stored == 1, str(stored))
+    check('the column was added on first use', has_column())
+
+    got = health_store.get_session_logs(U).get('1-Monday-0', {})
+    check('its timeline round-trips through get_session_logs',
+          got.get('exerciseTimeline') == timeline, str(got.get('exerciseTimeline')))
+
+    # A later save that carries no timeline (a notes edit, the phone) keeps it.
+    health_store.upsert_session_log(U, {
+        'sessionKey': '1-Monday-0', 'exercises': {}, 'notes': 'edited',
+        'completedAt': '2026-06-01T10:05:00+00:00',
+    })
+    again = health_store.get_session_logs(U).get('1-Monday-0', {})
+    check('the later write landed', again.get('notes') == 'edited', str(again.get('notes')))
+    check('and did not erase the timeline',
+          again.get('exerciseTimeline') == timeline, str(again.get('exerciseTimeline')))
+
+
 def test_logs_no_longer_merge_across_programs() -> None:
     """The corruption migrations/006 exists to stop.
 
@@ -665,6 +717,7 @@ if __name__ == '__main__':
     test_match_and_store_without_history()
     test_match_and_store_with_history()
     test_manual_confirm_resolves_a_uid()
+    test_session_log_timeline_column_is_added_on_demand()
     test_logs_no_longer_merge_across_programs()
     test_progression_sees_finished_blocks()
 

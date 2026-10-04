@@ -13,6 +13,7 @@ def init_db() -> None:
 
 _DEDUPE_COLUMNS_READY: bool | None = None   # None = not yet checked
 _METRICS_COLUMN_READY: bool | None = None   # None = not yet checked
+_TIMELINE_COLUMN_READY: bool | None = None  # None = not yet checked
 
 
 def _ensure_dedupe_columns(cur) -> bool:
@@ -58,6 +59,24 @@ def _ensure_metrics_column(cur) -> bool:
     except Exception:
         _METRICS_COLUMN_READY = False
     return _METRICS_COLUMN_READY
+
+
+def _ensure_timeline_column(cur) -> bool:
+    """Add session_logs.exercise_timeline if it is missing; mirrors migrations/008.
+
+    Production's table never had it, and upsert_session_log swallows errors, so
+    every log the server received was dropped while the PUT routes answered
+    {saved: ...}. Returns False when the DDL is not permitted.
+    """
+    global _TIMELINE_COLUMN_READY
+    if _TIMELINE_COLUMN_READY is not None:
+        return _TIMELINE_COLUMN_READY
+    try:
+        cur.execute('ALTER TABLE session_logs ADD COLUMN IF NOT EXISTS exercise_timeline JSONB')
+        _TIMELINE_COLUMN_READY = True
+    except Exception:
+        _TIMELINE_COLUMN_READY = False
+    return _TIMELINE_COLUMN_READY
 
 
 def _load_dedupe_candidates(cur, user_id: str, workouts: list[dict]) -> list[dict]:
@@ -559,6 +578,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                _ensure_timeline_column(cur)
                 exercises_raw = log.get('exercises', {})
                 if isinstance(exercises_raw, str):
                     try:

@@ -269,7 +269,14 @@ training data; only sign-in goes to Supabase.
   import and every confirm from either client was lost. The stub now fills
   every NOT NULL column; `test_dedupe_sql.py` writes a match against the
   production-shaped schema. When a store writer swallows exceptions, test it
-  against a schema with the real constraints.
+  against a schema with the real constraints. Session logs fell into the same
+  hole from the other side: production's `session_logs` never got
+  `exercise_timeline` (`migrations/008`, `health_store._ensure_timeline_column`),
+  so every log sent through the server died on it — the web's always, the
+  phone's from 2026-10-01, when it stopped upserting the table itself — until
+  the column was added on 2026-10-04, and `test_program_history_sql.py` stayed
+  green because its own DDL declared the column. Keep a test schema to what
+  production has and let the lazy ensure add the rest.
 - **Load maths never reads a series.** `workouts.metrics`
   (`migrations/007_workout_metrics.sql`, lazily added by
   `health_store._ensure_metrics_column`) caches `zones.compute_metrics` — zone
