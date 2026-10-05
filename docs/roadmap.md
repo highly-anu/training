@@ -3,6 +3,8 @@
 The single backlog for this project. Last verified against the code and the
 production database on 2026-09-30; the information-architecture items were added
 from the functionality review of 2026-10-01 (`information-architecture.md`).
+The Garmin items (1, 2 and 4) were added on 2026-10-05 from the Connect IQ
+connection plan, after a read-only look at production.
 
 This replaces the phased build roadmap (phases 0–8, all complete), and absorbs
 `next_features.md` (March), `model-generalization-gaps.md` (April),
@@ -33,11 +35,128 @@ deferred is under *Later*.
 
 | # | Item | Priority | Complexity | Area |
 |---|------|----------|------------|------|
-| 1 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
+| 1 | Connect IQ pairing-flow defects | P2 | S | watch, web |
+| 2 | Garmin wellness via Connect IQ | P2 | L | watch, API, web, iOS |
+| 3 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
+| 4 | On-demand HRV capture on the watch | P3 | M | watch, API |
 
 ---
 
-### 1. Exercise animation content — P2 · L
+### 1. Connect IQ pairing-flow defects — P2 · S
+
+Found while planning the Garmin wellness connection (2026-10-05). None of them
+needs the watch to run anything new.
+
+1. **The pairing QR is a dead link.** `Config.pairQrValue`
+   (`garmin/TrainingCompanionCIQ/source/Config.mc:50-56`) encodes
+   `<webBaseUrl>/pair?code=…`, but the web app has no `/pair` route (`App.tsx`
+   falls through to `NotFound`), and `ProtectedRoute` → `/login` →
+   `navigate('/')` (`LoginPage.tsx:23`) discards any return path, so a scanned
+   link could not finish even with the route. `webBaseUrl` defaults to empty, so
+   today the QR carries the bare code and only the typed-code path works
+   (Settings ▸ Connections ▸ Devices). Either add `/pair` (read `?code=`,
+   survive sign-in, claim) or drop the link and encode the bare code on
+   purpose. The production web origin lives only in the `FRONTEND_URL` Fly
+   secret, so a default would have to be written down.
+2. **Every watch pairs as "Garmin Fenix 9"** (`SyncManager.mc:64`). Send
+   `System.getDeviceSettings().partNumber` with `POST /devices/pair` and let the
+   server name the model (item 2's `data/garmin_devices.json` is the lookup).
+3. **The manifest lists two products** (`fenix943mm`, `fenix947mm`,
+   `manifest.xml:21-24`); the SDK defines seven fēnix 9 products (`fenix943mm`,
+   `fenix947mm`, `fenix9pro43mm`, `fenix9pro47mm`, `fenix9pro51mm`,
+   `fenix9prosolar47mm`, `fenix9prosolar51mm`) and which watch the athlete wears
+   is recorded nowhere. Add the real model's id and compile it
+   (`DEVICE=<id> ./build.sh --device`).
+
+The Devices card's Revoke button sends back the truncated token the list shows
+and always 404s; that is fixed with the token-scope work in item 2, slice 2.
+
+Acceptance: scanning the watch's QR with a phone signs in if needed and claims
+the code (or the QR is the bare code and says so); the Devices card shows the
+model's name; every manifest product compiles.
+
+---
+
+### 2. Garmin wellness via Connect IQ — P2 · L
+
+Garmin's official Developer Program is enterprise-only (personal applications
+are rejected, onboarding is paused), so the built but dormant code for it
+(`src/garmin_connect.py`, `src/garmin_worker.py`, `migrations/004_garmin.sql`)
+stays off. The open route is the Connect IQ SDK the watch app already uses: it
+can read **resting HR, Body Battery history and recovery time** on the wrist
+and post them with the paired `ciqdev_` token. It cannot read nightly HRV,
+sleep or training readiness, so this does **not** close the HRV gap — HRV is 35
+of readiness's 100 points and September has it on 6 of 25 days — and the Apple
+Health relay keeps carrying those.
+
+Decisions:
+
+- A new `daily_wellness` side table (`migrations/009_wellness.sql`), not
+  `daily_bio`: `upsert_daily_bio` overwrites a day wholesale and swallows every
+  exception, so a watch post would wipe Apple's sleep and HRV for that date. No
+  HRV columns in v1.
+- Readiness scores resting HR from **one series**, never mixed across sources
+  or methods (`src/wellness.merge_for_scoring`: the series with the most
+  readings wins, ties go to `daily_bio`). Body Battery and recovery time are
+  display-only, there are no new flags, the scoring functions are untouched,
+  and the response gains `sources` saying where each component's data came from.
+- The device token is scoped before the endpoint ships: today a claimed token
+  is accepted on every authenticated route.
+- A hardware spike gates every watch-side slice. The simulator fabricates
+  `SensorHistory` and profile values, and the app has never run on a watch.
+
+Slices. Each reverts alone. Merging to `master` deploys the API, so the
+migration runs on production first, after `scripts/backup_prod.sh`.
+
+0. `garmin/WellnessSpike/` — a throwaway app (own app id) that logs every
+   candidate signal from the foreground and from a 15-minute background event
+   into on-watch Storage. Its README is the checklist for five mornings: is
+   `restingHeartRate` a daily value or a static setting; do `SensorHistory` and
+   `ActivityMonitor` reads work from the background, within memory; is
+   `timeToRecovery` non-null; does the event fire with the app closed and
+   `makeWebRequest` finish inside 30 s; what is `wakeTime`; which `<iq:product>`
+   the watch needs. **Gate 1**, the athlete's, about five minutes a day.
+1. The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
+   `test_wellness.py`. The SQL suite makes its own throwaway database, not
+   `training_test`.
+2. A device-token allowlist (the four routes the watch calls today plus the new
+   one, everything else 403) and the Revoke fix (the list shows a 14-character
+   prefix and revoke deletes by the full token); a test enumerates every
+   protected route.
+3. `POST /api/health/wellness` (gated by the Garmin integration toggle,
+   validated, idempotent, 503 on a failed write so the watch retries),
+   `wellness_store.py`, one `_bio_for_scoring` loader at the four scoring sites,
+   and the program-analytics digest hashing merged values (it hashes only bio
+   *dates* today, so a changed same-date value never busts the cache).
+4. `GET /api/health/wellness/latest`, `data/garmin_devices.json` (part number to
+   model), a Devices-card line and a readiness footnote on web and iOS.
+5. Watch: foreground-on-open sync; delete the dead `PUT /health/bio/{date}`
+   chain (`SyncManager.mc:185-192`) and the TODO at `WorkoutController.mc:807`.
+   **Gate 2** — a week of rows matching Connect's numbers.
+6. Watch: the background service, a morning window (wake time + 30 min to + 6 h)
+   and a once-a-day marker. **Gate 3** — at least 6 of 7 mornings sent without
+   opening the app.
+
+Kill criteria from the spike: the event never fires with the app closed → slice
+5 only; `restingHeartRate` static and the `hr_min_8h` fallback implausible →
+display-only, no readiness merge; both histories empty on the athlete's model →
+stop and record it here.
+
+Not in this item: switching on the Garmin Developer Program code (needs
+approval); Strava, the other open API, which carries activities only — an
+optional step that needs no code (`STRAVA_*` Fly secrets, then connect under
+Settings ▸ Connections; whether its GPS survives the dedup merge into the
+HR-only canonical row is unchecked); unofficial scrapers (terms of service, and
+Garmin blocks datacentre IPs).
+
+Acceptance: a morning snapshot reaches `daily_wellness` from the watch and the
+Devices card shows when and what; readiness names the source of its resting HR
+and is identical to today's when no wellness rows exist; a leaked device token
+can call only the five routes.
+
+---
+
+### 3. Exercise animation content — P2 · L
 
 Every exercise has a description, cue points and a muscle diagram; 79 have a
 GIF sourced from free-exercise-db; the rest are `animation.type: none`.
@@ -55,6 +174,31 @@ installed and `ExerciseAnimationPanel` renders `<DotLottieReact>` for
 Acceptance: Lottie renders in the drawer; ten Starrett movements, the two core
 KB ballistics and five Portal locomotion patterns animate; `type: none` still
 shows the category placeholder.
+
+---
+
+### 4. On-demand HRV capture on the watch — P3 · M
+
+The open SDK has no nightly HRV, but `Toybox.Sensor.HeartRateData` (API 3.0.0,
+through `Sensor.registerSensorDataListener`, needs the `Sensor` permission)
+delivers beat-to-beat intervals. The app could take a short seated capture on
+demand — a couple of minutes each morning — and compute RMSSD. That is a
+*different measurement* from Apple Health's SDNN and from Garmin's overnight
+value, so it gets its own `hrv_ms` / `hrv_method` columns (added to
+`daily_wellness` additively) and its own baseline series; item 2's series rule
+already treats `(source, method)` as a series identity, so methods are never
+mixed in one baseline.
+
+1. The `Sensor` permission and a capture view: start, progress, a motion and
+   quality check, and a discarded window when too few intervals are clean.
+2. `hrv_ms` / `hrv_method` through `validate`, the store and
+   `merge_for_scoring`; `sources.hrv` names the series.
+3. The readiness HRV component scores the watch series once it has the three
+   readings in 14 days that `_score_hrv` already needs.
+
+Needs item 2's slices 1–3 first. Acceptance: a capture reaches `daily_wellness`
+with its method, readiness scores it from its own baseline and says so, and
+Apple's SDNN series is untouched.
 
 ---
 

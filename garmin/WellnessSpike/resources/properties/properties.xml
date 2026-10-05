@@ -1,0 +1,4 @@
+<properties>
+  <!-- Reachability probe target: GET <apiBaseUrl>/devices/status answers 400 without a token, touches no data. -->
+  <property id="apiBaseUrl" type="string">https://training-api.fly.dev/api</property>
+</properties>

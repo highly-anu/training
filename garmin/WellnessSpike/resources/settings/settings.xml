@@ -1,0 +1,5 @@
+<settings>
+  <setting propertyKey="@Properties.apiBaseUrl" title="API base URL">
+    <settingConfig type="alphaNumeric"/>
+  </setting>
+</settings>

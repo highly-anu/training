@@ -140,6 +140,10 @@ Resolved (verified by compiling against SDK 9.2.0):
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
+- Daily wellness to the server (resting HR, Body Battery, recovery time through the
+  SDK's `SensorHistory` / `UserProfile` / `ActivityMonitor`, background-synced): gated
+  on the hardware spike in `../WellnessSpike/`; the plan and slices are item 2 in
+  `docs/roadmap.md`. The spike is a separate app id, so it sideloads beside this one.
 - Phase 3 **phone app itself** (CIQ Mobile SDK, iOS/Android): Supabase login +
   the phone half of the protocol above. Native-mobile work (not built here).
 - Phase 4: server-side Training API push of conditioning workouts. Blocked — Garmin
