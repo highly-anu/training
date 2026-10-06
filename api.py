@@ -2670,7 +2670,9 @@ def devices_pair():
     """Unauthenticated: a watch requests a pairing code + device token."""
     from src import device_store
     body = request.get_json(silent=True) or {}
-    result = device_store.create_pairing(device_name=body.get('deviceName'))
+    part = body.get('partNumber') if isinstance(body.get('partNumber'), str) else None
+    name = body.get('deviceName') if isinstance(body.get('deviceName'), str) else None
+    result = device_store.create_pairing(device_name=device_store.device_label(part and part[:32], name and name[:64]))
     return jsonify(result)
 
 
@@ -2976,10 +2978,9 @@ def get_today_session():
         })
 
     try:
+        bio, sources = _bio_for_scoring(g.user_id, days=14)
         readiness = _compute_readiness(
-            _health.get_recent_bio_logs(g.user_id, days=14),
-            _health.get_session_logs(g.user_id),
-            user_id=g.user_id,
+            bio, _health.get_session_logs(g.user_id), user_id=g.user_id, sources=sources,
         )
     except Exception:
         readiness = None
@@ -3216,6 +3217,44 @@ def health_upsert_bio(date: str):
     return jsonify({'saved': date})
 
 
+@app.post('/api/health/wellness')
+@require_auth
+def health_post_wellness():
+    """One day's wellness reading from the Connect IQ watch (src/wellness.py).
+
+    422 with the error list for a reading that fails validation — the watch
+    drops it, since resending cannot fix it. 503 when the write fails, so the
+    watch keeps the reading and retries. Repeats of a day merge
+    (src/wellness_store.py), so a retry after a lost response is harmless. A
+    Garmin toggle that is off answers 200 with `stored: false`: the athlete
+    chose that, and a retry would not change it.
+    """
+    from src import wellness, wellness_store
+    row, errors = wellness.validate(request.get_json(silent=True))
+    if errors:
+        return jsonify({'detail': 'invalid wellness reading', 'errors': errors}), 422
+    if not integration_allows(g.user_id, 'garmin'):
+        return jsonify({'stored': False, 'skipped': 'garmin integration disabled', 'date': row['date']})
+    try:
+        wellness_store.upsert(g.user_id, row)
+    except Exception as e:
+        app.logger.warning('wellness write failed: %s', e)
+        return jsonify({'detail': 'wellness write failed'}), 503
+    return jsonify({'stored': True, 'date': row['date']})
+
+
+@app.get('/api/health/wellness/latest')
+@require_auth
+def health_wellness_latest():
+    """The newest watch reading and the watch's model name, for the Devices
+    card and the readiness footnote. `latest` is null before the first one."""
+    from src import device_store, wellness_store
+    latest = wellness_store.latest(g.user_id)
+    if latest:
+        latest['model'] = device_store.model_name(latest.get('part_number'))
+    return jsonify({'latest': latest})
+
+
 @app.post('/api/health/matches')
 @require_auth
 def health_upsert_match():
@@ -3354,7 +3393,18 @@ def _score_fatigue(session_dict: dict, flags: list[str]) -> int:
     return 15
 
 
-def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | None = None) -> dict:
+def _bio_for_scoring(user_id: str, days: int) -> tuple[list[dict], dict]:
+    """The bio list every readiness score reads, and where its components
+    came from: daily_bio merged with the watch's daily_wellness, resting HR
+    from one series only (src/wellness.merge_for_scoring). The four scoring
+    sites used to read daily_bio each on their own."""
+    from src import wellness, wellness_store
+    return wellness.merge_for_scoring(_health.get_recent_bio_logs(user_id, days=days),
+                                      wellness_store.recent(user_id, days=days))
+
+
+def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | None = None,
+                       sources: dict | None = None) -> dict:
     flags: list[str] = []
     rhr     = _score_rhr(bio_list, flags)
     hrv     = _score_hrv(bio_list, flags)
@@ -3367,20 +3417,23 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
     fatigue = min(fatigue, 10)
     score = min(100, max(0, rhr + hrv + sleep + fatigue + tsb))
     status = 'green' if score >= 70 else 'yellow' if score >= 45 else 'red'
-    return {
+    out = {
         'score':      score,
         'status':     status,
         'flags':      flags,
         'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue, 'tsb': tsb},
     }
+    if sources is not None:
+        out['sources'] = sources        # where rhr / hrv / sleep came from
+    return out
 
 
 @app.get('/api/health/readiness')
 @require_auth
 def health_readiness():
-    bio_list     = _health.get_recent_bio_logs(g.user_id, days=14)
+    bio_list, sources = _bio_for_scoring(g.user_id, days=14)
     session_dict = _health.get_session_logs(g.user_id)
-    return jsonify(_compute_readiness(bio_list, session_dict, user_id=g.user_id))
+    return jsonify(_compute_readiness(bio_list, session_dict, user_id=g.user_id, sources=sources))
 
 
 # ---------------------------------------------------------------------------
@@ -3654,7 +3707,7 @@ def _program_analytics_inputs(user_id: str):
         program=program, start_date=start, today=_d.today(),
         session_logs=_health.get_session_logs(user_id), matches=matches, workouts=workouts,
         performance_logs=_health.get_performance_logs(user_id),
-        bio_logs=_health.get_recent_bio_logs(user_id, days=42), profile=profile,
+        bio_logs=_bio_for_scoring(user_id, days=42)[0], profile=profile,
         philosophy_weights=stored.get('sourceGoalWeights') or {},
     ), stored
 
@@ -3675,7 +3728,10 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
         _j.dumps({k: len(v) for k, v in inputs.performance_logs.items()}, sort_keys=True),
-        _j.dumps(sorted(b.get('date', '') for b in inputs.bio_logs), default=str),
+        # Values, not only dates: a same-date resting HR from the watch, or a
+        # corrected Apple Health night, has to bust the cache too.
+        _j.dumps(sorted((b.get('date', ''), b.get('resting_hr'), b.get('hrv'), b.get('sleep_duration_min'))
+                        for b in inputs.bio_logs), default=str),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
     ]
@@ -3837,7 +3893,7 @@ def progression_review():
         period = 'weekly'
 
     session_logs = _health.get_session_logs(g.user_id)
-    bio_logs     = _health.get_recent_bio_logs(g.user_id, days=42)
+    bio_logs     = _bio_for_scoring(g.user_id, days=42)[0]
     program_data = _db.get_user_program(g.user_id)
 
     if not program_data:

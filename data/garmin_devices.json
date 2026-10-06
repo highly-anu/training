@@ -1,0 +1,6 @@
+{
+  "_comment": "Garmin part number (System.getDeviceSettings().partNumber) -> model name and Connect IQ product id. Only part numbers read off a real watch belong here; add one when a new watch pairs and reports a part number this file does not know. 006-B4953-00 was read by garmin/WellnessSpike on 2026-10-06; its owner identified it as the fenix 9 Pro 47 mm (not Solar), unconfirmed against the SDK's device files.",
+  "devices": {
+    "006-B4953-00": {"name": "fēnix 9 Pro 47 mm", "product": "fenix9pro47mm"}
+  }
+}

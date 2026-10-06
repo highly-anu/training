@@ -53,6 +53,20 @@ def _decode_token(token: str):
     raise pyjwt.InvalidTokenError('No valid signing key available')
 
 
+# The routes a paired watch may call with its ciqdev_ token, as (method, rule).
+# A device token used to be accepted on every authenticated route, so one read
+# off a lost watch could rewrite the program, the profile or the other paired
+# devices. Everything else answers 403 to a device token;
+# test_device_scope.py enumerates every protected route against this list.
+DEVICE_ROUTES = frozenset({
+    ('GET',  '/api/user/today-session'),
+    ('GET',  '/api/health/readiness'),
+    ('POST', '/api/health/workouts'),
+    ('PUT',  '/api/health/sessions/<path:session_key>'),
+    ('POST', '/api/health/wellness'),
+})
+
+
 def require_auth(f):
     """Decorator that validates Supabase JWTs (or watch device tokens) and sets g.user_id."""
     @wraps(f)
@@ -64,6 +78,9 @@ def require_auth(f):
         # dev and prod; a claimed token resolves to its bound user_id.
         from src import device_store
         if token.startswith(device_store.TOKEN_PREFIX):
+            rule = request.url_rule.rule if request.url_rule else ''
+            if (request.method, rule) not in DEVICE_ROUTES:
+                return jsonify({'detail': 'Not available to a device token'}), 403
             user_id = device_store.user_for_token(token)
             if user_id:
                 g.user_id = user_id
@@ -90,4 +107,5 @@ def require_auth(f):
 
         return f(*args, **kwargs)
 
+    decorated.requires_auth = True
     return decorated

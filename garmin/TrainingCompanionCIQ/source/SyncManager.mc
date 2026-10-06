@@ -61,7 +61,10 @@ class SyncManager {
         _pairCb = cb;
         Comm.makeWebRequest(
             Config.apiBaseUrl() + "/devices/pair",
-            { "deviceName" => "Garmin Fenix 9" },
+            // The server names the model from the part number
+            // (data/garmin_devices.json); every watch used to pair as "Fenix 9".
+            { "deviceName" => "Garmin watch",
+              "partNumber" => System.getDeviceSettings().partNumber },
             jsonBodyOptions(Comm.HTTP_REQUEST_METHOD_POST),
             method(:onPair)
         );

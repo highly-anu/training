@@ -68,8 +68,16 @@ needs the watch to run anything new.
    is recorded nowhere. Add the real model's id and compile it
    (`DEVICE=<id> ./build.sh --device`).
 
-The Devices card's Revoke button sends back the truncated token the list shows
-and always 404s; that is fixed with the token-scope work in item 2, slice 2.
+*Status (2026-10-06, `feat/garmin-wellness`):* 2 and 3 are done but not yet
+compiled — the watch sends its part number and the server names it from
+`data/garmin_devices.json` (`device_store.device_label`; an unknown part shows
+as itself so it can be added); the manifest lists all five fēnix 9 Pro ids, as
+the spike's SDK-generated manifest spells them. Still to do: compile
+`fenix9pro47mm` on the Mac, and 1 (the QR). Revoke is fixed (below).
+
+The Devices card's Revoke button sent back the truncated token the list shows
+and always 404'd. Fixed in item 2, slice 2: revoke resolves the display id to
+exactly one of the athlete's own tokens.
 
 Acceptance: scanning the watch's QR with a phone signs in if needed and claims
 the code (or the QR is the bare code and says so); the Devices card shows the
@@ -128,28 +136,31 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    | 3 | `tr58` from the background = the watch's 58 h, after a morning reading of 0 h | pass |
    | 4 | 10-06: 44 runs, 00:04 → 10:35, longest gap 15 min (43 temporal + wake); 10-05: 33 (32 + sleep); overnight 23:49 → 00:04. API ok 20, fail 0, killed 0; last 1 283 ms, worst 6 434 ms | pass |
    | 5 | `w07:00 s22:15` | awaiting Connect's configured times |
-   | 6 | Part number `006-B4953-00`, fw 6.49, Monkey C 6.0.3 — a fēnix 9 Pro; run `tools/gen_products.py --part 006-B4953-00` for the product id | needs the SDK device files |
+   | 6 | Part number `006-B4953-00`, fw 6.49, Monkey C 6.0.3 — a fēnix 9 Pro, 47 mm by the owner's account (`fenix9pro47mm`); `tools/gen_products.py --part 006-B4953-00` would confirm it | owner's answer; the manifest carries all five Pro ids meanwhile |
 
    SpO2 read null with no samples (Pulse Ox off at night); nothing uses it.
-1. The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
+1. **Done** (`feat/garmin-wellness`, not deployed). The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
    `test_wellness.py`. The SQL suite makes its own throwaway database, not
    `training_test`.
-2. A device-token allowlist (the four routes the watch calls today plus the new
+2. **Done**, `test_device_scope.py`. A device-token allowlist (the four routes the watch calls today plus the new
    one, everything else 403) and the Revoke fix (the list shows a 14-character
    prefix and revoke deletes by the full token); a test enumerates every
    protected route.
-3. `POST /api/health/wellness` (gated by the Garmin integration toggle,
+3. **Done**. `POST /api/health/wellness` (gated by the Garmin integration toggle,
    validated, idempotent, 503 on a failed write so the watch retries),
    `wellness_store.py`, one `_bio_for_scoring` loader at the four scoring sites,
    and the program-analytics digest hashing merged values (it hashes only bio
    *dates* today, so a changed same-date value never busts the cache).
 4. `GET /api/health/wellness/latest`, `data/garmin_devices.json` (part number to
-   model), a Devices-card line and a readiness footnote on web and iOS.
+   model), a Devices-card line and a readiness footnote on web and iOS. **The
+   route and the lookup are done**; the two clients are not.
 5. Watch: foreground-on-open sync; delete the dead `PUT /health/bio/{date}`
    chain (`SyncManager.mc:185-192`) and the TODO at `WorkoutController.mc:807`.
    **Gate 2** — a week of rows matching Connect's numbers.
 6. Watch: the background service, a morning window (wake time + 30 min to + 6 h)
-   and a once-a-day marker. **Gate 3** — at least 6 of 7 mornings sent without
+   and a once-a-day marker. Send on the **first** fire in the window, not the
+   last: the heart-rate history holds six hours (spike finding 2a), so a late
+   send has already lost the overnight low. **Gate 3** — at least 6 of 7 mornings sent without
    opening the app.
 
 Kill criteria from the spike: the event never fires with the app closed → slice
