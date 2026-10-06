@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Watch, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Button } from '@/components/ui/button'
-import { useDevices, useClaimDevice, useRevokeDevice } from '@/api/devices'
+import { useDevices, useClaimDevice, useRevokeDevice, useLatestWellness } from '@/api/devices'
+import { wellnessSummary } from '@/lib/wellness'
 
 function when(iso: string | null): string {
   if (!iso) return 'never'
@@ -18,6 +19,7 @@ export function DevicesCard() {
   const { data: devices = [], isLoading, isError } = useDevices()
   const claim = useClaimDevice()
   const revoke = useRevokeDevice()
+  const { data: latest } = useLatestWellness()
   const [code, setCode] = useState('')
 
   return (
@@ -76,6 +78,11 @@ export function DevicesCard() {
             </li>
           ))}
         </ul>
+      )}
+      {latest && (
+        <p className="text-[11px] text-muted-foreground">
+          Last wellness reading{latest.model ? ` from the ${latest.model}` : ''}: {wellnessSummary(latest)}
+        </p>
       )}
     </div>
   )

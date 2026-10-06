@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
-import type { PairedDevice } from './types'
+import type { PairedDevice, WellnessReading } from './types'
 
 /**
  * Connect IQ watch pairing. The watch mints a code with no account, shows it,
@@ -31,5 +31,18 @@ export function useRevokeDevice() {
   return useMutation<{ revoked: boolean }, Error, string>({
     mutationFn: (token) => apiClient.delete(`/devices/${encodeURIComponent(token)}`) as unknown as Promise<{ revoked: boolean }>,
     onSuccess: () => { void qc.invalidateQueries({ queryKey: DEVICES_KEY }) },
+  })
+}
+
+/** The newest wellness reading a paired watch sent; null before the first. */
+export function useLatestWellness() {
+  return useQuery<WellnessReading | null>({
+    queryKey: ['wellness', 'latest'],
+    queryFn: async () => {
+      const body = (await apiClient.get('/health/wellness/latest')) as unknown as { latest: WellnessReading | null }
+      return body?.latest ?? null
+    },
+    staleTime: 60_000,
+    retry: false,
   })
 }

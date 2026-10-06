@@ -5,7 +5,7 @@ import { AlertTriangle } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import type { ReadinessFlag } from '@/lib/readiness'
+import { readinessSourceNote, type ReadinessFlag } from '@/lib/readiness'
 import { fetchReadiness } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
@@ -44,6 +44,7 @@ export function ReadinessWidget() {
   const status = result?.status ?? 'green'
   const styles = STATUS_STYLES[status]
   const actionableFlags = (result?.flags ?? []).filter((f) => f !== 'insufficient_data')
+  const sourceNote = readinessSourceNote(result?.sources)
 
   return (
     <div className={cn('h-full rounded-xl border bg-card p-4 space-y-3 ring-1', styles.ring)}>
@@ -119,6 +120,8 @@ export function ReadinessWidget() {
           Add daily resting HR + HRV check-ins to get accurate readiness scores.
         </p>
       )}
+
+      {sourceNote && <p className="text-[10px] text-muted-foreground/70">{sourceNote}</p>}
     </div>
   )
 }

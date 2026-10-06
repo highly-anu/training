@@ -152,8 +152,11 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    and the program-analytics digest hashing merged values (it hashes only bio
    *dates* today, so a changed same-date value never busts the cache).
 4. `GET /api/health/wellness/latest`, `data/garmin_devices.json` (part number to
-   model), a Devices-card line and a readiness footnote on web and iOS. **The
-   route and the lookup are done**; the two clients are not.
+   model), a Devices-card line and a readiness footnote on web and iOS. **Done
+   except iOS**: the route, the lookup, and on the web the Devices card's
+   "Last wellness reading" line (`lib/wellness.ts`) and the readiness footnote
+   (`lib/readiness.readinessSourceNote`, `ReadinessWidget.test.tsx`). iOS needs
+   the simulator.
 5. Watch: foreground-on-open sync; delete the dead `PUT /health/bio/{date}`
    chain (`SyncManager.mc:185-192`) and the TODO at `WorkoutController.mc:807`.
    **Gate 2** — a week of rows matching Connect's numbers.
