@@ -48,8 +48,14 @@ class SessionListView extends Ui.View {
     function onShow() {
         _sync.flushBuffer();               // retry any failed uploads
         _sync.fetchToday(method(:onToday));
-        _sync.fetchReadiness(method(:onReadiness));
+        // Wellness first, then readiness: readiness then scores this morning's
+        // resting HR, and only two requests are in flight beside the flush.
+        _sync.sendWellness(method(:onWellnessSent));
         maybeAutoStart();
+    }
+
+    function onWellnessSent(success, data) as Void {
+        _sync.fetchReadiness(method(:onReadiness));
     }
 
     function onToday(success, data) as Void {

@@ -804,7 +804,8 @@ class WorkoutController {
             "source" => "garmin",
             "workout" => workout,
             "sessionLog" => sessionLog
-            // "bio" => {...}  // TODO: attach RHR/HRV/sleep when read from device.
+            // Resting HR, Body Battery and recovery time are not per session:
+            // SyncManager.sendWellness posts them once a day, on app open.
         };
     }
 

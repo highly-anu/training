@@ -3,6 +3,7 @@ using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.PersistedContent;
 using Toybox.System;
+using Toybox.Time;
 
 // The exact data type makeWebRequest hands its callback on this SDK.
 typedef WebData as Null or Lang.Dictionary or Lang.String or PersistedContent.Iterator;
@@ -18,7 +19,14 @@ class SyncManager {
     hidden var _todayCb;
     hidden var _readinessCb;
 
-    // Upload state machine (workout -> session log -> bio), all-or-buffer.
+    // Wellness: the readings to post this round, the one in flight, and the
+    // first that failed (kept for the next open).
+    hidden var _wellnessCb;
+    hidden var _wellnessQueue;
+    hidden var _wellnessInFlight;
+    hidden var _wellnessFailed;
+
+    // Upload state machine (workout -> session log), all-or-buffer.
     hidden var _uploadCb;
     hidden var _uploadSummary;
 
@@ -147,12 +155,92 @@ class SyncManager {
         }
     }
 
+    // ── wellness (POST /health/wellness) ──────────────────────────────────────────
+
+    // Reads today's wellness (Wellness.read) and posts it, then cb.invoke(success, null).
+    // Called on every app open before readiness is fetched, so the readiness dot
+    // already scores this morning's resting HR. One reading that did not reach the
+    // server is kept: a later one of the same day absorbs its lows and highs (the
+    // heart-rate history holds six hours, so the morning's low would otherwise be
+    // gone), one of an earlier day is posted first. 200 (stored, or skipped because
+    // the Garmin toggle is off) and 422 (resending cannot fix it) both end a
+    // reading; anything else — no phone, a 503 — keeps it.
+    function sendWellness(cb) {
+        _wellnessCb = cb;
+        _wellnessQueue = [];
+        _wellnessFailed = null;
+        if (token() == null) { cb.invoke(true, null); return; }
+
+        var pending = Storage.getValue(Config.KEY_WELLNESS_PENDING) as Lang.Dictionary?;
+        var sentAt = Storage.getValue(Config.KEY_WELLNESS_SENT_AT) as Lang.Number?;
+        if (pending == null && sentAt != null
+                && Time.now().value() - sentAt < Config.WELLNESS_MIN_GAP_SEC) {
+            cb.invoke(true, null);
+            return;
+        }
+
+        var cur = Wellness.read();
+        if (pending != null) {
+            if (cur != null && cur["date"].equals(pending["date"])) {
+                cur = foldWellness(pending, cur);
+            } else {
+                _wellnessQueue.add(pending);
+            }
+        }
+        if (cur != null) { _wellnessQueue.add(cur); }
+        _postNextWellness();
+    }
+
+    // The newer reading, keeping the lower lows and the higher high of the two —
+    // the same per-column rule src/wellness_store.py applies to a repeat post.
+    function foldWellness(older, newer) {
+        var lows = ["hrMin", "bodyBatteryMin"];
+        for (var i = 0; i < lows.size(); i++) {
+            var k = lows[i];
+            if (older.hasKey(k) && (!newer.hasKey(k) || older[k] < newer[k])) { newer[k] = older[k]; }
+        }
+        if (older.hasKey("bodyBatteryMax")
+                && (!newer.hasKey("bodyBatteryMax") || older["bodyBatteryMax"] > newer["bodyBatteryMax"])) {
+            newer["bodyBatteryMax"] = older["bodyBatteryMax"];
+        }
+        return newer;
+    }
+
+    hidden function _postNextWellness() {
+        if (_wellnessQueue.size() == 0) {
+            if (_wellnessFailed != null) {
+                Storage.setValue(Config.KEY_WELLNESS_PENDING, _wellnessFailed);
+            } else {
+                Storage.deleteValue(Config.KEY_WELLNESS_PENDING);
+                Storage.setValue(Config.KEY_WELLNESS_SENT_AT, Time.now().value());
+            }
+            if (_wellnessCb != null) { _wellnessCb.invoke(_wellnessFailed == null, null); }
+            return;
+        }
+        _wellnessInFlight = _wellnessQueue[0];
+        _wellnessQueue = _wellnessQueue.slice(1, null);
+        Comm.makeWebRequest(
+            Config.apiBaseUrl() + "/health/wellness",
+            _wellnessInFlight,
+            jsonBodyOptions(Comm.HTTP_REQUEST_METHOD_POST),
+            method(:onWellnessPosted)
+        );
+    }
+
+    function onWellnessPosted(code as Lang.Number, data as WebData) as Void {
+        if (code != 200 && code != 422 && _wellnessFailed == null) {
+            _wellnessFailed = _wellnessInFlight;
+        }
+        _wellnessInFlight = null;
+        _postNextWellness();
+    }
+
     // ── upload (buffer-and-retry) ─────────────────────────────────────────────────
 
-    // summary: {
-    //   sessionKey, date, source:"garmin", workout:{...}, sessionLog:{...}, bio:{...}?
-    // }
-    // Runs workout -> sessionLog -> bio; buffers the whole summary on the first failure.
+    // summary: { sessionKey, date, source:"garmin", workout:{...}, sessionLog:{...} }
+    // Runs workout -> sessionLog; buffers the whole summary on the first failure.
+    // There used to be a third step, PUT /health/bio/{date}, for a "bio" key nothing
+    // ever filled; daily wellness now goes through sendWellness on every open.
     function uploadSession(summary, cb) {
         _uploadSummary = summary;
         _uploadCb = cb;
@@ -182,18 +270,6 @@ class SyncManager {
 
     function onSessionLogPut(code as Lang.Number, data as WebData) as Void {
         if (code != 200) { _failUpload(); return; }
-        var bio = _uploadSummary.hasKey("bio") ? _uploadSummary["bio"] : null;
-        if (bio == null) { _finishUpload(); return; }
-        Comm.makeWebRequest(
-            Config.apiBaseUrl() + "/health/bio/" + _uploadSummary["date"],
-            bio,
-            jsonBodyOptions(Comm.HTTP_REQUEST_METHOD_PUT),
-            method(:onBioPut)
-        );
-    }
-
-    function onBioPut(code as Lang.Number, data as WebData) as Void {
-        // Bio is best-effort; a failure here still counts the session as uploaded.
         _finishUpload();
     }
 

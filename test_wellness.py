@@ -82,6 +82,30 @@ def test_validate() -> None:
     check('a non-object body is refused', e != [])
 
 
+# ── the watch's reader agrees with the validator ─────────────────────────────
+
+def test_watch_parity() -> None:
+    """garmin/TrainingCompanionCIQ/source/Wellness.mc keeps every value inside
+    the bounds validate() accepts, because one value outside them makes the
+    server refuse the whole reading. Monkey C cannot be compiled here, so this
+    reads the source: a bound changed on one side only fails here."""
+    import re
+    from src.wellness import FIELDS, TEXT_FIELDS
+    print('watch parity')
+    src = (Path(__file__).parent / 'garmin/TrainingCompanionCIQ/source/Wellness.mc').read_text(encoding='utf-8')
+    puts = re.findall(r'put\(d, "(\w+)", [^;]*?, (-?\d+), (-?\d+)\)', src)
+    check('the reader bounds its values', len(puts) >= 7, str(puts))
+    for key, lo, hi in puts:
+        col_lo_hi = FIELDS.get(key)
+        check(f'{key} is a field the server reads', col_lo_hi is not None)
+        if col_lo_hi:
+            check(f'{key} bounds {lo}..{hi} match the server\'s',
+                  (int(lo), int(hi)) == (col_lo_hi[1], col_lo_hi[2]), f'server {col_lo_hi[1]}..{col_lo_hi[2]}')
+    direct = set(re.findall(r'd\["(\w+)"\] =', src)) | set(re.findall(r'"(date|readAt)" =>', src))
+    unknown = direct - set(TEXT_FIELDS) - {'date', 'readAt'}
+    check('every other key is one the server reads', not unknown, str(unknown))
+
+
 # ── merge_for_scoring ─────────────────────────────────────────────────────────
 
 def bio(days_ago: int, **vals) -> dict:
@@ -269,6 +293,7 @@ def _sql_checks(dsn: str) -> None:
 
 if __name__ == '__main__':
     test_validate()
+    test_watch_parity()
     test_merge()
     test_readiness_unchanged()
     sql_suite()

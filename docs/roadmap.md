@@ -159,6 +159,11 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    the simulator.
 5. Watch: foreground-on-open sync; delete the dead `PUT /health/bio/{date}`
    chain (`SyncManager.mc:185-192`) and the TODO at `WorkoutController.mc:807`.
+   **Written, not compiled** (2026-10-06): `Wellness.mc` reads only calls the
+   spike ran on the watch, keeps each value inside the server's bounds
+   (`test_wellness.py` checks the two agree), and `SyncManager.sendWellness`
+   posts on open (at most every 15 min) before readiness is fetched, keeping
+   one unsent reading for the next open. The bio chain and the TODO are gone.
    **Gate 2** — a week of rows matching Connect's numbers.
 6. Watch: the background service, a morning window (wake time + 30 min to + 6 h)
    and a once-a-day marker. Send on the **first** fire in the window, not the
