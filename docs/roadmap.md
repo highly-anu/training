@@ -116,6 +116,21 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    `timeToRecovery` non-null; does the event fire with the app closed and
    `makeWebRequest` finish inside 30 s; what is `wakeTime`; which `<iq:product>`
    the watch needs. **Gate 1**, the athlete's, about five minutes a day.
+
+   *Results so far* (installed 2026-10-05 16:04; morning 1 = 2026-10-06, read
+   at 10:35–10:50 after a workout; the app was closed 07:02–10:42):
+
+   | # | Finding | State |
+   |---|---|---|
+   | 1 | `r46` = Connect's resting HR 46; `a47` = Connect's **7-day average** 47, so `a` is that average | matches; needs `r` to move on ≥ 3 of 5 mornings |
+   | 2 | From the background: `h42/42#360`, `b95/48/68#240`; `getMin/getMax` return numbers equal to the walk's (hr 42/163, bb 51/95, kinds `NN`), so the real feature can skip the walk. Run 563 ms (hr 173, bb 118). Memory: start 17 816, read 24 448, peak 29 544 **of 61 344** | pass on this watch — the 24 KB line was for 32 KB devices; this budget is 60 KB |
+   | 2a | Heart-rate history holds **6 hours, not 8**: 360 samples at one a minute, span 359 min, below the 600 cap; `ActivityMonitor` also n360. A morning read covers only the last 6 h, so read early in the morning window | design constraint |
+   | 3 | `tr58` from the background = the watch's 58 h, after a morning reading of 0 h | pass |
+   | 4 | 10-06: 44 runs, 00:04 → 10:35, longest gap 15 min (43 temporal + wake); 10-05: 33 (32 + sleep); overnight 23:49 → 00:04. API ok 20, fail 0, killed 0; last 1 283 ms, worst 6 434 ms | pass |
+   | 5 | `w07:00 s22:15` | awaiting Connect's configured times |
+   | 6 | Part number `006-B4953-00`, fw 6.49, Monkey C 6.0.3 — a fēnix 9 Pro; run `tools/gen_products.py --part 006-B4953-00` for the product id | needs the SDK device files |
+
+   SpO2 read null with no samples (Pulse Ox off at night); nothing uses it.
 1. The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
    `test_wellness.py`. The SQL suite makes its own throwaway database, not
    `training_test`.
