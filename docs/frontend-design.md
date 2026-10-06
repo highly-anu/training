@@ -2361,7 +2361,8 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
 | **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |
-| **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell |
+| **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell; returns to the page that sent it there (`lib/returnPath.ts`) |
+| **Pair a watch** | `Watch` | "Pair a watch" | None | None | None | ✅ — `/pair?code=…`, the watch QR's target; not in the sidebar |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
 | **Workout Detail** | Back-nav | Workout type | — | — | — | Back-nav pattern |
 | **Program History Detail** | Back-nav | Program name | — | — | — | Back-nav pattern (`/program/history/:versionId`) |

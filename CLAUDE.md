@@ -136,7 +136,10 @@ Appearance · Developer in dev builds). The Garmin and Strava OAuth callbacks la
 `/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
 intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
 that predates Settings. Dev Lab `/dev` exists in dev
-builds only (`src/lib/featureFlags.ts`). Old paths (`/builder`, `/import`, `/bio`,
+builds only (`src/lib/featureFlags.ts`). `/pair?code=…` (`pages/PairDevice.tsx`) is the
+watch QR's target, outside the sidebar: it claims on a tap, never on load, and sign-in
+returns to it (`ProtectedRoute` passes the path, `lib/returnPath.safeReturnPath` keeps
+it in-app). Old paths (`/builder`, `/import`, `/bio`,
 `/exercises`, `/philosophies`, `/program/history`) redirect through
 `components/layout/LegacyRedirect.tsx`; unknown paths render `pages/NotFound.tsx`.
 Session detail (page and Home side panel) renders one `components/session/SessionPanel.tsx`;

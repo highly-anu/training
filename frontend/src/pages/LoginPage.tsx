@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { safeReturnPath } from '@/lib/returnPath'
 import { useAuthStore } from '@/store/authStore'
 
 export function LoginPage() {
@@ -12,6 +13,7 @@ export function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn)
   const signUp = useAuthStore((s) => s.signUp)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,7 +22,7 @@ export function LoginPage() {
     try {
       if (tab === 'signin') {
         await signIn(email, password)
-        navigate('/', { replace: true })
+        navigate(safeReturnPath((location.state as { from?: unknown } | null)?.from), { replace: true })
       } else {
         await signUp(email, password)
         setSignupSent(true)

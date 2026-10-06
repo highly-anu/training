@@ -72,8 +72,12 @@ needs the watch to run anything new.
 compiled — the watch sends its part number and the server names it from
 `data/garmin_devices.json` (`device_store.device_label`; an unknown part shows
 as itself so it can be added); the manifest lists all five fēnix 9 Pro ids, as
-the spike's SDK-generated manifest spells them. Still to do: compile
-`fenix9pro47mm` on the Mac, and 1 (the QR). Revoke is fixed (below).
+the spike's SDK-generated manifest spells them. 1 is done on the web: `/pair`
+(`pages/PairDevice.tsx`) shows the code and claims it on a tap, and sign-in
+keeps the link (`ProtectedRoute` → `LoginPage` → `lib/returnPath.ts`). For the
+watch to encode the link, set its `webBaseUrl` setting to the web origin in the
+Garmin Connect app (Connect IQ app settings) — no rebuild. Still to do: compile
+`fenix9pro47mm` on the Mac. Revoke is fixed (below).
 
 The Devices card's Revoke button sent back the truncated token the list shows
 and always 404'd. Fixed in item 2, slice 2: revoke resolves the display id to
