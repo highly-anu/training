@@ -154,9 +154,14 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    (`ios/TrainingCompanion/SyncManager.swift`, `syncAll`): it stops at
    `cursor < today`, so today's value lands tomorrow, and it skips any date
    already on the server, so a day pushed before Garmin Connect synced keeps no
-   resting HR for good. Fix both on the next iOS session — push today, and
-   re-push the last three days when one lacks resting HR — and check it in the
-   simulator.
+   resting HR for good. **Written, not yet built** (2026-10-08):
+   `BioSyncPlan` (`ios/TrainingCompanion/BioSyncPlan.swift`, pinned by
+   `BioSyncPlanTests`) sends today and the two days before it on every sync,
+   and older days only when the server lacks them. On the Mac:
+   `./ios/run_tests.sh BioSyncPlanTests`, then a sync in the simulator. One
+   side effect to know: `upsert_daily_bio` replaces a day wholesale, so a
+   manual check-in (web `DailyCheckin`) for one of those three days is now
+   overwritten by the next sync, where before only older days could be.
 1. **Done** (`feat/garmin-wellness`, not deployed). The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
    `test_wellness.py`. The SQL suite makes its own throwaway database, not
    `training_test`.
