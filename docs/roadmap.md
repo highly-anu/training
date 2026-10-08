@@ -215,6 +215,115 @@ Devices card shows when and what; readiness names the source of its resting HR
 and is identical to today's when no wellness rows exist; a leaked device token
 can call only the five routes.
 
+#### Next steps — handoff of 2026-10-08
+
+State: everything above is on branch `feat/garmin-wellness`, open as **PR #101**
+(CI green on the web and server). Nothing is deployed. Two parts have never
+been compiled, because the cloud sessions that wrote them had no Xcode and no
+Connect IQ SDK: the Swift in `ios/` (`BioSyncPlan`, `ReadinessSourceNote`,
+`WellnessReading`) and the Monkey C in `garmin/TrainingCompanionCIQ/`
+(`Wellness.mc`, `SyncManager.sendWellness`, the manifest). The athlete has a
+Mac again from about 2026-10-14.
+
+**A. Until the Mac (phone only, daily).**
+
+1. Spike mornings 4 and 5 (2026-10-09, -10): before any workout, a photo of the
+   spike's LOG page plus the watch's resting HR, recovery time and 7-day
+   average. Add a column to the results table above. What is still being
+   watched: `h` keeps moving with the watch's resting HR (within 5 bpm), and
+   `tr` keeps matching. `r` is settled (the zone setting) and needs no more
+   data.
+2. Leave the spike installed until step B10 is done; it costs nothing and its
+   DAYS page keeps proving the background events fire.
+
+**B. The Mac session, in this order.** Stop at the first step that fails, fix
+it (or paste the error into a session), and only then go on — B6 deploys.
+
+1. *Branch.* `git fetch origin && git checkout feat/garmin-wellness && git pull`.
+2. *Server checks* (`.venv`, a local Postgres for the SQL halves):
+   `.venv/bin/python test_device_scope.py`,
+   `SUPABASE_URL='' .venv/bin/python test_wellness.py`,
+   `SUPABASE_URL='' .venv/bin/python test_program_analytics.py`,
+   `cd frontend && npx vitest run`. All must pass; they passed in the cloud.
+3. *iOS compile and tests.* `./ios/run_tests.sh BioSyncPlanTests ReadinessSourceTests`,
+   then the whole bundle `./ios/run_tests.sh`. A compile error here is the
+   expected kind of failure (the Swift was never built); fix it on this branch.
+   Then the simulator, per CLAUDE.md: `python api.py` on this branch, and
+   `LOCAL_API=1 ./ios/run_sim.sh /tmp/today.png`. Check the readiness card on
+   Today shows the source line under the score ("Resting HR … from Apple
+   Health and check-ins.") and, via Profile ▸ gear ▸ Settings, that Devices
+   still lists devices and Sync Now still works. Screenshot both.
+4. *Watch compile.* `cd garmin/TrainingCompanionCIQ && DEVICE=fenix9pro47mm ./build.sh --device`.
+   The part number `006-B4953-00` is mapped to `fenix9pro47mm` only from the
+   athlete's word; `python3 ../WellnessSpike/tools/gen_products.py --part 006-B4953-00`
+   confirms it from the SDK's device files. If the id differs, change
+   `data/garmin_devices.json` (`product`) and the build command, nothing else.
+   Fix any compile error in `Wellness.mc` / `SyncManager.mc` on this branch;
+   `test_wellness.py` (watch parity) must still pass afterwards.
+5. *Production database.* `scripts/backup_prod.sh` (needs `.env` from
+   `op inject -i .env.template -o .env` and Homebrew `libpq`'s pg_dump 17; it
+   must exit 0 with every row count `ok`). Then
+   `python run_migration.py 009_wellness`. Check the policy exists:
+   `select policyname from pg_policies where tablename = 'daily_wellness';`
+   → `users access own wellness`.
+6. *Merge PR #101.* Merging deploys the API (`deploy-api.yml`); wait for it to
+   go green. Smoke test: `curl -s https://training-api.fly.dev/api/devices/status`
+   answers 400 `Missing device token`; signed in on the web, Settings ▸
+   Connections still lists devices and Home still shows readiness (now with a
+   source line).
+7. *Watch app on the watch.* USB, copy the `.prg` from `bin/` into
+   `GARMIN/APPS/`, eject, open Training Companion. Pair: the watch shows a
+   code — enter it under Settings ▸ Connections ▸ Watch devices, or scan the
+   QR once B9 is done. The Devices card must name it "fēnix 9 Pro 47 mm" (an
+   unknown part shows as "Garmin 006-…": add it to `data/garmin_devices.json`).
+8. *First wellness post.* Opening the app posts one reading. Within a minute
+   the Devices card shows "Last wellness reading from the fēnix 9 Pro 47 mm:
+   … HR low …, 7-day resting HR …, Body Battery …, recovery … h". Compare HR
+   low and recovery with the spike's LOG and the watch. Nothing there after
+   two opens 15 min apart → the post failed; the watch keeps it in Storage
+   (`wellnessPending`) and resends on the next open — check the Fly logs for
+   `POST /api/health/wellness` and its status (422 lists the refused field).
+9. *Pairing QR link.* In the Garmin Connect app ▸ Training Companion ▸
+   Settings, set **Web app URL** to the web origin (the `FRONTEND_URL` Fly
+   secret). Unpair and pair again: scanning the QR with the phone opens
+   `/pair?code=…`, which pairs on a tap.
+10. *iOS on the phone.* Install the build from Xcode, open it, Sync Now. Then
+    check that today's resting HR on the server equals the watch's
+    (`GET /api/health/bio/recent` or Analytics ▸ Recovery): that is the
+    `BioSyncPlan` fix. Garmin Connect must have synced first (open it).
+    Readiness's source line should now read "Resting HR, HRV and sleep from
+    Apple Health and check-ins." Uninstall the spike app afterwards.
+11. *One real workout.* Start today's session in the app: the live HR must
+    match the watch's own HR field, and the zone it announces must match
+    Garmin's zone colour (`UserProfile.getHeartRateZones`). After finishing,
+    the workout appears in the web Log and is matched to the session. If the
+    server's zones disagree with the watch's, set Garmin's max HR under
+    Profile ▸ Heart Rate (the server uses that, else 220 − age).
+
+**C. Gate 2 — the seven days after B.** Each morning, open the watch app once
+before training, then check on the web: a `daily_wellness` row for the day
+(Devices card), its HR low within 5 bpm of the watch's resting HR, and today's
+`daily_bio` resting HR equal to the watch's once Garmin Connect has synced.
+Record the seven days in a table here. Pass: 7 of 7 rows, 7 of 7 equal resting
+HR values. A fail of the second half points at the relay (B10), not the watch.
+
+**D. After Gate 2.**
+
+1. Slice 6, the background send (item 6 above). Reuse `Wellness.read()` and
+   `SyncManager.sendWellness`'s pending/fold logic in a `(:background)` service;
+   send on the first temporal event after wake time + 30 min, once a day
+   (marker in Storage); the spike measured a 61 KB budget with 29.5 KB peak
+   for the reads alone, so keep the service free of view code. Also refresh
+   the glance cache (today's session and readiness) from the same run, so the
+   glance stops saying "Open to sync". Gate 3: 6 of 7 mornings sent without
+   opening the app.
+2. Delete `garmin/WellnessSpike/` (its findings live in the table above) in
+   the slice-6 change.
+3. Optional hardening: `upsert_daily_bio` replaces a day wholesale, so a manual
+   web check-in for one of the last three days is overwritten by the next
+   phone sync (`BioSyncPlan` re-sends them). If manual check-ins are used,
+   make that upsert merge non-null fields instead.
+
 ---
 
 ### 3. Exercise animation content — P2 · L
