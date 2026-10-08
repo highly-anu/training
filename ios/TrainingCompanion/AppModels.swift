@@ -583,6 +583,40 @@ struct ReadinessResult: Codable {
     let status: String   // "green" | "yellow" | "red"
     let flags: [String]
     let components: ReadinessComponents
+    /// Where resting HR, HRV and sleep came from; absent from servers older
+    /// than the wellness merge (src/wellness.merge_for_scoring).
+    var sources: ReadinessSources? = nil
+}
+
+/// `daily_bio` is the Apple Health relay and the check-ins; `garmin_ciq` the
+/// Connect IQ watch's heart-rate low. Nil when nothing fed that component.
+struct ReadinessSources: Codable, Equatable {
+    let rhr: String?
+    let hrv: String?
+    let sleep: String?
+}
+
+/// One day's reading from the Connect IQ watch (GET /health/wellness/latest).
+/// Snake case, as daily_wellness stores it. `restingHR` is the watch profile's
+/// zone setting, not the day's value, so nothing shows it.
+struct WellnessReading: Decodable, Equatable {
+    let date: String
+    var hrMin: Int? = nil
+    var restingHR7dAvg: Int? = nil
+    var bodyBatteryMax: Int? = nil
+    var recoveryTimeH: Int? = nil
+    var readAt: String? = nil
+    var model: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case hrMin = "hr_min"
+        case restingHR7dAvg = "resting_hr_7d_avg"
+        case bodyBatteryMax = "body_battery_max"
+        case recoveryTimeH = "recovery_time_h"
+        case readAt = "read_at"
+        case model
+    }
 }
 
 struct ReadinessComponents: Codable {

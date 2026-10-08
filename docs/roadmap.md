@@ -178,8 +178,12 @@ migration runs on production first, after `scripts/backup_prod.sh`.
    model), a Devices-card line and a readiness footnote on web and iOS. **Done
    except iOS**: the route, the lookup, and on the web the Devices card's
    "Last wellness reading" line (`lib/wellness.ts`) and the readiness footnote
-   (`lib/readiness.readinessSourceNote`, `ReadinessWidget.test.tsx`). iOS needs
-   the simulator.
+   (`lib/readiness.readinessSourceNote`, `ReadinessWidget.test.tsx`). **iOS
+   written, not yet built** (2026-10-08): `ReadinessSourceNote` on Today and
+   Analytics ▸ Recovery, the last reading in Settings ▸ Devices
+   (design-system §6.21, `ReadinessSourceTests`). On the Mac:
+   `./ios/run_tests.sh ReadinessSourceTests BioSyncPlanTests`, then
+   `LOCAL_API=1 ./ios/run_sim.sh` on Today and Settings.
 5. Watch: foreground-on-open sync; delete the dead `PUT /health/bio/{date}`
    chain (`SyncManager.mc:185-192`) and the TODO at `WorkoutController.mc:807`.
    **Written, not compiled** (2026-10-06): `Wellness.mc` reads only calls the

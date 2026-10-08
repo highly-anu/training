@@ -1119,3 +1119,23 @@ and the segmented control truncates "Development" to "Develop…" (§6.8). The
 enum case is still `.development`; the deep link is
 `trainingcompanion://analytics?section=blocks`; `router.showAnalytics(.development)`
 from anywhere else (§6.9).
+
+### 6.21 Readiness Source Note
+
+`ReadinessSourceNote(result:)` (`ReadinessPresentation.swift`) is the one line
+under the readiness score that says where resting HR, HRV and sleep came from
+— on Today's readiness card and in Analytics ▸ Recovery. `.caption2`,
+`.secondary`, wrapping; it renders nothing when the server did not report
+`sources` (an older server), so neither screen needs a guard.
+
+The words come from `ReadinessResult.sourceNote`, the phone's copy of the
+web's `lib/readiness.readinessSourceNote`: components grouped by source,
+"Resting HR from your Garmin watch's heart-rate low; HRV and sleep from Apple
+Health and check-ins." Resting HR is scored from one series only
+(`src/wellness.merge_for_scoring`), so the note is what explains a score that
+moved because its source changed. `ReadinessSourceTests` pins the text.
+
+Settings ▸ Devices shows the paired Connect IQ watch's last wellness reading
+under the device rows (`WellnessReading.summary()`, the web Devices card's
+line): the heart-rate low, the 7-day resting HR, Body Battery and recovery
+time — never the watch profile's `resting_hr`, which is the zone setting.
