@@ -9,7 +9,7 @@
   tools/gen_products.py generated from the same device files. The athlete's
   watch is part 006-B4953-00, a fēnix 9 Pro (47 mm by the owner's account;
   data/garmin_devices.json). Added 2026-10-06 without a compile here: build
-  `DEVICE=fenix9pro47mm ./build.sh --device` on the Mac before sideloading.
+  `DEVICE=fenix9pro47mm ./build.sh` with the device flag on the Mac before sideloading.
   The Fenix 9 tops out at on-device Connect IQ API 6.0.3, so minApiLevel 4.0.0
   is safe headroom; CIQ-6-era calls (UserProfile zones, adaptive workout steps,
   QR generation) are additionally guarded at runtime with `has` checks.

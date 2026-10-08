@@ -35,9 +35,11 @@ final class ReadinessSourceTests: XCTestCase {
     }
 
     func testTheWellnessLineListsWhatTheWatchRead() throws {
-        let json = #"{"latest": {"date": "2026-10-08", "source": "garmin_ciq", "resting_hr": 46,
+        let json = #"""
+        {"latest": {"date": "2026-10-08", "source": "garmin_ciq", "resting_hr": 46,
             "resting_hr_7d_avg": 47, "hr_min": 47, "body_battery_max": 75, "recovery_time_h": 82,
-            "read_at": "2026-10-08T05:20:00+00:00", "model": "fēnix 9 Pro 47 mm"}}"#
+            "read_at": "2026-10-08T05:20:00+00:00", "model": "fēnix 9 Pro 47 mm"}}
+        """#
         struct Body: Decodable { let latest: WellnessReading? }
         let reading = try XCTUnwrap(try JSONDecoder().decode(Body.self, from: Data(json.utf8)).latest)
         XCTAssertEqual(reading.model, "fēnix 9 Pro 47 mm")
