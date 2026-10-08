@@ -309,8 +309,13 @@ training data; only sign-in goes to Supabase.
   Readiness, the program analytics and the progression review all read
   `api._bio_for_scoring`, which takes resting HR from **one** series (the one
   with more readings, ties to `daily_bio`; `wellness.merge_for_scoring`) and
-  never mixes Apple's and Garmin's methods day by day. Readiness says which in
-  `sources`. With no watch rows every score is what it was.
+  never mixes methods day by day. Readiness says which in `sources`. With no
+  watch rows every score is what it was. The watch's series is its
+  heart-rate low `hr_min`, **never** `resting_hr`: the SDK's
+  `UserProfile.restingHeartRate` is the zone setting (46 on three mornings
+  while the watch showed 46, 45, 49). Garmin's exact daily resting HR reaches
+  `daily_bio` through Garmin Connect → Apple Health → the iOS relay, which is
+  why `daily_bio` wins ties.
 - **A device token reaches five routes.** `auth.DEVICE_ROUTES` lists the
   (method, rule) pairs a `ciqdev_` token may call — today's session,
   readiness, workouts, session logs, wellness; every other protected route

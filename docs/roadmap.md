@@ -134,15 +134,29 @@ migration runs on production first, after `scripts/backup_prod.sh`.
 
    | # | Finding | State |
    |---|---|---|
-   | 1 | `r46` = Connect's resting HR 46; `a47` = Connect's **7-day average** 47, so `a` is that average | matches; needs `r` to move on ≥ 3 of 5 mornings |
+   | 1 | `r` read **46, 46, 46** on mornings 1–3 while the watch showed **46, 45, 49**: `UserProfile.restingHeartRate` is the zone *setting*, not the day's value. `a` (7-day average) 47, 46, 47 matches Connect's. `h` (HR low, 6 h) 42, 43, 47 — 4, 2 and 2 under the watch, moving with it (+1/−1, +4/+4) | **fails** for `r`; the `h` fallback passes. Scoring now uses `hr_min` (below) |
    | 2 | From the background: `h42/42#360`, `b95/48/68#240`; `getMin/getMax` return numbers equal to the walk's (hr 42/163, bb 51/95, kinds `NN`), so the real feature can skip the walk. Run 563 ms (hr 173, bb 118). Memory: start 17 816, read 24 448, peak 29 544 **of 61 344** | pass on this watch — the 24 KB line was for 32 KB devices; this budget is 60 KB |
    | 2a | Heart-rate history holds **6 hours, not 8**: 360 samples at one a minute, span 359 min, below the 600 cap; `ActivityMonitor` also n360. A morning read covers only the last 6 h, so read early in the morning window | design constraint |
-   | 3 | `tr58` from the background = the watch's 58 h, after a morning reading of 0 h | pass |
+   | 3 | `tr` 58, 35, 82 = the watch's 58 h, 35 h, 82 h on mornings 1–3 | pass (3 of 3) |
    | 4 | 10-06: 44 runs, 00:04 → 10:35, longest gap 15 min (43 temporal + wake); 10-05: 33 (32 + sleep); overnight 23:49 → 00:04. API ok 20, fail 0, killed 0; last 1 283 ms, worst 6 434 ms | pass |
    | 5 | `w07:00 s22:15` | awaiting Connect's configured times |
    | 6 | Part number `006-B4953-00`, fw 6.49, Monkey C 6.0.3 — a fēnix 9 Pro, 47 mm by the owner's account (`fenix9pro47mm`); `tools/gen_products.py --part 006-B4953-00` would confirm it | owner's answer; the manifest carries all five Pro ids meanwhile |
 
    SpO2 read null with no samples (Pulse Ox off at night); nothing uses it.
+
+   **Garmin's exact daily resting HR already reaches the server another way.**
+   Garmin Connect writes it to Apple Health, one value a day (46, 45, 49 for
+   6–8 Oct, identical to the watch), and the iOS relay reads HealthKit's
+   resting heart rate from any source into `daily_bio`. So `merge_for_scoring`
+   keeps `daily_bio` first and scores the watch's `hr_min` only where that
+   path has fewer readings; the watch's `resting_hr` is stored for display and
+   never scored. Two relay defects keep the exact value from arriving on time
+   (`ios/TrainingCompanion/SyncManager.swift`, `syncAll`): it stops at
+   `cursor < today`, so today's value lands tomorrow, and it skips any date
+   already on the server, so a day pushed before Garmin Connect synced keeps no
+   resting HR for good. Fix both on the next iOS session — push today, and
+   re-push the last three days when one lacks resting HR — and check it in the
+   simulator.
 1. **Done** (`feat/garmin-wellness`, not deployed). The migration, `src/wellness.py` (`validate`, `merge_for_scoring`) and
    `test_wellness.py`. The SQL suite makes its own throwaway database, not
    `training_test`.

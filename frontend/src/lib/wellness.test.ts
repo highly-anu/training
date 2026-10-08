@@ -4,9 +4,13 @@ import { wellnessSummary } from './wellness'
 describe('wellnessSummary', () => {
   it('lists what the watch read', () => {
     expect(wellnessSummary({
-      date: '2026-10-06', source: 'garmin_ciq', resting_hr: 46, body_battery_max: 95,
-      recovery_time_h: 58, read_at: '2026-10-06T07:31:00',
-    })).toBe('6 Oct, 07:31 · resting HR\u00a046 · Body Battery\u00a095 · recovery\u00a058\u00a0h')
+      date: '2026-10-08', source: 'garmin_ciq', resting_hr: 46, resting_hr_7d_avg: 47, hr_min: 47,
+      body_battery_max: 75, recovery_time_h: 82, read_at: '2026-10-08T07:20:00',
+    })).toBe('8 Oct, 07:20 · HR low\u00a047 · 7-day resting HR\u00a047 · Body Battery\u00a075 · recovery\u00a082\u00a0h')
+  })
+
+  it('never shows the profile resting HR, which is the zone setting', () => {
+    expect(wellnessSummary({ date: '2026-10-08', source: 'garmin_ciq', resting_hr: 46 })).toBe('8 Oct')
   })
 
   it('keeps a recovery time of zero and skips what is missing', () => {

@@ -37,7 +37,7 @@ describe('ReadinessWidget', () => {
     readiness.mockResolvedValue({ ...base, sources: { rhr: 'garmin_ciq', hrv: 'daily_bio', sleep: 'daily_bio' } })
     mount()
     expect(await screen.findByText(
-      'Resting HR from your Garmin watch; HRV and sleep from Apple Health and check-ins.')).toBeInTheDocument()
+      "Resting HR from your Garmin watch's heart-rate low; HRV and sleep from Apple Health and check-ins.")).toBeInTheDocument()
   })
 
   it('shows no footnote for a server that does not report sources', async () => {

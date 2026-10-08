@@ -29,7 +29,9 @@ export interface ReadinessResult {
 
 const SOURCE_LABEL: Record<ReadinessSource, string> = {
   daily_bio: 'Apple Health and check-ins',
-  garmin_ciq: 'your Garmin watch',
+  // The watch's series is its overnight heart-rate low, not Garmin's daily
+  // resting HR (the SDK does not expose that; src/wellness.merge_for_scoring).
+  garmin_ciq: "your Garmin watch's heart-rate low",
 }
 
 /**

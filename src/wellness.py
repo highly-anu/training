@@ -19,6 +19,9 @@ SOURCE = 'garmin_ciq'
 # body key -> (column, low, high, kind). Bounds reject a sensor glitch or a
 # unit mix-up, not an unusual athlete: a resting HR of 28 is real.
 FIELDS: dict[str, tuple[str, float, float, type]] = {
+    # UserProfile.restingHeartRate is the resting HR *setting* the zones use,
+    # not the day's measurement: the wellness spike read 46 on three mornings
+    # while the watch showed 46, 45 and 49. Stored for display, never scored.
     'restingHr':         ('resting_hr',          25, 200, int),
     'restingHr7dAvg':    ('resting_hr_7d_avg',   25, 200, int),
     'hrMin':             ('hr_min',              25, 230, int),
@@ -107,17 +110,26 @@ def merge_for_scoring(bio_logs: list[dict], wellness_rows: list[dict]) -> tuple[
     Resting HR comes from **one series**: whichever of daily_bio and
     daily_wellness has more readings in the window, ties to daily_bio. Mixing
     them day by day would score the difference between two methods as a
-    change in the athlete — Apple's resting HR and Garmin's are computed
-    differently and sit a few beats apart. HRV and sleep always come from
-    daily_bio; the watch cannot read them.
+    change in the athlete. HRV and sleep always come from daily_bio; the watch
+    cannot read them.
+
+    The watch's series is its heart-rate low (`hr_min`), never its
+    `resting_hr`. The SDK does not expose Garmin's daily resting HR: the
+    profile value is the zone setting and does not move, while the low of the
+    six-hour history tracked the watch's daily figure 2–4 bpm under it in the
+    wellness spike. A steady offset does not matter to a score that compares
+    each day with the same series' own baseline. Garmin's exact daily value
+    reaches daily_bio through Garmin Connect → Apple Health → the iOS relay,
+    which is why daily_bio wins ties: the watch fills in only where that path
+    has fewer readings.
 
     With no wellness rows the result equals `bio_logs`, so readiness is
     unchanged for anyone who never pairs a watch. Inputs are not mutated.
     """
     merged = [dict(b) for b in bio_logs]
     bio_rhr = sum(1 for b in bio_logs if b.get('resting_hr') is not None)
-    w_rhr = {str(w['date']): w['resting_hr'] for w in wellness_rows
-             if w.get('resting_hr') is not None}
+    w_rhr = {str(w['date']): w['hr_min'] for w in wellness_rows
+             if w.get('hr_min') is not None}
 
     if len(w_rhr) > bio_rhr:
         rhr_source = SOURCE

@@ -10,8 +10,11 @@ using Toybox.UserProfile;
 // validates them; the keys below are its body keys).
 //
 // Every call here ran on the athlete's fēnix 9 Pro in garmin/WellnessSpike
-// (docs/roadmap.md, item 2, "Results so far"): UserProfile's resting HR is the
-// value Garmin Connect shows and averageRestingHeartRate its 7-day average;
+// (docs/roadmap.md, item 2, "Results so far"): UserProfile's restingHeartRate
+// is the zone *setting* (46 on three mornings while the watch showed 46, 45,
+// 49), so the server stores it for display and never scores it — the HR low
+// below is the watch's resting-HR signal; averageRestingHeartRate is Garmin's
+// 7-day average;
 // SensorHistory's getMin()/getMax() return numbers equal to a full walk of the
 // samples, so this does not walk them; the heart-rate history holds six hours,
 // so a reading taken late in the day has already lost the night's low — the

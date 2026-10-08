@@ -126,11 +126,12 @@ def test_merge() -> None:
     check('no wellness rows: rhr from daily_bio', sources == {'rhr': 'daily_bio', 'hrv': 'daily_bio',
                                                               'sleep': 'daily_bio'}, str(sources))
 
-    garmin = [{'date': bio(d)['date'], 'resting_hr': 46 + d} for d in range(5)]
+    # The watch's series is its HR low; its resting_hr is the profile setting.
+    garmin = [{'date': bio(d)['date'], 'hr_min': 46 + d, 'resting_hr': 46} for d in range(5)]
     merged, sources = merge_for_scoring(apple, garmin)
     by = {b['date']: b for b in merged}
     check('more watch readings: rhr from the watch', sources['rhr'] == 'garmin_ciq', str(sources))
-    check('…every rhr is the watch\'s', all(by[g['date']]['resting_hr'] == g['resting_hr'] for g in garmin))
+    check('…every rhr is the watch\'s HR low', all(by[g['date']]['resting_hr'] == g['hr_min'] for g in garmin))
     check('…none of Apple\'s survives', all(b.get('resting_hr') in {46, 47, 48, 49, 50} for b in merged
                                             if 'resting_hr' in b), str(merged))
     check('…HRV and sleep stay Apple\'s', by[bio(0)['date']]['hrv'] == 60.0
@@ -139,16 +140,25 @@ def test_merge() -> None:
     check('…newest first', [b['date'] for b in merged] == sorted((b['date'] for b in merged), reverse=True))
     check('inputs are not mutated', apple == frozen)
 
-    tie = [{'date': bio(d)['date'], 'resting_hr': 46} for d in range(3)]
+    tie = [{'date': bio(d)['date'], 'hr_min': 46} for d in range(3)]
     merged, sources = merge_for_scoring(apple, tie)
     check('a tie goes to daily_bio', sources['rhr'] == 'daily_bio' and merged == apple, str(sources))
 
-    merged, sources = merge_for_scoring([], [{'date': bio(0)['date'], 'resting_hr': 46}])
+    merged, sources = merge_for_scoring([], [{'date': bio(0)['date'], 'hr_min': 46}])
     check('watch only: rhr from the watch, no hrv source',
           sources == {'rhr': 'garmin_ciq', 'hrv': None, 'sleep': None} and merged[0]['resting_hr'] == 46,
           str(sources))
     merged, sources = merge_for_scoring([], [{'date': bio(0)['date'], 'body_battery_max': 95}])
-    check('a watch row without rhr leaves rhr unsourced', sources['rhr'] is None and merged == [])
+    check('a watch row without an HR low leaves rhr unsourced', sources['rhr'] is None and merged == [])
+
+    # The spike's finding: UserProfile.restingHeartRate read 46 on three
+    # mornings while the watch showed 46, 45, 49. A profile value alone must
+    # never be scored, however many days carry it.
+    stale = [{'date': bio(d)['date'], 'resting_hr': 46} for d in range(7)]
+    merged, sources = merge_for_scoring(apple, stale)
+    check('the profile resting HR is never scored', sources['rhr'] == 'daily_bio' and merged == apple, str(sources))
+    merged, sources = merge_for_scoring([], stale)
+    check('…not even when it is all there is', sources['rhr'] is None and merged == [], str(merged))
 
 
 def test_readiness_unchanged() -> None:
