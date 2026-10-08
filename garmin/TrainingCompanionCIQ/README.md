@@ -32,7 +32,8 @@ source/
   Config.mc             Constants, storage keys, apiBaseUrl/webBaseUrl, rest defaults
   PhoneLink.mc          Phase-3 phone glue-app link (BLE phone-app messages)
   TrainingCompanionApp.mc  Entry point + glance + routing (pair vs. today; deep-link)
-  SyncManager.mc        All backend I/O: pairing, today-session, readiness, upload
+  SyncManager.mc        All backend I/O: pairing, today-session, wellness, readiness, upload
+  Wellness.mc           Reads resting HR, HR low, Body Battery, recovery time for /health/wellness
   SessionModel.mc       WorkoutSession / WorkoutExercise wrappers over the JSON
   WorkoutController.mc  State machine, ActivityRecording, HR/GPS capture,
                         HR-zone drift, EMOM/AMRAP timing, set editor, summary
@@ -64,11 +65,16 @@ Auth is a device token (`ciqdev_…`) sent as `Authorization: Bearer <token>`.
    watch polls `GET /devices/status` until `claimed`.
 2. **Today** — `GET /user/today-session` → compact session list (already
    slot-typed + zone-parsed server-side).
-3. **Readiness** — `GET /health/readiness` → cached; rendered as a green/yellow/red
-   dot on the glance and today screen.
-4. **Upload** — on finish: `POST /health/workouts` (`source:"garmin"`) →
-   `PUT /health/sessions/{key}` → optional `PUT /health/bio/{date}`. Any failure
-   buffers the whole payload in `Storage` and retries on next open.
+3. **Wellness** — on every open (at most every 15 min): `Wellness.read()` →
+   `POST /health/wellness` with the local date. One reading that failed to send is
+   kept and folded into the next (lows kept low, the Body Battery high kept high),
+   because the heart-rate history holds six hours.
+4. **Readiness** — `GET /health/readiness`, after the wellness post so it scores
+   this morning's resting HR → cached; rendered as a green/yellow/red dot on the
+   glance and today screen.
+5. **Upload** — on finish: `POST /health/workouts` (`source:"garmin"`) →
+   `PUT /health/sessions/{key}`. Any failure buffers the whole payload in
+   `Storage` and retries on next open.
 
 These flow into the same tables the Apple Watch app uses, so a Garmin session
 shows up in the iOS Analytics tab with no analytics changes.
@@ -140,6 +146,11 @@ Resolved (verified by compiling against SDK 9.2.0):
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
+- Daily wellness is sent on open (slice 5 of item 2 in `docs/roadmap.md`), written
+  2026-10-06 against calls the hardware spike in `../WellnessSpike/` ran on the
+  fēnix 9 Pro, and **not compiled yet**: `DEVICE=fenix9pro47mm ./build.sh --device`.
+  The background send without opening the app is slice 6. The spike is a separate
+  app id, so it sideloads beside this one.
 - Phase 3 **phone app itself** (CIQ Mobile SDK, iOS/Android): Supabase login +
   the phone half of the protocol above. Native-mobile work (not built here).
 - Phase 4: server-side Training API push of conditioning workouts. Blocked — Garmin

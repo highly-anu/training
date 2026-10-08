@@ -26,6 +26,8 @@ _CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 _CODE_LEN = 6
 
 _local_path = Path(__file__).parent.parent / 'data' / 'user_profiles' / '_device_tokens.json'
+_devices_path = Path(__file__).parent.parent / 'data' / 'garmin_devices.json'
+_DEVICES: dict | None = None
 
 _TABLE_READY = False
 
@@ -106,6 +108,30 @@ def _expired(created_iso: str) -> bool:
 
 
 # ── Public API ──────────────────────────────────────────────────────────────────
+
+def model_name(part_number: str | None) -> str | None:
+    """The model a Garmin part number names (data/garmin_devices.json)."""
+    global _DEVICES
+    if not part_number:
+        return None
+    if _DEVICES is None:
+        try:
+            _DEVICES = json.loads(_devices_path.read_text(encoding='utf-8')).get('devices', {})
+        except Exception:
+            _DEVICES = {}
+    entry = _DEVICES.get(part_number)
+    return entry.get('name') if entry else None
+
+
+def device_label(part_number: str | None, device_name: str | None) -> str:
+    """What the Devices list calls a newly paired watch. Every watch used to
+    pair as "Garmin Fenix 9", the string the watch app hardcoded; the part
+    number it now sends is looked up, and an unknown one is shown as itself so
+    it can be added to the lookup."""
+    if part_number:
+        return model_name(part_number) or f'Garmin {part_number}'
+    return device_name or 'Garmin watch'
+
 
 def create_pairing(device_name: str | None = None) -> dict:
     """Mint a pending pairing. Returns {code, deviceToken, expiresInSec}."""
@@ -255,7 +281,7 @@ def list_devices(user_id: str) -> list[dict]:
             rows = cur.fetchall()
         return [
             {
-                'deviceToken': r['device_token'][:14] + '…',   # never expose the full secret
+                'deviceToken': display_id(r['device_token']),   # never expose the full secret
                 'deviceName': r['device_name'],
                 'claimedAt': str(r['claimed_at']) if r['claimed_at'] else None,
                 'lastUsedAt': str(r['last_used_at']) if r['last_used_at'] else None,
@@ -264,7 +290,7 @@ def list_devices(user_id: str) -> list[dict]:
         ]
     return [
         {
-            'deviceToken': tok[:14] + '…',
+            'deviceToken': display_id(tok),
             'deviceName': rec.get('device_name'),
             'claimedAt': rec.get('claimed_at'),
             'lastUsedAt': rec.get('last_used_at'),
@@ -274,23 +300,53 @@ def list_devices(user_id: str) -> list[dict]:
     ]
 
 
+DISPLAY_LEN = 14                  # list_devices shows this many characters + '…'
+
+
+def display_id(device_token: str) -> str:
+    """What list_devices shows for a token, and what revoke accepts back."""
+    return device_token[:DISPLAY_LEN] + '…'
+
+
+def _resolve_owned(given: str, owned: list[str]) -> str | None:
+    """The one token of `owned` that `given` names: the full secret, or the
+    display id the Devices list shows (with or without its ellipsis). Anything
+    shorter than the display prefix, or a prefix two tokens share, names none —
+    'ciqdev_' alone must never revoke every watch."""
+    if given in owned:
+        return given
+    prefix = given.rstrip('…')
+    if len(prefix) < DISPLAY_LEN:
+        return None
+    hits = [t for t in owned if t.startswith(prefix)]
+    return hits[0] if len(hits) == 1 else None
+
+
 def revoke_token(device_token: str, user_id: str) -> bool:
-    """Delete a device token the user owns. True if a row was removed."""
+    """Delete a device token the user owns. True if a row was removed.
+
+    The Devices list never exposes the secret, only its display id, and both
+    clients send that id back; revoke used to delete by exact match and so
+    404'd on every call."""
     conn = _conn()
     if conn:
         with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
             _ensure_table(cur)
+            cur.execute('SELECT device_token FROM device_tokens WHERE user_id = %s', (user_id,))
+            token = _resolve_owned(device_token, [r['device_token'] for r in cur.fetchall()])
+            if token is None:
+                return False
             cur.execute(
                 'DELETE FROM device_tokens WHERE device_token = %s AND user_id = %s',
-                (device_token, user_id),
+                (token, user_id),
             )
             deleted = cur.rowcount > 0
         conn.commit()
         return deleted
     data = _local_load()
-    rec = data.get(device_token)
-    if rec and rec.get('user_id') == user_id:
-        del data[device_token]
-        _local_save(data)
-        return True
-    return False
+    token = _resolve_owned(device_token, [t for t, r in data.items() if r.get('user_id') == user_id])
+    if token is None:
+        return False
+    del data[token]
+    _local_save(data)
+    return True

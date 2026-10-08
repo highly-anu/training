@@ -491,6 +491,7 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .italic()
                 }
+                ReadinessSourceNote(result: result)
             }
             .padding(14)
             .background(.background.secondary)

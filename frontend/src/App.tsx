@@ -19,6 +19,7 @@ import { WorkoutAnalytics } from '@/pages/WorkoutAnalytics'
 import { DevLab } from '@/pages/DevLab'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFound } from '@/pages/NotFound'
+import { PairDevice } from '@/pages/PairDevice'
 import { LegacyRedirect } from '@/components/layout/LegacyRedirect'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -80,6 +81,8 @@ export default function App() {
                     {/* You */}
                     <Route path="profile" element={<ProfileBenchmarks />} />
                     <Route path="settings" element={<Settings />} />
+                    {/* The watch's pairing QR: <web>/pair?code=… */}
+                    <Route path="pair" element={<PairDevice />} />
                     {/* Dev */}
                     {DEVLAB_ENABLED && <Route path="dev" element={<DevLab />} />}
                     {/* Old addresses. Query and router state survive the hop. */}

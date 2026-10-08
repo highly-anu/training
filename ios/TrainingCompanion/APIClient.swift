@@ -587,6 +587,14 @@ final class APIClient {
         }
     }
 
+    /// The newest wellness reading a paired Connect IQ watch sent; nil before
+    /// the first, or from a server without the route.
+    func fetchLatestWellness() async -> WellnessReading? {
+        struct Body: Decodable { let latest: WellnessReading? }
+        guard let data = try? await get("/health/wellness/latest") else { return nil }
+        return (try? JSONDecoder().decode(Body.self, from: data))?.latest
+    }
+
     /// List devices already paired to the signed-in account (tokens are truncated by the server).
     func fetchDevices() async throws -> [PairedDevice] {
         let data = try await get("/devices")

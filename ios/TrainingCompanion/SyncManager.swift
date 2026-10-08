@@ -60,45 +60,42 @@ final class SyncManager: ObservableObject {
             let syncedDates = Set(try await api.getSyncedDates())
             logger.log("syncAll: server has \(syncedDates.count) synced bio dates")
 
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            let earliest = calendar.date(byAdding: .day, value: -30, to: today)!
-
+            // Today and the last two days are re-sent every time: Garmin
+            // Connect writes the watch's daily resting HR into Apple Health
+            // whenever it syncs, so a day sent earlier may have gained it
+            // (BioSyncPlan).
             var pushed = 0
-            var cursor = earliest
-            while cursor < today && !cancelled {
+            let days = BioSyncPlan.days(today: Date(), synced: syncedDates, calendar: Calendar.current,
+                                        key: dayFormatter.string(from:))
+            for cursor in days where !cancelled {
                 let dateStr = dayFormatter.string(from: cursor)
 
-                if !syncedDates.contains(dateStr) {
-                    let sleep = await hk.fetchSleepData(for: cursor)
-                    let bio = await hk.fetchDailyBiometrics(for: cursor)
+                let sleep = await hk.fetchSleepData(for: cursor)
+                let bio = await hk.fetchDailyBiometrics(for: cursor)
 
-                    // Cache latest biometrics for Watch readiness payload
-                    if let hrv = bio.hrv { UserDefaults.standard.set(hrv, forKey: "lastHRV") }
-                    if let hr = bio.restingHR { UserDefaults.standard.set(hr, forKey: "lastRestingHR") }
+                // Cache latest biometrics for Watch readiness payload
+                if let hrv = bio.hrv { UserDefaults.standard.set(hrv, forKey: "lastHRV") }
+                if let hr = bio.restingHR { UserDefaults.standard.set(hr, forKey: "lastRestingHR") }
 
-                    if sleep.totalMin > 0 || bio.restingHR != nil || bio.hrv != nil
-                        || bio.spo2Avg != nil || bio.respiratoryRateAvg != nil {
-                        let payload = DailyBioPayload(
-                            restingHR: bio.restingHR,
-                            hrv: bio.hrv,
-                            sleepDurationMin: sleep.totalMin > 0 ? sleep.totalMin : nil,
-                            deepSleepMin: sleep.deepMin > 0 ? sleep.deepMin : nil,
-                            remSleepMin: sleep.remMin > 0 ? sleep.remMin : nil,
-                            lightSleepMin: sleep.lightMin > 0 ? sleep.lightMin : nil,
-                            awakeMins: sleep.awakeMin > 0 ? sleep.awakeMin : nil,
-                            sleepStart: sleep.sleepStart.map { iso.string(from: $0) },
-                            sleepEnd: sleep.sleepEnd.map { iso.string(from: $0) },
-                            spo2Avg: bio.spo2Avg,
-                            respiratoryRateAvg: bio.respiratoryRateAvg
-                        )
-                        try await api.pushBio(date: dateStr, payload: payload)
-                        pushed += 1
-                        logger.log("bio: pushed \(dateStr)")
-                    }
+                if sleep.totalMin > 0 || bio.restingHR != nil || bio.hrv != nil
+                    || bio.spo2Avg != nil || bio.respiratoryRateAvg != nil {
+                    let payload = DailyBioPayload(
+                        restingHR: bio.restingHR,
+                        hrv: bio.hrv,
+                        sleepDurationMin: sleep.totalMin > 0 ? sleep.totalMin : nil,
+                        deepSleepMin: sleep.deepMin > 0 ? sleep.deepMin : nil,
+                        remSleepMin: sleep.remMin > 0 ? sleep.remMin : nil,
+                        lightSleepMin: sleep.lightMin > 0 ? sleep.lightMin : nil,
+                        awakeMins: sleep.awakeMin > 0 ? sleep.awakeMin : nil,
+                        sleepStart: sleep.sleepStart.map { iso.string(from: $0) },
+                        sleepEnd: sleep.sleepEnd.map { iso.string(from: $0) },
+                        spo2Avg: bio.spo2Avg,
+                        respiratoryRateAvg: bio.respiratoryRateAvg
+                    )
+                    try await api.pushBio(date: dateStr, payload: payload)
+                    pushed += 1
+                    logger.log("bio: pushed \(dateStr)")
                 }
-
-                cursor = calendar.date(byAdding: .day, value: 1, to: cursor)!
             }
 
             if !cancelled {

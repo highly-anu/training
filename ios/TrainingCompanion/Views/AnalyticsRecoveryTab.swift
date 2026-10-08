@@ -30,6 +30,7 @@ struct AnalyticsRecoveryTab: View {
 
     private var readinessCard: some View {
         AnalyticsCard(header: "Today's Readiness") {
+          VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 16) {
                 if let info = appState.readinessInfo(from: appState.recentBioLogs) {
                     VStack(spacing: 4) {
@@ -68,6 +69,10 @@ struct AnalyticsRecoveryTab: View {
                     }
                 }
             }
+            if let result = appState.readinessResult {
+                ReadinessSourceNote(result: result)
+            }
+          }
         }
     }
 

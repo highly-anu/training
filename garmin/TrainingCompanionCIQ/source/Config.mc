@@ -14,6 +14,11 @@ module Config {
     const KEY_TODAY_DATE     = "todaySessionDate";
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
     const KEY_READINESS      = "readiness";       // cached /health/readiness dict
+    const KEY_WELLNESS_PENDING = "wellnessPending"; // one wellness reading the server never got
+    const KEY_WELLNESS_SENT_AT = "wellnessSentAt";  // epoch seconds of the last accepted post
+
+    // Opening the app more often than this sends no new wellness reading.
+    const WELLNESS_MIN_GAP_SEC = 15 * 60;
 
     // Poll cadence for pairing status (ms).
     const PAIR_POLL_MS = 3000;

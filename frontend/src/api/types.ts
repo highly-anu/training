@@ -995,6 +995,26 @@ export interface PairedDevice {
   lastUsedAt: string | null
 }
 
+/** One day's reading from the Connect IQ watch (GET /api/health/wellness/latest).
+ *  Snake_case: the row as daily_wellness stores it; absent keys were not read. */
+export interface WellnessReading {
+  date: string
+  source: string
+  resting_hr?: number
+  resting_hr_7d_avg?: number
+  hr_min?: number
+  body_battery_max?: number
+  body_battery_min?: number
+  body_battery_latest?: number
+  recovery_time_h?: number
+  vo2max?: number
+  part_number?: string
+  read_at?: string
+  received_at?: string
+  /** Named from the part number; null for a model data/garmin_devices.json lacks. */
+  model?: string | null
+}
+
 export interface ProgressionReview {
   period_key: string
   period_type: 'weekly' | 'biweekly'

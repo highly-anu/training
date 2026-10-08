@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var diagnosis: WorkoutAccessDiagnosis?
     @State private var isDiagnosing = false
     @State private var garminDevices: [PairedDevice] = []
+    @State private var latestWellness: WellnessReading?
     @State private var isLoadingDevices = false
     @State private var garminCode = ""
     @State private var isClaiming = false
@@ -226,6 +227,12 @@ struct SettingsView: View {
                             Text("Paired").foregroundStyle(.green).font(.footnote)
                         }
                     }
+                }
+                // The web Devices card's "Last wellness reading" line.
+                if let latestWellness {
+                    Text("Last wellness reading: \(latestWellness.summary())")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -528,6 +535,11 @@ struct SettingsView: View {
         guard let api = appState.api else { return }
         isLoadingDevices = true
         garminDevices = (try? await api.fetchDevices()) ?? []
+        if garminDevices.isEmpty {
+            latestWellness = nil
+        } else {
+            latestWellness = await api.fetchLatestWellness()
+        }
         isLoadingDevices = false
     }
 

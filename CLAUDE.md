@@ -99,7 +99,9 @@ All prefixed `/api/`:
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
-| GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
+| GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
+| POST | `/health/wellness` | one day's watch reading into `daily_wellness`; 422 invalid, 503 on a failed write (the watch retries), 200 `stored: false` when the Garmin toggle is off |
+| GET | `/health/wellness/latest` | the newest watch reading, with the model named from its part number |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
 
@@ -134,7 +136,10 @@ Appearance · Developer in dev builds). The Garmin and Strava OAuth callbacks la
 `/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
 intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
 that predates Settings. Dev Lab `/dev` exists in dev
-builds only (`src/lib/featureFlags.ts`). Old paths (`/builder`, `/import`, `/bio`,
+builds only (`src/lib/featureFlags.ts`). `/pair?code=…` (`pages/PairDevice.tsx`) is the
+watch QR's target, outside the sidebar: it claims on a tap, never on load, and sign-in
+returns to it (`ProtectedRoute` passes the path, `lib/returnPath.safeReturnPath` keeps
+it in-app). Old paths (`/builder`, `/import`, `/bio`,
 `/exercises`, `/philosophies`, `/program/history`) redirect through
 `components/layout/LegacyRedirect.tsx`; unknown paths render `pages/NotFound.tsx`.
 Session detail (page and Home side panel) renders one `components/session/SessionPanel.tsx`;
@@ -293,6 +298,30 @@ training data; only sign-in goes to Supabase.
   read full rows only for matches dated inside the program's own span
   (`_matched_ids_in_window`); the progression routes read summaries.
   `test_workout_metrics.py` pins all three.
+- **Watch wellness is a side table, merged only to score.** The Connect IQ app
+  posts resting HR, its 7-day average, the heart-rate low, Body Battery and
+  recovery time to `POST /api/health/wellness` (`src/wellness.py` validates,
+  `src/wellness_store.py` writes `daily_wellness`, `migrations/009_wellness.sql`).
+  Not `daily_bio`: `upsert_daily_bio` overwrites a day wholesale and would wipe
+  the Apple relay's sleep and HRV. A repeat post of a day merges per column —
+  lows keep the lowest, the Body Battery high the highest, the rest the newest
+  by `read_at` — because the watch's heart-rate history holds only six hours.
+  Readiness, the program analytics and the progression review all read
+  `api._bio_for_scoring`, which takes resting HR from **one** series (the one
+  with more readings, ties to `daily_bio`; `wellness.merge_for_scoring`) and
+  never mixes methods day by day. Readiness says which in `sources`. With no
+  watch rows every score is what it was. The watch's series is its
+  heart-rate low `hr_min`, **never** `resting_hr`: the SDK's
+  `UserProfile.restingHeartRate` is the zone setting (46 on three mornings
+  while the watch showed 46, 45, 49). Garmin's exact daily resting HR reaches
+  `daily_bio` through Garmin Connect → Apple Health → the iOS relay, which is
+  why `daily_bio` wins ties.
+- **A device token reaches five routes.** `auth.DEVICE_ROUTES` lists the
+  (method, rule) pairs a `ciqdev_` token may call — today's session,
+  readiness, workouts, session logs, wellness; every other protected route
+  answers it 403 before the token is looked up. A new watch route goes in that
+  list; `test_device_scope.py` sends a device token to every `@require_auth`
+  view and fails on any other that answers.
 - **Profile writes merge.** `PUT /api/profile` overwrites only the keys the body
   carries. It used to rebuild the blob, which is why every iOS save wiped
   `activeGoalId`. `performanceLogs` is not a profile key: PRs and the
@@ -615,6 +644,14 @@ Run these after touching program history, the matcher or the session-log path:
 ```bash
 .venv/bin/python test_program_history.py      # hashing, flattening, intervals (no DB)
 .venv/bin/python test_workout_matcher.py      # the cross-language parity contract
+```
+
+Run these after touching watch pairing, device tokens or wellness (the SQL half
+of `test_wellness.py` makes and drops its own database; it skips without a server):
+
+```bash
+.venv/bin/python test_device_scope.py      # device-token allowlist, revoke by display id, model names
+SUPABASE_URL='' .venv/bin/python test_wellness.py   # validate, the scoring merge, the store, the routes
 ```
 
 Run these after touching the workout import pipeline:
