@@ -1,0 +1,19 @@
+# How Wildman Kettlebell sessions look on the watch (docs/schemas/watch.schema.json).
+id: wildman_kettlebell
+spec_version: 1
+archetypes:
+  tgu_practice:
+    slots:
+      # The get-up practice block: the six positions under the clock.
+      main:
+        lines: phases
+        phases: [roll, post, bridge, sweep, lunge, stand]
+      accessory:
+        behaviours: { side_tracked: true }
+  kb_pentathlon_training:
+    slots:
+      # Timed sets paced to a target: the RPM is the session.
+      main:
+        a: rpm
+        b: time_left
+        behaviours: { metronome_rpm: 12 }

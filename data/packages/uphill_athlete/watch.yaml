@@ -1,0 +1,11 @@
+# How Uphill Athlete sessions look on the watch (docs/schemas/watch.schema.json).
+id: uphill_athlete
+spec_version: 1
+archetypes:
+  weighted_ruck_z2:
+    slots:
+      # The ruck itself leads with distance; the warm-up and cool-down are
+      # timed blocks like any other.
+      main_aerobic:
+        a: distance_km
+        b: elapsed

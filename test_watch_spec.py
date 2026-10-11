@@ -1,0 +1,201 @@
+"""Packages own their watch screens: the vocabulary, the resolver, the payload.
+
+- every package x archetype x slot resolves to a spec the vocabulary knows,
+  with a LAP its template allows;
+- the slot-type defaults are the screens the watch drew by slot_type before
+  packages owned them (the regression table below is the old
+  ExerciseScreen.build + renderer mapping);
+- the declared overrides land where they are scoped (archetype + slot role);
+- a throwaway package with its own watch.yaml reaches the today-session
+  payload with no change to src/ or the watch's core;
+- a borrowed session shows its owner's screens;
+- one session's screens stay small enough for the watch.
+
+No database. Run: SUPABASE_URL='' .venv/bin/python test_watch_spec.py
+"""
+import contextlib
+import json
+import os
+import shutil
+import sys
+from pathlib import Path
+
+import yaml
+
+os.environ.setdefault('SUPABASE_URL', '')
+
+from src import loader, watch_spec  # noqa: E402
+
+failures: list = []
+
+
+def check(name, cond, detail=''):
+    if not cond:
+        failures.append(f'{name} {detail}'.strip())
+    print(('  ok   ' if cond else '  FAIL ') + name + (f'  [{detail}]' if detail and not cond else ''))
+
+
+# What the watch drew per slot type before packages owned their screens.
+OLD_RENDERERS = {
+    'sets_reps':      ('sets',     'reps',             'rpe_or_set',      'set',            'complete_set'),
+    'static_hold':    ('hold',     'hold',             'set',             'hold',           'toggle_hold'),
+    'emom':           ('interval', 'interval',         'interval_left',   'interval_round', 'skip'),
+    'amrap':          ('rounds',   'rounds',           'cap_left',        'rounds',         'log_round'),
+    'amrap_movement': ('rounds',   'rounds',           'cap_left',        'rounds',         'log_round'),
+    'for_time':       ('for_time', 'rounds_of_target', 'elapsed',         'rounds_of_target', 'log_round'),
+    'distance':       ('distance', 'distance',         'distance_target', 'distance',       'log_round'),
+    'time_domain':    ('timed',    'time_left',        'zone_or_time',    'time_left',      'skip'),
+    'skill_practice': ('timed',    'time_left',        'zone_or_time',    'time_left',      'skip'),
+}
+
+
+def test_defaults():
+    print('\ndefaults reproduce the slot-type renderers')
+    for slot_type, (tpl, a, b, gauge, lap) in OLD_RENDERERS.items():
+        s = watch_spec.resolve(None, None, None, slot_type)
+        got = (s['template'], s['a'], s['b'], s['gauge'], s['lap'])
+        check(f'{slot_type}', got == (tpl, a, b, gauge, lap), f'{got}')
+    s = watch_spec.resolve(None, None, None, 'something_new')
+    check('an unknown slot type falls back to the timed block', s['template'] == 'timed')
+
+
+def test_every_slot_resolves():
+    print('\nevery package x archetype x slot resolves cleanly')
+    errors, count, biggest = [], 0, (0, '')
+    for arch in loader.load_all_archetypes():
+        pkg = arch.get('_package')
+        slots = [(s.get('role'), s.get('slot_type')) for s in arch.get('slots') or []]
+        for role, slot_type in slots:
+            count += 1
+            spec = watch_spec.resolve(pkg, arch['id'], role, slot_type)
+            errors += watch_spec.resolved_errors(spec, f"{pkg}/{arch['id']}.{role}")
+        table, keys = watch_spec.session_screens(pkg, arch['id'], slots)
+        size = len(json.dumps({'watch': watch_spec.session_identity(pkg), 'screens': table},
+                              separators=(',', ':')))
+        if size > biggest[0]:
+            biggest = (size, arch['id'])
+        if keys and set(keys) != set(table):
+            errors.append(f"{arch['id']}: keys {keys} vs table {sorted(table)}")
+    check(f'{count} slots, no vocabulary errors', not errors, '; '.join(errors[:5]))
+    check('one session\'s screens fit in 1.5 KB of JSON', biggest[0] <= 1536,
+          f'{biggest[1]}: {biggest[0]} bytes')
+
+
+def test_declared_overrides():
+    print('\ndeclared overrides are scoped to archetype + slot role')
+    r = watch_spec.resolve
+    tgu = r('gym_jones', 'gym_jones_tgu_recovery', 'tgu_volume', 'sets_reps')
+    check('Gym Jones get-ups count toward 100, per side',
+          tgu['a'] == 'cumulative' and tgu['behaviours'] == {'side_tracked': True, 'cumulative_target': 100})
+    ladder = r('gym_jones', 'gym_jones_breathing_ladder', 'breathing_ladder', 'amrap')
+    swings = r('gym_jones', 'gym_jones_breathing_ladder', 'warm_up_swing', 'sets_reps')
+    check('the ladder counts rungs', ladder['a'] == 'rung' and ladder['lines'] == 'ladder_total')
+    check('...its warm-up swings stay plain sets', swings['a'] == 'reps' and 'behaviours' not in swings)
+    bjj = [r('bjj', 'bjj_class', role, t) for role, t in
+           [('warm_up', 'time_domain'), ('technique_drilling', 'skill_practice')]]
+    check('a BJJ class is a round timer on every block, with its fields',
+          all(s['template'] == 'round_timer' and s['a'] == 'block_left' for s in bjj))
+    ruck = r('uphill_athlete', 'weighted_ruck_z2', 'main_aerobic', 'time_domain')
+    warm = r('uphill_athlete', 'weighted_ruck_z2', 'warmup', 'time_domain')
+    check('the weighted ruck leads with km on its main block only',
+          ruck['a'] == 'distance_km' and warm['a'] == 'time_left')
+    check('a package with no watch.yaml gets the defaults',
+          r('starting_strength', 'anything', 'primary_squat', 'sets_reps')
+          == watch_spec.resolve(None, None, None, 'sets_reps'))
+    ident = watch_spec.session_identity('starting_strength')
+    check('...and its philosophy\'s name as the label', bool(ident['label']), str(ident))
+
+
+_PKG_ROOT = Path(__file__).parent / 'data' / 'packages'
+
+
+@contextlib.contextmanager
+def throwaway_package(pkg_id: str):
+    """A package that exists only for this test: one archetype, one watch.yaml."""
+    root = _PKG_ROOT / pkg_id
+    if root.exists():
+        shutil.rmtree(root)
+    (root / 'archetypes' / 'max_strength').mkdir(parents=True)
+    (root / 'philosophy.yaml').write_text(yaml.safe_dump({
+        'id': pkg_id, 'name': 'Throwaway Method', 'core_principles': ['test'],
+        'scope': ['max_strength'], 'bias': ['max_strength'], 'self_contained': True}))
+    (root / 'archetypes' / 'max_strength' / f'{pkg_id}_day.yaml').write_text(yaml.safe_dump({
+        'id': f'{pkg_id}_day', 'name': 'Throwaway Day', 'modality': 'max_strength',
+        'slots': [{'role': 'main_lift', 'slot_type': 'sets_reps', 'sets': 5, 'reps': 5},
+                  {'role': 'finisher', 'slot_type': 'static_hold', 'sets': 3}]}))
+    (root / 'watch.yaml').write_text(yaml.safe_dump({
+        'id': pkg_id, 'spec_version': 1,
+        'identity': {'label': 'Throwaway', 'accent': 'violet'},
+        'archetypes': {f'{pkg_id}_day': {'slots': {'main_lift': {
+            'a': 'cumulative', 'behaviours': {'cumulative_target': 25}}}}},
+        'summary': {'pages': ['summary', 'exercises']}}))
+    watch_spec.clear_cache()
+    try:
+        yield root
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+        watch_spec.clear_cache()
+
+
+def _assignment(role, slot_type, **load):
+    return {'slot_role': role, 'slot_type': slot_type, 'load': load,
+            'exercise': {'id': f'{role}_ex', 'name': role.title()}}
+
+
+def test_throwaway_package_reaches_the_payload():
+    print('\na new package with a watch.yaml reaches the watch, no core change')
+    import api
+    pkg = '_zz_watch_test'
+    with throwaway_package(pkg):
+        session = {'modality': 'max_strength',
+                   'archetype': {'id': f'{pkg}_day', 'name': 'Throwaway Day'},
+                   'exercises': [_assignment('main_lift', 'sets_reps', sets=5, reps=5),
+                                 _assignment('finisher', 'static_hold', sets=3, hold_seconds=30)]}
+        out = api.encode_watch_session(session, '1-Monday-0', spec_level=1)
+        check('packageId is the archetype\'s package', out.get('packageId') == pkg, str(out.get('packageId')))
+        check('identity from its watch.yaml',
+              out['watch']['label'] == 'Throwaway' and out['watch']['accent'] == 'violet')
+        check('summary pages from its watch.yaml', out['watch']['summary']['pages'] == ['summary', 'exercises'])
+        main, fin = out['exercises']
+        check('each exercise names a screen in the table',
+              main['screen'] in out['screens'] and fin['screen'] in out['screens'])
+        check('the main lift counts toward 25', out['screens'][main['screen']]['a'] == 'cumulative'
+              and out['screens'][main['screen']]['behaviours'] == {'cumulative_target': 25})
+        check('the finisher keeps the hold default', out['screens'][fin['screen']]['template'] == 'hold')
+
+        legacy = api.encode_watch_session(session, '1-Monday-0')
+        check('without spec the session has no spec keys',
+              not ({'packageId', 'watch', 'screens'} & set(legacy))
+              and all('screen' not in e for e in legacy['exercises']))
+
+
+def test_borrowed_session_shows_its_owner():
+    print('\na borrowed session shows its owner\'s screens')
+    import api
+    session = {'modality': 'combat_sport',
+               'archetype': {'id': 'bjj_class', 'name': 'BJJ Class'},
+               'provenance': {'package': 'bjj', 'borrowed': True},
+               'exercises': [{'slot_role': 'free_rolling', 'slot_type': 'time_domain', 'meta': True,
+                              'load': {'duration_minutes': 25}}]}
+    out = api.encode_watch_session(session, '1-Monday-0', spec_level=1)
+    check('packageId is bjj', out['packageId'] == 'bjj')
+    check('the round timer comes with it',
+          out['screens'][out['exercises'][0]['screen']]['template'] == 'round_timer')
+    session['archetype'] = {'id': 'gone_from_the_library'}
+    out = api.encode_watch_session(session, '1-Monday-0', spec_level=1)
+    check('an unknown archetype falls back to the provenance tag', out['packageId'] == 'bjj')
+
+
+def main() -> int:
+    test_defaults()
+    test_every_slot_resolves()
+    test_declared_overrides()
+    test_throwaway_package_reaches_the_payload()
+    test_borrowed_session_shows_its_owner()
+    print()
+    print('ok' if not failures else f'{len(failures)} failure(s)')
+    return 0 if not failures else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "watch.schema.json",
+  "title": "Package Watch Screens",
+  "description": "How one methodology's sessions look on the watch. A package ships this file beside its philosophy.yaml to override, per archetype and slot, the screen the watch draws; anything it leaves out is the vocabulary's default for the slot type. This schema checks the shape only: the ids (templates, fields, title parts, lines, LAP actions, behaviours) are the vocabulary in data/commons/watch_vocabulary.json, and tools/check_provenance.py checks them against it, along with archetype ownership and slot roles. src/watch_spec.py resolves the file; the watch's core interprets the result.",
+  "type": "object",
+  "required": [
+    "id",
+    "spec_version"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Must equal the package directory name and the philosophy id."
+    },
+    "spec_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The vocabulary version the file was written against."
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Short name on the watch; defaults to the philosophy's name."
+        },
+        "accent": {
+          "type": "string",
+          "description": "A palette token from the vocabulary (never hex: the MIP screens have 64 colours)."
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slot_types": {
+          "type": "object",
+          "description": "Per slot type, the package's override for every archetype it owns.",
+          "additionalProperties": {
+            "$ref": "#/definitions/screen"
+          }
+        }
+      }
+    },
+    "archetypes": {
+      "type": "object",
+      "description": "Keyed by archetype id; the archetype must be owned or borrowed by the package.",
+      "additionalProperties": {
+        "$ref": "#/definitions/archetypeScreens"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "string"
+          },
+          "description": "The post-session page loop, in order (vocabulary summary_pages)."
+        }
+      }
+    },
+    "edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weight_step_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "weight_step_by_category": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "A compiled watch module (garmin/packages/<id>/). Builds without it draw the declarative screens."
+    }
+  },
+  "definitions": {
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "title": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string"
+          },
+          "description": "At most four parts; parts whose value is absent (no side, no wave) are not drawn."
+        },
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "string"
+        },
+        "gauge": {
+          "type": "string"
+        },
+        "lines": {
+          "type": "string"
+        },
+        "lap": {
+          "type": "string"
+        },
+        "phases": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "maxLength": 10
+          }
+        },
+        "module_screen": {
+          "type": "string",
+          "description": "A screen of the package's module; the rest of this spec is its fallback."
+        },
+        "behaviours": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "side_tracked": {
+              "type": "boolean"
+            },
+            "cumulative_target": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "ladder": {
+              "type": "object",
+              "required": [
+                "peak"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "peak": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "load_wave": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 150
+              }
+            },
+            "metronome_rpm": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "archetypeScreens": {
+      "type": "object",
+      "description": "Keys at this level apply to every slot of the archetype; slot_types and slots narrow them.",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/screen/properties/template"
+        },
+        "title": {
+          "$ref": "#/definitions/screen/properties/title"
+        },
+        "a": {
+          "$ref": "#/definitions/screen/properties/a"
+        },
+        "b": {
+          "$ref": "#/definitions/screen/properties/b"
+        },
+        "gauge": {
+          "$ref": "#/definitions/screen/properties/gauge"
+        },
+        "lines": {
+          "$ref": "#/definitions/screen/properties/lines"
+        },
+        "lap": {
+          "$ref": "#/definitions/screen/properties/lap"
+        },
+        "phases": {
+          "$ref": "#/definitions/screen/properties/phases"
+        },
+        "module_screen": {
+          "$ref": "#/definitions/screen/properties/module_screen"
+        },
+        "behaviours": {
+          "$ref": "#/definitions/screen/properties/behaviours"
+        },
+        "slot_types": {
+          "type": "object",
+          "description": "Per slot type within this archetype.",
+          "additionalProperties": {
+            "$ref": "#/definitions/screen"
+          }
+        },
+        "slots": {
+          "type": "object",
+          "description": "Keyed by slot role; the role must exist in the archetype.",
+          "additionalProperties": {
+            "$ref": "#/definitions/screen"
+          }
+        }
+      }
+    }
+  }
+}

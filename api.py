@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
+from src import watch_spec as _watch_spec
 from src import goals, loader, provenance
 from src.similarity import compute_all_similarities
 from src.generator import generate
@@ -2915,6 +2916,51 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
     }
 
 
+def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
+                         spec_level: int = 0) -> dict:
+    """One stored session in the watch's shape.
+
+    With spec_level >= 1 the session also says which package owns it and
+    carries that package's resolved screens (src/watch_spec.py): `watch` holds
+    the package-level settings, `screens` the deduplicated specs, and each
+    exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
+    the demo programmes through this too, so demo and real sessions agree.
+    """
+    modality = s.get('modality') or ''
+    archetype = s.get('archetype') or {}
+    pairs = [
+        (ea, e) for ea, e in (
+            (ea, _encode_watch_exercise(ea, modality)) for ea in (s.get('exercises') or [])
+        ) if e is not None
+    ]
+    exercises = [e for _, e in pairs]
+    out = {
+        'sessionId': session_key,
+        'completed': completed,
+        'modalityId': modality,
+        # Archetype identity drives the category icon, and on builds before 1.4
+        # the watch's per-archetype behaviour table.
+        'archetypeId': archetype.get('id'),
+        'archetypeName': archetype.get('name') or modality,
+        'archetypeCategory': archetype.get('category'),
+        'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+        'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
+        'exercises': exercises,
+    }
+    if spec_level >= 1:
+        package_id = _watch_spec.session_package(s)
+        table, keys = _watch_spec.session_screens(
+            package_id, archetype.get('id'),
+            [(e['slotRole'] or None, e['slotType']) for e in exercises],
+        )
+        for e, key in zip(exercises, keys):
+            e['screen'] = key
+        out['packageId'] = package_id
+        out['watch'] = _watch_spec.session_identity(package_id)
+        out['screens'] = table
+    return out
+
+
 @app.get('/api/user/today-session')
 @require_auth
 def get_today_session():
@@ -2963,31 +3009,22 @@ def get_today_session():
         if m.get('matchConfidence') != 'rejected'
     }
 
+    # ?spec=1: the watch build reads package screen specs. Without it the
+    # payload is what builds before 1.4 parse, key for key.
+    try:
+        spec_level = int(request.args.get('spec') or 0)
+    except ValueError:
+        spec_level = 0
+
     out_sessions = []
     for i, s in enumerate(sessions):
-        modality = s.get('modality') or ''
-        archetype = s.get('archetype') or {}
         session_key = f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}"
         log = session_logs.get(session_key) or {}
-        exercises = [
-            e for e in (
-                _encode_watch_exercise(ea, modality) for ea in (s.get('exercises') or [])
-            ) if e is not None
-        ]
-        out_sessions.append({
-            'sessionId': session_key,
-            'completed': bool(log.get('completedAt')) or session_key in matched_keys,
-            'modalityId': modality,
-            # Archetype identity drives the client's per-archetype behavior table
-            # (TGU side alternation, Tabata work/rest, BJJ round names, ...) and
-            # the category icon. Previously only the display name was sent.
-            'archetypeId': archetype.get('id'),
-            'archetypeName': archetype.get('name') or modality,
-            'archetypeCategory': archetype.get('category'),
-            'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
-            'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
-            'exercises': exercises,
-        })
+        out_sessions.append(encode_watch_session(
+            s, session_key,
+            completed=bool(log.get('completedAt')) or session_key in matched_keys,
+            spec_level=spec_level,
+        ))
 
     try:
         bio, sources = _bio_for_scoring(g.user_id, days=14)
@@ -3016,7 +3053,7 @@ def get_today_session():
         else:
             tomorrow = {'dayName': t_day, 'sessionCount': 0}
 
-    return jsonify({
+    body = {
         'status': 'ok',
         'date': str(today),
         # Position in the program, not the stored absolute week_number.
@@ -3033,7 +3070,10 @@ def get_today_session():
         'readiness': readiness,
         'sessions': out_sessions,
         'tomorrow': tomorrow,
-    })
+    }
+    if spec_level >= 1:
+        body['specVersion'] = _watch_spec.spec_version()
+    return jsonify(body)
 
 
 # ---------------------------------------------------------------------------

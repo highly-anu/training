@@ -217,6 +217,23 @@ def load_analytics_specs() -> dict:
     return specs
 
 
+def load_watch_specs() -> dict:
+    """Return {package_id: watch spec} for every package that declares one.
+
+    A package's watch.yaml says how its sessions look on the watch
+    (docs/schemas/watch.schema.json); src/watch_spec.py resolves it against
+    data/commons/watch_vocabulary.json. Optional, like analytics.yaml: a
+    package without one gets the vocabulary's slot-type defaults.
+    """
+    specs: dict = {}
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'watch.yaml'))):
+        pkg_id = os.path.basename(os.path.dirname(path))
+        data = _load_yaml(path) or {}
+        data['_package'] = pkg_id
+        specs[pkg_id] = data
+    return specs
+
+
 def load_philosophies() -> list:
     """Return list of philosophy dicts, each with a system_connections key."""
     fw_map: dict = {}

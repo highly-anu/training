@@ -76,6 +76,18 @@ def run():
     body = client.get('/api/user/today-session?date=2026-10-11').get_json()
     check(body['isRestDay'] and body['tomorrow'] is None, f"end of program {body.get('tomorrow')}")
 
+    # ?spec=1: the package screens ride along; without it the keys are the
+    # ones builds before 1.4 parse.
+    plain = client.get('/api/user/today-session?date=2026-10-09').get_json()
+    check('specVersion' not in plain and not ({'packageId', 'watch', 'screens'} & set(plain['sessions'][0])),
+          f"spec keys without ?spec: {sorted(plain['sessions'][0])}")
+    spec = client.get('/api/user/today-session?date=2026-10-09&spec=1').get_json()
+    check(isinstance(spec.get('specVersion'), int), f"specVersion {spec.get('specVersion')}")
+    s0 = spec['sessions'][0]
+    check({'packageId', 'watch', 'screens'} <= set(s0), f"session keys {sorted(s0)}")
+    check(set(s0) - {'packageId', 'watch', 'screens'} == set(plain['sessions'][0]),
+          'the spec payload must only add keys')
+
     for f in failures:
         print('FAIL', f)
     print('ok' if not failures else f'{len(failures)} failure(s)')
