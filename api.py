@@ -2954,17 +2954,29 @@ def get_today_session():
     schedule = week.get('schedule') or {}
     sessions = schedule.get(day_name) or []
 
+    # Which of today's sessions are already done, for the watch glance's ring:
+    # a session log with a completion time, or a workout matched to the session
+    # (so a workout recorded on the phone or another watch counts too).
+    session_logs = _health.get_session_logs(g.user_id)
+    matched_keys = {
+        m.get('sessionKey') for m in _health.get_matches(g.user_id)
+        if m.get('matchConfidence') != 'rejected'
+    }
+
     out_sessions = []
     for i, s in enumerate(sessions):
         modality = s.get('modality') or ''
         archetype = s.get('archetype') or {}
+        session_key = f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}"
+        log = session_logs.get(session_key) or {}
         exercises = [
             e for e in (
                 _encode_watch_exercise(ea, modality) for ea in (s.get('exercises') or [])
             ) if e is not None
         ]
         out_sessions.append({
-            'sessionId': f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}",
+            'sessionId': session_key,
+            'completed': bool(log.get('completedAt')) or session_key in matched_keys,
             'modalityId': modality,
             # Archetype identity drives the client's per-archetype behavior table
             # (TGU side alternation, Tabata work/rest, BJJ round names, ...) and
@@ -2980,10 +2992,29 @@ def get_today_session():
     try:
         bio, sources = _bio_for_scoring(g.user_id, days=14)
         readiness = _compute_readiness(
-            bio, _health.get_session_logs(g.user_id), user_id=g.user_id, sources=sources,
+            bio, session_logs, user_id=g.user_id, sources=sources,
         )
     except Exception:
         readiness = None
+
+    # Tomorrow's first session, for the glance's rest-day and evening preview.
+    tomorrow = None
+    t_index = (days_since + 1) // 7
+    if t_index < len(weeks):
+        t_day = _DAY_NAMES[(today.weekday() + 1) % 7]
+        t_sessions = (weeks[t_index].get('schedule') or {}).get(t_day) or []
+        if t_sessions:
+            first = t_sessions[0]
+            t_arch = first.get('archetype') or {}
+            tomorrow = {
+                'dayName': t_day,
+                'sessionCount': len(t_sessions),
+                'modalityId': first.get('modality') or '',
+                'archetypeName': t_arch.get('name') or first.get('modality') or '',
+                'estimatedMinutes': _pick(t_arch, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+            }
+        else:
+            tomorrow = {'dayName': t_day, 'sessionCount': 0}
 
     return jsonify({
         'status': 'ok',
@@ -3001,6 +3032,7 @@ def get_today_session():
         'isRestDay': len(out_sessions) == 0,
         'readiness': readiness,
         'sessions': out_sessions,
+        'tomorrow': tomorrow,
     })
 
 

@@ -631,6 +631,7 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
+SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow
 ```
 
 Run this after touching anything under `ios/` (in addition to the simulator):
