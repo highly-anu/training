@@ -41,6 +41,7 @@ deferred is under *Later*.
 | 3 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
 | 4 | Watch app: Garmin-native look, menus and icons | P2 | M | watch |
 | 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
+| 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 
 ---
 
@@ -553,6 +554,38 @@ mixed in one baseline.
 Needs item 2's slices 1–3 first. Acceptance: a capture reaches `daily_wellness`
 with its method, readiness scores it from its own baseline and says so, and
 Apple's SDNN series is untouched.
+
+---
+
+### 6. Watch: package-owned screens — verify and finish — P2 · M
+
+Added 2026-10-11. The watch app is now a core library (`garmin/core`) inside an
+app shell, and each package's `watch.yaml` says how its sessions look
+(`data/commons/watch_vocabulary.json`, `src/watch_spec.py`,
+`GET /user/today-session?spec=1`, one `SpecRenderer` in place of the eight
+slot-type renderers and `ArchetypeBehavior.mc`). Everything builds for the seven
+products and `test_watch_spec.py` passes. Still to do:
+
+1. **Hardware (S).** Sideload a `--demo` build and walk each demo programme:
+   pre-start → data pages → LAP → stop menu → Discard? → summary, beside the
+   1.3.0 photos. Visible changes to confirm: a side-tracked get-up alternates
+   Left/Right on each set (it never switched before), Gym Jones' get-ups count
+   toward 100, the TGU phases strip, the pentathlon RPM beside the clock, and a
+   weighted ruck in km on its main block only. Then a real day against
+   production with `?spec=1`.
+2. **Monkey C unit tests (S).** `build.sh --test` compiles `garmin/core/test`; it
+   was never run, because the simulator was not reachable from the session that
+   wrote it.
+3. **Server fields still demo-only (M).** `targetRpm`, `switchAtSec`,
+   `restUntilHr` and `bells` exist only in the demo JSON (and `bells` as an id
+   heuristic on the watch). They belong on archetype slots and in
+   `_encode_watch_exercise`.
+4. **Split `WorkoutController` (M).** Still 1,300 lines; the plan was
+   Recorder / HrStore / GpsTrack / StepClock / SetLog / Upload behind the same
+   facade. Not needed for packages to own their screens, so it was left for
+   after the hardware check.
+5. **iOS Apple Watch (M).** It still picks views by `slotType`/`archetypeId`; it
+   could read the same `?spec=1` table.
 
 ---
 
