@@ -237,9 +237,12 @@ def _report_watch_specs(data: dict, installed: set) -> list:
                 for slot_type, narrow in (screen.get('slot_types') or {}).items():
                     problems.extend(watch_spec.spec_errors(narrow, f"{where}: {arch_id}.{role}.{slot_type}"))
             # The resolved spec of every slot: actions its template allows,
-            # behaviours its fields need.
+            # behaviours its fields need, a module for a module screen.
             for slot in slots:
                 resolved = watch_spec.resolve(pkg, arch_id, slot.get('role'), slot.get('slot_type'))
+                if resolved.get('module_screen') and not spec.get('module'):
+                    problems.append(f"{where}: {arch_id}.{slot.get('role')} names module_screen "
+                                    f"{resolved['module_screen']!r} but the package declares no module")
                 problems.extend(watch_spec.resolved_errors(
                     resolved, f"{where}: {arch_id}.{slot.get('role')} (resolved)"))
     return problems

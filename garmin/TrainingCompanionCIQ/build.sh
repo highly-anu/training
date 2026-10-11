@@ -49,15 +49,15 @@ if [ "${1:-}" == "--demo" ]; then
   # Staged beside this directory, so the jungle's ../core still resolves.
   STAGE="$(dirname "$HERE")/.demo-stage"
   rm -rf "$STAGE"; mkdir -p "$STAGE"
-  cp -R "$HERE/source" "$HERE/resources" "$HERE/manifest.xml" "$HERE/monkey.jungle" "$STAGE/"
+  cp -R "$HERE/source" "$HERE/resources" "$HERE/manifest.xml" "$HERE/monkey.jungle" "$HERE/packages.jungle" "$STAGE/"
   perl -pi -e 's|(<property id="demoProgrammes" type="boolean">)false|${1}true|' "$STAGE/resources/properties/properties.xml"
   perl -pi -e 's|"stamp": "dev"|"stamp": "'"$(date +%H%M)"'"|' "$STAGE"/resources/jsonData/demo_*.json
   grep -q 'id="demoProgrammes" type="boolean">true' "$STAGE/resources/properties/properties.xml" \
     || { echo "ERROR: demoProgrammes not enabled"; exit 1; }
   echo "Building demo .iq (all devices) ..."
-  "$MONKEYC" -e -o "$OUT/TrainingCompanionDemo.iq" -f "$STAGE/monkey.jungle" -y "$KEY" -r
+  "$MONKEYC" -e -o "$OUT/TrainingCompanionDemo.iq" -f "$STAGE/monkey.jungle;$STAGE/packages.jungle" -y "$KEY" -r
   echo "Building demo sideload .prg for $DEVICE ..."
-  "$MONKEYC" -o "$OUT/TrainingCompanionDemo-$DEVICE.prg" -f "$STAGE/monkey.jungle" -y "$KEY" -d "$DEVICE" -r
+  "$MONKEYC" -o "$OUT/TrainingCompanionDemo-$DEVICE.prg" -f "$STAGE/monkey.jungle;$STAGE/packages.jungle" -y "$KEY" -d "$DEVICE" -r
   rm -rf "$STAGE"
   echo "Built: $OUT/TrainingCompanionDemo.iq  and  $OUT/TrainingCompanionDemo-$DEVICE.prg"
   exit 0
@@ -68,7 +68,7 @@ if [ "${1:-}" == "--test" ]; then
   TJ="$HERE/.test.jungle"   # beside monkey.jungle, so ../core/test resolves
   printf 'base.sourcePath = $(base.sourcePath);../core/test\n' > "$TJ"
   echo "Building unit tests for $DEVICE ..."
-  (cd "$HERE" && "$MONKEYC" --unit-test -o "$OUT/Tests-$DEVICE.prg" -f "monkey.jungle;$TJ" -y "$KEY" -d "$DEVICE")
+  (cd "$HERE" && "$MONKEYC" --unit-test -o "$OUT/Tests-$DEVICE.prg" -f "monkey.jungle;packages.jungle;$TJ" -y "$KEY" -d "$DEVICE")
   echo "Running (the simulator must be open: ./run-sim.sh) ..."
   rm -f "$TJ"
   "$SDK/bin/monkeydo" "$OUT/Tests-$DEVICE.prg" "$DEVICE" -t
@@ -79,7 +79,7 @@ if [ "${1:-}" == "--release" ]; then
   grep -q 'id="demoProgrammes" type="boolean">false' "$HERE/resources/properties/properties.xml" \
     || { echo "ERROR: demoProgrammes must default to false in a release"; exit 1; }
   echo "Building release .iq (all devices) ..."
-  "$MONKEYC" -e -o "$OUT/TrainingCompanion.iq" -f "$HERE/monkey.jungle" -y "$KEY" -r
+  "$MONKEYC" -e -o "$OUT/TrainingCompanion.iq" -f "$HERE/monkey.jungle;$HERE/packages.jungle" -y "$KEY" -r
   echo "Built: $OUT/TrainingCompanion.iq  (store upload)"
   exit 0
 fi
@@ -88,7 +88,7 @@ if [ "${1:-}" == "--device" ]; then
   echo "Building sideloadable .prg for $DEVICE ..."
   "$MONKEYC" \
     -o "$OUT/TrainingCompanion-$DEVICE.prg" \
-    -f "$HERE/monkey.jungle" \
+    -f "$HERE/monkey.jungle;$HERE/packages.jungle" \
     -y "$KEY" \
     -d "$DEVICE" \
     -r
@@ -97,7 +97,7 @@ else
   echo "Building simulator .prg for $DEVICE ..."
   "$MONKEYC" \
     -o "$OUT/TrainingCompanion.prg" \
-    -f "$HERE/monkey.jungle" \
+    -f "$HERE/monkey.jungle;$HERE/packages.jungle" \
     -y "$KEY" \
     -d "$DEVICE"
   echo "Built: $OUT/TrainingCompanion.prg   (run ./run-sim.sh)"

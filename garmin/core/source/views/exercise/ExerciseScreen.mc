@@ -29,6 +29,8 @@ class ExerciseScreen extends Ui.View {
     hidden var _page;
     hidden var _pageAt;
     hidden var _renderer;
+    hidden var _spec;          // the shared SpecRenderer
+    hidden var _boundEx;       // the exercise _renderer was bound for
     hidden var _cursor;        // focused row on the step page
     hidden var _err;
     hidden var _left = false;
@@ -111,10 +113,24 @@ class ExerciseScreen extends Ui.View {
         return -1;
     }
 
-    // The page is drawn from the exercise's screen spec (SpecRenderer); one
-    // renderer serves every exercise.
+    // The page is drawn from the exercise's screen spec: by SpecRenderer, or by
+    // the package module's renderer when the spec names a module_screen and this
+    // build compiled the module in (Registry). Rebound when the exercise changes.
     function bindRenderer() {
-        if (_renderer == null) { _renderer = new SpecRenderer(); }
+        var ex = _ctl.currentExercise();
+        if (_renderer != null && ex == _boundEx) { return; }
+        _boundEx = ex;
+        _renderer = null;
+        var spec = (ex != null) ? ex.spec() : null;
+        if (spec != null && spec.hasKey("module_screen")) {
+            var w = _ctl.session().watch();
+            var mod = Registry.create(w.hasKey("module") ? w["module"] : null);
+            if (mod != null) { _renderer = mod.renderer(spec["module_screen"], spec); }
+        }
+        if (_renderer == null) {
+            if (_spec == null) { _spec = new SpecRenderer(); }
+            _renderer = _spec;
+        }
     }
 
     // ── drawing ──────────────────────────────────────────────────────────────────

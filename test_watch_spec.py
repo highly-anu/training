@@ -194,6 +194,7 @@ def test_watch_side_is_current():
     py = sys.executable
     for args, name in [
         ([py, 'garmin/tools/gen_vocab.py', '--check'], 'Vocab.mc is generated from the current vocabulary'),
+        ([py, 'garmin/tools/gen_registry.py', '--check'], 'Registry.mc and packages.jungle list the package modules'),
         ([py, 'garmin/tools/gen_watch_demo.py', '--check'], 'the demo programmes carry their packages\' current specs'),
         ([py, 'garmin/tools/check_core_neutral.py'], 'garmin/core names no package or archetype'),
     ]:
