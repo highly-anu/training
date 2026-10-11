@@ -30,7 +30,8 @@
        "restSeconds": 180,
        "targetRpe": 8,
        "loadDescription": "5x3 @ 110 kg",
-       "loadNote": "+2.5kg from last week"
+       "loadNote": "+2.5kg from last week",
+       "screen": "s0"
       },
       {
        "exerciseId": "overhead_press",
@@ -45,7 +46,8 @@
        "movementPattern": "vertical_push",
        "bilateral": true,
        "restSeconds": 150,
-       "loadDescription": "4x5 @ 52.5 kg"
+       "loadDescription": "4x5 @ 52.5 kg",
+       "screen": "s0"
       },
       {
        "exerciseId": "weighted_pull_up",
@@ -60,7 +62,8 @@
        "movementPattern": "vertical_pull",
        "bilateral": true,
        "restSeconds": 120,
-       "loadDescription": "4x5 @ +15 kg"
+       "loadDescription": "4x5 @ +15 kg",
+       "screen": "s0"
       },
       {
        "exerciseId": "farmer_carry",
@@ -74,9 +77,57 @@
        "category": "loaded_carry",
        "movementPattern": "farmer_carry",
        "bilateral": true,
-       "loadDescription": "3x40 m @ 2x32 kg"
+       "loadDescription": "3x40 m @ 2x32 kg",
+       "screen": "s1"
       }
-     ]
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
     },
     {
      "sessionId": "demo-sof-pt",
@@ -99,7 +150,8 @@
        "movementPattern": "horizontal_push",
        "bilateral": true,
        "restSeconds": 60,
-       "loadDescription": "5x25"
+       "loadDescription": "5x25",
+       "screen": "s0"
       },
       {
        "exerciseId": "sit_up",
@@ -113,7 +165,8 @@
        "movementPattern": "flexion",
        "bilateral": true,
        "restSeconds": 60,
-       "loadDescription": "5x30"
+       "loadDescription": "5x30",
+       "screen": "s0"
       },
       {
        "exerciseId": "pull_up",
@@ -127,9 +180,44 @@
        "movementPattern": "vertical_pull",
        "bilateral": true,
        "restSeconds": 90,
-       "loadDescription": "5x8"
+       "loadDescription": "5x8",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      }
+     }
     },
     {
      "sessionId": "demo-showcase",
@@ -154,7 +242,8 @@
        "bilateral": false,
        "restSeconds": 90,
        "loadDescription": "5x5 @ 24 kg",
-       "loadNote": "+2kg from last session"
+       "loadNote": "+2kg from last session",
+       "screen": "s0"
       },
       {
        "exerciseId": "power_clean",
@@ -170,7 +259,8 @@
        "category": "barbell",
        "movementPattern": "olympic_lift",
        "bilateral": true,
-       "loadDescription": "10 x 60s"
+       "loadDescription": "10 x 60s",
+       "screen": "s1"
       },
       {
        "exerciseId": "front_lever",
@@ -184,7 +274,8 @@
        "category": "bodyweight",
        "movementPattern": "isometric",
        "bilateral": true,
-       "loadDescription": "5x45s hold"
+       "loadDescription": "5x45s hold",
+       "screen": "s2"
       },
       {
        "exerciseId": "farmer_carry",
@@ -197,7 +288,8 @@
        "category": "loaded_carry",
        "movementPattern": "farmer_carry",
        "bilateral": true,
-       "loadDescription": "3x40 m"
+       "loadDescription": "3x40 m",
+       "screen": "s3"
       },
       {
        "exerciseId": "movement_flow",
@@ -210,7 +302,8 @@
        "category": "skill",
        "movementPattern": "locomotion",
        "bilateral": true,
-       "loadDescription": "5 min"
+       "loadDescription": "5 min",
+       "screen": "s4"
       },
       {
        "exerciseId": null,
@@ -221,9 +314,106 @@
        "durationMinutes": 25,
        "prescribedZoneLower": 3,
        "prescribedZoneUpper": 4,
-       "loadDescription": "25 min - Zone 3-4"
+       "loadDescription": "25 min - Zone 3-4",
+       "screen": "s4"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "phases",
+       "lap": "complete_set",
+       "template": "sets",
+       "phases": [
+        "roll",
+        "post",
+        "bridge",
+        "sweep",
+        "lunge",
+        "stand"
+       ],
+       "behaviours": {
+        "side_tracked": true
+       }
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      },
+      "s3": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      },
+      "s4": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   },
@@ -253,9 +443,44 @@
        "category": "loaded_carry",
        "movementPattern": "loaded_carry",
        "bilateral": true,
-       "loadDescription": "12.0 km @ 20 kg"
+       "loadDescription": "12.0 km @ 20 kg",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "horsemen_gpp",
+     "watch": {
+      "label": "Horsemen GPP / SOF-Style Training",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
     }
    ]
   },
@@ -291,7 +516,8 @@
        "category": "kettlebell",
        "movementPattern": "ballistic",
        "bilateral": true,
-       "loadDescription": "8 x 20s/10s"
+       "loadDescription": "8 x 20s/10s",
+       "screen": "s0"
       },
       {
        "exerciseId": "squat_air",
@@ -305,7 +531,8 @@
        "category": "bodyweight",
        "movementPattern": "squat",
        "bilateral": true,
-       "loadDescription": "AMRAP 12 min"
+       "loadDescription": "AMRAP 12 min",
+       "screen": "s1"
       },
       {
        "exerciseId": "pull_up",
@@ -318,7 +545,8 @@
        "category": "bodyweight",
        "movementPattern": "vertical_pull",
        "bilateral": true,
-       "loadDescription": "5 reps / round"
+       "loadDescription": "5 reps / round",
+       "screen": "s1"
       },
       {
        "exerciseId": "push_up",
@@ -331,7 +559,8 @@
        "category": "bodyweight",
        "movementPattern": "horizontal_push",
        "bilateral": true,
-       "loadDescription": "10 reps / round"
+       "loadDescription": "10 reps / round",
+       "screen": "s1"
       },
       {
        "exerciseId": "row_2k",
@@ -344,9 +573,69 @@
        "category": "aerobic",
        "movementPattern": "aerobic_monostructural",
        "bilateral": true,
-       "loadDescription": "2000 m for time"
+       "loadDescription": "2000 m for time",
+       "screen": "s2"
       }
-     ]
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "rounds",
+       "b": "cap_left",
+       "lines": "components",
+       "lap": "log_round",
+       "template": "rounds",
+       "gauge": "rounds"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "rounds_of_target",
+       "b": "elapsed",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "for_time",
+       "gauge": "rounds_of_target"
+      }
+     }
     }
    ]
   },
@@ -376,9 +665,43 @@
        "category": "aerobic",
        "movementPattern": "aerobic_monostructural",
        "bilateral": true,
-       "loadDescription": "60 min - Zone 2"
+       "loadDescription": "60 min - Zone 2",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   },
@@ -408,9 +731,44 @@
        "category": "loaded_carry",
        "movementPattern": "loaded_carry",
        "bilateral": true,
-       "loadDescription": "20.0 km @ 30 kg"
+       "loadDescription": "20.0 km @ 30 kg",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
     }
    ]
   },
@@ -438,7 +796,8 @@
        "category": "mobility",
        "movementPattern": "locomotion",
        "bilateral": true,
-       "loadDescription": "10 min"
+       "loadDescription": "10 min",
+       "screen": "s0"
       },
       {
        "exerciseId": "couch_stretch",
@@ -452,9 +811,55 @@
        "category": "mobility",
        "movementPattern": "isometric",
        "bilateral": false,
-       "loadDescription": "2x90s each side"
+       "loadDescription": "2x90s each side",
+       "screen": "s1"
       }
-     ]
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      }
+     }
     }
    ]
   }

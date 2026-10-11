@@ -16,12 +16,12 @@ using Toybox.Graphics as Gfx;
 function setsField(v, lo) { return ["sets", "SETS", v, 1, lo, 30]; }
 function repsField(v)   { return ["reps", "REPS", v, 1, 0, 100]; }
 function holdField(v)   { return ["hold", "SECONDS", v, 5, 0, 600]; }
-// Kettlebells come in half-pood (4 kg) steps; a double edits the weight of one bell.
+// The step is the package's (WorkoutExercise.weightStep): kettlebells come in
+// half-pood (4 kg) steps by default. A double edits the weight of one bell.
 function weightField(v, ex) {
     var b = (ex != null) ? ex.bells() : 1;
-    var kb = ex != null && ex.isKettlebell();
     return ["weight", (b > 1) ? "KG PER BELL" : "WEIGHT KG", v.toFloat(),
-            kb ? 4.0 : 2.5, 0.0, 500.0];
+            (ex != null) ? ex.weightStep() : Vocab.WEIGHT_STEP_KG, 0.0, 500.0];
 }
 function rpeField(v)    { return ["rpe", "RPE", v.toFloat(), 0.5, 5.0, 10.0]; }
 

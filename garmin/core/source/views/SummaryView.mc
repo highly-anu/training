@@ -23,9 +23,20 @@ class SummaryView extends Ui.View {
         View.initialize();
         _ctl = ctl;
         _page = 0;
-        _pages = [[:summary, "SUMMARY"], [:hr, "HEART RATE"]];
-        if (ctl.trainingEffect() != null) { _pages.add([:te, "TRAINING EFFECT"]); }
-        _pages.add([:exercises, "EXERCISES"]);
+        // The package chooses the pages and their order (watch.summary.pages,
+        // vocabulary summary_pages); Training Effect only when the watch has one.
+        _pages = [];
+        var ids = ctl.session().summaryPages();
+        for (var i = 0; i < ids.size() && _pages.size() < 5; i += 1) {
+            var id = ids[i];
+            if (id.equals("summary"))              { _pages.add([:summary, "SUMMARY"]); }
+            else if (id.equals("heart_rate"))      { _pages.add([:hr, "HEART RATE"]); }
+            else if (id.equals("training_effect")) {
+                if (ctl.trainingEffect() != null) { _pages.add([:te, "TRAINING EFFECT"]); }
+            }
+            else if (id.equals("exercises"))       { _pages.add([:exercises, "EXERCISES"]); }
+        }
+        if (_pages.size() == 0) { _pages.add([:summary, "SUMMARY"]); }
     }
 
     function onLayout(dc) {
@@ -78,7 +89,7 @@ class SummaryView extends Ui.View {
         var g = _g;
         var s = _ctl.session();
         Icons.drawCentered(dc, g.cx, (g.h * 13) / 100, g.iconChip,
-                           Icons.categoryKey(s.archetypeCategory()), Theme.accent(s.modalityId()));
+                           Icons.categoryKey(s.archetypeCategory()), Theme.sessionAccent(s));
         Native.fitted(dc, g.cx, (g.h * 225) / 1000, Text.lineBold(), s.archetypeName(),
                       Gfx.COLOR_WHITE, (g.w * 66) / 100);
         Native.text(dc, g.cx, (g.h * 385) / 1000, Text.bigNum(), Text.mmss(_ctl.elapsedSec()),

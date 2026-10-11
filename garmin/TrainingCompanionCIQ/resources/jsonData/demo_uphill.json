@@ -29,7 +29,8 @@
        "durationMinutes": 20,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       },
       {
        "exerciseId": "threshold_run",
@@ -47,7 +48,8 @@
        "timeMinutes": 50,
        "prescribedZoneLower": 3,
        "prescribedZoneUpper": 4,
-       "zoneTarget": "Zone 3-4"
+       "zoneTarget": "Zone 3-4",
+       "screen": "s1"
       },
       {
        "exerciseId": "cool_run",
@@ -62,9 +64,57 @@
        "durationMinutes": 15,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
     },
     {
      "sessionId": "demo-up-core",
@@ -85,7 +135,8 @@
        "movementPattern": "rotation",
        "bilateral": true,
        "loadDescription": "5 min",
-       "durationMinutes": 5
+       "durationMinutes": 5,
+       "screen": "s0"
       },
       {
        "exerciseId": "hanging_leg_raise",
@@ -99,7 +150,8 @@
        "loadDescription": "4x8",
        "sets": 4,
        "reps": "8",
-       "restSeconds": 90
+       "restSeconds": 90,
+       "screen": "s1"
       },
       {
        "exerciseId": "weighted_plank",
@@ -114,9 +166,68 @@
        "sets": 3,
        "holdSeconds": 45,
        "weightKg": 10.0,
-       "restSeconds": 60
+       "restSeconds": 60,
+       "screen": "s2"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      }
+     }
     }
    ]
   },
@@ -146,9 +257,43 @@
        "durationMinutes": 40,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   },
@@ -178,7 +323,8 @@
        "durationMinutes": 20,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       },
       {
        "exerciseId": "hill_repeat",
@@ -196,7 +342,8 @@
        "timeMinutes": 48,
        "prescribedZoneLower": 4,
        "prescribedZoneUpper": 5,
-       "zoneTarget": "Zone 4-5"
+       "zoneTarget": "Zone 4-5",
+       "screen": "s1"
       },
       {
        "exerciseId": "cool_run2",
@@ -211,9 +358,57 @@
        "durationMinutes": 10,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
     }
    ]
   },
@@ -243,7 +438,8 @@
        "durationMinutes": 15,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       },
       {
        "exerciseId": "box_step_up",
@@ -258,7 +454,8 @@
        "sets": 8,
        "reps": "50",
        "weightKg": 20.0,
-       "restSeconds": 60
+       "restSeconds": 60,
+       "screen": "s1"
       },
       {
        "exerciseId": "cool_walk",
@@ -273,9 +470,56 @@
        "durationMinutes": 10,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      }
+     }
     }
    ]
   },
@@ -305,9 +549,44 @@
        "distanceKm": 12.0,
        "packLoadKg": 20,
        "prescribedZoneLower": 2,
-       "prescribedZoneUpper": 2
+       "prescribedZoneUpper": 2,
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance_km",
+       "b": "elapsed",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance_km"
+      }
+     }
     }
    ]
   },
@@ -337,7 +616,8 @@
        "durationMinutes": 15,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       },
       {
        "exerciseId": "long_run",
@@ -352,7 +632,8 @@
        "durationMinutes": 120,
        "prescribedZoneLower": 2,
        "prescribedZoneUpper": 2,
-       "zoneTarget": "Zone 2"
+       "zoneTarget": "Zone 2",
+       "screen": "s0"
       },
       {
        "exerciseId": "cool_run3",
@@ -367,9 +648,43 @@
        "durationMinutes": 15,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   },
@@ -399,7 +714,8 @@
        "durationMinutes": 20,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       },
       {
        "exerciseId": "mountain",
@@ -415,7 +731,8 @@
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 2,
        "zoneTarget": "Zone 1-2",
-       "focus": "eat every 45 min"
+       "focus": "eat every 45 min",
+       "screen": "s0"
       },
       {
        "exerciseId": "descent",
@@ -430,9 +747,43 @@
        "durationMinutes": 10,
        "prescribedZoneLower": 1,
        "prescribedZoneUpper": 1,
-       "zoneTarget": "Zone 1"
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   }

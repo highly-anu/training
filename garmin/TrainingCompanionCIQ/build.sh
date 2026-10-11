@@ -4,6 +4,7 @@
 #   ./build.sh              -> build a runnable .prg for the simulator (default device)
 #   ./build.sh --device     -> build a signed .iq / sideloadable .prg for a real watch
 #   DEVICE=fenix943mm ./build.sh   -> override target device
+#   ./build.sh --test       -> build the core's (:test) functions and run them in the open simulator
 #   ./build.sh --release    -> the real app as a store upload (all devices): bin/TrainingCompanion.iq
 #   ./build.sh --demo       -> the real app (same id and name, so it uploads as a new version) with the
 #                              demo programmes (SOF, Kettlebell, Uphill) and no pairing. Writes bin/TrainingCompanionDemo.iq
@@ -59,6 +60,18 @@ if [ "${1:-}" == "--demo" ]; then
   "$MONKEYC" -o "$OUT/TrainingCompanionDemo-$DEVICE.prg" -f "$STAGE/monkey.jungle" -y "$KEY" -d "$DEVICE" -r
   rm -rf "$STAGE"
   echo "Built: $OUT/TrainingCompanionDemo.iq  and  $OUT/TrainingCompanionDemo-$DEVICE.prg"
+  exit 0
+fi
+
+if [ "${1:-}" == "--test" ]; then
+  # The core's (:test) functions (../core/test), run in the simulator.
+  TJ="$HERE/.test.jungle"   # beside monkey.jungle, so ../core/test resolves
+  printf 'base.sourcePath = $(base.sourcePath);../core/test\n' > "$TJ"
+  echo "Building unit tests for $DEVICE ..."
+  (cd "$HERE" && "$MONKEYC" --unit-test -o "$OUT/Tests-$DEVICE.prg" -f "monkey.jungle;$TJ" -y "$KEY" -d "$DEVICE")
+  echo "Running (the simulator must be open: ./run-sim.sh) ..."
+  rm -f "$TJ"
+  "$SDK/bin/monkeydo" "$OUT/Tests-$DEVICE.prg" "$DEVICE" -t
   exit 0
 fi
 

@@ -11,13 +11,12 @@ module Steps {
     // Exercises counted in sets, each followed by a rest.
     function isSetBased(ex) {
         if (ex == null) { return false; }
-        var s = ex.slotType();
-        return s.equals("sets_reps") || s.equals("static_hold");
+        return ex.isTemplate("sets") || ex.isTemplate("hold");
     }
 
     // Short carries arrive in metres and are counted as laps.
     function isShortDistance(ex) {
-        return ex != null && ex.slotType().equals("distance")
+        return ex != null && ex.isTemplate("distance")
             && ex.distanceM() != null && ex.distanceKm() == null;
     }
 
@@ -166,7 +165,7 @@ module Steps {
                       : ((i == cur) ? :now : :upcoming);
             var n = setCount(ex);
             var rest = restSec(ex, modality);
-            if (ex.slotType().equals("emom") && ex.targetRounds() != null && ex.targetRounds() > 1) {
+            if (ex.isTemplate("interval") && ex.targetRounds() != null && ex.targetRounds() > 1) {
                 // A repeat block, as Garmin lists one: work and rest rows under
                 // "Now: 3/8 Repeats".
                 var rn = ex.targetRounds();

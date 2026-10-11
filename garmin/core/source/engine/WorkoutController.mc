@@ -39,7 +39,7 @@ class WorkoutController {
     hidden var _elapsed;        // seconds since start
 
     // HR reservoir — FIXED capacity, decimating. An unbounded per-second array
-    // would reach 21,600 entries on a 6-hour long_mountain_day (~346 KB across
+    // would reach 21,600 entries on a 6-hour mountain day (~346 KB across
     // the two arrays, 45% of the 768 KB app limit) and the app would die before
     // finish() ever saved the FIT. Both consumers already subsample to <= 600,
     // so capping here is lossless relative to what is actually uploaded.
@@ -422,11 +422,12 @@ class WorkoutController {
 
         var ex = currentExercise();
         if (ex == null) { return; }
-        var slot = ex.slotType();
         // A timed step or an AMRAP block is announced as it starts (name, then what
         // it asks for); sets with rests between them are not.
         if (announces(ex)) { queueAlert(ex.name(), Steps.prescription(ex)); }
-        if (slot.equals("emom")) {
+        // The step runs as its screen spec's template says (ScreenSpec), not by
+        // slot type: a package can run a class's timed blocks as a round timer.
+        if (ex.isTemplate("interval")) {
             var rounds = ex.targetRounds();
             _emomTotal = (rounds != null) ? rounds : 0;
 
@@ -447,7 +448,7 @@ class WorkoutController {
             _emomInterval = _workSec + _intRestSec;
             _intPhase = PHASE_WORK;
             _intPhaseLeft = _workSec;
-        } else if (slot.equals("amrap")) {
+        } else if (ex.isTemplate("rounds")) {
             var cap = ex.timeMinutes();
             _capSec = (cap != null) ? (cap * 60) : 0;
         }
@@ -483,10 +484,11 @@ class WorkoutController {
         Haptics.sideChange();
     }
 
-    // True when the current exercise needs left/right tracking.
+    // True when the current exercise is counted per side: a unilateral movement,
+    // or one its package marks side_tracked (the get-up).
     function needsSideTracking() {
         var ex = currentExercise();
-        return ex != null && ex.isUnilateral();
+        return ex != null && ex.sideTracked();
     }
 
     // ── static hold ──────────────────────────────────────────────────────────────
@@ -771,24 +773,25 @@ class WorkoutController {
         return (v < lo) ? lo : ((v > hi) ? hi : v);
     }
 
-    // Interval and timed-step clock, run once a second while ACTIVE.
+    // Interval and timed-step clock, run once a second while ACTIVE. Keyed on the
+    // step's template (ScreenSpec), not its slot type:
     //
-    //   emom          work and rest phases with their own cues; a target RPM ticks
+    //   interval      work and rest phases with their own cues; a target RPM ticks
     //                 the metronome, a hand switch fires mid-set, and a rest with an
     //                 HR target ends once HR has stayed under it for 5 s (the rest
     //                 time is then only a cap). The block ends itself after its last
     //                 round, as Garmin's repeat steps do.
-    //   amrap         ends itself when the cap runs out
-    //   time_domain / skill_practice with a duration: end themselves at 0:00
+    //   rounds        ends itself when the cap runs out
+    //   timed         with a duration: ends itself at 0:00 (a round_timer block
+    //                 does not: LAP counts its rounds and leaves it)
     //
     // LAP still ends any of them early.
     hidden function updateIntervalTiming() {
         var ex = currentExercise();
         if (ex == null) { return; }
-        var slot = ex.slotType();
         var since = _elapsed - _exStartSec;
 
-        if (slot.equals("emom") && _workSec > 0) {
+        if (ex.isTemplate("interval") && _workSec > 0) {
             _intPhaseLeft -= 1;
             if (_intPhase == PHASE_WORK) {
                 var sw = ex.switchAtSec();
@@ -831,14 +834,13 @@ class WorkoutController {
                            workValue(ex));
             }
 
-        } else if (slot.equals("amrap") && _capSec > 0) {
+        } else if (ex.isTemplate("rounds") && _capSec > 0) {
             if (since >= _capSec && !_capBuzzed) {
                 _capBuzzed = true;
                 Haptics.sessionComplete();
                 nextExercise();
             }
-        } else if ((slot.equals("time_domain") || slot.equals("skill_practice"))
-                   && !ArchetypeBehavior.isRoundTimer(archetypeId())) {
+        } else if (ex.isTemplate("timed")) {
             var mins = ex.durationMinutes();
             if (mins != null && mins > 0 && since >= mins * 60) {
                 Haptics.restOver();
@@ -890,9 +892,8 @@ class WorkoutController {
     hidden function queueAlert(title, line) { _alert = [title, line]; }
 
     hidden function announces(ex) {
-        var slot = ex.slotType();
-        if (slot.equals("emom") || slot.equals("amrap") || slot.equals("for_time")) { return true; }
-        return (slot.equals("time_domain") || slot.equals("skill_practice"))
+        if (ex.isTemplate("interval") || ex.isTemplate("rounds") || ex.isTemplate("for_time")) { return true; }
+        return (ex.isTemplate("timed") || ex.isTemplate("round_timer"))
             && ex.durationMinutes() != null && ex.durationMinutes() > 0;
     }
     function takeAlert() { var a = _alert; _alert = null; return a; }

@@ -114,7 +114,8 @@ class SyncManager {
         if (DemoSession.enabled()) { cb.invoke(true, null); return; }
         _todayCb = cb;
         Comm.makeWebRequest(
-            Config.apiBaseUrl() + "/user/today-session",
+            // spec=1: each session carries its package's screen specs (ScreenSpec).
+            Config.apiBaseUrl() + "/user/today-session?spec=" + Vocab.VERSION.toString(),
             null,
             jsonGetOptions(),
             method(:onToday)

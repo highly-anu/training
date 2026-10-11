@@ -1,11 +1,13 @@
 using Toybox.Lang;
 
-// Base class for the slot-type screens.
+// Base class for page 1 of the workout. SpecRenderer draws every exercise from
+// its package's screen spec; a package module (garmin/packages/<id>) may supply
+// its own subclass for a screen the vocabulary cannot express.
 //
-// Each renderer supplies only the content of Garmin's data page — a title line,
+// A renderer supplies only the content of Garmin's data page — a title line,
 // one or two fields (capitals over a number) and the two lines under the rule —
 // and what LAP does. ExerciseScreen draws them in the watch's own layout, so every
-// slot type reads like a page of Garmin's Strength workout.
+// screen reads like a page of Garmin's Strength workout.
 class Renderer {
 
     function initialize() {}

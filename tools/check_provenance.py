@@ -234,6 +234,8 @@ def _report_watch_specs(data: dict, installed: set) -> list:
                 if role not in roles:
                     problems.append(f"{where}: {arch_id} has no slot role {role!r}")
                 problems.extend(watch_spec.spec_errors(screen, f"{where}: {arch_id}.{role}"))
+                for slot_type, narrow in (screen.get('slot_types') or {}).items():
+                    problems.extend(watch_spec.spec_errors(narrow, f"{where}: {arch_id}.{role}.{slot_type}"))
             # The resolved spec of every slot: actions its template allows,
             # behaviours its fields need.
             for slot in slots:

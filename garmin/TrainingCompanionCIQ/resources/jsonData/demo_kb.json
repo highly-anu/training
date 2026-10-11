@@ -27,7 +27,8 @@
        "bilateral": true,
        "loadDescription": "10 min",
        "durationMinutes": 10,
-       "focus": "prime the hinge"
+       "focus": "prime the hinge",
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_swing_skill",
@@ -40,7 +41,8 @@
        "bilateral": true,
        "loadDescription": "10 min",
        "durationMinutes": 10,
-       "focus": "crisp hip snap"
+       "focus": "crisp hip snap",
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_hand_to_hand_swing",
@@ -57,7 +59,8 @@
        "intervalRestSec": 60,
        "timeMinutes": 15,
        "weightKg": 24.0,
-       "targetRpm": 70
+       "targetRpm": 70,
+       "screen": "s1"
       },
       {
        "exerciseId": "kb_tgu_flow",
@@ -70,9 +73,57 @@
        "bilateral": true,
        "loadDescription": "5 min",
        "durationMinutes": 5,
-       "focus": "shoulder check"
+       "focus": "shoulder check",
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
     },
     {
      "sessionId": "demo-kb-double",
@@ -93,7 +144,8 @@
        "movementPattern": "squat",
        "bilateral": true,
        "loadDescription": "5 min",
-       "durationMinutes": 5
+       "durationMinutes": 5,
+       "screen": "s0"
       },
       {
        "exerciseId": "double_kb_press",
@@ -109,7 +161,8 @@
        "reps": "5",
        "weightKg": 24.0,
        "restSeconds": 120,
-       "targetRpe": 8
+       "targetRpe": 8,
+       "screen": "s1"
       },
       {
        "exerciseId": "double_kb_front_squat",
@@ -124,7 +177,8 @@
        "sets": 5,
        "reps": "5",
        "weightKg": 24.0,
-       "restSeconds": 120
+       "restSeconds": 120,
+       "screen": "s1"
       },
       {
        "exerciseId": "renegade_row",
@@ -140,9 +194,56 @@
        "reps": "8",
        "weightKg": 20.0,
        "restSeconds": 60,
-       "bells": 2
+       "bells": 2,
+       "screen": "s1"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      }
+     }
     }
    ]
   },
@@ -176,9 +277,45 @@
        "weightKg": 32.0,
        "restUntilHr": 130,
        "prescribedZoneLower": 2,
-       "prescribedZoneUpper": 2
+       "prescribedZoneUpper": 2,
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
     }
    ]
   },
@@ -205,7 +342,8 @@
        "movementPattern": "hip_hinge",
        "bilateral": true,
        "loadDescription": "10 min",
-       "durationMinutes": 10
+       "durationMinutes": 10,
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_snatch",
@@ -223,7 +361,8 @@
        "timeMinutes": 24,
        "weightKg": 16.0,
        "targetRpm": 14,
-       "switchAtSec": 180
+       "switchAtSec": 180,
+       "screen": "s1"
       },
       {
        "exerciseId": "kb_tgu_cool",
@@ -235,9 +374,60 @@
        "movementPattern": "rotation",
        "bilateral": true,
        "loadDescription": "10 min",
-       "durationMinutes": 10
+       "durationMinutes": 10,
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval",
+       "behaviours": {
+        "metronome_rpm": 12
+       }
+      }
+     }
     }
    ]
   },
@@ -269,7 +459,8 @@
        "movementPattern": "rotation",
        "bilateral": true,
        "loadDescription": "5 min",
-       "durationMinutes": 5
+       "durationMinutes": 5,
+       "screen": "s0"
       },
       {
        "exerciseId": "wk_kb_tgu",
@@ -284,7 +475,8 @@
        "sets": 10,
        "reps": "1",
        "weightKg": 24.0,
-       "restSeconds": 45
+       "restSeconds": 45,
+       "screen": "s1"
       },
       {
        "exerciseId": "kb_windmill",
@@ -299,9 +491,83 @@
        "sets": 6,
        "reps": "5",
        "weightKg": 16.0,
-       "restSeconds": 45
+       "restSeconds": 45,
+       "screen": "s2"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "phases",
+       "lap": "complete_set",
+       "template": "sets",
+       "phases": [
+        "roll",
+        "post",
+        "bridge",
+        "sweep",
+        "lunge",
+        "stand"
+       ],
+       "behaviours": {
+        "side_tracked": true
+       }
+      },
+      "s2": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets",
+       "behaviours": {
+        "side_tracked": true
+       }
+      }
+     }
     }
    ]
   },
@@ -328,7 +594,8 @@
        "movementPattern": "rotation",
        "bilateral": true,
        "loadDescription": "5 min",
-       "durationMinutes": 5
+       "durationMinutes": 5,
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_juggling",
@@ -341,7 +608,8 @@
        "bilateral": true,
        "loadDescription": "20 min",
        "durationMinutes": 20,
-       "focus": "soft catches, both hands"
+       "focus": "soft catches, both hands",
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_halo_flow",
@@ -353,9 +621,43 @@
        "movementPattern": "rotation",
        "bilateral": true,
        "loadDescription": "10 min",
-       "durationMinutes": 10
+       "durationMinutes": 10,
+       "screen": "s0"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
     }
    ]
   },
@@ -382,7 +684,8 @@
        "movementPattern": "hip_hinge",
        "bilateral": true,
        "loadDescription": "10 min",
-       "durationMinutes": 10
+       "durationMinutes": 10,
+       "screen": "s0"
       },
       {
        "exerciseId": "kb_snatch_vol",
@@ -399,9 +702,57 @@
        "intervalRestSec": 60,
        "timeMinutes": 18,
        "weightKg": 20.0,
-       "targetRpm": 16
+       "targetRpm": 16,
+       "screen": "s1"
       }
-     ]
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
     }
    ]
   }

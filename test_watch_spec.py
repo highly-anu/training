@@ -9,7 +9,9 @@
 - a throwaway package with its own watch.yaml reaches the today-session
   payload with no change to src/ or the watch's core;
 - a borrowed session shows its owner's screens;
-- one session's screens stay small enough for the watch.
+- one session's screens stay small enough for the watch;
+- the watch's generated Vocab.mc and the demo programmes are current, and
+  garmin/core names no package or archetype.
 
 No database. Run: SUPABASE_URL='' .venv/bin/python test_watch_spec.py
 """
@@ -186,12 +188,27 @@ def test_borrowed_session_shows_its_owner():
     check('an unknown archetype falls back to the provenance tag', out['packageId'] == 'bjj')
 
 
+def test_watch_side_is_current():
+    print('\nthe watch reads the same tables')
+    import subprocess
+    py = sys.executable
+    for args, name in [
+        ([py, 'garmin/tools/gen_vocab.py', '--check'], 'Vocab.mc is generated from the current vocabulary'),
+        ([py, 'garmin/tools/gen_watch_demo.py', '--check'], 'the demo programmes carry their packages\' current specs'),
+        ([py, 'garmin/tools/check_core_neutral.py'], 'garmin/core names no package or archetype'),
+    ]:
+        r = subprocess.run(args, cwd=os.path.dirname(os.path.abspath(__file__)),
+                           capture_output=True, text=True)
+        check(name, r.returncode == 0, (r.stdout + r.stderr).strip()[-300:])
+
+
 def main() -> int:
     test_defaults()
     test_every_slot_resolves()
     test_declared_overrides()
     test_throwaway_package_reaches_the_payload()
     test_borrowed_session_shows_its_owner()
+    test_watch_side_is_current()
     print()
     print('ok' if not failures else f'{len(failures)} failure(s)')
     return 0 if not failures else 1

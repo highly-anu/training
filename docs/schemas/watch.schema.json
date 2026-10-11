@@ -223,6 +223,49 @@
           "type": "object",
           "description": "Keyed by slot role; the role must exist in the archetype.",
           "additionalProperties": {
+            "$ref": "#/definitions/slotScreen"
+          }
+        }
+      }
+    },
+    "slotScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/screen/properties/template"
+        },
+        "title": {
+          "$ref": "#/definitions/screen/properties/title"
+        },
+        "a": {
+          "$ref": "#/definitions/screen/properties/a"
+        },
+        "b": {
+          "$ref": "#/definitions/screen/properties/b"
+        },
+        "gauge": {
+          "$ref": "#/definitions/screen/properties/gauge"
+        },
+        "lines": {
+          "$ref": "#/definitions/screen/properties/lines"
+        },
+        "lap": {
+          "$ref": "#/definitions/screen/properties/lap"
+        },
+        "phases": {
+          "$ref": "#/definitions/screen/properties/phases"
+        },
+        "module_screen": {
+          "$ref": "#/definitions/screen/properties/module_screen"
+        },
+        "behaviours": {
+          "$ref": "#/definitions/screen/properties/behaviours"
+        },
+        "slot_types": {
+          "type": "object",
+          "description": "Narrower still: this role when it arrives as a given slot type.",
+          "additionalProperties": {
             "$ref": "#/definitions/screen"
           }
         }

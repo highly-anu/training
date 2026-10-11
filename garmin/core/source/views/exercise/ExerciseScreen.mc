@@ -13,8 +13,9 @@ using Toybox.Lang;
 //                past its end, wraps to page 1; UP walks up and, past its top,
 //                returns to page 2
 //
-// The renderer for the current slot type supplies page 1's content and LAP's
-// action; resting and "workout complete" are drawn here.
+// The exercise's screen spec (its package's, see ScreenSpec) supplies page 1's
+// content and LAP's action through SpecRenderer; resting and "workout complete"
+// are drawn here.
 class ExerciseScreen extends Ui.View {
 
     const PAGE_WORK  = 0;
@@ -28,7 +29,6 @@ class ExerciseScreen extends Ui.View {
     hidden var _page;
     hidden var _pageAt;
     hidden var _renderer;
-    hidden var _slotKey;
     hidden var _cursor;        // focused row on the step page
     hidden var _err;
     hidden var _left = false;
@@ -38,7 +38,6 @@ class ExerciseScreen extends Ui.View {
         _ctl = ctl;
         _page = PAGE_WORK;
         _pageAt = 0;
-        _slotKey = null;
         _cursor = -1;
     }
 
@@ -112,28 +111,10 @@ class ExerciseScreen extends Ui.View {
         return -1;
     }
 
-    // Pick the renderer for the current slot type.
+    // The page is drawn from the exercise's screen spec (SpecRenderer); one
+    // renderer serves every exercise.
     function bindRenderer() {
-        var ex = _ctl.currentExercise();
-        var slot = (ex != null) ? ex.slotType() : "";
-        var key = ArchetypeBehavior.isRoundTimer(_ctl.archetypeId()) ? "__round" : slot;
-        if (_slotKey == null || !_slotKey.equals(key)) {
-            _renderer = build(key, slot);
-            _slotKey = key;
-        }
-    }
-
-    hidden function build(key, slot) {
-        if (key.equals("__round"))         { return new RoundTimerRenderer(); }
-        if (slot.equals("sets_reps"))      { return new SetsRepsRenderer(); }
-        if (slot.equals("emom"))           { return new EmomRenderer(); }
-        if (slot.equals("amrap"))          { return new AmrapRenderer(); }
-        if (slot.equals("amrap_movement")) { return new AmrapRenderer(); }
-        if (slot.equals("for_time"))       { return new ForTimeRenderer(); }
-        if (slot.equals("distance"))       { return new DistanceRenderer(); }
-        if (slot.equals("static_hold"))    { return new StaticHoldRenderer(); }
-        // time_domain and skill_practice share a screen.
-        return new TimeDomainRenderer();
+        if (_renderer == null) { _renderer = new SpecRenderer(); }
     }
 
     // ── drawing ──────────────────────────────────────────────────────────────────
@@ -146,8 +127,6 @@ class ExerciseScreen extends Ui.View {
     hidden function draw(dc) {
         Native.clear(dc);
         if (_g == null) { _g = new Grid(dc); Text.init(_g); }
-        // Steps now end by themselves on the clock, so the slot can change between
-        // key presses: rebind here (a no-op unless the slot type changed).
         bindRenderer();
         if (_page == PAGE_HEART) {
             drawHeart(dc);

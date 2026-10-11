@@ -57,7 +57,7 @@ module Clip {
     // Accent for a day: its first session's modality, or the recovery colour.
     function dayAccent(day) {
         var ss = day["sessions"];
-        return (ss.size() > 0) ? Theme.accent(ss[0].modalityId()) : Theme.TEXT_HINT;
+        return (ss.size() > 0) ? Theme.sessionAccent(ss[0]) : Theme.TEXT_HINT;
     }
 
     function dayMinutes(day) {

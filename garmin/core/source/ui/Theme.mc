@@ -45,6 +45,13 @@ module Theme {
     const READY_YELLOW = 0xEAB308;
     const READY_RED    = 0xEF4444;
 
+    // Accent for a session: its package's accent token (watch.accent), else the
+    // modality's.
+    function sessionAccent(s) {
+        var a = (s != null) ? s.accent() : null;
+        return (a != null) ? a : accent((s != null) ? s.modalityId() : null);
+    }
+
     // Accent for a modality id. Falls back to a neutral grey for ids we don't know
     // (a new modality shipped server-side should degrade, not crash).
     function accent(modalityId) {

@@ -131,7 +131,7 @@ class ActivityHeader extends Ui.Drawable {
             dc.drawText(cx, h / 2, Text.line(), "Training", Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
             return;
         }
-        var accent = Theme.accent(_s.modalityId());
+        var accent = Theme.sessionAccent(_s);
         var icon = (w * 67) / 1000;
         Icons.drawCentered(dc, cx, (h * 22) / 100, icon, Icons.categoryKey(_s.archetypeCategory()), accent);
         var nw = (w * 62) / 100;

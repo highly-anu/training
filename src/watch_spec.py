@@ -14,6 +14,7 @@ Resolution, most specific last (each layer deep-merges over the one before):
     archetype (keys at its top level apply to all of its slots)
     archetype slot_types.<type>
     archetype slots.<role>
+    archetype slots.<role>.slot_types.<type>
 
 over the default of the template that wins: the slot type's, unless a layer
 names another `template`, in which case that template's defaults are the base
@@ -102,10 +103,12 @@ def resolve(package_id: str | None, archetype_id: str | None,
     layers = [((pkg.get('defaults') or {}).get('slot_types') or {}).get(slot_type or '')]
     arch = (pkg.get('archetypes') or {}).get(archetype_id or '') or {}
     if arch:
+        slot = (arch.get('slots') or {}).get(slot_role or '') or {}
         layers += [
             _spec_part(arch),
             (arch.get('slot_types') or {}).get(slot_type or ''),
-            (arch.get('slots') or {}).get(slot_role or ''),
+            slot,
+            (slot.get('slot_types') or {}).get(slot_type or ''),
         ]
     over: dict = {}
     for layer in layers:
