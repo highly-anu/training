@@ -1,5 +1,5 @@
 id: kb_pentathlon_training
-name: "KB Pentathlon Timed Sets (Wildman)"
+name: "KB Pentathlon Timed Sets (IKMF)"
 modality: strength_endurance
 category: kettlebell
 training_levels:
@@ -18,13 +18,22 @@ slots:
       category: kettlebell
       movement_pattern: hip_hinge
 
+  # One of the five IKMF events, paced at its scoring cap per minute
+  # (exercises.yaml competition_pace); the watch beats it and lets the athlete
+  # set their own.
   - role: main
     slot_type: time_domain
     duration_minutes: 30
     intensity: high
+    paced: true
     exercise_filter:
       category: kettlebell
-      movement_pattern: ballistic
+      exercise_ids:
+        - wk_kb_clean_single
+        - wk_kb_long_cycle_press
+        - kb_jerk_single
+        - wk_kb_half_snatch
+        - wk_kb_push_press_single
 
   - role: skill_cooldown
     slot_type: skill_practice
@@ -37,13 +46,16 @@ slots:
 required_equipment:
   - kettlebell
 sources:
+  - IKMF
   - Wildman
-  - Pavel
 notes: >
-  Pentathlon-specific timed sets. Events: jerk, snatch, half-snatch, push press,
-  long cycle clean & jerk. Competition format: 6 minutes per event; one hand switch
-  permitted (snatch only). Training builds from shorter sets (2–3 min) at competition
-  RPM toward full 6-minute sets. RPM targets at 1 pood (16 kg): jerk ~20 RPM,
-  snatch ~14 RPM, long cycle ~8–10 RPM. Rest between sets equals or exceeds work
-  duration early in training; rest decreases as competition approaches.
-  TGU cooldown assesses shoulder status after overhead volume.
+  Timed sets for the IKMF kettlebell pentathlon (Valery Fedorenko's event,
+  ikmf-world.com/disciplines/ikmf-pentathlon). Single bell, in this order: clean,
+  long cycle press, jerk, half snatch, strict push press — six minutes each,
+  five minutes rest after each, multiple hand changes allowed, the bell may not
+  be set down. Each event caps the reps that score: 120 cleans, 60 long cycle
+  presses, 120 jerks, 108 half snatches, 120 push presses — 20, 10, 20, 18 and
+  20 RPM. The main block is paced at that cap; it is the ceiling, not a
+  prescription, so the athlete sets their own pace on the watch (hold UP ▸ Pace).
+  Training builds from shorter sets toward full six-minute sets. TGU cooldown
+  assesses shoulder status after overhead volume.

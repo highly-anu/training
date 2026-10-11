@@ -2899,6 +2899,9 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         'reps': str(reps) if reps is not None else None,
         'weightKg': _pick(load, 'weight_kg', 'weightKg', 'suggested_weight_kg', 'suggestedWeightKg'),
         'targetRpe': _pick(load, 'target_rpe', 'targetRpe'),
+        # A paced slot's pace, from the exercise's competition cap
+        # (progression.paced_rpm); absent otherwise, never a default.
+        'targetRpm': _pick(load, 'target_rpm', 'targetRpm'),
         'rir': _pick(load, 'rir'),
         'durationMinutes': _pick(load, 'duration_minutes', 'durationMinutes'),
         'zoneTarget': zone_target,

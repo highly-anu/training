@@ -194,6 +194,35 @@
     },
     "notes": {
       "type": "string"
+    },
+    "competition_pace": {
+      "type": "object",
+      "description": "A competition event's scoring cap, which sets the pace of a slot marked `paced: true` (target RPM = max_reps / minutes). Only for an event whose rules publish a cap.",
+      "required": [
+        "competition",
+        "event",
+        "max_reps",
+        "minutes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "competition": {
+          "type": "string",
+          "description": "e.g. ikmf_pentathlon"
+        },
+        "event": {
+          "type": "string"
+        },
+        "max_reps": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The most reps that score in one set."
+        },
+        "minutes": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
     }
   }
 }

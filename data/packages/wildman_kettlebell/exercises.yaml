@@ -217,6 +217,14 @@ exercises:
       Bell pulled from swing arc into rack position at shoulder. Elbow nestled
       against body; bell resting on forearm. Horsemen 12-min KB complex: 1 min
       clean & press each arm. Wildman complexity ladder: swing → clean → press → snatch.
+      The IKMF pentathlon's first event: 120 cleans in 6 min score at most (20 RPM).
+    # IKMF pentathlon clean: the most reps that score in a six-minute set
+    # (ikmf-world.com/disciplines/ikmf-pentathlon). A paced slot's target RPM.
+    competition_pace:
+      competition: ikmf_pentathlon
+      event: clean
+      max_reps: 120
+      minutes: 6
     starting_load_kg:
       novice: 12
       intermediate: 16
@@ -285,6 +293,7 @@ exercises:
       - push_pattern
       - bracing_mechanics
     unlocks:
+      - wk_kb_long_cycle_press
       - kb_press_double
       - wk_kb_push_press_single
       - wk_kb_overhead_carry
@@ -396,6 +405,15 @@ exercises:
     notes: >
       Hip dip drives bell off shoulder; arm locks out overhead. Bridge movement from
       strict press to jerk. Horsemen warm-up protocol: 1 min push press each arm.
+      The IKMF pentathlon's last event (strict push press: heels down, no bounce
+      out of the rack): 120 reps in 6 min score at most (20 RPM).
+    # IKMF pentathlon strict_push_press: the most reps that score in a six-minute set
+    # (ikmf-world.com/disciplines/ikmf-pentathlon). A paced slot's target RPM.
+    competition_pace:
+      competition: ikmf_pentathlon
+      event: strict_push_press
+      max_reps: 120
+      minutes: 6
     starting_load_kg:
       novice: 12
       intermediate: 16
@@ -442,9 +460,15 @@ exercises:
       - Pavel
     notes: >
       Double-dip jerk: first dip drives bell overhead, second dip catches arm locked
-      under bell. KB sport RPM target: 10 RPM at 1 pood (16 kg). Timed protocol:
-      8 min at 10 RPM switching hands every 2 min. Pentathlon standard: 120 reps
-      in 6 min (20 RPM).
+      under bell. Trained as timed sets at a target RPM. The IKMF pentathlon's
+      third event: 120 reps in 6 min score at most (20 RPM), hand changes free.
+    # IKMF pentathlon jerk: the most reps that score in a six-minute set
+    # (ikmf-world.com/disciplines/ikmf-pentathlon). A paced slot's target RPM.
+    competition_pace:
+      competition: ikmf_pentathlon
+      event: jerk
+      max_reps: 120
+      minutes: 6
     starting_load_kg:
       novice: 12
       intermediate: 16
@@ -491,7 +515,7 @@ exercises:
     notes: >
       Two bells jerked simultaneously from double rack. Highest systemic demand of
       all KB pressing patterns. Demands exceptional breathing mechanics and core
-      stability. Pentathlon long cycle clean & jerk uses double bells.
+      stability.
     starting_load_kg:
       novice: 16
       intermediate: 24
@@ -517,7 +541,8 @@ exercises:
     requires:
       - wk_kb_swing_single_arm
       - wk_kb_clean_single
-    unlocks: []
+    unlocks:
+      - wk_kb_half_snatch
     contraindicated_with:
       - lumbar_disc
       - shoulder_impingement
@@ -540,13 +565,118 @@ exercises:
     notes: >
       Bell punched from hip-hinge to overhead lockout in one movement. Horsemen
       12-min complex: 1 min snatch each arm. Horsemen SSST standard: 200+ snatches
-      in 10 min at 53 lb. Pentathlon half-snatch: 108 reps in 6 min. KB sport RPM
-      target: 14 RPM at 1 pood.
+      in 10 min at 53 lb. Not a pentathlon event — the pentathlon's is the half
+      snatch (wk_kb_half_snatch).
     starting_load_kg:
       novice: 16
       intermediate: 24
       advanced: 32
       elite: 40
+
+  - id: wk_kb_half_snatch
+    name: "Kettlebell Half Snatch"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - olympic_lift
+      - ballistic
+      - vertical_push
+    requires:
+      - wk_kb_snatch
+    unlocks: []
+    contraindicated_with:
+      - lumbar_disc
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+      - hip_flexor_strain
+    progressions:
+      load: increase_bell_weight
+      volume: increase_rpm_target
+    scaling_down:
+      - wk_kb_snatch
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 2
+      duration_sec: 360
+    sources:
+      - IKMF
+    notes: >
+      Snatched to a straight-arm lockout, lowered to the rack with a stop, then
+      dropped from the rack into the backswing for the next rep. The IKMF
+      pentathlon's fourth event: 108 reps in 6 min score at most (18 RPM), hand
+      changes free.
+    # IKMF pentathlon half snatch: the most reps that score in a six-minute set
+    # (ikmf-world.com/disciplines/ikmf-pentathlon). A paced slot's target RPM.
+    competition_pace:
+      competition: ikmf_pentathlon
+      event: half_snatch
+      max_reps: 108
+      minutes: 6
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 20
+      elite: 24
+
+  - id: wk_kb_long_cycle_press
+    name: "Kettlebell Long Cycle Press"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - ballistic
+      - vertical_push
+    requires:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+    unlocks: []
+    contraindicated_with:
+      - lumbar_disc
+      - shoulder_impingement
+      - shoulder_instability
+      - wrist_injury
+    progressions:
+      load: increase_bell_weight
+      volume: increase_rpm_target
+    scaling_down:
+      - wk_kb_press_single
+      - wk_kb_clean_single
+    typical_volume:
+      sets: 2
+      duration_sec: 360
+    sources:
+      - IKMF
+    notes: >
+      A clean and a strict press every rep: a still moment in the rack between
+      them, no knee bend before the press, the bell fixed overhead without sway.
+      The IKMF pentathlon's second event: 60 reps in 6 min score at most (10 RPM),
+      hand changes free.
+    # IKMF pentathlon long cycle press: the most reps that score in a six-minute
+    # set (ikmf-world.com/disciplines/ikmf-pentathlon). A paced slot's target RPM.
+    competition_pace:
+      competition: ikmf_pentathlon
+      event: long_cycle_press
+      max_reps: 60
+      minutes: 6
+    starting_load_kg:
+      novice: 12
+      intermediate: 16
+      advanced: 20
+      elite: 24
 
   - id: wk_kb_squat_goblet
     name: "Kettlebell Goblet Squat"

@@ -60,7 +60,8 @@
        "timeMinutes": 15,
        "weightKg": 24.0,
        "targetRpm": 70,
-       "screen": "s1"
+       "screen": "s1",
+       "coachingCue": "Example pace for the demo, not a standard. Set your own: hold UP > Pace."
       },
       {
        "exerciseId": "kb_tgu_flow",
@@ -327,7 +328,7 @@
      "sessionId": "demo-kb-pentathlon",
      "modalityId": "strength_endurance",
      "archetypeId": "kb_pentathlon_training",
-     "archetypeName": "Pentathlon: Snatch",
+     "archetypeName": "Pentathlon: Half Snatch",
      "archetypeCategory": "kettlebell",
      "estimatedMinutes": 50,
      "isDeload": false,
@@ -346,23 +347,24 @@
        "screen": "s0"
       },
       {
-       "exerciseId": "kb_snatch",
-       "name": "Kettlebell Snatch",
+       "exerciseId": "wk_kb_half_snatch",
+       "name": "Kettlebell Half Snatch",
        "slotType": "emom",
        "slotRole": "main",
        "isMeta": false,
        "category": "kettlebell",
        "movementPattern": "ballistic",
        "bilateral": true,
-       "loadDescription": "2 x 6 min @ 14 RPM, switch at 3:00",
+       "loadDescription": "2 x 6 min @ 18 RPM, switch at 3:00",
        "targetRounds": 2,
        "workSec": 360,
        "intervalRestSec": 360,
        "timeMinutes": 24,
        "weightKg": 16.0,
-       "targetRpm": 14,
+       "targetRpm": 18,
        "switchAtSec": 180,
-       "screen": "s1"
+       "screen": "s1",
+       "coachingCue": "IKMF cap: 108 in 6 min (18 RPM). Stop in the rack on the way down. Hands change freely; set your pace with hold UP > Pace."
       },
       {
        "exerciseId": "kb_tgu_cool",
@@ -422,10 +424,7 @@
        "gauge": "interval_round",
        "lines": "interval_next",
        "lap": "skip",
-       "template": "interval",
-       "behaviours": {
-        "metronome_rpm": 12
-       }
+       "template": "interval"
       }
      }
     }
@@ -703,7 +702,8 @@
        "timeMinutes": 18,
        "weightKg": 20.0,
        "targetRpm": 16,
-       "screen": "s1"
+       "screen": "s1",
+       "coachingCue": "Example pace for the demo, not a standard. Set your own: hold UP > Pace."
       }
      ],
      "packageId": "wildman_kettlebell",

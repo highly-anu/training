@@ -446,6 +446,10 @@ slots:                              # required — ordered list of session secti
       category: mobility            # filter by exercise category
       movement_pattern: hip_hinge   # filter by movement pattern alias
       bilateral: true               # only bilateral exercises
+      exercise_ids: [a, b]          # only these exercises, rotated least-recent first
+                                    #   (events fixed by rules, e.g. a pentathlon's five)
+    paced: true                     # optional — target RPM from the chosen exercise's
+                                    #   competition_pace (max_reps / minutes), sent to the watch
     notes: >                        # optional — what specifically happens in this slot
       Describe the specific exercises or movements if they are fixed,
       or describe the selection principle if dynamic.

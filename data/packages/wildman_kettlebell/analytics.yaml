@@ -4,6 +4,9 @@
 id: wildman_kettlebell
 
 progress:
+  # Targets are the IKMF pentathlon caps per minute (120 jerks and 108 half
+  # snatches in 6 min score at most; ikmf-world.com/disciplines/ikmf-pentathlon),
+  # the ceiling the paced sets are measured against.
   - id: jerk_rpm
     label: Jerk cadence
     primitive: rate
@@ -11,16 +14,16 @@ progress:
       frameworks: [kb_pentathlon]
       archetypes: [kb_pentathlon_training]
       exercises: [kb_jerk_single]
-    rpm_target: 20          # "jerk ~20 RPM at 1 pood" — kb_pentathlon_training.yaml
+    rpm_target: 20          # IKMF cap: 120 in 6 min
 
-  - id: snatch_rpm
-    label: Snatch cadence
+  - id: half_snatch_rpm
+    label: Half snatch cadence
     primitive: rate
     scope:
       frameworks: [kb_pentathlon]
       archetypes: [kb_pentathlon_training]
-      exercises: [wk_kb_snatch]
-    rpm_target: 14          # "snatch ~14 RPM at 1 pood"
+      exercises: [wk_kb_half_snatch]
+    rpm_target: 18          # IKMF cap: 108 in 6 min
 
   - id: ballistic_load
     label: Ballistic load

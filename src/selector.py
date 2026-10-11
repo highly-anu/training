@@ -116,6 +116,11 @@ def _matches_slot_filter(ex: dict, ex_filter: dict, excluded_patterns: set) -> b
     if req_cat and ex.get('category') != req_cat:
         return False
 
+    # Explicit id list — a slot whose events are fixed by rules (a pentathlon's five)
+    req_ids = ex_filter.get('exercise_ids')
+    if req_ids and ex.get('id') not in req_ids:
+        return False
+
     # Movement-pattern filter (uses aliases with or/and/category modes)
     req_pattern = ex_filter.get('movement_pattern')
     if req_pattern:
@@ -517,9 +522,17 @@ def select_exercise(
 
     def _score_ex(ex: dict) -> tuple:
         recency_penalty = sum(2 for eid in recent if eid == ex['id'])
-        forward_bonus = 0.5 if ex.get('unlocks') else 0
+        # A slot that names its exercises (a pentathlon's five events) rotates
+        # through them on recency alone; the ladder bonus would starve the
+        # events that unlock nothing.
+        forward_bonus = 0.5 if ex.get('unlocks') and not ex_filter.get('exercise_ids') else 0
         # Prefer exercises that have defined movement patterns over joint drills / stub entries
         pattern_bonus = 0.5 if ex.get('movement_patterns') else 0
+        if ex_filter.get('exercise_ids'):
+            # …and among equals the one used longest ago goes first (recent is
+            # oldest → newest), so every event comes round.
+            last = max((i for i, eid in enumerate(recent) if eid == ex['id']), default=-1)
+            return (-recency_penalty + pattern_bonus, -last, ex['id'])
         return (-recency_penalty + forward_bonus + pattern_bonus, ex['id'])
 
     if not candidates:

@@ -16,9 +16,10 @@ archetypes:
         behaviours: { side_tracked: true }
   kb_pentathlon_training:
     slots:
-      # Timed sets paced to a target: the RPM is the session. An interval set
-      # shows the pace in its own field; a timed block puts it beside the clock.
+      # Timed sets paced to a target: the RPM is the session. The pace is the
+      # exercise's IKMF cap per minute, sent as targetRpm (there is no package
+      # default: one number cannot fit five events). A timed block puts it
+      # beside the clock.
       main:
-        behaviours: { metronome_rpm: 12 }
         slot_types:
           time_domain: { b: rpm }

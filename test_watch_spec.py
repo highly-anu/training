@@ -209,12 +209,57 @@ def test_watch_side_is_current():
         check(name, r.returncode == 0, (r.stdout + r.stderr).strip()[-300:])
 
 
+# The IKMF pentathlon's five single-bell events and the reps that score at most
+# in six minutes (ikmf-world.com/disciplines/ikmf-pentathlon).
+IKMF_CAPS = {'clean': 120, 'long_cycle_press': 60, 'jerk': 120,
+             'half_snatch': 108, 'strict_push_press': 120}
+
+
+def test_pentathlon_pace():
+    print('\nthe pentathlon is paced from the IKMF caps, never a default')
+    import api
+    from src import progression, selector
+    exercises, _ = loader.load_all_exercises()
+    arch = next(a for a in loader.load_all_archetypes() if a['id'] == 'kb_pentathlon_training')
+    main = next(s for s in arch['slots'] if s['role'] == 'main')
+    ids = main['exercise_filter']['exercise_ids']
+    events = {exercises[i]['competition_pace']['event']: exercises[i]['competition_pace']
+              for i in ids if (exercises.get(i) or {}).get('competition_pace')}
+    check('the main slot draws the five IKMF events',
+          len(ids) == 5 and {e: p['max_reps'] for e, p in events.items()} == IKMF_CAPS, str(events))
+    check('the main slot is paced', main.get('paced') is True)
+    check('the full snatch cannot fill it',
+          not selector._matches_slot_filter(exercises['wk_kb_snatch'], main['exercise_filter'], set()))
+
+    jerk = exercises['kb_jerk_single']
+    load = progression.calculate_load(jerk, main, 'linear_load', 1, 'build', 'intermediate', False, 60)
+    check('a paced jerk set is 20 RPM', load.get('target_rpm') == 20, str(load))
+    lcp = progression.calculate_load(exercises['wk_kb_long_cycle_press'], main, 'linear_load',
+                                     1, 'build', 'intermediate', False, 60)
+    check('a paced long cycle press is 10 RPM', lcp.get('target_rpm') == 10, str(lcp))
+    unpaced = dict(main, paced=False)
+    check('an unpaced slot carries no pace',
+          'target_rpm' not in progression.calculate_load(jerk, unpaced, 'linear_load', 1, 'build',
+                                                          'intermediate', False, 60))
+
+    out = api.encode_watch_session(
+        {'modality': 'strength_endurance', 'archetype': {'id': 'kb_pentathlon_training'},
+         'exercises': [{'slot_role': 'main', 'slot_type': 'time_domain', 'exercise': jerk,
+                        'load': load}]}, '1-Monday-0', spec_level=1)
+    ex = out['exercises'][0]
+    check('the watch gets targetRpm', ex.get('targetRpm') == 20, str(ex.get('targetRpm')))
+    spec = out['screens'][ex['screen']]
+    check('the screen shows the pace and has no flat default',
+          spec.get('b') == 'rpm' and 'metronome_rpm' not in (spec.get('behaviours') or {}), str(spec))
+
+
 def main() -> int:
     test_defaults()
     test_every_slot_resolves()
     test_declared_overrides()
     test_throwaway_package_reaches_the_payload()
     test_borrowed_session_shows_its_owner()
+    test_pentathlon_pace()
     test_watch_side_is_current()
     print()
     print('ok' if not failures else f'{len(failures)} failure(s)')

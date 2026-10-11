@@ -287,6 +287,34 @@ def calculate_load(
     session_time_minutes: int | None = None,
 ) -> dict:
     """Calculate the load prescription for one exercise in one slot."""
+    load = _calculate_load(exercise, slot, progression_model, week_number, phase,
+                           training_level, is_deload, session_time_minutes)
+    rpm = paced_rpm(exercise, slot)
+    if rpm is not None and isinstance(load, dict):
+        load['target_rpm'] = rpm
+    return load
+
+
+def paced_rpm(exercise: dict, slot: dict) -> int | None:
+    """A paced slot's target RPM: the exercise's competition cap per minute
+    (an IKMF pentathlon jerk scores at most 120 in 6 min, so 20). None when the
+    slot is not paced or the exercise names no cap — never a made-up default."""
+    pace = (exercise or {}).get('competition_pace') if slot.get('paced') else None
+    if not pace or not pace.get('max_reps') or not pace.get('minutes'):
+        return None
+    return round(pace['max_reps'] / pace['minutes'])
+
+
+def _calculate_load(
+    exercise: dict,
+    slot: dict,
+    progression_model: str,
+    week_number: int,
+    phase: str,
+    training_level: str,
+    is_deload: bool,
+    session_time_minutes: int | None = None,
+) -> dict:
     slot_type = slot.get('slot_type', 'sets_reps')
 
     if slot_type == 'sets_reps':
