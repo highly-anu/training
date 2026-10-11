@@ -3,8 +3,9 @@
 The single backlog for this project. Last verified against the code and the
 production database on 2026-09-30; the information-architecture items were added
 from the functionality review of 2026-10-01 (`information-architecture.md`).
-The Garmin items (1, 2 and 4) were added on 2026-10-05 from the Connect IQ
-connection plan, after a read-only look at production.
+The Garmin items (1, 2 and 5) were added on 2026-10-05 from the Connect IQ
+connection plan, after a read-only look at production; item 4 on 2026-10-09
+from the watch-app demo tests.
 
 This replaces the phased build roadmap (phases 0–8, all complete), and absorbs
 `next_features.md` (March), `model-generalization-gaps.md` (April),
@@ -38,7 +39,8 @@ deferred is under *Later*.
 | 1 | Connect IQ pairing-flow defects | P2 | S | watch, web |
 | 2 | Garmin wellness via Connect IQ | P2 | L | watch, API, web, iOS |
 | 3 | Exercise animation content (Lottie and SVG CSS files) | P2 | L | content |
-| 4 | On-demand HRV capture on the watch | P3 | M | watch, API |
+| 4 | Watch app: Garmin-native look, menus and icons | P2 | M | watch |
+| 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
 
 ---
 
@@ -347,7 +349,189 @@ shows the category placeholder.
 
 ---
 
-### 4. On-demand HRV capture on the watch — P3 · M
+### 4. Watch app: Garmin-native look, menus and icons — P2 · M
+
+The demo builds (`./build.sh --demo`, tested on the athlete's fenix 9 Pro
+47mm, 2026-10-08/09) work, but every screen is our own invention: the stop menu
+is a plain `Menu2`, the finish screen is one page, there is no confirmation on
+Discard, and the button map (BACK cycles reps → weight → RPE → pages → END)
+exists nowhere else on the watch. The athlete photographed Garmin's own
+activity flow (pre-start list, data page, stop menu, "Discard?", the summary
+page loop, "Delete activity?") and asked for ours to match it.
+
+**Garmin's guides ship inside the SDK** — no web lookup needed, and they match
+the installed SDK 9.2.0 exactly:
+
+- `<SDK>/doc/docs/User_Experience_Guidelines/` — workflows, menus, views,
+  confirmations, visual design. Its rules that bind us: *"Use the native menus,
+  confirmations and progress bars. They will automatically have the product
+  personality"*; up/down page loops, never left/right; at most seven items in a
+  menu; don't change the back behaviour; keep input minimal during activity.
+- `<SDK>/doc/docs/Personality_Library/` — the **Personality UI** style system:
+  Monkey Style selectors (`personality="…"` in resource XML, `Rez.Styles.*` in
+  code) that resolve per device to Garmin's own colours, fonts, icon assets,
+  positions and input mappings.
+- `~/Library/Application Support/Garmin/ConnectIQ/Devices/<id>/personality.mss`
+  plus the SVGs beside it — present for all seven products in the manifest. On
+  `fenix9pro47mm` the delete-confirmation hint sits at (353, 77), the START
+  button, mapped to `KEY_ENTER` — exactly the red trash arc in the photo.
+
+**What the library gives us, and what it does not:**
+
+| Need | Source |
+|---|---|
+| Save, Discard (red variant), Check (green), Cancel, Revert (undo), Warning, Question, About | `system_icon_{dark,positive,destructive}__*` |
+| Button hints for all five buttons (the white arc at the START button on every summary page) | `system_icon_dark__hint_button_*` + `system_loc__hint_button_*` |
+| "Discard?" / "Delete activity?" page | `confirmation_icon__hint_delete`, `__hint_reject`, `confirmation_font__body`, `confirmation_input__delete` (the Personality *Delete Confirmation* recipe; `WatchUi.Confirmation` only does yes/no) |
+| Black/white activity colours, prompt colours and fonts | `activity_color_dark__*`, `prompt_*` |
+| Menu icon size, toast icon size | `system_size__menu_icon`, `system_size__toast_icon` |
+| Resume ▶, Lap, Skip, Week, Workout, Rest, Heart icons | **Not in the library.** Draw our own SVGs at the same size and stroke weight. Copying Garmin's artwork is out: the store review guidelines require owning or licensing all IP. |
+
+APIs, all within the fenix 9's on-device API 6.0.3: `Menu2` + `IconMenuItem`
+(3.0), `CustomMenu` with a `:foreground` drawable (for the red paused ring),
+`ActionMenu` (3.4), `ViewLoop` (the system page loop with its own page
+indicator), `showToast`, `View.setActionMenuIndicator` (5.1.1), and
+`Activity.Info.trainingEffect` (live aerobic TE, for the summary).
+
+**Fonts.** Garmin uses two families: Roboto for text and Bionic for numbers
+(`simulator.json`: `FONT_MEDIUM` is Roboto-Regular, `FONT_NUMBER_HOT` is
+Bionic_Medium on the 47mm). `ui/Text.mc` already asks for Bionic and Roboto
+Condensed by vector face, but the two **solar (MIP) models have neither
+BionicBold nor BionicMedium** — only `BionicSemiBold` — so every hero number
+there silently falls back to a bitmap font. Add `BionicSemiBold` to each face
+list, and use Roboto Regular in capitals for the field labels ("DISTANCE",
+"PACE"), as the native data page does.
+
+**The flow, screen by screen** (Garmin's, from the photos → ours):
+
+1. *Pre-start* — activity icon in its colour, the name, a subtitle, a coloured
+   rule, then a list of icon + title + subtitle rows (Training, Navigate…). →
+   `SessionListView` becomes that page: modality icon, session name, "45 min ·
+   6 exercises", the accent rule, and rows for Workout (the exercise list),
+   Week (`UpcomingView`) and Readiness, with the START hint arc. BACK exits
+   (done in v8).
+2. *Data pages* — a heart-rate zone gauge across the top (five zone colours,
+   a marker), capital Roboto labels over Bionic numbers, hairline dividers,
+   vertical page dots on the left, the timer at the bottom. → Restyle
+   `ExerciseScreen`'s three pages in that grammar, the HR gauge from
+   `UserProfile.getHeartRateZones`, and the page dots on the left.
+3. *Stop menu* — START pauses; a red ring circles the screen; Resume, Save,
+   Discard, Lap… with icons. → `CustomMenu` with the red ring as its
+   foreground and icon rows: Resume, Save, Discard, Skip exercise, Lap.
+4. *Discard?* — the Personality delete confirmation: red trash at START, back
+   arrow on BACK. → Built from the selectors; Discard asks first again (v7
+   dropped that because of a view-stack bug, not because the dialog was wrong:
+   the confirmation must pop itself before anything switches views).
+5. *Summary* — a page loop with vertical dots and the next page named at the
+   bottom ("HEART RATE", "TRAINING EFFECT"); START opens Done / All Stats /
+   … / Delete. → A `ViewLoop` of Overview (duration, sets, volume), Heart rate
+   (avg/max and a chart from the samples the controller already keeps),
+   Exercises (sets × reps @ kg each) and Sync. START opens an `ActionMenu`:
+   Done (exits), Exercises, Heart rate. No Delete: Connect IQ cannot delete an
+   activity once `ActivityRecording.save()` has run — Discard before saving is
+   the only delete there is.
+6. *Toasts* — "Set logged", "Synced", "Sync failed — will retry" through
+   `showToast` with the library's check and warning icons, instead of hint-line
+   text.
+7. Week view, glance and pairing: system fonts and personality colours, no
+   layout change.
+
+**The button map: Garmin's** (the athlete's decision, 2026-10-09, with photos of
+Garmin's own Strength workout). START pauses into the stop menu; BACK is LAP — it
+ends a set and starts the rest, ends a rest early, counts a round or lap, or moves
+to the next step; DOWN/UP turn the pages, the last page being the scrollable step
+list ("Now: 2/5 Sets" in yellow, the focused row marked blue), which DOWN walks to
+its end and then wraps to page 1; hold UP opens Stop Workout / Skip / Edit Set.
+Garmin's own page 1 is ♥ HR, REPS | SET, a rule, "Next: Rest" / "1:00"; page 2 the
+five-zone gauge, ♥ HR, the timer, REPS | ACTIVE CALORIES, the time of day.
+
+*Status (2026-10-09, `feat/garmin-wellness`, uncommitted; store test upload v1.1.0):* all seven slices are
+built and compile for all seven products; the Delete Confirmation, menu icons and
+button hints come from the Personality Library (`resources/drawables/garmin.xml`,
+`resources/layouts/confirm.xml`, `source/ui/Native.mc`). Not yet run on the watch:
+the simulator could not be observed from the build machine's session (no screen
+capture), so the first check is the athlete's. Two findings on the way: Rez.Styles
+entries can only be read field by field (passing one as a value crashes the
+assembler with "undefined symbol"), and with the Background permission and no
+annotated code the whole app is the background image, which outgrew 64 KB —
+`Config` is now `(:glance, :background)`.
+
+*1.1.0 on the watch (2026-10-09):* START during a workout crashed the app — the
+stop menu's IconMenuItems were given bitmaps loaded into the app heap; 1.1.1 hands
+them a Drawable that draws a graphics-pool BitmapReference (Garmin's Menu2 sample
+does the same) and gives the stop menu its title back. Not reproducible here, so
+unconfirmed until the watch says so. Also from the test: a workout began recording
+the moment it was chosen. 1.1.1 adds Garmin's workout menu on START (Do Workout /
+Steps, where each exercise's reps, hold, weight and RPE are set for the run), a
+ready state that records nothing until START, and Set Next in the hold-UP menu.
+
+*1.1.2 (2026-10-09):* the glance follows the day — readiness ring and the next
+session before any training; one segment per session, filled as each is done;
+a green ring with a tick and the day's totals once all are done; tomorrow on a
+rest day and after `Config.GLANCE_EVENING_HOUR`. A saved workout is recorded on
+the watch (`DayLog`, Storage, local date; a discard is not); `GET
+/api/user/today-session` now marks each session `completed` (a session log with a
+completion time, or a non-rejected match — so another device's workout counts)
+and carries `tomorrow` (`test_today_session.py`). Garmin's SDK has no glance
+layout guide beyond "an executive summary"; the label-over-value shape copies
+the watch's own glances.
+
+*1.2.0 (2026-10-10):* three demo programmes chosen from hold UP ▸ Programme
+(`demo_sof.json`, `demo_kb.json`, `demo_uphill.json`; `DemoProgram` loads only the
+selected one and seeds the glance from it). New engine behaviour, all Garmin's:
+timed steps end themselves (LAP ends them early), a full-screen step alert as each
+step or interval phase begins (`views/StepAlertView.mc`), interval blocks as
+Run / Recover or Work / Rest repeats in the step list, a toast when HR leaves the
+target zone, a metronome for paced sets (hold UP ▸ Metronome), a hand switch
+mid-set, rest that ends when HR drops under a target, and distance / pace on a
+run's heart page. A session counts as cardio (GPS, run page, RUNNING sport) only
+when it is aerobic *and* moves — an aerobic-base kettlebell session no longer
+records as a run. **Follow-up:** `targetRpm`, `switchAtSec` and `restUntilHr` are
+demo-only; `api._encode_watch_exercise` should send them once the generator carries
+them (today they live in the archetypes' `notes`).
+
+*1.2.1 (2026-10-10), from the 1.2.0 watch test:* the metronome beats on its own
+timer (`60000 / targetRpm` ms), so paces above 60 RPM work — the hand-to-hand swing
+is 70; Plan and Set Next edit the number of sets (Set Next never below the next set);
+a double-kettlebell exercise (`bells`, or a `double_` exercise id) edits and shows one
+bell ("5 Reps @ 2x24 kg", "KG PER BELL") while the step page and the "Next:" line show
+the total (`Steps.preview`); kettlebell weights step by 4 kg (half a pood). `bells`
+joins the encoder follow-up above.
+
+*1.2.2:* the step alert announces only timed steps (a duration, an interval block)
+and AMRAP / for-time blocks; set-based exercises start silently, and LAP no longer
+shows a "Set 2/5" toast — the rest screen is the confirmation.
+
+*1.3.0 (2026-10-10): the real app.* The athlete trains from the server's sessions from
+here on: `./build.sh --release` builds the store `.iq`, which saves each workout to
+Garmin Connect and uploads it. The demo property is now `demoProgrammes` (a stored
+`demoMode = true` from the demo builds would have outlived the update). Double
+kettlebell weights are per bell everywhere, as the packages prescribe them
+(`kb_press_double` starts at 16 kg); the id suffix `_double` marks a double, and the
+summary's volume counts both bells.
+
+**Order of work** (each slice ends in a demo `.iq` and photos from the watch;
+the simulator can't be scripted, so also passive `monkeydo` screenshots on a
+round AMOLED and a solar MIP device):
+
+0. *Spike (S).* Add one Personality layout (the delete confirmation) and one
+   icon menu item; build all seven devices; confirm `Rez.Styles` compiles at
+   `minApiLevel` 4.0.0 and the solar 260/280 px screens place the hints.
+1. *Menus, confirmation, toasts (S).* Slices 3, 4 and 6 above; the icon SVGs we
+   draw ourselves.
+2. *Summary loop (M).* Slice 5.
+3. *Data pages (M).* Slice 2, and the button map once decided.
+4. *Pre-start page (S).* Slice 1.
+5. *Fonts and the rest (S).* The `BionicSemiBold` fix and slice 7.
+
+Acceptance: on the fenix 9 Pro and in the solar simulator, the stop menu,
+Discard confirmation and summary sit beside Garmin's own photos without
+standing out — same fonts, the library's icons where it has them, hints at the
+real buttons — and no screen needs a hint line to explain its buttons.
+
+---
+
+### 5. On-demand HRV capture on the watch — P3 · M
 
 The open SDK has no nightly HRV, but `Toybox.Sensor.HeartRateData` (API 3.0.0,
 through `Sensor.registerSensorDataListener`, needs the `Sensor` permission)
