@@ -124,6 +124,7 @@ class SyncManager {
     function onToday(code as Lang.Number, data as WebData) as Void {
         if (code == 200 && data instanceof Lang.Dictionary) {
             Storage.setValue(Config.KEY_TODAY_SESSION, data);
+            GlanceCache.write(data);
             Storage.setValue(Config.KEY_TODAY_DATE, data["date"]);
             if (_todayCb != null) { _todayCb.invoke(true, data); }
         } else {

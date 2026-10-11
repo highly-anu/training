@@ -17,6 +17,7 @@ module Config {
     const KEY_CLAIMED        = "claimed";
     const KEY_TODAY_SESSION  = "todaySession";   // cached today-session JSON dict
     const KEY_TODAY_DATE     = "todaySessionDate";
+    const KEY_TODAY_GLANCE   = "todayGlance";     // GlanceCache: the slim copy the glance reads
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
     const KEY_READINESS      = "readiness";       // cached /health/readiness dict
     // The hour after which a finished day's glance previews tomorrow.

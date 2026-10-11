@@ -98,8 +98,9 @@ module DemoProgram {
                              "estimatedMinutes" => d1[0]["estimatedMinutes"] };
             }
         }
-        Storage.setValue(Config.KEY_TODAY_SESSION,
-                         { "status" => "ok", "sessions" => today, "tomorrow" => tomorrow });
+        var slim = { "status" => "ok", "sessions" => today, "tomorrow" => tomorrow };
+        Storage.setValue(Config.KEY_TODAY_SESSION, slim);
+        GlanceCache.write(slim);
         Storage.setValue(Config.KEY_READINESS, DemoSession.readiness());
     }
 }

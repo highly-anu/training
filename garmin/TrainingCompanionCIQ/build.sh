@@ -45,7 +45,8 @@ fi
 
 # --- build -------------------------------------------------------------------
 if [ "${1:-}" == "--demo" ]; then
-  STAGE="$OUT/demo-stage"
+  # Staged beside this directory, so the jungle's ../core still resolves.
+  STAGE="$(dirname "$HERE")/.demo-stage"
   rm -rf "$STAGE"; mkdir -p "$STAGE"
   cp -R "$HERE/source" "$HERE/resources" "$HERE/manifest.xml" "$HERE/monkey.jungle" "$STAGE/"
   perl -pi -e 's|(<property id="demoProgrammes" type="boolean">)false|${1}true|' "$STAGE/resources/properties/properties.xml"

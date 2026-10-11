@@ -19,7 +19,7 @@ motion, outdoors. Minimum stroke weight is 7 units in a 96 unit box (~4px).
 import os, textwrap
 
 VB = 96
-OUT = os.path.join(os.path.dirname(__file__), '..', 'resources', 'drawables', 'icons')
+OUT = os.path.join(os.path.dirname(__file__), '..', 'core', 'resources', 'drawables', 'icons')
 
 W = '#FFFFFF'
 

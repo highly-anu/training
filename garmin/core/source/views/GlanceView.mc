@@ -46,7 +46,7 @@ class GlanceView extends Ui.GlanceView {
         var sessions = null;
         var doneFlags = null;
 
-        var today = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
+        var today = Storage.getValue(Config.KEY_TODAY_GLANCE) as Lang.Dictionary?;
         if (today != null && today.hasKey("status") && !stale()) {
             var status = today["status"] as Lang.String;
             sessions = today.hasKey("sessions") ? (today["sessions"] as Lang.Array) : null;
