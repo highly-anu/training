@@ -101,6 +101,12 @@ def test_declared_overrides():
     warm = r('uphill_athlete', 'weighted_ruck_z2', 'warmup', 'time_domain')
     check('the weighted ruck leads with km on its main block only',
           ruck['a'] == 'distance_km' and warm['a'] == 'time_left')
+    tgu = r('wildman_kettlebell', 'tgu_practice', 'main', 'skill_practice')
+    check('the Wildman get-up block switches sides on LAP and shows the side',
+          tgu['template'] == 'timed' and tgu['lap'] == 'next_side' and 'side' in tgu['title'])
+    inert = dict(r(None, None, None, 'time_domain'), behaviours={'side_tracked': True})
+    check('side_tracked on a step that never alternates is an error',
+          any('never alternates' in e for e in watch_spec.resolved_errors(inert, 'x')))
     check('a package with no watch.yaml gets the defaults',
           r('starting_strength', 'anything', 'primary_squat', 'sets_reps')
           == watch_spec.resolve(None, None, None, 'sets_reps'))

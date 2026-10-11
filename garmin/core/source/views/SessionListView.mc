@@ -42,7 +42,7 @@ class SessionListView extends Ui.View {
             _sessions = [];
         }
         _readiness = Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?;
-        if (DemoSession.enabled()) { applyToday(null); }
+        if (DemoSession.enabled()) { applyToday(null); } else { GlanceCache.restoreReal(); }
     }
 
     function onLayout(dc) {

@@ -85,7 +85,7 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
             m.addItem(new Ui.MenuItem("Skip", skipLabel(), :skip, {}));
         }
         var ex = _ctl.currentExercise();
-        if (st != WorkoutController.DONE && ex != null && ex.slotType().equals("sets_reps")) {
+        if (st != WorkoutController.DONE && ex != null && ex.isTemplate("sets")) {
             m.addItem(new Ui.MenuItem("Set Next", nextLabel(), :next, {}));
         }
         if (_ctl.lastSet() != null) {

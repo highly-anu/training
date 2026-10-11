@@ -68,6 +68,25 @@ def run():
     done = [s['completed'] for s in body['sessions']]
     check(done == [True, True], f"matched session not completed: {done}")
 
+    # An earlier program's match on the same key does not complete today's
+    # session; one on this version's uid does.
+    import src.program_history as ph
+    real_active = ph.active_version_id
+    ph.active_version_id = lambda uid: 'vNEW'
+    api._health.get_matches = lambda uid: [
+        {'sessionKey': '1-Friday-1', 'sessionUid': 'vOLD:w0-Friday-1', 'matchConfidence': 'high'},
+    ]
+    body = client.get('/api/user/today-session?date=2026-10-09').get_json()
+    done = [s['completed'] for s in body['sessions']]
+    check(done == [True, False], f"another version's match completed today: {done}")
+    api._health.get_matches = lambda uid: [
+        {'sessionKey': '1-Friday-1', 'sessionUid': 'vNEW:w0-Friday-1', 'matchConfidence': 'high'},
+    ]
+    body = client.get('/api/user/today-session?date=2026-10-09').get_json()
+    done = [s['completed'] for s in body['sessions']]
+    check(done == [True, True], f"this version's match not completed: {done}")
+    ph.active_version_id = real_active
+
     # Saturday: tomorrow (Sunday) is a rest day.
     body = client.get('/api/user/today-session?date=2026-10-10').get_json()
     check(body['tomorrow'] == {'dayName': 'Sunday', 'sessionCount': 0}, f"rest tomorrow {body['tomorrow']}")

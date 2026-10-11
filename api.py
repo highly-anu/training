@@ -657,6 +657,7 @@ def update_archetype(arch_id: str):
         return _invalid('archetype', errors)
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(merged, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    _watch_spec.clear_cache()
     return jsonify(merged), 200
 
 
@@ -672,6 +673,7 @@ def delete_archetype(arch_id: str):
         return jsonify({'detail': 'only archetypes in the custom package can be deleted through the API; '
                                   'authored packages are edited as YAML'}), 403
     os.remove(path)
+    _watch_spec.clear_cache()
     return jsonify({'deleted': arch_id}), 200
 
 
@@ -719,6 +721,9 @@ def create_archetype():
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
         yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    # The watch's archetype -> package index is cached; the new archetype's
+    # sessions must name their package without a server restart.
+    _watch_spec.clear_cache()
     return jsonify(body), 201
 
 
@@ -2928,12 +2933,8 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     """
     modality = s.get('modality') or ''
     archetype = s.get('archetype') or {}
-    pairs = [
-        (ea, e) for ea, e in (
-            (ea, _encode_watch_exercise(ea, modality)) for ea in (s.get('exercises') or [])
-        ) if e is not None
-    ]
-    exercises = [e for _, e in pairs]
+    exercises = [e for e in (_encode_watch_exercise(ea, modality)
+                             for ea in (s.get('exercises') or [])) if e is not None]
     out = {
         'sessionId': session_key,
         'completed': completed,
@@ -2959,6 +2960,36 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
         out['watch'] = _watch_spec.session_identity(package_id)
         out['screens'] = table
     return out
+
+
+def _today_match_sets(matches: list[dict]) -> tuple[set, set]:
+    """(session uids, legacy keys) of the athlete's live matches. A match that
+    carries a uid is known only by it, so another version's '3-Friday-0' never
+    marks this version's session done."""
+    uids, keys = set(), set()
+    for m in matches:
+        if m.get('matchConfidence') == 'rejected':
+            continue
+        if m.get('sessionUid'):
+            uids.add(m['sessionUid'])
+        elif m.get('sessionKey'):
+            keys.add(m['sessionKey'])
+    return uids, keys
+
+
+def _active_version_or_none(user_id: str) -> str | None:
+    try:
+        from src import program_history
+        return program_history.active_version_id(user_id)
+    except Exception:
+        return None
+
+
+def _program_history_uid(vid: str | None, week_index: int, day_name: str, i: int) -> str | None:
+    if not vid:
+        return None
+    from src import program_history
+    return program_history.session_uid(vid, week_index, day_name, i)
 
 
 @app.get('/api/user/today-session')
@@ -3003,11 +3034,12 @@ def get_today_session():
     # Which of today's sessions are already done, for the watch glance's ring:
     # a session log with a completion time, or a workout matched to the session
     # (so a workout recorded on the phone or another watch counts too).
+    # The key ('3-Friday-0') repeats across program versions, so a match that
+    # names a session uid counts only for this version's session; a legacy
+    # match without one still counts by key.
     session_logs = _health.get_session_logs(g.user_id)
-    matched_keys = {
-        m.get('sessionKey') for m in _health.get_matches(g.user_id)
-        if m.get('matchConfidence') != 'rejected'
-    }
+    matched_uids, matched_keys = _today_match_sets(_health.get_matches(g.user_id))
+    vid = _active_version_or_none(g.user_id)
 
     # ?spec=1: the watch build reads package screen specs. Without it the
     # payload is what builds before 1.4 parse, key for key.
@@ -3020,9 +3052,11 @@ def get_today_session():
     for i, s in enumerate(sessions):
         session_key = f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}"
         log = session_logs.get(session_key) or {}
+        uid = _program_history_uid(vid, week_index, day_name, i)
+        matched = (uid in matched_uids) if uid else False
         out_sessions.append(encode_watch_session(
             s, session_key,
-            completed=bool(log.get('completedAt')) or session_key in matched_keys,
+            completed=bool(log.get('completedAt')) or matched or session_key in matched_keys,
             spec_level=spec_level,
         ))
 

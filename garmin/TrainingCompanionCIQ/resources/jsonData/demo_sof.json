@@ -348,7 +348,7 @@
        "b": "rpe_or_set",
        "gauge": "set",
        "lines": "phases",
-       "lap": "complete_set",
+       "lap": "next_side",
        "template": "sets",
        "phases": [
         "roll",
@@ -379,6 +379,7 @@
       "s2": {
        "title": [
         "name",
+        "side",
         "load"
        ],
        "a": "hold",
@@ -850,6 +851,7 @@
       "s1": {
        "title": [
         "name",
+        "side",
         "load"
        ],
        "a": "hold",

@@ -60,22 +60,22 @@ module Steps {
 
     function describe(ex, total) {
         if (ex == null) { return ""; }
-        var s = ex.slotType();
         var w = ex.weightKg();
         var at = (w != null) ? (" @ " + (total ? Text.kg(totalKg(ex, w)) : loadText(ex, w)) + " kg") : "";
-        if (s.equals("sets_reps")) {
+        // By the step's template, as the engine runs it, not by slot type.
+        if (ex.isTemplate("sets")) {
             var reps = ex.reps();
             return ((reps != null) ? reps.toString() : "?") + " Reps" + at;
         }
-        if (s.equals("static_hold")) {
+        if (ex.isTemplate("hold")) {
             var h = ex.holdSeconds();
             return "Hold " + Text.secs((h != null) ? h : 30) + at;
         }
-        if (s.equals("distance")) {
+        if (ex.isTemplate("distance")) {
             if (ex.distanceKm() != null) { return Text.kg(ex.distanceKm()) + " km" + packText(ex); }
             if (ex.distanceM() != null)  { return ex.distanceM().toString() + " m" + at; }
         }
-        if (s.equals("emom")) {
+        if (ex.isTemplate("interval")) {
             var rd = ex.targetRounds();
             var ws = ex.workSec();
             var line = (rd != null) ? (rd.toString() + " x ") : "";
@@ -87,11 +87,11 @@ module Steps {
             if (ir != null && ir > 0) { line += " / " + Text.mmss(ir); }
             return line + at;
         }
-        if (s.equals("amrap")) {
+        if (ex.isTemplate("rounds") && ex.parentSlotRole() == null) {
             var tm = ex.timeMinutes();
             return ((tm != null) ? (tm.toString() + " min ") : "") + "AMRAP";
         }
-        if (s.equals("for_time")) {
+        if (ex.isTemplate("for_time")) {
             var tr = ex.targetRounds();
             return ((tr != null) ? (tr.toString() + " Rounds ") : "") + "for time";
         }

@@ -19,7 +19,7 @@ module Vocab {
         if ("sets".equals(t)) {
             return { "title" => ["name", "side", "load"], "a" => "reps", "b" => "rpe_or_set", "gauge" => "set", "lines" => "next_step", "lap" => "complete_set", "template" => "sets" };
         } else if ("hold".equals(t)) {
-            return { "title" => ["name", "load"], "a" => "hold", "b" => "set", "lines" => "hold_prompt", "lap" => "toggle_hold", "template" => "hold", "gauge" => "hold" };
+            return { "title" => ["name", "side", "load"], "a" => "hold", "b" => "set", "lines" => "hold_prompt", "lap" => "toggle_hold", "template" => "hold", "gauge" => "hold" };
         } else if ("interval".equals(t)) {
             return { "title" => ["name", "wave_pct", "switch_side", "zone_or_load"], "a" => "interval", "b" => "interval_left", "gauge" => "interval_round", "lines" => "interval_next", "lap" => "skip", "template" => "interval" };
         } else if ("rounds".equals(t)) {
@@ -38,7 +38,7 @@ module Vocab {
 
     // The LAP actions a template allows.
     function actionsFor(t) {
-        var m = { "sets" => ["complete_set", "skip"], "hold" => ["toggle_hold", "skip"], "interval" => ["skip"], "rounds" => ["log_round", "skip"], "for_time" => ["log_round", "skip"], "distance" => ["log_round", "skip"], "timed" => ["skip"], "round_timer" => ["log_round", "skip"] };
+        var m = { "sets" => ["complete_set", "skip"], "hold" => ["toggle_hold", "skip"], "interval" => ["skip"], "rounds" => ["log_round", "skip"], "for_time" => ["log_round", "skip"], "distance" => ["log_round", "skip"], "timed" => ["skip", "next_side"], "round_timer" => ["log_round", "skip"] };
         return (t != null && m.hasKey(t)) ? m[t] : [];
     }
 

@@ -4,9 +4,11 @@ spec_version: 1
 archetypes:
   tgu_practice:
     slots:
-      # The get-up practice block: the six positions under the rule, and when
-      # it is counted in sets, one side at a time.
+      # The get-up practice block: a timed block worked one side at a time,
+      # LAP switching sides, with the six positions under the rule.
       main:
+        title: [name, side, load]
+        lap: next_side
         lines: phases
         phases: [roll, post, bridge, sweep, lunge, stand]
         behaviours: { side_tracked: true }

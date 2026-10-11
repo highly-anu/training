@@ -219,6 +219,10 @@ def spec_errors(spec: dict, where: str) -> list[str]:
     return errs
 
 
+# The LAP actions that move a side-tracked step to the other side.
+_SIDE_LAPS = {'complete_set', 'toggle_hold', 'next_side'}
+
+
 def resolved_errors(spec: dict, where: str) -> list[str]:
     """Errors only a resolved spec can have: a LAP its template does not
     allow, a field whose behaviour is missing, a phases line with no phases."""
@@ -234,6 +238,11 @@ def resolved_errors(spec: dict, where: str) -> list[str]:
             errs.append(f'{where}: field {spec[key]!r} needs the {need!r} behaviour')
     if spec.get('lines') == 'ladder_total' and 'ladder' not in behaviours:
         errs.append(f"{where}: lines 'ladder_total' needs the 'ladder' behaviour")
+    if behaviours.get('side_tracked') and spec.get('lap') not in _SIDE_LAPS:
+        errs.append(f"{where}: side_tracked never alternates with lap {spec.get('lap')!r}"
+                    f" (use one of {sorted(_SIDE_LAPS)})")
+    if behaviours.get('side_tracked') and 'side' not in (spec.get('title') or []):
+        errs.append(f"{where}: side_tracked shows no side without the 'side' title part")
     if spec.get('lines') == 'phases' and not spec.get('phases'):
         errs.append(f"{where}: lines 'phases' needs a phases list")
     return errs

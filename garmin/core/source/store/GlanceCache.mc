@@ -14,6 +14,9 @@ module GlanceCache {
     function write(today as Lang.Dictionary) as Void {
         var out = { "status" => today["status"], "date" => today["date"],
                     "tomorrow" => today["tomorrow"] };
+        // A demo day carries its own readiness and is never stale; it lives only
+        // here, so the real cached day and readiness survive demo mode.
+        if (today.hasKey("demo")) { out["demo"] = today["demo"]; out["readiness"] = today["readiness"]; }
         var sessions = today["sessions"];
         if (sessions instanceof Lang.Array) {
             var slim = [];
@@ -29,5 +32,13 @@ module GlanceCache {
             out["sessions"] = slim;
         }
         Storage.setValue(Config.KEY_TODAY_GLANCE, out);
+    }
+
+    // Demo mode is off: put the real cached day back where the demo's was.
+    function restoreReal() as Void {
+        var g = Storage.getValue(Config.KEY_TODAY_GLANCE) as Lang.Dictionary?;
+        if (g == null || g["demo"] != true) { return; }
+        var real = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
+        if (real != null) { write(real); } else { Storage.deleteValue(Config.KEY_TODAY_GLANCE); }
     }
 }

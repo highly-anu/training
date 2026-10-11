@@ -61,7 +61,8 @@ class WorkoutExercise {
     function isEdited() { return o != null; }
 
     function name()            { return g("name"); }
-    function slotType()        { return g("slotType"); }
+    // "" when the payload names none, so a comparison never runs on null.
+    function slotType()        { var s = g("slotType"); return (s != null) ? s : ""; }
     function slotRole()        { return g("slotRole"); }
     function isMeta()          { return g("isMeta") == true; }
     // The server's "5x3 @ 110 kg" no longer describes an edited exercise.

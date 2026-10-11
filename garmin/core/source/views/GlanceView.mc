@@ -29,6 +29,8 @@ class GlanceView extends Ui.GlanceView {
     const TRACK = 0x2A2A2E;
     const GOOD  = 0x10B981;
 
+    hidden var _demoReadiness = null;   // a demo day's own readiness, from its glance copy
+
     function initialize() {
         // Qualified: this class is also named GlanceView, so the bare name is itself
         // and the constructor recursed until the glance process died, leaving the
@@ -47,7 +49,9 @@ class GlanceView extends Ui.GlanceView {
         var doneFlags = null;
 
         var today = Storage.getValue(Config.KEY_TODAY_GLANCE) as Lang.Dictionary?;
-        if (today != null && today.hasKey("status") && !stale()) {
+        var demo = today != null && today["demo"] == true;
+        _demoReadiness = demo ? today["readiness"] : null;
+        if (today != null && today.hasKey("status") && (demo || !stale())) {
             var status = today["status"] as Lang.String;
             sessions = today.hasKey("sessions") ? (today["sessions"] as Lang.Array) : null;
             var tomorrow = today.hasKey("tomorrow") ? today["tomorrow"] : null;
@@ -179,7 +183,9 @@ class GlanceView extends Ui.GlanceView {
     hidden function drawReadiness(dc, gx, gy, gr, show, sessions) {
         var rc = Gfx.COLOR_DK_GRAY;
         var sweep = 1.0;
-        var r = show ? (Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?) : null;
+        var r = !show ? null
+              : ((_demoReadiness != null) ? (_demoReadiness as Lang.Dictionary?)
+                                          : (Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?));
         if (r != null && r.hasKey("status")) {
             rc = readinessColor(r["status"] as Lang.String);
             if (r.hasKey("score") && r["score"] != null) { sweep = r["score"].toFloat() / 100.0; }

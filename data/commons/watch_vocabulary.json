@@ -24,7 +24,7 @@
     "hold": {
       "doc": "Timed holds: LAP starts the hold and ends it early.",
       "actions": ["toggle_hold", "skip"],
-      "defaults": { "title": ["name", "load"], "a": "hold", "b": "set", "lines": "hold_prompt", "lap": "toggle_hold" }
+      "defaults": { "title": ["name", "side", "load"], "a": "hold", "b": "set", "lines": "hold_prompt", "lap": "toggle_hold" }
     },
     "interval": {
       "doc": "Work/rest phases that run themselves (EMOM, Tabata, repeats).",
@@ -48,7 +48,7 @@
     },
     "timed": {
       "doc": "A block held for a time, often in a zone; counts down and ends itself.",
-      "actions": ["skip"],
+      "actions": ["skip", "next_side"],
       "defaults": { "title": ["name", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
     },
     "round_timer": {
@@ -103,6 +103,7 @@
     "complete_set": "Ends the set and starts the rest.",
     "log_round": "Counts a round or lap; moves on once the step's countable target (cap, rounds, laps, block time) is reached, or at once when it has none.",
     "toggle_hold": "Starts the hold, or ends it early.",
+    "next_side": "Switches to the other side (a side-tracked practice block worked one side at a time).",
     "skip": "Moves on to the next step."
   },
   "behaviours": {

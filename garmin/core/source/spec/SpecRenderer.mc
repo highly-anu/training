@@ -79,8 +79,7 @@ class SpecRenderer extends Renderer {
         }
         if (id.equals("cumulative")) {
             var cum = (ex != null) ? ex.behaviour("cumulative_target") : null;
-            var per = (ex != null && ex.reps() != null) ? ctl.editReps() : 1;
-            var done = (ctl.currentSetCount() * per).toString();
+            var done = ctl.repsDoneFor(ex).toString();
             return ["TOTAL", (cum != null) ? (done + "/" + cum.toString()) : done];
         }
         if (id.equals("rounds")) { return ["ROUNDS", ctl.amrapRounds().toString()]; }
@@ -222,6 +221,7 @@ class SpecRenderer extends Renderer {
             return;
         }
         if (id.equals("log_round")) { logRound(ctl, ex); return; }
+        if (id.equals("next_side")) { ctl.toggleSide(); return; }
         ctl.skip();
     }
 

@@ -79,13 +79,9 @@ module DemoProgram {
         var d0 = days[0]["sessions"];
         for (var i = 0; i < d0.size(); i += 1) {
             var s = d0[i];
-            // Exercise count only: the glance runs in 64 KB and reads nothing else.
-            var ph = new [s["exercises"].size()];
-            for (var k = 0; k < ph.size(); k += 1) { ph[k] = {}; }
             today.add({ "sessionId" => s["sessionId"], "modalityId" => s["modalityId"],
                         "archetypeName" => s["archetypeName"],
-                        "estimatedMinutes" => s["estimatedMinutes"],
-                        "exercises" => ph });
+                        "estimatedMinutes" => s["estimatedMinutes"] });
         }
         var tomorrow = null;
         if (days.size() > 1) {
@@ -98,9 +94,9 @@ module DemoProgram {
                              "estimatedMinutes" => d1[0]["estimatedMinutes"] };
             }
         }
-        var slim = { "status" => "ok", "sessions" => today, "tomorrow" => tomorrow };
-        Storage.setValue(Config.KEY_TODAY_SESSION, slim);
-        GlanceCache.write(slim);
-        Storage.setValue(Config.KEY_READINESS, DemoSession.readiness());
+        // Only the glance's copy: the real cached day and readiness stay as the
+        // last sync left them, for when demo mode is turned off.
+        GlanceCache.write({ "status" => "ok", "sessions" => today, "tomorrow" => tomorrow,
+                            "demo" => true, "readiness" => DemoSession.readiness() });
     }
 }

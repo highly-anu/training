@@ -44,10 +44,9 @@ function leadingNumber(r, dflt) {
 
 function editPlan(ex, item) {
     var fs = [];
-    var s = ex.slotType();
     if (Steps.isSetBased(ex) || Steps.isShortDistance(ex)) { fs.add($.setsField(Steps.setCount(ex), 1)); }
-    if (s.equals("sets_reps")) { fs.add($.repsField($.leadingNumber(ex.reps(), 8))); }
-    if (s.equals("static_hold")) {
+    if (ex.isTemplate("sets")) { fs.add($.repsField($.leadingNumber(ex.reps(), 8))); }
+    if (ex.isTemplate("hold")) {
         fs.add($.holdField((ex.holdSeconds() != null) ? ex.holdSeconds() : 30));
     }
     if (ex.weightKg() != null) { fs.add($.weightField(ex.weightKg(), ex)); }
@@ -77,7 +76,7 @@ function editLastSet(ctl) {
     var set = ctl.lastSet();
     if (set == null) { return; }
     var ex = ctl.currentExercise();
-    var hold = ex != null && ex.name().equals(ctl.lastSetName()) && ex.slotType().equals("static_hold");
+    var hold = ex != null && ex.name().equals(ctl.lastSetName()) && ex.isTemplate("hold");
     var fs = [];
     if (set["reps"] != null) { fs.add(hold ? $.holdField(set["reps"]) : $.repsField(set["reps"])); }
     var same = ex != null && ex.name().equals(ctl.lastSetName());

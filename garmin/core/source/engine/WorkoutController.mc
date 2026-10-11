@@ -220,12 +220,14 @@ class WorkoutController {
     }
 
     // A paced work period beats at the target RPM on its own timer (the third of
-    // three: this, the clock and the step alert); everything else stops it.
+    // three: this, the clock and the step alert); everything else stops it. An
+    // interval paces its work phases only; a timed block (a pentathlon set) is
+    // all work.
     hidden function syncMetronome() {
         var ms = 0;
         var ex = currentExercise();
-        if (_state == ACTIVE && !_paused && _metronome && ex != null && _workSec > 0
-                && _intPhase == PHASE_WORK && ex.targetRpm() != null && ex.targetRpm() > 0) {
+        if (_state == ACTIVE && !_paused && _metronome && ex != null && pacedNow(ex)
+                && ex.targetRpm() != null && ex.targetRpm() > 0) {
             ms = 60000 / ex.targetRpm();
         }
         if (ms == _metroMs) { return; }
@@ -235,6 +237,11 @@ class WorkoutController {
             _metroTimer.start(method(:onBeat), ms, true);
             _metroMs = ms;
         }
+    }
+
+    hidden function pacedNow(ex) {
+        if (_workSec > 0) { return _intPhase == PHASE_WORK; }
+        return ex.isTemplate("timed");
     }
 
     hidden function stopMetronome() {
@@ -514,6 +521,7 @@ class WorkoutController {
         var ex = currentExercise();
         logSet(actual, (ex != null) ? ex.weightKg() : null, null);
         Haptics.setLogged();
+        if (needsSideTracking()) { toggleSide(); }
         afterSet();
     }
 
@@ -708,6 +716,21 @@ class WorkoutController {
         if (ex == null) { return 0; }
         var id = ex.name();
         return _setLogs.hasKey(id) ? _setLogs[id].size() : 0;
+    }
+
+    // Reps actually logged for one exercise, for a cumulative target (100
+    // get-ups): an edited set counts what it logged, not the next set's reps.
+    // An exercise prescribed without reps counts its sets.
+    function repsDoneFor(ex) {
+        if (ex == null || !_setLogs.hasKey(ex.name())) { return 0; }
+        var arr = _setLogs[ex.name()];
+        if (ex.reps() == null) { return arr.size(); }
+        var n = 0;
+        for (var i = 0; i < arr.size(); i += 1) {
+            var r = arr[i]["reps"];
+            if (r instanceof Lang.Number) { n += r; }
+        }
+        return n;
     }
 
     // kg moved across every logged set with both reps and a load.
@@ -907,6 +930,7 @@ class WorkoutController {
             _holdLeft = 0;
             Haptics.restOver();
             logSet(holdTarget(), currentExercise() != null ? currentExercise().weightKg() : null, null);
+            if (needsSideTracking()) { toggleSide(); }
             afterSet();
         }
     }
@@ -1291,7 +1315,7 @@ class WorkoutController {
         var p = ex.movementPattern();
         if (c != null && c.equals("aerobic")) { return true; }
         if (p != null && (p.equals("aerobic_monostructural") || p.equals("locomotion"))) { return true; }
-        return ex.slotType().equals("distance") && ex.distanceKm() != null;
+        return ex.isTemplate("distance") && ex.distanceKm() != null;
     }
 
     // Cardio modalities drive GPS/distance capture and the RUNNING sport type.
