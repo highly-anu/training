@@ -103,7 +103,7 @@ class StepsMenuDelegate extends Ui.Menu2InputDelegate {
     }
     function onSelect(item) {
         var ex = _list[item.getId()];
-        if (Steps.isSetBased(ex) || ex.weightKg() != null
+        if (Steps.isSetBased(ex) || ex.weightKg() != null || ex.targetRpm() != null
                 || ex.targetRpe() != null) {
             $.editPlan(ex, item);
         }

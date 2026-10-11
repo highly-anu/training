@@ -56,6 +56,7 @@ class WorkoutExercise {
         if (vals.hasKey("hold"))   { o["holdSeconds"] = vals["hold"]; }
         if (vals.hasKey("weight")) { o["weightKg"] = vals["weight"]; }
         if (vals.hasKey("rpe"))    { o["targetRpe"] = vals["rpe"]; }
+        if (vals.hasKey("rpm"))    { o["targetRpm"] = vals["rpm"]; }
     }
 
     function isEdited() { return o != null; }

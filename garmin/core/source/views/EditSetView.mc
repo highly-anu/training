@@ -9,9 +9,10 @@ using Toybox.Graphics as Gfx;
 //                 reps (or hold), weight and RPE for the whole run
 //   editNextSet   hold UP > Set Next: what the next sets of this exercise log
 //   editLastSet   hold UP > Edit Set: correct the set just logged
+//   editPace      hold UP > Pace: the RPM a paced step and its metronome run at
 //
 // Fields are [id, label, value, step, lo, hi]; ids sets / reps / hold / weight /
-// rpe. A double's weight is one bell's, as the server prescribes it.
+// rpe / rpm. A double's weight is one bell's, as the server prescribes it.
 
 function setsField(v, lo) { return ["sets", "SETS", v, 1, lo, 30]; }
 function repsField(v)   { return ["reps", "REPS", v, 1, 0, 100]; }
@@ -24,6 +25,7 @@ function weightField(v, ex) {
             (ex != null) ? ex.weightStep() : Vocab.WEIGHT_STEP_KG, 0.0, 500.0];
 }
 function rpeField(v)    { return ["rpe", "RPE", v.toFloat(), 0.5, 5.0, 10.0]; }
+function rpmField(v)    { return ["rpm", "RPM", v, 1, 1, 120]; }
 
 // Reps arrive from the server as text ("5", "8-12", "max"): take the leading number.
 function leadingNumber(r, dflt) {
@@ -51,6 +53,7 @@ function editPlan(ex, item) {
     }
     if (ex.weightKg() != null) { fs.add($.weightField(ex.weightKg(), ex)); }
     if (ex.targetRpe() != null) { fs.add($.rpeField(ex.targetRpe())); }
+    if (ex.targetRpm() != null) { fs.add($.rpmField(ex.targetRpm())); }
     var v = new EditSetView("Plan", ex.name(), fs, new PlanTarget(ex, item), "Plan updated");
     Ui.pushView(v, new EditSetDelegate(v), Ui.SLIDE_LEFT);
 }
@@ -69,6 +72,16 @@ function editNextSet(ctl) {
     if (ctl.editRpe() != null) { fs.add($.rpeField(ctl.editRpe())); }
     var n = ctl.currentSetCount() + 1;
     var v = new EditSetView("Next: set " + n.toString(), ex.name(), fs, new WorkingTarget(ctl, ex), "Next sets updated");
+    Ui.pushView(v, new EditSetDelegate(v), Ui.SLIDE_LEFT);
+}
+
+// The pace of the step being worked: the metronome, the RPM field and the step
+// text all read the edited value from the next beat on.
+function editPace(ctl) {
+    var ex = ctl.currentExercise();
+    if (ex == null || ex.targetRpm() == null) { return; }
+    var v = new EditSetView("Pace", ex.name(), [$.rpmField(ex.targetRpm())],
+                            new WorkingTarget(ctl, ex), "Pace updated");
     Ui.pushView(v, new EditSetDelegate(v), Ui.SLIDE_LEFT);
 }
 
@@ -105,6 +118,7 @@ class WorkingTarget {
     function initialize(ctl, ex) { _ctl = ctl; _ex = ex; }
     function applyEdit(vals) {
         if (vals.hasKey("sets")) { _ex.setPlan({ "sets" => vals["sets"] }); }
+        if (vals.hasKey("rpm"))  { _ex.setPlan({ "rpm" => vals["rpm"] }); }
         _ctl.setWorking(vals);
     }
 }
@@ -172,7 +186,7 @@ class EditSetView extends Ui.View {
     }
 
     hidden function isCount(f) {
-        return f[0].equals("sets") || f[0].equals("reps") || f[0].equals("hold");
+        return f[0].equals("sets") || f[0].equals("reps") || f[0].equals("hold") || f[0].equals("rpm");
     }
 
     // BACK: previous field, or leave without saving.

@@ -91,8 +91,10 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
         if (_ctl.lastSet() != null) {
             m.addItem(new Ui.MenuItem("Edit Set", _ctl.lastSetName(), :edit, {}));
         }
-        // Garmin keeps its metronome in the activity menu; ours, for paced sets.
-        if (ex != null && ex.targetRpm() != null) {
+        // Garmin keeps its metronome in the activity menu; ours, for paced sets,
+        // with the pace itself editable beside it.
+        if (st != WorkoutController.DONE && ex != null && ex.targetRpm() != null) {
+            m.addItem(new Ui.MenuItem("Pace", ex.targetRpm().toString() + " RPM", :pace, {}));
             m.addItem(new Ui.ToggleMenuItem("Metronome", ex.targetRpm().toString() + " RPM",
                                             :metronome, _ctl.metronomeOn(), {}));
         }

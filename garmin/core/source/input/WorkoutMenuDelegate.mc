@@ -30,6 +30,11 @@ class WorkoutMenuDelegate extends Ui.Menu2InputDelegate {
                 $.editNextSet(_ctl);
                 return;
             }
+            if (id == :pace) {
+                Ui.popView(Ui.SLIDE_IMMEDIATE);
+                $.editPace(_ctl);
+                return;
+            }
             if (id == :metronome) {
                 _ctl.toggleMetronome();
                 return;   // a toggle stays in the menu, as Garmin's do
