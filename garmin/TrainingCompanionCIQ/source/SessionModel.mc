@@ -6,21 +6,51 @@ using Toybox.Lang;
 
 class WorkoutExercise {
     hidden var d;
-    function initialize(dict) { d = dict; }
+    hidden var o;   // the athlete's own reps / load / hold / RPE for this run, or null
 
-    hidden function g(k) { return (d != null && d.hasKey(k)) ? d[k] : null; }
+    function initialize(dict) { d = dict; o = null; }
+
+    hidden function g(k) {
+        if (o != null && o.hasKey(k)) { return o[k]; }
+        return (d != null && d.hasKey(k)) ? d[k] : null;
+    }
+
+    // Set before starting, from the workout's Steps list ("set reps / weight"). The
+    // server's prescription stays untouched; the session log records what was done.
+    function setPlan(vals) {
+        if (o == null) { o = {}; }
+        if (vals.hasKey("sets"))   { o["sets"] = vals["sets"]; }
+        if (vals.hasKey("reps"))   { o["reps"] = vals["reps"]; }
+        if (vals.hasKey("hold"))   { o["holdSeconds"] = vals["hold"]; }
+        if (vals.hasKey("weight")) { o["weightKg"] = vals["weight"]; }
+        if (vals.hasKey("rpe"))    { o["targetRpe"] = vals["rpe"]; }
+    }
+
+    function isEdited() { return o != null; }
 
     function name()            { return g("name"); }
     function slotType()        { return g("slotType"); }
     function slotRole()        { return g("slotRole"); }
     function isMeta()          { return g("isMeta") == true; }
-    function loadDescription() { return g("loadDescription"); }
+    // The server's "5x3 @ 110 kg" no longer describes an edited exercise.
+    function loadDescription() { return (o != null) ? null : g("loadDescription"); }
     function loadNote()        { return g("loadNote"); }
     function coachingCue()     { return g("coachingCue"); }
 
     function sets()            { return g("sets"); }
     function reps()            { return g("reps"); }
-    function weightKg()        { return g("weightKg"); }
+    function weightKg()        { return g("weightKg"); }   // one bell of a double, as the server prescribes
+    // Bells held at once: 2 for double-kettlebell work, else 1. The server sends no
+    // such field yet; the exercise id says so (kb_press_double, double_kb_press).
+    function bells() {
+        var b = g("bells");
+        if (b != null) { return b; }
+        var id = g("exerciseId");
+        if (id == null || !isKettlebell()) { return 1; }
+        var n = id.length();
+        return (id.find("double_") == 0 || (n > 7 && id.substring(n - 7, n).equals("_double"))) ? 2 : 1;
+    }
+    function isKettlebell()    { var c = g("category"); return c != null && c.equals("kettlebell"); }
     function targetRpe()       { return g("targetRpe"); }
     function durationMinutes() { return g("durationMinutes"); }
     function zoneTarget()      { return g("zoneTarget"); }
@@ -52,6 +82,12 @@ class WorkoutExercise {
     function rir()             { return g("rir"); }
     // Set on an amrap_movement to name the amrap slot it belongs to.
     function parentSlotRole()  { return g("parentSlotRole"); }
+
+    // Demo-only for now (the server encoder does not send them yet); each is
+    // optional and absent means the behaviour before it existed.
+    function targetRpm()       { return g("targetRpm"); }     // metronome pace for timed sets
+    function switchAtSec()     { return g("switchAtSec"); }   // hand switch inside a work period
+    function restUntilHr()     { return g("restUntilHr"); }   // rest ends when HR drops below this
 }
 
 class WorkoutSession {
@@ -78,6 +114,9 @@ class WorkoutSession {
     function archetypeCategory() { return s("archetypeCategory"); }
     function estimatedMinutes(){ return d["estimatedMinutes"]; }
     function isDeload()        { return d["isDeload"] == true; }
+    // Done today: saved on this watch, or reported done by the server (a session
+    // log, or a workout from another device matched to it).
+    function isCompleted()     { return d["completed"] == true || DayLog.isDone(sessionId()); }
     function exercises()       { return _exercises; }
     function exerciseCount()   { return _exercises.size(); }
 

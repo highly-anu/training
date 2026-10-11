@@ -12,9 +12,11 @@ using Toybox.UserProfile;
 // upload. Mirrors ios/.../WorkoutManager.swift + WorkoutSessionState.swift.
 class WorkoutController {
 
-    // States (mirror WorkoutSessionState phases).
+    // States (mirror WorkoutSessionState phases). DONE: every step is finished but
+    // the activity is still recording, as on Garmin's own workouts — "Workout
+    // complete" shows and the athlete saves from the stop menu.
     enum {
-        IDLE, ACTIVE, RESTING, COMPLETE
+        IDLE, ACTIVE, RESTING, COMPLETE, DONE
     }
 
     // Reservoir capacity. Matches the <= 600 both upload paths already enforce.
@@ -101,17 +103,31 @@ class WorkoutController {
     hidden var _holdLeft;       // seconds remaining in the active hold, 0 = idle
     hidden var _holdRunning;
 
-    // On-wrist editable working set (sets_reps). Seeded from the prescription when
-    // the exercise becomes active; UP/DOWN adjust the focused field, BACK cycles it.
+    // The working set (sets_reps): what LAP logs. Seeded from the prescription when
+    // the exercise becomes active; Edit Set changes the last logged set and carries
+    // the new values forward to the sets after it, as Garmin's Strength does.
     hidden var _editReps;
     hidden var _editWeight;     // kg, or null when the slot prescribes no load
     hidden var _editRpe;        // or null
-    hidden var _editFields;     // applicable field ids, e.g. ["reps","weight"]
-    hidden var _editFieldIdx;
+    hidden var _advanceAfterRest;  // the rest follows an exercise's last set
+    hidden var _lastLogName;    // where the last logged set lives, for Edit Set
+    hidden var _lastLogIdx;
+    hidden var _calories;       // Activity.Info.calories, kcal
+    hidden var _speed;          // Activity.Info.currentSpeed, m/s (cardio)
+    hidden var _gateRest;       // this interval rest ends on HR, not on the clock
+    hidden var _gateBelow;      // consecutive seconds under the HR target
+    hidden var _metroTimer;     // the metronome's own beat (1 Hz is too slow for 70 RPM)
+    hidden var _metroMs;        // its current period, 0 when stopped
+    hidden var _metronome;      // metronome on (hold-UP toggles it)
+    hidden var _alert;          // a step alert waiting to be shown: [title, line]
+    hidden var _te;             // Activity.Info.trainingEffect, read at the end
 
     // setLogs: { exerciseId => [ {reps, weightKg, rpe} ] }
     hidden var _setLogs;
     hidden var _uploadOk;   // null until the upload resolves
+    hidden var _lastError;  // first failure swallowed to keep the workout alive
+    hidden var _paused;     // stop menu open: clock and recording held
+    hidden var _discarded;  // ended without saving or uploading
 
     function initialize(session, sync) {
         _session = session;
@@ -140,30 +156,103 @@ class WorkoutController {
         _side = SIDE_LEFT; _sideReps = 0;
         _holdLeft = 0; _holdRunning = false;
         _editReps = 0; _editWeight = null; _editRpe = null;
-        _editFields = ["reps"]; _editFieldIdx = 0;
+        _advanceAfterRest = false;
+        _lastLogName = null; _lastLogIdx = 0;
+        _calories = 0; _te = null;
+        _speed = 0.0; _gateRest = false; _gateBelow = 0; _metroMs = 0;
+        _metronome = true; _alert = null;
         _setLogs = {};
         _uploadOk = null;
+        _lastError = null;
+        _paused = false;
+        _discarded = false;
+        seedSetEditor();
     }
 
     // ── lifecycle ────────────────────────────────────────────────────────────────
 
-    function start() {
-        _startMoment = Time.now();
-        _isCardio = isCardioModality(_session.modalityId());
+    // Do Workout: the workout screen is up but nothing records until START, as on
+    // Garmin's own workouts. The clock runs only to show the live HR.
+    function prepare() {
+        _isCardio = isCardioSession();
         _hrZones = readHrZones();
+        if (_timer == null) {
+            _timer = new Timer.Timer();
+            _timer.start(method(:onTick), 1000, true);
+        }
+    }
+
+    // BACK before START: leave without having recorded anything.
+    function cancel() {
+        if (_state != IDLE) { return; }
+        if (_timer != null) { try { _timer.stop(); } catch (e) {} }
+        _timer = null;
+    }
+
+    function isReady() { return _state == IDLE; }
+
+    // START: begin recording. Set Next values chosen while ready carry over.
+    function start() {
+        if (_state != IDLE) { return; }
+        prepare();
+        _startMoment = Time.now();
         _rec = Rec.createSession({
             :name => _session.archetypeName(),
-            :sport => sportForModality(_session.modalityId()),
+            :sport => _isCardio ? Rec.SPORT_RUNNING : Rec.SPORT_TRAINING,
             :subSport => subSportForModality(_session.modalityId())
         });
         _rec.start();
-        _timer = new Timer.Timer();
-        _timer.start(method(:onTick), 1000, true);
         _state = ACTIVE;
+        var r = _editReps;
+        var w = _editWeight;
+        var p = _editRpe;
         beginExerciseTiming();
+        _editReps = r;
+        _editWeight = w;
+        _editRpe = p;
     }
 
     function onTick() as Void {
+        // A throw in a timer callback kills the whole app mid-set. Keep the
+        // workout alive and remember what failed; the finish screen shows it.
+        try { tick(); } catch (e) { _lastError = "tick: " + e.getErrorMessage(); }
+        try { syncMetronome(); } catch (e) {}
+    }
+
+    // A paced work period beats at the target RPM on its own timer (the third of
+    // three: this, the clock and the step alert); everything else stops it.
+    hidden function syncMetronome() {
+        var ms = 0;
+        var ex = currentExercise();
+        if (_state == ACTIVE && !_paused && _metronome && ex != null && _workSec > 0
+                && _intPhase == PHASE_WORK && ex.targetRpm() != null && ex.targetRpm() > 0) {
+            ms = 60000 / ex.targetRpm();
+        }
+        if (ms == _metroMs) { return; }
+        stopMetronome();
+        if (ms > 0) {
+            _metroTimer = new Timer.Timer();
+            _metroTimer.start(method(:onBeat), ms, true);
+            _metroMs = ms;
+        }
+    }
+
+    hidden function stopMetronome() {
+        if (_metroTimer != null) { try { _metroTimer.stop(); } catch (e) {} }
+        _metroTimer = null;
+        _metroMs = 0;
+    }
+
+    function onBeat() as Void { Haptics.metronome(); }
+
+    hidden function tick() {
+        if (_state == IDLE) {
+            var i0 = Activity.getActivityInfo();
+            if (i0 != null && i0.currentHeartRate != null) { _hrLast = i0.currentHeartRate; }
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (_paused) { return; }
         _elapsed += 1;
         var info = Activity.getActivityInfo();
         if (info != null && info.currentHeartRate != null) {
@@ -172,6 +261,10 @@ class WorkoutController {
             pushHr(_elapsed, hr);
             _hrSum += hr; _hrCount += 1;
             if (hr > _hrPeak) { _hrPeak = hr; }
+        }
+        if (info != null) {
+            if ((info has :calories) && info.calories != null) { _calories = info.calories; }
+            if ((info has :trainingEffect) && info.trainingEffect != null) { _te = info.trainingEffect; }
         }
         if (_isCardio) { captureGps(info); }
         if (_state == ACTIVE) { evaluateHrDrift(); updateIntervalTiming(); }
@@ -182,10 +275,11 @@ class WorkoutController {
             else if (_restRemaining == 10) { Haptics.restWarn10(); }
             if (_restRemaining <= 0) {
                 Haptics.restOver();
-                _state = ACTIVE;
+                endRest();
             }
         }
         if (_holdRunning) { tickHold(); }
+        StepAlert.flush(self);
         WatchUi.requestUpdate();
     }
 
@@ -233,6 +327,9 @@ class WorkoutController {
         if (info == null) { return; }
         if ((info has :elapsedDistance) && info.elapsedDistance != null) {
             _distanceM = info.elapsedDistance;
+        }
+        if ((info has :currentSpeed) && info.currentSpeed != null) {
+            _speed = info.currentSpeed;
         }
         if ((info has :totalAscent) && info.totalAscent != null) {
             _ascent = info.totalAscent;
@@ -306,6 +403,8 @@ class WorkoutController {
         if (_driftSec == Config.HR_DRIFT_HOLD_SEC) {
             _driftDir = dir;
             Haptics.hrDrift(dir);
+            // Garmin's target alert, in words as well as a buzz.
+            Native.toast((dir > 0) ? "Heart rate too high" : "Heart rate too low", false);
         }
     }
 
@@ -319,10 +418,14 @@ class WorkoutController {
         _workSec = 0; _intRestSec = 0; _intPhase = PHASE_WORK; _intPhaseLeft = 0;
         _side = SIDE_LEFT; _sideReps = 0;
         _holdLeft = 0; _holdRunning = false;
+        _gateRest = false; _gateBelow = 0;
 
         var ex = currentExercise();
         if (ex == null) { return; }
         var slot = ex.slotType();
+        // A timed step or an AMRAP block is announced as it starts (name, then what
+        // it asks for); sets with rests between them are not.
+        if (announces(ex)) { queueAlert(ex.name(), Steps.prescription(ex)); }
         if (slot.equals("emom")) {
             var rounds = ex.targetRounds();
             _emomTotal = (rounds != null) ? rounds : 0;
@@ -409,8 +512,7 @@ class WorkoutController {
         var ex = currentExercise();
         logSet(actual, (ex != null) ? ex.weightKg() : null, null);
         Haptics.setLogged();
-        var target = (ex != null && ex.sets() != null) ? ex.sets() : 1;
-        if (currentSetCount() >= target) { nextExercise(); } else { startRest(); }
+        afterSet();
     }
 
     function holdTarget() {
@@ -508,59 +610,178 @@ class WorkoutController {
         }
     }
 
-    // Seed the editable working set from the prescription. Only the fields the slot
-    // actually prescribes become adjustable (a bodyweight lift exposes reps only).
+    // Seed the working set from the prescription.
     hidden function seedSetEditor() {
-        _editFields = ["reps"];
-        _editFieldIdx = 0;
         var ex = currentExercise();
         if (ex == null) {
             _editReps = 0; _editWeight = null; _editRpe = null;
             return;
         }
-        var r = ex.reps();
-        _editReps = (r != null) ? r : 8;
+        _editReps = repsNumber(ex.reps());
         _editWeight = ex.weightKg();
         _editRpe = ex.targetRpe();
-        if (_editWeight != null) { _editFields.add("weight"); }
-        if (_editRpe != null)    { _editFields.add("rpe"); }
     }
 
-    // Adjust the focused field by delta (±1) with a per-field step and clamp.
-    function adjustEdit(delta) {
-        var f = _editFields[_editFieldIdx];
-        if (f.equals("reps")) {
-            _editReps = clampNum(_editReps + delta, 0, 100);
-        } else if (f.equals("weight")) {
-            _editWeight = clampNum(_editWeight + (delta * 2.5), 0, 500);
-        } else if (f.equals("rpe")) {
-            _editRpe = clampNum(_editRpe + (delta * 0.5), 5.0, 10.0);
+    // The server sends reps as text ("5", "8-12", "max"), and the editor does
+    // arithmetic on it: DOWN on "5" threw a type error and killed the app. Take
+    // the leading whole number, or 8 when there is none ("max", "AMRAP").
+    hidden function repsNumber(r) {
+        if (r instanceof Lang.Number) { return r; }
+        if (!(r instanceof Lang.String)) { return 8; }
+        var n = 0;
+        var any = false;
+        for (var i = 0; i < r.length(); i += 1) {
+            var d = "0123456789".find(r.substring(i, i + 1));
+            if (d == null) { break; }
+            n = (n * 10) + d;
+            any = true;
         }
+        return any ? n : 8;
     }
 
-    function cycleEditField()  { _editFieldIdx = (_editFieldIdx + 1) % _editFields.size(); }
-    function editReps()        { return _editReps; }
-    function editWeight()      { return _editWeight; }
-    function editRpe()         { return _editRpe; }
-    function editFocusField()  { return _editFields[_editFieldIdx]; }
-    function editFieldCount()  { return _editFields.size(); }
-    function editHasField(id)  { return _editFields.indexOf(id) >= 0; }
+    // Set Next: the reps / load / RPE the next sets of this exercise will log.
+    function setWorking(vals) {
+        if (vals.hasKey("reps"))   { _editReps = vals["reps"]; }
+        if (vals.hasKey("weight")) { _editWeight = vals["weight"]; }
+        if (vals.hasKey("rpe"))    { _editRpe = vals["rpe"]; }
+    }
 
-    // Log the current set using the edited working values.
-    function logCurrentSet() {
+    function editReps()   { return _editReps; }
+    function editWeight() { return _editWeight; }
+    function editRpe()    { return _editRpe; }
+
+    // LAP on a sets/reps screen: the set is done. Log the working values, then rest
+    // (or move on), as Garmin's Strength activity does on LAP.
+    function completeSet() {
         logSet(_editReps, _editWeight, _editRpe);
         _sideReps += 1;
         Haptics.setLogged();
         // Unilateral work alternates automatically: the athlete shouldn't have to
         // press anything extra between sides.
         if (needsSideTracking()) { toggleSide(); }
+        afterSet();
+    }
+
+    // After a set: rest before the next set; after the last set, rest before the
+    // next exercise when the prescription has a rest, else move straight on.
+    hidden function afterSet() {
+        var ex = currentExercise();
+        var rest = Steps.restSec(ex, _session.modalityId());
+        if (currentSetCount() < Steps.setCount(ex)) {
+            if (rest > 0) { startRest(rest, false); }
+            return;
+        }
+        if (hasNextExercise() && rest > 0) { startRest(rest, true); return; }
+        nextExercise();
+    }
+
+    // The last logged set, for Edit Set: { reps, weightKg, rpe } or null.
+    function lastSet() {
+        if (_lastLogName == null || !_setLogs.hasKey(_lastLogName)) { return null; }
+        var arr = _setLogs[_lastLogName];
+        return (_lastLogIdx < arr.size()) ? arr[_lastLogIdx] : null;
+    }
+
+    function lastSetName()   { return _lastLogName; }
+    function lastSetNumber() { return _lastLogIdx + 1; }
+
+    // Edit Set: replace the last logged set's values; the sets after it on the
+    // same exercise start from the new values.
+    function editLastSet(reps, weightKg, rpe) {
+        var set = lastSet();
+        if (set == null) { return; }
+        set["reps"] = reps;
+        set["weightKg"] = weightKg;
+        set["rpe"] = rpe;
+        var ex = currentExercise();
+        if (ex != null && ex.name().equals(_lastLogName)) {
+            if (reps != null) { _editReps = reps; }
+            _editWeight = weightKg;
+            _editRpe = rpe;
+        }
+    }
+
+    // Sets logged for one exercise (the step list's "Now: 2/5").
+    function setsDoneFor(ex) {
+        if (ex == null) { return 0; }
+        var id = ex.name();
+        return _setLogs.hasKey(id) ? _setLogs[id].size() : 0;
+    }
+
+    // kg moved across every logged set with both reps and a load.
+    function totalVolumeKg() {
+        var v = 0.0;
+        var keys = _setLogs.keys();
+        for (var i = 0; i < keys.size(); i += 1) {
+            var arr = _setLogs[keys[i]];
+            var ex = exerciseNamed(keys[i]);
+            for (var j = 0; j < arr.size(); j += 1) {
+                var r = arr[j]["reps"];
+                var w = arr[j]["weightKg"];
+                if (r instanceof Lang.Number && w != null) { v += r * Steps.totalKg(ex, w); }
+            }
+        }
+        return v;
+    }
+
+    // "5x3 @ 110" — one exercise's logged sets, for the summary.
+    function loggedText(name) {
+        if (!_setLogs.hasKey(name)) { return null; }
+        var arr = _setLogs[name];
+        if (arr.size() == 0) { return null; }
+        var r = arr[arr.size() - 1]["reps"];
+        var w = arr[arr.size() - 1]["weightKg"];
+        var t = arr.size().toString() + "x" + ((r != null) ? r.toString() : "-");
+        if (w != null) { t += " @ " + Steps.loadText(exerciseNamed(name), w); }
+        return t;
+    }
+
+    hidden function exerciseNamed(name) {
+        var list = _session.exercises();
+        for (var i = 0; i < list.size(); i += 1) {
+            if (name.equals(list[i].name())) { return list[i]; }
+        }
+        return null;
+    }
+
+    function calories()       { return _calories; }
+    function trainingEffect() { return _te; }
+
+    // The HR reservoir, for the summary's chart.
+    function hrCount() { return _hrN; }
+    function hrAt(i)   { return _hrVal[i]; }
+
+    // Where the live HR sits across the five-zone gauge, 0.0-1.0, or null.
+    function hrGaugeFraction() {
+        if (_hrZones == null || _hrZones.size() < 6 || _hrLast == null) { return null; }
+        if (_hrLast <= _hrZones[0]) { return 0.0; }
+        for (var z = 1; z <= 5; z += 1) {
+            var lo = _hrZones[z - 1];
+            var hi = _hrZones[z];
+            if (_hrLast < hi || z == 5) {
+                var f = (hi > lo) ? ((_hrLast - lo).toFloat() / (hi - lo).toFloat()) : 0.0;
+                if (f > 1.0) { f = 1.0; }
+                return ((z - 1) + f) / 5.0;
+            }
+        }
+        return 1.0;
     }
 
     hidden function clampNum(v, lo, hi) {
         return (v < lo) ? lo : ((v > hi) ? hi : v);
     }
 
-    // Buzz at the top of each EMOM interval; buzz once when an AMRAP cap is reached.
+    // Interval and timed-step clock, run once a second while ACTIVE.
+    //
+    //   emom          work and rest phases with their own cues; a target RPM ticks
+    //                 the metronome, a hand switch fires mid-set, and a rest with an
+    //                 HR target ends once HR has stayed under it for 5 s (the rest
+    //                 time is then only a cap). The block ends itself after its last
+    //                 round, as Garmin's repeat steps do.
+    //   amrap         ends itself when the cap runs out
+    //   time_domain / skill_practice with a duration: end themselves at 0:00
+    //
+    // LAP still ends any of them early.
     hidden function updateIntervalTiming() {
         var ex = currentExercise();
         if (ex == null) { return; }
@@ -569,34 +790,112 @@ class WorkoutController {
 
         if (slot.equals("emom") && _workSec > 0) {
             _intPhaseLeft -= 1;
+            if (_intPhase == PHASE_WORK) {
+                var sw = ex.switchAtSec();
+                if (sw != null && (_workSec - _intPhaseLeft) == sw) {
+                    toggleSide();
+                    queueAlert("Switch hands", (_side == SIDE_LEFT) ? "Left hand" : "Right hand");
+                }
+            } else if (_gateRest) {
+                var gate = ex.restUntilHr();
+                if (_hrLast != null && gate != null && _hrLast < gate) { _gateBelow += 1; }
+                else { _gateBelow = 0; }
+                if (_gateBelow >= 5) { _intPhaseLeft = 0; }
+            }
             if (_intPhaseLeft > 0) { return; }
 
             if (_intPhase == PHASE_WORK && _intRestSec > 0) {
                 // Work -> rest. Distinct cue: the athlete must stop, not start.
                 _intPhase = PHASE_REST;
+                _gateRest = (ex.restUntilHr() != null);
+                _gateBelow = 0;
                 _intPhaseLeft = _intRestSec;
                 Haptics.intervalRest();
+                if (_workSec >= 60 || _gateRest) { queueAlert(restLabel(ex), restValue(ex)); }
                 return;
             }
 
             // Rest -> work, or a rest-less EMOM rolling to the next minute.
             if (_emomTotal > 0 && _emomRound >= _emomTotal) {
-                _intPhaseLeft = 0;
-                return;                       // block finished; SELECT advances
+                nextExercise();
+                return;
             }
             _emomRound += 1;
             _intPhase = PHASE_WORK;
+            _gateRest = false;
             _intPhaseLeft = _workSec;
             markLap();
             Haptics.intervalWork();
+            if (_workSec >= 60 || ex.restUntilHr() != null) {
+                queueAlert(workLabel(ex) + " " + _emomRound.toString() + "/" + _emomTotal.toString(),
+                           workValue(ex));
+            }
 
         } else if (slot.equals("amrap") && _capSec > 0) {
             if (since >= _capSec && !_capBuzzed) {
                 _capBuzzed = true;
                 Haptics.sessionComplete();
+                nextExercise();
+            }
+        } else if ((slot.equals("time_domain") || slot.equals("skill_practice"))
+                   && !ArchetypeBehavior.isRoundTimer(archetypeId())) {
+            var mins = ex.durationMinutes();
+            if (mins != null && mins > 0 && since >= mins * 60) {
+                Haptics.restOver();
+                nextExercise();
             }
         }
     }
+
+    // Garmin's own words for interval phases: Run / Recover on a run, Work / Rest
+    // otherwise.
+    function isRunInterval(ex) {
+        return ex != null && ex.zoneLower() != null && ex.targetRpm() == null && isLocomotion(ex);
+    }
+    function workLabel(ex) { return isRunInterval(ex) ? "Run" : "Work"; }
+    function restLabel(ex) { return isRunInterval(ex) ? "Recover" : "Rest"; }
+
+    function workValue(ex) {
+        var t = Text.mmss(_workSec);
+        if (ex.targetRpm() != null) { return t + "  " + ex.targetRpm().toString() + " RPM"; }
+        var z = ex.zoneLower();
+        if (z != null) {
+            var hi = ex.zoneUpper();
+            return t + "  Zone " + z.toString() + ((hi != null && hi != z) ? ("-" + hi.toString()) : "");
+        }
+        return t;
+    }
+
+    function restValue(ex) {
+        var gate = ex.restUntilHr();
+        if (gate != null) { return "until HR " + gate.toString(); }
+        return Text.mmss(_intRestSec);
+    }
+
+    function gateRest()       { return _gateRest; }
+    function restPhaseElapsed() { return _intRestSec - _intPhaseLeft; }
+    function metronomeOn()    { return _metronome; }
+    function toggleMetronome() { _metronome = !_metronome; syncMetronome(); }
+
+    // "5:12" per km from the live speed, or "--" when standing.
+    function paceText() {
+        if (_speed == null || _speed < 0.3) { return "--"; }
+        return Text.mmss((1000.0 / _speed).toNumber());
+    }
+
+    function isCardio() { return _isCardio; }
+
+    // Step alerts: queued by the engine, shown by StepAlert from the tick or a
+    // key handler, so the controller never pushes a view itself.
+    hidden function queueAlert(title, line) { _alert = [title, line]; }
+
+    hidden function announces(ex) {
+        var slot = ex.slotType();
+        if (slot.equals("emom") || slot.equals("amrap") || slot.equals("for_time")) { return true; }
+        return (slot.equals("time_domain") || slot.equals("skill_practice"))
+            && ex.durationMinutes() != null && ex.durationMinutes() > 0;
+    }
+    function takeAlert() { var a = _alert; _alert = null; return a; }
 
     // Static hold countdown, with the same graded end-of-period cue.
     hidden function tickHold() {
@@ -606,10 +905,8 @@ class WorkoutController {
             _holdRunning = false;
             _holdLeft = 0;
             Haptics.restOver();
-            logSet(null, currentExercise() != null ? currentExercise().weightKg() : null, null);
-            var ex2 = currentExercise();
-            var target = (ex2 != null && ex2.sets() != null) ? ex2.sets() : 1;
-            if (currentSetCount() >= target) { nextExercise(); } else { startRest(); }
+            logSet(holdTarget(), currentExercise() != null ? currentExercise().weightKg() : null, null);
+            afterSet();
         }
     }
 
@@ -686,22 +983,75 @@ class WorkoutController {
         var id = ex.name();   // TODO: prefer a stable exerciseId; backend keys by it.
         if (!_setLogs.hasKey(id)) { _setLogs[id] = []; }
         _setLogs[id].add({ "reps" => reps, "weightKg" => weightKg, "rpe" => rpe });
+        _lastLogName = id;
+        _lastLogIdx = _setLogs[id].size() - 1;
     }
 
-    function startRest() {
-        var ex = currentExercise();
-        var sec = (ex != null && ex.restSeconds() != null)
-            ? ex.restSeconds()
-            : Config.defaultRestSec(_session.modalityId());
+    hidden function startRest(sec, advance) {
         if (sec == null || sec <= 0) { return; }
         _restRemaining = sec;
         _restTotal = sec;
+        _advanceAfterRest = advance;
         _state = RESTING;
     }
 
+    // LAP during a rest ends it, as on Garmin's Strength.
     function skipRest() {
+        if (_state != RESTING) { return; }
         _restRemaining = 0;
-        _state = ACTIVE;
+        endRest();
+    }
+
+    hidden function endRest() {
+        var adv = _advanceAfterRest;
+        _advanceAfterRest = false;
+        if (adv) { nextExercise(); } else { _state = ACTIVE; }
+    }
+
+    function restAdvances() { return _advanceAfterRest; }
+
+    // Skip (hold-UP menu): leave the current exercise, rest included.
+    function skip() {
+        if (_state == DONE || _state == COMPLETE) { return; }
+        _advanceAfterRest = false;
+        nextExercise();
+    }
+
+    function hasNextExercise() { return nextIndex() < _session.exerciseCount(); }
+
+    function upcomingExercise() {
+        var i = nextIndex();
+        var list = _session.exercises();
+        return (i < list.size()) ? list[i] : null;
+    }
+
+    hidden function nextIndex() {
+        var i = _exIndex + 1;
+        while (i < _session.exerciseCount() && isFoldedComponent(i)) { i += 1; }
+        return i;
+    }
+
+    // The next step, for the "Next:" line: [title, value].
+    function nextStep() {
+        var ex = currentExercise();
+        if (_state == DONE || ex == null) { return ["Finish", null]; }
+        if (_state == RESTING) {
+            if (_advanceAfterRest) { return stepOf(upcomingExercise()); }
+            var n = Steps.setCount(ex);
+            return [ex.name(), "Set " + (currentSetCount() + 1).toString() + "/" + n.toString()
+                               + "  " + Steps.preview(ex)];
+        }
+        var rest = Steps.restSec(ex, _session.modalityId());
+        if (Steps.isSetBased(ex) && rest > 0
+                && (currentSetCount() + 1 < Steps.setCount(ex) || hasNextExercise())) {
+            return ["Rest", Text.mmss(rest)];
+        }
+        return stepOf(upcomingExercise());
+    }
+
+    hidden function stepOf(ex) {
+        if (ex == null) { return ["Finish", null]; }
+        return [ex.name(), Steps.preview(ex)];
     }
 
     // Advance to the next exercise (or finish).
@@ -713,7 +1063,13 @@ class WorkoutController {
             _exIndex += 1;
         }
         if (_exIndex >= _session.exerciseCount()) {
-            finish();
+            // Every step done. Keep recording until the athlete saves, as Garmin's
+            // own workouts do; the screen says "Workout complete".
+            _state = DONE;
+            _advanceAfterRest = false;
+            markLap();
+            Haptics.sessionComplete();
+            queueAlert("Workout complete", "Press START to save");
         } else {
             _state = ACTIVE;
             _driftSec = 0; _pendingDir = 0; _driftDir = 0;   // reset drift latch per exercise
@@ -722,20 +1078,86 @@ class WorkoutController {
         }
     }
 
+    // The stop menu (Resume / Save / Discard) opens: hold the clock and the
+    // recording. Resume continues the same FIT session.
+    function pause() {
+        if (_state == COMPLETE || _paused) { return; }
+        _paused = true;
+        stopMetronome();
+        try { if (_rec != null) { _rec.stop(); } } catch (e) { noteError("pause", e); }
+    }
+
+    function resume() {
+        if (!_paused) { return; }
+        _paused = false;
+        try { if (_rec != null) { _rec.start(); } } catch (e) { noteError("resume", e); }
+        WatchUi.requestUpdate();
+    }
+
+    function isPaused() { return _paused; }
+
+    // End without saving: nothing is written to the activity list or uploaded.
+    function discardSession() {
+        if (_state == COMPLETE) { return; }
+        if (_state == IDLE) { cancel(); _state = COMPLETE; _discarded = true; return; }
+        _state = COMPLETE;
+        _paused = false;
+        _discarded = true;
+        if (_timer != null) { try { _timer.stop(); } catch (e) {} }
+        stopMetronome();
+        try {
+            if (_rec != null) { _rec.stop(); _rec.discard(); }
+        } catch (e) { noteError("discard", e); }
+    }
+
+    function wasDiscarded() { return _discarded; }
+
+    // Leaving before the upload answered: buffer it so the next open retries.
+    function parkPendingUpload() {
+        if (_uploadOk == null && !_discarded && _sync != null) { _sync.parkPending(); }
+    }
+
     function finish() {
         // Idempotent: the BACK confirmation, the session menu and AppBase.onStop()
         // can all reach here, and stop()/save() must not run twice.
         if (_state == COMPLETE) { return; }
-        if (_timer != null) { _timer.stop(); }
-        if (_rec != null) {
-            _rec.stop();
-            _rec.save();     // writes the FIT to the device activity list
-        }
+        // Never started: nothing was recorded, so nothing is saved or uploaded.
+        if (_state == IDLE) { cancel(); _state = COMPLETE; _discarded = true; return; }
         _state = COMPLETE;
-        Haptics.sessionComplete();
-        var summary = buildSummary();
-        _sync.uploadSession(summary, method(:onUploadDone));
+        _paused = false;
+        if (_timer != null) { try { _timer.stop(); } catch (e) {} }
+        stopMetronome();
+        try {
+            var info = Activity.getActivityInfo();
+            if (info != null && (info has :trainingEffect) && info.trainingEffect != null) {
+                _te = info.trainingEffect;
+            }
+        } catch (e) {}
+        // Each step is guarded on its own: whichever one fails must not stop the
+        // workout reaching its finish screen, and the failure is shown there.
+        try {
+            if (_rec != null) {
+                _rec.stop();
+                // A demo session is not a real activity: discard it rather than
+                // writing it to the watch's history (and on to Garmin Connect).
+                if (DemoSession.enabled()) { _rec.discard(); } else { _rec.save(); }
+            }
+        } catch (e) { noteError("save", e); }
+        // The glance's ring and the pre-start page's "Completed" read this.
+        try { DayLog.record(_session.sessionId(), _elapsed / 60, totalSetsLogged()); } catch (e) {}
+        try {
+            _sync.uploadSession(buildSummary(), method(:onUploadDone));
+        } catch (e) {
+            noteError("summary", e);
+            _uploadOk = false;
+        }
     }
+
+    hidden function noteError(where, e) {
+        if (_lastError == null) { _lastError = where + ": " + e.getErrorMessage(); }
+    }
+
+    function lastError() { return _lastError; }
 
     function onUploadDone(success, data) as Void {
         // The finish screen reports this, so a failed sync is visible rather than
@@ -848,20 +1270,36 @@ class WorkoutController {
         ]);
     }
 
+    // A session is cardio — GPS, distance, the run page, the RUNNING sport type —
+    // when its modality is aerobic AND it actually moves: a run, a ruck, a hike. An
+    // aerobic-base kettlebell session (anti-glycolic swings) is aerobic work done on
+    // the spot, and recording it as a run with GPS was wrong.
+    hidden function isCardioSession() {
+        var m = _session.modalityId();
+        if (!isCardioModality(m) && (m == null || !m.equals("durability"))) { return false; }
+        var list = _session.exercises();
+        for (var i = 0; i < list.size(); i += 1) {
+            if (isLocomotion(list[i])) { return true; }
+        }
+        return false;
+    }
+
+    function isLocomotion(ex) {
+        if (ex == null) { return false; }
+        var c = ex.category();
+        var p = ex.movementPattern();
+        if (c != null && c.equals("aerobic")) { return true; }
+        if (p != null && (p.equals("aerobic_monostructural") || p.equals("locomotion"))) { return true; }
+        return ex.slotType().equals("distance") && ex.distanceKm() != null;
+    }
+
     // Cardio modalities drive GPS/distance capture and the RUNNING sport type.
     hidden function isCardioModality(m) {
         return m != null && (m.equals("aerobic_base") || m.equals("anaerobic_intervals"));
     }
 
-    // SPORT_*/SUB_SPORT_* are ActivityRecording constants (verified against SDK 9.2.0
-    // by compilation — an unknown symbol fails the monkeyc build).
-    hidden function sportForModality(m) {
-        if (isCardioModality(m)) {
-            return Rec.SPORT_RUNNING;   // refine: rowing/cycling per exercise
-        }
-        return Rec.SPORT_TRAINING;
-    }
-
+    // SUB_SPORT_* are ActivityRecording constants (verified against SDK 9.2.0 by
+    // compilation — an unknown symbol fails the monkeyc build).
     hidden function subSportForModality(m) {
         if (m == null) { return Rec.SUB_SPORT_GENERIC; }
         if (m.find("strength") != null || m.equals("power")) {

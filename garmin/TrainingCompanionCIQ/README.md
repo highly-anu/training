@@ -36,13 +36,24 @@ source/
   Wellness.mc           Reads resting HR, HR low, Body Battery, recovery time for /health/wellness
   SessionModel.mc       WorkoutSession / WorkoutExercise wrappers over the JSON
   WorkoutController.mc  State machine, ActivityRecording, HR/GPS capture,
-                        HR-zone drift, EMOM/AMRAP timing, set editor, summary
+                        HR-zone drift, EMOM/AMRAP timing, set/rest flow, Edit Set, summary
+  Steps.mc              The session as Garmin workout steps (blocks of sets + rests)
+  DemoSession.mc / DemoProgram.mc  The demo programmes (SOF, Kettlebell, Uphill;
+                        resources/jsonData), chosen from hold UP > Programme
+  ui/
+    Native.mc           Garmin's activity grammar: fields, rule, HR gauge, page dots,
+                        button hints and toasts from the Personality Library
+    Text.mc             Roboto for text, Bionic for numbers (vector faces + fallbacks)
   views/
     PairingView.mc      Mint code → scan-to-claim QR + code → poll (or phone push)
-    SessionListView.mc  Today's session / rest day + readiness dot; SELECT starts it
-    ExerciseView.mc     Dispatch by slotType + rest overlay + live HR + drift arrow;
-                        on-wrist set editor for sets_reps (edit reps/weight/RPE)
-    SessionCompleteView.mc
+    SessionListView.mc  Pre-start page: icon, name, rule, readiness, green START hint
+    ActivityMenu.mc     hold UP on pre-start: Workout, Today, Week, Readiness, Sync
+    exercise/           The workout: three pages (Strength, HR gauge, step list) and
+                        one renderer per slot type supplying page 1 and LAP's action
+    EditSetView.mc      Plan / Set Next / Edit Set: reps, weight, RPE one at a time
+    StepAlertView.mc    The full-screen step alert as each step or interval phase begins
+    DiscardConfirmView.mc  "Discard?" — the Personality Library delete confirmation
+    SummaryView.mc      Post-Save page loop: summary, heart rate, Training Effect, exercises
     GlanceView.mc       At-a-glance card + readiness dot, from cache
 ```
 
@@ -100,6 +111,12 @@ Steps:
    deployed API.
 3. **Sideload to the watch:** `./build.sh --device`, then copy
    `bin/TrainingCompanion-fenix947mm.prg` to `GARMIN/APPS/` over USB.
+4. **Store test upload:** `./build.sh --release` writes `bin/TrainingCompanion.iq`
+   (the real app, all seven devices); `./build.sh --demo` writes
+   `bin/TrainingCompanionDemo.iq` with the demo programmes on. Same app id, so each
+   uploads as a new version of one app. The demo switch is the `demoProgrammes`
+   setting (renamed from `demoMode`, whose stored `true` from the demo builds would
+   otherwise outlive the update).
 
 `build.sh` / `run-sim.sh` auto-detect the SDK path and key; override with
 `CIQ_SDK`, `CIQ_KEY`, `DEVICE` env vars. Builds use the default type-check level;
@@ -122,10 +139,18 @@ Resolved (verified by compiling against SDK 9.2.0):
     `HR_DRIFT_HOLD_SEC` out of band.
   - EMOM per-interval buzz + round counter; AMRAP time-cap countdown with
     SELECT-to-count rounds; for-time round counter.
-- On-wrist set logger for sets_reps: SELECT logs the set with edited values,
-  UP/DOWN adjust the focused field (reps ±1, weight ±2.5 kg, RPE ±0.5), BACK
-  cycles the field. Values seed from the prescription and carry across sets;
-  hold-UP still finishes the session early.
+- Garmin-style workout (2026-10-09, matching the watch's own Strength workout):
+  START on the pre-start page opens Do Workout / Steps (Steps sets each exercise's
+  reps, hold, weight and RPE for the run); Do Workout shows the workout ready, and
+  nothing records until START. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
+  delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
+  rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
+  pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
+  (the next sets' reps and load) / Edit Set. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
+  carries the new values to the sets after it. When every step is done the
+  activity keeps recording ("Workout complete") until Save. Touch is off while
+  recording. Icons and button hints are the Personality Library's
+  (`resources/drawables/garmin.xml`); glyphs it lacks are drawn by `tools/gen_icons.py`.
 
 - Phase 3 **watch-side** phone-link hooks (`PhoneLink.mc`): registers for BLE
   phone-app messages while the pairing screen is up, so the future glue app can

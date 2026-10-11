@@ -28,6 +28,9 @@ class TrainingCompanionApp extends Application.AppBase {
     // `state` carries the launch context. :launchedFromComplication (the complication
     // index) or :launchedFromGlance mark a tap on our today shortcut — deep-link to it.
     function onStart(state) {
+        // Nothing demo-related here: onStart also runs in the glance process,
+        // whose 64 KB leaves no room for seeding a cache (the glance went blank).
+        // The demo seeds it from the foreground, in getInitialView.
         if (state != null
                 && (state.hasKey(:launchedFromComplication)
                     || state.hasKey(:launchedFromGlance))) {

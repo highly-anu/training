@@ -111,6 +111,7 @@ class SyncManager {
 
     // GET /user/today-session. cb.invoke(success, dict). Caches on success.
     function fetchToday(cb) {
+        if (DemoSession.enabled()) { cb.invoke(true, null); return; }
         _todayCb = cb;
         Comm.makeWebRequest(
             Config.apiBaseUrl() + "/user/today-session",
@@ -137,6 +138,7 @@ class SyncManager {
     // GET /health/readiness. Caches the dict so the glance (which has no reliable
     // network) can render the readiness dot from Storage. cb.invoke(success, dict).
     function fetchReadiness(cb) {
+        if (DemoSession.enabled()) { cb.invoke(true, DemoSession.readiness()); return; }
         _readinessCb = cb;
         Comm.makeWebRequest(
             Config.apiBaseUrl() + "/health/readiness",
@@ -166,6 +168,7 @@ class SyncManager {
     // the Garmin toggle is off) and 422 (resending cannot fix it) both end a
     // reading; anything else — no phone, a 503 — keeps it.
     function sendWellness(cb) {
+        if (DemoSession.enabled()) { cb.invoke(true, null); return; }
         _wellnessCb = cb;
         _wellnessQueue = [];
         _wellnessFailed = null;
@@ -242,6 +245,9 @@ class SyncManager {
     // There used to be a third step, PUT /health/bio/{date}, for a "bio" key nothing
     // ever filled; daily wellness now goes through sendWellness on every open.
     function uploadSession(summary, cb) {
+        // A demo workout must never reach the server, nor sit in the retry buffer
+        // waiting for a real pairing to send it.
+        if (DemoSession.enabled()) { cb.invoke(true, null); return; }
         _uploadSummary = summary;
         _uploadCb = cb;
         _postWorkout();
@@ -284,6 +290,14 @@ class SyncManager {
         _uploadSummary = null;
     }
 
+    // The app is closing with an upload in flight: buffer it, drop the callback.
+    function parkPending() {
+        if (_uploadSummary == null) { return; }
+        bufferPayload(_uploadSummary);
+        _uploadSummary = null;
+        _uploadCb = null;
+    }
+
     // ── local buffer (survives upload failure) ────────────────────────────────────
 
     function bufferPayload(payload) {
@@ -297,6 +311,7 @@ class SyncManager {
     // Retry the oldest buffered upload. Call on app open / when reachable.
     // TODO: iterate the whole buffer; here we drain one per call to stay simple.
     function flushBuffer() {
+        if (DemoSession.enabled()) { return; }
         var buf = Storage.getValue(Config.KEY_UPLOAD_BUFFER);
         if (buf == null || buf.size() == 0) { return; }
         var next = buf[0];

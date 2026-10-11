@@ -3,12 +3,17 @@ using Toybox.Graphics as Gfx;
 using Toybox.Application;
 using Toybox.Application.Storage;
 using Toybox.Lang;
+using Toybox.System;
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 
-// Today's session(s): shows the archetype + est. minutes, or a rest-day message.
-// SELECT starts the (first) session. MENU (hold-UP) refreshes from the server.
-// Refreshes from the backend on show; seeds from same-day cache for instant paint.
+// The pre-start page, as Garmin's own activities have one: the session's icon,
+// name and length, a rule in its colour, readiness, and the green START hint that
+// says the activity is ready. START opens the workout (Do Workout / Steps, where
+// reps and weights are set); UP/DOWN move between the day's
+// sessions; hold UP opens the activity menu (Workout, Today, Week, Readiness);
+// BACK leaves the app. Refreshes from the backend on show; seeds from the
+// same-day cache for an instant paint.
 class SessionListView extends Ui.View {
 
     hidden var _sync;
@@ -46,6 +51,12 @@ class SessionListView extends Ui.View {
     }
 
     function onShow() {
+        if (DemoSession.enabled()) {
+            DemoProgram.seedGlanceCache();
+            _readiness = DemoSession.readiness();
+            maybeAutoStart();
+            return;
+        }
         _sync.flushBuffer();               // retry any failed uploads
         _sync.fetchToday(method(:onToday));
         // Wellness first, then readiness: readiness then scores this morning's
@@ -71,7 +82,7 @@ class SessionListView extends Ui.View {
         if (Application.Properties.getValue("autoStartOnLaunch") != true) { return; }
         if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
             _autoStarted = true;
-            startFirstSession();
+            autoStart();
         }
     }
 
@@ -82,7 +93,7 @@ class SessionListView extends Ui.View {
     hidden function applyToday(data as Lang.Dictionary?) as Void {
         if (DemoSession.enabled()) {
             _status = "ok";
-            _sessions = [ DemoSession.build() ];
+            _sessions = DemoProgram.week()[0]["sessions"];
             return;
         }
         if (data == null) { _status = "loading"; _sessions = []; return; }
@@ -93,7 +104,7 @@ class SessionListView extends Ui.View {
 
     function sessions() { return _sessions; }
 
-    // Move between multiple sessions scheduled on the same day.
+    // Move between the sessions scheduled on the same day.
     function cycle(delta) {
         if (_sessions == null || _sessions.size() <= 1) { return; }
         var n = _sessions.size();
@@ -101,8 +112,32 @@ class SessionListView extends Ui.View {
         Ui.requestUpdate();
     }
 
-    // Re-fetch today's session (called from MENU button).
+    // The demo programme changed: show its day 0 and refresh the glance's cache.
+    function reloadDemo() {
+        _index = 0;
+        applyToday(null);
+        DemoProgram.seedGlanceCache();
+        Ui.requestUpdate();
+    }
+
+    function select(i) {
+        if (_sessions != null && i >= 0 && i < _sessions.size()) { _index = i; }
+        Ui.requestUpdate();
+    }
+
+    function index()     { return _index; }
+    function readiness() { return _readiness; }
+    function status()    { return _status; }
+
+    // The session START would begin, or null.
+    function current() {
+        if (!_status.equals("ok") || _sessions == null || _sessions.size() == 0) { return null; }
+        return _sessions[(_index < _sessions.size()) ? _index : 0];
+    }
+
+    // Re-fetch today's session (the activity menu's Sync).
     function refresh() {
+        if (DemoSession.enabled()) { return; }
         _status = "loading";
         Ui.requestUpdate();
         _sync.fetchToday(method(:onToday));
@@ -128,150 +163,108 @@ class SessionListView extends Ui.View {
         return Theme.accent(modalityId);
     }
 
-    // Readiness as an arc on the bezel plus a score, rather than a loose dot.
-    hidden function drawReadiness(dc, g) {
-        if (_readiness == null || !_readiness.hasKey("status")) { return; }
-        var status = _readiness["status"] as Lang.String;
-        var col = Theme.readiness(status);
-        var score = _readiness.hasKey("score") ? _readiness["score"] : null;
-
-        if (score != null) {
-            // A short arc at the top of the bezel, proportional to the score.
-            Ring.drawProgress(dc, g.cx, g.cy, g.ringR, g.ringPen,
-                              null, col, score.toFloat() / 100.0, true);
-            dc.setColor(col, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx, g.yCrown, Text.hint(),
-                        "READY " + score.toString(),
-                        Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        } else {
-            dc.setColor(col, Gfx.COLOR_TRANSPARENT);
-            dc.fillCircle(g.cx, g.yCrown, g.dotR);
-        }
+    function onUpdate(dc) {
+        try { draw(dc); } catch (e) { Clip.drawError(dc, "list " + _index, e); }
     }
 
-    function onUpdate(dc) {
-        dc.setColor(Theme.TEXT, Theme.BG);
-        dc.clear();
-        if (dc has :setAntiAlias) { dc.setAntiAlias(true); }
+    hidden function draw(dc) {
+        Native.clear(dc);
         if (_g == null) { _g = new Grid(dc); Text.init(_g); }
         var g = _g;
 
         if (_status.equals("loading")) {
-            dc.setColor(Theme.TEXT_DIM, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx, g.cy, Text.label(), "Syncing...",
-                        Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+            Native.text(dc, g.cx, g.cy, Text.line(), "Syncing...", Native.DIM);
             return;
         }
-
         if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
-            drawSessionCard(dc, g, _sessions[_index]);
+            drawSession(dc, g, _sessions[_index]);
         } else if (_status.equals("ok")) {
-            drawRestDay(dc, g);
+            drawMessage(dc, g, Rez.Drawables.IcCatRecovery, Ui.loadResource(Rez.Strings.RestDay), null);
         } else {
-            drawNoProgram(dc, g);
+            drawMessage(dc, g, Rez.Drawables.IcUiSync, Ui.loadResource(Rez.Strings.NoProgram),
+                        "Generate a plan in the app");
         }
     }
 
-    // Today's session. Everything is laid out off the Grid, so it fits 416 and
-    // 454 alike — the previous version hardcoded pixel offsets (cy-82, btnW=120)
-    // tuned for neither, which clipped the archetype name and let the START
-    // button collide with the footer hint.
-    hidden function drawSessionCard(dc, g, s) {
+    hidden function drawSession(dc, g, s) {
         var accent = Theme.accent(s.modalityId());
-
-        drawReadiness(dc, g);
-
-        // Category icon above the name.
-        var iy = g.yCrown + (g.h * 85 / 1000);
-        Icons.drawCentered(dc, g.cx, iy, g.iconChip,
+        Icons.drawCentered(dc, g.cx, (g.h * 14) / 100, g.iconChip,
                            Icons.categoryKey(s.archetypeCategory()), accent);
-
-        // Archetype name, fitted and wrapped to two lines instead of clipped.
-        var ny = iy + (g.h * 70 / 1000);
-        var lineH = (g.h * 62 / 1000);
-        var lines = Text.drawWrapped2(dc, g.cx, ny, g.chordWidth(ny), lineH,
-                                      s.archetypeName(), Theme.TEXT, Text.label());
-
-        // Duration + move count.
-        var my = ny + (lines * lineH) + (g.h * 22 / 1000);
-        dc.setColor(Theme.TEXT_DIM, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(g.cx, my, Text.hint(),
-                    s.estimatedMinutes().toString() + " MIN  -  "
-                        + s.exerciseCount().toString()
-                        + ((s.exerciseCount() == 1) ? " MOVE" : " MOVES"),
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-
-        if (s.isDeload()) {
-            Icons.drawCentered(dc, g.cx - (g.iconChip), my + (g.h * 48 / 1000),
-                               g.iconChip, Rez.Drawables.IcUiDeload, Theme.READY_YELLOW);
-            dc.setColor(Theme.READY_YELLOW, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx + (g.iconChip / 2), my + (g.h * 48 / 1000), Text.hint(),
-                        "DELOAD", Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER);
-        }
-
-        // START as a ghost button: an outline, not a solid accent block. On an
-        // AMOLED panel luminance is power, and a large filled rectangle is the
-        // most expensive thing on the screen.
-        var bw = (g.w * 42) / 100;
-        var bh = (g.h * 11) / 100;
-        var bx = g.cx - (bw / 2);
-        var by = g.yBase - (bh / 2);
-        dc.setColor(accent, Gfx.COLOR_TRANSPARENT);
-        dc.setPenWidth(g.h * 7 / 1000);
-        dc.drawRoundedRectangle(bx, by, bw, bh, bh / 2);
-        dc.drawText(g.cx, g.yBase, Text.label(), "START",
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-
-        // Multi-session days: show which of the day's sessions this is, and let
-        // UP/DOWN move between them. Only _sessions[0] was ever reachable before.
+        var day = "TODAY";
         if (_sessions.size() > 1) {
-            Chrome.drawDots(dc, g, g.yBase + (g.h * 78 / 1000),
-                            _sessions.size(), _index + 1, accent, 0.0);
+            day += "  " + (_index + 1).toString() + " OF " + _sessions.size().toString();
+        }
+        Native.text(dc, g.cx, (g.h * 225) / 1000, Text.small(), day, Native.DIM);
+
+        // The name on up to two lines, then its length.
+        var lineH = (g.h * 80) / 1000;
+        var ny = (g.h * 285) / 1000;
+        var lines = Text.drawWrapped2(dc, g.cx, ny, (g.w * 76) / 100, lineH,
+                                      s.archetypeName(), Gfx.COLOR_WHITE, Text.line());
+        var my = ny + (lines * lineH) + (g.h * 40) / 1000;
+        var n = s.exerciseCount();
+        Native.text(dc, g.cx, my, Text.small(),
+                    s.estimatedMinutes().toString() + " min  " + n.toString()
+                        + ((n == 1) ? " exercise" : " exercises"), Native.DIM);
+
+        // The rule in the session's colour, as under the activity name in Garmin's menus.
+        var ry = my + (g.h * 55) / 1000;
+        var half = (g.w * 30) / 100;
+        dc.setColor(accent, Gfx.COLOR_TRANSPARENT);
+        dc.setPenWidth((g.h >= 400) ? 3 : 2);
+        dc.drawLine(g.cx - half, ry, g.cx + half, ry);
+
+        var y = ry + (g.h * 70) / 1000;
+        if (_readiness != null && _readiness.hasKey("score") && _readiness["score"] != null) {
+            Native.text(dc, g.cx, y, Text.line(), "Readiness " + _readiness["score"].toString(),
+                        Theme.readiness(_readiness["status"]));
+            y += (g.h * 80) / 1000;
+        }
+        if (s.isCompleted()) {
+            Native.text(dc, g.cx, y, Text.small(), "Completed", Native.GOOD);
+        } else if (s.isDeload()) {
+            Native.text(dc, g.cx, y, Text.small(), "Deload week", Native.WARN);
         }
 
-        Chrome.drawHint(dc, g, "START begin  -  hold UP refresh");
+        if (DemoSession.enabled()) {
+            // Build stamp and free memory, so a photo of this page says which build
+            // ran and how much room it had.
+            var st = System.getSystemStats();
+            Native.text(dc, g.cx, (g.h * 92) / 100, Text.small(),
+                        DemoProgram.stamp() + "  " + (st.freeMemory / 1024).toString() + " KB", 0x5F6368);
+        }
+        Native.pageDots(dc, g, _index, _sessions.size());
+        Native.hint(dc, :ready);
     }
 
-    hidden function drawRestDay(dc, g) {
-        drawReadiness(dc, g);
-        Icons.drawCentered(dc, g.cx, g.cy - (g.h * 60 / 1000), g.iconHero,
-                           Rez.Drawables.IcCatRecovery, Theme.MOBILITY);
-        dc.setColor(Theme.TEXT, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(g.cx, g.cy + (g.h * 40 / 1000), Text.label(),
-                    Ui.loadResource(Rez.Strings.RestDay),
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        Chrome.drawHint(dc, g, "hold UP to refresh");
+    hidden function drawMessage(dc, g, icon, title, sub) {
+        Icons.drawCentered(dc, g.cx, (g.h * 36) / 100, g.iconChip, icon, Native.DIM);
+        Native.text(dc, g.cx, (g.h * 50) / 100, Text.line(), title, Gfx.COLOR_WHITE);
+        if (sub != null) { Native.text(dc, g.cx, (g.h * 60) / 100, Text.small(), sub, Native.DIM); }
     }
 
-    hidden function drawNoProgram(dc, g) {
-        dc.setColor(Theme.TEXT_DIM, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(g.cx, g.cy - (g.h * 30 / 1000), Text.label(),
-                    Ui.loadResource(Rez.Strings.NoProgram),
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        dc.setColor(Theme.TEXT_HINT, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(g.cx, g.cy + (g.h * 30 / 1000), Text.hint(),
-                    "Generate a plan in the app",
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        Chrome.drawHint(dc, g, "hold UP to refresh");
-    }
-
+    // Do Workout: the workout screen, ready but not recording until START. A
+    // workout already recording (the app was left mid-session) is resumed instead.
     function startFirstSession() {
         var app = TrainingCompanionApp.instance();
         var ctl = (app != null) ? app.activeController : null;
-
         if (ctl == null) {
-            if (_sessions == null || _sessions.size() == 0) { return; }
-            var i = (_index < _sessions.size()) ? _index : 0;
-            ctl = new WorkoutController(_sessions[i], _sync);
-            ctl.start();
+            var s = current();
+            if (s == null) { return; }
+            ctl = new WorkoutController(s, _sync);
+            ctl.prepare();
             if (app != null) { app.activeController = ctl; }
         }
-
         var ev = new ExerciseScreen(ctl);
         Ui.pushView(ev, new WorkoutDelegate(ctl, ev), Ui.SLIDE_LEFT);
     }
 
-
+    // Auto-start from the glance skips the menu and begins at once.
+    hidden function autoStart() {
+        startFirstSession();
+        var app = TrainingCompanionApp.instance();
+        if (app != null && app.activeController != null) { app.activeController.start(); }
+    }
 }
 
 class SessionListDelegate extends Ui.BehaviorDelegate {
@@ -280,22 +273,22 @@ class SessionListDelegate extends Ui.BehaviorDelegate {
         BehaviorDelegate.initialize();
         _view = view;
     }
+    // START: the workout menu (Do Workout / Steps), as Garmin opens a workout.
     function onSelect() {
-        _view.startFirstSession();
+        if (_view.current() != null) { $.openWorkoutMenu(_view); }
         return true;
     }
-    // Consume BACK at the root view so the system doesn't exit the app.
-    // (The user exits intentionally via the app list, not by accident.)
+    // BACK on the pre-start page leaves the app, as on Garmin's own. Exit
+    // explicitly: after a workout this is not the only view on the stack.
     function onBack() {
-        return true;
+        Toybox.System.exit();
     }
-    // UP/DOWN move between multiple sessions scheduled on the same day.
     function onNextPage()     { _view.cycle(1);  return true; }
     function onPreviousPage() { _view.cycle(-1); return true; }
 
-    // MENU (hold-UP): manually refresh today's session.
+    // hold UP: the activity menu.
     function onMenu() {
-        _view.refresh();
+        $.openActivityMenu(_view);
         return true;
     }
 }

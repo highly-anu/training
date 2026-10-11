@@ -1,19 +1,19 @@
 using Toybox.WatchUi as Ui;
 
-// The unified input model for all nine workout screens.
+// The workout's buttons, mapped as on Garmin's own Strength activity:
 //
-// Buttons stay authoritative — they work sweaty, gloved and in motion — and touch
-// adds the affordances that are genuinely better indoors.
+//   START          before the workout has begun: start it (the timer and the
+//                  recording); after: pause and open the stop menu
+//                  (Resume / Save / Discard)
+//   BACK = LAP     end the set (then rest); during a rest, end the rest; on other
+//                  slot types count a round or lap, or move to the next step
+//   DOWN / UP      turn the pages; on the step page, walk the list
+//   hold UP        the workout menu: Stop Workout, Skip, Set Next, Edit Set
+//   BACK before the start leaves without recording anything
 //
-//   SELECT / tap   the screen's ONE primary action, never overloaded
-//   UP / DOWN      adjust the focused field where there is one, else page
-//   swipe up/down  always pages Exercise <-> Progress <-> Metrics
-//   swipe left     next exercise (the device leaves swipeLeft unmapped)
-//   BACK / swipe right   end-workout confirmation while recording
-//   hold UP        session menu
-//
-// Spending UP/DOWN on editing is what makes an inline set logger possible: a
-// heavy set gets logged without pushing a separate view.
+// Touch is off while recording, as on the watch's activities: a tap or a sideways
+// swipe on a sweaty wrist must not pause the workout or log a set. Swipes up and
+// down still turn the pages (the system maps them to DOWN/UP).
 class WorkoutDelegate extends Ui.BehaviorDelegate {
 
     hidden var _ctl;
@@ -26,89 +26,110 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
     }
 
     function onSelect() {
-        if (_ctl.state() == WorkoutController.RESTING) {
-            _ctl.skipRest();
+        try {
+            if (_ctl.state() == WorkoutController.COMPLETE) { _view.leaveIfComplete(); return true; }
+            if (_ctl.isReady()) {
+                _ctl.start();
+                StepAlert.flush(_ctl);     // the first step's alert
+                Ui.requestUpdate();
+                return true;
+            }
+            $.openStopMenu(_ctl, _view);
+        } catch (e) { _view.fail("START", e); }
+        return true;
+    }
+
+    function onBack() {
+        try {
+            var st = _ctl.state();
+            if (st == WorkoutController.COMPLETE) { _view.leaveIfComplete(); return true; }
+            if (_ctl.isReady()) {
+                _ctl.cancel();
+                var app = TrainingCompanionApp.instance();
+                if (app != null) { app.activeController = null; }
+                Ui.popView(Ui.SLIDE_RIGHT);
+                return true;
+            }
+            if (_ctl.isPaused() || st == WorkoutController.DONE) { return true; }
+            if (st == WorkoutController.RESTING) {
+                _ctl.skipRest();
+            } else {
+                var r = _view.renderer();
+                if (r != null) { r.onLap(_ctl, _ctl.currentExercise()); }
+            }
+            _view.bindRenderer();
+            StepAlert.flush(_ctl);
             Ui.requestUpdate();
-            return true;
-        }
-        var r = _view.renderer();
-        var ex = _ctl.currentExercise();
-        if (r != null) { r.onSelect(_ctl, ex); }
-        _view.bindRenderer();
-        maybeComplete();
-        Ui.requestUpdate();
+        } catch (e) { _view.fail("LAP", e); }
         return true;
     }
 
     function onNextPage() {
-        if (isEditing()) { _ctl.adjustEdit(-1); Ui.requestUpdate(); return true; }
-        _view.setPage(_view.page() + 1);
+        try { _view.down(); } catch (e) { _view.fail("DOWN", e); }
         return true;
     }
 
     function onPreviousPage() {
-        if (isEditing()) { _ctl.adjustEdit(1); Ui.requestUpdate(); return true; }
-        _view.setPage(_view.page() - 1);
-        return true;
-    }
-
-    // Touch. The device maps tap/swipeUp/swipeDown/swipeRight at system level;
-    // swipeLeft carries no behavior id, so it is ours to claim.
-    function onSwipe(evt) {
-        var d = evt.getDirection();
-        if (d == Ui.SWIPE_LEFT) {
-            _ctl.nextExercise();
-            _view.bindRenderer();
-            maybeComplete();
-            Ui.requestUpdate();
-            return true;
-        }
-        return false;   // let the system map the rest to page/back behaviors
-    }
-
-    // Tapping a value focuses it, replacing the old "BACK cycles the edit field",
-    // which fought the platform's back semantics.
-    function onTap(evt) {
-        if (isEditing() && _ctl.editFieldCount() > 1) {
-            _ctl.cycleEditField();
-            Ui.requestUpdate();
-            return true;
-        }
-        return onSelect();
-    }
-
-    // BACK never silently abandons a recording session.
-    function onBack() {
-        confirmEnd();
+        try { _view.up(); } catch (e) { _view.fail("UP", e); }
         return true;
     }
 
     function onMenu() {
-        var m = new Ui.Menu2({ :title => "Session" });
-        m.addItem(new Ui.MenuItem("Skip exercise", null, :skip, {}));
-        m.addItem(new Ui.MenuItem("Mark lap", null, :lap, {}));
-        m.addItem(new Ui.MenuItem("End workout", null, :end, {}));
-        Ui.pushView(m, new WorkoutMenuDelegate(_ctl, _view), Ui.SLIDE_UP);
+        var st = _ctl.state();
+        if (st == WorkoutController.COMPLETE) { return true; }
+        var m = new Ui.Menu2({ :title => "Workout" });
+        if (!_ctl.isReady()) {
+            m.addItem(new Ui.MenuItem("Stop Workout", null, :stop, {}));
+        }
+        if (st != WorkoutController.DONE && !_ctl.isReady()) {
+            m.addItem(new Ui.MenuItem("Skip", skipLabel(), :skip, {}));
+        }
+        var ex = _ctl.currentExercise();
+        if (st != WorkoutController.DONE && ex != null && ex.slotType().equals("sets_reps")) {
+            m.addItem(new Ui.MenuItem("Set Next", nextLabel(), :next, {}));
+        }
+        if (_ctl.lastSet() != null) {
+            m.addItem(new Ui.MenuItem("Edit Set", _ctl.lastSetName(), :edit, {}));
+        }
+        // Garmin keeps its metronome in the activity menu; ours, for paced sets.
+        if (ex != null && ex.targetRpm() != null) {
+            m.addItem(new Ui.ToggleMenuItem("Metronome", ex.targetRpm().toString() + " RPM",
+                                            :metronome, _ctl.metronomeOn(), {}));
+        }
+        Ui.pushView(m, new WorkoutMenuDelegate(_ctl, _view), Ui.SLIDE_LEFT);
         return true;
     }
 
-    hidden function confirmEnd() {
-        Ui.pushView(new Ui.Confirmation(Ui.loadResource(Rez.Strings.EndWorkoutQ)),
-                    new EndWorkoutConfirm(_ctl), Ui.SLIDE_UP);
+    // "3 reps @ 110 kg" — what the next set will log.
+    hidden function nextLabel() {
+        var t = _ctl.editReps().toString() + " reps";
+        if (_ctl.editWeight() != null) { t += " @ " + Text.kg(_ctl.editWeight()) + " kg"; }
+        return t;
     }
 
-    hidden function isEditing() {
-        if (_ctl.state() != WorkoutController.ACTIVE) { return false; }
-        var r = _view.renderer();
-        return r != null && r.editable(_ctl, _ctl.currentExercise());
-    }
-
-    hidden function maybeComplete() {
-        if (_ctl.state() == WorkoutController.COMPLETE) {
-            var app = TrainingCompanionApp.instance();
-            if (app != null) { app.activeController = null; }
-            Ui.switchToView(new SessionCompleteView(_ctl), new SessionCompleteDelegate(),
-                            Ui.SLIDE_UP);
+    hidden function skipLabel() {
+        var ex = _ctl.currentExercise();
+        if (_ctl.state() == WorkoutController.RESTING && _ctl.restAdvances()) {
+            var nx = _ctl.upcomingExercise();
+            return (nx != null) ? ("to " + nx.name()) : null;
         }
+        return (ex != null) ? ex.name() : null;
     }
+
+    function onTap(evt) { return true; }
+
+    function onSwipe(evt) {
+        var d = evt.getDirection();
+        return d == Ui.SWIPE_LEFT || d == Ui.SWIPE_RIGHT;
+    }
+}
+
+// START while recording: pause, then Garmin's stop menu.
+function openStopMenu(ctl, view) {
+    ctl.pause();
+    var m = new Ui.Menu2({ :title => "Paused" });
+    m.addItem(new Ui.IconMenuItem("Resume", null, :resume, Native.icon(Rez.Drawables.GmResume), {}));
+    m.addItem(new Ui.IconMenuItem("Save", null, :save, Native.icon(Rez.Drawables.GmSave), {}));
+    m.addItem(new Ui.IconMenuItem("Discard", null, :discard, Native.icon(Rez.Drawables.GmDiscard), {}));
+    Ui.pushView(m, new StopMenuDelegate(ctl, view), Ui.SLIDE_UP);
 }

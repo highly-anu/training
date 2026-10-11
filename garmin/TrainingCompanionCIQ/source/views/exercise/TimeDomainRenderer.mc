@@ -1,79 +1,41 @@
-using Toybox.Graphics as Gfx;
-
-// time_domain and skill_practice — together the largest share of the corpus
-// (~75 slots), and everything Uphill Athlete, Kelly Starrett and Ido Portal
-// prescribe.
-//
-// Core is the elapsed clock; the inner ring drains toward the prescribed block
-// duration. When the slot carries an HR zone, the sub-line shows the target band
-// and the core number takes the live zone colour, so the athlete can hold the
-// prescription without reading any text.
+// time_domain and skill_practice — everything Uphill Athlete, Kelly Starrett and
+// Ido Portal prescribe: hold this block for this long, often in a zone. A block
+// with a duration counts down and ends itself; LAP moves on early.
 class TimeDomainRenderer extends Renderer {
 
     function initialize() { Renderer.initialize(); }
 
-    function core(ctl, ex)     { return Text.mmss(elapsed(ctl)); }
-    function coreWide(ctl, ex) { return true; }
-
-    function sub(ctl, ex) {
-        if (ex == null) { return null; }
-        var mins = ex.durationMinutes();
-        if (mins != null) { return "of " + Text.mmss(mins * 60); }
-        return ex.loadDescription();
-    }
-
-    function innerProgress(ctl, ex) {
-        if (ex == null) { return null; }
-        var mins = ex.durationMinutes();
-        if (mins == null || mins <= 0) { return null; }
-        var p = elapsed(ctl).toFloat() / (mins * 60).toFloat();
-        return (p > 1.0) ? 1.0 : p;
-    }
-
-    function drawBase(dc, g, accent, ctl, ex) {
-        if (ex == null) { return; }
-
-        // Distance-led sessions (rucks) foreground km and pack weight.
+    function fieldA(ctl, ex) {
         if (ArchetypeBehavior.isDistanceLed(ctl.archetypeId())) {
-            drawRuckLine(dc, g, accent, ctl, ex);
-            return;
+            return ["KM", Text.kg(ctl.distanceKm())];
         }
+        // A timed step counts down and ends itself, as Garmin's do.
+        var mins = (ex != null) ? ex.durationMinutes() : null;
+        if (mins != null && mins > 0) {
+            var left = (mins * 60) - elapsed(ctl);
+            return ["TIME LEFT", Text.mmss((left > 0) ? left : 0)];
+        }
+        return ["TIME", Text.mmss(elapsed(ctl))];
+    }
 
-        // A prescribed HR band is the actual instruction for zone work.
+    function fieldB(ctl, ex) {
+        if (ex == null) { return null; }
+        if (ArchetypeBehavior.isDistanceLed(ctl.archetypeId())) {
+            return ["TIME", Text.mmss(elapsed(ctl))];
+        }
         var lo = ex.zoneLower();
         if (lo != null) {
             var hi = ex.zoneUpper();
-            var label = (hi != null && hi != lo)
-                ? ("ZONE " + lo.toString() + "-" + hi.toString())
-                : ("ZONE " + lo.toString());
-            dc.setColor(Theme.zoneColor(ctl.currentZone()), Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx, g.yBase, Text.label(), label,
-                        Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-            return;
+            return ["ZONE", (hi != null && hi != lo) ? (lo.toString() + "-" + hi.toString())
+                                                     : lo.toString()];
         }
-
-        var f = ex.focus();
-        if (f != null) {
-            dc.setColor(Theme.TEXT_HINT, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx, g.yBase, Text.hint(), f,
-                        Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        }
+        // Counting down on the left, the time spent on the right; an open block
+        // already shows its time on the left.
+        return (ex.durationMinutes() != null) ? ["TIME", Text.mmss(elapsed(ctl))] : null;
     }
 
-    function drawRuckLine(dc, g, accent, ctl, ex) {
-        var pack = ex.packLoadKg();
-        var line = Text.kg(ctl.distanceKm()) + " km";
-        if (ctl.ascentM() > 0) { line += "  +" + ctl.ascentM().toNumber().toString() + "m"; }
-        dc.setColor(Theme.TEXT_DIM, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(g.cx, g.yBase, Text.label(), line,
-                    Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        if (pack != null) {
-            dc.setColor(Theme.dimmed(accent, 80), Gfx.COLOR_TRANSPARENT);
-            dc.drawText(g.cx, g.yBase + (g.h * 50 / 1000), Text.hint(),
-                        "PACK " + Text.kg(pack) + " KG",
-                        Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        }
+    function lines(ctl, ex) {
+        if (ex != null && ex.focus() != null) { return [ex.focus(), "Next: " + ctl.nextStep()[0]]; }
+        return Renderer.lines(ctl, ex);
     }
-
-    function hint(ctl, ex) { return "START next block"; }
 }

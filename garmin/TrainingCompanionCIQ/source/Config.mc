@@ -2,7 +2,12 @@ using Toybox.Application;
 
 // Central constants + storage keys. Mirrors the iOS app's UserDefaults keys where
 // it helps keep the two companions conceptually aligned.
-(:glance)
+//
+// (:background) as well as (:glance): the manifest holds the Background permission
+// but nothing runs in the background yet, and with no annotated code the compiler
+// loads the WHOLE app as the background image, which outgrew the 64 KB background
+// limit. Annotating this module confines the background image to it.
+(:glance, :background)
 module Config {
     // Must match src/device_store.py TOKEN_PREFIX and the backend routes.
     const TOKEN_PREFIX = "ciqdev_";
@@ -14,6 +19,8 @@ module Config {
     const KEY_TODAY_DATE     = "todaySessionDate";
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
     const KEY_READINESS      = "readiness";       // cached /health/readiness dict
+    // The hour after which a finished day's glance previews tomorrow.
+    const GLANCE_EVENING_HOUR = 18;
     const KEY_WELLNESS_PENDING = "wellnessPending"; // one wellness reading the server never got
     const KEY_WELLNESS_SENT_AT = "wellnessSentAt";  // epoch seconds of the last accepted post
 

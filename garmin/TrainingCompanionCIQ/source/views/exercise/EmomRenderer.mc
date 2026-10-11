@@ -1,63 +1,66 @@
-using Toybox.Graphics as Gfx;
-
-// emom — EMOM strength waves, Gym Jones row intervals, and Tabata.
+// emom — every interval block: EMOM strength waves, Tabata, Uphill's threshold and
+// hill repeats, kettlebell timed sets at a target RPM, anti-glycolic swings.
 //
-// This is the screen the old derived-interval logic could not draw. Tabata is 8
-// rounds of 20s work / 10s rest: a 30s cycle with two distinct states. The core
-// number counts down the CURRENT phase, a WORK/REST capsule names it, and the
-// inner ring is one segment per round so the athlete can see how many remain.
+// Laid out as Garmin's repeat steps: INTERVAL 3/8 (or RPM 14 on a paced set) and
+// TIME LEFT, the target on the title line, "Next: Recover 2:00" under the rule. A
+// rest with an HR target shows how long it has run and the HR still to come down.
+// The phases run themselves; LAP leaves the block.
 class EmomRenderer extends Renderer {
 
     function initialize() { Renderer.initialize(); }
 
-    function core(ctl, ex) { return Text.secs(ctl.intervalLeft()); }
-
-    function sub(ctl, ex) {
-        var total = ctl.emomTotal();
-        var r = "RD " + ctl.emomRound().toString();
-        if (total > 0) { r += "/" + total.toString(); }
-        return r;
-    }
-
-    function innerSegments(ctl, ex) {
-        var t = ctl.emomTotal();
-        return (t > 0) ? t : null;
-    }
-
-    function innerFilled(ctl, ex) { return ctl.emomRound() - 1; }
-
-    function innerProgress(ctl, ex) {
-        return (ctl.emomTotal() > 0) ? null : ctl.intervalProgress();
-    }
-
-    function drawBase(dc, g, accent, ctl, ex) {
-        // WORK / REST capsule. Only shown when the protocol actually has a rest
-        // period — a rest-less EMOM is a single continuous state and the capsule
-        // would be noise.
-        if (ctl.intervalRestSec() > 0) {
-            var working = ctl.intervalWorking();
-            Chrome.drawCapsule(dc, g, g.yBase, working ? "WORK" : "REST",
-                               working ? accent : Theme.dimmed(accent, 45));
-        }
-
-        // The EMOM strength load wave, so the athlete can see the prescribed
-        // percentage for this round instead of recalling it from the notes.
+    function title(ctl, ex) {
+        if (ex == null) { return null; }
+        var t = ex.name();
         var wave = ArchetypeBehavior.loadWave(ctl.archetypeId());
         if (wave != null) {
             var i = ctl.emomRound() - 1;
-            if (i >= 0 && i < wave.size()) {
-                var line = wave[i].toString() + "% 1RM";
-                var w = (ex != null) ? ex.weightKg() : null;
-                if (w != null) { line += "  -  " + Text.kg(w) + " kg"; }
-                dc.setColor(Theme.TEXT_DIM, Gfx.COLOR_TRANSPARENT);
-                dc.drawText(g.cx, g.yBase + (g.h * 55 / 1000), Text.hint(), line,
-                            Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-            }
+            if (i >= 0 && i < wave.size()) { t += "  " + wave[i].toString() + "%"; }
         }
+        if (ex.switchAtSec() != null) { t += ctl.sideIsLeft() ? "  Left" : "  Right"; }
+        var z = ex.zoneLower();
+        if (z != null) {
+            var hi = ex.zoneUpper();
+            t += "  Z" + z.toString() + ((hi != null && hi != z) ? ("-" + hi.toString()) : "");
+        } else if (ex.weightKg() != null) {
+            t += "  " + Steps.loadText(ex, ex.weightKg()) + " kg";
+        }
+        return t;
     }
 
-    function hint(ctl, ex) {
-        if (ctl.intervalRestSec() > 0) { return "auto  -  START skip block"; }
-        return "START next block";
+    hidden function rounds(ctl) {
+        var total = ctl.emomTotal();
+        return ctl.emomRound().toString() + ((total > 0) ? ("/" + total.toString()) : "");
+    }
+
+    function fieldA(ctl, ex) {
+        if (!ctl.intervalWorking() && ctl.intervalRestSec() > 0) {
+            if (ctl.gateRest()) { return ["REST", Text.mmss(ctl.restPhaseElapsed())]; }
+            return [ctl.restLabel(ex).toUpper(), rounds(ctl)];
+        }
+        if (ex != null && ex.targetRpm() != null) { return ["RPM", ex.targetRpm().toString()]; }
+        return [ctl.isRunInterval(ex) ? "INTERVAL" : "ROUND", rounds(ctl)];
+    }
+
+    function fieldB(ctl, ex) {
+        if (ctl.gateRest() && !ctl.intervalWorking()) {
+            var hr = ctl.currentHR();
+            return ["HR TO " + ex.restUntilHr().toString(), (hr != null) ? hr.toString() : "--"];
+        }
+        return ["TIME LEFT", Text.secs(ctl.intervalLeft())];
+    }
+
+    function gaugeField(ctl, ex) {
+        return [ctl.isRunInterval(ex) ? "INTERVAL" : "ROUND", rounds(ctl)];
+    }
+
+    function lines(ctl, ex) {
+        if (ex == null) { return Renderer.lines(ctl, ex); }
+        var more = ctl.emomTotal() <= 0 || ctl.emomRound() < ctl.emomTotal();
+        if (ctl.intervalWorking() && ctl.intervalRestSec() > 0) {
+            return ["Next: " + ctl.restLabel(ex), ctl.restValue(ex)];
+        }
+        if (more) { return ["Next: " + ctl.workLabel(ex), ctl.workValue(ex)]; }
+        return Renderer.lines(ctl, ex);
     }
 }

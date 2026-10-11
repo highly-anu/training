@@ -1,0 +1,409 @@
+{
+ "name": "Wildman Kettlebell",
+ "phase": "STRENGTH  -  WEEK 2 OF 6",
+ "stamp": "dev",
+ "days": [
+  {
+   "offset": 0,
+   "title": "Ballistics + strength",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-ballistic",
+     "modalityId": "power",
+     "archetypeId": "kb_ballistic_session",
+     "archetypeName": "KB Ballistic Power",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 45,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_halo",
+       "name": "Halo and Deadlift",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "hip_hinge",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10,
+       "focus": "prime the hinge"
+      },
+      {
+       "exerciseId": "kb_swing_skill",
+       "name": "Swing Technique",
+       "slotType": "skill_practice",
+       "slotRole": "skill_work",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10,
+       "focus": "crisp hip snap"
+      },
+      {
+       "exerciseId": "kb_hand_to_hand_swing",
+       "name": "Hand-to-Hand Swing",
+       "slotType": "emom",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "5 x 2 min @ 70 RPM",
+       "targetRounds": 5,
+       "workSec": 120,
+       "intervalRestSec": 60,
+       "timeMinutes": 15,
+       "weightKg": 24.0,
+       "targetRpm": 70
+      },
+      {
+       "exerciseId": "kb_tgu_flow",
+       "name": "Get-Up Cool-Down",
+       "slotType": "skill_practice",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "durationMinutes": 5,
+       "focus": "shoulder check"
+      }
+     ]
+    },
+    {
+     "sessionId": "demo-kb-double",
+     "modalityId": "max_strength",
+     "archetypeId": "kb_double_strength",
+     "archetypeName": "Double KB Strength",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 40,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "goblet_prying",
+       "name": "Goblet Prying Squat",
+       "slotType": "skill_practice",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "squat",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "durationMinutes": 5
+      },
+      {
+       "exerciseId": "double_kb_press",
+       "name": "Double KB Clean and Press",
+       "slotType": "sets_reps",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "vertical_push",
+       "bilateral": true,
+       "loadDescription": "5x5 @ 2x24 kg",
+       "sets": 5,
+       "reps": "5",
+       "weightKg": 24.0,
+       "restSeconds": 120,
+       "targetRpe": 8
+      },
+      {
+       "exerciseId": "double_kb_front_squat",
+       "name": "Double KB Front Squat",
+       "slotType": "sets_reps",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "squat",
+       "bilateral": true,
+       "loadDescription": "5x5 @ 2x24 kg",
+       "sets": 5,
+       "reps": "5",
+       "weightKg": 24.0,
+       "restSeconds": 120
+      },
+      {
+       "exerciseId": "renegade_row",
+       "name": "Renegade Row",
+       "slotType": "sets_reps",
+       "slotRole": "accessory",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "horizontal_pull",
+       "bilateral": true,
+       "loadDescription": "3x8 @ 2x20 kg",
+       "sets": 3,
+       "reps": "8",
+       "weightKg": 20.0,
+       "restSeconds": 60,
+       "bells": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "offset": 1,
+   "title": "Anti-glycolic swings",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-antiglycolic",
+     "modalityId": "aerobic_base",
+     "archetypeId": "kb_antiglycolic_session",
+     "archetypeName": "Anti-Glycolic Swings",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 40,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_swing_ag",
+       "name": "Two-Hand Swing",
+       "slotType": "emom",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "20 x 15 s, rest to HR 130",
+       "targetRounds": 20,
+       "workSec": 15,
+       "intervalRestSec": 180,
+       "timeMinutes": 35,
+       "weightKg": 32.0,
+       "restUntilHr": 130,
+       "prescribedZoneLower": 2,
+       "prescribedZoneUpper": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "offset": 2,
+   "title": "Pentathlon snatch",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-pentathlon",
+     "modalityId": "strength_endurance",
+     "archetypeId": "kb_pentathlon_training",
+     "archetypeName": "Pentathlon: Snatch",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 50,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_swing_warm",
+       "name": "Swing Warm-Up",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "hip_hinge",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10
+      },
+      {
+       "exerciseId": "kb_snatch",
+       "name": "Kettlebell Snatch",
+       "slotType": "emom",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "2 x 6 min @ 14 RPM, switch at 3:00",
+       "targetRounds": 2,
+       "workSec": 360,
+       "intervalRestSec": 360,
+       "timeMinutes": 24,
+       "weightKg": 16.0,
+       "targetRpm": 14,
+       "switchAtSec": 180
+      },
+      {
+       "exerciseId": "kb_tgu_cool",
+       "name": "Get-Up Shoulder Check",
+       "slotType": "skill_practice",
+       "slotRole": "skill_cooldown",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "offset": 3,
+   "title": "Rest",
+   "sessions": []
+  },
+  {
+   "offset": 4,
+   "title": "Get-up practice",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-tgu",
+     "modalityId": "relative_strength",
+     "archetypeId": "tgu_practice",
+     "archetypeName": "Turkish Get-Up Practice",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 30,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "arm_bar",
+       "name": "Arm Bar",
+       "slotType": "skill_practice",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "durationMinutes": 5
+      },
+      {
+       "exerciseId": "wk_kb_tgu",
+       "name": "Kettlebell Turkish Get-Up",
+       "slotType": "sets_reps",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": false,
+       "loadDescription": "5 x 1/side @ 24 kg",
+       "sets": 10,
+       "reps": "1",
+       "weightKg": 24.0,
+       "restSeconds": 45
+      },
+      {
+       "exerciseId": "kb_windmill",
+       "name": "Kettlebell Windmill",
+       "slotType": "sets_reps",
+       "slotRole": "accessory",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": false,
+       "loadDescription": "3x5/side @ 16 kg",
+       "sets": 6,
+       "reps": "5",
+       "weightKg": 16.0,
+       "restSeconds": 45
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "offset": 5,
+   "title": "Movement skill",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-skill",
+     "modalityId": "movement_skill",
+     "archetypeId": "kb_movement_skill_session",
+     "archetypeName": "KB Movement Skill",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 35,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_mobility",
+       "name": "Joint Prep",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "durationMinutes": 5
+      },
+      {
+       "exerciseId": "kb_juggling",
+       "name": "Kettlebell Juggling",
+       "slotType": "skill_practice",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "20 min",
+       "durationMinutes": 20,
+       "focus": "soft catches, both hands"
+      },
+      {
+       "exerciseId": "kb_halo_flow",
+       "name": "Halo Flow",
+       "slotType": "skill_practice",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "offset": 6,
+   "title": "Ballistics",
+   "sessions": [
+    {
+     "sessionId": "demo-kb-ballistic-2",
+     "modalityId": "power",
+     "archetypeId": "kb_ballistic_session",
+     "archetypeName": "KB Ballistic Volume",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 45,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_halo2",
+       "name": "Halo and Deadlift",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "hip_hinge",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "durationMinutes": 10
+      },
+      {
+       "exerciseId": "kb_snatch_vol",
+       "name": "Kettlebell Snatch",
+       "slotType": "emom",
+       "slotRole": "main",
+       "isMeta": false,
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "6 x 2 min @ 16 RPM",
+       "targetRounds": 6,
+       "workSec": 120,
+       "intervalRestSec": 60,
+       "timeMinutes": 18,
+       "weightKg": 20.0,
+       "targetRpm": 16
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

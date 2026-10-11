@@ -3,9 +3,13 @@ using Toybox.Lang;
 
 // Typography.
 //
-// The fenix 9 exposes scalable system fonts (BionicBold/BionicMedium are Garmin's
-// number faces, RobotoCondensed* the text faces), so numerals can be sized as a
-// fraction of the screen instead of snapping to the six fixed bitmap sizes.
+// Garmin draws text in Roboto and numbers in Bionic (the device's simulator.json:
+// FONT_MEDIUM is Roboto-Regular, FONT_NUMBER_HOT Bionic_Medium on the 47mm). The
+// fenix 9 exposes both as scalable system faces, so numerals can be sized as a
+// fraction of the screen instead of snapping to the six fixed bitmap sizes. The
+// two solar (MIP) models carry different weights — BionicSemiBold and Roboto
+// Condensed only — so every face list names a fallback that exists there; before,
+// their hero numbers silently dropped to a bitmap font.
 //
 // getVectorFont() is declared `VectorFont or Null` even for faces the device
 // advertises, and the whole API is guarded — every accessor here degrades to a
@@ -14,6 +18,10 @@ using Toybox.Lang;
 // Resolve fonts ONCE in View.onLayout() and hold the handles; never per frame.
 module Text {
 
+    const NUM_FACES  = ["BionicMedium", "BionicSemiBold", "BionicBold"];
+    const TEXT_FACES = ["RobotoRegular", "RobotoCondensedRegular", "RobotoCondensedBold"];
+    const BOLD_FACES = ["RobotoMedium", "RobotoCondensedBold", "RobotoRegular"];
+
     var _hero;      // core number
     var _heroWide;  // core number when it's a wide mm:ss
     var _sub;       // secondary metric
@@ -21,14 +29,54 @@ module Text {
     var _hint;      // footer hint
     var _ready;
 
+    // The native activity grammar (data pages, summary, step list).
+    var _fieldLabel;   // "REPS", "SET" — capitals over a field
+    var _fieldValue;   // the field's number
+    var _fieldValueS;  // the same, one step down, for long values
+    var _fieldValueXS;
+    var _bigNum;       // the gauge page's timer, the summary's duration
+    var _hrNum;        // the heart-rate readout under the gauge
+    var _line;         // "Next: Rest" and other running text
+    var _lineBold;     // titles, the exercise name
+    var _small;        // time of day, footers, list values
+
     function init(g) {
         if (_ready == true) { return; }
-        _hero     = vector(["BionicBold", "BionicMedium"], (g.w * 26) / 100);
-        _heroWide = vector(["BionicBold", "BionicMedium"], (g.w * 21) / 100);
-        _sub      = vector(["BionicMedium", "BionicBold"], (g.w * 10) / 100);
+        _hero     = vector(NUM_FACES, (g.w * 26) / 100);
+        _heroWide = vector(NUM_FACES, (g.w * 21) / 100);
+        _sub      = vector(NUM_FACES, (g.w * 10) / 100);
         _label    = vector(["RobotoCondensedBold", "RobotoMedium"], (g.w * 68) / 1000);
         _hint     = vector(["RobotoCondensedRegular", "RobotoRegular"], (g.w * 45) / 1000);
+
+        _fieldLabel   = vector(TEXT_FACES, (g.w * 66) / 1000);
+        _fieldValue   = vector(NUM_FACES,  (g.w * 175) / 1000);
+        _fieldValueS  = vector(NUM_FACES,  (g.w * 135) / 1000);
+        _fieldValueXS = vector(NUM_FACES,  (g.w * 100) / 1000);
+        _bigNum       = vector(NUM_FACES,  (g.w * 225) / 1000);
+        _hrNum        = vector(NUM_FACES,  (g.w * 105) / 1000);
+        _line         = vector(TEXT_FACES, (g.w * 76) / 1000);
+        _lineBold     = vector(BOLD_FACES, (g.w * 70) / 1000);
+        _small        = vector(TEXT_FACES, (g.w * 64) / 1000);
         _ready = true;
+    }
+
+    function fieldLabel()   { return (_fieldLabel   != null) ? _fieldLabel   : Gfx.FONT_TINY; }
+    function fieldValue()   { return (_fieldValue   != null) ? _fieldValue   : Gfx.FONT_NUMBER_HOT; }
+    function fieldValueS()  { return (_fieldValueS  != null) ? _fieldValueS  : Gfx.FONT_NUMBER_MEDIUM; }
+    function fieldValueXS() { return (_fieldValueXS != null) ? _fieldValueXS : Gfx.FONT_NUMBER_MILD; }
+    function bigNum()       { return (_bigNum       != null) ? _bigNum       : Gfx.FONT_NUMBER_THAI_HOT; }
+    function hrNum()        { return (_hrNum        != null) ? _hrNum        : Gfx.FONT_NUMBER_MILD; }
+    function line()         { return (_line         != null) ? _line         : Gfx.FONT_SMALL; }
+    function lineBold()     { return (_lineBold     != null) ? _lineBold     : Gfx.FONT_SMALL; }
+    function small()        { return (_small        != null) ? _small        : Gfx.FONT_TINY; }
+
+    // The largest field-value font in which `str` fits `maxW`.
+    function fitValue(dc, str, maxW) {
+        var fs = [fieldValue(), fieldValueS(), fieldValueXS()];
+        for (var i = 0; i < fs.size(); i += 1) {
+            if (dc.getTextWidthInPixels(str, fs[i]) <= maxW) { return fs[i]; }
+        }
+        return fs[fs.size() - 1];
     }
 
     function vector(faces, px) {

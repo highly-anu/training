@@ -4,6 +4,11 @@
 #   ./build.sh              -> build a runnable .prg for the simulator (default device)
 #   ./build.sh --device     -> build a signed .iq / sideloadable .prg for a real watch
 #   DEVICE=fenix943mm ./build.sh   -> override target device
+#   ./build.sh --release    -> the real app as a store upload (all devices): bin/TrainingCompanion.iq
+#   ./build.sh --demo       -> the real app (same id and name, so it uploads as a new version) with the
+#                              demo programmes (SOF, Kettlebell, Uphill) and no pairing. Writes bin/TrainingCompanionDemo.iq
+#                              (store test upload, all devices) and the sideload .prg for $DEVICE.
+#                              The real app's sources are untouched; demoProgrammes stays false there.
 #
 # Requires: the Connect IQ SDK and a developer key.
 set -euo pipefail
@@ -39,6 +44,32 @@ fi
 [ -f "$KEY" ]     || { echo "ERROR: developer key not found at $KEY (set CIQ_KEY)."; exit 1; }
 
 # --- build -------------------------------------------------------------------
+if [ "${1:-}" == "--demo" ]; then
+  STAGE="$OUT/demo-stage"
+  rm -rf "$STAGE"; mkdir -p "$STAGE"
+  cp -R "$HERE/source" "$HERE/resources" "$HERE/manifest.xml" "$HERE/monkey.jungle" "$STAGE/"
+  perl -pi -e 's|(<property id="demoProgrammes" type="boolean">)false|${1}true|' "$STAGE/resources/properties/properties.xml"
+  perl -pi -e 's|"stamp": "dev"|"stamp": "'"$(date +%H%M)"'"|' "$STAGE"/resources/jsonData/demo_*.json
+  grep -q 'id="demoProgrammes" type="boolean">true' "$STAGE/resources/properties/properties.xml" \
+    || { echo "ERROR: demoProgrammes not enabled"; exit 1; }
+  echo "Building demo .iq (all devices) ..."
+  "$MONKEYC" -e -o "$OUT/TrainingCompanionDemo.iq" -f "$STAGE/monkey.jungle" -y "$KEY" -r
+  echo "Building demo sideload .prg for $DEVICE ..."
+  "$MONKEYC" -o "$OUT/TrainingCompanionDemo-$DEVICE.prg" -f "$STAGE/monkey.jungle" -y "$KEY" -d "$DEVICE" -r
+  rm -rf "$STAGE"
+  echo "Built: $OUT/TrainingCompanionDemo.iq  and  $OUT/TrainingCompanionDemo-$DEVICE.prg"
+  exit 0
+fi
+
+if [ "${1:-}" == "--release" ]; then
+  grep -q 'id="demoProgrammes" type="boolean">false' "$HERE/resources/properties/properties.xml" \
+    || { echo "ERROR: demoProgrammes must default to false in a release"; exit 1; }
+  echo "Building release .iq (all devices) ..."
+  "$MONKEYC" -e -o "$OUT/TrainingCompanion.iq" -f "$HERE/monkey.jungle" -y "$KEY" -r
+  echo "Built: $OUT/TrainingCompanion.iq  (store upload)"
+  exit 0
+fi
+
 if [ "${1:-}" == "--device" ]; then
   echo "Building sideloadable .prg for $DEVICE ..."
   "$MONKEYC" \

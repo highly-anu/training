@@ -308,14 +308,47 @@ ICONS['ui_sync'] = [
 ]
 ICONS['ui_generic'] = [ring(48, 48, 32, 9), c(48, 48, 10)]
 
+# ── menu glyphs (Menu2 IconMenuItem, sized by the personality menu-icon selector) ──
+# Garmin's Personality Library has save / discard / check / revert; these are the
+# functions it has no icon for. Drawn here, never copied from Garmin's artwork.
+
+ICONS['menu_resume'] = [poly([(26, 14), (82, 48), (26, 82)])]
+ICONS['menu_skip'] = [poly([(14, 16), (60, 48), (14, 80)]), r(66, 16, 14, 64, rx=4)]
+ICONS['menu_list'] = [
+    c(18, 22, 8), r(34, 16, 50, 12, rx=6),
+    c(18, 48, 8), r(34, 42, 50, 12, rx=6),
+    c(18, 74, 8), r(34, 68, 50, 12, rx=6),
+]
+ICONS['menu_week'] = [
+    path('M10 20 h76 v66 H10 Z M20 40 v36 h56 V40 Z'),
+    r(24, 8, 10, 20, rx=4), r(62, 8, 10, 20, rx=4),
+    r(28, 48, 12, 10), r(44, 48, 12, 10), r(60, 48, 10, 10),
+    r(28, 62, 12, 10), r(44, 62, 12, 10),
+]
+ICONS['menu_readiness'] = [
+    path('M8 70 A40 40 0 0 1 88 70 h-14 A26 26 0 0 0 22 70 Z'),
+    poly([(44, 74), (52, 74), (70, 34)]),
+    c(48, 74, 9),
+]
+ICONS['menu_edit'] = [
+    poly([(62, 10), (86, 34), (36, 84), (12, 84), (12, 60)]),
+]
+ICONS['menu_today'] = [ring(48, 48, 36, 9), r(44, 22, 8, 30, rx=4), r(48, 46, 22, 8, rx=4)]
+ICONS['menu_refresh'] = ICONS['ui_sync']
+
 
 def write(name, shapes):
     body = '\n  '.join(shapes)
     svg = (f'<?xml version="1.0" encoding="UTF-8"?>\n'
            f'<svg xmlns="http://www.w3.org/2000/svg" width="{VB}" height="{VB}" '
            f'viewBox="0 0 {VB} {VB}">\n  {body}\n</svg>\n')
-    sub = 'cat' if (name.startswith('slot_') or name.startswith('cat_')
-                    or name.startswith('ui_')) else 'pattern'
+    if name.startswith('menu_'):
+        sub = 'menu'
+    elif (name.startswith('slot_') or name.startswith('cat_')
+          or name.startswith('ui_')):
+        sub = 'cat'
+    else:
+        sub = 'pattern'
     d = os.path.join(OUT, sub)
     os.makedirs(d, exist_ok=True)
     with open(os.path.join(d, name + '.svg'), 'w') as f:
