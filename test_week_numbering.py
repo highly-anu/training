@@ -50,7 +50,20 @@ def test_route_numbers_the_tail_and_defaults_to_one():
     assert r.get_json()['weeks'][0]['week_number'] == 1, 'garbage is treated as unset'
 
 
+def test_envelope_recovers_its_sources_from_the_goal():
+    # A regenerate that names no philosophy still records which ones built the
+    # program: one from '_phil_<id>', a blend from the goal's primary_sources.
+    import api
+    one = {'goal': {'id': '_phil_uphill_athlete', 'primary_sources': ['uphill_athlete']}}
+    assert api._goal_ids_from_body({}, one)[0] == ['uphill_athlete']
+    blend = {'goal': {'id': '_phil_blend', 'primary_sources': ['uphill_athlete', 'horsemen_gpp']}}
+    assert api._goal_ids_from_body({}, blend)[0] == ['uphill_athlete', 'horsemen_gpp']
+    assert api._goal_ids_from_body({}, {'goal': {'id': '_phil_blend'}})[0] == [], 'never "blend"'
+    assert api._goal_ids_from_body({'philosophy_id': 'x'}, blend)[0] == ['x'], 'the request wins'
+
+
 if __name__ == '__main__':
     test_phase_entries_number_from_the_first_week()
     test_route_numbers_the_tail_and_defaults_to_one()
+    test_envelope_recovers_its_sources_from_the_goal()
     print('All week numbering tests passed.')

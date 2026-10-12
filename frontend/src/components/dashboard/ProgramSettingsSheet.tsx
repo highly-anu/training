@@ -22,6 +22,7 @@ import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { useRegenerateFromWeek } from '@/api/programs'
 import type { GeneratedProgram } from '@/api/types'
+import { regenerateSource } from '@/lib/programSource'
 
 interface ProgramSettingsSheetProps {
   program: GeneratedProgram
@@ -68,9 +69,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
 
   function handleRebuildFromTomorrow() {
     regenerate.mutate({
-      philosophyId: sourceGoalIds.length === 1 ? sourceGoalIds[0] : undefined,
-      philosophyIds: sourceGoalIds.length > 1 ? sourceGoalIds : undefined,
-      philosophyWeights: sourceGoalIds.length > 1 ? sourceGoalWeights : undefined,
+      ...regenerateSource(sourceGoalIds, sourceGoalWeights, program),
       constraints: program.constraints ?? {},
       numWeeks: weeksRemainingFromTomorrow,
       weekInProgram: tomorrowWeekIdx + 1,
