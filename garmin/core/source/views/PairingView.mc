@@ -3,6 +3,7 @@ using Toybox.Graphics as Gfx;
 using Toybox.Timer;
 using Toybox.Lang;
 using Toybox.ScanCode;
+using Toybox.Math;
 
 // First-run pairing. Mints a pairing code, shows it plus a scan-to-claim QR (on
 // CIQ 6+ devices), then polls until the user claims it while signed in on web/phone.
@@ -92,6 +93,25 @@ class PairingView extends Ui.View {
         _qrPx = (dc.getWidth() * 52) / 100;
     }
 
+    // The code is letters and digits (ABC234), so a number font cannot draw it.
+    // Take the largest text font whose line fits the round face where it sits:
+    // the narrower of the chords at its top and bottom, less a margin.
+    hidden function codeFont(dc, top) {
+        var r = dc.getWidth() / 2;
+        var cy = dc.getHeight() / 2;
+        var fonts = [Gfx.FONT_LARGE, Gfx.FONT_MEDIUM, Gfx.FONT_SMALL, Gfx.FONT_TINY];
+        for (var i = 0; i < fonts.size(); i++) {
+            var h = dc.getFontHeight(fonts[i]);
+            var dy = (top - cy).abs();
+            var dyb = (top + h - cy).abs();
+            if (dyb > dy) { dy = dyb; }
+            if (dy >= r) { continue; }
+            var chord = 2 * Math.sqrt(r * r - dy * dy) - (r / 8);
+            if (dc.getTextWidthInPixels(_code, fonts[i]) <= chord) { return fonts[i]; }
+        }
+        return Gfx.FONT_XTINY;
+    }
+
     function onUpdate(dc) {
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
         dc.clear();
@@ -106,12 +126,12 @@ class PairingView extends Ui.View {
                 var qh = _qr.getHeight();
                 var qy = (dc.getHeight() - qh) / 2 - (dc.getHeight() / 10);
                 dc.drawBitmap(cx - (qw / 2), qy, _qr);
-                dc.drawText(cx, qy + qh + (dc.getHeight() / 40),
-                    Gfx.FONT_NUMBER_MEDIUM, _code, Gfx.TEXT_JUSTIFY_CENTER);
+                var ty = qy + qh + (dc.getHeight() / 40);
+                dc.drawText(cx, ty, codeFont(dc, ty), _code, Gfx.TEXT_JUSTIFY_CENTER);
             } else {
                 // No on-device QR: the user types the code on the web/phone app.
                 dc.drawText(cx, cy - 45, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);
-                dc.drawText(cx, cy + 5, Gfx.FONT_NUMBER_MEDIUM, _code, Gfx.TEXT_JUSTIFY_CENTER);
+                dc.drawText(cx, cy + 5, codeFont(dc, cy + 5), _code, Gfx.TEXT_JUSTIFY_CENTER);
             }
         } else {
             dc.drawText(cx, cy, Gfx.FONT_SMALL, _msg, Gfx.TEXT_JUSTIFY_CENTER);
