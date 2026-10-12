@@ -1,7 +1,10 @@
 <drawables>
   <!--
-    Placeholder launcher icon, 65x65 (fenix947mm size; fenix943mm wants 60x60 and
-    scales down cleanly). Replace launcher_icon.png with real branding when ready.
+    Launcher icon, 65x65 (fenix947mm size; fenix943mm wants 60x60 and the
+    compiler scales it). The app icon's compass rose
+    (ios/TrainingCompanion/Assets.xcassets/AppIcon.appiconset), cropped to a
+    circle on transparent and lifted to read on a black face. The 500 px copy
+    for the store listing is store/app_icon_500.png.
   -->
   <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
 </drawables>
