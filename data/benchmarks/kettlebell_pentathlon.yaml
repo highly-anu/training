@@ -1,10 +1,90 @@
-# Kettlebell pentathlon — the five timed events, scored as reps in a 6-minute set.
-# Source: data/packages/wildman_kettlebell/archetypes/strength_endurance/kb_pentathlon_training.yaml
-# (events, format, and the RPM targets at 1 pood that the "advanced" tier is
-# built from: jerk ~20 RPM, snatch ~14 RPM, long cycle 8–10 RPM). Entry and
-# intermediate are 50 % and 75 % of that cadence held for the full six minutes;
-# elite is 120 %. Men at 16 kg, women at 12 kg — the same reps, one bell lighter.
-# One hand switch is permitted in the snatch only.
+# IKMF kettlebell pentathlon — the five timed events, scored as reps in a
+# six-minute single-bell set, in competition order.
+# Source: IKMF, https://ikmf-world.com/disciplines/ikmf-pentathlon (Valery
+# Fedorenko's event): clean, long cycle press, jerk, half snatch, strict push
+# press; six minutes each, five minutes rest after each, multiple hand changes
+# allowed, the bell may not be set down. Each event caps the reps that score
+# (120 / 60 / 120 / 108 / 120), so `elite` here is the cap and nothing above it
+# counts. IKMF ranks the pentathlon by points (reps × a bell-weight
+# coefficient), which these tables do not reproduce: entry, intermediate and
+# advanced are this app's own tiers at 50 %, 75 % and 90 % of the cap, the same
+# for men and women — pick the bell, not the table.
+
+- id: kb_pentathlon_clean_reps
+  name: KB Pentathlon — Clean (reps in 6 min)
+  category: kettlebell
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    Single-kettlebell clean for six minutes: swing, catch in the rack, back to the swing. The first event.
+  test_protocol: >
+    One bell of your choice, six minutes continuous without setting it down,
+    hand changes as often as you like. The bell stops in the rack each rep. Five minutes rest before the
+    next event.
+  levels:
+    entry:
+      male: 60
+      female: 60
+      note: Half the cap (10 RPM) — this app's tier.
+    intermediate:
+      male: 90
+      female: 90
+      note: 75 % of the cap — this app's tier.
+    advanced:
+      male: 108
+      female: 108
+      note: 90 % of the cap — this app's tier.
+    elite:
+      male: 120
+      female: 120
+      note: The IKMF cap — 120 reps (20 RPM); nothing above it scores.
+  goal_relevance:
+    - kettlebell_sport
+    - general_gpp
+  sources:
+    - IKMF
+  notes: >
+    Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained
+    with wk_kb_clean_single.
+
+- id: kb_pentathlon_long_cycle_press_reps
+  name: KB Pentathlon — Long Cycle Press (reps in 6 min)
+  category: kettlebell
+  domain: strength_endurance
+  metric_type: reps
+  lower_is_better: false
+  description: >
+    A clean and a strict press every rep, for six minutes. The second event and the slowest.
+  test_protocol: >
+    One bell of your choice, six minutes continuous without setting it down,
+    hand changes as often as you like. A still moment in the rack between clean and press; no knee bend before the press; the bell fixed overhead without sway. Five minutes rest before the
+    next event.
+  levels:
+    entry:
+      male: 30
+      female: 30
+      note: Half the cap (5 RPM) — this app's tier.
+    intermediate:
+      male: 45
+      female: 45
+      note: 75 % of the cap — this app's tier.
+    advanced:
+      male: 54
+      female: 54
+      note: 90 % of the cap — this app's tier.
+    elite:
+      male: 60
+      female: 60
+      note: The IKMF cap — 60 reps (10 RPM); nothing above it scores.
+  goal_relevance:
+    - kettlebell_sport
+    - general_gpp
+  sources:
+    - IKMF
+  notes: >
+    Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained
+    with wk_kb_long_cycle_press.
 
 - id: kb_pentathlon_jerk_reps
   name: KB Pentathlon — Jerk (reps in 6 min)
@@ -13,78 +93,36 @@
   metric_type: reps
   lower_is_better: false
   description: >
-    Single-kettlebell jerk for six minutes without setting the bell down.
-    The first event of the pentathlon and the one that sets up the rest:
-    a jerk cadence you can hold for six minutes is the pentathlon's
-    foundation (Wildman).
+    Single-kettlebell jerk from the rack for six minutes. The third event.
   test_protocol: >
-    One bell (16 kg men / 12 kg women), six minutes continuous, hand switch
-    allowed once. Count locked-out reps only. Five minutes rest before the
+    One bell of your choice, six minutes continuous without setting it down,
+    hand changes as often as you like. Locked out overhead and fixed before the descent. Five minutes rest before the
     next event.
   levels:
     entry:
       male: 60
       female: 60
-      note: 10 RPM — half the competition cadence held for the full set.
+      note: Half the cap (10 RPM) — this app's tier.
     intermediate:
       male: 90
       female: 90
-      note: 15 RPM for six minutes.
+      note: 75 % of the cap — this app's tier.
     advanced:
+      male: 108
+      female: 108
+      note: 90 % of the cap — this app's tier.
+    elite:
       male: 120
       female: 120
-      note: The archetype's target — ~20 RPM at 1 pood.
-    elite:
-      male: 144
-      female: 144
-      note: 24 RPM; competition pace with a heavier bell is the next step.
+      note: The IKMF cap — 120 reps (20 RPM); nothing above it scores.
   goal_relevance:
     - kettlebell_sport
     - general_gpp
   sources:
-    - wildman_kettlebell
+    - IKMF
   notes: >
-    Reps, not points: the pentathlon's coefficient scoring depends on bell
-    weight and is better read from the competition sheet. These tiers are the
-    archetype's RPM targets held for the full event.
-
-- id: kb_pentathlon_snatch_reps
-  name: KB Pentathlon — Snatch (reps in 6 min)
-  category: kettlebell
-  domain: strength_endurance
-  metric_type: reps
-  lower_is_better: false
-  description: >
-    Single-kettlebell snatch for six minutes, one hand switch. The grip and
-    the hinge are the limiters long before the lungs are.
-  test_protocol: >
-    One bell (16 kg men / 12 kg women), six minutes continuous, one hand
-    switch. Count locked-out reps only. Five minutes rest before the next event.
-  levels:
-    entry:
-      male: 42
-      female: 42
-      note: 7 RPM.
-    intermediate:
-      male: 63
-      female: 63
-      note: ~10 RPM.
-    advanced:
-      male: 84
-      female: 84
-      note: The archetype's target — ~14 RPM at 1 pood.
-    elite:
-      male: 100
-      female: 100
-      note: ~17 RPM.
-  goal_relevance:
-    - kettlebell_sport
-    - general_gpp
-  sources:
-    - wildman_kettlebell
-  notes: >
-    The Secret Service Snatch Test (ssst_reps) is the ten-minute, free-switch
-    cousin of this event.
+    Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained
+    with kb_jerk_single.
 
 - id: kb_pentathlon_half_snatch_reps
   name: KB Pentathlon — Half Snatch (reps in 6 min)
@@ -93,91 +131,71 @@
   metric_type: reps
   lower_is_better: false
   description: >
-    Snatch up, lower to the rack, drop into the swing from the rack. Faster
-    than the full snatch because the descent is shorter.
+    Snatch to a straight-arm lockout, lower to the rack with a stop, drop from the rack into the next swing. The fourth event.
   test_protocol: >
-    One bell (16 kg men / 12 kg women), six minutes continuous, one hand
-    switch. Count locked-out reps only.
+    One bell of your choice, six minutes continuous without setting it down,
+    hand changes as often as you like. A stop in the rack on the way down; the bell caught overhead with a straight arm. Five minutes rest before the
+    next event.
   levels:
     entry:
-      male: 48
-      female: 48
+      male: 54
+      female: 54
+      note: Half the cap (9 RPM) — this app's tier.
     intermediate:
-      male: 72
-      female: 72
+      male: 81
+      female: 81
+      note: 75 % of the cap — this app's tier.
     advanced:
-      male: 96
-      female: 96
-      note: 16 RPM at 1 pood.
+      male: 97
+      female: 97
+      note: 90 % of the cap — this app's tier.
     elite:
-      male: 115
-      female: 115
+      male: 108
+      female: 108
+      note: The IKMF cap — 108 reps (18 RPM); nothing above it scores.
   goal_relevance:
     - kettlebell_sport
+    - general_gpp
   sources:
-    - wildman_kettlebell
+    - IKMF
+  notes: >
+    Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained
+    with wk_kb_half_snatch.
 
 - id: kb_pentathlon_push_press_reps
-  name: KB Pentathlon — Push Press (reps in 6 min)
+  name: KB Pentathlon — Strict Push Press (reps in 6 min)
   category: kettlebell
   domain: strength_endurance
   metric_type: reps
   lower_is_better: false
   description: >
-    Single-kettlebell push press from the rack for six minutes. The legs
-    start it; the shoulder finishes it. Cadence matches the jerk.
+    Single-kettlebell push press from the rack for six minutes, heels down. The fifth event.
   test_protocol: >
-    One bell (16 kg men / 12 kg women), six minutes continuous, hand switch
-    allowed once. Count locked-out reps only.
+    One bell of your choice, six minutes continuous without setting it down,
+    hand changes as often as you like. Heels stay down; no bouncing out of the rack into the next rep. Five minutes rest before the
+    next event.
   levels:
     entry:
       male: 60
       female: 60
+      note: Half the cap (10 RPM) — this app's tier.
     intermediate:
       male: 90
       female: 90
+      note: 75 % of the cap — this app's tier.
     advanced:
+      male: 108
+      female: 108
+      note: 90 % of the cap — this app's tier.
+    elite:
       male: 120
       female: 120
-      note: ~20 RPM at 1 pood.
-    elite:
-      male: 144
-      female: 144
+      note: The IKMF cap — 120 reps (20 RPM); nothing above it scores.
   goal_relevance:
     - kettlebell_sport
+    - general_gpp
   sources:
-    - wildman_kettlebell
-
-- id: kb_pentathlon_long_cycle_reps
-  name: KB Pentathlon — Long Cycle Clean & Jerk (reps in 6 min)
-  category: kettlebell
-  domain: strength_endurance
-  metric_type: reps
-  lower_is_better: false
-  description: >
-    Clean and jerk, every rep from the swing. The slowest event and the one
-    that decides the pentathlon: the clean costs a breath the jerk does not.
-  test_protocol: >
-    One bell (16 kg men / 12 kg women), six minutes continuous, hand switch
-    allowed once. Count locked-out reps only.
-  levels:
-    entry:
-      male: 27
-      female: 27
-      note: 4–5 RPM.
-    intermediate:
-      male: 40
-      female: 40
-      note: ~7 RPM.
-    advanced:
-      male: 54
-      female: 54
-      note: The archetype's target — 8–10 RPM at 1 pood.
-    elite:
-      male: 66
-      female: 66
-      note: 11 RPM.
-  goal_relevance:
-    - kettlebell_sport
-  sources:
-    - wildman_kettlebell
+    - IKMF
+  notes: >
+    Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained
+    with wk_kb_push_press_single.

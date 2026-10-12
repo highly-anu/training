@@ -15,7 +15,7 @@
     <settingConfig type="boolean"/>
   </setting>
   <!-- Demo session, for verifying the workout screens without a paired account. -->
-  <setting propertyKey="demoMode" title="Demo session (no account)">
+  <setting propertyKey="demoProgrammes" title="Demo session (no account)">
     <settingConfig type="boolean"/>
   </setting>
 </settings>

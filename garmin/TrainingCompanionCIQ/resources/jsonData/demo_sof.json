@@ -1,0 +1,870 @@
+{
+ "name": "SOF Selection Prep",
+ "phase": "BUILD  -  WEEK 3 OF 8",
+ "days": [
+  {
+   "offset": 0,
+   "title": "Strength + PT prep",
+   "sessions": [
+    {
+     "sessionId": "demo-sof-strength",
+     "modalityId": "max_strength",
+     "archetypeId": "sof_strength",
+     "archetypeName": "SOF Strength A (Squat / Press / Pull)",
+     "archetypeCategory": "barbell",
+     "estimatedMinutes": 55,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "back_squat",
+       "name": "Back Squat",
+       "slotType": "sets_reps",
+       "slotRole": "primary_squat",
+       "isMeta": false,
+       "sets": 5,
+       "reps": "3",
+       "weightKg": 110.0,
+       "category": "barbell",
+       "movementPattern": "squat",
+       "bilateral": true,
+       "restSeconds": 180,
+       "targetRpe": 8,
+       "loadDescription": "5x3 @ 110 kg",
+       "loadNote": "+2.5kg from last week",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "overhead_press",
+       "name": "Overhead Press",
+       "slotType": "sets_reps",
+       "slotRole": "upper_press",
+       "isMeta": false,
+       "sets": 4,
+       "reps": "5",
+       "weightKg": 52.5,
+       "category": "barbell",
+       "movementPattern": "vertical_push",
+       "bilateral": true,
+       "restSeconds": 150,
+       "loadDescription": "4x5 @ 52.5 kg",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "weighted_pull_up",
+       "name": "Weighted Pull-Up",
+       "slotType": "sets_reps",
+       "slotRole": "secondary_compound",
+       "isMeta": false,
+       "sets": 4,
+       "reps": "5",
+       "weightKg": 15.0,
+       "category": "bodyweight",
+       "movementPattern": "vertical_pull",
+       "bilateral": true,
+       "restSeconds": 120,
+       "loadDescription": "4x5 @ +15 kg",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "farmer_carry",
+       "name": "Farmer Carry",
+       "slotType": "distance",
+       "slotRole": "carry_finisher",
+       "isMeta": false,
+       "distanceM": 40,
+       "sets": 3,
+       "weightKg": 32.0,
+       "category": "loaded_carry",
+       "movementPattern": "farmer_carry",
+       "bilateral": true,
+       "loadDescription": "3x40 m @ 2x32 kg",
+       "screen": "s1"
+      }
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
+    },
+    {
+     "sessionId": "demo-sof-pt",
+     "modalityId": "strength_endurance",
+     "archetypeId": "sof_pt_prep",
+     "archetypeName": "PT Test Prep (Push / Sit / Pull)",
+     "archetypeCategory": "bodyweight",
+     "estimatedMinutes": 25,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "push_up",
+       "name": "Push-Up",
+       "slotType": "sets_reps",
+       "slotRole": "pt_push",
+       "isMeta": false,
+       "sets": 5,
+       "reps": "25",
+       "category": "bodyweight",
+       "movementPattern": "horizontal_push",
+       "bilateral": true,
+       "restSeconds": 60,
+       "loadDescription": "5x25",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "sit_up",
+       "name": "Sit-Up",
+       "slotType": "sets_reps",
+       "slotRole": "pt_core",
+       "isMeta": false,
+       "sets": 5,
+       "reps": "30",
+       "category": "bodyweight",
+       "movementPattern": "flexion",
+       "bilateral": true,
+       "restSeconds": 60,
+       "loadDescription": "5x30",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "pull_up",
+       "name": "Pull-Up",
+       "slotType": "sets_reps",
+       "slotRole": "pt_pull",
+       "isMeta": false,
+       "sets": 5,
+       "reps": "8",
+       "category": "bodyweight",
+       "movementPattern": "vertical_pull",
+       "bilateral": true,
+       "restSeconds": 90,
+       "loadDescription": "5x8",
+       "screen": "s0"
+      }
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      }
+     }
+    },
+    {
+     "sessionId": "demo-showcase",
+     "modalityId": "max_strength",
+     "archetypeId": "tgu_practice",
+     "archetypeName": "Demo: every screen type",
+     "archetypeCategory": "kettlebell",
+     "estimatedMinutes": 40,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "wk_kb_tgu",
+       "name": "Kettlebell Turkish Get-Up",
+       "slotType": "sets_reps",
+       "slotRole": "main",
+       "isMeta": false,
+       "sets": 5,
+       "reps": "5",
+       "weightKg": 24.0,
+       "category": "kettlebell",
+       "movementPattern": "rotation",
+       "bilateral": false,
+       "restSeconds": 90,
+       "loadDescription": "5x5 @ 24 kg",
+       "loadNote": "+2kg from last session",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "power_clean",
+       "name": "Power Clean",
+       "slotType": "emom",
+       "slotRole": "primary_emom_lift",
+       "isMeta": false,
+       "targetRounds": 10,
+       "workSec": 60,
+       "intervalRestSec": 0,
+       "timeMinutes": 10,
+       "weightKg": 80.0,
+       "category": "barbell",
+       "movementPattern": "olympic_lift",
+       "bilateral": true,
+       "loadDescription": "10 x 60s",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "front_lever",
+       "name": "Front Lever Hold",
+       "slotType": "static_hold",
+       "slotRole": "isometric_endurance",
+       "isMeta": false,
+       "sets": 5,
+       "holdSeconds": 45,
+       "restSeconds": 60,
+       "category": "bodyweight",
+       "movementPattern": "isometric",
+       "bilateral": true,
+       "loadDescription": "5x45s hold",
+       "screen": "s2"
+      },
+      {
+       "exerciseId": "farmer_carry",
+       "name": "Farmer Carry",
+       "slotType": "distance",
+       "slotRole": "carry_finisher",
+       "isMeta": false,
+       "distanceM": 40,
+       "sets": 3,
+       "category": "loaded_carry",
+       "movementPattern": "farmer_carry",
+       "bilateral": true,
+       "loadDescription": "3x40 m",
+       "screen": "s3"
+      },
+      {
+       "exerciseId": "movement_flow",
+       "name": "Floreio Groundwork",
+       "slotType": "skill_practice",
+       "slotRole": "floreio",
+       "isMeta": false,
+       "durationMinutes": 5,
+       "focus": "movement quality over quantity",
+       "category": "skill",
+       "movementPattern": "locomotion",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "screen": "s4"
+      },
+      {
+       "exerciseId": null,
+       "name": "Free Rolling",
+       "slotType": "time_domain",
+       "slotRole": "free_rolling",
+       "isMeta": true,
+       "durationMinutes": 25,
+       "prescribedZoneLower": 3,
+       "prescribedZoneUpper": 4,
+       "loadDescription": "25 min - Zone 3-4",
+       "screen": "s4"
+      }
+     ],
+     "packageId": "wildman_kettlebell",
+     "watch": {
+      "label": "Mark Wildman Kettlebell",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "phases",
+       "lap": "next_side",
+       "template": "sets",
+       "phases": [
+        "roll",
+        "post",
+        "bridge",
+        "sweep",
+        "lunge",
+        "stand"
+       ],
+       "behaviours": {
+        "side_tracked": true
+       }
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      },
+      "s3": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      },
+      "s4": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 1,
+   "title": "Ruck 12 km",
+   "sessions": [
+    {
+     "sessionId": "demo-ruck_session",
+     "modalityId": "aerobic_base",
+     "archetypeId": "ruck_session",
+     "archetypeName": "Ruck March 12 km",
+     "archetypeCategory": "loaded_carry",
+     "estimatedMinutes": 150,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "ruck",
+       "name": "Ruck March",
+       "slotType": "distance",
+       "slotRole": "ruck_main",
+       "isMeta": false,
+       "distanceKm": 12.0,
+       "packLoadKg": 20,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 2,
+       "category": "loaded_carry",
+       "movementPattern": "loaded_carry",
+       "bilateral": true,
+       "loadDescription": "12.0 km @ 20 kg",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "horsemen_gpp",
+     "watch": {
+      "label": "Horsemen GPP / SOF-Style Training",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 2,
+   "title": "Rest",
+   "sessions": []
+  },
+  {
+   "offset": 3,
+   "title": "Conditioning",
+   "sessions": [
+    {
+     "sessionId": "demo-sof-cond",
+     "modalityId": "mixed_modal_conditioning",
+     "archetypeId": "sof_conditioning",
+     "archetypeName": "SOF Conditioning (Swings / AMRAP / Row)",
+     "archetypeCategory": "conditioning",
+     "estimatedMinutes": 45,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "kb_swing",
+       "name": "Kettlebell Swing",
+       "slotType": "emom",
+       "slotRole": "tabata_block_1",
+       "isMeta": false,
+       "targetRounds": 8,
+       "workSec": 20,
+       "intervalRestSec": 10,
+       "timeMinutes": 4,
+       "emomFormat": "EMOM",
+       "category": "kettlebell",
+       "movementPattern": "ballistic",
+       "bilateral": true,
+       "loadDescription": "8 x 20s/10s",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "squat_air",
+       "name": "Air Squat",
+       "slotType": "amrap",
+       "slotRole": "amrap_main",
+       "isMeta": false,
+       "timeMinutes": 12,
+       "targetRounds": 6,
+       "emomFormat": "AMRAP",
+       "category": "bodyweight",
+       "movementPattern": "squat",
+       "bilateral": true,
+       "loadDescription": "AMRAP 12 min",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "pull_up",
+       "name": "Pull-Up",
+       "slotType": "amrap_movement",
+       "slotRole": "amrap_pull",
+       "isMeta": false,
+       "repsPerRound": 5,
+       "parentSlotRole": "amrap_main",
+       "category": "bodyweight",
+       "movementPattern": "vertical_pull",
+       "bilateral": true,
+       "loadDescription": "5 reps / round",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "push_up",
+       "name": "Push-Up",
+       "slotType": "amrap_movement",
+       "slotRole": "amrap_push",
+       "isMeta": false,
+       "repsPerRound": 10,
+       "parentSlotRole": "amrap_main",
+       "category": "bodyweight",
+       "movementPattern": "horizontal_push",
+       "bilateral": true,
+       "loadDescription": "10 reps / round",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "row_2k",
+       "name": "2000m Row",
+       "slotType": "for_time",
+       "slotRole": "conditioning_finisher",
+       "isMeta": false,
+       "targetRounds": 1,
+       "timeMinutes": 9,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "2000 m for time",
+       "screen": "s2"
+      }
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "rounds",
+       "b": "cap_left",
+       "lines": "components",
+       "lap": "log_round",
+       "template": "rounds",
+       "gauge": "rounds"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "rounds_of_target",
+       "b": "elapsed",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "for_time",
+       "gauge": "rounds_of_target"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 4,
+   "title": "Zone 2 run",
+   "sessions": [
+    {
+     "sessionId": "demo-sof-z2",
+     "modalityId": "aerobic_base",
+     "archetypeId": "zone2_run",
+     "archetypeName": "Zone 2 Run",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 60,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "run_easy",
+       "name": "Easy Run (Zone 2)",
+       "slotType": "time_domain",
+       "slotRole": "aerobic_main",
+       "isMeta": false,
+       "durationMinutes": 60,
+       "zoneTarget": "Zone 2",
+       "prescribedZoneLower": 2,
+       "prescribedZoneUpper": 2,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "60 min - Zone 2",
+       "screen": "s0"
+      }
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 5,
+   "title": "Long ruck 20 km",
+   "sessions": [
+    {
+     "sessionId": "demo-weighted_ruck_z2",
+     "modalityId": "aerobic_base",
+     "archetypeId": "weighted_ruck_z2",
+     "archetypeName": "Long Ruck 20 km",
+     "archetypeCategory": "loaded_carry",
+     "estimatedMinutes": 240,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "ruck",
+       "name": "Ruck March",
+       "slotType": "distance",
+       "slotRole": "ruck_main",
+       "isMeta": false,
+       "distanceKm": 20.0,
+       "packLoadKg": 30,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 2,
+       "category": "loaded_carry",
+       "movementPattern": "loaded_carry",
+       "bilateral": true,
+       "loadDescription": "20.0 km @ 30 kg",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance",
+       "b": "distance_target",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 6,
+   "title": "Mobility",
+   "sessions": [
+    {
+     "sessionId": "demo-sof-mob",
+     "modalityId": "mobility",
+     "archetypeId": "mobility_flow",
+     "archetypeName": "Mobility + Recovery",
+     "archetypeCategory": "mobility",
+     "estimatedMinutes": 25,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "movement_flow",
+       "name": "Hips + T-Spine Flow",
+       "slotType": "skill_practice",
+       "slotRole": "flow",
+       "isMeta": false,
+       "durationMinutes": 10,
+       "focus": "slow, full range",
+       "category": "mobility",
+       "movementPattern": "locomotion",
+       "bilateral": true,
+       "loadDescription": "10 min",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "couch_stretch",
+       "name": "Couch Stretch",
+       "slotType": "static_hold",
+       "slotRole": "mobility_hold",
+       "isMeta": false,
+       "sets": 2,
+       "holdSeconds": 90,
+       "restSeconds": 15,
+       "category": "mobility",
+       "movementPattern": "isometric",
+       "bilateral": false,
+       "loadDescription": "2x90s each side",
+       "screen": "s1"
+      }
+     ],
+     "packageId": null,
+     "watch": {
+      "label": null,
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "stamp": "dev"
+}

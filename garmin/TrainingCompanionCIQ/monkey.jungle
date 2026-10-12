@@ -1,3 +1,7 @@
-# Connect IQ build config. Default project layout: source/ + resources/.
-# Kept minimal — the SDK picks up source/**.mc and resources/** automatically.
+# Connect IQ build config. The app shell (this directory) holds the manifest,
+# settings, launcher icon and demo data; the engine, screens and spec
+# interpreter are the core library in ../core, shared by every package.
+# Package modules (../packages/<id>) are added by the generated packages.jungle.
 project.manifest = manifest.xml
+base.sourcePath = source;../core/source
+base.resourcePath = resources;../core/resources

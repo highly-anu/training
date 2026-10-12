@@ -179,6 +179,72 @@ def report_authoring() -> list:
     #    analytics cannot quietly reach into another package's exercises.
     problems.extend(_report_analytics_specs(data, installed))
 
+    # 6. A package's watch.yaml may only restyle archetypes it owns (a borrowed
+    #    session shows its owner's screens, so an entry for it would never be
+    #    read), only for slot roles the archetype has, and only with ids from
+    #    the watch vocabulary that the watch's core implements.
+    problems.extend(_report_watch_specs(data, installed))
+
+    return problems
+
+
+def _report_watch_specs(data: dict, installed: set) -> list:
+    from src import watch_spec
+
+    problems: list = []
+    vocab = watch_spec.vocabulary()
+    archetypes = {a['id']: a for a in data['archetypes']}
+
+    for pkg, spec in loader.load_watch_specs().items():
+        where = f"{pkg}/watch.yaml"
+        if spec.get('id') != pkg:
+            problems.append(f"{where}: id {spec.get('id')!r} must equal the package")
+        if pkg not in installed:
+            problems.append(f"{where}: no philosophy.yaml beside it")
+            continue
+        accent = (spec.get('identity') or {}).get('accent')
+        if accent is not None and accent not in vocab['palette']:
+            problems.append(f"{where}: accent {accent!r} is not a palette token")
+        for page in (spec.get('summary') or {}).get('pages') or []:
+            if page not in vocab['summary_pages']:
+                problems.append(f"{where}: unknown summary page {page!r}")
+        for slot_type, screen in ((spec.get('defaults') or {}).get('slot_types') or {}).items():
+            if slot_type not in vocab['defaults']['slot_types']:
+                problems.append(f"{where}: defaults name unknown slot type {slot_type!r}")
+            problems.extend(watch_spec.spec_errors(screen, f"{where}: defaults.{slot_type}"))
+
+        for arch_id, entry in (spec.get('archetypes') or {}).items():
+            arch = archetypes.get(arch_id)
+            if not arch:
+                problems.append(f"{where}: unknown archetype {arch_id!r}")
+                continue
+            if arch.get('_package') != pkg:
+                problems.append(f"{where}: archetype {arch_id!r} belongs to "
+                                f"{arch.get('_package')!r}; its screens come from that package")
+                continue
+            slots = arch.get('slots') or []
+            roles = {s.get('role') for s in slots}
+            types = {s.get('slot_type') for s in slots}
+            problems.extend(watch_spec.spec_errors(entry, f"{where}: {arch_id}"))
+            for slot_type, screen in (entry.get('slot_types') or {}).items():
+                if slot_type not in types:
+                    problems.append(f"{where}: {arch_id} has no {slot_type!r} slot")
+                problems.extend(watch_spec.spec_errors(screen, f"{where}: {arch_id}.{slot_type}"))
+            for role, screen in (entry.get('slots') or {}).items():
+                if role not in roles:
+                    problems.append(f"{where}: {arch_id} has no slot role {role!r}")
+                problems.extend(watch_spec.spec_errors(screen, f"{where}: {arch_id}.{role}"))
+                for slot_type, narrow in (screen.get('slot_types') or {}).items():
+                    problems.extend(watch_spec.spec_errors(narrow, f"{where}: {arch_id}.{role}.{slot_type}"))
+            # The resolved spec of every slot: actions its template allows,
+            # behaviours its fields need, a module for a module screen.
+            for slot in slots:
+                resolved = watch_spec.resolve(pkg, arch_id, slot.get('role'), slot.get('slot_type'))
+                if resolved.get('module_screen') and not spec.get('module'):
+                    problems.append(f"{where}: {arch_id}.{slot.get('role')} names module_screen "
+                                    f"{resolved['module_screen']!r} but the package declares no module")
+                problems.extend(watch_spec.resolved_errors(
+                    resolved, f"{where}: {arch_id}.{slot.get('role')} (resolved)"))
     return problems
 
 

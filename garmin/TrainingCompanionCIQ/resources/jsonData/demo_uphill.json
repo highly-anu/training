@@ -1,0 +1,792 @@
+{
+ "name": "Uphill Athlete",
+ "phase": "SPECIFIC  -  WEEK 5 OF 12",
+ "stamp": "dev",
+ "days": [
+  {
+   "offset": 0,
+   "title": "Threshold + core",
+   "sessions": [
+    {
+     "sessionId": "demo-up-threshold",
+     "modalityId": "anaerobic_intervals",
+     "archetypeId": "ant_threshold_intervals",
+     "archetypeName": "Threshold Intervals",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 75,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "warm_run",
+       "name": "Warm-Up Run",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "20 min - Zone 1",
+       "durationMinutes": 20,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "threshold_run",
+       "name": "Threshold Run",
+       "slotType": "emom",
+       "slotRole": "main_intervals",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "5 x 8 min Z3-4 / 2 min easy",
+       "targetRounds": 5,
+       "workSec": 480,
+       "intervalRestSec": 120,
+       "timeMinutes": 50,
+       "prescribedZoneLower": 3,
+       "prescribedZoneUpper": 4,
+       "zoneTarget": "Zone 3-4",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "cool_run",
+       "name": "Cool-Down Run",
+       "slotType": "time_domain",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "15 min - Zone 1",
+       "durationMinutes": 15,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
+    },
+    {
+     "sessionId": "demo-up-core",
+     "modalityId": "max_strength",
+     "archetypeId": "core_max_strength",
+     "archetypeName": "Core Max Strength",
+     "archetypeCategory": "bodyweight",
+     "estimatedMinutes": 30,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "core_prep",
+       "name": "Core Activation",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "bodyweight",
+       "movementPattern": "rotation",
+       "bilateral": true,
+       "loadDescription": "5 min",
+       "durationMinutes": 5,
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "hanging_leg_raise",
+       "name": "Hanging Leg Raise",
+       "slotType": "sets_reps",
+       "slotRole": "main_strength",
+       "isMeta": false,
+       "category": "bodyweight",
+       "movementPattern": "hip_flexion",
+       "bilateral": true,
+       "loadDescription": "4x8",
+       "sets": 4,
+       "reps": "8",
+       "restSeconds": 90,
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "weighted_plank",
+       "name": "Weighted Plank",
+       "slotType": "static_hold",
+       "slotRole": "main_strength",
+       "isMeta": false,
+       "category": "bodyweight",
+       "movementPattern": "isometric",
+       "bilateral": true,
+       "loadDescription": "3x45s @ 10 kg",
+       "sets": 3,
+       "holdSeconds": 45,
+       "weightKg": 10.0,
+       "restSeconds": 60,
+       "screen": "s2"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      },
+      "s2": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "hold",
+       "b": "set",
+       "lines": "hold_prompt",
+       "lap": "toggle_hold",
+       "template": "hold",
+       "gauge": "hold"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 1,
+   "title": "Recovery",
+   "sessions": [
+    {
+     "sessionId": "demo-up-recovery",
+     "modalityId": "aerobic_base",
+     "archetypeId": "recovery_jog",
+     "archetypeName": "Recovery Jog",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 40,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "recovery_jog",
+       "name": "Recovery Jog",
+       "slotType": "time_domain",
+       "slotRole": "main_aerobic",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "40 min - Zone 1",
+       "durationMinutes": 40,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 2,
+   "title": "VO2 hill repeats",
+   "sessions": [
+    {
+     "sessionId": "demo-up-hills",
+     "modalityId": "anaerobic_intervals",
+     "archetypeId": "vo2_hill_repeats",
+     "archetypeName": "VO2 Hill Repeats",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 60,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "warm_run2",
+       "name": "Warm-Up Run",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "20 min - Zone 1",
+       "durationMinutes": 20,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "hill_repeat",
+       "name": "Hill Repeat",
+       "slotType": "emom",
+       "slotRole": "main_intervals",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "8 x 3 min Z4-5 / 3 min down",
+       "targetRounds": 8,
+       "workSec": 180,
+       "intervalRestSec": 180,
+       "timeMinutes": 48,
+       "prescribedZoneLower": 4,
+       "prescribedZoneUpper": 5,
+       "zoneTarget": "Zone 4-5",
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "cool_run2",
+       "name": "Cool-Down Run",
+       "slotType": "time_domain",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "10 min - Zone 1",
+       "durationMinutes": 10,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "wave_pct",
+        "switch_side",
+        "zone_or_load"
+       ],
+       "a": "interval",
+       "b": "interval_left",
+       "gauge": "interval_round",
+       "lines": "interval_next",
+       "lap": "skip",
+       "template": "interval"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 3,
+   "title": "Muscular endurance",
+   "sessions": [
+    {
+     "sessionId": "demo-up-me",
+     "modalityId": "strength_endurance",
+     "archetypeId": "me_weighted_box_step_ups",
+     "archetypeName": "ME Box Step-Ups",
+     "archetypeCategory": "loaded_carry",
+     "estimatedMinutes": 75,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "warm_hike",
+       "name": "Warm-Up",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "15 min - Zone 1",
+       "durationMinutes": 15,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "box_step_up",
+       "name": "Weighted Box Step-Up",
+       "slotType": "sets_reps",
+       "slotRole": "main_me",
+       "isMeta": false,
+       "category": "loaded_carry",
+       "movementPattern": "step_up",
+       "bilateral": false,
+       "loadDescription": "4 x 50/side @ 20 kg pack",
+       "sets": 8,
+       "reps": "50",
+       "weightKg": 20.0,
+       "restSeconds": 60,
+       "screen": "s1"
+      },
+      {
+       "exerciseId": "cool_walk",
+       "name": "Cool-Down",
+       "slotType": "time_domain",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "10 min - Zone 1",
+       "durationMinutes": 10,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      },
+      "s1": {
+       "title": [
+        "name",
+        "side",
+        "load"
+       ],
+       "a": "reps",
+       "b": "rpe_or_set",
+       "gauge": "set",
+       "lines": "next_step",
+       "lap": "complete_set",
+       "template": "sets"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 4,
+   "title": "Weighted ruck",
+   "sessions": [
+    {
+     "sessionId": "demo-up-ruck",
+     "modalityId": "aerobic_base",
+     "archetypeId": "weighted_ruck_z2",
+     "archetypeName": "Weighted Ruck Z2",
+     "archetypeCategory": "loaded_carry",
+     "estimatedMinutes": 120,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "ruck_z2",
+       "name": "Ruck",
+       "slotType": "distance",
+       "slotRole": "main_aerobic",
+       "isMeta": false,
+       "category": "loaded_carry",
+       "movementPattern": "loaded_carry",
+       "bilateral": true,
+       "loadDescription": "12 km @ 20 kg",
+       "distanceKm": 12.0,
+       "packLoadKg": 20,
+       "prescribedZoneLower": 2,
+       "prescribedZoneUpper": 2,
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load",
+        "pack"
+       ],
+       "a": "distance_km",
+       "b": "elapsed",
+       "lines": "next_step",
+       "lap": "log_round",
+       "template": "distance",
+       "gauge": "distance_km"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 5,
+   "title": "Long zone 2",
+   "sessions": [
+    {
+     "sessionId": "demo-up-long",
+     "modalityId": "aerobic_base",
+     "archetypeId": "long_zone_2",
+     "archetypeName": "Long Zone 2",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 150,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "warm_run3",
+       "name": "Warm-Up Run",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "15 min - Zone 1",
+       "durationMinutes": 15,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "long_run",
+       "name": "Long Run",
+       "slotType": "time_domain",
+       "slotRole": "main_aerobic",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "120 min - Zone 2",
+       "durationMinutes": 120,
+       "prescribedZoneLower": 2,
+       "prescribedZoneUpper": 2,
+       "zoneTarget": "Zone 2",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "cool_run3",
+       "name": "Cool-Down Run",
+       "slotType": "time_domain",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "aerobic_monostructural",
+       "bilateral": true,
+       "loadDescription": "15 min - Zone 1",
+       "durationMinutes": 15,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "offset": 6,
+   "title": "Mountain day",
+   "sessions": [
+    {
+     "sessionId": "demo-up-mountain",
+     "modalityId": "durability",
+     "archetypeId": "long_mountain_day",
+     "archetypeName": "Mountain Day",
+     "archetypeCategory": "aerobic",
+     "estimatedMinutes": 300,
+     "isDeload": false,
+     "exercises": [
+      {
+       "exerciseId": "approach",
+       "name": "Approach Hike",
+       "slotType": "time_domain",
+       "slotRole": "warmup",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "locomotion",
+       "bilateral": true,
+       "loadDescription": "20 min - Zone 1",
+       "durationMinutes": 20,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "mountain",
+       "name": "Mountain Hike",
+       "slotType": "time_domain",
+       "slotRole": "main_durability",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "locomotion",
+       "bilateral": true,
+       "loadDescription": "270 min - Zone 1-2",
+       "durationMinutes": 270,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 2,
+       "zoneTarget": "Zone 1-2",
+       "focus": "eat every 45 min",
+       "screen": "s0"
+      },
+      {
+       "exerciseId": "descent",
+       "name": "Descent",
+       "slotType": "time_domain",
+       "slotRole": "cooldown",
+       "isMeta": false,
+       "category": "aerobic",
+       "movementPattern": "locomotion",
+       "bilateral": true,
+       "loadDescription": "10 min - Zone 1",
+       "durationMinutes": 10,
+       "prescribedZoneLower": 1,
+       "prescribedZoneUpper": 1,
+       "zoneTarget": "Zone 1",
+       "screen": "s0"
+      }
+     ],
+     "packageId": "uphill_athlete",
+     "watch": {
+      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "accent": null,
+      "summary": {
+       "pages": [
+        "summary",
+        "heart_rate",
+        "training_effect",
+        "exercises"
+       ]
+      },
+      "edit": {
+       "weight_step_kg": 2.5,
+       "weight_step_by_category": {
+        "kettlebell": 4.0
+       }
+      }
+     },
+     "screens": {
+      "s0": {
+       "title": [
+        "name",
+        "load"
+       ],
+       "a": "time_left",
+       "b": "zone_or_time",
+       "lines": "focus",
+       "lap": "skip",
+       "template": "timed",
+       "gauge": "time_left"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

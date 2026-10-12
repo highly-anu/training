@@ -1,0 +1,7 @@
+<resources>
+  <!-- The demo programmes, one loaded at a time (DemoProgram). Same shape as the
+       server's today-session payload, one day per entry from today. -->
+  <jsonData id="DemoSof" filename="demo_sof.json" />
+  <jsonData id="DemoKb" filename="demo_kb.json" />
+  <jsonData id="DemoUphill" filename="demo_uphill.json" />
+</resources>

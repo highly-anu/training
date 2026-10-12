@@ -10,6 +10,8 @@
   <!-- Demo session: renders a built-in session that exercises every slot type and
        archetype specialization, without pairing or a synced program. Used to
        verify the workout screens in the simulator and on-wrist before an account
-       exists. Off by default; never ships enabled. -->
-  <property id="demoMode" type="boolean">false</property>
+       exists. Off by default; never ships enabled. Renamed from demoMode on 2026-10-10:
+       the demo store builds stored demoMode=true on the watch, and a stored value
+       outlives an update, so the real build reads a key the demo never wrote. -->
+  <property id="demoProgrammes" type="boolean">false</property>
 </properties>

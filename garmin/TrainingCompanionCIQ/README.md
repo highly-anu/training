@@ -20,31 +20,74 @@ API required.
 
 ## Layout
 
+The app is a shell around a core library; each training philosophy owns its
+watch screens as data, and may add compiled code only where data cannot say it.
+
 ```
-manifest.xml            App id, Fenix 9 product target, permissions
-monkey.jungle           Build config
-resources/
-  strings/strings.xml   UI strings
-  drawables/            launcher_icon.png (present)
-  settings/ properties/ apiBaseUrl, webBaseUrl, autoStartOnLaunch
-                        (overridable in Garmin Connect Mobile)
-source/
-  Config.mc             Constants, storage keys, apiBaseUrl/webBaseUrl, rest defaults
-  PhoneLink.mc          Phase-3 phone glue-app link (BLE phone-app messages)
-  TrainingCompanionApp.mc  Entry point + glance + routing (pair vs. today; deep-link)
-  SyncManager.mc        All backend I/O: pairing, today-session, wellness, readiness, upload
-  Wellness.mc           Reads resting HR, HR low, Body Battery, recovery time for /health/wellness
-  SessionModel.mc       WorkoutSession / WorkoutExercise wrappers over the JSON
-  WorkoutController.mc  State machine, ActivityRecording, HR/GPS capture,
-                        HR-zone drift, EMOM/AMRAP timing, set editor, summary
-  views/
-    PairingView.mc      Mint code → scan-to-claim QR + code → poll (or phone push)
-    SessionListView.mc  Today's session / rest day + readiness dot; SELECT starts it
-    ExerciseView.mc     Dispatch by slotType + rest overlay + live HR + drift arrow;
-                        on-wrist set editor for sets_reps (edit reps/weight/RPE)
-    SessionCompleteView.mc
-    GlanceView.mc       At-a-glance card + readiness dot, from cache
+garmin/
+  core/                       the library: names no philosophy (check_core_neutral.py)
+    source/
+      engine/WorkoutController.mc  state machine, ActivityRecording, HR/GPS, timing by
+                              the step's template, set/rest flow, Edit Set, summary
+      model/                  SessionModel (exercise + its screen spec), Steps
+      net/                    SyncManager (?spec=1), PhoneLink, Wellness
+      store/                  Config, DayLog, GlanceCache (the glance's slim copy)
+      spec/                   ScreenSpec (payload spec or slot-type default),
+                              SpecRenderer (every id the vocabulary names), PackageModule
+      gen/                    Vocab.mc, Registry.mc — GENERATED, never edit
+      ui/ views/ input/       Garmin's activity grammar, the pages, the button map
+    resources/                icons, Personality Library styles, layouts, strings
+    test/                     (:test) functions — ./build.sh --test
+  packages/<id>/              optional compiled module per philosophy (none yet)
+    package.json              {"id": "<id>", "class": "<Class>"}
+    source/<Class>.mc         class <Class> extends PackageModule, annotated (:pkg_<id>)
+  tools/
+    gen_vocab.py              data/commons/watch_vocabulary.json -> core/source/gen/Vocab.mc
+    gen_registry.py           garmin/packages/*/package.json -> Registry.mc + packages.jungle
+    gen_watch_demo.py         gives the demo programmes their packages' specs
+    check_core_neutral.py     fails on a package or archetype id in garmin/core
+    gen_icons.py              the menu / category / pattern icon SVGs
+  TrainingCompanionCIQ/       the app shell
+    manifest.xml  monkey.jungle  packages.jungle (generated)  build.sh  run-sim.sh
+    source/                   TrainingCompanionApp, DemoProgram, DemoSession
+    resources/                AppName, launcher icon, settings/properties, demo jsonData
 ```
+
+### Packages own their watch screens
+
+What a session looks like on the watch is its package's, the way its analytics
+are (`data/packages/<id>/analytics.yaml`):
+
+1. **The vocabulary** — `data/commons/watch_vocabulary.json` — lists the templates
+   (the engine modes: sets, hold, interval, rounds, for_time, distance, timed,
+   round_timer), the field ids for the two data fields, title parts, the lines
+   under the rule, LAP actions and behaviours (side_tracked, cumulative_target,
+   ladder, load_wave, metronome_rpm). Its slot-type defaults are the screens the
+   watch drew by slot type before packages owned them. Every id is implemented in
+   `core/source/spec/SpecRenderer.mc`; add both in one change, then run
+   `gen_vocab.py`.
+2. **A package's `watch.yaml`** (`docs/schemas/watch.schema.json`) overrides them
+   per archetype and slot role — e.g. Gym Jones' get-ups count toward 100 per
+   side, BJJ's class runs as a round timer. A package without one gets the
+   defaults. `src/watch_spec.py` resolves it.
+3. **The server** sends the resolved specs: `GET /user/today-session?spec=1` adds
+   `packageId` (the archetype's owner, so a borrowed session keeps its owner's
+   screens), `watch` (label, accent, summary pages, edit steps, module) and a
+   deduplicated `screens` table each exercise names by `screen`.
+4. **The watch** draws each exercise through `ScreenSpec` + `SpecRenderer`; a
+   payload without specs, or an id this build lacks, falls back to the slot
+   type's default, field by field.
+5. **A compiled module** is the escape hatch for what the vocabulary cannot say:
+   `garmin/packages/<id>/`, then `gen_registry.py`; the package's `watch.yaml`
+   names `module: <id>` and a slot's `module_screen`. The slot's spec stays
+   complete without it, so `gen_registry.py --without <id>` builds draw the
+   declarative screen. Prefer growing the vocabulary: a module ships in every
+   build and every module needs a store release.
+
+**Adding a philosophy, back to front:** its package in `data/packages/<id>/`
+(philosophy, frameworks, archetypes, exercises), optionally a `watch.yaml`; run
+`validate_entities.py`, `check_provenance.py`, `test_watch_spec.py`. The watch
+needs no change and no release unless the package ships a module.
 
 App settings (`resources/settings`, editable in Garmin Connect Mobile):
 - `apiBaseUrl` — backend base URL (default `https://training-api.fly.dev/api`).
@@ -100,6 +143,12 @@ Steps:
    deployed API.
 3. **Sideload to the watch:** `./build.sh --device`, then copy
    `bin/TrainingCompanion-fenix947mm.prg` to `GARMIN/APPS/` over USB.
+4. **Store test upload:** `./build.sh --release` writes `bin/TrainingCompanion.iq`
+   (the real app, all seven devices); `./build.sh --demo` writes
+   `bin/TrainingCompanionDemo.iq` with the demo programmes on. Same app id, so each
+   uploads as a new version of one app. The demo switch is the `demoProgrammes`
+   setting (renamed from `demoMode`, whose stored `true` from the demo builds would
+   otherwise outlive the update).
 
 `build.sh` / `run-sim.sh` auto-detect the SDK path and key; override with
 `CIQ_SDK`, `CIQ_KEY`, `DEVICE` env vars. Builds use the default type-check level;
@@ -122,10 +171,18 @@ Resolved (verified by compiling against SDK 9.2.0):
     `HR_DRIFT_HOLD_SEC` out of band.
   - EMOM per-interval buzz + round counter; AMRAP time-cap countdown with
     SELECT-to-count rounds; for-time round counter.
-- On-wrist set logger for sets_reps: SELECT logs the set with edited values,
-  UP/DOWN adjust the focused field (reps ±1, weight ±2.5 kg, RPE ±0.5), BACK
-  cycles the field. Values seed from the prescription and carry across sets;
-  hold-UP still finishes the session early.
+- Garmin-style workout (2026-10-09, matching the watch's own Strength workout):
+  START on the pre-start page opens Do Workout / Steps (Steps sets each exercise's
+  reps, hold, weight and RPE for the run); Do Workout shows the workout ready, and
+  nothing records until START. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
+  delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
+  rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
+  pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
+  (the next sets' reps and load) / Edit Set. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
+  carries the new values to the sets after it. When every step is done the
+  activity keeps recording ("Workout complete") until Save. Touch is off while
+  recording. Icons and button hints are the Personality Library's
+  (`resources/drawables/garmin.xml`); glyphs it lacks are drawn by `tools/gen_icons.py`.
 
 - Phase 3 **watch-side** phone-link hooks (`PhoneLink.mc`): registers for BLE
   phone-app messages while the pairing screen is up, so the future glue app can

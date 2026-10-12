@@ -1,0 +1,43 @@
+<resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+  <!--
+    Garmin's own assets, through the Personality Library (SDK doc/docs/Personality_Library).
+    Each selector resolves per device to the system artwork and size, so the icons in
+    our menus and the button hints on our screens are the ones the watch itself uses.
+    scope="application" keeps them out of the 64 KB glance build.
+  -->
+
+  <!-- Menu icons (Menu2 IconMenuItem), at the system menu-icon size. -->
+  <bitmap id="GmSave"     personality="system_icon_dark__save system_size__menu_icon" scope="application" />
+  <bitmap id="GmDiscard"  personality="system_icon_dark__discard system_size__menu_icon" scope="application" />
+  <bitmap id="GmCheck"    personality="system_icon_dark__check system_size__menu_icon" scope="application" />
+  <bitmap id="GmRevert"   personality="system_icon_dark__revert system_size__menu_icon" scope="application" />
+
+  <!-- Our own glyphs for functions the library has no icon for (tools/gen_icons.py),
+       at the same system size. -->
+  <bitmap id="GmResume" filename="icons/menu/menu_resume.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmSkip" filename="icons/menu/menu_skip.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmList" filename="icons/menu/menu_list.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmWeek" filename="icons/menu/menu_week.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmReadiness" filename="icons/menu/menu_readiness.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmEdit" filename="icons/menu/menu_edit.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmToday" filename="icons/menu/menu_today.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+  <bitmap id="GmRefresh" filename="icons/menu/menu_refresh.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
+
+  <!-- Toast icons. -->
+  <bitmap id="GmToastCheck"   personality="system_icon_positive__check system_size__toast_icon" scope="application" />
+  <bitmap id="GmToastWarning" personality="system_icon_destructive__warning system_size__toast_icon" scope="application" />
+
+  <!-- Button hints: the arcs Garmin draws at a physical button. -->
+  <bitmap id="GmHintStart"      personality="system_icon_dark__hint_button_right_top" scope="application" />
+  <bitmap id="GmHintStartReady" personality="system_icon_positive__hint_button_right_top" scope="application" />
+  <bitmap id="GmHintLap"        personality="system_icon_positive__hint_button_right_bottom" scope="application" />
+</resources>

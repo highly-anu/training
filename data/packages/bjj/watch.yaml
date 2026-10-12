@@ -1,0 +1,8 @@
+# How BJJ sessions look on the watch (docs/schemas/watch.schema.json).
+id: bjj
+spec_version: 1
+archetypes:
+  # A class has no exercises: each block's role is its content ("Drilling
+  # 25:00", "Rolling 25:00"), and LAP counts rounds within it.
+  bjj_class:
+    template: round_timer

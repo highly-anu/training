@@ -1,0 +1,141 @@
+{
+  "_comment": "The watch's screen vocabulary: the one list of templates, fields, title parts, lines, LAP actions and behaviours a package's watch.yaml may name. src/watch_spec.py resolves package specs against it; garmin/tools/gen_vocab.py turns it into garmin/core/source/gen/Vocab.mc, so the server and the watch read one table. Every id here is implemented in the watch's core (spec/Fields.mc, Titles.mc, Lines.mc, Actions.mc); add the implementation in the same change as the id. The slot-type defaults reproduce the renderers the watch picked by slot_type before packages owned their screens.",
+  "version": 1,
+  "palette": {
+    "red": "0xEF4444",
+    "rose": "0xF43F5E",
+    "orange": "0xF97316",
+    "amber": "0xF59E0B",
+    "yellow": "0xEAB308",
+    "lime": "0x84CC16",
+    "emerald": "0x10B981",
+    "teal": "0x14B8A6",
+    "cyan": "0x06B6D4",
+    "sky": "0x0EA5E9",
+    "violet": "0x8B5CF6",
+    "pink": "0xEC4899"
+  },
+  "templates": {
+    "sets": {
+      "doc": "Counted sets: LAP ends a set, rest follows.",
+      "actions": ["complete_set", "skip"],
+      "defaults": { "title": ["name", "side", "load"], "a": "reps", "b": "rpe_or_set", "gauge": "set", "lines": "next_step", "lap": "complete_set" }
+    },
+    "hold": {
+      "doc": "Timed holds: LAP starts the hold and ends it early.",
+      "actions": ["toggle_hold", "skip"],
+      "defaults": { "title": ["name", "side", "load"], "a": "hold", "b": "set", "lines": "hold_prompt", "lap": "toggle_hold" }
+    },
+    "interval": {
+      "doc": "Work/rest phases that run themselves (EMOM, Tabata, repeats).",
+      "actions": ["skip"],
+      "defaults": { "title": ["name", "wave_pct", "switch_side", "zone_or_load"], "a": "interval", "b": "interval_left", "gauge": "interval_round", "lines": "interval_next", "lap": "skip" }
+    },
+    "rounds": {
+      "doc": "Rounds against a time cap (AMRAP).",
+      "actions": ["log_round", "skip"],
+      "defaults": { "title": ["name", "load"], "a": "rounds", "b": "cap_left", "lines": "components", "lap": "log_round" }
+    },
+    "for_time": {
+      "doc": "Rounds against the clock; the last round moves on.",
+      "actions": ["log_round", "skip"],
+      "defaults": { "title": ["name", "load"], "a": "rounds_of_target", "b": "elapsed", "lines": "next_step", "lap": "log_round" }
+    },
+    "distance": {
+      "doc": "Distance: live km against the target, or laps of a short carry.",
+      "actions": ["log_round", "skip"],
+      "defaults": { "title": ["name", "load", "pack"], "a": "distance", "b": "distance_target", "lines": "next_step", "lap": "log_round" }
+    },
+    "timed": {
+      "doc": "A block held for a time, often in a zone; counts down and ends itself.",
+      "actions": ["skip", "next_side"],
+      "defaults": { "title": ["name", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
+    },
+    "round_timer": {
+      "doc": "A named block with no exercise content (a class): LAP counts rounds.",
+      "actions": ["log_round", "skip"],
+      "defaults": { "title": ["name"], "a": "block_left", "b": "rounds", "lines": "next_step", "lap": "log_round" }
+    }
+  },
+  "fields": {
+    "reps": { "label": "REPS", "doc": "The working reps of this set." },
+    "set": { "label": "SET", "doc": "Set n of N." },
+    "rpe_or_set": { "label": "RPE|SET", "doc": "The target RPE on an unloaded set that has one, else SET." },
+    "cumulative": { "label": "TOTAL", "doc": "Reps so far toward the session total.", "requires": "cumulative_target" },
+    "rounds": { "label": "ROUNDS", "doc": "Rounds logged." },
+    "rounds_of_target": { "label": "ROUNDS", "doc": "Rounds logged of the target rounds." },
+    "rung": { "label": "RUNG", "doc": "The ladder rung.", "requires": "ladder" },
+    "cap_left": { "label": "LEFT", "doc": "Time left on the cap." },
+    "elapsed": { "label": "TIME", "doc": "Time on this step." },
+    "time_left": { "label": "TIME LEFT", "doc": "Countdown of the step's duration, else the time on it." },
+    "zone_or_time": { "label": "ZONE|TIME", "doc": "The prescribed HR zone, else the time on a counting-down step." },
+    "distance": { "label": "KM|LAPS", "doc": "Km covered, or laps of a short carry." },
+    "distance_target": { "label": "OF KM|METRES|TIME", "doc": "The target distance, the carry's metres, else the time." },
+    "distance_km": { "label": "KM", "doc": "Km covered, whatever the slot type." },
+    "hold": { "label": "HOLD", "doc": "The hold's seconds: left while it runs, the target before." },
+    "interval": { "label": "INTERVAL|ROUND|RPM|REST", "doc": "The interval's round, the paced RPM, or the rest phase." },
+    "interval_left": { "label": "TIME LEFT|HR TO", "doc": "Time left in the phase, or the HR a gated rest waits for." },
+    "interval_round": { "label": "INTERVAL|ROUND", "doc": "Round n of N." },
+    "block_left": { "label": "LEFT|TIME", "doc": "Time left in a named block, else the time on it." },
+    "rpm": { "label": "RPM", "doc": "The target pace: the exercise's targetRpm, else the metronome_rpm behaviour." },
+    "pack_kg": { "label": "PACK KG", "doc": "The prescribed pack load." },
+    "hr": { "label": "HR", "doc": "Current heart rate." }
+  },
+  "title_parts": {
+    "name": "The exercise (or block) name.",
+    "load": "The working weight, per bell on a double.",
+    "side": "Left or Right while the step is side-tracked (the side_tracked behaviour or a unilateral exercise).",
+    "switch_side": "Left or Right on a set with a hand switch (switchAtSec).",
+    "wave_pct": "The round's % of the load_wave behaviour.",
+    "zone_or_load": "The HR zone, else the load.",
+    "pack": "The pack load on a ruck."
+  },
+  "lines": {
+    "next_step": "Next: the step after this one.",
+    "focus": "The prescription's focus, else next_step.",
+    "components": "The movements of one round, else next_step.",
+    "ladder_total": "Reps so far on the ladder, then next_step.",
+    "hold_prompt": "Start / end-early prompt for a hold.",
+    "interval_next": "The coming work or rest phase.",
+    "phases": "The spec's phases strip, then next_step."
+  },
+  "actions": {
+    "complete_set": "Ends the set and starts the rest.",
+    "log_round": "Counts a round or lap; moves on once the step's countable target (cap, rounds, laps, block time) is reached, or at once when it has none.",
+    "toggle_hold": "Starts the hold, or ends it early.",
+    "next_side": "Switches to the other side (a side-tracked practice block worked one side at a time).",
+    "skip": "Moves on to the next step."
+  },
+  "behaviours": {
+    "side_tracked": { "type": "boolean", "doc": "Count each set per side, alternating left and right." },
+    "cumulative_target": { "type": "integer", "doc": "The session total the cumulative field counts toward." },
+    "ladder": { "type": "object", "doc": "Rungs climb 1..peak and back down; {peak: int}." },
+    "load_wave": { "type": "integer_array", "doc": "% of the load per interval round." },
+    "metronome_rpm": { "type": "integer", "doc": "Default pace for the rpm field when the exercise names none." }
+  },
+  "summary_pages": {
+    "summary": "Time, sets, volume and calories.",
+    "heart_rate": "Average and max HR, time in zones.",
+    "training_effect": "Aerobic and anaerobic training effect.",
+    "exercises": "What was logged, per exercise."
+  },
+  "limits": { "title_parts": 4, "summary_pages": 5, "phases": 8, "module_menu_items": 2 },
+  "defaults": {
+    "slot_types": {
+      "sets_reps": "sets",
+      "static_hold": "hold",
+      "emom": "interval",
+      "amrap": "rounds",
+      "amrap_movement": "rounds",
+      "for_time": "for_time",
+      "rounds_for_time": "for_time",
+      "distance": "distance",
+      "time_domain": "timed",
+      "skill_practice": "timed"
+    },
+    "fallback_template": "timed",
+    "identity": { "accent": null },
+    "summary": { "pages": ["summary", "heart_rate", "training_effect", "exercises"] },
+    "edit": { "weight_step_kg": 2.5, "weight_step_by_category": { "kettlebell": 4.0 } }
+  }
+}

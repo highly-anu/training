@@ -16,6 +16,8 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 | `goal_profile.schema.json` | One entry per goal type | `data/goals/{id}.yaml` |
 | `constraints.schema.json` | Runtime athlete input (not a library) | Input to generator |
 | `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml` |
+| `analytics.schema.json` | What progress means for one methodology (optional) | `data/packages/{name}/analytics.yaml` |
+| `watch.schema.json` | How the methodology's sessions look on the watch (optional); ids from `data/commons/watch_vocabulary.json` | `data/packages/{name}/watch.yaml` |
 
 ### Package structure
 
@@ -33,6 +35,8 @@ data/packages/{name}/
     gpp_durability/        ← carries, sandbag, rucking
     movement_skill/        ← mobility, joint prep, skill practice
   exercises.yaml           ← all exercises for this package (list under exercises: key)
+  analytics.yaml           ← optional: what progress means for it
+  watch.yaml               ← optional: its watch screens, per archetype and slot role
 ```
 
 Modalities are shared infrastructure (`data/modalities/`) — they are not owned by any package and almost never change.

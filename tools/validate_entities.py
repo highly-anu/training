@@ -56,6 +56,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'exercise.schema.json', True
     if basename == 'analytics.yaml':
         return 'analytics.schema.json', False
+    if basename == 'watch.yaml':
+        return 'watch.schema.json', False
     for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS

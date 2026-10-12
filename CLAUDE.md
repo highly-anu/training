@@ -449,6 +449,38 @@ writes.
   current program too, so a planned date before the current program's start
   overrides the key lookup (`LogSessions.rows`).
 
+## Watch Screens (Connect IQ)
+
+The Garmin app (`garmin/`) is a **core library** (`garmin/core`) inside an app
+shell (`garmin/TrainingCompanionCIQ`); **packages own their watch screens** the
+way they own their analytics. Layout and the add-a-philosophy walk-through:
+`garmin/TrainingCompanionCIQ/README.md`.
+
+- **One vocabulary, two readers.** `data/commons/watch_vocabulary.json` lists the
+  templates (engine modes), field ids, title parts, lines, LAP actions and
+  behaviours; its slot-type defaults are the screens the watch drew by slot type
+  before. `src/watch_spec.py` resolves a package's `watch.yaml` against it (deep
+  merge: package slot-type defaults < archetype < archetype slot type < slot role
+  < slot role's slot type); `garmin/tools/gen_vocab.py` generates the watch's
+  `Vocab.mc` from it. An id is added to the JSON and implemented in
+  `garmin/core/source/spec/SpecRenderer.mc` in the same change.
+- **`?spec=1` only adds keys.** `GET /user/today-session?spec=1` gives each session
+  `packageId` — the **archetype's owner**, not the program's philosophy, so a
+  borrowed session keeps its owner's screens — `watch` and a deduplicated
+  `screens` table, and each exercise a `screen` key. Without the parameter the
+  payload is what 1.3 builds parse. `api.encode_watch_session` is the one encoder.
+- **Nothing in `garmin/core` names a philosophy or archetype**
+  (`garmin/tools/check_core_neutral.py`). The engine runs a step by its spec's
+  `template`, never by slot type or archetype id; `ArchetypeBehavior.mc` is gone,
+  and with it three bugs its archetype-wide flags hid (a get-up that never
+  switched sides, a ruck's warm-up shown in km, a dead distance flag).
+- **Compiled modules are the escape hatch**, not the norm: `garmin/packages/<id>/`
+  + `gen_registry.py` (Monkey C has no reflection, so `Registry.mc` is generated).
+  A module's slots keep a complete declarative spec; `--without <id>` builds draw it.
+  None ships yet.
+- **The glance reads `GlanceCache`'s slim copy** (`todayGlance`), never the
+  payload: it runs in 64 KB.
+
 ## Program History
 
 `user_programs` holds **one row per athlete** and `save_user_program` upserts it,
@@ -631,6 +663,17 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_styles.py                   # every philosophy x style generates
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
+SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1
+```
+
+Run these after touching the watch app, a package's `watch.yaml` or the
+watch vocabulary (the Monkey C tests need the Connect IQ simulator open):
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_watch_spec.py   # resolver, payload, generated files, core neutrality
+SUPABASE_URL='' .venv/bin/python garmin/tools/gen_watch_demo.py   # after a watch.yaml or vocabulary change
+garmin/TrainingCompanionCIQ/build.sh --release        # all products
+garmin/TrainingCompanionCIQ/build.sh --test           # the core's (:test) functions, in the simulator
 ```
 
 Run this after touching anything under `ios/` (in addition to the simulator):

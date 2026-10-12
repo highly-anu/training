@@ -154,6 +154,34 @@
     "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences."
   },
   {
+    "id": "kb_pentathlon_clean_reps",
+    "name": "KB Pentathlon — Clean (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 60,
+      "intermediate": 90,
+      "advanced": 108,
+      "elite": 120
+    },
+    "lower_is_better": false,
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_clean_single."
+  },
+  {
+    "id": "kb_pentathlon_long_cycle_press_reps",
+    "name": "KB Pentathlon — Long Cycle Press (reps in 6 min)",
+    "category": "kettlebell",
+    "unit": " reps",
+    "standards": {
+      "entry": 30,
+      "intermediate": 45,
+      "advanced": 54,
+      "elite": 60
+    },
+    "lower_is_better": false,
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_long_cycle_press."
+  },
+  {
     "id": "kb_pentathlon_jerk_reps",
     "name": "KB Pentathlon — Jerk (reps in 6 min)",
     "category": "kettlebell",
@@ -161,25 +189,11 @@
     "standards": {
       "entry": 60,
       "intermediate": 90,
-      "advanced": 120,
-      "elite": 144
+      "advanced": 108,
+      "elite": 120
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: the pentathlon's coefficient scoring depends on bell weight and is better read from the competition sheet. These tiers are the archetype's RPM targets held for the full event."
-  },
-  {
-    "id": "kb_pentathlon_snatch_reps",
-    "name": "KB Pentathlon — Snatch (reps in 6 min)",
-    "category": "kettlebell",
-    "unit": " reps",
-    "standards": {
-      "entry": 42,
-      "intermediate": 63,
-      "advanced": 84,
-      "elite": 100
-    },
-    "lower_is_better": false,
-    "notes": "The Secret Service Snatch Test (ssst_reps) is the ten-minute, free-switch cousin of this event."
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with kb_jerk_single."
   },
   {
     "id": "kb_pentathlon_half_snatch_reps",
@@ -187,38 +201,27 @@
     "category": "kettlebell",
     "unit": " reps",
     "standards": {
-      "entry": 48,
-      "intermediate": 72,
-      "advanced": 96,
-      "elite": 115
+      "entry": 54,
+      "intermediate": 81,
+      "advanced": 97,
+      "elite": 108
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_half_snatch."
   },
   {
     "id": "kb_pentathlon_push_press_reps",
-    "name": "KB Pentathlon — Push Press (reps in 6 min)",
+    "name": "KB Pentathlon — Strict Push Press (reps in 6 min)",
     "category": "kettlebell",
     "unit": " reps",
     "standards": {
       "entry": 60,
       "intermediate": 90,
-      "advanced": 120,
-      "elite": 144
+      "advanced": 108,
+      "elite": 120
     },
-    "lower_is_better": false
-  },
-  {
-    "id": "kb_pentathlon_long_cycle_reps",
-    "name": "KB Pentathlon — Long Cycle Clean & Jerk (reps in 6 min)",
-    "category": "kettlebell",
-    "unit": " reps",
-    "standards": {
-      "entry": 27,
-      "intermediate": 40,
-      "advanced": 54,
-      "elite": 66
-    },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_push_press_single."
   },
   {
     "id": "ruck_12mi_40lb_minutes",

@@ -165,8 +165,8 @@ kb_jerk_single:
   description: The single-arm kettlebell jerk is a two-dip movement — the first dip
     drives the bell overhead, the second dip catches the arm locked under the bell
     before standing. The double-dip makes it more efficient than the push press under
-    fatigue, allowing heavier loads and higher rep targets. Wildman programs it as
-    timed sets at target RPM (10 RPM at 16 kg).
+    fatigue, allowing heavier loads and higher rep targets. Trained as timed sets
+    at a target RPM; in the IKMF pentathlon 120 jerks in 6 minutes score at most.
   muscle_diagram:
     highlight_primary:
     - deltoids
@@ -618,8 +618,7 @@ wk_kb_snatch:
     in a single movement -- a more explosive and technically demanding combination
     of the swing and the press. Horsemen program 1-minute snatch bouts per arm in
     their 12-minute complex; the Horsemen SSST standard is 200+ snatches in 10 minutes
-    at 53 lb. KB sport RPM target is 14 per minute at 1 pood. It is the apex of the
-    Wildman single-bell complexity ladder.
+    at 53 lb. It is the apex of the Wildman single-bell complexity ladder.
   muscle_diagram:
     highlight_primary:
     - glutes

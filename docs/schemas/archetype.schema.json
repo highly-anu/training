@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "archetype.schema.json",
   "title": "Workout Archetype",
-  "description": "A reusable workout shape. Defines the structure of a session \u2014 how many slots, of what type, in what format \u2014 without specifying which exercises fill them. The selector populates slots with exercises at generation time.",
+  "description": "A reusable workout shape. Defines the structure of a session — how many slots, of what type, in what format — without specifying which exercises fill them. The selector populates slots with exercises at generation time.",
   "type": "object",
   "required": [
     "id",
@@ -21,7 +21,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Human-readable name. e.g. '3\u00d75 Linear Strength', 'Long Zone 2 Run'"
+      "description": "Human-readable name. e.g. '3×5 Linear Strength', 'Long Zone 2 Run'"
     },
     "modality": {
       "type": "string",
@@ -168,6 +168,14 @@
               },
               "exclude_movement_pattern": {
                 "type": "string"
+              },
+              "exercise_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "Only these exercises may fill the slot (still level, equipment and injury filtered). For a slot whose events are fixed by rules, e.g. a pentathlon's five."
               }
             },
             "additionalProperties": false
@@ -210,6 +218,10 @@
           "time_cap_sec": {
             "type": "integer",
             "description": "Time cap for an amrap/for_time slot. Read by progression._density_slot as the duration fallback."
+          },
+          "paced": {
+            "type": "boolean",
+            "description": "The slot is worked at a target RPM taken from the chosen exercise's competition_pace (max_reps / minutes); the load carries it as target_rpm and the watch paces the set."
           }
         }
       }

@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
+from src import watch_spec as _watch_spec
 from src import goals, loader, provenance
 from src.similarity import compute_all_similarities
 from src.generator import generate
@@ -656,6 +657,7 @@ def update_archetype(arch_id: str):
         return _invalid('archetype', errors)
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(merged, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    _watch_spec.clear_cache()
     return jsonify(merged), 200
 
 
@@ -671,6 +673,7 @@ def delete_archetype(arch_id: str):
         return jsonify({'detail': 'only archetypes in the custom package can be deleted through the API; '
                                   'authored packages are edited as YAML'}), 403
     os.remove(path)
+    _watch_spec.clear_cache()
     return jsonify({'deleted': arch_id}), 200
 
 
@@ -718,6 +721,9 @@ def create_archetype():
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
         yaml.dump(body, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    # The watch's archetype -> package index is cached; the new archetype's
+    # sessions must name their package without a server restart.
+    _watch_spec.clear_cache()
     return jsonify(body), 201
 
 
@@ -2893,6 +2899,9 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         'reps': str(reps) if reps is not None else None,
         'weightKg': _pick(load, 'weight_kg', 'weightKg', 'suggested_weight_kg', 'suggestedWeightKg'),
         'targetRpe': _pick(load, 'target_rpe', 'targetRpe'),
+        # A paced slot's pace, from the exercise's competition cap
+        # (progression.paced_rpm); absent otherwise, never a default.
+        'targetRpm': _pick(load, 'target_rpm', 'targetRpm'),
         'rir': _pick(load, 'rir'),
         'durationMinutes': _pick(load, 'duration_minutes', 'durationMinutes'),
         'zoneTarget': zone_target,
@@ -2913,6 +2922,77 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         'prescribedZoneLower': zlo,
         'prescribedZoneUpper': zhi,
     }
+
+
+def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
+                         spec_level: int = 0) -> dict:
+    """One stored session in the watch's shape.
+
+    With spec_level >= 1 the session also says which package owns it and
+    carries that package's resolved screens (src/watch_spec.py): `watch` holds
+    the package-level settings, `screens` the deduplicated specs, and each
+    exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
+    the demo programmes through this too, so demo and real sessions agree.
+    """
+    modality = s.get('modality') or ''
+    archetype = s.get('archetype') or {}
+    exercises = [e for e in (_encode_watch_exercise(ea, modality)
+                             for ea in (s.get('exercises') or [])) if e is not None]
+    out = {
+        'sessionId': session_key,
+        'completed': completed,
+        'modalityId': modality,
+        # Archetype identity drives the category icon, and on builds before 1.4
+        # the watch's per-archetype behaviour table.
+        'archetypeId': archetype.get('id'),
+        'archetypeName': archetype.get('name') or modality,
+        'archetypeCategory': archetype.get('category'),
+        'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+        'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
+        'exercises': exercises,
+    }
+    if spec_level >= 1:
+        package_id = _watch_spec.session_package(s)
+        table, keys = _watch_spec.session_screens(
+            package_id, archetype.get('id'),
+            [(e['slotRole'] or None, e['slotType']) for e in exercises],
+        )
+        for e, key in zip(exercises, keys):
+            e['screen'] = key
+        out['packageId'] = package_id
+        out['watch'] = _watch_spec.session_identity(package_id)
+        out['screens'] = table
+    return out
+
+
+def _today_match_sets(matches: list[dict]) -> tuple[set, set]:
+    """(session uids, legacy keys) of the athlete's live matches. A match that
+    carries a uid is known only by it, so another version's '3-Friday-0' never
+    marks this version's session done."""
+    uids, keys = set(), set()
+    for m in matches:
+        if m.get('matchConfidence') == 'rejected':
+            continue
+        if m.get('sessionUid'):
+            uids.add(m['sessionUid'])
+        elif m.get('sessionKey'):
+            keys.add(m['sessionKey'])
+    return uids, keys
+
+
+def _active_version_or_none(user_id: str) -> str | None:
+    try:
+        from src import program_history
+        return program_history.active_version_id(user_id)
+    except Exception:
+        return None
+
+
+def _program_history_uid(vid: str | None, week_index: int, day_name: str, i: int) -> str | None:
+    if not vid:
+        return None
+    from src import program_history
+    return program_history.session_uid(vid, week_index, day_name, i)
 
 
 @app.get('/api/user/today-session')
@@ -2954,38 +3034,63 @@ def get_today_session():
     schedule = week.get('schedule') or {}
     sessions = schedule.get(day_name) or []
 
+    # Which of today's sessions are already done, for the watch glance's ring:
+    # a session log with a completion time, or a workout matched to the session
+    # (so a workout recorded on the phone or another watch counts too).
+    # The key ('3-Friday-0') repeats across program versions, so a match that
+    # names a session uid counts only for this version's session; a legacy
+    # match without one still counts by key.
+    session_logs = _health.get_session_logs(g.user_id)
+    matched_uids, matched_keys = _today_match_sets(_health.get_matches(g.user_id))
+    vid = _active_version_or_none(g.user_id)
+
+    # ?spec=1: the watch build reads package screen specs. Without it the
+    # payload is what builds before 1.4 parse, key for key.
+    try:
+        spec_level = int(request.args.get('spec') or 0)
+    except ValueError:
+        spec_level = 0
+
     out_sessions = []
     for i, s in enumerate(sessions):
-        modality = s.get('modality') or ''
-        archetype = s.get('archetype') or {}
-        exercises = [
-            e for e in (
-                _encode_watch_exercise(ea, modality) for ea in (s.get('exercises') or [])
-            ) if e is not None
-        ]
-        out_sessions.append({
-            'sessionId': f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}",
-            'modalityId': modality,
-            # Archetype identity drives the client's per-archetype behavior table
-            # (TGU side alternation, Tabata work/rest, BJJ round names, ...) and
-            # the category icon. Previously only the display name was sent.
-            'archetypeId': archetype.get('id'),
-            'archetypeName': archetype.get('name') or modality,
-            'archetypeCategory': archetype.get('category'),
-            'estimatedMinutes': _pick(archetype, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
-            'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
-            'exercises': exercises,
-        })
+        session_key = f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}"
+        log = session_logs.get(session_key) or {}
+        uid = _program_history_uid(vid, week_index, day_name, i)
+        matched = (uid in matched_uids) if uid else False
+        out_sessions.append(encode_watch_session(
+            s, session_key,
+            completed=bool(log.get('completedAt')) or matched or session_key in matched_keys,
+            spec_level=spec_level,
+        ))
 
     try:
         bio, sources = _bio_for_scoring(g.user_id, days=14)
         readiness = _compute_readiness(
-            bio, _health.get_session_logs(g.user_id), user_id=g.user_id, sources=sources,
+            bio, session_logs, user_id=g.user_id, sources=sources,
         )
     except Exception:
         readiness = None
 
-    return jsonify({
+    # Tomorrow's first session, for the glance's rest-day and evening preview.
+    tomorrow = None
+    t_index = (days_since + 1) // 7
+    if t_index < len(weeks):
+        t_day = _DAY_NAMES[(today.weekday() + 1) % 7]
+        t_sessions = (weeks[t_index].get('schedule') or {}).get(t_day) or []
+        if t_sessions:
+            first = t_sessions[0]
+            t_arch = first.get('archetype') or {}
+            tomorrow = {
+                'dayName': t_day,
+                'sessionCount': len(t_sessions),
+                'modalityId': first.get('modality') or '',
+                'archetypeName': t_arch.get('name') or first.get('modality') or '',
+                'estimatedMinutes': _pick(t_arch, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+            }
+        else:
+            tomorrow = {'dayName': t_day, 'sessionCount': 0}
+
+    body = {
         'status': 'ok',
         'date': str(today),
         # Position in the program, not the stored absolute week_number.
@@ -3001,7 +3106,11 @@ def get_today_session():
         'isRestDay': len(out_sessions) == 0,
         'readiness': readiness,
         'sessions': out_sessions,
-    })
+        'tomorrow': tomorrow,
+    }
+    if spec_level >= 1:
+        body['specVersion'] = _watch_spec.spec_version()
+    return jsonify(body)
 
 
 # ---------------------------------------------------------------------------

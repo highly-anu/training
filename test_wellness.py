@@ -85,14 +85,14 @@ def test_validate() -> None:
 # ── the watch's reader agrees with the validator ─────────────────────────────
 
 def test_watch_parity() -> None:
-    """garmin/TrainingCompanionCIQ/source/Wellness.mc keeps every value inside
+    """garmin/core/source/net/Wellness.mc keeps every value inside
     the bounds validate() accepts, because one value outside them makes the
     server refuse the whole reading. Monkey C cannot be compiled here, so this
     reads the source: a bound changed on one side only fails here."""
     import re
     from src.wellness import FIELDS, TEXT_FIELDS
     print('watch parity')
-    src = (Path(__file__).parent / 'garmin/TrainingCompanionCIQ/source/Wellness.mc').read_text(encoding='utf-8')
+    src = (Path(__file__).parent / 'garmin/core/source/net/Wellness.mc').read_text(encoding='utf-8')
     puts = re.findall(r'put\(d, "(\w+)", [^;]*?, (-?\d+), (-?\d+)\)', src)
     check('the reader bounds its values', len(puts) >= 7, str(puts))
     for key, lo, hi in puts:

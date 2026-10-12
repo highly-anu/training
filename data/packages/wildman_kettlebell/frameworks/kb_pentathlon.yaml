@@ -1,5 +1,5 @@
 id: kb_pentathlon
-name: "Kettlebell Pentathlon Training (Wildman)"
+name: "Kettlebell Pentathlon Training (IKMF)"
 source_philosophy: wildman_kettlebell
 
 goals_served:
@@ -39,14 +39,16 @@ deload_protocol:
   intensity_change: reduce_slightly
 
 sources:
+  - IKMF
   - Wildman
   - Pavel
 notes: >
-  Sport-specific preparation for the 5-event kettlebell pentathlon: jerk, snatch,
-  half-snatch, push press, and long cycle clean & jerk. Sessions build toward
-  6-minute timed sets at competition RPM targets. Volume and RPM increase weekly;
-  deload weeks use reduced RPM and shorter set duration. Not appropriate for novices
-  — requires proficiency in all five movements before entering this framework.
+  Sport-specific preparation for the IKMF kettlebell pentathlon (Fedorenko):
+  clean, long cycle press, jerk, half snatch and strict push press, six minutes
+  each with five minutes rest, hand changes free. Sessions build toward
+  six-minute timed sets paced against each event's scoring cap (20, 10, 20, 18
+  and 20 RPM). Not appropriate for novices — requires proficiency in all five
+  movements before entering this framework.
 
 expectations:
   min_weeks: 10
