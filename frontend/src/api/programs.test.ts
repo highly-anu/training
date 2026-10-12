@@ -24,3 +24,10 @@ describe('buildPostBody', () => {
     expect(body).not.toHaveProperty('philosophy_id')
   })
 })
+
+describe('buildPostBody without a philosophy', () => {
+  it('says so instead of failing on an index', () => {
+    expect(() => buildPostBody({ constraints })).toThrow(/methodology/)
+    expect(() => buildPostBody({ philosophyIds: [], constraints })).toThrow(/methodology/)
+  })
+})

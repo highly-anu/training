@@ -737,8 +737,12 @@ def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
         # A synthetic goal's id is '_phil_<philosophy_id>' (see
         # _philosophy_to_goal), so it can be read back when the caller did not
         # say which philosophy it asked for.
-        goal_id = ((generated.get('goal') or {}).get('id') or '')
-        if goal_id.startswith('_phil_'):
+        # A blend's id is '_phil_blend', so its sources come from the goal's
+        # primary_sources, which every synthetic goal carries.
+        goal = generated.get('goal') or {}
+        goal_id = goal.get('id') or ''
+        ids = [i for i in (goal.get('primary_sources') or []) if i]
+        if not ids and goal_id.startswith('_phil_') and goal_id != '_phil_blend':
             ids = [goal_id[len('_phil_'):]]
     weights = body.get('philosophy_weights') or body.get('goal_weights') or {}
     return list(ids), dict(weights)

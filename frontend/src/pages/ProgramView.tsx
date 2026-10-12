@@ -21,6 +21,7 @@ import { useProgramStore } from '@/store/programStore'
 import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
+import { regenerateSource } from '@/lib/programSource'
 
 type ProgramTab = 'calendar' | 'overview' | 'history'
 const PROGRAM_TABS: ProgramTab[] = ['calendar', 'overview', 'history']
@@ -102,13 +103,10 @@ export function ProgramView() {
 
   function handleRegenerate() {
     if (!program || !currentWeekData) return
-    // Get source philosophy IDs from store (stored as sourceGoalIds for now)
-    const sourceIds = useProgramStore.getState().sourceGoalIds.filter((id) => id !== '_blended')
+    const { sourceGoalIds: storedIds, sourceGoalWeights } = useProgramStore.getState()
     regenerate.mutate(
       {
-        philosophyId: sourceIds.length === 1 ? sourceIds[0] : undefined,
-        philosophyIds: sourceIds.length > 1 ? sourceIds : undefined,
-        philosophyWeights: sourceIds.length > 1 ? useProgramStore.getState().sourceGoalWeights : undefined,
+        ...regenerateSource(storedIds, sourceGoalWeights, program),
         constraints: {
           ...program.constraints ?? {},
           injury_flags: localFlags,

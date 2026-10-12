@@ -38,12 +38,16 @@ interface GenerateParams {
 
 export function buildPostBody(params: GenerateParams) {
   const multiPhil = params.philosophyIds && params.philosophyIds.length > 1
+  const single = params.philosophyId ?? params.philosophyIds?.[0]
+  if (!multiPhil && !single) {
+    throw new Error("This program doesn't record which methodology built it. Build a new one from Program ▸ New.")
+  }
 
   return {
     // Philosophy path
     ...(multiPhil
       ? { philosophy_ids: params.philosophyIds, philosophy_weights: params.philosophyWeights }
-      : { philosophy_id: params.philosophyId ?? params.philosophyIds![0] }),
+      : { philosophy_id: single }),
     constraints: params.constraints,
     ...(params.eventDate ? { event_date: params.eventDate } : {}),
     ...(params.startDate ? { start_date: params.startDate } : {}),
