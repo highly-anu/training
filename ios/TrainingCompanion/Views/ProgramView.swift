@@ -40,7 +40,7 @@ struct ProgramView: View {
     }
 
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-    private var cardWidth: CGFloat { UIScreen.main.bounds.width - 32 }
+    private var cardWidth: CGFloat { AppMetrics.screenWidth - 32 }
     private var peekIndex: Int { lockedAdjacentIndex ?? weekIndex + (dragOffset <= 0 ? 1 : -1) }
 
     // MARK: - Body

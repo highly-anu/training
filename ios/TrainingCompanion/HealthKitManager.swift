@@ -287,7 +287,7 @@ final class HealthKitManager {
         if !UserDefaults.standard.bool(forKey: Self.anchorResetKey) {
             resetWorkoutAnchor()
             UserDefaults.standard.set(true, forKey: Self.anchorResetKey)
-            AppLogger.shared.logFromBackground(
+            AppLogger.logFromBackground(
                 "workout-import: anchor reset once for the widened source filter")
         }
 
@@ -578,7 +578,7 @@ final class HealthKitManager {
             sampleType: HKObjectType.workoutType(), predicate: nil
         ) { _, completionHandler, error in
             if let error {
-                AppLogger.shared.logFromBackground(
+                AppLogger.logFromBackground(
                     "workout-import: observer error \(error.localizedDescription)")
                 completionHandler()
                 return

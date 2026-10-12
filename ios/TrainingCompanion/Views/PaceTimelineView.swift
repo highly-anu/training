@@ -82,7 +82,7 @@ struct PaceTimelineView: View {
         String(format: "%d:%02d", Int(secPerKm) / 60, Int(secPerKm) % 60)
     }
 
-    static func buildData(points: [GPSPoint], distanceKm: Double?)
+    nonisolated static func buildData(points: [GPSPoint], distanceKm: Double?)
         -> (data: [PacePoint], avgPace: Double?, lo: Double, hi: Double)
     {
         let iso = ISO8601DateFormatter()

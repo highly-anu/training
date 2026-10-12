@@ -21,7 +21,7 @@ enum LogSessions {
 
     /// The server writes `completed_at` as "2026-09-28 18:00:00+02:00"; the
     /// phone's own completions are ISO 8601 with a "T".
-    static func parseServerDate(_ value: String?) -> Date? {
+    nonisolated static func parseServerDate(_ value: String?) -> Date? {
         guard let value, !value.isEmpty else { return nil }
         let iso = ISO8601DateFormatter()
         if let d = iso.date(from: value) { return d }

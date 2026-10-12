@@ -306,7 +306,7 @@ struct DevelopmentAnalytics: Decodable {
     }
 
     /// A date string "2026-09-25" (or a longer ISO stamp) as a local-midnight Date.
-    static func day(_ value: String) -> Date? {
+    nonisolated static func day(_ value: String) -> Date? {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone.current

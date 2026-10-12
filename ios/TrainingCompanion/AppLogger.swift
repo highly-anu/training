@@ -26,7 +26,7 @@ final class AppLogger: ObservableObject {
     }
 
     /// Convenience: call from non-isolated contexts.
-    nonisolated func logFromBackground(_ message: String) {
+    nonisolated static func logFromBackground(_ message: String) {
         Task { @MainActor in AppLogger.shared.log(message) }
     }
 }

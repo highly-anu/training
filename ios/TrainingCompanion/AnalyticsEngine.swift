@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Pure computation engine for analytics. Safe for Task.detached — no @MainActor, no ObservableObject.
 /// Mirrors frontend/src/lib/hrZones.ts and sessionAnalysis.ts.
-enum AnalyticsEngine {
+nonisolated enum AnalyticsEngine {
 
     // MARK: - Constants
 
@@ -313,7 +313,7 @@ enum AnalyticsEngine {
 
     // MARK: - Period Stats (with prior period for trend arrows)
 
-    static func periodStats(
+    @MainActor static func periodStats(
         for current: [ImportedWorkout],
         period: AnalyticsPeriod,
         allWorkouts: [ImportedWorkout]
@@ -385,7 +385,7 @@ enum AnalyticsEngine {
 
     // MARK: - Modality Breakdown
 
-    static func modalityBreakdown(workouts: [ImportedWorkout]) -> [ModalityShare] {
+    @MainActor static func modalityBreakdown(workouts: [ImportedWorkout]) -> [ModalityShare] {
         let totalMin = workouts.compactMap(\.durationMinutes).reduce(0, +)
         guard totalMin > 0 else { return [] }
         var byModality: [String: Double] = [:]

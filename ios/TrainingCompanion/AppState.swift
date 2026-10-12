@@ -385,7 +385,7 @@ final class AppState: ObservableObject {
         do {
             try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId, performance: performance)
         } catch {
-            AppLogger.shared.logFromBackground("session log: save failed — \(error.localizedDescription)")
+            AppLogger.logFromBackground("session log: save failed — \(error.localizedDescription)")
         }
     }
 
@@ -431,7 +431,7 @@ final class AppState: ObservableObject {
         } catch {
             // Ignore task cancellation (expected when SwiftUI .task cancels on view disappear)
             if (error as? URLError)?.code == .cancelled { return }
-            AppLogger.shared.logFromBackground("bio: HTTP error — \(error.localizedDescription)")
+            AppLogger.logFromBackground("bio: HTTP error — \(error.localizedDescription)")
         }
     }
 
@@ -441,7 +441,7 @@ final class AppState: ObservableObject {
             readinessResult = try await api.fetchReadiness()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
-            AppLogger.shared.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
+            AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
         }
     }
 
@@ -458,7 +458,7 @@ final class AppState: ObservableObject {
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             programAnalyticsError = error.localizedDescription
-            AppLogger.shared.logFromBackground("analytics: program fetch failed — \(error.localizedDescription)")
+            AppLogger.logFromBackground("analytics: program fetch failed — \(error.localizedDescription)")
         }
     }
 
@@ -474,7 +474,7 @@ final class AppState: ObservableObject {
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             developmentError = error.localizedDescription
-            AppLogger.shared.logFromBackground("analytics: development fetch failed — \(error.localizedDescription)")
+            AppLogger.logFromBackground("analytics: development fetch failed — \(error.localizedDescription)")
         }
     }
 
@@ -484,7 +484,7 @@ final class AppState: ObservableObject {
             progressionReview = try await api.fetchProgressionReview()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
-            AppLogger.shared.logFromBackground("progression: fetch failed — \(error.localizedDescription)")
+            AppLogger.logFromBackground("progression: fetch failed — \(error.localizedDescription)")
         }
     }
 
@@ -520,7 +520,7 @@ final class AppState: ObservableObject {
         if let entries = try? await pmc {
             serverPMC = entries.compactMap { $0.pmcEntry() }
         } else {
-            AppLogger.shared.logFromBackground("load: server PMC unavailable — computing on device")
+            AppLogger.logFromBackground("load: server PMC unavailable — computing on device")
         }
         if let weeks = try? await weekly {
             serverWeeklyLoad = weeks

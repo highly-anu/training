@@ -8,12 +8,12 @@ import Foundation
 /// phone pre-formats for it in `WatchSessionManager`.
 enum LoadFormat {
 
-    static let knownSlotTypes = ["sets_reps", "time_domain", "skill_practice", "emom",
+    nonisolated static let knownSlotTypes = ["sets_reps", "time_domain", "skill_practice", "emom",
                                  "amrap", "amrap_movement", "for_time", "distance", "static_hold"]
 
     /// Passes a known `slot_type` through; infers one from the load's fields
     /// for custom archetypes that omit it. Order matters.
-    static func resolvedSlotType(_ ea: ProgramExerciseAssignment) -> String {
+    nonisolated static func resolvedSlotType(_ ea: ProgramExerciseAssignment) -> String {
         if let st = ea.slotType, knownSlotTypes.contains(st) { return st }
         let load = ea.load
         if load.distanceKm      != nil { return "distance" }
@@ -75,7 +75,7 @@ enum LoadFormat {
     }
 
     /// 80 → "80", 82.5 → "82.5": a whole number never shows a ".0".
-    static func kilograms(_ value: Double) -> String {
+    nonisolated static func kilograms(_ value: Double) -> String {
         value.truncatingRemainder(dividingBy: 1) == 0
             ? String(Int(value))
             : String(format: "%.1f", value)

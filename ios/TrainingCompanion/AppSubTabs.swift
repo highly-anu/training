@@ -44,7 +44,7 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
         .pickerStyle(.segmented)
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .onChange(of: selection) { _ in AppHaptics.selection() }
+        .onChange(of: selection) { AppHaptics.selection() }
     }
 }
 

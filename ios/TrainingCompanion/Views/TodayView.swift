@@ -20,7 +20,7 @@ struct TodayView: View {
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     private let weekdayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
-    private var cardWidth: CGFloat { UIScreen.main.bounds.width - 32 }
+    private var cardWidth: CGFloat { AppMetrics.screenWidth - 32 }
 
     private var peekDayOffset: Int {
         lockedAdjacentOffset ?? dayOffset + (dragOffset <= 0 ? 1 : -1)

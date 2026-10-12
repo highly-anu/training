@@ -104,11 +104,11 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
             WCSession.default.transferUserInfo(payload)
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
-            AppLogger.shared.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
+            AppLogger.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
         } catch {
             // Was a bare silent catch: a failed fetch left the Watch on cached
             // sessions with nothing anywhere saying why.
-            AppLogger.shared.logFromBackground("WCSession: syncProgram FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("WCSession: syncProgram FAILED — \(error.localizedDescription)")
         }
     }
 
@@ -342,7 +342,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
 extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         let type = userInfo["type"] as? String ?? "(no type)"
-        AppLogger.shared.logFromBackground("WCSession: received userInfo type=\(type)")
+        AppLogger.logFromBackground("WCSession: received userInfo type=\(type)")
 
         if type == "session_marked_complete" {
             guard let sessionId = userInfo["sessionId"] as? String,
@@ -354,7 +354,7 @@ extension WatchSessionManager: WCSessionDelegate {
         guard type == "workout_complete" else { return }
         guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
               let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
-            AppLogger.shared.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
+            AppLogger.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
             return
         }
         WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
@@ -366,7 +366,7 @@ extension WatchSessionManager: WCSessionDelegate {
         guard file.metadata?["type"] as? String == "workout_complete_file" else { return }
         guard let data = try? Data(contentsOf: file.fileURL),
               let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
-            AppLogger.shared.logFromBackground("WCSession: failed to decode large workout file")
+            AppLogger.logFromBackground("WCSession: failed to decode large workout file")
             return
         }
         WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
@@ -383,7 +383,7 @@ extension WatchSessionManager: WCSessionDelegate {
         let sessionKey = summary.sessionId
         let cachedSession = sessionCache[sessionKey]
         let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
-        AppLogger.shared.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
+        AppLogger.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
 
         // 1. Save session log (exercises, set data, HR aggregates)
         var log: [String: Any] = [
@@ -397,12 +397,12 @@ extension WatchSessionManager: WCSessionDelegate {
         if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
         if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
 
-        AppLogger.shared.logFromBackground("API: saving workout log for \(sessionKey)…")
+        AppLogger.logFromBackground("API: saving workout log for \(sessionKey)…")
         do {
             try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
-            AppLogger.shared.logFromBackground("API: saved workout log for \(sessionKey) ✓")
+            AppLogger.logFromBackground("API: saved workout log for \(sessionKey) ✓")
         } catch {
-            AppLogger.shared.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
         }
 
         // 2. Store the workout through the server. Elevation comes from the
@@ -411,7 +411,7 @@ extension WatchSessionManager: WCSessionDelegate {
         //    than lost — none of which the raw Supabase upsert this path used
         //    to do could offer (see WatchUpload).
         guard let startDate = WatchUpload.parseStart(summary.startedAt) else {
-            AppLogger.shared.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
+            AppLogger.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
             return
         }
         let workoutId = WatchUpload.workoutId(sessionKey: sessionKey, startedAt: summary.startedAt)
@@ -419,11 +419,11 @@ extension WatchSessionManager: WCSessionDelegate {
                                                  sessionName: cachedSession?.name, modality: cachedSession?.modality)
         do {
             try await api.saveWatchWorkouts([workout])
-            AppLogger.shared.logFromBackground("API: saved watch workout \(workoutId) ✓")
+            AppLogger.logFromBackground("API: saved watch workout \(workoutId) ✓")
             // Safe to discard the local buffer now that the server has the row.
             WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
         } catch {
-            AppLogger.shared.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
             return
         }
 
@@ -436,9 +436,9 @@ extension WatchSessionManager: WCSessionDelegate {
                                              startedAt: summary.startedAt, in: listed)
         do {
             try await api.saveWorkoutMatch(WatchUpload.matchPayload(workoutId: linkId, sessionKey: sessionKey))
-            AppLogger.shared.logFromBackground("API: saved workout match \(linkId) → \(sessionKey) ✓")
+            AppLogger.logFromBackground("API: saved workout match \(linkId) → \(sessionKey) ✓")
         } catch {
-            AppLogger.shared.logFromBackground("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("API: saveWorkoutMatch FAILED — \(error.localizedDescription)")
         }
 
         // 4. Async GPS enrichment: try to fetch the full HKWorkoutRoute after a short delay
@@ -452,12 +452,12 @@ extension WatchSessionManager: WCSessionDelegate {
     }
 
     private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async {
-        AppLogger.shared.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
+        AppLogger.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
         do {
             try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt)
-            AppLogger.shared.logFromBackground("API: marked session complete \(sessionId) ✓")
+            AppLogger.logFromBackground("API: marked session complete \(sessionId) ✓")
         } catch {
-            AppLogger.shared.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
         }
     }
 
@@ -488,9 +488,9 @@ extension WatchSessionManager: WCSessionDelegate {
         let workoutId = workout["id"] as? String ?? "?"
         do {
             try await api.saveWatchWorkouts([WatchUpload.enriched(workout, gpsTrack: gpsTrack)])
-            AppLogger.shared.logFromBackground("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
+            AppLogger.logFromBackground("API: enriched workout \(workoutId) with \(locations.count) GPS points ✓")
         } catch {
-            AppLogger.shared.logFromBackground("API: GPS enrichment FAILED — \(error.localizedDescription)")
+            AppLogger.logFromBackground("API: GPS enrichment FAILED — \(error.localizedDescription)")
         }
     }
 

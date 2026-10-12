@@ -21,7 +21,7 @@ enum WatchUpload {
     }
 
     /// The watch stamps ISO 8601 with or without fractional seconds.
-    static func parseStart(_ startedAt: String) -> Date? {
+    nonisolated static func parseStart(_ startedAt: String) -> Date? {
         let plain = ISO8601DateFormatter()
         let fractional = ISO8601DateFormatter()
         fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
