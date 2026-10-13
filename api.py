@@ -3006,7 +3006,9 @@ def get_today_session():
 
     Server-side port of ios/.../WatchSessionManager.syncProgram(): derives the
     current week + weekday from programStartDate and returns only the fields the
-    slot-type views need. Accepts optional ?date=YYYY-MM-DD for testing.
+    slot-type views need. ?date=YYYY-MM-DD names the day; the watch sends its own
+    local date, because the server's is UTC. ?week=1 adds `days`, today and the
+    six after it (within the program), for the watch's Week menu.
     """
     from src.db import get_user_program
     program = get_user_program(g.user_id)
@@ -3055,17 +3057,22 @@ def get_today_session():
     except ValueError:
         spec_level = 0
 
-    out_sessions = []
-    for i, s in enumerate(sessions):
-        session_key = f"{_pick(week, 'week_number', 'weekNumber')}-{day_name}-{i}"
-        log = session_logs.get(session_key) or {}
-        uid = _program_history_uid(vid, week_index, day_name, i)
-        matched = (uid in matched_uids) if uid else False
-        out_sessions.append(encode_watch_session(
-            s, session_key,
-            completed=bool(log.get('completedAt')) or matched or session_key in matched_keys,
-            spec_level=spec_level,
-        ))
+    def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
+        w = weeks[w_index]
+        out = []
+        for i, s in enumerate((w.get('schedule') or {}).get(d_name) or []):
+            session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
+            log = session_logs.get(session_key) or {}
+            uid = _program_history_uid(vid, w_index, d_name, i)
+            matched = (uid in matched_uids) if uid else False
+            out.append(encode_watch_session(
+                s, session_key,
+                completed=bool(log.get('completedAt')) or matched or session_key in matched_keys,
+                spec_level=level,
+            ))
+        return out
+
+    out_sessions = encode_day(week_index, day_name, spec_level)
 
     try:
         bio, sources = _bio_for_scoring(g.user_id, days=14)
@@ -3114,6 +3121,22 @@ def get_today_session():
     }
     if spec_level >= 1:
         body['specVersion'] = _watch_spec.spec_version()
+    if request.args.get('week') == '1':
+        # The demo's day shape ({offset, title, sessions}). No screen specs: the
+        # Week menu lists sessions and their steps, it never runs them.
+        days = []
+        for offset in range(7):
+            d_since = days_since + offset
+            if d_since // 7 >= len(weeks):
+                break
+            d_name = _DAY_NAMES[(today.weekday() + offset) % 7]
+            d_sessions = encode_day(d_since // 7, d_name, 0)
+            title = d_sessions[0]['archetypeName'] if d_sessions else 'Rest'
+            if len(d_sessions) > 1:
+                title += f' +{len(d_sessions) - 1}'
+            days.append({'offset': offset, 'date': str(today + _timedelta(days=offset)),
+                         'title': title, 'sessions': d_sessions})
+        body['days'] = days
     return jsonify(body)
 
 

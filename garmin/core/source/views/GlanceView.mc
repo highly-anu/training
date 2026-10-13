@@ -151,13 +151,11 @@ class GlanceView extends Ui.GlanceView {
         dc.drawText(tx, ty + hl, fv, clip(dc, value, fv, avail), Gfx.TEXT_JUSTIFY_LEFT);
     }
 
-    // The cache is another day's (the server stamps it with its UTC date).
+    // The cache is another day's (stamped with the local date the watch asked for).
     hidden function stale() {
         var d = Storage.getValue(Config.KEY_TODAY_DATE);
         if (d == null) { return false; }
-        var i = Gregorian.utcInfo(Time.now(), Time.FORMAT_SHORT);
-        var t = i.year.format("%04d") + "-" + i.month.format("%02d") + "-" + i.day.format("%02d");
-        return !t.equals(d);
+        return !Config.localDate().equals(d);
     }
 
     hidden function describe(s) {

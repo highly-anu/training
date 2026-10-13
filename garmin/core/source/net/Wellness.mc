@@ -27,13 +27,8 @@ module Wellness {
     const HR_WINDOW_SEC = 8 * 3600;    // asks for 8 h; the watch keeps 6
     const BB_WINDOW_SEC = 12 * 3600;
 
-    // The athlete's local day, which is the day the server files the reading
-    // under. (SessionListView's todayDateStr is the UTC day, on purpose: it
-    // matches /user/today-session.)
-    function localDate() {
-        var i = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
-        return i.year.format("%04d") + "-" + i.month.format("%02d") + "-" + i.day.format("%02d");
-    }
+    // The athlete's local day, which is the day the server files the reading under.
+    function localDate() { return Config.localDate(); }
 
     function history(which) {
         if (!(Toybox has :SensorHistory)) { return null; }

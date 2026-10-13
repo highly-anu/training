@@ -4,6 +4,7 @@ using Toybox.Lang;
 using Toybox.PersistedContent;
 using Toybox.System;
 using Toybox.Time;
+using Toybox.Time.Gregorian;
 
 // The exact data type makeWebRequest hands its callback on this SDK.
 typedef WebData as Null or Lang.Dictionary or Lang.String or PersistedContent.Iterator;
@@ -109,13 +110,23 @@ class SyncManager {
 
     // ── today's session ──────────────────────────────────────────────────────────
 
-    // GET /user/today-session. cb.invoke(success, dict). Caches on success.
+    // The HTTP status of the last today-session request (a negative number is
+    // Connect IQ's: no phone, timed out, response too large), for the
+    // couldn't-sync page.
+    var lastTodayCode = null;
+
+    // GET /user/today-session for the watch's own day, with the week ahead.
+    // cb.invoke(success, dict). Caches on success.
     function fetchToday(cb) {
         if (DemoSession.enabled()) { cb.invoke(true, null); return; }
         _todayCb = cb;
         Comm.makeWebRequest(
             // spec=1: each session carries its package's screen specs (ScreenSpec).
-            Config.apiBaseUrl() + "/user/today-session?spec=" + Vocab.VERSION.toString(),
+            // date: the server's own date is UTC, a day out every evening west of
+            // Greenwich and every early morning east of it.
+            // week=1: `days`, today and the six after it, for the Week menu.
+            Config.apiBaseUrl() + "/user/today-session?spec=" + Vocab.VERSION.toString()
+                + "&week=1&date=" + Config.localDate(),
             null,
             jsonGetOptions(),
             method(:onToday)
@@ -123,14 +134,25 @@ class SyncManager {
     }
 
     function onToday(code as Lang.Number, data as WebData) as Void {
+        lastTodayCode = code;
         if (code == 200 && data instanceof Lang.Dictionary) {
+            // The week is stored on its own: with it, a heavy week would push the
+            // day past what one Storage value holds.
+            if (data.hasKey("days")) {
+                Storage.setValue(Config.KEY_WEEK, data["days"]);
+                data.remove("days");
+            } else {
+                Storage.deleteValue(Config.KEY_WEEK);
+            }
             Storage.setValue(Config.KEY_TODAY_SESSION, data);
             GlanceCache.write(data);
             Storage.setValue(Config.KEY_TODAY_DATE, data["date"]);
             if (_todayCb != null) { _todayCb.invoke(true, data); }
         } else {
-            // Fall back to cache so the app is useful offline.
-            var cached = Storage.getValue(Config.KEY_TODAY_SESSION);
+            // Offline: the cached day, but only if it is today's. Yesterday's
+            // cache used to stand in for today, so a failed morning sync after a
+            // rest day showed today as a rest day too.
+            var cached = SyncCache.cachedToday();
             if (_todayCb != null) { _todayCb.invoke(cached != null, cached); }
         }
     }
@@ -325,5 +347,53 @@ class SyncManager {
     function onFlushResult(success, data) as Void {
         // On failure uploadSession re-buffers automatically; keep draining on success.
         if (success) { flushBuffer(); }
+    }
+}
+
+// The cached day and week, read by the views and checked against the athlete's
+// local date. A module, not statics on SyncManager: a static that calls another
+// unqualified fails at run time ("Failed invoking <symbol>").
+module SyncCache {
+
+    // The cached today-session, or null when it is another day's.
+    function cachedToday() {
+        var d = Storage.getValue(Config.KEY_TODAY_DATE) as Lang.String?;
+        if (d == null || !d.equals(Config.localDate())) { return null; }
+        return Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
+    }
+
+    // The cached week, re-based on today: a week fetched on Monday still answers
+    // on Wednesday, from its third day on. Null when nothing of it is left.
+    function cachedWeek() {
+        var days = Storage.getValue(Config.KEY_WEEK) as Lang.Array?;
+        var d = Storage.getValue(Config.KEY_TODAY_DATE) as Lang.String?;
+        if (days == null || d == null) { return null; }
+        var shift = daysBetween(d, Config.localDate());
+        if (shift == null || shift < 0) { return null; }
+        var out = [];
+        for (var i = 0; i < days.size(); i += 1) {
+            var day = days[i] as Lang.Dictionary;
+            var off = (day["offset"] as Lang.Number) - shift;
+            if (off < 0) { continue; }
+            out.add({ "offset" => off, "title" => day["title"], "sessions" => day["sessions"] });
+        }
+        return (out.size() > 0) ? out : null;
+    }
+
+    // Whole days from one "YYYY-MM-DD" to another, or null if either is malformed.
+    function daysBetween(a, b) {
+        var ma = moment(a);
+        var mb = moment(b);
+        if (ma == null || mb == null) { return null; }
+        return ((mb.value() - ma.value()) / 86400.0).toNumber();
+    }
+
+    function moment(ymd) {
+        if (ymd == null || ymd.length() != 10) { return null; }
+        var y = ymd.substring(0, 4).toNumber();
+        var m = ymd.substring(5, 7).toNumber();
+        var dd = ymd.substring(8, 10).toNumber();
+        if (y == null || m == null || dd == null) { return null; }
+        return Gregorian.moment({ :year => y, :month => m, :day => dd, :hour => 12 });
     }
 }
