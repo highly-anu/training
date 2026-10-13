@@ -18,12 +18,13 @@ class SessionListView extends Ui.View {
 
     hidden var _sync;
     hidden var _sessions;   // [WorkoutSession]
-    hidden var _status;     // "ok" | "no_program" | "program_expired" | "loading"
+    hidden var _status;     // "ok" | "no_program" | "program_expired" | "loading" | "offline"
     hidden var _readiness;  // cached /health/readiness dict, or null
     hidden var _deepLink;   // launched from the complication/glance today shortcut
     hidden var _autoStarted;
     hidden var _g;          // built once in onLayout
     hidden var _index;      // which of the day's sessions is shown
+    hidden var _tomorrow;   // the payload's tomorrow preview, or null
 
     function initialize(deepLink) {
         View.initialize();
@@ -34,9 +35,8 @@ class SessionListView extends Ui.View {
         _index = 0;
         // Only seed from cache when the cached date matches today; stale cache
         // (from another day) would briefly show a misleading session.
-        var cached = Storage.getValue(Config.KEY_TODAY_SESSION) as Lang.Dictionary?;
-        var cachedDate = Storage.getValue(Config.KEY_TODAY_DATE) as Lang.String?;
-        if (cached != null && cachedDate != null && cachedDate.equals(todayDateStr())) {
+        var cached = SyncCache.cachedToday();
+        if (cached != null) {
             applyToday(cached);
         } else {
             _sessions = [];
@@ -70,6 +70,14 @@ class SessionListView extends Ui.View {
     }
 
     function onToday(success, data) as Void {
+        if (!success && data == null) {
+            // Nothing for today: say so, rather than spin on "Syncing..." or
+            // show another day's sessions.
+            _status = "offline";
+            _sessions = [];
+            Ui.requestUpdate();
+            return;
+        }
         applyToday(data as Lang.Dictionary?);
         maybeAutoStart();
         Ui.requestUpdate();
@@ -99,6 +107,7 @@ class SessionListView extends Ui.View {
         if (data == null) { _status = "loading"; _sessions = []; return; }
         _status = data.hasKey("status") ? (data["status"] as Lang.String) : "no_program";
         _sessions = WorkoutSession.listFromToday(data);
+        _tomorrow = data.hasKey("tomorrow") ? data["tomorrow"] : null;
         if (_index >= _sessions.size()) { _index = 0; }
     }
 
@@ -126,6 +135,34 @@ class SessionListView extends Ui.View {
     }
 
     function index()     { return _index; }
+
+    // [ { "offset", "title", "sessions" => [WorkoutSession] } ] from today on,
+    // or null when there is no week to show.
+    function week() {
+        if (DemoSession.enabled()) { return DemoProgram.week(); }
+        var raw = SyncCache.cachedWeek();
+        if (raw == null) { return null; }
+        for (var i = 0; i < raw.size(); i += 1) {
+            var rs = raw[i]["sessions"];
+            var ss = [];
+            for (var j = 0; j < rs.size(); j += 1) { ss.add(new WorkoutSession(rs[j])); }
+            raw[i]["sessions"] = ss;
+        }
+        return raw;
+    }
+
+    // The Week menu's title: the demo's phase, or "Week 2 · Base".
+    function weekTitle() {
+        if (DemoSession.enabled()) { return DemoProgram.programPhase(); }
+        var t = SyncCache.cachedToday();
+        if (t == null || t["weekNumber"] == null) { return "Week"; }
+        var title = "Week " + t["weekNumber"].toString();
+        var ph = t["phase"];
+        if (ph instanceof Lang.String && ph.length() > 0) {
+            title += "  " + ph.substring(0, 1).toUpper() + ph.substring(1, ph.length());
+        }
+        return title;
+    }
     function readiness() { return _readiness; }
     function status()    { return _status; }
 
@@ -144,14 +181,6 @@ class SessionListView extends Ui.View {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────────
-
-    // Today's date as "YYYY-MM-DD" in UTC (matches the server date field).
-    hidden function todayDateStr() {
-        var info = Gregorian.utcInfo(Time.now(), Time.FORMAT_SHORT);
-        return info.year.format("%04d") + "-"
-             + info.month.format("%02d") + "-"
-             + info.day.format("%02d");
-    }
 
     // Accent color for a modality id.
     //
@@ -179,7 +208,11 @@ class SessionListView extends Ui.View {
         if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
             drawSession(dc, g, _sessions[_index]);
         } else if (_status.equals("ok")) {
-            drawMessage(dc, g, Rez.Drawables.IcCatRecovery, Ui.loadResource(Rez.Strings.RestDay), null);
+            drawRest(dc, g);
+        } else if (_status.equals("offline")) {
+            var code = _sync.lastTodayCode;
+            drawMessage(dc, g, Rez.Drawables.IcUiSync, "Couldn't sync",
+                        "Hold UP > Sync" + ((code != null) ? ("  (" + code.toString() + ")") : ""));
         } else {
             drawMessage(dc, g, Rez.Drawables.IcUiSync, Ui.loadResource(Rez.Strings.NoProgram),
                         "Generate a plan in the app");
@@ -235,6 +268,28 @@ class SessionListView extends Ui.View {
         }
         Native.pageDots(dc, g, _index, _sessions.size());
         Native.hint(dc, :ready);
+    }
+
+    // Rest day: the charging battery in the recovery green, and what comes next.
+    hidden function drawRest(dc, g) {
+        Icons.drawCentered(dc, g.cx, (g.h * 30) / 100, g.iconHero, Rez.Drawables.IcUiRest, Native.GOOD);
+        Native.text(dc, g.cx, (g.h * 47) / 100, Text.line(), Ui.loadResource(Rez.Strings.RestDay),
+                    Gfx.COLOR_WHITE);
+        var y = (g.h * 58) / 100;
+        var t = _tomorrow;
+        if (t instanceof Lang.Dictionary) {
+            var n = t.hasKey("sessionCount") ? t["sessionCount"] : 0;
+            Native.text(dc, g.cx, y, Text.small(), "TOMORROW", Native.DIM);
+            var what = (n == 0) ? "Rest"
+                : (t["archetypeName"] + "  " + t["estimatedMinutes"].toString() + " min");
+            Native.text(dc, g.cx, y + (g.h * 65) / 1000, Text.small(),
+                        Clip.fit(dc, what, Text.small(), (g.w * 76) / 100), Gfx.COLOR_WHITE);
+            y += (g.h * 150) / 1000;
+        }
+        if (_readiness != null && _readiness.hasKey("score") && _readiness["score"] != null) {
+            Native.text(dc, g.cx, y, Text.small(), "Readiness " + _readiness["score"].toString(),
+                        Theme.readiness(_readiness["status"]));
+        }
     }
 
     hidden function drawMessage(dc, g, icon, title, sub) {

@@ -9,7 +9,8 @@ using Toybox.Lang;
 //
 //   Workout    the session's steps
 //   Today      pick another of the day's sessions (when there is more than one)
-//   Week       the programme's days, each day's sessions, each session's steps
+//   Week       today and the six days after it, each day's sessions, each
+//              session's steps (the demo's programme, or the synced week)
 //   Programme  the demo's programme: SOF, Kettlebell or Uphill (demo only)
 //   Readiness  today's score
 //   Sync       re-fetch today (real programme only)
@@ -26,8 +27,10 @@ function openActivityMenu(view) {
                                           :today, Native.icon(Rez.Drawables.GmToday), {}));
         }
     }
+    if (view.week() != null) {
+        m.addItem(new Ui.IconMenuItem("Week", view.weekTitle(), :week, Native.icon(Rez.Drawables.GmWeek), {}));
+    }
     if (DemoSession.enabled()) {
-        m.addItem(new Ui.IconMenuItem("Week", DemoProgram.programPhase(), :week, Native.icon(Rez.Drawables.GmWeek), {}));
         m.addItem(new Ui.IconMenuItem("Programme", DemoProgram.programName(), :programme,
                                       Native.icon(Rez.Drawables.GmList), {}));
     }
@@ -66,7 +69,11 @@ function openWorkoutMenu(view) {
 
 // A session's steps as a system list, name over prescription. Selecting an
 // exercise with something to set (reps, a hold, a load, an RPE) opens its editor.
-function openSessionSteps(s) {
+function openSessionSteps(s) { openSteps(s, true); }
+
+// editable false: a day from the Week menu, shown but not set up — those
+// exercise objects are not the ones a workout would run.
+function openSteps(s, editable) {
     var m = new Ui.Menu2({ :title => "Steps" });
     var list = s.exercises();
     for (var i = 0; i < list.size(); i += 1) {
@@ -74,7 +81,7 @@ function openSessionSteps(s) {
         if (ex.slotType().equals("amrap_movement") && ex.parentSlotRole() != null) { continue; }
         m.addItem(new Ui.MenuItem(ex.name(), Steps.overview(ex), i, {}));
     }
-    Ui.pushView(m, new StepsMenuDelegate(list), Ui.SLIDE_LEFT);
+    Ui.pushView(m, new StepsMenuDelegate(list, editable), Ui.SLIDE_LEFT);
 }
 
 class WorkoutStartDelegate extends Ui.Menu2InputDelegate {
@@ -97,11 +104,14 @@ class WorkoutStartDelegate extends Ui.Menu2InputDelegate {
 
 class StepsMenuDelegate extends Ui.Menu2InputDelegate {
     hidden var _list;
-    function initialize(list) {
+    hidden var _editable;
+    function initialize(list, editable) {
         Menu2InputDelegate.initialize();
         _list = list;
+        _editable = editable;
     }
     function onSelect(item) {
+        if (!_editable) { return; }
         var ex = _list[item.getId()];
         if (Steps.isSetBased(ex) || ex.weightKg() != null || ex.targetRpm() != null
                 || ex.targetRpe() != null) {
@@ -201,8 +211,9 @@ class ActivityMenuDelegate extends Ui.Menu2InputDelegate {
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
 
     hidden function openWeek() {
-        var days = DemoProgram.week();
-        var m = new Ui.Menu2({ :title => DemoProgram.programPhase() });
+        var days = _view.week();
+        if (days == null) { return; }
+        var m = new Ui.Menu2({ :title => _view.weekTitle() });
         for (var i = 0; i < days.size(); i += 1) {
             var d = days[i];
             var n = d["sessions"].size();
@@ -274,7 +285,7 @@ class DayMenuDelegate extends Ui.Menu2InputDelegate {
         Menu2InputDelegate.initialize();
         _sessions = sessions;
     }
-    function onSelect(item) { $.openSessionSteps(_sessions[item.getId()]); }
+    function onSelect(item) { $.openSteps(_sessions[item.getId()], false); }
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
 }
 

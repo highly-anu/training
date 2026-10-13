@@ -1,4 +1,6 @@
 using Toybox.Application;
+using Toybox.Time;
+using Toybox.Time.Gregorian;
 
 // Central constants + storage keys. Mirrors the iOS app's UserDefaults keys where
 // it helps keep the two companions conceptually aligned.
@@ -18,6 +20,7 @@ module Config {
     const KEY_TODAY_SESSION  = "todaySession";   // cached today-session JSON dict
     const KEY_TODAY_DATE     = "todaySessionDate";
     const KEY_TODAY_GLANCE   = "todayGlance";     // GlanceCache: the slim copy the glance reads
+    const KEY_WEEK           = "weekAhead";       // today and the six days after it ({offset, title, sessions})
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
     const KEY_READINESS      = "readiness";       // cached /health/readiness dict
     // The hour after which a finished day's glance previews tomorrow.
@@ -47,6 +50,14 @@ module Config {
             "durability" => 0, "combat_sport" => 0, "rehab" => 30
         };
         return m.hasKey(modality) ? m[modality] : 60;
+    }
+
+    // The athlete's own day as "YYYY-MM-DD". The watch sends it with every
+    // today-session request, so the server answers for this day rather than for
+    // its UTC one, and every cache is stamped and checked with it.
+    function localDate() {
+        var i = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+        return i.year.format("%04d") + "-" + i.month.format("%02d") + "-" + i.day.format("%02d");
     }
 
     function apiBaseUrl() {

@@ -300,13 +300,37 @@ ICONS['ui_deload'] = [
 ICONS['ui_flame'] = [path(
     'M48 6 c14 18 6 24 16 32 c6 5 10 -2 10 -8 c10 14 10 26 4 36 a30 30 0 0 1 -56 -14 '
     'c0 -16 12 -22 18 -32 c5 -8 6 -10 8 -14 Z')]
-ICONS['ui_sync'] = [
-    path('M48 12 a36 36 0 0 1 34 24 l-13 5 A22 22 0 0 0 48 26 Z'),
-    path('M48 84 a36 36 0 0 1 -34 -24 l13 -5 A22 22 0 0 0 48 70 Z'),
-    poly([(74, 4), (94, 24), (66, 30)]),
-    poly([(22, 92), (2, 72), (30, 66)]),
-]
+def _arc_arrow(start, end, cx=48, cy=48, ro=36, ri=24, head=14, tip=18, steps=10):
+    """A ring segment from `start` to `end` degrees (clockwise on screen, 0 = 3
+    o'clock) ending in an arrowhead that points along the turn. Sampled into
+    one polygon: Batik draws polygons exactly, and the head and the band share
+    edges, so nothing floats loose at 30 px."""
+    import math
+    def pt(deg, rad):
+        a = math.radians(deg)
+        return (round(cx + rad * math.cos(a), 1), round(cy + rad * math.sin(a), 1))
+    span = [start + (end - start) * k / steps for k in range(steps + 1)]
+    outer = [pt(d, ro) for d in span]
+    inner = [pt(d, ri) for d in reversed(span)]
+    rm = (ro + ri) / 2
+    a = math.radians(end)
+    tx, ty = -math.sin(a), math.cos(a)            # clockwise tangent on screen
+    mx, my = cx + rm * math.cos(a), cy + rm * math.sin(a)
+    head_pts = [pt(end, rm + head), (round(mx + tip * tx, 1), round(my + tip * ty, 1)),
+                pt(end, rm - head)]
+    return poly(outer[:-1] + [outer[-1]] + head_pts + [inner[0]] + inner[1:])
+
+# Two arrows chasing each other round a circle -- the platform's sync mark.
+ICONS['ui_sync'] = [_arc_arrow(195, 330), _arc_arrow(15, 150)]
 ICONS['ui_generic'] = [ring(48, 48, 32, 9), c(48, 48, 10)]
+# Rest day: a battery charging, as the phone's rest card shows it. Drawn at the
+# hero size (HERO below) -- it is the page's only content.
+ICONS['ui_rest'] = [
+    path('M8 26 h68 a6 6 0 0 1 6 6 v32 a6 6 0 0 1 -6 6 h-68 a6 6 0 0 1 -6 -6 v-32 a6 6 0 0 1 6 -6 Z '
+         'M14 35 v26 h62 v-26 Z'),
+    r(84, 38, 10, 20, rx=3),
+    poly([(50, 30), (28, 52), (44, 52), (38, 68), (62, 44), (46, 44), (54, 30)]),
+]
 
 # ── menu glyphs (Menu2 IconMenuItem, sized by the personality menu-icon selector) ──
 # Garmin's Personality Library has save / discard / check / revert; these are the
@@ -337,6 +361,9 @@ ICONS['menu_today'] = [ring(48, 48, 36, 9), r(44, 22, 8, 30, rx=4), r(48, 46, 22
 ICONS['menu_refresh'] = ICONS['ui_sync']
 
 
+HERO = {'ui_rest'}
+
+
 def write(name, shapes):
     body = '\n  '.join(shapes)
     svg = (f'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -363,8 +390,8 @@ def main():
         sub = write(name, shapes)
         counts[sub] = counts.get(sub, 0) + 1
         rez = 'Ic' + ''.join(p.capitalize() for p in name.split('_'))
-        # Hero size for movement patterns, chip size for slot/category/UI glyphs.
-        pct = '13%' if sub == 'pattern' else '6.7%'
+        # Hero size for movement patterns and HERO, chip size for the other glyphs.
+        pct = '13%' if (sub == 'pattern' or name in HERO) else '6.7%'
         entries.append((rez, f'icons/{sub}/{name}.svg', pct))
     print(f'wrote {sum(counts.values())} icons {counts}')
     return entries

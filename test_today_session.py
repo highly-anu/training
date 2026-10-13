@@ -107,6 +107,21 @@ def run():
     check(set(s0) - {'packageId', 'watch', 'screens'} == set(plain['sessions'][0]),
           'the spec payload must only add keys')
 
+    # ?week=1: today and the days after it, inside the program, in the demo's
+    # day shape; without it there is no `days` key.
+    check('days' not in plain, 'days without ?week=1')
+    wk = client.get('/api/user/today-session?date=2026-10-09&week=1').get_json()
+    days = wk.get('days') or []
+    check([d['offset'] for d in days] == [0, 1, 2], f"week offsets {[d['offset'] for d in days]} (program ends Sunday)")
+    check([d['title'] for d in days] == ['Strength A +1', 'Ruck', 'Rest'], f"week titles {[d['title'] for d in days]}")
+    check([d['date'] for d in days] == ['2026-10-09', '2026-10-10', '2026-10-11'], 'week dates')
+    check(days and [s['sessionId'] for s in days[0]['sessions']] == [s['sessionId'] for s in wk['sessions']],
+          "day 0 is today's sessions")
+    check(days and 'screens' not in days[0]['sessions'][0], 'the week carries no screen specs')
+    # A week fetched mid-week reaches into the next only while the program lasts.
+    wk = client.get('/api/user/today-session?date=2026-10-05&week=1').get_json()
+    check(len(wk.get('days') or []) == 7, f"Monday's week {len(wk.get('days') or [])} days")
+
     for f in failures:
         print('FAIL', f)
     print('ok' if not failures else f'{len(failures)} failure(s)')

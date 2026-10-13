@@ -480,6 +480,12 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   None ships yet.
 - **The glance reads `GlanceCache`'s slim copy** (`todayGlance`), never the
   payload: it runs in 64 KB.
+- **The watch asks for its own day.** It sends `date=` (its local date) with
+  `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
+  six after it, inside the program, no screen specs) for the Week menu; the
+  watch stores them apart from the day (`weekAhead`), and `SyncCache` serves a
+  cached day only if it is today's — yesterday's rest day used to stand in for
+  a failed morning sync.
 
 ## Program History
 

@@ -205,6 +205,11 @@
           scaleX="6.7%" scaleY="6.7%" scaleRelativeTo="screen"
           automaticPalette="false" packingFormat="default"
           scope="application" />
+  <!-- The rest day's page icon, at the hero size (Grid.iconHero). -->
+  <bitmap id="IcUiRest" filename="icons/cat/ui_rest.svg"
+          scaleX="13%" scaleY="13%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="application" />
   <bitmap id="IcUiGeneric" filename="icons/cat/ui_generic.svg"
           scaleX="6.7%" scaleY="6.7%" scaleRelativeTo="screen"
           automaticPalette="false" packingFormat="default"
