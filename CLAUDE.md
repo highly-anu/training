@@ -126,15 +126,17 @@ revision-checked PUT — nothing is persisted by the endpoint.
 
 React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanStack Query, Zustand, Recharts, MSW v2, React Router v7.
 
-**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** Train — Home `/`
+**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** the same items and sections,
+in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — rename or move
+a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
 History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
-Suggestions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
-`/analytics` (Program · Progress · Load · Recovery via `?tab=`). Library — Explore
+Suggestions · Sessions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+`/analytics` (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks). Library — Explore
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
-with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete · Equipment ·
-Injuries · Schedule · Benchmarks · Heart Rate) and Settings `/settings` (Connections · Account ·
-Appearance · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
+with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
+heart-rate zones · Equipment · Injuries · Schedule · Benchmarks; `heartrate` aliases Athlete)
+and Settings `/settings` (Connections · Appearance · Account · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
 `/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
 intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
 that predates Settings. Dev Lab `/dev` exists in dev
@@ -653,8 +655,10 @@ LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.
 LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
 ```
 
-Routes: `today`, `program`, `analytics?section=program|overview|workouts|progress|
-recovery`, `profile` (`DeepLink.swift`, routed through `AppRouter`). The route travels
+Routes: `today`, `program?section=calendar|overview|history`,
+`analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
+still alias Load and Blocks), `log?section=workouts|suggestions|sessions`,
+`profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.

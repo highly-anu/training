@@ -43,6 +43,7 @@ deferred is under *Later*.
 | 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
+| 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
 
 ---
 
@@ -619,6 +620,30 @@ Philosophies own their phases since 2026-10-13 (`src/phases.py`, CLAUDE.md
    the phone the focus, neither the description yet.
 
 ---
+
+### 8. Web ↔ iOS parity — P2 · M
+
+From the feature-parity audit of 2026-10-13 (branch `web-ios-consolidation`),
+which unified the menus and sections of both clients
+(`information-architecture.md` §2), made Recovery and the Apple Watch show the
+server's readiness, gave Today's suggestions Accept, added Log ▸ Sessions on the
+web, and moved the workout analysis, the Load KPIs and Today's compliance to the
+server. Left open:
+
+1. **Strava and Garmin connect on the phone (M).** The web connects, syncs and
+   backfills both (Settings ▸ Connections); the phone only has the per-source
+   toggles. The OAuth callbacks land on the web (`_integrations_redirect`), so
+   the phone needs a server-side return URL for the app
+   (`ASWebAuthenticationSession` with a custom scheme) before any UI.
+2. **Equipment profiles (S).** `GET /constraints/equipment-profiles` exists and
+   neither client offers the presets: the web's equipment list is hard-coded and
+   `useEquipment` is never called; the phone's `fetchEquipmentProfiles` has no
+   caller. Offer them on both Equipment sections or delete the route.
+3. **Dead code (S).** `FITFileParser.swift` and `Swiss3DMapView.swift` (iOS);
+   `usePlannedSessions`, `fetchProgressionHistory` and `useEquipment` (web).
+4. **Profile's fifth segment truncates on the phone (S).** "Benchmarks" shows as
+   "Benchm…" in the segmented control (it did in fourth place too). Either a
+   shorter label on both clients or a scrolling selector in `AppSubTabPicker`.
 
 ## Later
 

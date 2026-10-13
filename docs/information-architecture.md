@@ -52,17 +52,55 @@ Rules the layout must satisfy:
    to learn what happened today.
 5. **Dev tooling is not user navigation.**
 
-## 2. Web — grouped sidebar
+## 2. One menu on both clients
+
+Since 2026-10-13 the web sidebar and the phone's tab bar name the same places
+and the same sections, in the same order, so moving between them needs no
+translation. The web groups its items (Train · Insight · Library · You); the
+phone shows the same items as tabs.
+
+| Item | Web sections (`?tab=`) | iOS sections (`AppSubTabs`) |
+|---|---|---|
+| **Today** | — (web route `/`) | — |
+| **Program** | Calendar · Overview · History | Calendar · Overview · History |
+| **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
+| **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
+| **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
+| **Profile** | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+| **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
+
+Differences kept on purpose:
+
+- **Explore is web-only.** It is reference material to browse at a desk; on the
+  phone the exercise sheet and the methodology sheet cover lookup in context
+  (*Later* in the roadmap).
+- **Notifications are phone-only.** Local session reminders; the web has nothing
+  to remind with.
+- **Settings is a tab row on the web and a grouped list on the phone**, in the
+  same order. The phone keeps its sync details and debug log in release builds:
+  on the athlete's own phone they are the only way to read a sync failure.
+- **Settings is reached from Profile's gear on the phone** (five tabs is the
+  bar's limit) and from the sidebar on the web.
+
+Renames, with the old links kept: Home → **Today** (web label; the route stays
+`/`); Analytics Development → **Blocks** (`?tab=development` still lands there —
+the phone's segmented control cannot fit the long word) and the phone's
+Overview → **Load** (`section=overview` and `section=development` still
+deep-link); web Profile ▸ Heart Rate folded into **Athlete**, as on the phone
+(`?tab=heartrate` lands on Athlete); the phone's Program ▸ Current → **Calendar**,
+with a new **Overview** (methodology, phases, priority mix) beside it.
+
+### 2.1 Web — grouped sidebar
 
 | Group | Item | Route | Sub-tabs (header pills) | Header actions |
 |---|---|---|---|---|
-| Train | **Home** | `/` | — | Program settings sheet |
+| Train | **Today** | `/` | — | Program settings sheet |
 | Train | **Program** | `/program` | Calendar · Overview · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
-| Train | **Log** | `/log` | Workouts · Suggestions (count badge) | Import (sheet) |
-| Insight | **Analytics** | `/analytics` | Program · Progress · Development · Load · Recovery | — (period selector is a control strip) |
+| Train | **Log** | `/log` | Workouts · Suggestions (count badge) · Sessions | Import (sheet) |
+| Insight | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| You | **Profile** | `/profile` | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | — |
-| You | **Settings** | `/settings` | Connections · Account · Appearance (· Developer in dev builds) | — |
+| You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Benchmarks | — |
+| You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds) | — |
 | Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
 
 Flows and details, not nav items: `/program/new` (the builder, launched from the Home
@@ -98,9 +136,13 @@ generalises "Regenerate from week N" (today injuries-only) to equipment and leve
 component; filters all / matched / unmatched; source and match badges) and the
 suggestions inbox read from `GET /api/health/matches/suggestions`. Import is a header
 action opening a sheet, not a page, and the manual "program start date" field goes:
-start date is server state. No Sessions sub-tab — completed sessions already have the
-Session Log inside Progress, and a second list would be a fourth workout-list
-implementation.
+start date is server state. A Sessions sub-tab was refused here on 2026-10-01 (a
+second list of completed sessions beside Progress's Session Log); it was added on
+2026-10-13 for parity with the phone's Log ▸ Sessions, once the server named the
+logs of earlier programs (`GET /api/health/sessions/recent` resolves each
+`session_uid` through `planned_sessions`). It lists what was logged against planned
+sessions — earlier programs' included — not recorded workouts, so it is not a
+fourth workout list.
 
 **Analytics** is the interpretation: Program (methodology scorecard, server-side),
 Progress (the current ProgressionTab), Development (every block, not just this one —
@@ -124,14 +166,14 @@ Dev Lab does not use it.
 Benchmarks), sex (a new profile key; unblocks the female benchmark standards), bodyweight
 (the `bodyweight_kg` benchmark series), and the account switcher and sign-out.
 
-## 3. iOS — five tabs
+## 3. iOS — five tabs (the same menu as §2)
 
 | Tab | Root | Sections (`AppSubTabs`) | Notes |
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
-| **Program** | `ProgramView` | Current · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Current gains "About this methodology". |
+| **Program** | `ProgramView` | Calendar · Overview · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
-| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Blocks · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = the web's Development (the label fits five segments; design system §6.20). |
+| **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = every program (design system §6.20); Load = the old Overview. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
@@ -142,7 +184,7 @@ Why a Log tab now and not before: until 2026-10-01 the phone had no session logg
 Log tab would have been one list moved. It logs from the session detail now, and the tab
 is the record across sessions — the same area as the web's Log. A Library tab still has
 no content to show; the exercise reference is contextual (a detail sheet from any session
-row) and philosophy detail sits inside the builder's step 1 and Program ▸ Current.
+row) and philosophy detail sits inside the builder's step 1 and Program ▸ Overview.
 
 Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnalytics(.progress)`,
 `showProgram()`; the direct `router.tab` write in `ContentView.onOpenURL` becomes
