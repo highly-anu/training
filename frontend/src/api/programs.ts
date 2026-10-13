@@ -32,6 +32,11 @@ interface GenerateParams {
    */
   weekInProgram?: number
   customInjuryFlags?: CustomInjuryFlag[]
+  /** The track to run (null = the philosophy's primary track). */
+  trackId?: string | null
+  /** The track phase to start at (null = its first phase). */
+  startPhaseId?: string | null
+  /** Legacy: a framework pick, mapped server-side to its track and phase. */
   frameworkId?: string | null
   priorityOverrides?: Partial<Record<ModalityId, number>> | null
 }
@@ -53,6 +58,8 @@ export function buildPostBody(params: GenerateParams) {
     ...(params.startDate ? { start_date: params.startDate } : {}),
     ...(params.numWeeks ? { num_weeks: params.numWeeks } : {}),
     ...(params.weekInProgram ? { week_in_program: params.weekInProgram } : {}),
+    ...(params.trackId ? { track_id: params.trackId } : {}),
+    ...(params.startPhaseId ? { start_phase: params.startPhaseId } : {}),
     ...(params.frameworkId ? { framework_id: params.frameworkId } : {}),
     ...(params.priorityOverrides ? { priority_overrides: params.priorityOverrides } : {}),
     custom_injury_flags: params.customInjuryFlags ?? [],

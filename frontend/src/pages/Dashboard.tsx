@@ -88,6 +88,7 @@ function WeekTab({
           week={weekIndex + 1}
           totalWeeks={program.weeks.length}
           phase={currentWeek.phase}
+          phaseLabel={currentWeek.phase_name}
           isDeload={currentWeek.is_deload}
           onPrev={() => handleWeekChange(-1)}
           onNext={() => handleWeekChange(1)}

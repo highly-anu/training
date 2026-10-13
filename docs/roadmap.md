@@ -42,6 +42,7 @@ deferred is under *Later*.
 | 4 | Watch app: Garmin-native look, menus and icons | P2 | M | watch |
 | 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
+| 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 
 ---
 
@@ -586,6 +587,36 @@ products and `test_watch_spec.py` passes. Still to do:
    after the hardware check.
 5. **iOS Apple Watch (M).** It still picks views by `slotType`/`archetypeId`; it
    could read the same `?spec=1` table.
+
+---
+
+### 7. Phases and tracks: review the text, verify iOS — P2 · S
+
+Philosophies own their phases since 2026-10-13 (`src/phases.py`, CLAUDE.md
+*Philosophies own their phases*). Open:
+
+1. **Review the drafted phase text (S, content).** Every phase name, focus,
+   description, adaptation list and intensity line in the eleven
+   `philosophy.yaml` files was drafted from that package's own notes. Gym Jones'
+   Accumulation → Transmutation → Realization, Horsemen's four months and Ido
+   Portal's isolation → integration → expression come from their notes;
+   Wildman's phase names, and the single repeatable phase given to Starting
+   Strength, CrossFit, Marcus Filly and BJJ, are inferences.
+2. **Review the widened `applicable_phases` (S, content).** The per-phase
+   coverage check needed eleven archetypes to apply to more kinds. Wildman's
+   General Practice now runs `kb_pentathlon_training` as its strength-endurance
+   session in every phase, because that is the package's only one; a general
+   strength-endurance archetype may be the better fix.
+3. **iOS — verify in the simulator (S).** Written on 2026-10-13 without a Mac:
+   the builder's track picker and start phase, the settings sheet's, Program ▸
+   Current's phase names and kind colours, Today's label, the methodology
+   sheet's tracks and Analytics ▸ Program's phase name and focus;
+   `PhaseTrackTests` added. Not yet compiled or run: build, run
+   `./ios/run_tests.sh`, and screenshot the builder's step 2 (Wildman, two
+   tracks), Program ▸ Current on an Uphill program, and the methodology sheet.
+4. **Analytics frame (S).** `/analytics/program` now returns the phase's
+   `label`, `description` and the `track`; both clients show the label and
+   the phone the focus, neither the description yet.
 
 ---
 

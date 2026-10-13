@@ -39,18 +39,57 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: kelly_starrett_mobility
-
-framework_groups:
-  - id: default
-    name: "Supple Leopard Mobility System"
-    type: alternatives
-    frameworks:
-      - kelly_starrett_mobility
-canonical_phase_sequence:
-  - phase: base
-    weeks: 6
-  - phase: build
-    weeks: 6
-  - phase: maintenance
-    weeks: 4
+# One track from passive to loaded range, then maintenance. Phase text is
+# drafted from this package's own notes and framework notes — review before
+# relying on it.
+primary_track_id: supple_leopard
+tracks:
+  - id: supple_leopard
+    name: "Supple Leopard Mobility"
+    description: >
+      A mobility and movement-quality layer: restore positions, own them
+      under load, then keep them. Built to sit on top of any other training.
+    phases:
+      - id: restore
+        name: "Restore"
+        kind: base
+        weeks: 6
+        framework_id: kelly_starrett_mobility
+        focus: "Screen and restore positions"
+        description: >
+          Test each target position against its standard, then restore it:
+          tissue prep (two minutes minimum per region), banded joint
+          distraction and contract-relax mobilizations. Breathing and bracing
+          — 360 degrees of air — is established before anything is loaded.
+        adaptations:
+          - "Passive range in the limiting positions"
+          - "Breathing and bracing"
+        intensity: "Low; position-driven"
+      - id: load_the_range
+        name: "Load the Range"
+        kind: build
+        weeks: 6
+        framework_id: kelly_starrett_mobility
+        focus: "Active range under light load"
+        description: >
+          Progress from passive range to active range under light load, so the
+          restored positions hold when they are asked to work.
+        adaptations:
+          - "Active control at end range"
+          - "Positions that hold under load"
+        intensity: "Light load"
+      - id: maintain
+        name: "Maintain"
+        kind: maintenance
+        weeks: 4
+        repeatable: true
+        framework_id: kelly_starrett_mobility
+        focus: "Daily maintenance"
+        description: >
+          Keep the positions with tissue prep before and after sessions and
+          short mobilizations through the day, alongside whatever else is
+          being trained.
+        adaptations:
+          - "Retained range"
+          - "Tissue health"
+        intensity: "Low, frequent"

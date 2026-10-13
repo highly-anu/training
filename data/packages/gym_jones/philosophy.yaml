@@ -56,11 +56,62 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: block_periodization
-
-framework_groups:
-  - id: default
+# One track of three one-month blocks, repeatable. Phase text is drafted from
+# this package's own notes and framework notes — review before relying on it.
+primary_track_id: block_periodization
+tracks:
+  - id: block_periodization
     name: "Block Periodization Program"
-    type: alternatives
-    frameworks:
-      - block_periodization
+    description: >
+      Twight's sequential blocks for operator fitness: accumulate volume,
+      convert it to intensity, then realise it. Each block is about a month;
+      the cycle repeats.
+    phases:
+      - id: accumulation
+        name: "Accumulation"
+        kind: base
+        weeks: 4
+        repeatable: true
+        framework_id: block_periodization
+        focus: "High volume, moderate intensity"
+        description: >
+          A month of high volume at moderate intensity on the six-day week:
+          strength, circuit and accumulation key days, recovery days between
+          them, one long endurance day. Power-endurance and strength-endurance
+          are the targets; maximal strength and speed are not chased.
+        adaptations:
+          - "Work capacity"
+          - "Strength-endurance and power-endurance base"
+          - "Aerobic support for repeat efforts"
+        intensity: "Hard/easy alternation at moderate intensity"
+      - id: transmutation
+        name: "Transmutation"
+        kind: build
+        weeks: 4
+        repeatable: true
+        framework_id: block_periodization
+        focus: "Moderate volume, higher intensity"
+        description: >
+          Volume comes down and intensity goes up, converting the accumulated
+          capacity into usable power-endurance. Progress one lever at a time:
+          less rest on bodyweight work or more load on barbell and kettlebell
+          work — never both at once.
+        adaptations:
+          - "Power-endurance"
+          - "Relative strength under fatigue"
+        intensity: "Higher; one progression lever at a time"
+      - id: realization
+        name: "Realization"
+        kind: peak
+        weeks: 4
+        repeatable: true
+        framework_id: block_periodization
+        focus: "Low volume, peak performance"
+        description: >
+          Low volume at peak intensity, so the qualities built in the previous
+          blocks show up as performance. Recovery days stay in place; the
+          mind is trained alongside the body.
+        adaptations:
+          - "Expressed performance"
+          - "Mental durability under load"
+        intensity: "Peak intensity, low volume"

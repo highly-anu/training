@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import loader, provenance
+from . import loader, phases, provenance
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -100,10 +100,15 @@ def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: st
 
 
 def _build_phase_entries(
-    phase_seq: list, start_phase: str, start_wip: int, num_weeks: int,
+    phase_seq: list, start_phase: str | None, start_wip: int, num_weeks: int,
     first_week_number: int = 1,
 ) -> list[dict]:
     """Expand phase_sequence into per-week entries starting at start_phase/start_wip.
+
+    `start_phase` is a `phase_id` from the sequence (resolve a request with
+    `phases.resolve_start_phase`); None starts at the first phase. Every entry
+    carries its phase's framework, including the padding past the end of the
+    sequence — padding used to drop it and run the goal's default framework.
 
     `first_week_number` is the `week_in_program` of the first entry. A partial
     regenerate passes the kept head's length + 1 so its tail continues the
@@ -112,53 +117,38 @@ def _build_phase_entries(
     """
     first = max(1, int(first_week_number or 1))
     if not phase_seq:
-        return [
-            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': first + i}
-            for i in range(num_weeks)
-        ]
+        raise phases.PhaseResolutionError('The goal has no phase sequence.')
+
+    start_id = start_phase or phase_seq[0].get('phase_id')
+    start_idx = next(
+        (i for i, e in enumerate(phase_seq) if e.get('phase_id') == start_id), None)
+    if start_idx is None:
+        raise phases.PhaseResolutionError(
+            f"Phase '{start_phase}' is not in this track: "
+            f"{[e.get('phase_id') for e in phase_seq]}"
+        )
 
     entries: list[dict] = []
     week_in_program = first
-    found = False
-
-    for phase_entry in phase_seq:
-        phase_name  = phase_entry['phase']
-        phase_weeks = phase_entry.get('weeks', 4)
-        phase_framework = phase_entry.get('framework_id')  # Phase-specific framework
-
-        if not found:
-            if phase_name != start_phase:
-                continue
-            found = True
-            first_wip = start_wip
-        else:
-            first_wip = 1
-
+    for idx in range(start_idx, len(phase_seq)):
+        phase_entry = phase_seq[idx]
+        phase_weeks = int(phase_entry.get('weeks') or 1)
+        first_wip = max(1, int(start_wip or 1)) if idx == start_idx else 1
         for wip in range(first_wip, phase_weeks + 1):
-            entry = {
-                'phase': phase_name,
-                'week_in_phase': wip,
-                'week_in_program': week_in_program,
-            }
-            if phase_framework:
-                entry['framework_id'] = phase_framework
-            entries.append(entry)
+            entries.append(phases.week_entry(phase_entry, wip, week_in_program))
             week_in_program += 1
             if len(entries) >= num_weeks:
                 return entries
 
-    # start_phase not found (manual override) — fall back to flat list
-    if not entries:
-        return [
-            {'phase': start_phase, 'week_in_phase': start_wip + i, 'week_in_program': first + i}
-            for i in range(num_weeks)
-        ]
-
-    # Phase sequence exhausted before num_weeks — pad with last phase
-    last = phase_seq[-1]['phase']
-    extra_wip = 1
+    # Sequence exhausted before num_weeks — continue the last phase, counting on
+    # from its last emitted week so deload cadence and loads keep running.
+    last = phase_seq[-1]
+    if entries and entries[-1].get('phase_id') == last.get('phase_id'):
+        extra_wip = entries[-1]['week_in_phase'] + 1
+    else:
+        extra_wip = max(1, int(start_wip or 1)) if start_idx == len(phase_seq) - 1 else 1
     while len(entries) < num_weeks:
-        entries.append({'phase': last, 'week_in_phase': extra_wip, 'week_in_program': week_in_program})
+        entries.append(phases.week_entry(last, extra_wip, week_in_program))
         week_in_program += 1
         extra_wip += 1
 
@@ -354,16 +344,17 @@ def generate(
         entries = phase_schedule
     else:
         phase_seq = goal.get('phase_sequence', [])
-        # Default start phase: first in the sequence (not hardcoded 'base'),
-        # so sequential philosophies like Uphill Athlete start at transition.
-        first_phase = phase_seq[0]['phase'] if phase_seq else 'base'
-        base_phase = constraints.get('training_phase', first_phase)
+        # Default start: the track's first phase (never a hard-coded 'base'),
+        # so Uphill Athlete starts at transition.
+        start_phase = phases.resolve_start_phase(
+            phase_seq, constraints.get('start_phase'), constraints.get('training_phase'))
         start_week = constraints.get('periodization_week', 1)
         entries = _build_phase_entries(
-            phase_seq, base_phase, start_week, num_weeks,
+            phase_seq, start_phase, start_week, num_weeks,
             first_week_number=start_week_number or 1,
         )
 
+    track_id = (goal.get('track') or {}).get('id')
     program = {'weeks': []}
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
@@ -553,14 +544,21 @@ def generate(
             if include_trace and week_trace is not None:
                 week_trace['sessions'][day_name] = day_session_traces
 
-        program['weeks'].append({
+        week_out = {
             'week_number':    week_in_program,
             'week_in_phase':  week_in_phase,
             'phase':          phase,
             'is_deload':      is_deload,
             'schedule':       populated_schedule,
             'framework':      framework['id'],
-        })
+        }
+        if entry.get('phase_id'):
+            week_out['phase_id'] = entry['phase_id']
+        if entry.get('phase_name'):
+            week_out['phase_name'] = entry['phase_name']
+        if track_id:
+            week_out['track_id'] = track_id
+        program['weeks'].append(week_out)
         if include_trace and generation_trace is not None and week_trace is not None:
             generation_trace['weeks'].append(week_trace)
 

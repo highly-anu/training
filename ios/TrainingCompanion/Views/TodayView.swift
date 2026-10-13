@@ -156,7 +156,7 @@ struct TodayView: View {
                     // the stored absolute number and can disagree with the start date.
                     Text("Week \((appState.currentWeekIndex ?? 0) + 1)")
                     Text("·")
-                    Text(week.phase.capitalized)
+                    Text(week.phaseLabel)
                     if week.isDeload {
                         Text("· Deload").foregroundStyle(.orange)
                     }

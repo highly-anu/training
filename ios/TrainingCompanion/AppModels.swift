@@ -131,15 +131,66 @@ struct PhilosophyCard: Codable, Identifiable {
     /// `progression_philosophy` in philosophy.yaml (`load_based`, `time_based`, …).
     let progressionPhilosophy: String?
 
+    /// Ways to follow this methodology, each an ordered list of its own
+    /// phases (philosophy.yaml `tracks`). Nil from a server that predates them.
+    let tracks: [PhilosophyTrack]?
+    let primaryTrackId: String?
+
     /// What a card shows under the name. Packages write a folded `notes`
     /// paragraph; none has a `description`.
     var summary: String? { description ?? notes }
 
+    /// The default track: `primary_track_id`, else the first.
+    var primaryTrack: PhilosophyTrack? {
+        let all = tracks ?? []
+        return all.first { $0.id == primaryTrackId } ?? all.first
+    }
+
+    /// The named track, else the primary one.
+    func track(_ id: String?) -> PhilosophyTrack? {
+        if let id, let match = tracks?.first(where: { $0.id == id }) { return match }
+        return primaryTrack
+    }
+
     enum CodingKeys: String, CodingKey {
-        case id, name, description, notes, bias
+        case id, name, description, notes, bias, tracks
         case corePrinciples = "core_principles"
         case intensityModel = "intensity_model"
         case progressionPhilosophy = "progression_philosophy"
+        case primaryTrackId = "primary_track_id"
+    }
+}
+
+/// One way to follow a methodology: an ordered list of its own phases.
+/// The server's half is `src/phases.py`.
+struct PhilosophyTrack: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let description: String?
+    let phases: [PhilosophyPhase]
+
+    /// Every phase's default length, summed — the track run end to end.
+    var totalWeeks: Int { phases.reduce(0) { $0 + $1.weeks } }
+}
+
+/// A phase as its methodology names and describes it. `kind` is the shared
+/// vocabulary the engine and the colours key on (data/commons/phase_kinds.yaml);
+/// the words are the methodology's own and are only ever shown for it.
+struct PhilosophyPhase: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let kind: String
+    let weeks: Int
+    let frameworkId: String?
+    let focus: String?
+    let description: String?
+    let adaptations: [String]?
+    let intensity: String?
+    let repeatable: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, kind, weeks, focus, description, adaptations, intensity, repeatable
+        case frameworkId = "framework_id"
     }
 }
 
@@ -707,8 +758,15 @@ struct GenerateConstraints: Encodable {
     var equipment: [String] = []
     var injuryFlags: [String] = []
     var phase: String? = nil
-    /// The web's name for the phase; sent alongside `phase`.
+    /// The legacy start: a phase kind, which the server maps to the first
+    /// phase of that kind in the track. `startPhase` wins when both are set.
     var trainingPhase: String? = nil
+    /// The track to run (a `PhilosophyTrack.id`); nil is the methodology's
+    /// primary track.
+    var trackId: String? = nil
+    /// The track phase to start at (a `PhilosophyPhase.id`); nil is the
+    /// track's first phase. The server no longer defaults to 'base'.
+    var startPhase: String? = nil
     /// Week within the phase a partial regenerate continues from.
     var periodizationWeek: Int? = nil
     var preferredDays: [String]? = nil
@@ -721,6 +779,8 @@ struct GenerateConstraints: Encodable {
         case injuryFlags = "injury_flags"
         case phase
         case trainingPhase = "training_phase"
+        case trackId = "track_id"
+        case startPhase = "start_phase"
         case periodizationWeek = "periodization_week"
         case preferredDays = "preferred_days"
     }

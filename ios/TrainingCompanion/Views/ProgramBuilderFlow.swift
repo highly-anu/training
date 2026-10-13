@@ -6,10 +6,24 @@ import Combine
 @MainActor
 final class BuilderState: ObservableObject {
     // Step 1
-    @Published var selectedPhilosophyId: String? = nil
+    @Published var selectedPhilosophyId: String? = nil {
+        didSet {
+            guard oldValue != selectedPhilosophyId else { return }
+            selectedTrackId = nil
+            startPhaseId = nil
+            lengthSetFor = nil
+        }
+    }
 
     // Step 2
+    /// The track to run; nil is the methodology's primary track.
+    @Published var selectedTrackId: String? = nil
+    /// The phase to start at; nil is the track's first.
+    @Published var startPhaseId: String? = nil
     @Published var numWeeks: Int = 12
+    /// The track whose length `numWeeks` was last set from, so the default
+    /// is applied once per track and never over the athlete's own choice.
+    var lengthSetFor: String? = nil
     @Published var eventDate: Date? = nil
     @Published var startDate: Date = Date()
 
@@ -23,6 +37,20 @@ final class BuilderState: ObservableObject {
 
     var isStep1Valid: Bool { selectedPhilosophyId != nil }
     var isStep3Valid: Bool { !constraints.equipment.isEmpty }
+
+    /// The track the program will run: the picked one, else the primary.
+    func track(in philosophy: PhilosophyCard?) -> PhilosophyTrack? {
+        philosophy?.track(selectedTrackId)
+    }
+
+    /// A multi-phase track runs all its phases, so its length becomes the
+    /// default duration — once per track. A single repeatable block keeps the
+    /// athlete's choice.
+    func applyLength(of track: PhilosophyTrack?) {
+        guard let track, lengthSetFor != track.id else { return }
+        lengthSetFor = track.id
+        if track.phases.count > 1 { numWeeks = track.totalWeeks }
+    }
 }
 
 // MARK: - Program Builder Flow
@@ -95,9 +123,18 @@ struct ProgramBuilderFlow: View {
         let startStr = dayFmt.string(from: builder.startDate)
         let eventStr = builder.eventDate.map { dayFmt.string(from: $0) }
 
+        // The track and its start phase, by id. The phase picker used to send
+        // `phase` only, a key the server never read, so every phone-built
+        // program started wherever the server defaulted.
+        var constraints = builder.constraints
+        constraints.trackId = builder.selectedTrackId
+        constraints.startPhase = builder.eventDate == nil ? builder.startPhaseId : nil
+        constraints.phase = nil
+        constraints.trainingPhase = nil
+
         let request = GenerateProgramRequest(
             philosophyId: philosophyId,
-            constraints: builder.constraints,
+            constraints: constraints,
             numWeeks: builder.numWeeks,
             startDate: startStr,
             eventDate: eventStr
@@ -245,12 +282,28 @@ struct BuilderStep1PhilosophyView: View {
 
 struct BuilderStep2ScheduleView: View {
     @ObservedObject var builder: BuilderState
+    @EnvironmentObject var appState: AppState
 
-    private let weekOptions = [4, 6, 8, 10, 12, 16, 20, 24]
     private let dayOptions = Array(2...7)
+
+    private var philosophy: PhilosophyCard? {
+        appState.philosophies.first { $0.id == builder.selectedPhilosophyId }
+    }
+
+    /// The standard lengths plus the track's own and the current choice, so
+    /// a 31-week track is selectable.
+    private var weekOptions: [Int] {
+        var options: Set<Int> = [4, 6, 8, 10, 12, 16, 20, 24, builder.numWeeks]
+        if let track = builder.track(in: philosophy) { options.insert(track.totalWeeks) }
+        return options.sorted()
+    }
 
     var body: some View {
         Form {
+            if let tracks = philosophy?.tracks, !tracks.isEmpty {
+                trackSection(tracks)
+            }
+
             Section("Duration") {
                 Picker("Number of Weeks", selection: $builder.numWeeks) {
                     ForEach(weekOptions, id: \.self) { w in
@@ -293,6 +346,65 @@ struct BuilderStep2ScheduleView: View {
                 }
             }
         }
+        .onAppear { builder.applyLength(of: builder.track(in: philosophy)) }
+    }
+
+    /// The methodology's tracks, each with its own phases. One track is shown
+    /// for what it is; two or more are a choice.
+    private func trackSection(_ tracks: [PhilosophyTrack]) -> some View {
+        let active = builder.track(in: philosophy)
+        return Section {
+            ForEach(tracks) { track in
+                if tracks.count > 1 {
+                    Button {
+                        AppHaptics.light()
+                        builder.selectedTrackId = track.id
+                        builder.startPhaseId = nil
+                        builder.applyLength(of: track)
+                    } label: {
+                        trackRow(track, selected: track.id == active?.id,
+                                 primary: track.id == philosophy?.primaryTrack?.id)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    trackRow(track, selected: false, primary: false)
+                }
+            }
+        } header: {
+            Text(tracks.count > 1 ? "Track" : "Phases")
+        } footer: {
+            if tracks.count > 1 {
+                Text("Each track is one way to follow this methodology, in its own phases.")
+            }
+        }
+    }
+
+    private func trackRow(_ track: PhilosophyTrack, selected: Bool, primary: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(track.name)
+                    .font(.subheadline).fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                if primary {
+                    Text("Primary")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue)
+                }
+            }
+            if let text = track.description, !text.isEmpty {
+                Text(text)
+                    .font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+            }
+            TrackPhaseList(track: track)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -303,7 +415,11 @@ struct BuilderStep3ConstraintsView: View {
     @EnvironmentObject var appState: AppState
 
     private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
-    private let phases = ["base", "build", "peak", "taper"]
+
+    /// The chosen track's own phases — the only places a program can start.
+    private var trackPhases: [PhilosophyPhase] {
+        builder.track(in: appState.philosophies.first { $0.id == builder.selectedPhilosophyId })?.phases ?? []
+    }
 
     var body: some View {
         Form {
@@ -341,16 +457,38 @@ struct BuilderStep3ConstraintsView: View {
                 }
             }
 
-            Section("Starting Phase (optional)") {
-                Picker("Phase", selection: Binding(
-                    get: { builder.constraints.phase ?? "base" },
-                    set: { builder.constraints.phase = $0 }
-                )) {
-                    ForEach(phases, id: \.self) { Text($0.capitalized).tag($0) }
+            if trackPhases.count > 1 {
+                Section {
+                    StartPhasePicker(phases: trackPhases, selection: $builder.startPhaseId)
+                        .disabled(builder.eventDate != nil)
+                } header: {
+                    Text("Starting Phase")
+                } footer: {
+                    Text(builder.eventDate != nil
+                         ? "Set from the event date: the phases are counted back from it."
+                         : "Where you are in this track. Most programs start at the first phase.")
                 }
-                .pickerStyle(.menu)
             }
         }
+    }
+}
+
+/// Picks a start phase from a track's own phases; nil is the first phase.
+/// Shared by the builder and the Program settings sheet.
+struct StartPhasePicker: View {
+    let phases: [PhilosophyPhase]
+    @Binding var selection: String?
+
+    var body: some View {
+        Picker("Start at", selection: Binding(
+            get: { selection ?? phases.first?.id ?? "" },
+            set: { selection = ($0 == phases.first?.id) ? nil : $0 }
+        )) {
+            ForEach(phases) { phase in
+                Text(phase.name).tag(phase.id)
+            }
+        }
+        .pickerStyle(.menu)
     }
 }
 
@@ -371,6 +509,15 @@ struct BuilderStep4ReviewView: View {
                 if let id = builder.selectedPhilosophyId,
                    let philosophy = appState.philosophies.first(where: { $0.id == id }) {
                     LabeledContent("Methodology", value: philosophy.name)
+                    if let track = builder.track(in: philosophy) {
+                        LabeledContent("Track", value: track.name)
+                        if builder.eventDate == nil, let start = builder.startPhaseId,
+                           let phase = track.phases.first(where: { $0.id == start }) {
+                            LabeledContent("Starts at", value: phase.name)
+                        }
+                        TrackPhaseList(track: track)
+                            .padding(.vertical, 4)
+                    }
                 }
             }
 
@@ -386,7 +533,6 @@ struct BuilderStep4ReviewView: View {
 
             Section("Constraints") {
                 LabeledContent("Level", value: builder.constraints.trainingLevel.capitalized)
-                LabeledContent("Phase", value: (builder.constraints.phase ?? "base").capitalized)
                 if !builder.constraints.equipment.isEmpty {
                     LabeledContent("Equipment", value: "\(builder.constraints.equipment.count) items")
                 }
@@ -439,7 +585,17 @@ extension AppState {
 
 @MainActor
 private final class SettingsState: ObservableObject {
-    @Published var selectedPhilosophyId: String
+    @Published var selectedPhilosophyId: String {
+        didSet {
+            guard oldValue != selectedPhilosophyId else { return }
+            selectedTrackId = nil
+            startPhaseId = nil
+        }
+    }
+    /// The program's own track and first phase, so a regenerate keeps them
+    /// unless the athlete picks others; nil is the primary track / first phase.
+    @Published var selectedTrackId: String?
+    @Published var startPhaseId: String?
     @Published var numWeeks: Int
     @Published var startDate: Date
     @Published var eventDate: Date?
@@ -454,6 +610,8 @@ private final class SettingsState: ObservableObject {
         // sourceGoalIds holds philosophy ids — the name predates the removal
         // of the goals layer. A blend collapses to its first source here.
         selectedPhilosophyId = program.sourceGoalIds.first ?? ""
+        selectedTrackId = weeks.first?.trackId
+        startPhaseId = weeks.first?.phaseId
         numWeeks = weeks.count
         startDate = program.programStartDate.flatMap { dayFmt.date(from: $0) } ?? Date()
         eventDate = program.eventDate.flatMap { dayFmt.date(from: $0) }
@@ -468,7 +626,9 @@ private final class SettingsState: ObservableObject {
                     .filter { !(w.schedule[$0] ?? []).isEmpty }.count
             } ?? 4, 2)
         c.sessionTimeMinutes = 60
-        c.phase = weeks.first?.phase
+        // Weeks generated before phases had ids: start at the first phase of
+        // the first week's kind, as before.
+        if weeks.first?.phaseId == nil { c.trainingPhase = weeks.first?.phase }
         constraints = c
     }
 }
@@ -488,9 +648,19 @@ struct ProgramSettingsSheet: View {
         _settings = StateObject(wrappedValue: SettingsState(program: program, weeks: weeks, profile: profile))
     }
 
-    private let weekOptions = [4, 6, 8, 10, 12, 16, 20, 24]
     private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
-    private let phases = ["base", "build", "peak", "taper"]
+
+    private var philosophy: PhilosophyCard? {
+        appState.philosophies.first { $0.id == settings.selectedPhilosophyId }
+    }
+
+    private var track: PhilosophyTrack? { philosophy?.track(settings.selectedTrackId) }
+
+    private var weekOptions: [Int] {
+        var options: Set<Int> = [4, 6, 8, 10, 12, 16, 20, 24, settings.numWeeks]
+        if let track { options.insert(track.totalWeeks) }
+        return options.sorted()
+    }
 
     var body: some View {
         NavigationStack {
@@ -537,6 +707,19 @@ struct ProgramSettingsSheet: View {
                     }
                 }
                 .pickerStyle(.menu)
+                if let tracks = philosophy?.tracks, tracks.count > 1 {
+                    Picker("Track", selection: Binding(
+                        get: { track?.id ?? "" },
+                        set: { settings.selectedTrackId = $0; settings.startPhaseId = nil }
+                    )) {
+                        ForEach(tracks) { Text($0.name).tag($0.id) }
+                    }
+                    .pickerStyle(.menu)
+                }
+                if let track {
+                    TrackPhaseList(track: track)
+                        .padding(.vertical, 4)
+                }
             }
         }
     }
@@ -575,14 +758,20 @@ struct ProgramSettingsSheet: View {
                 .pickerStyle(.menu)
             }
 
-            Section("Starting Phase") {
-                Picker("Phase", selection: Binding(
-                    get: { settings.constraints.phase ?? "base" },
-                    set: { settings.constraints.phase = $0 }
-                )) {
-                    ForEach(phases, id: \.self) { Text($0.capitalized).tag($0) }
+            if let phases = track?.phases, phases.count > 1 {
+                Section {
+                    StartPhasePicker(phases: phases, selection: Binding(
+                        get: { phases.contains(where: { $0.id == settings.startPhaseId }) ? settings.startPhaseId : nil },
+                        set: { settings.startPhaseId = $0 }
+                    ))
+                    .disabled(settings.eventDate != nil)
+                } header: {
+                    Text("Starting Phase")
+                } footer: {
+                    if settings.eventDate != nil {
+                        Text("Set from the event date: the phases are counted back from it.")
+                    }
                 }
-                .pickerStyle(.menu)
             }
 
             Section("Equipment") {
@@ -687,9 +876,18 @@ struct ProgramSettingsSheet: View {
         settings.isGenerating = true
         settings.generationError = nil
         let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
+        var constraints = settings.constraints
+        constraints.trackId = track?.id ?? settings.selectedTrackId
+        // A start phase from another methodology's track would be an error on
+        // the server; only send one this track has.
+        let start = settings.startPhaseId.flatMap { id in
+            (track?.phases.contains(where: { $0.id == id }) ?? false) ? id : nil
+        }
+        constraints.startPhase = settings.eventDate == nil ? start : nil
+        if start != nil || settings.eventDate != nil { constraints.trainingPhase = nil }
         let request = GenerateProgramRequest(
             philosophyId: settings.selectedPhilosophyId,
-            constraints: settings.constraints,
+            constraints: constraints,
             numWeeks: settings.numWeeks,
             startDate: dayFmt.string(from: settings.startDate),
             eventDate: settings.eventDate.map { dayFmt.string(from: $0) }

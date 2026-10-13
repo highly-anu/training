@@ -765,7 +765,8 @@ final class AppState: ObservableObject {
         }
         let week = program.weeks[start]
         let constraints = ProgramConstraintsDiff.merged(program: programConstraints, profile: profile,
-                                                        weekInPhase: week.weekInPhase, phase: week.phase)
+                                                        weekInPhase: week.weekInPhase, phase: week.phase,
+                                                        phaseId: week.phaseId, trackId: week.trackId)
         let request = GenerateProgramRequest(
             philosophyId: ids.count == 1 ? ids[0] : nil,
             philosophyIds: ids.count > 1 ? ids : nil,

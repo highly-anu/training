@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import {
   MODALITY_ORDER, DEFAULT_PRIORITIES, derivePhilosophyPriorities,
-  philosophyHasSequentialPhases, primaryFrameworkFor,
 } from '@/lib/philosophyPriorities'
 import type { Framework, ModalityId, Philosophy } from '@/api/types'
 import type { SourceMode } from '@/store/builderStore'
@@ -291,7 +290,7 @@ export function ProgramSource() {
 
   const {
     setSourceMode, setGoalIds, setGoalWeightsBulk, setPriorityOverrides,
-    setFramework, setPhilosophyIds, setPhilosophyWeights, setSourcePriorities,
+    setTrack, setPhilosophyIds, setPhilosophyWeights, setSourcePriorities,
   } = useBuilderStore()
 
   function activateMode(mode: SourceMode) {
@@ -303,7 +302,7 @@ export function ProgramSource() {
     setPriorityOverrides(null)
     setSourcePriorities(null)
     setPhilosophyIds([])
-    setFramework(null)
+    setTrack(null)
 
     // Custom mode has no selection step — seed goal + priorities immediately so Next is enabled
     if (next === 'custom') {
@@ -326,23 +325,21 @@ export function ProgramSource() {
       setPriorityOverrides(null)
       setSourcePriorities(null)
       setPhilosophyIds([])
-      setFramework(null)
+      setTrack(null)
       return
     }
 
     setSelectedPhilIds([phil.id])
 
     const priorities = derivePhilosophyPriorities(phil, frameworks)
-    const primaryFramework = primaryFrameworkFor(phil, frameworks)
-    const hasSequentialPhases = philosophyHasSequentialPhases(phil)
 
     setGoalIds(['general_gpp'])
     setGoalWeightsBulk({})
     setPriorityOverrides(priorities)
     setSourcePriorities(priorities)
     setPhilosophyIds([phil.id])
-    // For philosophies with sequential phases, leave framework as null to enable Full Program mode
-    setFramework(hasSequentialPhases ? null : (primaryFramework?.id ?? null))
+    // The primary track until the athlete picks another in the next step.
+    setTrack(null)
   }
 
   // ── Mode 2: multi philosophy blend ──
@@ -377,7 +374,7 @@ export function ProgramSource() {
       setSourcePriorities(null)
       setPhilosophyIds([])
       setPhilosophyWeights({})
-      setFramework(null)
+      setTrack(null)
       return
     }
     const priorities = deriveBlendedPriorities(philIds, weights, philosophies, frameworks)
@@ -387,7 +384,7 @@ export function ProgramSource() {
     setSourcePriorities(priorities)
     setPhilosophyIds(philIds)
     setPhilosophyWeights(weights)
-    setFramework(null)
+    setTrack(null)
   }
 
   // ── Mode 3: custom priorities ──
@@ -398,7 +395,7 @@ export function ProgramSource() {
     setPriorityOverrides(p)
     setSourcePriorities(p)
     setPhilosophyIds([])
-    setFramework(null)
+    setTrack(null)
   }
 
   // Priority preview for the selected philosophy (Mode 1)

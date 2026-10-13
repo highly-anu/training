@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Dict, List
 
-from . import loader
+from . import loader, phases
 from .goals import FrameworkResolutionError
 
 _RECOVERY_COST_RANK = {'high': 3, 'medium': 2, 'low': 1}
@@ -53,11 +53,15 @@ def select_framework(goal: dict, constraints: dict,
     """Select the best framework for the given goal and constraints.
 
     Args:
-        phase_framework_id: Phase-specific framework from canonical_phase_sequence (highest priority)
+        phase_framework_id: The framework the week's phase names (highest
+            priority). Every phase of a track names one, so inside a track this
+            always decides; an explicit pick from the request is mapped onto a
+            track and start phase by the API (goals.owner_track_for_framework)
+            rather than competing with it here.
 
     If _trace dict is provided it will be populated with framework selection details.
     """
-    # Priority 1: Phase-specific framework from canonical_phase_sequence
+    # Priority 1: the framework the week's phase names
     if phase_framework_id:
         try:
             fw = loader.load_framework(phase_framework_id)
@@ -505,8 +509,6 @@ _DEFAULT_SPREAD: Dict[int, List[int]] = {
     7: [1, 2, 3, 4, 5, 6, 7],
 }
 
-# Phases that prefer the most evenly-distributed pattern (maximum recovery between sessions)
-_SPREAD_PHASES = {'taper', 'deload', 'rehab'}
 
 
 def _spread_pick(candidates: List[int], n: int) -> List[int]:
@@ -534,8 +536,8 @@ def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int
     options = ((framework or {}).get('cadence_options') or {}).get(days)
     if not options:
         return _DEFAULT_SPREAD.get(days, list(range(1, days + 1)))
-    if phase in _SPREAD_PHASES:
-        return options[0]                          # most spread-out in recovery phases
+    if phases.kind_flag(phase, 'spread_cadence'):
+        return options[0]                          # most spread-out in recovery kinds
     return options[week_in_phase % len(options)]   # rotate week-to-week otherwise
 
 
@@ -760,7 +762,7 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
     Build a weekly schedule.
 
     Args:
-        phase_framework_id: Optional phase-specific framework override (from canonical_phase_sequence)
+        phase_framework_id: Optional phase-specific framework override (the week's phase names it)
 
     Returns:
         {

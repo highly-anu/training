@@ -122,6 +122,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                     weekNumber={weekData.week_number}
                     weekInPhase={weekData.week_in_phase}
                     phase={weekData.phase}
+                    phaseLabel={weekData.phase_name}
                   />
                 </div>
                 <div className="flex items-center gap-2 shrink-0 mt-1">

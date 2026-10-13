@@ -8,7 +8,9 @@ import { useBuilderStore } from '@/store/builderStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useInjuryFlags } from '@/api/constraints'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import type { EquipmentId, InjuryFlagId, TrainingLevel, FatigueState, TrainingPhase } from '@/api/types'
+import { usePhilosophies } from '@/api/philosophies'
+import { builderTrack } from '@/lib/tracks'
+import type { EquipmentId, InjuryFlagId, TrainingLevel, FatigueState } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
 
@@ -66,6 +68,13 @@ export function ConstraintsForm() {
   const eventDate = useBuilderStore((s) => s.eventDate)
   const startDate = useBuilderStore((s) => s.startDate)
   const setStartDate = useBuilderStore((s) => s.setStartDate)
+  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
+  const selectedTrackId = useBuilderStore((s) => s.selectedTrackId)
+  const startPhaseId = useBuilderStore((s) => s.startPhaseId)
+  const setStartPhase = useBuilderStore((s) => s.setStartPhase)
+  const { data: philosophies } = usePhilosophies()
+  // The start phase is one of the chosen track's own phases.
+  const trackPhases = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId)?.track.phases ?? []
 
   const currentMonday = useMemo(() => {
     const d = new Date()
@@ -263,32 +272,30 @@ export function ConstraintsForm() {
                 </Select>
               </div>
 
-              <div className={cn('space-y-2', eventDate && 'opacity-50 pointer-events-none')}>
-                <Label className="text-sm font-semibold">
-                  Training Phase
-                  {eventDate && (
-                    <span className="ml-2 text-[10px] font-normal text-muted-foreground">(auto from event date)</span>
-                  )}
-                </Label>
-                <p className="text-[11px] text-muted-foreground">Where are you in your training cycle?</p>
-                <Select
-                  value={constraints.training_phase ?? 'base'}
-                  onValueChange={(v) => update({ training_phase: v as TrainingPhase })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="base">Base</SelectItem>
-                    <SelectItem value="build">Build</SelectItem>
-                    <SelectItem value="peak">Peak</SelectItem>
-                    <SelectItem value="taper">Taper</SelectItem>
-                    <SelectItem value="deload">Deload</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="rehab">Rehab</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {trackPhases.length > 1 && (
+                <div className={cn('space-y-2', eventDate && 'opacity-50 pointer-events-none')}>
+                  <Label className="text-sm font-semibold">
+                    Starting Phase
+                    {eventDate && (
+                      <span className="ml-2 text-[10px] font-normal text-muted-foreground">(auto from event date)</span>
+                    )}
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">Where are you in this track?</p>
+                  <Select
+                    value={startPhaseId ?? trackPhases[0].id}
+                    onValueChange={(v) => setStartPhase(v === trackPhases[0].id ? null : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {trackPhases.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
 

@@ -72,11 +72,15 @@
       },
       "default": []
     },
+    "start_phase": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Phase id from the chosen track to start generation at. Defaults to the track's first phase."
+    },
     "training_phase": {
       "type": "string",
-      "enum": ["active", "base", "build", "peak", "taper", "deload", "maintenance", "rehab", "post_op"],
-      "description": "Current phase of training. Filters available archetypes (e.g. no peaking templates during base phase).",
-      "default": "base"
+      "enum": ["transition", "base", "build", "specific", "peak", "taper", "maintenance", "deload", "recovery", "rehab", "post_op", "active"],
+      "description": "Legacy: a phase kind (data/commons/phase_kinds.yaml). Resolved to the first phase of that kind in the track; start_phase wins when both are given. Never defaulted."
     },
     "periodization_week": {
       "type": "integer",

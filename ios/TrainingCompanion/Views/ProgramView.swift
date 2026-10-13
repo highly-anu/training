@@ -225,12 +225,12 @@ struct ProgramView: View {
             GeometryReader { geo in
                 let barWidth = geo.size.width
                 HStack(spacing: 0) {
-                    ForEach(segments, id: \.phase) { seg in
+                    ForEach(segments) { seg in
                         let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
                         let segWidth = barWidth * segFrac
                         let isCurrent = seg.weekIndices.contains(currentIdx)
                         let isPast = (seg.weekIndices.last ?? -1) < currentIdx
-                        let color = phaseColor(seg.phase)
+                        let color = PhaseStyle.color(for: seg.kind)
 
                         ZStack(alignment: .leading) {
                             if isPast {
@@ -267,11 +267,11 @@ struct ProgramView: View {
             // Phase labels
             GeometryReader { geo in
                 HStack(spacing: 0) {
-                    ForEach(segments, id: \.phase) { seg in
+                    ForEach(segments) { seg in
                         let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
                         let isCurrent = seg.weekIndices.contains(currentIdx)
-                        let color = phaseColor(seg.phase)
-                        Text(seg.phase.capitalized)
+                        let color = PhaseStyle.color(for: seg.kind)
+                        Text(seg.label)
                             .font(.caption2)
                             .fontWeight(isCurrent ? .semibold : .regular)
                             .foregroundStyle(isCurrent ? color : .secondary)
@@ -377,7 +377,7 @@ struct ProgramView: View {
                     }
                     Spacer()
                     HStack(spacing: 6) {
-                        Text(week.phase.capitalized)
+                        Text(week.phaseLabel)
                         if week.isDeload { Text("· Deload").foregroundStyle(.orange) }
                     }
                     .font(.caption)
@@ -489,33 +489,8 @@ struct ProgramView: View {
 
     // MARK: - Helpers
 
-    private func phaseColor(_ phase: String) -> Color {
-        switch phase {
-        case "base":   return .blue
-        case "build":  return .green
-        case "peak":   return .orange
-        case "taper":  return .purple
-        case "deload": return .gray
-        default:       return .secondary
-        }
-    }
-
-    private struct PhaseSegment { let phase: String; let weekIndices: [Int] }
-
     private func phaseSegments(from weeks: [ProgramWeek]) -> [PhaseSegment] {
-        var segments: [PhaseSegment] = []
-        var current: PhaseSegment? = nil
-        for (i, week) in weeks.enumerated() {
-            let phase = week.phase   // isDeload stays within the parent phase, matching web app
-            if phase == current?.phase {
-                current = PhaseSegment(phase: phase, weekIndices: (current?.weekIndices ?? []) + [i])
-            } else {
-                if let c = current { segments.append(c) }
-                current = PhaseSegment(phase: phase, weekIndices: [i])
-            }
-        }
-        if let c = current { segments.append(c) }
-        return segments
+        PhaseSegment.segments(of: weeks)
     }
 }
 
@@ -592,4 +567,32 @@ private struct DaySelection: Identifiable {
     let id = UUID()
     let weekIndex: Int
     let dayName: String
+}
+
+/// A run of consecutive weeks in one phase. Grouped by the methodology's own
+/// phase id, so two phases of one kind stay two segments; weeks generated
+/// before phases had ids group by kind. A deload week stays inside its phase,
+/// as on the web (`hooks/usePhaseCalendar.ts`).
+struct PhaseSegment: Identifiable, Equatable {
+    /// Phase id, else the kind.
+    let key: String
+    let kind: String
+    let label: String
+    let weekIndices: [Int]
+    /// Unique even when a phase recurs: the segment's first week.
+    var id: Int { weekIndices.first ?? 0 }
+
+    static func segments(of weeks: [ProgramWeek]) -> [PhaseSegment] {
+        var out: [PhaseSegment] = []
+        for (i, week) in weeks.enumerated() {
+            let key = week.phaseId ?? week.phase
+            if let last = out.last, last.key == key {
+                out[out.count - 1] = PhaseSegment(key: key, kind: last.kind, label: last.label,
+                                                  weekIndices: last.weekIndices + [i])
+            } else {
+                out.append(PhaseSegment(key: key, kind: week.phase, label: week.phaseLabel, weekIndices: [i]))
+            }
+        }
+        return out
+    }
 }

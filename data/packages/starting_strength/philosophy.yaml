@@ -35,18 +35,31 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: linear_progression
-
-framework_groups:
-  - id: default
+# One continuous phase: linear progression runs until gains stall. Phase text
+# is drafted from this package's own notes and framework notes — review before
+# relying on it.
+primary_track_id: linear_progression
+tracks:
+  - id: linear_progression
     name: "Linear Progression Program"
-    type: alternatives
-    frameworks:
-      - linear_progression
-canonical_phase_sequence:
-  - phase: base
-    weeks: 8
-  - phase: build
-    weeks: 6
-  - phase: peak
-    weeks: 4
+    description: >
+      The novice barbell program: three full-body sessions a week, weight on
+      the bar every session, until it stops going up.
+    phases:
+      - id: novice_lp
+        name: "Novice Linear Progression"
+        kind: build
+        weeks: 12
+        repeatable: true
+        framework_id: linear_progression
+        focus: "Add weight every session"
+        description: >
+          Squat 3×5 every session, press or bench 3×5 alternating, deadlift
+          1×5. Each session adds weight — about 5 lb on the squat and deadlift,
+          2.5 lb on the press. Conditioning stays minimal so recovery goes to
+          the bar. The phase runs until a lift stalls for three consecutive
+          sessions; that is the end of the novice period.
+        adaptations:
+          - "Maximal strength in the main barbell lifts"
+          - "Technique under progressively heavier loads"
+        intensity: "Heavy sets of five, every session"

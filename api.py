@@ -26,6 +26,7 @@ from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
 from src import goals, loader, provenance
+from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
@@ -366,14 +367,19 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                 })
             named_schedule[day_name] = named_sessions
 
-        weeks.append({
+        week_out = {
             'week_number':   wk['week_number'],
             'week_in_phase': wk['week_in_phase'],
-            'phase':         wk['phase'],
+            'phase':         wk['phase'],          # the phase kind
             'is_deload':     wk.get('is_deload', False),
             'framework':     wk.get('framework'),
             'schedule':      named_schedule,
-        })
+        }
+        # The philosophy's own phase: id and display name, and the track.
+        for key in ('phase_id', 'phase_name', 'track_id'):
+            if wk.get(key):
+                week_out[key] = wk[key]
+        weeks.append(week_out)
 
     volume_summary = []
     for raw_wk in raw.get('weeks', []):
@@ -855,14 +861,23 @@ def generate_program():
         raise
 
 
-def _philosophy_to_goal(phil_id: str, all_frameworks: list) -> dict:
+def _track_of_weeks(current: dict) -> str | None:
+    """The track a stored program's weeks were generated on, if they say."""
+    for w in current.get('weeks') or []:
+        if isinstance(w, dict) and w.get('track_id'):
+            return w['track_id']
+    return None
+
+
+def _philosophy_to_goal(phil_id: str, all_frameworks: list, track_id: str | None = None) -> dict:
     """Build a synthetic goal dict from a philosophy. See src/goals.py."""
-    return goals.philosophy_to_goal(phil_id, all_frameworks)
+    return goals.philosophy_to_goal(phil_id, all_frameworks, track_id)
 
 
-def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list) -> dict:
+def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list,
+                            track_id: str | None = None) -> dict:
     """Weighted-average a set of philosophy synthetic goals into one."""
-    return goals.blend_philosophy_goals(phil_ids, phil_weights, all_frameworks)
+    return goals.blend_philosophy_goals(phil_ids, phil_weights, all_frameworks, track_id)
 
 
 def _normalize_schedule_constraints(constraints: dict) -> dict:
@@ -976,26 +991,53 @@ def _generate_program_inner(body):
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
-    constraints.setdefault('training_phase', 'base')
+    # No training_phase default: the start is the track's first phase unless
+    # the request names one (start_phase, or the legacy training_phase kind).
+    # A 'base' default here is what kept Uphill from ever running Transition.
     constraints.setdefault('periodization_week', 1)
     constraints.setdefault('fatigue_state', 'normal')
 
-    # Framework override — stored in constraints so scheduler.select_framework picks it up
-    framework_id = body.get('framework_id')
-    if framework_id:
-        constraints['forced_framework'] = framework_id
-
     blend_warnings: list[str] = []
 
-    # ── Philosophy path: build synthetic goal from philosophy data ──────────
+    # ── Philosophy path: build synthetic goal from one track ─────────────────
     all_frameworks = list(loader.load_all_frameworks().values())
+    member_ids = [philosophy_id] if philosophy_id else list(philosophy_ids)
+    track_id = body.get('track_id') or constraints.get('track_id')
+    start_phase = body.get('start_phase') or constraints.get('start_phase')
+
+    # Legacy framework pick ("build with this framework", older clients): the
+    # track and phase that run it. It used to sit in constraints as
+    # forced_framework, where the phase's own framework overrode it — Uphill
+    # ignored every explicit pick.
+    framework_id = body.get('framework_id')
+    if framework_id and not track_id:
+        try:
+            hit = goals.owner_track_for_framework(member_ids, philosophy_weights, framework_id)
+        except FileNotFoundError as e:
+            return jsonify({'detail': str(e)}), 404
+        if hit is None:
+            return jsonify({'detail': f"Framework '{framework_id}' is not used by any "
+                                      f"track of {member_ids}."}), 422
+        _, track, phase = hit
+        track_id = track['id']
+        if not start_phase and not body.get('event_date') \
+                and not constraints.get('training_phase'):
+            start_phase = phase['id']
+    constraints.pop('forced_framework', None)
+
     try:
         if philosophy_id:
-            goal = _philosophy_to_goal(philosophy_id, all_frameworks)
+            goal = _philosophy_to_goal(philosophy_id, all_frameworks, track_id)
         else:
-            goal = _blend_philosophy_goals(philosophy_ids, philosophy_weights, all_frameworks)
+            goal = _blend_philosophy_goals(philosophy_ids, philosophy_weights, all_frameworks,
+                                           track_id)
     except FileNotFoundError as e:
         return jsonify({'detail': str(e)}), 404
+    except PhaseResolutionError as e:
+        return jsonify({'detail': str(e)}), 422
+    constraints['track_id'] = goal.get('track', {}).get('id')
+    if start_phase:
+        constraints['start_phase'] = start_phase
     goal_dict_for_generate = goal
     goal_ids = [goal['id']]
 
@@ -1025,6 +1067,7 @@ def _generate_program_inner(body):
             from src.phase_calendar import build_remaining_schedule
             event_date = _date.fromisoformat(event_date_str)
             cal = compute_phase_from_date(goal, event_date)
+            constraints['start_phase'] = cal['phase_id']
             constraints['training_phase'] = cal['phase']
             constraints['periodization_week'] = cal['week_in_phase']
             # Build the exact week-by-week schedule from today to the event,
@@ -2143,11 +2186,13 @@ def get_user_program_endpoint():
                 source_ids = program.get('sourceGoalIds') or []
                 try:
                     all_frameworks = list(loader.load_all_frameworks().values())
+                    track_id = _track_of_weeks(current)
                     if len(source_ids) == 1:
-                        goal = _philosophy_to_goal(source_ids[0], all_frameworks)
+                        goal = _philosophy_to_goal(source_ids[0], all_frameworks, track_id)
                     elif len(source_ids) > 1:
                         weights = program.get('sourceGoalWeights') or {}
-                        goal = _blend_philosophy_goals(source_ids, weights, all_frameworks)
+                        goal = _blend_philosophy_goals(source_ids, weights, all_frameworks,
+                                                       track_id)
                     else:
                         goal = None
                     if goal:
@@ -2271,10 +2316,12 @@ def save_user_program_endpoint():
                 try:
                     all_frameworks = list(loader.load_all_frameworks().values())
                     if len(new_ids) == 1:
-                        current['goal'] = _philosophy_to_goal(new_ids[0], all_frameworks)
+                        current['goal'] = _philosophy_to_goal(
+                            new_ids[0], all_frameworks, _track_of_weeks(current))
                     else:
                         weights = body.get('sourceGoalWeights') or {}
-                        current['goal'] = _blend_philosophy_goals(new_ids, weights, all_frameworks)
+                        current['goal'] = _blend_philosophy_goals(
+                            new_ids, weights, all_frameworks, _track_of_weeks(current))
                 except Exception as goal_err:
                     app.logger.warning('goal rebuild error: %s', goal_err)
 

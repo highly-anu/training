@@ -20,13 +20,18 @@ const expectations = (days: number) => ({
 
 const philosophy = any_({
   id: 'p1',
-  framework_groups: [{
-    type: 'sequential',
-    canonical_phase_sequence: [
-      { phase: 'base',     framework_id: 'fw-base',  weeks: 2 },
-      { phase: 'missing',  framework_id: 'fw-gone',  weeks: 10 },
-      { phase: 'peak',     framework_id: 'fw-peak',  weeks: 2 },
+  tracks: [{
+    id: 't1',
+    name: 'Track',
+    phases: [
+      { id: 'a', name: 'A', kind: 'base',  framework_id: 'fw-base', weeks: 2 },
+      { id: 'b', name: 'B', kind: 'build', framework_id: 'fw-gone', weeks: 10 },
+      { id: 'c', name: 'C', kind: 'peak',  framework_id: 'fw-peak', weeks: 2 },
     ],
+  }, {
+    id: 'single',
+    name: 'One block',
+    phases: [{ id: 'blk', name: 'Block', kind: 'base', framework_id: 'fw-base', weeks: 12 }],
   }],
 })
 
@@ -69,5 +74,14 @@ describe('blendExpectations with a phased philosophy', () => {
     const blended = blendExpectations([], [], {}, opts(missing))
     // 2 + 10 + 2 — the athlete's program is still 14 weeks long.
     expect(blended?.ideal_weeks).toBe(14)
+  })
+
+  it('takes a one-phase track straight from its framework', () => {
+    const blended = blendExpectations([], [], {}, any_({
+      ...opts([{ id: 'fw-base', expectations: expectations(3) }]),
+      selectedTrackId: 'single',
+    }))
+    expect(blended?.min_weeks).toBe(4)
+    expect(blended?.ideal_days_per_week).toBe(3)
   })
 })

@@ -25,3 +25,30 @@ export function regenerateSource(
   if (ids.length > 1) return { philosophyIds: ids, philosophyWeights: sourceGoalWeights }
   return {}
 }
+
+/**
+ * Where a regenerated tail resumes: the target week's own track, phase and
+ * week in that phase. All three regenerate paths used to resend the program's
+ * original start phase, so a tail from week 10 of base(8) + build(6) restarted
+ * at base week 2. A program stored before tracks has no phase id; its week's
+ * kind is sent instead, which the server maps to the first phase of that kind.
+ */
+export function tailResume(
+  program: Pick<GeneratedProgram, 'weeks' | 'constraints'>,
+  weekIndex: number,
+): { trackId?: string; startPhaseId?: string; constraints: GeneratedProgram['constraints'] } {
+  const week = program.weeks[weekIndex]
+  const base = { ...(program.constraints ?? {}) } as GeneratedProgram['constraints']
+  if (!week) return { constraints: base }
+  const constraints = { ...base, periodization_week: week.week_in_phase }
+  if (week.phase_id) {
+    delete constraints.training_phase
+    return {
+      trackId: week.track_id ?? base.track_id,
+      startPhaseId: week.phase_id,
+      constraints: { ...constraints, start_phase: week.phase_id },
+    }
+  }
+  delete constraints.start_phase
+  return { constraints: { ...constraints, training_phase: week.phase } }
+}

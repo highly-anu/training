@@ -71,8 +71,6 @@ borrows_from:
     kinds:
       - exercises
 
-primary_framework_id: uphill_base_phase
-
 # Full program expectations (sum of all phases)
 expectations:
   min_weeks: 20
@@ -83,29 +81,85 @@ expectations:
   ideal_session_minutes: 90
   supports_split_days: true
 
-framework_groups:
+# One track: the four Uphill phases run in order, each on its own framework.
+# Phase text is drafted from this package's own notes and framework notes —
+# review before relying on it.
+primary_track_id: full_program
+tracks:
   - id: full_program
     name: "Full Alpine Training Program"
-    type: sequential
-    frameworks:
-      - uphill_transition_phase
-      - uphill_base_phase
-      - uphill_specific_phase
-      - uphill_taper_phase
-    canonical_phase_sequence:
-      - phase: transition
+    description: >
+      The complete House & Johnston progression toward a mountain objective:
+      Transition, Base, Specific, Taper. Give it an event date and the phases
+      are counted back from the objective.
+    phases:
+      - id: transition
+        name: "Transition"
+        kind: transition
         weeks: 4
         framework_id: uphill_transition_phase
         focus: "Recovery and movement prep"
-      - phase: base
+        description: >
+          Rebuild from the off-season. Structured load returns without
+          intensity: aerobic work stays strictly in Zones 1–2 (nose-breathing),
+          strength is general and progressed linearly, mobility is near daily.
+          The point is general work capacity and clean movement before volume
+          climbs.
+        adaptations:
+          - "General work capacity"
+          - "Movement quality and tissue tolerance"
+          - "Aerobic re-entry below AeT"
+        intensity: "Zones 1–2 only; no anaerobic work"
+      - id: base
+        name: "Base"
+        kind: base
         weeks: 16
         framework_id: uphill_base_phase
         focus: "Aerobic base building"
-      - phase: specific
+        description: >
+          The defining phase. High volumes of low-intensity work raise aerobic
+          capacity and capillarization, ramping about 10% a week for three
+          weeks and then unloading. The long aerobic day grows toward the
+          objective's duration. Once AeT is solid, muscular endurance enters
+          and weighted step-ups become the signature session; strength shifts
+          from general to mountain-specific.
+        adaptations:
+          - "Aerobic capacity and capillarization"
+          - "A rising aerobic threshold (closing the AeT–AnT gap)"
+          - "Muscular endurance introduced once AeT is solid"
+        intensity: "Polarized — about 90% Zones 1–2"
+      - id: specific
+        name: "Specific"
+        kind: specific
         weeks: 8
         framework_id: uphill_specific_phase
         focus: "Sport-specific muscular endurance"
-      - phase: taper
+        description: >
+          Training converges on the objective: vertical gain, pack weight,
+          terrain and long-day duration approach what the climb demands.
+          Muscular endurance is the central quality — weighted carries and box
+          step-ups to deep local fatigue. AnT intervals replace some general
+          aerobic time, max strength drops to maintenance, and long days run
+          back to back. Progress comes from specificity and the intensity
+          split, not from adding hours.
+        adaptations:
+          - "Mountain-specific muscular endurance"
+          - "Threshold (AnT) durability"
+          - "Back-to-back long-day tolerance"
+        intensity: "About 80/15/5 — AnT intervals enter"
+      - id: taper
+        name: "Taper"
+        kind: taper
         weeks: 3
         framework_id: uphill_taper_phase
         focus: "Peak and recover for event"
+        description: >
+          The last one to three weeks before the objective. Volume drops 40–60%
+          from the Specific peak while the short, sharp pieces stay to keep
+          neuromuscular sharpness. No new stimuli and no long days in the final
+          7–10 days; sleep, nutrition and mobility come first. The taper is the
+          deload.
+        adaptations:
+          - "Fatigue dissipates while fitness is kept"
+          - "Neuromuscular sharpness preserved"
+        intensity: "Low volume; short intensity kept"

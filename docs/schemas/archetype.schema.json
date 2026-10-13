@@ -349,7 +349,7 @@
     },
     "applicable_phases": {
       "type": "array",
-      "description": "Training phases in which this archetype is appropriate. If empty, applicable in all phases.",
+      "description": "Phase kinds (data/commons/phase_kinds.yaml) in which this archetype is appropriate — matched against the kind of the program phase, never its package-local id. If empty, applicable in all phases.",
       "items": {
         "type": "string",
         "enum": [

@@ -11,6 +11,7 @@ applicable_phases:
   - recovery
   - base
   - maintenance
+  - build
 training_levels:
   - novice
   - intermediate

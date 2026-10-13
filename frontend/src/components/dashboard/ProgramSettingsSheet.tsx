@@ -22,7 +22,7 @@ import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { useRegenerateFromWeek } from '@/api/programs'
 import type { GeneratedProgram } from '@/api/types'
-import { regenerateSource } from '@/lib/programSource'
+import { regenerateSource, tailResume } from '@/lib/programSource'
 
 interface ProgramSettingsSheetProps {
   program: GeneratedProgram
@@ -68,9 +68,12 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
   const canRegenerateFromTomorrow = weeksRemainingFromTomorrow > 0
 
   function handleRebuildFromTomorrow() {
+    const resume = tailResume(program, tomorrowWeekIdx)
     regenerate.mutate({
       ...regenerateSource(sourceGoalIds, sourceGoalWeights, program),
-      constraints: program.constraints ?? {},
+      trackId: resume.trackId,
+      startPhaseId: resume.startPhaseId,
+      constraints: resume.constraints,
       numWeeks: weeksRemainingFromTomorrow,
       weekInProgram: tomorrowWeekIdx + 1,
     })

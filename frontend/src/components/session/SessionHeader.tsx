@@ -9,14 +9,16 @@ interface SessionHeaderProps {
   weekNumber: number
   weekInPhase: number
   phase: TrainingPhase
+  /** The philosophy's own phase name. */
+  phaseLabel?: string
 }
 
-export function SessionHeader({ session, day, weekNumber, weekInPhase, phase }: SessionHeaderProps) {
+export function SessionHeader({ session, day, weekNumber, weekInPhase, phase, phaseLabel }: SessionHeaderProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
         <ModalityBadge modality={session.modality} />
-        <PhaseBadge phase={phase} />
+        <PhaseBadge phase={phase} label={phaseLabel} />
       </div>
       <h2 className="text-lg font-bold text-foreground">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</h2>
       <p className="text-sm text-muted-foreground">

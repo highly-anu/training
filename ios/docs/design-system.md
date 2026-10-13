@@ -212,26 +212,24 @@ Image(systemName: style.icon)
 
 ### 3.2 Training Phase Colors
 
-```swift
-enum TrainingPhase: String {
-    case base, build, peak, taper, deload, maintenance, rehab, post_op
-    
-    var color: Color {
-        switch self {
-        case .base:        return Color(hex: "#0ea5e9")
-        case .build:       return Color(hex: "#f59e0b")
-        case .peak:        return Color(hex: "#ef4444")
-        case .taper:       return Color(hex: "#22c55e")
-        case .deload:      return Color(hex: "#94a3b8")
-        case .maintenance: return Color(hex: "#a1a1aa")
-        case .rehab:       return Color(hex: "#84cc16")
-        case .post_op:     return Color(hex: "#a855f7")
-        }
-    }
-    
-    var label: String { rawValue.capitalized.replacingOccurrences(of: "_", with: "-") }
-}
-```
+A phase has two parts. Its **name** is its methodology's own ("Foundations",
+"Transmutation", "Specific"): `ProgramWeek.phaseLabel`, `PhilosophyPhase.name`.
+Its **colour** comes from its **kind**, the shared vocabulary in
+`data/commons/phase_kinds.yaml`. `PhaseStyle.color(for:)` is the one mapping,
+with the same hex values as the web's `lib/phaseColors.ts`:
+
+| Kind | Hex | | Kind | Hex |
+|---|---|---|---|---|
+| base | `#0ea5e9` | | specific | `#f97316` |
+| build | `#f59e0b` | | maintenance | `#a1a1aa` |
+| peak | `#ef4444` | | rehab | `#84cc16` |
+| taper | `#22c55e` | | post_op | `#a855f7` |
+| transition | `#8b5cf6` | | deload / recovery / active | `#94a3b8` |
+
+Never label a phase by its kind when the week carries a name, and never write
+a phase's description from its kind: the words belong to the methodology.
+Program ▸ Current used to colour four kinds with system colours and everything
+else grey.
 
 **Intuitive mapping (same as web):** Blue = foundation, Amber = building heat, Red = peak intensity, Green = tapering, Gray = recovery/maintenance.
 
@@ -1037,6 +1035,9 @@ the builder until 2026-10-01, which left the plan the athlete was on with no
 way to say what it was for — the web's equivalent is the Program overview's
 link into Explore.
 
+The sheet also lists the methodology's tracks, each with its phases and
+their descriptions (§6.22).
+
 Rules: the row reads the envelope's `sourceGoalIds`, never the builder's
 selection; the sheet is the one methodology reference on the phone.
 
@@ -1139,3 +1140,30 @@ Settings ▸ Devices shows the paired Connect IQ watch's last wellness reading
 under the device rows (`WellnessReading.summary()`, the web Devices card's
 line): the heart-rate low, the 7-day resting HR, Body Battery and recovery
 time — never the watch profile's `resting_hr`, which is the zone setting.
+
+---
+
+### 6.22 Track Phase List and Start Phase Picker
+
+**A methodology's phases read the same wherever they appear.**
+`Views/TrackPhaseList.swift` draws one track: a proportional strip coloured by
+kind (§3.2), then one row per phase with its own name, its length (marked
+"repeatable" for a block meant to cycle) and its focus line. Three presenters:
+the builder's track picker (step 2) and review (step 4), the Program settings
+sheet under its Track picker, and the methodology sheet (§6.18), which passes
+`showsDescriptions: true` to add each phase's description.
+
+`StartPhasePicker` (in `ProgramBuilderFlow.swift`) picks where a program
+starts from the chosen track's own phases; `nil` is the first phase. The
+builder (step 3) and the settings sheet use it, and both disable it while an
+event date is set, because the server then counts the phases back from the
+event.
+
+Rules: the phases come from `PhilosophyCard.tracks`, never from a hard-coded
+list — the builder offered base/build/peak/taper for every methodology, and
+sent them under a key the server never read. A request names the track
+(`track_id`) and start phase (`start_phase`) by id; a tail regenerate takes
+both from the week it starts at (`ProgramConstraintsDiff.merged`). A
+methodology with one track shows it without a choice; a track with one phase
+shows no start picker.
+

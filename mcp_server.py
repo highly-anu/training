@@ -213,50 +213,36 @@ progression_philosophy: complexity_based
                          # load_based | volume_based | complexity_based | time_based |
                          # density_based | feel_based | rpm_based | range_based
 
-primary_framework_id: {slug}_framework
-                         # Default framework ID for this philosophy
+primary_track_id: default
+                         # Default track. Each track is one way to follow this
+                         # philosophy: an ordered list of its OWN phases. Phase
+                         # names and text belong to this package only.
 
-framework_groups:
+tracks:
   - id: default
     name: "{title} Program"
-    type: alternatives
-    frameworks:
-      - {slug}_framework
-                         # For philosophies with one framework or multiple alternatives (pick one style).
-                         # Example alternatives group:
-                         # - id: training_styles
-                         #   name: "Training Approaches"
-                         #   type: alternatives
-                         #   frameworks:
-                         #     - {slug}_concurrent
-                         #     - {slug}_block_periodization
-                         #
-                         # For phased programs (sequential phases), use type: sequential:
-                         # - id: full_program
-                         #   name: "Full {title} Program"
-                         #   type: sequential
-                         #   frameworks:
-                         #     - {slug}_transition_phase
-                         #     - {slug}_base_phase
-                         #     - {slug}_specific_phase
-                         #     - {slug}_taper_phase
-                         #   canonical_phase_sequence:
-                         #     - phase: transition
-                         #       weeks: 4
-                         #       framework_id: {slug}_transition_phase
-                         #       focus: "Recovery and movement prep"
-                         #     - phase: base
-                         #       weeks: 16
-                         #       framework_id: {slug}_base_phase
-                         #       focus: "Foundation building"
-                         #     - phase: specific
-                         #       weeks: 8
-                         #       framework_id: {slug}_specific_phase
-                         #       focus: "Sport-specific adaptation"
-                         #     - phase: taper
-                         #       weeks: 3
-                         #       framework_id: {slug}_taper_phase
-                         #       focus: "Peak and recover for event"
+    description: "What this track is for and when to choose it."
+    phases:
+      - id: {slug}_block
+        name: "{title} Block"
+        kind: base           # transition | base | build | specific | peak | taper |
+                             # maintenance | deload | recovery | rehab | post_op | active
+                             # (data/commons/phase_kinds.yaml — the engine keys on this)
+        weeks: 8
+        framework_id: {slug}_framework
+        focus: "One-line focus"
+        description: "What this phase is and why, in this philosophy's own words."
+        # adaptations: ["…"]
+        # intensity: "…"
+        # repeatable: true   # a block that may be cycled
+                         # A phased program lists several phases in order, each on
+                         # the framework that builds its weeks:
+                         #   phases:
+                         #     - {{id: transition, name: Transition, kind: transition, weeks: 4,
+                         #        framework_id: {slug}_transition_phase, ...}}
+                         #     - {{id: base, name: Base, kind: base, weeks: 16,
+                         #        framework_id: {slug}_base_phase, ...}}
+                         # Alternative goals (pick one) are separate tracks.
 
 sources: []
 # notes: ""

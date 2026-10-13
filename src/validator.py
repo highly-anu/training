@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List
 
+from . import loader, phases
 from .goals import FrameworkResolutionError
 from .scheduler import select_framework
 
@@ -150,22 +151,68 @@ def _check_equipment(goal, constraints, archetypes, result):
             )
 
 
+def _phase_frameworks(goal, constraints) -> list:
+    """(phase entry, framework) for every phase the program will run, start first.
+
+    Checks used to run against the goal's default framework only, so a phase
+    on a different framework (Uphill's taper, say) was never checked at all.
+    Without a resolvable start phase this is just the selected framework.
+    """
+    seq = goal.get('phase_sequence') or []
+    try:
+        start = phases.resolve_start_phase(
+            seq, constraints.get('start_phase'), constraints.get('training_phase'))
+    except phases.PhaseResolutionError:
+        start = None
+    out: list = []
+    seen: set = set()
+    started = False
+    for entry in seq:
+        if not started and entry.get('phase_id') != start:
+            continue
+        started = True
+        fid = entry.get('framework_id')
+        if not fid or fid in seen:
+            continue
+        seen.add(fid)
+        try:
+            out.append((entry, loader.load_framework(fid)))
+        except FileNotFoundError:
+            continue
+    if not out:
+        out.append((None, select_framework(goal, constraints)))
+    return out
+
+
 def _check_days(goal, constraints, result):
     try:
-        fw = select_framework(goal, constraints)
+        checked = _phase_frameworks(goal, constraints)
     except FrameworkResolutionError as exc:
         result.add_error(
             'FRAMEWORK_UNRESOLVED', str(exc),
-            suggested_fix="Set primary_framework_id on the philosophy.",
+            suggested_fix="Give the philosophy a track whose phases name a framework_id.",
         )
         return
     except Exception:
         return
 
+    days = constraints.get('days_per_week', 5)
+    # Later phases on another framework: a warning per phase whose framework
+    # does not fit, never an error — the start phase decides feasibility.
+    for entry, later in checked[1:]:
+        lw = later.get('applicable_when', {})
+        lo, hi = lw.get('days_per_week_min', 1), lw.get('days_per_week_max', 7)
+        if not (lo <= days <= hi):
+            result.add_warning(
+                'PHASE_DAYS_MISMATCH',
+                f"Phase '{entry.get('name') or entry.get('phase_id')}' runs "
+                f"'{later['name']}', which expects {lo}–{hi} days/week. Athlete has {days}.",
+            )
+    fw = checked[0][1]
+
     applicable = fw.get('applicable_when', {})
     min_days = applicable.get('days_per_week_min', 1)
     max_days = applicable.get('days_per_week_max', 7)
-    days = constraints.get('days_per_week', 5)
 
     if days < min_days:
         result.add_error(
@@ -264,13 +311,34 @@ def _check_injury_conflicts(goal, constraints, modalities, injury_flags_data, re
 
 
 def _check_phase(goal, constraints, result):
-    phase = constraints.get('training_phase', 'base')
-    phase_names = [p['phase'] for p in goal.get('phase_sequence', [])]
-    if phase_names and phase not in phase_names:
+    """The start phase must be one of the track's phases.
+
+    It used to be a warning, after which generation ran a flat list of the
+    unknown phase on the default framework.
+    """
+    seq = goal.get('phase_sequence', [])
+    if not seq:
+        result.add_error(
+            'NO_PHASES', f"Goal '{goal['id']}' has no phase sequence.",
+            suggested_fix="Give the philosophy a track with phases.",
+        )
+        return
+    try:
+        phases.resolve_start_phase(
+            seq, constraints.get('start_phase'), constraints.get('training_phase'))
+    except phases.PhaseResolutionError as exc:
+        result.add_error(
+            'PHASE_NOT_IN_TRACK', str(exc),
+            suggested_fix=f"Start at one of: {[p.get('phase_id') for p in seq]}.",
+        )
+        return
+    if phases.legacy_kind_missing(seq, constraints.get('start_phase'),
+                                  constraints.get('training_phase')):
+        first = seq[0]
         result.add_warning(
-            'PHASE_NOT_IN_GOAL',
-            f"Phase '{phase}' is not in goal '{goal['id']}' phase sequence "
-            f"({phase_names}). Base-phase priorities will be used.",
+            'PHASE_KIND_NOT_IN_TRACK',
+            f"This track has no '{constraints.get('training_phase')}' phase; "
+            f"starting at {first.get('name') or first.get('phase_id')}.",
         )
 
 
@@ -293,9 +361,9 @@ def _check_schedule(goal, constraints, result):
     total_minutes = sum(cfg.get('minutes', 0) for cfg in day_configs.values())
     days_available = len([d for d in day_configs.values() if d.get('minutes', 0) > 0])
 
-    # Get framework expectations
+    # Get framework expectations (the start phase's framework)
     try:
-        fw = select_framework(goal, constraints)
+        fw = _phase_frameworks(goal, constraints)[0][1]
         expectations = fw.get('expectations', {})
         if not expectations:
             return

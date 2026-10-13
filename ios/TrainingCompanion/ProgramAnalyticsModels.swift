@@ -72,12 +72,20 @@ struct ProgramAnalytics: Decodable {
             let progressionModel: String?
         }
         struct Phase: Decodable {
+            /// The phase kind (colour, and the label of last resort).
             let name: String
+            /// The methodology's own phase id and name, and its description.
+            /// Absent from servers that predate philosophy-owned phases.
+            let id: String?
+            let label: String?
             let weekInPhase: Int?
             let weekInProgram: Int
             let totalWeeks: Int
             let focus: String?
+            let description: String?
             let isDeload: Bool
+
+            var displayName: String { label ?? name.replacingOccurrences(of: "_", with: " ").capitalized }
         }
         struct Fidelity: Decodable, Identifiable {
             let field: String

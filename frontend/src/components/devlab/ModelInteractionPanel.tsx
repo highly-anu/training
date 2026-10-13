@@ -26,14 +26,13 @@ const EDGES: Edge[] = [
     id: 'philosophy-framework',
     source: 'Philosophy',
     target: 'Framework',
-    fn: 'api._philosophy_to_goal() + scheduler.select_framework()',
-    file: 'api.py:637–687 + src/scheduler.py:49–131',
+    fn: 'goals.philosophy_to_goal(track_id) + generator._build_phase_entries()',
+    file: 'src/goals.py + src/phases.py + src/scheduler.py',
     knowledgeRatio: 40,
     yamlFromSource: [
-      'framework_groups[] (defines available frameworks)',
-      'framework_groups[].canonical_phase_sequence (for sequential programs)',
-      'framework_groups[].frameworks[] (for alternatives)',
-      'primary_framework_id (default framework)',
+      'tracks[] (ways to follow the philosophy; the builder picks one)',
+      'tracks[].phases[] (the philosophy\'s own phases: id, name, kind, weeks, framework_id, text)',
+      'primary_track_id (default track)',
       'bias (fallback priorities)',
     ],
     yamlFromTarget: [
@@ -44,10 +43,10 @@ const EDGES: Edge[] = [
     ],
     bakedLogic: [
       'Philosophy mode creates synthetic goal internally via api._philosophy_to_goal() (not exposed to user)',
-      'Sequential group: canonical_phase_sequence → phase timeline with framework_id per phase',
-      'Alternatives group: generic 3-phase sequence (base/build/peak) + user picks which framework',
-      'Framework selection priority: 1) phase-specific framework_id, 2) API forced_framework, 3) primary_framework_id',
-      'Priorities derived from primary_framework.sessions_per_week, or philosophy.bias as fallback',
+      'Track phases → phase timeline; every week runs the framework its phase names',
+      'Phase kind (data/commons/phase_kinds.yaml) drives archetype filters, multipliers and cadence',
+      'A legacy framework_id maps to the track and phase that run it',
+      'Priorities derived from the track\'s longest phase framework sessions_per_week, or philosophy.bias as fallback',
       'No standalone goal YAML files — goals deprecated in favor of direct philosophy → framework flow',
     ],
     hardcodedValues: [
@@ -197,10 +196,9 @@ const EXTENSIBILITY: ExtRow[] = [
     autoUsed: 'n/a',
     gaps: [
       'No POST /api/philosophies endpoint',
-      'Schema recently updated: framework_groups system (replaces frameworks_are_phases boolean)',
-      'framework_groups[] supports both alternatives (pick one) and sequential (phased program) types',
+      'Tracks replaced framework_groups and canonical_phase_sequence; validate_entities checks track/phase ids and ownership',
       'No effect on program generation when used standalone — must be paired with frameworks',
-      'Fix: add POST endpoint + validation for framework_groups structure and canonical_phase_sequence integrity',
+      'Fix: add POST endpoint with the same track validation (src/phases.validate_philosophy_tracks)',
     ],
   },
   {

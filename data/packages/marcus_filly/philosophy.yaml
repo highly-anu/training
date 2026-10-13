@@ -45,18 +45,34 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: rpe_autoregulation
-
-framework_groups:
-  - id: default
-    name: "Functional Bodybuilding Program"
-    type: alternatives
-    frameworks:
-      - rpe_autoregulation
-canonical_phase_sequence:
-  - phase: base
-    weeks: 8
-  - phase: build
-    weeks: 8
-  - phase: peak
-    weeks: 4
+# One repeating phase: Functional Bodybuilding autoregulates week to week
+# rather than by fixed blocks. Phase text is drafted from this package's own
+# notes and framework notes — review before relying on it.
+primary_track_id: functional_bodybuilding
+tracks:
+  - id: functional_bodybuilding
+    name: "Functional Bodybuilding"
+    description: >
+      Strength and muscle with joint health built in: RPE sets the load,
+      tempo sets the time under tension, and rehab work sits alongside the
+      performance work.
+    phases:
+      - id: autoregulated_block
+        name: "Autoregulated Block"
+        kind: build
+        weeks: 12
+        repeatable: true
+        framework_id: rpe_autoregulation
+        focus: "RPE-led strength with tempo"
+        description: >
+          Load is chosen by RPE each session instead of fixed percentages, so
+          an under-recovered day self-adjusts downward. Tempo prescriptions and
+          controlled eccentrics add time under tension without heavier loads.
+          When several sessions in a row come in at RPE 9–10 at weights that
+          used to feel like 7–8, deload then rather than waiting for the
+          calendar.
+        adaptations:
+          - "Strength and muscle"
+          - "Tissue resilience from eccentrics and isometrics"
+          - "Shoulder and joint health"
+        intensity: "RPE 7–9, tempo-controlled"

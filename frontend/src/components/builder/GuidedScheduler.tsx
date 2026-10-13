@@ -32,7 +32,7 @@ export function GuidedScheduler() {
     selectedGoalIds,
     goalWeights,
     sourceMode,
-    selectedFrameworkId,
+    selectedTrackId,
     selectedPhilosophyIds,
   } = useBuilderStore()
 
@@ -44,11 +44,11 @@ export function GuidedScheduler() {
     () => blendExpectations([], selectedGoalIds, goalWeights, {
       sourceMode,
       frameworks,
-      selectedFrameworkId,
+      selectedTrackId,
       selectedPhilosophyIds,
       philosophies,
     }),
-    [selectedGoalIds, goalWeights, sourceMode, frameworks, selectedFrameworkId, selectedPhilosophyIds, philosophies],
+    [selectedGoalIds, goalWeights, sourceMode, frameworks, selectedTrackId, selectedPhilosophyIds, philosophies],
   )
 
   // Initialize from Profile schedule or create default

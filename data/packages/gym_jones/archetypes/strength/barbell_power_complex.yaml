@@ -10,6 +10,7 @@ applicable_phases:
   - build
   - peak
   - maintenance
+  - base
 training_levels:
   - intermediate
   - advanced

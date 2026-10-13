@@ -1,20 +1,39 @@
 import { useMemo } from 'react'
 import { differenceInWeeks } from 'date-fns'
-import type { GeneratedProgram, GoalProfile, TrainingPhase, WeekData } from '@/api/types'
+import type { GeneratedProgram, GoalProfile, Phase, PhaseEntry, PhaseKind, WeekData } from '@/api/types'
+import { phaseEntryFor } from '@/lib/tracks'
 
 export interface PhaseSegment {
-  phase: TrainingPhase
+  /** The phase kind — colours key on it. */
+  phase: PhaseKind
+  /** The philosophy's own phase id and name, when the program carries them. */
+  phaseId?: string
+  name?: string
   weeks: number
   focus?: string
+  /** The goal's entry for this phase — the only source of its words. */
+  entry?: PhaseEntry
   startWeek: number
   endWeek: number
+}
+
+/** Segments for a track's phases, before any program exists (builder, Explore). */
+export function trackSegments(phases: Phase[]): PhaseSegment[] {
+  const out: PhaseSegment[] = []
+  let cursor = 1
+  for (const p of phases) {
+    out.push({ phase: p.kind, phaseId: p.id, name: p.name, weeks: p.weeks, focus: p.focus,
+               startWeek: cursor, endWeek: cursor + p.weeks - 1 })
+    cursor += p.weeks
+  }
+  return out
 }
 
 export interface PhaseCalendar {
   segments: PhaseSegment[]
   totalWeeks: number
   currentWeek: number | null
-  currentPhase: TrainingPhase | null
+  currentPhase: PhaseKind | null
   weeksToEvent: number | null
 }
 
@@ -28,27 +47,35 @@ const EMPTY: PhaseCalendar = { segments: [], totalWeeks: 0, currentWeek: null, c
  * 8 + 6 + 4 = 18 weeks for Starting Strength — whatever the program held, so
  * a 4-week plan read "Week 1 / 18", and the injuries sheet, which sizes its
  * regenerate from this total, asked for 18 weeks and dropped the kept head.
- * The goal still contributes a phase's focus text and the event date.
+ * The goal still contributes a phase's own words and the event date.
+ *
+ * Weeks are grouped by the philosophy's phase id, so two phases of the same
+ * kind stay two segments; a program stored before tracks groups by kind.
  */
 export function buildPhaseCalendar(
   weeks: WeekData[] | undefined,
   goal: GoalProfile | undefined,
   currentWeek = 1,
 ): PhaseCalendar {
-  const focusOf = new Map<string, string | undefined>(
-    (goal?.phase_sequence ?? []).map((entry) => [entry.phase, entry.focus]),
-  )
   const segments: PhaseSegment[] = []
+  const keyOf = (w: Pick<WeekData, 'phase' | 'phase_id'>) => w.phase_id ?? w.phase
 
   if (weeks && weeks.length > 0) {
     let cursor = 1
+    let lastKey: string | null = null
     for (const week of weeks) {
       const last = segments[segments.length - 1]
-      if (last && last.phase === week.phase) {
+      if (last && lastKey === keyOf(week)) {
         last.weeks += 1
         last.endWeek = cursor
       } else {
-        segments.push({ phase: week.phase, weeks: 1, focus: focusOf.get(week.phase), startWeek: cursor, endWeek: cursor })
+        const entry = phaseEntryFor(goal, week)
+        segments.push({
+          phase: week.phase, phaseId: week.phase_id ?? entry?.phase_id,
+          name: week.phase_name ?? entry?.name, weeks: 1, focus: entry?.focus, entry,
+          startWeek: cursor, endWeek: cursor,
+        })
+        lastKey = keyOf(week)
       }
       cursor += 1
     }
@@ -56,8 +83,8 @@ export function buildPhaseCalendar(
     // No weeks to read yet (the builder's preview): the methodology's plan.
     let cursor = 1
     for (const entry of goal.phase_sequence) {
-      segments.push({ phase: entry.phase, weeks: entry.weeks, focus: entry.focus,
-                      startWeek: cursor, endWeek: cursor + entry.weeks - 1 })
+      segments.push({ phase: entry.phase, phaseId: entry.phase_id, name: entry.name, weeks: entry.weeks,
+                      focus: entry.focus, entry, startWeek: cursor, endWeek: cursor + entry.weeks - 1 })
       cursor += entry.weeks
     }
   } else {

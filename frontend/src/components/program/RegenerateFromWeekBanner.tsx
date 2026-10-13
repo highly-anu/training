@@ -6,7 +6,7 @@ import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useRegenerateFromWeek } from '@/api/programs'
 import { constraintDifferences, mergedConstraints } from '@/lib/programConstraintsDiff'
-import { regenerateSource } from '@/lib/programSource'
+import { regenerateSource, tailResume } from '@/lib/programSource'
 
 /**
  * "Your program was built for different settings." Shown on Profile when
@@ -44,11 +44,13 @@ export function RegenerateFromWeekBanner() {
 
   function run() {
     if (!program) return
-    const week = program.weeks[startIdx]
+    const resume = tailResume(program, startIdx)
     regenerate.mutate(
       {
         ...regenerateSource(ids, sourceGoalWeights, program),
-        constraints: mergedConstraints(program.constraints, profile, week?.week_in_phase ?? null),
+        trackId: resume.trackId,
+        startPhaseId: resume.startPhaseId,
+        constraints: mergedConstraints(resume.constraints, profile),
         numWeeks: remaining,
         weekInProgram: startIdx + 1,
         customInjuryFlags,

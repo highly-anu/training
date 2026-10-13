@@ -22,7 +22,7 @@ export function PhaseBar({ segments, totalWeeks, currentWeek }: PhaseBarProps) {
               key={seg.phase + seg.startWeek}
               className={cn('transition-all', colors.bg)}
               style={{ width: `${pct}%` }}
-              title={`${colors.label}: weeks ${seg.startWeek}–${seg.endWeek}`}
+              title={`${seg.name ?? colors.label}: weeks ${seg.startWeek}–${seg.endWeek}`}
             />
           )
         })}
@@ -41,7 +41,7 @@ export function PhaseBar({ segments, totalWeeks, currentWeek }: PhaseBarProps) {
               style={{ width: `${pct}%` }}
             >
               <span className={cn('text-[9px] sm:text-[10px] truncate', colors.text)}>
-                {colors.label}
+                {seg.name ?? colors.label}
               </span>
             </div>
           )

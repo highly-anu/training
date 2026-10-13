@@ -4,7 +4,7 @@ import os as _os
 import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
-from . import provenance
+from . import phases, provenance
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -436,6 +436,7 @@ def select_exercise(
     session_used = set(session_used_ids or [])
     ex_filter = slot.get('exercise_filter', {})
     primary_sources = primary_sources or set()
+    excludes_max = phases.kind_flag(phase, 'excludes_max_effort')
 
     n_pool = 0
     n_package = 0
@@ -485,8 +486,8 @@ def select_exercise(
                 continue
             n_filter += 1
 
-            # Taper: no max-effort exercises
-            if phase == 'taper' and ex.get('effort') == 'max':
+            # Taper kinds: no max-effort exercises
+            if excludes_max and ex.get('effort') == 'max':
                 continue
 
             slot_intensity = ex_filter.get('intensity') or slot.get('intensity', '')

@@ -54,12 +54,94 @@ notes: >
 # archetype in this package. Borrowing, where it happens, is declared below.
 self_contained: true
 
-primary_framework_id: concurrent_training
-
-framework_groups:
-  - id: alternatives
-    name: "Training Styles"
-    type: alternatives
-    frameworks:
-      - concurrent_training
-      - gpp_circuits
+# Two tracks: the 4-month macro on concurrent training, and GPP circuits as a
+# repeating block. Phase text is drafted from this package's own notes and
+# framework notes — review before relying on it.
+primary_track_id: four_month_macro
+tracks:
+  - id: four_month_macro
+    name: "4-Month Macro"
+    description: >
+      Month by month from strength to the job: strength-dominant, then
+      power-endurance, then job-specific, then maintenance. The strength
+      standards are prerequisites for entering it, not its goals.
+    phases:
+      - id: strength
+        name: "Strength"
+        kind: base
+        weeks: 4
+        framework_id: concurrent_training
+        focus: "Strength-dominant month"
+        description: >
+          Month one leans on strength — four strength exposures every two
+          weeks — with conditioning held at a level that does not interfere.
+          RPE autoregulation sets the day's load against accumulated fatigue.
+        adaptations:
+          - "Maximal and relative strength"
+          - "Fatigue management across modalities"
+        intensity: "Heavy strength; conditioning held back"
+      - id: power_endurance
+        name: "Power Endurance"
+        kind: build
+        weeks: 4
+        framework_id: concurrent_training
+        focus: "Power-endurance month"
+        description: >
+          Month two turns strength into repeatable output: barbell complexes,
+          sandbag work and conditioning that asks for power again and again
+          under fatigue.
+        adaptations:
+          - "Repeatable power under fatigue"
+          - "Work capacity"
+        intensity: "High, in repeated efforts"
+      - id: job_specific
+        name: "Job Specific"
+        kind: specific
+        weeks: 4
+        framework_id: concurrent_training
+        focus: "Job-specific month"
+        description: >
+          Month three shapes the work to the job: rucks, loaded carries, named
+          workouts and the PT-test events, so fitness is expressed in the forms
+          it will be needed.
+        adaptations:
+          - "Task-specific conditioning"
+          - "Load-carriage durability"
+        intensity: "Task-paced"
+      - id: maintenance
+        name: "Maintenance"
+        kind: maintenance
+        weeks: 4
+        framework_id: concurrent_training
+        focus: "Maintenance month"
+        description: >
+          Month four holds what the macro built at a sustainable dose, with
+          low-heart-rate recovery sessions (65% of max or less) between the
+          hard days.
+        adaptations:
+          - "Retained strength and conditioning"
+          - "Recovery"
+        intensity: "Sustainable; recovery at ≤65% max HR"
+  - id: gpp_circuits
+    name: "GPP Circuits"
+    description: >
+      Broad work capacity and durability through circuits, carries and
+      fixed-task benchmarks, repeated as a block.
+    phases:
+      - id: gpp_block
+        name: "GPP Block"
+        kind: build
+        weeks: 8
+        repeatable: true
+        framework_id: gpp_circuits
+        focus: "Work capacity and durability"
+        description: >
+          Sandbag complexes, loaded-carry circuits and bodyweight circuits,
+          progressed by time-to-task: the same circuit faster, heavier or with
+          less rest. Named benchmarks and SMMF efforts test work capacity and
+          mental durability at once.
+        adaptations:
+          - "General work capacity"
+          - "Durability under load"
+          - "Mental durability"
+        intensity: "Time-to-task"
