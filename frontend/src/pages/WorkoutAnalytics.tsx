@@ -40,17 +40,18 @@ import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'program' | 'progress' | 'development' | 'load' | 'recovery'
+type SubTab = 'program' | 'progress' | 'blocks' | 'load' | 'recovery'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
 // Analytics is the interpretation: what the program is for (Program), how the
 // athlete is progressing against it (Progress), what the body has been asked
-// to absorb (Load) and how it is coping (Recovery). The record itself — every
-// recorded workout — lives under Log.
+// to absorb (Load) and how it is coping (Recovery); Blocks reads every program
+// the athlete has run. The record itself — every recorded workout — lives under
+// Log. Names and order match the phone's Analytics sections.
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'program',  label: 'Program'  },
   { id: 'progress', label: 'Progress' },
-  { id: 'development', label: 'Development' },
+  { id: 'blocks',   label: 'Blocks'   },
   { id: 'load',     label: 'Load'     },
   { id: 'recovery', label: 'Recovery' },
 ]
@@ -582,7 +583,10 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
 export function WorkoutAnalytics() {
   // URL-driven so Home cards and the /bio redirect can land on a tab.
   const [searchParams, setSearchParams] = useSearchParams()
-  const tabParam = searchParams.get('tab')
+  // `development` is the tab's name before 2026-10-13, when both clients
+  // settled on Blocks (the phone's segment control cannot fit the long word).
+  const rawTab = searchParams.get('tab')
+  const tabParam = rawTab === 'development' ? 'blocks' : rawTab
   const activeTab: SubTab = tabParam && SUB_TAB_IDS.has(tabParam) ? (tabParam as SubTab) : 'program'
   function setActiveTab(tab: SubTab) {
     setSearchParams(
@@ -623,7 +627,7 @@ export function WorkoutAnalytics() {
             <ProgressionTab />
           </div>
         )}
-        {activeTab === 'development' && <DevelopmentTab />}
+        {activeTab === 'blocks'   && <DevelopmentTab />}
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}
       </div>

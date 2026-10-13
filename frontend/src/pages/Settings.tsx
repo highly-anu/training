@@ -24,8 +24,8 @@ interface SubTabItem { id: SettingsTab; label: string; Icon: React.ElementType }
 
 const SUB_TABS: SubTabItem[] = [
   { id: 'connections', label: 'Connections', Icon: Plug },
-  { id: 'account',     label: 'Account',     Icon: UserCircle },
   { id: 'appearance',  label: 'Appearance',  Icon: Palette },
+  { id: 'account',     label: 'Account',     Icon: UserCircle },
   ...(DEVLAB_ENABLED ? [{ id: 'developer' as const, label: 'Developer', Icon: Terminal }] : []),
 ]
 

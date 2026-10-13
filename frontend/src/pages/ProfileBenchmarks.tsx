@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Dumbbell, AlertTriangle, Trophy, Calendar, Heart, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
+import { User, Dumbbell, AlertTriangle, Trophy, Calendar, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -18,7 +18,7 @@ import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, Training
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'athlete' | 'equipment' | 'injuries' | 'benchmarks' | 'schedule' | 'heartrate'
+type SubTab = 'athlete' | 'equipment' | 'injuries' | 'schedule' | 'benchmarks'
 
 interface SubTabItem {
   id: SubTab
@@ -30,9 +30,8 @@ const SUB_TABS: SubTabItem[] = [
   { id: 'athlete',     label: 'Athlete',     Icon: User },
   { id: 'equipment',  label: 'Equipment',  Icon: Dumbbell      },
   { id: 'injuries',   label: 'Injuries',   Icon: AlertTriangle },
-  { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
   { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
-  { id: 'heartrate',  label: 'Heart Rate', Icon: Heart         },
+  { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
 ]
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
@@ -582,12 +581,16 @@ function ScheduleOverview() {
   )
 }
 
-// ── HR Settings ───────────────────────────────────────────────────────────────
+// ── Heart rate (a section of Athlete) ─────────────────────────────────────────
 
 const ZONE_COLORS = ['#94a3b8', '#38bdf8', '#fbbf24', '#f97316', '#ef4444']
 const ZONE_LABELS = ['Recovery', 'Aerobic', 'Tempo', 'Threshold', 'Max']
 
-function HRSettingsOverview() {
+/**
+ * Max HR and zone edges — a section of the Athlete tab, as on the phone, since
+ * 2026-10-13 (it was its own Heart Rate tab; `?tab=heartrate` lands here).
+ */
+function HeartRateSection() {
   const dob = useProfileStore((s) => s.dateOfBirth ?? null)
   const hrConfig = useProfileStore((s) => s.hrConfig)
   const setHRConfig = useProfileStore((s) => s.setHRConfig)
@@ -650,14 +653,10 @@ function HRSettingsOverview() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
+      <div className="space-y-10">
 
-        <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
-            Profile settings
-          </p>
-          <h2 className="text-2xl font-semibold leading-snug">Heart rate zones.</h2>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Heart rate zones</h3>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
             Set your real max HR and adjust zone boundaries to match your physiology.
             Both the web app and iOS read from this configuration.
@@ -788,7 +787,6 @@ function HRSettingsOverview() {
         </div>
 
       </div>
-    </div>
   )
 }
 
@@ -849,7 +847,7 @@ function AthleteOverview() {
           <div className="flex items-center justify-between gap-3 p-4">
             <div>
               <p className="text-sm font-medium">Date of birth</p>
-              <p className="text-[11px] text-muted-foreground">Estimates max heart rate unless you set one under Heart Rate.</p>
+              <p className="text-[11px] text-muted-foreground">Estimates max heart rate unless you set one below.</p>
             </div>
             <input
               type="date"
@@ -905,6 +903,8 @@ function AthleteOverview() {
           </div>
         </div>
 
+        <HeartRateSection />
+
         {/* The account moved to Settings ▸ Account: configuration, not the athlete. */}
         <div className="rounded-lg border border-border/30 bg-card/40 p-4 flex items-center justify-between gap-3">
           <p className="text-[11px] text-muted-foreground">Account, sign-out, connected services and appearance live in Settings.</p>
@@ -959,7 +959,9 @@ export function ProfileBenchmarks() {
   // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
   // straight on Connections — they redirect to /profile?tab=connections.
   const [searchParams] = useSearchParams()
-  const requestedTab = searchParams.get('tab') as SubTab | null
+  // Heart Rate folded into Athlete on 2026-10-13; old links land there.
+  const tabParam = searchParams.get('tab')
+  const requestedTab = (tabParam === 'heartrate' ? 'athlete' : tabParam) as SubTab | null
   const [activeTab, setActiveTab] = useState<SubTab>(
     requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
   )
@@ -1001,7 +1003,6 @@ export function ProfileBenchmarks() {
           {activeTab === 'injuries'   && <InjuriesOverview />}
           {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
           {activeTab === 'schedule'   && <ScheduleOverview />}
-          {activeTab === 'heartrate'  && <HRSettingsOverview />}
         </div>
       </div>
     </motion.div>

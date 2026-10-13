@@ -295,7 +295,7 @@ export function Dashboard() {
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
         <House className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Home</h1>
+        <h1 className="text-lg font-semibold">Today</h1>
         <div className="ml-auto">
           <ProgramSettingsSheet program={program} />
         </div>
