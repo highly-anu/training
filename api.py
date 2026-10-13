@@ -121,6 +121,56 @@ def _cors(response):
         response.headers['Access-Control-Max-Age'] = '600'
     return response
 
+
+# A client that stops reading (a phone suspended mid-download) used to hold the
+# only worker in sendall until gunicorn killed it at --timeout, 120 s later,
+# with every other request — the watch's sync included — queued behind it. A
+# send that makes no progress for this long now fails and frees the thread.
+_SEND_TIMEOUT_S = 30
+
+
+@app.before_request
+def _bound_send():
+    sock = request.environ.get('gunicorn.socket')
+    if sock is None:
+        return None
+    try:
+        import socket as _socket
+        import struct as _struct
+        sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_SNDTIMEO,
+                        _struct.pack('ll', _SEND_TIMEOUT_S, 0))
+    except (OSError, AttributeError):
+        pass
+    return None
+
+
+# The program envelope and the health snapshot run to megabytes of JSON; gzip
+# shrinks them about tenfold, so they leave the socket before a stalling client
+# can hold the thread. Never for a watch: whether Garmin's phone bridge
+# decodes gzip for a Connect IQ request is not documented, and its payloads
+# are small.
+_GZIP_MIN_BYTES = 2048
+
+
+@app.after_request
+def _gzip(response):
+    if (response.direct_passthrough or response.is_streamed
+            or response.status_code < 200 or response.status_code >= 300
+            or response.mimetype != 'application/json'
+            or 'Content-Encoding' in response.headers
+            or 'gzip' not in request.headers.get('Accept-Encoding', '').lower()
+            or request.headers.get('Authorization', '').startswith('Bearer ciqdev_')):
+        return response
+    body = response.get_data()
+    if len(body) < _GZIP_MIN_BYTES:
+        return response
+    import gzip as _gzip_mod
+    response.set_data(_gzip_mod.compress(body, compresslevel=5))
+    response.headers['Content-Encoding'] = 'gzip'
+    response.headers['Content-Length'] = str(len(response.get_data()))
+    response.vary.add('Accept-Encoding')
+    return response
+
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 

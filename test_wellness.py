@@ -201,11 +201,7 @@ def sql_suite() -> None:
         _sql_checks(dsn)
     finally:
         import src.db
-        try:
-            if src.db._pg_conn is not None:
-                src.db._pg_conn.close()
-        except Exception:
-            pass
+        src.db.close_conn()
         with conn.cursor() as cur:
             cur.execute(f'DROP DATABASE IF EXISTS {name} WITH (FORCE)')
         conn.close()
