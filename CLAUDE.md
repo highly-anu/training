@@ -42,7 +42,8 @@ training/
 ├── requirements.txt          # pyyaml, flask, flask-cors
 ├── src/
 │   ├── generator.py          # Orchestrates full program generation
-│   ├── goals.py              # Builds the synthetic goal from a philosophy
+│   ├── goals.py              # Builds the synthetic goal from one track of a philosophy
+│   ├── phases.py             # Tracks, phases, kinds; start-phase resolution
 │   ├── provenance.py         # Which packages a goal may draw from
 │   ├── scheduler.py          # Assigns modalities to days (recovery-aware)
 │   ├── selector.py           # Selects archetypes and exercises per slot
@@ -53,12 +54,12 @@ training/
 │   └── summary.py            # Volume summary computation
 ├── tools/
 │   ├── check_provenance.py   # Asserts no package leaks; --coverage reports gaps
-│   ├── check_styles.py       # Every philosophy x style validates and generates
+│   ├── check_styles.py       # Every philosophy x track x phase generates on its framework
 │   └── validate_entities.py  # YAML against docs/schemas/
 ├── data/
 │   ├── packages/             # 11 self-contained philosophy packages
 │   │   └── <philosophy_id>/
-│   │       ├── philosophy.yaml      # beliefs, scope, framework_groups,
+│   │       ├── philosophy.yaml      # beliefs, scope, tracks (its own phases),
 │   │       │                        #   self_contained, borrows_from
 │   │       ├── frameworks/          # the training styles it offers
 │   │       ├── archetypes/          # session shapes, one subdir per modality
@@ -66,6 +67,7 @@ training/
 │   │       ├── exercise_media.yaml  # demo links
 │   │       └── level_seeds.yaml     # optional; per-level assumed knowledge
 │   ├── commons/              # shared, owned by no philosophy
+│   │   ├── phase_kinds.yaml         # the phase kinds the engine keys on
 │   │   ├── modalities/              # 12 modality definitions
 │   │   ├── movement_patterns.yaml   # slot-filter aliases (press, hinge, carry…)
 │   │   └── constraints/
@@ -160,12 +162,12 @@ the reasoning are in `docs/information-architecture.md`; the work is ranked in
 ## System Architecture
 
 ```
-Philosophy → Framework Groups → Frameworks → Modalities → Archetypes → Exercises → Progression → Constraints → Program
+Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes → Exercises → Progression → Constraints → Program
 ```
 
-1. **Philosophy** — training methodology with framework_groups (sequential or alternatives)
-2. **Framework groups** — organize frameworks as sequential phases (e.g., base→build→peak) or alternative approaches
-3. **Synthetic goal** — generated from philosophy priorities + phase sequence; allows philosophy blending
+1. **Philosophy** — training methodology; declares one or more tracks
+2. **Tracks and phases** — a track is one way to follow the philosophy, an ordered list of its own phases; each phase names its framework and a shared kind
+3. **Synthetic goal** — built from one track (its phases become `phase_sequence`) + priorities; allows philosophy blending
 4. **Scheduler** — maps priorities + framework → session slots per day (recovery-aware)
 5. **Selector** — picks best archetype per slot; fills archetype slots with exercises (injury/equipment/level filtered)
 6. **Progression** — calculates load prescription per slot type (linear_load, rpe_autoregulation, time_to_task, distance, density)
@@ -190,8 +192,41 @@ Philosophy → Framework Groups → Frameworks → Modalities → Archetypes →
   on back-to-back days despite the recovery windows — Uphill's specific phase does, for
   its two ME long days (`scheduler.consecutive_allowances`).
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
-- **Phased frameworks**: Philosophies can specify different frameworks for each phase using `framework_groups` with `type: sequential`. Each group contains a `canonical_phase_sequence` with `framework_id` per phase. Framework selection priority: 1) phase-specific override, 2) API request override (`forced_framework`), 3) goal framework alternatives, 4) default framework. Uphill Athlete uses this for transition→base→specific→taper progression.
-- **Framework groups**: Philosophy `framework_groups[]` defines how frameworks are organized. Type `sequential` creates phased programs (UI shows "Full Program" button covering all phases). Type `alternatives` offers multiple styles/approaches (UI shows framework picker to choose one). Uphill Athlete has sequential phases; Wildman/Horsemen have alternatives.
+- **Philosophies own their phases** (`src/phases.py`). `philosophy.yaml` declares
+  `tracks`; each track is an ordered list of the philosophy's own phases — id, name,
+  `kind`, weeks, the `framework_id` that builds its weeks, and its words (`focus`,
+  `description`, `adaptations`, `intensity`, `repeatable`). A **framework** is how a
+  week is built; a **phase** is a block of weeks. Uphill runs one track of four
+  phases on four frameworks; Wildman offers two tracks (General Practice, Pentathlon
+  Prep); single-block methods have one repeatable phase. There is no default
+  sequence: a philosophy without tracks cannot become a goal.
+  - **The engine reads the kind, never the words.** `data/commons/phase_kinds.yaml`
+    is the vocabulary: archetype `applicable_phases`, the time/distance multipliers,
+    cadence spreading, the taper max-effort filter and the analytics deload reading
+    all key on it. Phase text reaches the clients only from the program's own goal
+    (`goal.phase_sequence`, `goal.track`); the web's overview used to describe every
+    phase from one map written from Uphill and Gym Jones.
+  - **Every week runs its phase's framework.** Weeks carry `phase` (the kind),
+    `phase_id`, `phase_name`, `track_id` and `framework`. `phases.week_entry` is the
+    one constructor the plain generate path and the event-date calendar share — the
+    calendar used to drop the framework, so Uphill's specific and taper weeks ran
+    its base framework.
+  - **Start phase.** `start_phase` (a phase id) or the legacy `training_phase` (a kind,
+    still sent by iOS: mapped to the first phase of that kind, or the first phase with
+    a `PHASE_KIND_NOT_IN_TRACK` warning). Neither → the track's first phase; the API
+    no longer defaults to `'base'`. An unknown `start_phase` is infeasible.
+  - **Picks.** `track_id` picks a track (a blend may name any member's; otherwise the
+    heaviest member's primary track). The legacy `framework_id` maps to the track and
+    phase that run it (`goals.owner_track_for_framework`) — it used to sit in
+    constraints as `forced_framework`, where the phase's framework overrode it.
+  - **Regenerates** send the target week's `track_id`, `start_phase` and
+    `periodization_week` (`lib/programSource.tailResume`), so a tail resumes in its
+    own phase.
+  - `tools/check_styles.py` generates every phase of every track and fails if a week
+    runs another framework; `check_provenance.py --coverage` fails if a phase's
+    framework schedules a modality no package archetype applies to for its kind;
+    `validate_entities.py` checks track/phase ids and framework ownership;
+    `test_phases.py` covers the rest.
 
 ## Design
 
@@ -666,7 +701,8 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (125 files)
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
-.venv/bin/python tools/check_styles.py                   # every philosophy x style generates
+.venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
+SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ownership, start phase, event date, legacy picks
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1

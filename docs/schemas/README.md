@@ -84,10 +84,14 @@ clean       jerk    snatch    tgu    skill    ruck
 farmer_carry    rack_carry    step_up
 ```
 
-### Training Phase IDs
+### Phase kinds
 ```
-active, base, build, peak, taper, deload, maintenance, rehab, post_op
+transition, base, build, specific, peak, taper, maintenance, deload,
+recovery, rehab, post_op, active
 ```
+Defined, with the engine semantics each carries, in `data/commons/phase_kinds.yaml`.
+A philosophy's phases have their own ids and names; each declares one of these
+kinds. Archetype `applicable_phases` lists kinds.
 
 ### Progression Model IDs
 ```
@@ -125,15 +129,29 @@ The generator needs to know how to represent a slot to the athlete (sets×reps v
 **Why `expectations` on framework instead of goal?**
 Different frameworks have different time/volume requirements even when serving the same goal. Starting Strength needs 3×/week 60-min sessions; Uphill Athlete base phase needs 5×/week with varied session durations. The framework defines the actual training structure, so it owns the expectations. Goals can derive composite expectations when blending multiple frameworks.
 
-**Why `framework_groups[]` on philosophy?**
-Some methodologies prescribe sequential periodization phases (Uphill Athlete: transition → base → specific → taper), while others offer alternative frameworks for different goals or styles (Horsemen GPP, Wildman Kettlebell). The `framework_groups` array organizes frameworks by type:
-- `type: sequential` — Frameworks are phases that run in order. UI shows "Full Program (All Phases)" button. Each group has `canonical_phase_sequence` with phase durations and framework assignments.
-- `type: alternatives` — Frameworks are different approaches where the user picks one. UI shows framework picker grid.
+**Why `tracks[]` on philosophy, and phases inside them?**
+A philosophy owns its phases. Each track is one way of following it — a goal or
+a program shape — and is an ordered list of the philosophy's own phases:
+- Uphill Athlete: one track (transition → base → specific → taper), each phase
+  on its own framework.
+- Wildman Kettlebell: two tracks, General Practice and Pentathlon Prep, each
+  with its own phases on its own framework.
+- Starting Strength: one track with one repeatable Linear Progression phase.
 
-This structure allows a single philosophy to define both sequential programs AND alternative approaches (e.g., a base program plus specialized variants) in a single unified model.
+A **framework** is how a week is built (session mix, intensity, progression,
+cadence, deload). A **phase** is a block of weeks: an id, a name, a length, the
+framework that builds its weeks, a `kind`, and the words an athlete reads about
+it (`focus`, `description`, `adaptations`, `intensity`). Picking a style in the
+builder is picking a track. This replaced `framework_groups` (sequential vs
+alternatives), the top-level `canonical_phase_sequence`, and the base 8 / build 6
+/ peak 4 sequence the engine used to invent for philosophies that declared none.
 
-**Why `canonical_phase_sequence` inside framework groups?**
-For `type: sequential` groups, the philosophy defines the standard phase progression. Each phase entry specifies weeks, framework_id, and focus description. This allows the generator to construct multi-phase programs with correct framework selection per phase, and lets the UI show expected total duration (sum of all phase weeks). The sequence lives inside the group rather than at philosophy level to support philosophies with multiple sequential programs.
+**Why a shared `kind` on every phase?**
+The engine needs to know what a phase *is* without knowing whose it is: archetype
+`applicable_phases`, time and distance multipliers, cadence spreading, the taper
+max-effort filter and the analytics deload reading all key on the kind. The
+words stay in the package, so no philosophy's phase is ever described in
+another's terms, and nothing in `src/` names a philosophy.
 
 ---
 

@@ -42,6 +42,7 @@ deferred is under *Later*.
 | 4 | Watch app: Garmin-native look, menus and icons | P2 | M | watch |
 | 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
+| 7 | Phases and tracks: review the drafted phase text; iOS track picker and phase names (*IA*) | P2 | M | content, iOS |
 
 ---
 
@@ -586,6 +587,34 @@ products and `test_watch_spec.py` passes. Still to do:
    after the hardware check.
 5. **iOS Apple Watch (M).** It still picks views by `slotType`/`archetypeId`; it
    could read the same `?spec=1` table.
+
+---
+
+### 7. Phases and tracks: review the text, bring iOS along — P2 · M
+
+Philosophies own their phases since 2026-10-13 (`src/phases.py`, CLAUDE.md
+*Philosophies own their phases*). Open:
+
+1. **Review the drafted phase text (S, content).** Every phase name, focus,
+   description, adaptation list and intensity line in the eleven
+   `philosophy.yaml` files was drafted from that package's own notes. Gym Jones'
+   Accumulation → Transmutation → Realization, Horsemen's four months and Ido
+   Portal's isolation → integration → expression come from their notes;
+   Wildman's phase names, and the single repeatable phase given to Starting
+   Strength, CrossFit, Marcus Filly and BJJ, are inferences.
+2. **Review the widened `applicable_phases` (S, content).** The per-phase
+   coverage check needed eleven archetypes to apply to more kinds. Wildman's
+   General Practice now runs `kb_pentathlon_training` as its strength-endurance
+   session in every phase, because that is the package's only one; a general
+   strength-endurance archetype may be the better fix.
+3. **iOS (M).** The phone shows `week.phase` capitalised (the kind) and its
+   builder offers base/build/peak/taper for every philosophy, which the server
+   maps onto the track. It should label weeks with `phase_name`, offer the
+   philosophy's tracks and their phases, and send `track_id` / `start_phase`.
+   Needs the simulator.
+4. **Analytics frame (S).** `/analytics/program` now returns the phase's
+   `label`, `description` and the `track`; neither client renders the
+   description yet.
 
 ---
 
