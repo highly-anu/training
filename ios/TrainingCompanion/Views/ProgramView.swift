@@ -1,7 +1,24 @@
 import SwiftUI
 
+/// Internal so `AppRouter` and deep links can name a section.
+/// The web Program's tabs, in its order (information-architecture.md §2):
+/// the weeks you are on, what the plan is, and the plans you have been on.
+/// One word each (§6.8). Calendar was "Current" until 2026-10-13.
+enum ProgramTab: Int, AppSubTab {
+    case calendar, overview, history
+
+    var label: String {
+        switch self {
+        case .calendar: return "Calendar"
+        case .overview: return "Overview"
+        case .history: return "History"
+        }
+    }
+}
+
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var router: AppRouter
 
     @State private var weekIndex: Int = 0
 
@@ -11,22 +28,8 @@ struct ProgramView: View {
 
     @State private var showBuilder = false
     @State private var showSettings = false
-    @State private var methodologySheet: PhilosophyCard? = nil
     @State private var selectedDay: DaySelection? = nil
-    @State private var section: ProgramSection = .current
-
-    /// The two things this screen is about: the plan you are on, and the plans
-    /// you have been on. Two sections, one word each (§6.8).
-    private enum ProgramSection: Int, AppSubTab {
-        case current, history
-
-        var label: String {
-            switch self {
-            case .current: return "Current"
-            case .history: return "History"
-            }
-        }
-    }
+    @State private var section: ProgramTab = .calendar
 
     @ViewBuilder
     private var currentProgramSection: some View {
@@ -54,17 +57,20 @@ struct ProgramView: View {
 
                 AppSubTabContent(selection: $section) { tab in
                     switch tab {
-                    case .current: currentProgramSection
+                    case .calendar: currentProgramSection
+                    case .overview: ProgramOverviewTab()
                     case .history: ProgramHistoryView()
                     }
                 }
             }
             .navigationTitle("Program")
             .appTabStyle()
+            .onAppear { applyRequestedSection() }
+            .onChange(of: router.programSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     // History is a record, not something to build or configure.
-                    if section == .current {
+                    if section != .history {
                         if appState.allWeeks.isEmpty {
                             Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
                         } else {
@@ -110,10 +116,6 @@ struct ProgramView: View {
                     .padding(.top, 4)
                     .padding(.bottom, 12)
 
-                methodologyRow
-                    .padding(.horizontal)
-                    .padding(.bottom, 12)
-
                 Divider().padding(.bottom, 12)
 
                 swipeableSection
@@ -127,62 +129,6 @@ struct ProgramView: View {
             weekIndex = appState.currentWeekIndex ?? 0
             await AppRefresh.perform { await appState.loadProgram() }
         }
-        .task { await appState.loadPhilosophiesIfNeeded() }
-        .sheet(item: $methodologySheet) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
-        }
-    }
-
-    // MARK: - Methodology
-
-    /// "About this methodology" — the program explains itself (§6.18). A
-    /// blend offers one entry per source.
-    @ViewBuilder
-    private var methodologyRow: some View {
-        let cards = appState.programMethodologies()
-        if cards.count == 1, let card = cards.first {
-            Button {
-                AppHaptics.light()
-                methodologySheet = card
-            } label: {
-                methodologyLabel(card.name)
-            }
-            .buttonStyle(.plain)
-        } else if cards.count > 1 {
-            Menu {
-                ForEach(cards) { card in
-                    Button(card.name) { methodologySheet = card }
-                }
-            } label: {
-                methodologyLabel(cards.map(\.name).joined(separator: " + "))
-            }
-        }
-    }
-
-    private func methodologyLabel(_ name: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "book")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("About this methodology")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .contentShape(Rectangle())
     }
 
     /// A save that lost to a newer copy on the server (409). The reload has
@@ -567,6 +513,18 @@ private struct DaySelection: Identifiable {
     let id = UUID()
     let weekIndex: Int
     let dayName: String
+}
+
+extension ProgramView {
+    /// Move to the section the router asked for (a deep link), then clear it
+    /// so a later visit keeps the user's own last choice.
+    fileprivate func applyRequestedSection() {
+        guard let requested = router.programSection else { return }
+        if section != requested {
+            withAnimation(AppAnimation.springStandard) { section = requested }
+        }
+        router.clearProgramSection()
+    }
 }
 
 /// A run of consecutive weeks in one phase. Grouped by the methodology's own

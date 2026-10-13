@@ -212,3 +212,106 @@ enum WorkoutSortKey: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 }
+
+// MARK: - Server analysis → the views' models
+
+extension WorkoutAnalysis {
+    var decouplingResult: DecouplingResult? {
+        guard let d = decoupling else { return nil }
+        let color: Color = d.label == "efficient" ? .green : d.label == "moderate" ? .orange : .red
+        return DecouplingResult(pct: d.pct, label: d.label, color: color)
+    }
+}
+
+// MARK: - Load summary (GET /health/load/summary)
+
+/// Analytics ▸ Load's totals, mixes, consistency and zone minutes for one
+/// period, computed on the server (src/analytics/load_summary.py) — the
+/// document the web's Load tab reads. `AnalyticsEngine` is the fallback.
+struct LoadSummary: Decodable, Equatable {
+    struct Totals: Decodable, Equatable {
+        let sessions: Int
+        let minutes: Double
+        let distanceKm: Double?
+        let elevationGainM: Double?
+        let elevationLossM: Double?
+        let calories: Double?
+    }
+    struct Modality: Decodable, Equatable {
+        let id: String?
+        let minutes: Double
+        let pct: Int
+    }
+    struct Activity: Decodable, Equatable {
+        let activityType: String
+        let minutes: Double
+        let sessions: Int
+        let modalityId: String?
+    }
+    struct Week: Decodable, Equatable {
+        let weekStart: String
+        let sessions: Int
+    }
+    struct Zones: Decodable, Equatable {
+        let minutes: [Double]
+        let workoutsMeasured: Int
+        let workoutsEstimated: Int
+    }
+    struct Focus: Decodable, Equatable {
+        let base: Double
+        let threshold: Double
+        let anaerobic: Double
+    }
+    let period: String
+    let from: String
+    let to: String
+    let totals: Totals
+    let prior: Totals?
+    let modalities: [Modality]
+    let activities: [Activity]
+    let consistency: [Week]
+    let zones: Zones?
+    let focus28d: Focus
+
+    /// The query value for a period ("All" is `all` on the wire).
+    static func query(_ period: AnalyticsPeriod) -> String { period == .all ? "all" : period.rawValue }
+
+    var stats: WorkoutPeriodStats {
+        WorkoutPeriodStats(
+            sessions: Double(totals.sessions), totalMinutes: totals.minutes,
+            totalDistanceKm: totals.distanceKm ?? 0, totalElevationGainM: totals.elevationGainM ?? 0,
+            totalCalories: totals.calories ?? 0,
+            prevSessions: Double(prior?.sessions ?? 0), prevMinutes: prior?.minutes ?? 0,
+            prevDistanceKm: prior?.distanceKm ?? 0)
+    }
+
+    var loadFocus: TrainingLoadFocus {
+        TrainingLoadFocus(baseMinutes: focus28d.base, thresholdMinutes: focus28d.threshold,
+                          anaerobicMinutes: focus28d.anaerobic)
+    }
+
+    @MainActor var modalityShares: [ModalityShare] {
+        modalities.prefix(8).map { m in
+            let id = m.id ?? "unknown"
+            return ModalityShare(modalityId: id, label: m.id == nil ? "Unclassified" : ModalityStyle.label(for: id),
+                                 pct: m.pct, color: ModalityStyle.color(for: id))
+        }
+    }
+
+    var activityEntries: [ActivityTypeEntry] {
+        let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
+        return activities.enumerated().map { i, a in
+            ActivityTypeEntry(name: a.activityType.replacingOccurrences(of: "_", with: " ").capitalized,
+                              hours: a.minutes / 60, sessions: Double(a.sessions), color: colors[i % colors.count])
+        }
+    }
+
+    var consistencyEntries: [WeeklyConsistencyEntry] {
+        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
+        let label = DateFormatter(); label.dateFormat = "MMM d"
+        return consistency.compactMap { w in
+            guard let d = fmt.date(from: w.weekStart) else { return nil }
+            return WeeklyConsistencyEntry(weekLabel: label.string(from: d), sessionCount: w.sessions, weekStart: d)
+        }
+    }
+}

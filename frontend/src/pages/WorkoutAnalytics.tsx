@@ -11,7 +11,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react'
-import { format, parseISO, subDays, startOfWeek, endOfWeek } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import {
   ResponsiveContainer,
   BarChart,
@@ -30,27 +30,26 @@ import { ProgramTab } from '@/components/analytics/ProgramTab'
 import { ProgressionTab } from '@/components/progression/ProgressionTab'
 import { RecoveryTab } from '@/components/bio/RecoveryTab'
 import { DevelopmentTab } from '@/components/analytics/DevelopmentTab'
-import { useBioStore } from '@/store/bioStore'
-import { useProfileStore } from '@/store/profileStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import type { ImportedWorkout, ModalityId } from '@/api/types'
+import { useLoadSummary } from '@/api/health'
+import type { ModalityId } from '@/api/types'
 import { formatActivityType } from '@/lib/activityType'
 import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'program' | 'progress' | 'development' | 'load' | 'recovery'
+type SubTab = 'program' | 'progress' | 'blocks' | 'load' | 'recovery'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
 // Analytics is the interpretation: what the program is for (Program), how the
 // athlete is progressing against it (Progress), what the body has been asked
-// to absorb (Load) and how it is coping (Recovery). The record itself — every
-// recorded workout — lives under Log.
+// to absorb (Load) and how it is coping (Recovery); Blocks reads every program
+// the athlete has run. The record itself — every recorded workout — lives under
+// Log. Names and order match the phone's Analytics sections.
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'program',  label: 'Program'  },
   { id: 'progress', label: 'Progress' },
-  { id: 'development', label: 'Development' },
+  { id: 'blocks',   label: 'Blocks'   },
   { id: 'load',     label: 'Load'     },
   { id: 'recovery', label: 'Recovery' },
 ]
@@ -77,19 +76,6 @@ function fmtDist(km: number): string {
 
 function fmtElev(m: number): string {
   return `${Math.round(m).toLocaleString()} m`
-}
-
-function useFilteredWorkouts(period: Period): ImportedWorkout[] {
-  const workouts = useBioStore((s) => s.importedWorkouts)
-  return useMemo(() => {
-    const entry = PERIODS.find((p) => p.id === period)
-    if (!entry?.days) return workouts
-    const cutoff = subDays(new Date(), entry.days)
-    return workouts.filter((w) => {
-      try { return parseISO(w.date) >= cutoff }
-      catch { return false }
-    })
-  }, [workouts, period])
 }
 
 // ── Tab Selector ───────────────────────────────────────────────────────────────
@@ -182,89 +168,48 @@ function KpiCard({
  */
 function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
   const navigate = useNavigate()
-  const filtered = useFilteredWorkouts(period)
-  const allWorkouts = useBioStore((s) => s.importedWorkouts)
+  // Totals, mixes and consistency are the server's (GET /health/load/summary),
+  // the same document the phone's Load section reads.
+  const { data: summary } = useLoadSummary(period)
+  const sessionCount = summary?.totals.sessions ?? 0
 
   const stats = useMemo(() => {
-    const totalMin = filtered.reduce((s, w) => s + w.durationMinutes, 0)
-    const distanceKm = filtered.reduce((s, w) => {
-      const v = w.distance?.value ?? 0
-      const unit = w.distance?.unit ?? 'km'
-      return s + (unit === 'm' ? v / 1000 : v)
-    }, 0)
-    const elevationGainM = filtered.reduce((s, w) => s + (w.elevation?.gain ?? 0), 0)
-    const elevationLossM = filtered.reduce((s, w) => s + (w.elevation?.loss ?? 0), 0)
-    const calories = filtered.reduce((s, w) => s + (w.calories ?? 0), 0)
-    const hasDistance = filtered.some((w) => w.distance != null)
-    const hasElevation = filtered.some((w) => w.elevation != null)
-    const hasCals = filtered.some((w) => w.calories != null)
+    const t = summary?.totals
     return {
-      sessions: filtered.length,
-      hours: totalMin > 0 ? fmtHours(totalMin) : null,
-      distance: hasDistance && distanceKm > 0 ? fmtDist(distanceKm) : null,
-      ascended: hasElevation && elevationGainM > 0 ? fmtElev(elevationGainM) : null,
-      descended: hasElevation && elevationLossM > 0 ? fmtElev(elevationLossM) : null,
-      calories: hasCals && calories > 0 ? `${Math.round(calories).toLocaleString()} kcal` : null,
+      sessions: t?.sessions ?? 0,
+      hours: t && t.minutes > 0 ? fmtHours(t.minutes) : null,
+      distance: t?.distanceKm ? fmtDist(t.distanceKm) : null,
+      ascended: t?.elevationGainM ? fmtElev(t.elevationGainM) : null,
+      descended: t?.elevationLossM ? fmtElev(t.elevationLossM) : null,
+      calories: t?.calories ? `${Math.round(t.calories).toLocaleString()} kcal` : null,
     }
-  }, [filtered])
+  }, [summary])
 
-  // Activity type breakdown (top 8 by training minutes)
-  const activityBreakdown = useMemo(() => {
-    const map = new Map<string, { minutes: number; sessions: number; modalityId: ModalityId | null }>()
-    for (const w of filtered) {
-      const key = formatActivityType(w.activityType)
-      const existing = map.get(key) ?? { minutes: 0, sessions: 0, modalityId: w.inferredModalityId ?? null }
-      map.set(key, { minutes: existing.minutes + w.durationMinutes, sessions: existing.sessions + 1, modalityId: existing.modalityId })
+  const activityBreakdown = useMemo(() => (summary?.activities ?? []).map((a) => {
+    const modalityId = a.modalityId as ModalityId | null
+    return {
+      type: formatActivityType(a.activityType),
+      hours: Math.round((a.minutes / 60) * 10) / 10,
+      sessions: a.sessions,
+      modalityId,
+      color: modalityId ? MODALITY_COLORS[modalityId]?.hex ?? '#94a3b8' : '#94a3b8',
     }
-    return Array.from(map.entries())
-      .map(([type, d]) => ({
-        type,
-        hours: Math.round((d.minutes / 60) * 10) / 10,
-        sessions: d.sessions,
-        modalityId: d.modalityId,
-        color: d.modalityId ? MODALITY_COLORS[d.modalityId]?.hex ?? '#94a3b8' : '#94a3b8',
-      }))
-      .sort((a, b) => b.hours - a.hours)
-      .slice(0, 8)
-  }, [filtered])
+  }), [summary])
 
-  // Modality breakdown (donut data)
-  const modalityBreakdown = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const w of filtered) {
-      const key = w.inferredModalityId ?? '__unclassified__'
-      map.set(key, (map.get(key) ?? 0) + w.durationMinutes)
-    }
-    const total = filtered.reduce((s, w) => s + w.durationMinutes, 0) || 1
-    return Array.from(map.entries())
-      .map(([id, minutes]) => ({
-        id,
-        label: id === '__unclassified__' ? 'Unclassified' : (MODALITY_COLORS[id as ModalityId]?.label ?? id),
-        pct: Math.round((minutes / total) * 100),
-        color: id === '__unclassified__' ? '#475569' : (MODALITY_COLORS[id as ModalityId]?.hex ?? '#94a3b8'),
-      }))
-      .sort((a, b) => b.pct - a.pct)
-  }, [filtered])
+  const modalityBreakdown = useMemo(() => (summary?.modalities ?? []).map((m) => ({
+    id: m.id ?? '__unclassified__',
+    label: m.id == null ? 'Unclassified' : (MODALITY_COLORS[m.id as ModalityId]?.label ?? m.id),
+    pct: m.pct,
+    color: m.id == null ? '#475569' : (MODALITY_COLORS[m.id as ModalityId]?.hex ?? '#94a3b8'),
+  })), [summary])
 
-  // 12-week consistency (regardless of period)
   const weeklyConsistency = useMemo(() => {
-    const now = new Date()
-    const weeks: { label: string; count: number }[] = []
-    const weekOpts = { weekStartsOn: 1 } as const  // Monday-anchored weeks
-    for (let i = 11; i >= 0; i--) {
-      const anchor = subDays(now, i * 7)
-      const weekStart = startOfWeek(anchor, weekOpts)
-      const weekEnd = endOfWeek(anchor, weekOpts)
-      const count = allWorkouts.filter((w) => {
-        try {
-          const d = parseISO(w.date)
-          return d >= weekStart && d <= weekEnd
-        } catch { return false }
-      }).length
-      weeks.push({ label: i === 0 ? 'This wk' : format(weekStart, 'MMM d'), count })
-    }
-    return weeks
-  }, [allWorkouts])
+    const weeks = summary?.consistency ?? []
+    return weeks.map((w, i) => ({
+      label: i === weeks.length - 1 ? 'This wk' : format(parseISO(w.weekStart), 'MMM d'),
+      count: w.sessions,
+    }))
+  }, [summary])
 
   function consistencyColor(count: number): string {
     if (count === 0) return 'var(--color-muted)'
@@ -282,8 +227,8 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
       <div className="flex items-center gap-3">
         <span className="text-xs text-muted-foreground">Period</span>
         <PeriodSelector active={period} onChange={onPeriodChange} />
-        {filtered.length > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">{filtered.length} workout{filtered.length !== 1 ? 's' : ''}</span>
+        {sessionCount > 0 && (
+          <span className="text-xs text-muted-foreground ml-auto">{sessionCount} workout{sessionCount !== 1 ? 's' : ''}</span>
         )}
       </div>
 
@@ -300,7 +245,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
         </div>
       </div>
 
-      {filtered.length === 0 && (
+      {summary && sessionCount === 0 && (
         <EmptyState
           icon={<ArrowDownToLine className="size-8 opacity-40" />}
           title="No workouts in this period"
@@ -309,7 +254,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
         />
       )}
 
-      {filtered.length > 0 && (
+      {sessionCount > 0 && (
         <>
           {/* Activity breakdown */}
           {activityBreakdown.length > 0 && (
@@ -466,37 +411,26 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
 
 // ── Load Tab ───────────────────────────────────────────────────────────────────
 
-function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
-  const filtered = useFilteredWorkouts(period)
-  const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
-  const hrConfig = useProfileStore((s) => s.hrConfig)
-  const maxHR = getEffectiveMaxHR(dateOfBirth, hrConfig?.maxHROverride)
+/** "3 workouts from the heart-rate series, 1 estimated from avg/max HR". */
+function zoneFootnote(measured: number, estimated: number): string {
+  const n = (k: number) => `${k} workout${k === 1 ? '' : 's'}`
+  if (measured === 0) return `${n(estimated)}, estimated from avg/max HR`
+  return estimated > 0
+    ? `${n(measured)} from the heart-rate series, ${estimated} estimated from avg/max HR`
+    : `${n(measured)} from the heart-rate series`
+}
 
-  // Aggregate zone distribution across all filtered workouts with HR data
+function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+  // Zone minutes over the period from the per-workout metrics cache — the
+  // numbers the weekly load and PMC are built from. This used to estimate
+  // every workout from its mean HR alone, ignoring the samples.
+  const { data: summary } = useLoadSummary(period)
   const zoneData = useMemo(() => {
-    const totals = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 }
-    let covered = 0
-    for (const w of filtered) {
-      const avg = w.heartRate.avg
-      if (avg == null) continue
-      const zones = computeHRZones(maxHR, [], avg, DEFAULT_ZONE_BOUNDARIES, w.heartRate.max ?? undefined)
-      const dur = w.durationMinutes
-      totals.z1 += (zones.z1 / 100) * dur
-      totals.z2 += (zones.z2 / 100) * dur
-      totals.z3 += (zones.z3 / 100) * dur
-      totals.z4 += (zones.z4 / 100) * dur
-      totals.z5 += (zones.z5 / 100) * dur
-      covered += dur
-    }
-    if (covered === 0) return null
-    return [
-      { zone: 'Z1', minutes: Math.round(totals.z1), color: '#10b981' },
-      { zone: 'Z2', minutes: Math.round(totals.z2), color: '#38bdf8' },
-      { zone: 'Z3', minutes: Math.round(totals.z3), color: '#f59e0b' },
-      { zone: 'Z4', minutes: Math.round(totals.z4), color: '#f97316' },
-      { zone: 'Z5', minutes: Math.round(totals.z5), color: '#ef4444' },
-    ]
-  }, [filtered, maxHR])
+    const m = summary?.zones?.minutes
+    if (!m) return null
+    const colors = ['#10b981', '#38bdf8', '#f59e0b', '#f97316', '#ef4444']
+    return m.map((minutes, i) => ({ zone: `Z${i + 1}`, minutes: Math.round(minutes), color: colors[i] }))
+  }, [summary])
 
   return (
     <div className="max-w-3xl mx-auto px-8 py-8 space-y-8">
@@ -565,7 +499,9 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <p className="text-[10px] text-muted-foreground/60 mt-1">Estimated from avg/max HR — based on {filtered.filter((w) => w.heartRate.avg != null).length} workouts with HR data</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">
+                {zoneFootnote(summary?.zones?.workoutsMeasured ?? 0, summary?.zones?.workoutsEstimated ?? 0)}
+              </p>
             </div>
           ) : (
             <div className="flex h-24 items-center justify-center">
@@ -582,7 +518,10 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
 export function WorkoutAnalytics() {
   // URL-driven so Home cards and the /bio redirect can land on a tab.
   const [searchParams, setSearchParams] = useSearchParams()
-  const tabParam = searchParams.get('tab')
+  // `development` is the tab's name before 2026-10-13, when both clients
+  // settled on Blocks (the phone's segment control cannot fit the long word).
+  const rawTab = searchParams.get('tab')
+  const tabParam = rawTab === 'development' ? 'blocks' : rawTab
   const activeTab: SubTab = tabParam && SUB_TAB_IDS.has(tabParam) ? (tabParam as SubTab) : 'program'
   function setActiveTab(tab: SubTab) {
     setSearchParams(
@@ -623,7 +562,7 @@ export function WorkoutAnalytics() {
             <ProgressionTab />
           </div>
         )}
-        {activeTab === 'development' && <DevelopmentTab />}
+        {activeTab === 'blocks'   && <DevelopmentTab />}
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}
       </div>

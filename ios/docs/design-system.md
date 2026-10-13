@@ -758,10 +758,18 @@ answer.
 | Tab | Root | Sections (`AppSubTabs`) |
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
-| **Program** | `ProgramView` | Current · History |
+| **Program** | `ProgramView` | Calendar · Overview · History |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
-| **Analytics** | `AnalyticsView` | Program · Overview · Progress · Blocks · Recovery |
+| **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+
+The section names and their order are the web's, item for item
+(`docs/information-architecture.md` §2): a section is renamed or moved on
+both clients in the same change. Program's Current became Calendar and
+gained Overview (`ProgramOverviewTab`: methodology, phases, priority mix),
+and Analytics' Overview became Load, on 2026-10-13. Every section is a
+deep link — `program?section=`, `analytics?section=` (`overview` and
+`development` are kept as aliases), `log?section=`, `profile?section=`.
 
 `AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
 selection from the router (§6.9). The first case is still named `.dashboard`
@@ -1028,8 +1036,8 @@ blend (`philosophy_ids` + weights), not as its first source.
 **The program explains itself.** `Views/PhilosophyDetailSheet.swift` — a
 methodology's summary, emphasis (modalities), core principles and how it
 trains (intensity model, progression philosophy). Two presenters: the
-builder's philosophy cards (step 1) and Program ▸ Current's "About this
-methodology" row under the phase bar, which a blend turns into a menu with
+builder's philosophy cards (step 1) and Program ▸ Overview's "About this
+methodology" row (`MethodologyRow`), which a blend turns into a menu with
 one entry per source (`AppState.programMethodologies()`). It was private to
 the builder until 2026-10-01, which left the plan the athlete was on with no
 way to say what it was for — the web's equivalent is the Program overview's
@@ -1055,7 +1063,7 @@ selection; the sheet is the one methodology reference on the phone.
 - *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
   as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
   first three of the same list (`AppState.pendingMatchSuggestions()`) with
-  Review and Dismiss, and links here when there are more.
+  the same three actions, and links here when there are more.
 - *Sessions* (`LogSessionsTab`): what was logged against planned sessions
   across the program, newest completion first — `LogSessions.rows` builds
   the rows from the server's session logs: the session's name when the key
@@ -1063,7 +1071,7 @@ selection; the sheet is the one methodology reference on the phone.
   exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
   resolves opens the session detail.
 
-Analytics keeps Program · Overview · Progress · Blocks · Recovery: it
+Analytics keeps Program · Progress · Blocks · Load · Recovery: it
 interprets, it no longer lists. `router.showLog(_:)` and
 `trainingcompanion://log?section=…` name the sections (§6.9).
 

@@ -35,6 +35,9 @@ struct WorkoutDetailView: View {
     @State private var trainingEffect: TrainingEffect? = nil
     @State private var bestEffortsResult: [BestEffort] = []
     @State private var recoveryTimeHours: Int? = nil
+    /// Whether the numbers above are the server's (`analysis`) or this
+    /// phone's fallback — said under Training Load, as the PMC footnote does.
+    @State private var analysisFromServer: Bool? = nil
 
     private var detail: ImportedWorkout { fullWorkout ?? workout }
 
@@ -121,7 +124,19 @@ struct WorkoutDetailView: View {
             fullWorkout = loaded
             isLoadingDetail = false
 
-            // Compute analytics after detail loads
+            // The server's analysis — the numbers the web shows. The phone
+            // computes its own only when the server predates it or the
+            // fetch failed.
+            if let a = loaded?.analysis {
+                hrZones = a.distribution
+                trimpScore = a.trimp
+                decoupling = a.decouplingResult
+                trainingEffect = a.effect
+                bestEffortsResult = a.efforts
+                recoveryTimeHours = a.recoveryHours
+                analysisFromServer = true
+                return
+            }
             let w = loaded ?? workout
             let hrConfig = appState.profile.hrConfig
             let dob = appState.profile.dateOfBirth
@@ -153,6 +168,7 @@ struct WorkoutDetailView: View {
             trainingEffect = effect
             bestEffortsResult = efforts
             recoveryTimeHours = recovery
+            analysisFromServer = false
         }
     }
 
@@ -321,7 +337,7 @@ struct WorkoutDetailView: View {
     }
 
     private var trimpSection: some View {
-        Section("Training Load") {
+        Section {
             if let score = trimpScore {
                 LabeledContent("Impulse Score") {
                     HStack(spacing: 6) {
@@ -340,6 +356,12 @@ struct WorkoutDetailView: View {
                     Label("\(hours)h", systemImage: "clock.arrow.circlepath")
                         .foregroundStyle(.secondary)
                 }
+            }
+        } header: {
+            Text("Training Load")
+        } footer: {
+            if analysisFromServer == false {
+                Text("Computed on this phone — the server's analysis was unavailable.")
             }
         }
     }

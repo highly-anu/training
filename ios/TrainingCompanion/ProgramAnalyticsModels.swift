@@ -152,8 +152,22 @@ struct ProgramAnalytics: Decodable {
         let tiers: [String: Tier]
         let elapsedWeeks: Int
         let modalities: [Row]
+        /// Completion per program week, elapsed sessions only — Today's
+        /// card. Empty from a server older than the series.
+        struct Week: Decodable {
+            let weekIndex: Int
+            let weekNumber: Int
+            let planned: Int
+            let completed: Int
+            let pct: Double?
+        }
+        let weeks: [Week]
+        let plannedSessions: Int?
+        let completedSessions: Int?
 
-        private enum CodingKeys: String, CodingKey { case headline, overallPct, tiers, elapsedWeeks, modalities }
+        private enum CodingKeys: String, CodingKey {
+            case headline, overallPct, tiers, elapsedWeeks, modalities, weeks, plannedSessions, completedSessions
+        }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             headline = (try? c.decodeIfPresent(String.self, forKey: .headline)) ?? "not_started"
@@ -161,6 +175,9 @@ struct ProgramAnalytics: Decodable {
             tiers = (try? c.decodeIfPresent([String: Tier].self, forKey: .tiers)) ?? [:]
             elapsedWeeks = (try? c.decodeIfPresent(Int.self, forKey: .elapsedWeeks)) ?? 0
             modalities = ((try? c.decodeIfPresent([Lossy<Row>].self, forKey: .modalities)) ?? [])?.compactMap(\.value) ?? []
+            weeks = ((try? c.decodeIfPresent([Lossy<Week>].self, forKey: .weeks)) ?? [])?.compactMap(\.value) ?? []
+            plannedSessions = try? c.decodeIfPresent(Int.self, forKey: .plannedSessions)
+            completedSessions = try? c.decodeIfPresent(Int.self, forKey: .completedSessions)
         }
     }
 

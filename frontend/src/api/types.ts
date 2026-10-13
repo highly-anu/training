@@ -804,6 +804,27 @@ export interface ImportedWorkout {
   gpsTrack?: GPSPoint[] | null
   elevation?: { gain: number; loss: number } | null
   rawData: Record<string, unknown>
+  /** Present on `GET /health/workouts/<id>` only: the server's analysis. */
+  analysis?: WorkoutAnalysis
+}
+
+/**
+ * One workout analysed on the server (src/analytics/workout_analysis.py) —
+ * the numbers both clients show on a workout instead of computing their own.
+ */
+export interface WorkoutAnalysis {
+  version: number
+  maxHr: number
+  maxHrSource: 'override' | 'age' | 'default'
+  zoneBoundaries: number[]
+  zoneBoundariesSource: 'custom' | 'shared'
+  /** Null when the workout has no heart rate at all. */
+  zones: { method: 'samples' | 'summary_estimate'; pct: number[]; minutes: number[] } | null
+  trimp: number | null
+  trainingEffect: string | null
+  recoveryHours: number | null
+  decoupling: { pct: number; label: 'efficient' | 'moderate' | 'high' } | null
+  bestEfforts: { label: string; km: number; seconds: number; secPerKm: number }[]
 }
 
 export interface SetPerformance {
@@ -1273,6 +1294,11 @@ export interface AnalyticsScorecard {
   tiers: Record<string, { planned: number; completed: number; pct: number | null }>
   elapsedWeeks: number
   modalities: AnalyticsScorecardRow[]
+  /** Sessions whose day has come, and how many were done (logged or matched). */
+  plannedSessions?: number
+  completedSessions?: number
+  /** Completion per program week, elapsed sessions only — the Today card. */
+  weeks?: { weekIndex: number; weekNumber: number; planned: number; completed: number; pct: number | null }[]
 }
 
 export interface AnalyticsFrame {

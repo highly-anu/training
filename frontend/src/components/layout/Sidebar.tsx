@@ -33,7 +33,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Train',
     items: [
-      { to: '/', label: 'Home', icon: House, end: true },
+      { to: '/', label: 'Today', icon: House, end: true },
       { to: '/program', label: 'Program', icon: Calendar },
       { to: '/log', label: 'Log', icon: ClipboardList },
     ],

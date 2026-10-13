@@ -85,13 +85,25 @@ final class AppState: ObservableObject {
     /// back to the on-device engine.
     @Published var serverPMC: [PMCEntry]? = nil
     @Published var serverWeeklyLoad: [ServerWeeklyLoadEntry]? = nil
+    /// Analytics ▸ Load's summary per period, from the server; a period with
+    /// no entry falls back to `AnalyticsEngine`.
+    @Published var loadSummaries: [AnalyticsPeriod: LoadSummary] = [:]
+    /// Periods whose last summary request failed, so the screen can say its
+    /// numbers are the phone's (not while a request is still in flight).
+    @Published var loadSummaryFailed: Set<AnalyticsPeriod> = []
 
     // MARK: - Internal
 
     var api: APIClient?
     private let iso = ISO8601DateFormatter()
+    /// Gregorian and POSIX: a phone set to the Buddhist or Japanese calendar
+    /// would otherwise write "2569-10-13", which the server rejects.
     private let dayFormatter: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
     }()
 
     // MARK: - Configuration
@@ -369,6 +381,8 @@ final class AppState: ObservableObject {
         )
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
         rescheduleNotifications()
+        // Today's completion is the program scorecard's.
+        await loadProgramAnalytics()
     }
 
     /// Store what was done for one exercise of a session — sets, or the
@@ -420,6 +434,7 @@ final class AppState: ObservableObject {
         // without this call the completion came back on the next sync.
         try? await api?.clearSessionCompletion(sessionKey: sessionKey)
         rescheduleNotifications()
+        await loadProgramAnalytics()
     }
 
     // MARK: - Bio Logs
@@ -438,7 +453,9 @@ final class AppState: ObservableObject {
     func loadReadiness() async {
         guard let api else { return }
         do {
-            readinessResult = try await api.fetchReadiness()
+            let result = try await api.fetchReadiness()
+            readinessResult = result
+            ReadinessInfo.storeForWatch(result)
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
@@ -524,6 +541,19 @@ final class AppState: ObservableObject {
         }
         if let weeks = try? await weekly {
             serverWeeklyLoad = weeks
+        }
+    }
+
+    func loadLoadSummary(_ period: AnalyticsPeriod) async {
+        guard let api else { return }
+        do {
+            loadSummaries[period] = try await api.fetchLoadSummary(period: period, today: dayFormatter.string(from: Date()))
+            loadSummaryFailed.remove(period)
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            loadSummaries[period] = nil
+            loadSummaryFailed.insert(period)
+            AppLogger.logFromBackground("load: server summary unavailable — computing on device (\(error.localizedDescription))")
         }
     }
 
@@ -801,29 +831,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Computed readiness from most recent bio log: green/yellow/red based on HRV + resting HR.
-    func readinessInfo(from bioLogs: [DailyBioLog]) -> ReadinessInfo? {
-        guard let latest = bioLogs.first else { return nil }
-        guard let hrv = latest.hrv else { return nil }
-        // Simple heuristic: HRV > 50ms = green, 35–50 = yellow, <35 = red
-        let signal: String
-        let score: Double
-        switch hrv {
-        case let h where h >= 50:
-            signal = "green"; score = min(1.0, h / 70.0)
-        case let h where h >= 35:
-            signal = "yellow"; score = h / 70.0
-        default:
-            signal = "red"; score = max(0.1, hrv / 70.0)
-        }
-        return ReadinessInfo(
-            score: score,
-            signal: signal,
-            restingHR: latest.restingHR.map { Int($0) },
-            hrv: Int(hrv)
-        )
-    }
-
     /// All weeks for the full program calendar.
     var allWeeks: [ProgramWeek] { serverProgram?.currentProgram?.weeks ?? [] }
 
@@ -946,5 +953,6 @@ final class AppState: ObservableObject {
             peakHR: workout.heartRate?.max,
             matchedWorkoutId: workout.id
         )
+        await loadProgramAnalytics()
     }
 }

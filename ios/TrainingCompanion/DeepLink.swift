@@ -3,7 +3,8 @@ import Foundation
 /// `trainingcompanion://` URLs, parsed once, routed through `AppRouter`.
 ///
 /// The widgets open `today` and `session?key=…`; `program`, `analytics`
-/// (`?section=program|overview|progress|blocks|recovery`) and `profile`
+/// (`?section=program|progress|blocks|load|recovery`; `overview` and
+/// `development` are the old names of Load and Blocks) and `profile`
 /// exist so a simulator can be driven to any section from the command line
 /// and screenshotted — the Simulator window is not scriptable. Opening the
 /// URL from outside (`simctl openurl`) makes iOS ask "Open in Training
@@ -19,6 +20,8 @@ enum DeepLink: Equatable {
     case profile(ProfileTab)
     /// `log?section=workouts|suggestions|sessions`.
     case log(LogTab)
+    /// `program?section=calendar|overview|history`.
+    case program(ProgramTab)
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -42,6 +45,10 @@ enum DeepLink: Equatable {
             }
             return .tab(.dashboard)
         case "program":
+            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
+               let section = ProgramTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
+                return .program(section)
+            }
             return .tab(.program)
         case "log":
             if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
@@ -56,9 +63,11 @@ enum DeepLink: Equatable {
             }
             return .tab(.profile)
         case "analytics":
-            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
-               let section = AnalyticsTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
-                return .analytics(section)
+            if let raw = query.first(where: { $0.name == "section" })?.value?.lowercased() {
+                let wanted = ["overview": "load", "development": "blocks"][raw] ?? raw
+                if let section = AnalyticsTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
+                    return .analytics(section)
+                }
             }
             return .tab(.analytics)
         default:
@@ -76,6 +85,7 @@ extension AppRouter {
         case .session(let key): openSession(key)
         case .profile(let section): showProfile(section)
         case .log(let section): showLog(section)
+        case .program(let section): showProgram(section)
         }
     }
 }

@@ -63,20 +63,28 @@ def max_hr_for(ctx: Context) -> float:
     The server used to ignore date of birth and use 190 flat, so its zones
     disagreed with the browser's for anyone who had set a DOB but no override.
     """
-    hr = (ctx.profile.get('hrConfig') or {})
+    return resolve_max_hr(ctx.profile, ctx.today)[0]
+
+
+def resolve_max_hr(profile: dict, today: date) -> tuple[float, str]:
+    """`max_hr_for` with where the number came from: 'override', 'age' or 'default'."""
+    hr = (profile.get('hrConfig') or {})
     override = hr.get('maxHROverride')
-    if override and float(override) > 0:
-        return float(override)
-    dob = ctx.profile.get('dateOfBirth')
+    try:
+        if override and float(override) > 0:
+            return float(override), 'override'
+    except (TypeError, ValueError):
+        pass
+    dob = profile.get('dateOfBirth')
     if dob:
         try:
             born = date.fromisoformat(str(dob)[:10])
-            age = ctx.today.year - born.year - ((ctx.today.month, ctx.today.day) < (born.month, born.day))
+            age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
             if 5 < age < 110:
-                return float(220 - age)
+                return float(220 - age), 'age'
         except ValueError:
             pass
-    return float(zones.default_max_hr())
+    return float(zones.default_max_hr()), 'default'
 
 
 def expected_value(entry: spec_mod.Entry, ea: dict | None, ctx: Context, week: dict | None) -> float | None:

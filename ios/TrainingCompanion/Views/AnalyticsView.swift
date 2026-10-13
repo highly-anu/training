@@ -3,16 +3,19 @@ import SwiftUI
 /// Internal rather than private: `AppRouter` names a section so another screen
 /// can send the user to one (the Dashboard's readiness card → Recovery).
 enum AnalyticsTab: Int, AppSubTab {
-    case program, overview, progress, development, recovery
+    // The web's Analytics tabs, in the web's order (information-architecture.md
+    // §2). Load was "Overview" here until 2026-10-13; `section=overview` and
+    // `section=development` still deep-link (DeepLink.swift).
+    case program, progress, blocks, load, recovery
 
     var label: String {
         switch self {
         case .program: return "Program"
-        case .overview: return "Overview"
         case .progress: return "Progress"
-        // "Development" on the web; five segments share the width here and
-        // the segmented control truncates anything longer (§6.8).
-        case .development: return "Blocks"
+        // Five segments share the width and the segmented control truncates
+        // anything longer (§6.8), which is why both clients say Blocks.
+        case .blocks: return "Blocks"
+        case .load: return "Load"
         case .recovery: return "Recovery"
         }
     }
@@ -27,7 +30,7 @@ struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
-    @State private var selectedSegment: AnalyticsTab = .overview
+    @State private var selectedSegment: AnalyticsTab = .program
     @State private var period: AnalyticsPeriod = .thirtyDays
     @State private var showBioEntry = false
 
@@ -41,14 +44,14 @@ struct AnalyticsView: View {
                     case .program:
                         AnalyticsProgramTab()
                             .environmentObject(appState)
-                    case .overview:
-                        AnalyticsOverviewTab(period: $period)
-                            .environmentObject(appState)
                     case .progress:
                         ProgressionView()
                             .environmentObject(appState)
-                    case .development:
+                    case .blocks:
                         AnalyticsDevelopmentTab()
+                            .environmentObject(appState)
+                    case .load:
+                        AnalyticsOverviewTab(period: $period)
                             .environmentObject(appState)
                     case .recovery:
                         AnalyticsRecoveryTab(showBioEntry: $showBioEntry)

@@ -31,6 +31,12 @@ def build(ctx: Context) -> dict:
     minutes_source: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     tier_planned = defaultdict(int)
     tier_completed = defaultdict(int)
+    # Per program week (array index), elapsed sessions only — the series the
+    # Today card draws on both clients. The phone used to count the whole
+    # current week as scheduled, so the days still ahead read as missed.
+    week_planned = defaultdict(int)
+    week_completed = defaultdict(int)
+    week_numbers: dict[int, int] = {}
 
     for hit in ctx.sessions(elapsed_only=True):
         mod = hit['session'].get('modality') or 'unknown'
@@ -38,11 +44,15 @@ def build(ctx: Context) -> dict:
         tier_votes[mod][tier] += 1
         planned[mod] += 1
         tier_planned[tier] += 1
+        wi = hit['week_index']
+        week_planned[wi] += 1
+        week_numbers[wi] = int(hit['week'].get('week_number', wi + 1))
         prescribed = _prescribed_minutes(ctx, hit)
         planned_min[mod] += prescribed
         if ctx.completed(hit) or ctx.workout_for(hit) is not None:
             completed[mod] += 1
             tier_completed[tier] += 1
+            week_completed[wi] += 1
             minutes, source = ctx.duration_minutes(hit)
             actual_min[mod] += minutes
             minutes_source[mod][source] += 1
@@ -96,6 +106,12 @@ def build(ctx: Context) -> dict:
         'tiers': tiers,
         'elapsedWeeks': len(ctx.elapsed_week_indexes),
         'modalities': rows,
+        'completedSessions': total_done,
+        'plannedSessions': total_planned,
+        'weeks': [{'weekIndex': wi, 'weekNumber': week_numbers[wi],
+                   'planned': week_planned[wi], 'completed': week_completed[wi],
+                   'pct': _pct(week_completed[wi], week_planned[wi])}
+                  for wi in sorted(week_planned)],
     }
 
 

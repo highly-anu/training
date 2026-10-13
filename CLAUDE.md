@@ -104,6 +104,8 @@ All prefixed `/api/`:
 | GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
 | POST | `/health/wellness` | one day's watch reading into `daily_wellness`; 422 invalid, 503 on a failed write (the watch retries), 200 `stored: false` when the Garmin toggle is off |
 | GET | `/health/wellness/latest` | the newest watch reading, with the model named from its part number |
+| GET | `/health/workouts/<id>` | one workout with its series and `analysis` — zones, TRIMP, training effect, recovery, decoupling, best efforts (`src/analytics/workout_analysis.py`) |
+| GET | `/health/load/summary?period=&today=` | Analytics ▸ Load's totals vs the prior period, modality/activity mix, 12-week consistency, zone minutes, 28-day focus (`src/analytics/load_summary.py`) |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
 
@@ -126,15 +128,17 @@ revision-checked PUT — nothing is persisted by the endpoint.
 
 React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanStack Query, Zustand, Recharts, MSW v2, React Router v7.
 
-**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** Train — Home `/`
+**Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** the same items and sections,
+in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — rename or move
+a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
 History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
-Suggestions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
-`/analytics` (Program · Progress · Load · Recovery via `?tab=`). Library — Explore
+Suggestions · Sessions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+`/analytics` (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks). Library — Explore
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
-with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete · Equipment ·
-Injuries · Schedule · Benchmarks · Heart Rate) and Settings `/settings` (Connections · Account ·
-Appearance · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
+with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
+heart-rate zones · Equipment · Injuries · Schedule · Benchmarks; `heartrate` aliases Athlete)
+and Settings `/settings` (Connections · Appearance · Account · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
 `/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
 intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
 that predates Settings. Dev Lab `/dev` exists in dev
@@ -653,8 +657,10 @@ LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.
 LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
 ```
 
-Routes: `today`, `program`, `analytics?section=program|overview|workouts|progress|
-recovery`, `profile` (`DeepLink.swift`, routed through `AppRouter`). The route travels
+Routes: `today`, `program?section=calendar|overview|history`,
+`analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
+still alias Load and Blocks), `log?section=workouts|suggestions|sessions`,
+`profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.
@@ -693,7 +699,18 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
 .venv/bin/python test_development_analytics.py               # development across programs, on a throwaway history (no DB)
 SUPABASE_URL='' .venv/bin/python test_workout_metrics.py     # the per-workout metrics cache and the load routes' reader (no DB)
+SUPABASE_URL='' .venv/bin/python test_workout_analysis.py    # one workout's analysis, pinned to the browser's golden values (no DB)
+SUPABASE_URL='' .venv/bin/python test_load_summary.py        # Analytics ▸ Load's summary and its route (no DB)
 ```
+
+**Numbers are computed on the server and shown by both clients** — a workout's
+zones, TRIMP, training effect, recovery, decoupling and best efforts
+(`analysis`), Analytics ▸ Load's totals and mixes (`/health/load/summary`) and
+Today's completion (`scorecard.weeks`). The phone's `AnalyticsEngine` is only a
+labelled fallback; the web has none. When the two clients' copies existed they
+disagreed: the phone bucketed with the old Friel edges, both clients' normal
+CDF was wrong (Φ(mean) ≈ 0), and two different numbers were called
+"Development". Add a new number to the server, not to a client.
 
 Before anything that changes production structure (a migration, a backfill):
 
