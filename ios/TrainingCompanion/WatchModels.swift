@@ -136,6 +136,20 @@ struct ProgramWeek: Codable {
         extra = try JSONValue.extras(from: decoder, excluding: CodingKeys.allCases.map(\.stringValue))
     }
 
+    // The methodology's own phase, which the server adds to every week it
+    // generates. Read from `extra` so the keys round-trip untouched; absent on
+    // weeks generated before philosophies owned their phases, where `phase`
+    // (the kind) is all there is.
+    var phaseId: String? { extra["phase_id"]?.stringValue }
+    var phaseName: String? { extra["phase_name"]?.stringValue }
+    var trackId: String? { extra["track_id"]?.stringValue }
+
+    /// What to call this week's phase: the methodology's name for it, else
+    /// the kind, capitalised.
+    var phaseLabel: String {
+        phaseName ?? phase.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(weekNumber, forKey: .weekNumber)
@@ -480,6 +494,12 @@ enum JSONValue: Codable, Hashable {
         case .array(let a): try c.encode(a)
         case .object(let o): try c.encode(o)
         }
+    }
+
+    /// The string this value holds, if it is one.
+    var stringValue: String? {
+        if case .string(let s) = self { return s }
+        return nil
     }
 
     /// Every key of the object being decoded that the model does not name.

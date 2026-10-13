@@ -88,8 +88,9 @@ struct AnalyticsProgramTab: View {
                 }
                 if let phase = frame.phase {
                     HStack(spacing: 6) {
-                        Text(phase.name.capitalized)
+                        Text(phase.displayName)
                             .font(.caption).fontWeight(.semibold)
+                            .foregroundStyle(PhaseStyle.color(for: phase.name))
                         Text("· week \(phase.weekInProgram) of \(phase.totalWeeks)")
                             .font(.caption).foregroundStyle(.secondary)
                         if phase.isDeload {
@@ -100,6 +101,10 @@ struct AnalyticsProgramTab: View {
                                 .foregroundStyle(.blue)
                                 .clipShape(Capsule())
                         }
+                    }
+                    if let focus = phase.focus, !focus.isEmpty {
+                        Text(focus)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 if !frame.planFidelity.isEmpty {

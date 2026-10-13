@@ -84,8 +84,16 @@ enum ProgramConstraintsDiff {
 
     /// The program's constraints with the profile's current values applied,
     /// continuing the phase the regenerated week is in.
+    ///
+    /// `phaseId` and `trackId` are the week's own (`ProgramWeek.phaseId`,
+    /// `.trackId`). Without them the server starts the tail on the
+    /// methodology's primary track at the first phase of the week's kind — a
+    /// Wildman Pentathlon Prep program came back as General Practice. They are
+    /// nil for weeks generated before phases had ids; `phase` (the kind) is
+    /// still sent for those.
     static func merged(program: [String: JSONValue], profile: UserProfile,
-                       weekInPhase: Int?, phase: String?) -> GenerateConstraints {
+                       weekInPhase: Int?, phase: String?,
+                       phaseId: String? = nil, trackId: String? = nil) -> GenerateConstraints {
         var c = GenerateConstraints()
         c.trainingLevel = profile.trainingLevel.isEmpty
             ? (string(program["training_level"]) ?? c.trainingLevel) : profile.trainingLevel
@@ -97,6 +105,8 @@ enum ProgramConstraintsDiff {
         c.injuryFlags = profile.injuryFlags
         c.phase = phase ?? string(program["training_phase"])
         c.trainingPhase = c.phase
+        c.startPhase = phaseId
+        c.trackId = trackId ?? string(program["track_id"])
         c.periodizationWeek = weekInPhase
         return c
     }

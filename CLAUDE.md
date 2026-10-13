@@ -211,17 +211,23 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
     one constructor the plain generate path and the event-date calendar share — the
     calendar used to drop the framework, so Uphill's specific and taper weeks ran
     its base framework.
-  - **Start phase.** `start_phase` (a phase id) or the legacy `training_phase` (a kind,
-    still sent by iOS: mapped to the first phase of that kind, or the first phase with
-    a `PHASE_KIND_NOT_IN_TRACK` warning). Neither → the track's first phase; the API
+  - **Start phase.** `start_phase` (a phase id) or the legacy `training_phase` (a kind:
+    mapped to the first phase of that kind, or the first phase with a
+    `PHASE_KIND_NOT_IN_TRACK` warning; older iOS builds send it, and the current one
+    sends it beside `start_phase` on a tail regenerate). Neither → the track's first phase; the API
     no longer defaults to `'base'`. An unknown `start_phase` is infeasible.
   - **Picks.** `track_id` picks a track (a blend may name any member's; otherwise the
     heaviest member's primary track). The legacy `framework_id` maps to the track and
     phase that run it (`goals.owner_track_for_framework`) — it used to sit in
     constraints as `forced_framework`, where the phase's framework overrode it.
   - **Regenerates** send the target week's `track_id`, `start_phase` and
-    `periodization_week` (`lib/programSource.tailResume`), so a tail resumes in its
-    own phase.
+    `periodization_week` (web `lib/programSource.tailResume`, iOS
+    `ProgramConstraintsDiff.merged`), so a tail resumes in its own track and phase.
+  - **iOS** decodes `PhilosophyCard.tracks`, reads `phase_id` / `phase_name` /
+    `track_id` off each week's round-tripped extras (`ProgramWeek.phaseLabel`), colours
+    by kind through `PhaseStyle`, and picks tracks and start phases with
+    `TrackPhaseList` / `StartPhasePicker` (design-system §3.2, §6.22;
+    `PhaseTrackTests`).
   - `tools/check_styles.py` generates every phase of every track and fails if a week
     runs another framework; `check_provenance.py --coverage` fails if a phase's
     framework schedules a modality no package archetype applies to for its kind;

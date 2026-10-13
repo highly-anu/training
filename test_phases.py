@@ -160,6 +160,18 @@ def test_route():
     ok(body['validation']['feasible'] and body['weeks'][0]['phase_id'] == 'novice_lp',
        "the iOS builder's 'base' still generates for a track without a base phase")
 
+    # The iOS payload: track and start phase inside constraints, the week's
+    # kind beside them as the legacy training_phase (a tail regenerate).
+    r = client.post('/api/programs/generate', json={
+        'philosophy_id': 'wildman_kettlebell',
+        'constraints': dict(CONSTRAINTS, days_per_week=4, track_id='pentathlon', start_phase='timed_sets',
+                            training_phase='build', phase='build', periodization_week=3),
+        'num_weeks': 2, 'week_in_program': 7})
+    weeks = r.get_json()['weeks']
+    ok([(w['track_id'], w['phase_id'], w['week_in_phase']) for w in weeks]
+       == [('pentathlon', 'timed_sets', 3), ('pentathlon', 'timed_sets', 4)],
+       "the phone's tail regenerate resumes in its own track and phase")
+
     r = client.post('/api/programs/generate', json={
         'philosophy_id': 'uphill_athlete', 'constraints': dict(CONSTRAINTS, start_phase='nope'),
         'num_weeks': 1})

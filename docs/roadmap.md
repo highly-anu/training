@@ -42,7 +42,7 @@ deferred is under *Later*.
 | 4 | Watch app: Garmin-native look, menus and icons | P2 | M | watch |
 | 5 | On-demand HRV capture on the watch | P3 | M | watch, API |
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
-| 7 | Phases and tracks: review the drafted phase text; iOS track picker and phase names (*IA*) | P2 | M | content, iOS |
+| 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 
 ---
 
@@ -590,7 +590,7 @@ products and `test_watch_spec.py` passes. Still to do:
 
 ---
 
-### 7. Phases and tracks: review the text, bring iOS along — P2 · M
+### 7. Phases and tracks: review the text, verify iOS — P2 · S
 
 Philosophies own their phases since 2026-10-13 (`src/phases.py`, CLAUDE.md
 *Philosophies own their phases*). Open:
@@ -607,14 +607,16 @@ Philosophies own their phases since 2026-10-13 (`src/phases.py`, CLAUDE.md
    General Practice now runs `kb_pentathlon_training` as its strength-endurance
    session in every phase, because that is the package's only one; a general
    strength-endurance archetype may be the better fix.
-3. **iOS (M).** The phone shows `week.phase` capitalised (the kind) and its
-   builder offers base/build/peak/taper for every philosophy, which the server
-   maps onto the track. It should label weeks with `phase_name`, offer the
-   philosophy's tracks and their phases, and send `track_id` / `start_phase`.
-   Needs the simulator.
+3. **iOS — verify in the simulator (S).** Written on 2026-10-13 without a Mac:
+   the builder's track picker and start phase, the settings sheet's, Program ▸
+   Current's phase names and kind colours, Today's label, the methodology
+   sheet's tracks and Analytics ▸ Program's phase name and focus;
+   `PhaseTrackTests` added. Not yet compiled or run: build, run
+   `./ios/run_tests.sh`, and screenshot the builder's step 2 (Wildman, two
+   tracks), Program ▸ Current on an Uphill program, and the methodology sheet.
 4. **Analytics frame (S).** `/analytics/program` now returns the phase's
-   `label`, `description` and the `track`; neither client renders the
-   description yet.
+   `label`, `description` and the `track`; both clients show the label and
+   the phone the focus, neither the description yet.
 
 ---
 

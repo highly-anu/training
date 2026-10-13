@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// What a methodology is: its summary, emphasis, core principles and how it
-/// trains (design-system §6.18). Presented from the builder's philosophy
+/// What a methodology is: its summary, emphasis, core principles, how it
+/// trains, and its tracks with their own phases (design-system §6.18). Presented from the builder's philosophy
 /// cards and from Program ▸ Current's "About this methodology" — the phone's
 /// counterpart to the web's Explore link. It used to be private to the
 /// builder, so the program the athlete was on had no way to explain itself.
@@ -28,6 +28,19 @@ struct PhilosophyDetailSheet: View {
                 if let principles = philosophy.corePrinciples, !principles.isEmpty {
                     Section("Core principles") {
                         ForEach(principles, id: \.self) { Text(humanised($0)) }
+                    }
+                }
+                if let tracks = philosophy.tracks, !tracks.isEmpty {
+                    ForEach(tracks) { track in
+                        Section {
+                            if let text = track.description, !text.isEmpty {
+                                Text(text).font(.subheadline)
+                            }
+                            TrackPhaseList(track: track, showsDescriptions: true)
+                                .padding(.vertical, 4)
+                        } header: {
+                            Text(tracks.count > 1 ? "Track — \(track.name)" : "Phases — \(track.name)")
+                        }
                     }
                 }
                 if philosophy.intensityModel != nil || philosophy.progressionPhilosophy != nil {
