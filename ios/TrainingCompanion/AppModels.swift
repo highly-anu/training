@@ -452,9 +452,12 @@ struct ImportedWorkout: Codable, Identifiable {
     let distance: WorkoutDistance?
     let gpsTrack: [GPSPoint]?
     let elevation: WorkoutElevation?
+    /// The server's analysis, on `GET /health/workouts/<id>` only — never
+    /// sent back (nil encodes as absent).
+    var analysis: WorkoutAnalysis? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, source, date, calories, distance, elevation
+        case id, source, date, calories, distance, elevation, analysis
         case startTime = "startTime"
         case endTime = "endTime"
         case durationMinutes = "durationMinutes"
@@ -462,6 +465,55 @@ struct ImportedWorkout: Codable, Identifiable {
         case inferredModalityId = "inferredModalityId"
         case heartRate = "heartRate"
         case gpsTrack = "gpsTrack"
+    }
+}
+
+/// One workout analysed on the server (src/analytics/workout_analysis.py):
+/// zones, TRIMP, training effect, recovery, decoupling and best efforts —
+/// the numbers the web shows for the same workout. `AnalyticsEngine` is only
+/// the fallback when a server predates it or the fetch fails.
+struct WorkoutAnalysis: Codable, Equatable {
+    struct Zones: Codable, Equatable {
+        let method: String
+        let pct: [Int]
+        let minutes: [Double]
+    }
+    struct Decoupling: Codable, Equatable {
+        let pct: Double
+        let label: String
+    }
+    struct Effort: Codable, Equatable {
+        let label: String
+        let km: Double
+        let seconds: Double
+        let secPerKm: Double
+    }
+    let maxHr: Int
+    let maxHrSource: String
+    let zoneBoundaries: [Double]
+    let zones: Zones?
+    let trimp: Int?
+    let trainingEffect: String?
+    let recoveryHours: Int?
+    let decoupling: Decoupling?
+    let bestEfforts: [Effort]
+
+    /// The zone split as the charts take it.
+    var distribution: HRZoneDistribution? {
+        guard let z = zones, z.pct.count == 5 else { return nil }
+        return HRZoneDistribution(z1: Double(z.pct[0]), z2: Double(z.pct[1]), z3: Double(z.pct[2]),
+                                  z4: Double(z.pct[3]), z5: Double(z.pct[4]), method: z.method)
+    }
+
+    var effect: TrainingEffect? { trainingEffect.flatMap(TrainingEffect.init(rawValue:)) }
+
+    var efforts: [BestEffort] {
+        bestEfforts.map { e in
+            let s = Int(e.secPerKm.rounded())
+            return BestEffort(label: e.label, timeSeconds: e.seconds,
+                              paceStr: String(format: "%d:%02d /km", s / 60, s % 60),
+                              isPersonalRecord: false)
+        }
     }
 }
 

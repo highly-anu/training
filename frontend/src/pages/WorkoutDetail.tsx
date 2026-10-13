@@ -2,7 +2,6 @@ import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft,
@@ -17,6 +16,7 @@ import {
   Info,
   AlertTriangle,
   Link2,
+  Timer,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Button } from '@/components/ui/button'
@@ -29,11 +29,11 @@ import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { computeHRZones, computeTRIMP, computeAerobicDecoupling, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import { computeSessionInsight } from '@/lib/sessionAnalysis'
 import { scoreMatch, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useCurrentProgram } from '@/api/programs'
-import { apiClient } from '@/api/client'
+import { useWorkoutDetail, zonesFromAnalysis } from '@/api/health'
 import type { ImportedWorkout, InsightItem, PendingMatch } from '@/api/types'
 
 // Lazy-load map dependencies (Leaflet + CesiumJS are heavy)
@@ -117,6 +117,14 @@ function StatCard({
   )
 }
 
+/** 310 → "5:10"; 3725 → "1:02:05". */
+function formatClock(totalSeconds: number) {
+  const t = Math.round(totalSeconds)
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60
+  const ss = String(sec).padStart(2, '0')
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`
+}
+
 function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
@@ -154,19 +162,7 @@ export function WorkoutDetail() {
   // Always fetch full workout from API — snapshot workouts omit gpsTrack and hr_samples
   // to keep the snapshot response small. State workout (from navigation) may also lack
   // these fields if it came from the list. Fetch unconditionally when workoutId is known.
-  const { data: fetchedWorkout, isLoading: fetchLoading } = useQuery<ImportedWorkout | null>({
-    queryKey: ['workout', workoutId],
-    queryFn: async () => {
-      if (!workoutId) return null
-      try {
-        return await apiClient.get(`/health/workouts/${encodeURIComponent(workoutId)}`) as ImportedWorkout
-      } catch {
-        return null
-      }
-    },
-    enabled: !!workoutId,
-    staleTime: 5 * 60 * 1000,
-  })
+  const { data: fetchedWorkout, isLoading: fetchLoading } = useWorkoutDetail(workoutId)
 
   // fetchedWorkout takes priority so GPS/HR samples are always present
   const workout = fetchedWorkout ?? stateWorkout ?? localWorkout ?? undefined
@@ -183,8 +179,13 @@ export function WorkoutDetail() {
 
   const dob = useProfileStore((s) => s.dateOfBirth ?? null)
   const hrConfig = useProfileStore((s) => s.hrConfig)
-  const maxHR = getEffectiveMaxHR(dob, hrConfig.maxHROverride ?? undefined)
-  const zoneBoundaries = hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES
+  // Zones, TRIMP, training effect, recovery, decoupling and best efforts are
+  // the server's (`analysis` on GET /health/workouts/<id>), the same numbers
+  // the phone shows. The profile's values only colour the charts until the
+  // fetch lands.
+  const analysis = fetchedWorkout?.analysis
+  const maxHR = analysis?.maxHr ?? getEffectiveMaxHR(dob, hrConfig.maxHROverride ?? undefined)
+  const zoneBoundaries = analysis?.zoneBoundaries ?? hrConfig.zoneBoundaries ?? DEFAULT_ZONE_BOUNDARIES
 
   // Resolve matched session from program
   // Session keys are "weekNum-DayName-sessionIdx" (per-session) or legacy "weekNum-DayName"
@@ -203,22 +204,12 @@ export function WorkoutDetail() {
     return computeSessionInsight(matchedSessions, workout, perfLog, maxHR, match?.sessionKey)
   }, [workout, matchedSessions, perfLogs, match, maxHR])
 
-  const hrZones = useMemo(() => {
-    if (!workout) return null
-    const samples = workout.heartRate.samples ?? []
-    if (samples.length === 0 && workout.heartRate.avg == null) return null
-    return computeHRZones(maxHR, samples, workout.heartRate.avg ?? undefined, zoneBoundaries)
-  }, [workout, maxHR, zoneBoundaries])
-
-  const trimp = useMemo(() => {
-    if (!hrZones || !workout) return null
-    return computeTRIMP(hrZones, workout.durationMinutes)
-  }, [hrZones, workout])
-
-  const decoupling = useMemo(() => {
-    if (!workout?.gpsTrack?.length || !workout?.heartRate?.samples?.length) return null
-    return computeAerobicDecoupling(workout.gpsTrack, workout.heartRate.samples)
-  }, [workout])
+  const hrZones = zonesFromAnalysis(analysis)
+  const trimp = analysis?.trimp ?? null
+  const decoupling = analysis?.decoupling
+    ? { ...analysis.decoupling,
+        color: analysis.decoupling.label === 'efficient' ? 'green' : analysis.decoupling.label === 'moderate' ? 'amber' : 'red' }
+    : null
 
   // Must run before the `if (!workout)` early return further down: the render
   // where the query resolves would otherwise call one more hook than the
@@ -500,7 +491,15 @@ export function WorkoutDetail() {
             icon={Activity}
             label="Training Load"
             value={String(trimp)}
-            sub="TRIMP score"
+            sub={analysis?.trainingEffect ? `TRIMP · ${analysis.trainingEffect}` : 'TRIMP score'}
+          />
+        )}
+        {analysis?.recoveryHours != null && (
+          <StatCard
+            icon={Timer}
+            label="Recovery"
+            value={`${analysis.recoveryHours} h`}
+            sub="estimated from TRIMP"
           />
         )}
       </div>
@@ -571,6 +570,27 @@ export function WorkoutDetail() {
               HR Zone Distribution
             </h2>
             <HRZoneChart zones={hrZones} />
+          </div>
+        </>
+      )}
+
+      {/* Best efforts — the fastest 1 / 5 / 10 km windows, as on the phone */}
+      {analysis && analysis.bestEfforts.length > 0 && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Best Efforts
+            </h2>
+            <div className="grid grid-cols-3 gap-2 max-w-md">
+              {analysis.bestEfforts.map((e) => (
+                <div key={e.label} className="rounded-lg border bg-muted/30 px-3 py-2">
+                  <div className="text-[10px] text-muted-foreground">{e.label}</div>
+                  <div className="text-sm font-semibold tabular-nums">{formatClock(e.seconds)}</div>
+                  <div className="text-[10px] text-muted-foreground tabular-nums">{formatClock(e.secPerKm)} /km</div>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}

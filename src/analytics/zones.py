@@ -60,13 +60,16 @@ def assign_zone(bpm: float, max_hr: float, bounds: list[float] | None = None) ->
     return 4
 
 
-def zone_fractions(workout: dict, max_hr: float) -> dict:
+def zone_fractions(workout: dict, max_hr: float, bounds: list[float] | None = None) -> dict:
     """{'fractions': [5 floats summing to 1], 'method': 'samples'|'summary_estimate'|'none',
         'measured_seconds': float}
 
     `workout` is the health_store shape: heartRate.samples[{timestamp,bpm}],
-    heartRate.avg, heartRate.max, durationMinutes.
+    heartRate.avg, heartRate.max, durationMinutes. `bounds` are zone edges
+    other than the shared ones — the athlete's own, for one workout's detail
+    (workout_analysis.py); the cached load maths never pass them.
     """
+    edges = list(bounds) if bounds else upper_bounds()
     hr = workout.get('heartRate') or {}
     samples = hr.get('samples') or []
 
@@ -80,7 +83,7 @@ def zone_fractions(workout: dict, max_hr: float) -> dict:
                 if dt <= 0:
                     continue
                 dt = min(dt, SAMPLE_GAP_CAP_SEC)
-                by_zone[assign_zone(float(a['bpm']), max_hr)] += dt
+                by_zone[assign_zone(float(a['bpm']), max_hr, edges)] += dt
                 total += dt
         except (KeyError, TypeError, ValueError):
             total = 0.0
@@ -92,7 +95,7 @@ def zone_fractions(workout: dict, max_hr: float) -> dict:
     if avg:
         peak = hr.get('max') or max_hr
         std = max(float(peak) - float(avg), 1.0) / 2.5
-        edges_bpm = [0.0] + [e * max_hr for e in upper_bounds()] + [math.inf]
+        edges_bpm = [0.0] + [e * max_hr for e in edges] + [math.inf]
         raw = []
         for lo, hi in zip(edges_bpm, edges_bpm[1:]):
             p_lo = 0.0 if lo == 0 else _norm_cdf(lo, float(avg), std)

@@ -120,17 +120,24 @@ export function zoneBoundariesToBpm(
   return boundaries.map((b) => Math.round(b * maxHR))
 }
 
-// ── Normal CDF approximation (Abramowitz and Stegun) ──────────────────────────
+// ── Normal CDF approximation (Abramowitz and Stegun 7.1.26) ───────────────────
 
-function normalCDF(x: number, mean: number, std: number): number {
-  const z = (x - mean) / std
-  const t = 1 / (1 + 0.3275911 * Math.abs(z))
+/**
+ * Φ((x − mean) / std) = ½(1 + erf(z/√2)). The polynomial approximates erf, so
+ * it takes z/√2 and returns erf. Until 2026-10-13 it took z and returned its
+ * erf estimate as the CDF — Φ(mean) came out ≈ 0, not 0.5 — so every
+ * summary-only zone split leaned a zone high. The server's (math.erf) was
+ * right; test_workout_analysis.py pins it.
+ */
+export function normalCDF(x: number, mean: number, std: number): number {
+  const u = (x - mean) / std / Math.SQRT2
+  const t = 1 / (1 + 0.3275911 * Math.abs(u))
   const poly =
     t *
     (0.254829592 +
       t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))))
-  const p = 1 - poly * Math.exp((-z * z) / 2)
-  return z >= 0 ? p : 1 - p
+  const erf = 1 - poly * Math.exp(-u * u)
+  return 0.5 * (1 + (u >= 0 ? erf : -erf))
 }
 
 function estimateZonesFromSummary(

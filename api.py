@@ -1954,6 +1954,15 @@ def health_get_workout(workout_id: str):
     workout = _health.get_workout(g.user_id, workout_id)
     if workout is None:
         return jsonify({'detail': 'Not found'}), 404
+    # Zones, TRIMP, training effect, recovery, decoupling and best efforts,
+    # computed once here for both clients (src/analytics/workout_analysis.py).
+    # A failure leaves the workout readable without them.
+    try:
+        from src.analytics.workout_analysis import analyse
+        from src.db import get_user_profile
+        workout['analysis'] = analyse(workout, get_user_profile(g.user_id) or {})
+    except Exception as exc:
+        app.logger.warning('workout analysis failed for %s: %s', workout_id, exc)
     return jsonify(workout)
 
 

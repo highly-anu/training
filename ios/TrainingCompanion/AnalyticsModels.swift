@@ -212,3 +212,13 @@ enum WorkoutSortKey: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 }
+
+// MARK: - Server analysis → the views' models
+
+extension WorkoutAnalysis {
+    var decouplingResult: DecouplingResult? {
+        guard let d = decoupling else { return nil }
+        let color: Color = d.label == "efficient" ? .green : d.label == "moderate" ? .orange : .red
+        return DecouplingResult(pct: d.pct, label: d.label, color: color)
+    }
+}

@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/dialog'
 import { HRZoneChart } from '@/components/bio/HRZoneChart'
 import { HRTimeline } from '@/components/workout/HRTimeline'
-import { computeHRZones, maxHRFromDOB } from '@/lib/hrZones'
+import { getEffectiveMaxHR } from '@/lib/hrZones'
+import { useWorkoutDetail, zonesFromAnalysis } from '@/api/health'
 import { computeSessionInsight } from '@/lib/sessionAnalysis'
 import { scoreMatch, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { useBioStore } from '@/store/bioStore'
@@ -71,14 +72,15 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
   const confirmMatch = useBioStore((s) => s.confirmMatch)
   const perfLog = useBioStore((s) => s.sessionPerformanceLogs[sessionKey])
   const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
+  const hrConfig = useProfileStore((s) => s.hrConfig)
   const programStartDate = useProgramStore((s) => s.programStartDate)
 
-  const maxHR = maxHRFromDOB(dateOfBirth) ?? 190
-
-  const zones = useMemo(
-    () => matched ? computeHRZones(maxHR, matched.heartRate.samples ?? [], matched.heartRate.avg) : null,
-    [matched, maxHR],
-  )
+  // The zones are the server's analysis of the matched workout — the same
+  // numbers as its page and the phone. This card used to compute its own,
+  // from date of birth alone, ignoring the max-HR override and the edges.
+  const { data: detail } = useWorkoutDetail(matched?.id)
+  const maxHR = detail?.analysis?.maxHr ?? getEffectiveMaxHR(dateOfBirth ?? null, hrConfig.maxHROverride ?? undefined)
+  const zones = zonesFromAnalysis(detail?.analysis)
 
   const insight = useMemo(
     () => matched ? computeSessionInsight(sessions, matched, perfLog, maxHR, sessionKey) : null,

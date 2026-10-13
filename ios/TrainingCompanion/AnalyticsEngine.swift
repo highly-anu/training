@@ -7,7 +7,12 @@ nonisolated enum AnalyticsEngine {
 
     // MARK: - Constants
 
-    static let defaultZoneBoundaries: [Double] = [0.60, 0.70, 0.80, 0.90]
+    /// data/commons/hr_zones.json's `upper_bounds` (version 2). These were the
+    /// old Friel edges (60/70/80/90 %) until 2026-10-13, long after the server
+    /// and the browser moved — Zone 2 at 72 % of max read as Z3 on the phone.
+    /// The workout detail now takes its zones from the server; this is the
+    /// fallback and the per-row TRIMP.
+    static let defaultZoneBoundaries: [Double] = [0.65, 0.78, 0.87, 0.93]
     static let banisterWeights: [Double] = [1.0, 1.5, 2.0, 3.0, 4.5]
 
     // MARK: - Max HR Resolution
@@ -45,8 +50,9 @@ nonisolated enum AnalyticsEngine {
         hrConfig: HRConfig?,
         dateOfBirth: String? = nil
     ) -> HRZoneDistribution? {
-        let configMax = effectiveMaxHR(hrConfig: hrConfig, dateOfBirth: dateOfBirth)
-        let maxHR = workoutMax.map { Swift.max(configMax, $0) } ?? configMax
+        // The athlete's max HR, as on the server and the web: a workout's own
+        // peak no longer raises it (a strap spike shifted every zone).
+        let maxHR = effectiveMaxHR(hrConfig: hrConfig, dateOfBirth: dateOfBirth)
         let boundaries = hrConfig?.zoneBoundaries ?? defaultZoneBoundaries
 
         if samples.count >= 2 {
@@ -85,12 +91,15 @@ nonisolated enum AnalyticsEngine {
                                         observedMax: Double(observedMax), boundaries: boundaries)
     }
 
-    private static func normalCDF(_ x: Double, mean: Double, std: Double) -> Double {
-        let z = (x - mean) / max(std, 1)
-        let t = 1.0 / (1.0 + 0.3275911 * abs(z))
+    /// Φ = ½(1 + erf(z/√2)). The polynomial approximates erf; until
+    /// 2026-10-13 it was fed z and its output used as Φ, which put Φ(mean)
+    /// near 0 and leaned every summary-only zone split a zone high.
+    static func normalCDF(_ x: Double, mean: Double, std: Double) -> Double {
+        let u = (x - mean) / max(std, 1) / 2.0.squareRoot()
+        let t = 1.0 / (1.0 + 0.3275911 * abs(u))
         let poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))))
-        let p = 1.0 - poly * exp(-z * z / 2.0)
-        return z >= 0 ? p : 1.0 - p
+        let erf = 1.0 - poly * exp(-u * u)
+        return 0.5 * (1.0 + (u >= 0 ? erf : -erf))
     }
 
     private static func estimateZonesFromSummary(
