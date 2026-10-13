@@ -113,7 +113,7 @@ struct HRTimelineView: View {
         }
     }
 
-    static func buildData(samples: [HRSample]) -> (data: [HRPoint], lo: Int, hi: Int) {
+    nonisolated static func buildData(samples: [HRSample]) -> (data: [HRPoint], lo: Int, hi: Int) {
         guard let first = samples.first else { return ([], 60, 180) }
 
         let iso = ISO8601DateFormatter()

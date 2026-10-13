@@ -96,7 +96,7 @@ final class APIClient {
         }
         // Decode failed — log a snippet so we can diagnose key-casing mismatches
         let snippet = String(data: data.prefix(300), encoding: .utf8) ?? "(unreadable)"
-        AppLogger.shared.logFromBackground("program: decode failed — raw: \(snippet)")
+        AppLogger.logFromBackground("program: decode failed — raw: \(snippet)")
         return nil
     }
 
@@ -297,11 +297,11 @@ final class APIClient {
         let data = try await get("/health/bio/recent")
         do {
             let logs = try JSONDecoder().decode([DailyBioLog].self, from: data)
-            AppLogger.shared.logFromBackground("bio: fetched \(logs.count) recent logs")
+            AppLogger.logFromBackground("bio: fetched \(logs.count) recent logs")
             return logs
         } catch {
             let raw = String(data: data, encoding: .utf8) ?? "(nil)"
-            AppLogger.shared.logFromBackground("bio: decode FAILED — \(error) | raw: \(raw.prefix(200))")
+            AppLogger.logFromBackground("bio: decode FAILED — \(error) | raw: \(raw.prefix(200))")
             return []
         }
     }
@@ -446,7 +446,7 @@ final class APIClient {
         case 200..<300:
             return try JSONDecoder().decode(AdjustResult.self, from: data)
         case 409:
-            AppLogger.shared.logFromBackground("program: adjust rejected (stale revision) — re-pulling")
+            AppLogger.logFromBackground("program: adjust rejected (stale revision) — re-pulling")
             throw StaleProgramRevision()
         default:
             throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not apply the adjustment")
@@ -567,7 +567,7 @@ final class APIClient {
         // web generated something newer. Surface it so the caller re-pulls
         // instead of overwriting work it has never seen.
         if let http = response as? HTTPURLResponse, http.statusCode == 409 {
-            AppLogger.shared.logFromBackground("program: save rejected (stale revision) — re-pulling")
+            AppLogger.logFromBackground("program: save rejected (stale revision) — re-pulling")
             throw StaleProgramRevision()
         }
         try validateStatus(response)

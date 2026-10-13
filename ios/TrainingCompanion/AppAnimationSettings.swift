@@ -39,6 +39,14 @@ enum AppMetrics {
     static let cardPadding: CGFloat = 16
     static let swipeThreshold: CGFloat = 80
     static let swipeVelocityThreshold: CGFloat = 400
+
+    /// Width of the screen the app's window scene is on — `UIScreen.main`
+    /// is deprecated in iOS 26.
+    static var screenWidth: CGFloat {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+        return scene?.screen.bounds.width ?? 390
+    }
 }
 
 struct AppTabStyle: ViewModifier {

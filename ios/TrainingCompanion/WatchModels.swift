@@ -662,13 +662,13 @@ struct WatchExercise: Codable, Hashable {
 
 /// Compact HR sample — uses integer second offsets from startedAt to save ~20 bytes/sample
 /// versus full ISO timestamps. Expanded back to ISO on the iPhone before sending to the API.
-struct HRSamplePoint: Codable {
+nonisolated struct HRSamplePoint: Codable {
     let t: Int   // seconds from session startedAt
     let b: Int   // bpm
 }
 
 /// Compact GPS point with optional altitude and HR at that moment.
-struct GPSTrackPoint: Codable {
+nonisolated struct GPSTrackPoint: Codable {
     let lat: Double
     let lng: Double
     let alt: Double?
@@ -677,14 +677,14 @@ struct GPSTrackPoint: Codable {
 }
 
 /// Per-exercise time window with HR summary, used to correlate bio data to specific exercises.
-struct ExerciseTimelineEntry: Codable {
+nonisolated struct ExerciseTimelineEntry: Codable {
     let exerciseId: String
     let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
     let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
     let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
 }
 
-struct WatchWorkoutSummary: Codable {
+nonisolated struct WatchWorkoutSummary: Codable {
     let sessionId: String
     let date: String                // "YYYY-MM-DD"
     let startedAt: String           // ISO 8601
@@ -705,7 +705,7 @@ struct WatchWorkoutSummary: Codable {
     let exerciseTimeline: [ExerciseTimelineEntry]?
 }
 
-struct WatchSetLog: Codable, Equatable {
+nonisolated struct WatchSetLog: Codable, Equatable {
     let setIndex: Int
     let repsActual: Int?
     let weightKg: Double?

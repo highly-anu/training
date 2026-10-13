@@ -83,7 +83,7 @@ struct ElevationProfileView: View {
     }
 }
 
-private func buildChartData(_ points: [GPSPoint]) -> (data: [ElevationProfileView.AltPoint], lo: Double, hi: Double) {
+nonisolated private func buildChartData(_ points: [GPSPoint]) -> (data: [ElevationProfileView.AltPoint], lo: Double, hi: Double) {
     guard let first = points.first else { return ([], 0, 500) }
 
     let iso = ISO8601DateFormatter()

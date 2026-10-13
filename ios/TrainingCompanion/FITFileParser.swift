@@ -93,7 +93,7 @@ struct FITFileParser {
 
                 // Parse fields, injecting the reconstructed timestamp
                 if def.globalNum == 20 {
-                    if var rec = parseRecordMsg(data: data, at: pos, def: def,
+                    if let rec = parseRecordMsg(data: data, at: pos, def: def,
                                                compressedTimestamp: fitDate(ts)) {
                         records.append(rec)
                     }
