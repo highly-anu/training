@@ -32,13 +32,16 @@ struct AnalyticsRecoveryTab: View {
         AnalyticsCard(header: "Today's Readiness") {
           VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 16) {
-                if let info = appState.readinessInfo(from: appState.recentBioLogs) {
+                // The server's score, as on Today. This circle used to come
+                // from an on-phone HRV rule and could disagree with the
+                // number beside it.
+                if let result = appState.readinessResult {
                     VStack(spacing: 4) {
                         Circle()
-                            .fill(info.signalColor.gradient)
+                            .fill(result.statusColor.gradient)
                             .frame(width: 52, height: 52)
                             .overlay(
-                                Image(systemName: info.signalIcon)
+                                Image(systemName: result.statusIcon)
                                     .foregroundStyle(.white).font(.headline)
                             )
                         Text("Readiness").font(.caption2).foregroundStyle(.secondary)

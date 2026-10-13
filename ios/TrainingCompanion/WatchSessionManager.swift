@@ -278,23 +278,10 @@ final class WatchSessionManager: NSObject, ObservableObject {
         }
     }
 
+    /// Today's server readiness, the same score the phone's Today and
+    /// Recovery show (`AppState.loadReadiness` stores it).
     private func buildReadinessPayload() -> ReadinessInfo? {
-        // Use last known HRV stored in UserDefaults (written by HealthKitManager sync)
-        guard let hrv = UserDefaults.standard.object(forKey: "lastHRV") as? Double else { return nil }
-        let restingHR = UserDefaults.standard.object(forKey: "lastRestingHR") as? Double
-        let signal: String
-        let score: Double
-        switch hrv {
-        case let h where h >= 50: signal = "green"; score = min(1.0, h / 70.0)
-        case let h where h >= 35: signal = "yellow"; score = h / 70.0
-        default:                  signal = "red";    score = max(0.1, hrv / 70.0)
-        }
-        return ReadinessInfo(
-            score: score,
-            signal: signal,
-            restingHR: restingHR.map { Int($0) },
-            hrv: Int(hrv)
-        )
+        ReadinessInfo.fromStoredServerScore()
     }
 
     private func sendNoProgramMessage() {

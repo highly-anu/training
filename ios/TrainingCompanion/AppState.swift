@@ -438,7 +438,9 @@ final class AppState: ObservableObject {
     func loadReadiness() async {
         guard let api else { return }
         do {
-            readinessResult = try await api.fetchReadiness()
+            let result = try await api.fetchReadiness()
+            readinessResult = result
+            ReadinessInfo.storeForWatch(result)
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
@@ -799,29 +801,6 @@ final class AppState: ObservableObject {
             await loadProgram()
             programSaveConflict = "Your program changed elsewhere — reloaded; your last edit was not saved."
         }
-    }
-
-    /// Computed readiness from most recent bio log: green/yellow/red based on HRV + resting HR.
-    func readinessInfo(from bioLogs: [DailyBioLog]) -> ReadinessInfo? {
-        guard let latest = bioLogs.first else { return nil }
-        guard let hrv = latest.hrv else { return nil }
-        // Simple heuristic: HRV > 50ms = green, 35–50 = yellow, <35 = red
-        let signal: String
-        let score: Double
-        switch hrv {
-        case let h where h >= 50:
-            signal = "green"; score = min(1.0, h / 70.0)
-        case let h where h >= 35:
-            signal = "yellow"; score = h / 70.0
-        default:
-            signal = "red"; score = max(0.1, hrv / 70.0)
-        }
-        return ReadinessInfo(
-            score: score,
-            signal: signal,
-            restingHR: latest.restingHR.map { Int($0) },
-            hrv: Int(hrv)
-        )
     }
 
     /// All weeks for the full program calendar.

@@ -377,6 +377,13 @@ struct TodayView: View {
                         SuggestionRowView(
                             suggestion: item.suggestion, workout: item.workout,
                             planned: plannedSession(for: item.suggestion.sessionKey),
+                            // Accept here as in Log ▸ Suggestions and on the
+                            // web's Today card — the decision belongs where
+                            // the suggestion is shown.
+                            onAccept: {
+                                Task { try? await appState.matchAndComplete(workout: item.workout,
+                                                                            sessionKey: item.suggestion.sessionKey) }
+                            },
                             onReview: { reviewWorkout = item.workout },
                             onDismiss: { Task { await appState.dismissSuggestion(workoutId: item.workout.id) } })
                     }
