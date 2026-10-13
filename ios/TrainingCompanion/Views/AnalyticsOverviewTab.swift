@@ -41,30 +41,37 @@ struct AnalyticsOverviewTab: View {
             }
     }
 
+    // Totals, mixes, consistency and the 28-day focus are the server's
+    // (`GET /health/load/summary`), the document the web's Load tab reads;
+    // AnalyticsEngine computes them only when that request failed.
+    private var summary: LoadSummary? { appState.loadSummaries[period] }
+
     private var filtered: [ImportedWorkout] {
         AnalyticsEngine.filter(appState.importedWorkouts, withinDays: period.days)
     }
 
     private var stats: WorkoutPeriodStats {
-        AnalyticsEngine.periodStats(for: filtered, period: period, allWorkouts: appState.importedWorkouts)
+        summary?.stats
+            ?? AnalyticsEngine.periodStats(for: filtered, period: period, allWorkouts: appState.importedWorkouts)
     }
 
     private var loadFocus: TrainingLoadFocus {
-        AnalyticsEngine.trainingLoadFocus(workouts: appState.importedWorkouts,
-                                          hrConfig: appState.profile.hrConfig,
-                                          dateOfBirth: appState.profile.dateOfBirth)
+        summary?.loadFocus
+            ?? AnalyticsEngine.trainingLoadFocus(workouts: appState.importedWorkouts,
+                                                 hrConfig: appState.profile.hrConfig,
+                                                 dateOfBirth: appState.profile.dateOfBirth)
     }
 
     private var modalities: [ModalityShare] {
-        AnalyticsEngine.modalityBreakdown(workouts: filtered)
+        summary?.modalityShares ?? AnalyticsEngine.modalityBreakdown(workouts: filtered)
     }
 
     private var activities: [ActivityTypeEntry] {
-        AnalyticsEngine.activityTypeBreakdown(workouts: filtered)
+        summary?.activityEntries ?? AnalyticsEngine.activityTypeBreakdown(workouts: filtered)
     }
 
     private var consistency: [WeeklyConsistencyEntry] {
-        AnalyticsEngine.weeklyConsistency(allWorkouts: appState.importedWorkouts)
+        summary?.consistencyEntries ?? AnalyticsEngine.weeklyConsistency(allWorkouts: appState.importedWorkouts)
     }
 
     var body: some View {
@@ -72,6 +79,11 @@ struct AnalyticsOverviewTab: View {
             LazyVStack(spacing: 16) {
                 AnalyticsPeriodPicker(period: $period)
                 kpiGrid
+                if summary == nil && appState.loadSummaryFailed.contains(period) {
+                    Text("Totals computed on this phone — the server's summary was unavailable.")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if loadFocus.total > 0 { loadFocusCard }
                 if !modalities.isEmpty { modalityDonutCard }
                 if !activities.isEmpty { activityBarCard }
@@ -85,10 +97,14 @@ struct AnalyticsOverviewTab: View {
         .task(id: appState.importedWorkouts.count) {
             await recomputePMC()
         }
+        .task(id: period) {
+            await appState.loadLoadSummary(period)
+        }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadWorkouts()
                 await recomputePMC()
+                await appState.loadLoadSummary(period)
             }
         }
     }

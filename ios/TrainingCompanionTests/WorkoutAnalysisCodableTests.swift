@@ -56,3 +56,33 @@ final class WorkoutAnalysisCodableTests: XCTestCase {
         XCTAssertTrue(a.efforts.isEmpty)
     }
 }
+
+/// `GET /health/load/summary` (src/analytics/load_summary.py), decoded into
+/// the models the Load section already draws.
+final class LoadSummaryCodableTests: XCTestCase {
+    private let json = """
+    {"period": "30d", "from": "2026-09-13", "to": "2026-10-13", "maxHr": 190,
+     "totals": {"sessions": 3, "minutes": 180.0, "distanceKm": 25.0, "elevationGainM": 100,
+                "elevationLossM": 100, "calories": 600},
+     "prior": {"sessions": 1, "minutes": 45.0, "distanceKm": 8.0, "elevationGainM": null,
+               "elevationLossM": null, "calories": null},
+     "modalities": [{"id": "aerobic_base", "minutes": 150.0, "pct": 83}, {"id": null, "minutes": 30.0, "pct": 17}],
+     "activities": [{"activityType": "Running", "minutes": 150.0, "sessions": 2, "modalityId": "aerobic_base"}],
+     "consistency": [{"weekStart": "2026-10-05", "sessions": 0}, {"weekStart": "2026-10-12", "sessions": 1}],
+     "zones": {"minutes": [10, 80, 50, 8, 2], "workoutsMeasured": 1, "workoutsEstimated": 1},
+     "focus28d": {"base": 90.0, "threshold": 50.0, "anaerobic": 10.0}}
+    """.data(using: .utf8)!
+
+    @MainActor func testDecodesIntoTheLoadSectionsModels() throws {
+        let s = try JSONDecoder().decode(LoadSummary.self, from: json)
+        XCTAssertEqual(s.stats.sessions, 3)
+        XCTAssertEqual(s.stats.totalDistanceKm, 25)
+        XCTAssertEqual(s.stats.prevMinutes, 45)
+        XCTAssertEqual(s.loadFocus.total, 150)
+        XCTAssertEqual(s.modalityShares.map(\.label), ["Aerobic Base", "Unclassified"])
+        XCTAssertEqual(s.activityEntries.first?.hours, 2.5)
+        XCTAssertEqual(s.consistencyEntries.map(\.sessionCount), [0, 1])
+        XCTAssertEqual(LoadSummary.query(.all), "all")
+        XCTAssertEqual(LoadSummary.query(.threeMonths), "3m")
+    }
+}

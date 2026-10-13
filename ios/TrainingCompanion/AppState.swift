@@ -85,6 +85,12 @@ final class AppState: ObservableObject {
     /// back to the on-device engine.
     @Published var serverPMC: [PMCEntry]? = nil
     @Published var serverWeeklyLoad: [ServerWeeklyLoadEntry]? = nil
+    /// Analytics ▸ Load's summary per period, from the server; a period with
+    /// no entry falls back to `AnalyticsEngine`.
+    @Published var loadSummaries: [AnalyticsPeriod: LoadSummary] = [:]
+    /// Periods whose last summary request failed, so the screen can say its
+    /// numbers are the phone's (not while a request is still in flight).
+    @Published var loadSummaryFailed: Set<AnalyticsPeriod> = []
 
     // MARK: - Internal
 
@@ -526,6 +532,19 @@ final class AppState: ObservableObject {
         }
         if let weeks = try? await weekly {
             serverWeeklyLoad = weeks
+        }
+    }
+
+    func loadLoadSummary(_ period: AnalyticsPeriod) async {
+        guard let api else { return }
+        do {
+            loadSummaries[period] = try await api.fetchLoadSummary(period: period, today: dayFormatter.string(from: Date()))
+            loadSummaryFailed.remove(period)
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            loadSummaries[period] = nil
+            loadSummaryFailed.insert(period)
+            AppLogger.logFromBackground("load: server summary unavailable — computing on device (\(error.localizedDescription))")
         }
     }
 

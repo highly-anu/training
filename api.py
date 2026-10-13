@@ -3806,6 +3806,32 @@ def health_load_weekly():
     return jsonify(result)
 
 
+@app.get('/api/health/load/summary')
+@require_auth
+def health_load_summary():
+    """Analytics ▸ Load's totals, modality and activity mix, consistency and
+    zone minutes for one period (src/analytics/load_summary.py) — what both
+    clients used to sum on the device. `period` is 7d|30d|3m|1y|all;
+    `today` is the client's local date (the server's is UTC)."""
+    from datetime import date as _date, timedelta as _td
+    from src.analytics.load_summary import PERIOD_DAYS, summarize
+
+    period = request.args.get('period', '30d')
+    if period not in PERIOD_DAYS:
+        return jsonify({'detail': f'period must be one of {sorted(PERIOD_DAYS)}'}), 422
+    try:
+        today = _date.fromisoformat(request.args['today']) if request.args.get('today') else _date.today()
+    except ValueError:
+        return jsonify({'detail': 'today must be YYYY-MM-DD'}), 422
+    days = PERIOD_DAYS[period]
+    # Twice the period for the prior comparison; twelve weeks for consistency.
+    lookback = max((days or 0) * 2, 7 * 12 + 7)
+    since = None if days is None else today - _td(days=lookback)
+    max_hr = _get_user_max_hr(g.user_id)
+    workouts = _workouts_for_load(g.user_id, max_hr, since=since)
+    return jsonify(summarize(workouts, max_hr, period, today))
+
+
 @app.get('/api/health/load/pmc')
 @require_auth
 def health_load_pmc():

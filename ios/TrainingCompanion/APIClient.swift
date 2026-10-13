@@ -408,6 +408,12 @@ final class APIClient {
         return try JSONDecoder().decode([ServerWeeklyLoadEntry].self, from: data)
     }
 
+    /// `today` is the phone's own date — the server's is UTC.
+    func fetchLoadSummary(period: AnalyticsPeriod, today: String) async throws -> LoadSummary {
+        let data = try await get("/health/load/summary?period=\(LoadSummary.query(period))&today=\(today)")
+        return try JSONDecoder().decode(LoadSummary.self, from: data)
+    }
+
     // MARK: - Exercise reference
 
     /// The package's media for one exercise: demo, description, cues, errors.
