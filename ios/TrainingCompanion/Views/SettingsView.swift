@@ -41,15 +41,20 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            // The web Settings' order (information-architecture.md §2):
+            // Connections (devices included) · Appearance · Account, with the
+            // phone-only Notifications after Connections and the developer
+            // sections last. The debug log stays in release builds: on the
+            // athlete's own phone it is the only way to read a sync failure.
             connectionsSection
             devicesSection
             pairGarminSection
             notificationsSection
             appearanceSection
+            accountSection
             syncCategoriesSection
             apiTargetSection
             debugLogSection
-            accountSection
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)

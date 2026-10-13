@@ -57,6 +57,18 @@ final class AppRouter: ObservableObject {
         logSection = nil
     }
 
+    /// A Program section asked for from outside, cleared once applied.
+    @Published var programSection: ProgramTab? = nil
+
+    func showProgram(_ section: ProgramTab) {
+        programSection = section
+        show(.program)
+    }
+
+    func clearProgramSection() {
+        programSection = nil
+    }
+
     /// A Profile section asked for from outside, cleared once applied.
     @Published var profileSection: ProfileTab? = nil
 

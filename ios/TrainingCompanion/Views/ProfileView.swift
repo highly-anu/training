@@ -3,15 +3,16 @@ import SwiftUI
 // MARK: - Tab definition
 
 enum ProfileTab: Int, AppSubTab {
-    case athlete, equipment, injuries, benchmarks, schedule
+    // The web Profile's tabs, in its order (information-architecture.md §2).
+    case athlete, equipment, injuries, schedule, benchmarks
 
     var label: String {
         switch self {
         case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
         case .injuries:   return "Injuries"
-        case .benchmarks: return "Benchmarks"
         case .schedule:   return "Schedule"
+        case .benchmarks: return "Benchmarks"
         }
     }
 }
