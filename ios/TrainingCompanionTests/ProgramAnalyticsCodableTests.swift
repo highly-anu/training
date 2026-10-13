@@ -31,7 +31,10 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
                         "plannedSessions": 5, "completedSessions": 1, "completionPct": 20.0, "plannedMinutes": 355,
                         "actualMinutes": 70, "weeklyPlannedMinutes": 178, "weeklyActualMinutes": 35,
                         "minWeeklyMinutes": 60, "maxWeeklyMinutes": 270, "doseStatus": "under", "planDoseStatus": "on",
-                        "minutesSource": {}}]
+                        "minutesSource": {}}],
+        "plannedSessions": 5, "completedSessions": 1,
+        "weeks": [{"weekIndex": 0, "weekNumber": 3, "planned": 3, "completed": 1, "pct": 33.3},
+                  {"weekIndex": 1, "weekNumber": 4, "planned": 2, "completed": 0, "pct": 0.0}]
       },
       "intensity": {"status": "insufficient_data", "coverage": {"inScope": 0, "measured": 0, "pct": 0.0, "reason": null},
                     "maxHr": 185, "methods": {}, "weeks": [], "byFramework": [], "maxDeviationPts": 0.0},
@@ -88,6 +91,11 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(scorecard.headline, "off_plan")
         XCTAssertEqual(scorecard.tiers["committed"]?.planned, 5)
         XCTAssertEqual(scorecard.modalities.first?.doseStatus, "under")
+        // Today's card reads the weekly series.
+        XCTAssertEqual(scorecard.plannedSessions, 5)
+        XCTAssertEqual(scorecard.completedSessions, 1)
+        XCTAssertEqual(scorecard.weeks.map(\.weekNumber), [3, 4])
+        XCTAssertEqual(scorecard.weeks.first?.pct, 33.3)
         XCTAssertEqual(scorecard.modalities.first?.completionPct, 20)
 
         XCTAssertEqual(doc.intensity?.status, "insufficient_data")

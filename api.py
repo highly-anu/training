@@ -3952,6 +3952,9 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                         for b in inputs.bio_logs), default=str),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
+        # The document's shape: bump when a section gains keys, so stored
+        # copies are rebuilt (2: scorecard.weeks, for the Today card).
+        'doc-2',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 

@@ -1294,6 +1294,11 @@ export interface AnalyticsScorecard {
   tiers: Record<string, { planned: number; completed: number; pct: number | null }>
   elapsedWeeks: number
   modalities: AnalyticsScorecardRow[]
+  /** Sessions whose day has come, and how many were done (logged or matched). */
+  plannedSessions?: number
+  completedSessions?: number
+  /** Completion per program week, elapsed sessions only — the Today card. */
+  weeks?: { weekIndex: number; weekNumber: number; planned: number; completed: number; pct: number | null }[]
 }
 
 export interface AnalyticsFrame {

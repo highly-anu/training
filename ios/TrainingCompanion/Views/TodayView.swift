@@ -96,6 +96,8 @@ struct TodayView: View {
                 // The header names the program's methodology; the catalog is
                 // static and small.
                 await appState.loadPhilosophiesIfNeeded()
+                // The development card's completion is the program scorecard.
+                if appState.programAnalytics == nil { await appState.loadProgramAnalytics() }
             }
         }
     }
@@ -640,41 +642,20 @@ struct TodayView: View {
         struct WeekRow { let weekNumber: Int; let pct: Int }
     }
 
+    /// The server's completion (`/analytics/program` scorecard), the number
+    /// Analytics ▸ Program and the web's Today card show. A session counts
+    /// when it was logged complete or has a matched workout, and only
+    /// sessions whose day has come count as scheduled — this card used to
+    /// count the whole current week, so the days ahead read as missed.
     private var complianceStats: ComplianceStats {
-        guard let currentIdx = appState.currentWeekIndex else {
+        guard let sc = appState.programAnalytics?.scorecard, sc.plannedSessions != nil else {
             return ComplianceStats(overall: 0, completed: 0, scheduled: 0, weekTrend: nil, weekRows: [])
         }
-        let weeks = appState.allWeeks
-        let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-        var totalScheduled = 0
-        var totalCompleted = 0
-        var weekRows: [ComplianceStats.WeekRow] = []
-
-        for wIdx in 0...currentIdx {
-            let week = weeks[wIdx]
-            var wScheduled = 0
-            var wCompleted = 0
-            for day in dayOrder {
-                let sessions = week.schedule[day] ?? []
-                for (i, _) in sessions.enumerated() {
-                    let key = appState.makeSessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
-                    wScheduled += 1
-                    if appState.isSessionComplete(key) { wCompleted += 1 }
-                }
-            }
-            totalScheduled += wScheduled
-            totalCompleted += wCompleted
-            let pct = wScheduled > 0 ? Int(Double(wCompleted) / Double(wScheduled) * 100) : 0
-            weekRows.append(ComplianceStats.WeekRow(weekNumber: week.weekNumber, pct: pct))
-        }
-
-        let overall = totalScheduled > 0 ? Int(Double(totalCompleted) / Double(totalScheduled) * 100) : 0
-        var trend: Int? = nil
-        if weekRows.count >= 2 {
-            trend = weekRows[weekRows.count - 1].pct - weekRows[weekRows.count - 2].pct
-        }
-        return ComplianceStats(overall: overall, completed: totalCompleted, scheduled: totalScheduled,
-                               weekTrend: trend, weekRows: weekRows)
+        let rows = sc.weeks.map { ComplianceStats.WeekRow(weekNumber: $0.weekNumber, pct: Int(($0.pct ?? 0).rounded())) }
+        let trend = rows.count >= 2 ? rows[rows.count - 1].pct - rows[rows.count - 2].pct : nil
+        return ComplianceStats(overall: Int((sc.overallPct ?? 0).rounded()),
+                               completed: sc.completedSessions ?? 0, scheduled: sc.plannedSessions ?? 0,
+                               weekTrend: trend, weekRows: rows)
     }
 
     private func complianceColor(_ pct: Int) -> Color {

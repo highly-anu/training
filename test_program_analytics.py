@@ -490,6 +490,14 @@ def test_scorecard() -> None:
           rows['aerobic_base']['planDoseStatus'] == 'under')
     check('actual dose follows the athlete', rows['aerobic_base']['doseStatus'] == 'under')
     check('minutes source is recorded', rows['aerobic_base']['minutesSource'] == {'prescribed': 2})
+    # The Today card's series: per program week, elapsed sessions only.
+    weeks = sc['weeks']
+    check('weekly series adds up to the overall', sum(w['planned'] for w in weeks) == sc['plannedSessions'] == 8
+          and sum(w['completed'] for w in weeks) == sc['completedSessions'] == 4)
+    check('weekly series is per week index, with its number',
+          [w['weekIndex'] for w in weeks] == sorted(w['weekIndex'] for w in weeks)
+          and all(w['weekNumber'] == w['weekIndex'] + 1 for w in weeks)
+          and all(w['pct'] == round(100 * w['completed'] / w['planned'], 1) for w in weeks))
 
     # Do the committed work instead → on_plan.
     logs2 = {f'{n}-{d}-0': _log(f'2026-03-{2 + (n-1)*7 + o:02d}T10:00:00+00:00')
