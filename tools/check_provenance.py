@@ -20,7 +20,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src import goals, loader, provenance  # noqa: E402
+from src import goals, loader, phases, provenance  # noqa: E402
 from src.generator import generate  # noqa: E402
 
 ALL_EQUIPMENT = [
@@ -43,7 +43,6 @@ def constraints_for(profile: dict) -> dict:
         **profile,
         'equipment': list(ALL_EQUIPMENT),
         'injury_flags': [],
-        'training_phase': 'base',
         'periodization_week': 1,
         'fatigue_state': 'normal',
     }
@@ -154,24 +153,28 @@ def report_authoring() -> list:
                     f"{slot.get('role')!r} filters on category {category!r}, "
                     f"not a valid exercise category")
 
-    # 4. Every phase a philosophy schedules needs an archetype that claims it.
+    # 4. Every modality a phase's framework schedules needs an archetype in the
+    #    package that applies to the phase's kind. This used to ask only whether
+    #    *some* archetype claimed each phase name, which passed while a phase's
+    #    main modality had nothing to run (Wildman's movement skill in build).
+    frameworks = loader.load_all_frameworks()
     for phil in loader.load_philosophies():
         phil_id = phil['id']
         archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
-        claimed: set = set()
-        for arch in archetypes:
-            claimed.update(arch.get('applicable_phases') or [])
-        declared: set = set()
-        for group in phil.get('framework_groups', []) or []:
-            for entry in group.get('canonical_phase_sequence', []) or []:
-                declared.add(entry.get('phase'))
-        for entry in phil.get('canonical_phase_sequence', []) or []:
-            declared.add(entry.get('phase'))
-        for phase in sorted(p for p in declared if p):
-            if claimed and phase not in claimed:
-                problems.append(
-                    f"{phil_id}: declares phase {phase!r} but no archetype in the "
-                    f"package lists it in applicable_phases")
+        for track in phases.tracks_of(phil):
+            for ph in track.get('phases') or []:
+                fw = frameworks.get(ph.get('framework_id')) or {}
+                for modality, count in (fw.get('sessions_per_week') or {}).items():
+                    if not count:
+                        continue
+                    if not any(a.get('modality') == modality and (
+                            not a.get('applicable_phases')
+                            or ph.get('kind') in a['applicable_phases'])
+                            for a in archetypes):
+                        problems.append(
+                            f"{phil_id}/{track['id']}/{ph['id']}: {fw.get('id')} schedules "
+                            f"{modality} but no archetype in the package applies to "
+                            f"kind {ph.get('kind')!r}")
 
     # 5. A package's analytics.yaml may only name what the package owns or
     #    borrows. The self-containment rule for programs, applied to the
@@ -376,17 +379,22 @@ def main() -> int:
 
         sessions = foreign_sessions = n_ex = foreign_ex = 0
         leak_samples: list = []
+        # Two weeks from the start of every phase of every track, so a phase
+        # whose kind filters archetypes differently is audited too.
+        runs = [(goals.philosophy_to_goal(phil_id, frameworks, track_id=t['id']), ph['id'])
+                for t in phases.tracks_of(phil) for ph in t['phases']]
         for profile in profiles:
-            raw = generate(goal_id=goal['id'], goal_dict=goal,
-                           constraints=constraints_for(profile), num_weeks=4,
-                           output_format='dict')
-            audit = audit_program(raw, policy, ex_index)
-            sessions += sum(audit['archetypes'].values())
-            n_ex += sum(audit['exercises'].values())
-            arch_leaks = [f for f in audit['foreign'] if f.startswith('archetype')]
-            foreign_sessions += len(arch_leaks)
-            foreign_ex += len(audit['foreign']) - len(arch_leaks)
-            leak_samples.extend(audit['foreign'][:3])
+            for run_goal, start in runs:
+                raw = generate(goal_id=run_goal['id'], goal_dict=run_goal,
+                               constraints={**constraints_for(profile), 'start_phase': start},
+                               num_weeks=2, output_format='dict')
+                audit = audit_program(raw, policy, ex_index)
+                sessions += sum(audit['archetypes'].values())
+                n_ex += sum(audit['exercises'].values())
+                arch_leaks = [f for f in audit['foreign'] if f.startswith('archetype')]
+                foreign_sessions += len(arch_leaks)
+                foreign_ex += len(audit['foreign']) - len(arch_leaks)
+                leak_samples.extend(audit['foreign'][:3])
 
         tot_sessions += sessions
         tot_foreign_sessions += foreign_sessions

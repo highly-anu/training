@@ -74,9 +74,18 @@ def _load_schema(schema_filename: str) -> dict:
 # Extra checks beyond JSON Schema
 # ---------------------------------------------------------------------------
 
-def _extra_checks(data: dict, schema_filename: str) -> list[str]:
+def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> list[str]:
     """Return a list of error strings for checks not covered by JSON Schema."""
     errors = []
+
+    if schema_filename == 'philosophy.schema.json' and path:
+        # Track and phase ids unique; every phase's framework is this package's.
+        sys.path.insert(0, _ROOT)
+        from src import phases
+        fw_dir = os.path.join(os.path.dirname(path), 'frameworks')
+        own = {os.path.splitext(os.path.basename(f))[0]
+               for f in glob.glob(os.path.join(fw_dir, '*.yaml'))}
+        errors.extend(phases.validate_philosophy_tracks(data, own))
 
     if schema_filename == 'framework.schema.json':
         # intensity_distribution must sum to 1.0
@@ -146,7 +155,7 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
             jsonschema.validate(instance=data, schema=schema)
         except jsonschema.ValidationError as e:
             errors.append(e.message)
-        extra = _extra_checks(data, schema_filename)
+        extra = _extra_checks(data, schema_filename, path)
         errors.extend(extra)
 
     return errors

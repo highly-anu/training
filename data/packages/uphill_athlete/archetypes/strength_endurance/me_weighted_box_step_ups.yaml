@@ -12,6 +12,7 @@ applicable_phases:
 - build
 - peak
 - specific
+- taper
 slots:
 - role: warmup
   slot_type: time_domain

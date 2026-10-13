@@ -40,11 +40,55 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: atg_joint_health
-
-framework_groups:
-  - id: default
-    name: "ATG Joint Health Program"
-    type: alternatives
-    frameworks:
-      - atg_joint_health
+# One track: range before load, then maintenance. Phase text is drafted from
+# this package's own notes and framework notes — review before relying on it.
+primary_track_id: joint_health
+tracks:
+  - id: joint_health
+    name: "ATG Joint Health"
+    description: >
+      Ben Patrick's progression: earn pain-free full range first, then load
+      it, then keep it.
+    phases:
+      - id: range
+        name: "Range"
+        kind: base
+        weeks: 8
+        framework_id: atg_joint_health
+        focus: "Pain-free full range"
+        description: >
+          Start from zero eccentric load: the reverse sled, tibialis raises
+          and full-range calf work rebuild knee tolerance. Split squats and
+          step-ups progress toward the ATG split squat only as range comes
+          back pain-free — range is the target, not load.
+        adaptations:
+          - "Knee tolerance"
+          - "Pain-free range of motion"
+        intensity: "Unloaded to light"
+      - id: load
+        name: "Load"
+        kind: build
+        weeks: 8
+        framework_id: atg_joint_health
+        focus: "Resistance through the earned range"
+        description: >
+          Once full range is pain-free, resistance is added through it:
+          loaded ATG split squats, Nordic curls and step-ups, with the sled and
+          tibialis work kept as the entry to every session.
+        adaptations:
+          - "Strength at end range"
+          - "Posterior-chain resilience"
+        intensity: "Moderate, range first"
+      - id: maintain
+        name: "Maintain"
+        kind: maintenance
+        weeks: 4
+        repeatable: true
+        framework_id: atg_joint_health
+        focus: "Keep the lower-body prep"
+        description: >
+          The lower-body prep stays in place alongside any other training,
+          keeping the range and the joint tolerance that were built.
+        adaptations:
+          - "Retained range and tolerance"
+        intensity: "Low"

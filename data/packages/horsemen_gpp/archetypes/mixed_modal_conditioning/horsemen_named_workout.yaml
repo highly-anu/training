@@ -12,6 +12,7 @@ applicable_phases:
 - peak
 - specific
 - maintenance
+- base
 training_levels:
 - intermediate
 - advanced

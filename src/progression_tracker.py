@@ -5,6 +5,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from src import phases
 from src.progression import calculate_load
 
 
@@ -857,7 +858,7 @@ def compute_progression_review(
     # Build per-exercise findings. A deload week — flagged, or a taper — is the
     # program asking for less, and must not read as a stall.
     deload_weeks = {w.get('week_number') for w in weeks
-                    if w.get('is_deload') or w.get('phase') in ('deload', 'taper')}
+                    if w.get('is_deload') or w.get('phase') in phases.deload_kinds()}
     exercise_findings = []
     for w in weeks:
         for day_sessions in w.get('schedule', {}).values():

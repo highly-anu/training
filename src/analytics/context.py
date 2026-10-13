@@ -20,12 +20,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-from src import loader
+from src import loader, phases
 from src.analytics.families import family_of
 from src.workout_matcher import session_calendar_date
 from src.program_keys import DAY_NAMES
 
-DELOAD_PHASES = frozenset({'deload', 'taper'})
+DELOAD_PHASES = phases.deload_kinds()   # kinds that count as deload (phase_kinds.yaml)
 DELOAD_DURATION_SCALE = 0.7
 
 

@@ -39,11 +39,33 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: bjj_performance
-
-framework_groups:
-  - id: default
-    name: "BJJ Performance Program"
-    type: alternatives
-    frameworks:
-      - bjj_performance
+# One repeating phase: S&C that supports mat time. The package describes no
+# block sequence. Phase text is drafted from this package's own notes and
+# framework notes — review before relying on it.
+primary_track_id: mat_support
+tracks:
+  - id: mat_support
+    name: "BJJ Performance"
+    description: >
+      Strength and conditioning around the mat: class is the anchor, and
+      everything else supports it without competing for recovery.
+    phases:
+      - id: mat_support
+        name: "Mat-Time Support"
+        kind: base
+        weeks: 12
+        repeatable: true
+        framework_id: bjj_performance
+        focus: "Support the mat without stealing recovery"
+        description: >
+          Mat time is non-negotiable; S&C fits around it. Hard rolling days
+          are followed by drilling or lighter work. The targets are the sport's
+          demands — isometric endurance for frames and grips, hip
+          explosiveness, grip endurance through six-minute rounds — and the
+          shoulders, knees and neck are protected with mandatory grappling
+          mobility.
+        adaptations:
+          - "Isometric and grip endurance"
+          - "Hip explosiveness"
+          - "Joint resilience"
+        intensity: "Hard/easy alternation; RPE-governed S&C"

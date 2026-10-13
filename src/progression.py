@@ -2,6 +2,8 @@
 from __future__ import annotations
 from typing import Optional
 
+from . import phases
+
 # Loads come from the exercise YAML: `starting_load_kg` by level and
 # `weekly_increment_kg`. The Python tables that used to shadow them are gone —
 # every exercise they named carries the fields in its package.
@@ -145,15 +147,8 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     else:
         base_sec = slot.get('duration_sec', 5400)  # default 90 min
 
-    phase_targets = {
-        'base':        base_sec,
-        'build':       int(base_sec * 1.25),
-        'peak':        int(base_sec * 1.40),
-        'taper':       int(base_sec * 0.60),
-        'deload':      int(base_sec * 0.60),
-        'maintenance': base_sec,
-    }
-    target_sec = phase_targets.get(phase, base_sec)
+    # The phase kind sets the ceiling (data/commons/phase_kinds.yaml).
+    target_sec = int(base_sec * phases.volume_multiplier(phase))
 
     # 10% weekly ramp up to target
     current_sec = min(base_sec * (1 + (week - 1) * 0.10), target_sec)
@@ -193,11 +188,10 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
         return short
 
     level_mult = {'novice': 0.5, 'intermediate': 0.75, 'advanced': 1.0, 'elite': 1.25}
-    phase_mult = {'base': 1.0, 'build': 1.25, 'peak': 1.40, 'taper': 0.60, 'deload': 0.60}
 
     distance_m = (base_m
                   * level_mult.get(level, 0.75)
-                  * phase_mult.get(phase, 1.0)
+                  * phases.volume_multiplier(phase)
                   * (1 + (week - 1) * 0.08))
 
     if is_deload:

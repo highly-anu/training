@@ -12,6 +12,8 @@ applicable_phases:
 - maintenance
 - recovery
 - transition
+- build
+- peak
 slots:
 - role: warmup
   slot_type: time_domain

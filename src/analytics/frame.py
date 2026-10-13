@@ -2,7 +2,8 @@
 
 The one section that is almost entirely static: the philosophy's own
 description of itself, the framework in force this week, the phase and its
-`focus` prose (authored in every package and rendered nowhere until now), and
+own words (every package authors its phases — name, focus, description — in
+its philosophy.yaml tracks), and
 plan fidelity — the framework's `expectations` against the constraints the
 program was generated under, which is the most direct statement of what the
 program asks for.
@@ -44,12 +45,17 @@ def build(ctx: Context, specs: list) -> dict:
 
     phase = None
     if cur_week is not None:
+        entry = _phase_entry(ctx.goal, cur_week) or {}
         phase = {
+            # `name` stays the kind: older clients label and colour by it.
             'name': cur_week.get('phase'),
+            'id': cur_week.get('phase_id') or entry.get('phase_id'),
+            'label': cur_week.get('phase_name') or entry.get('name'),
             'weekInPhase': cur_week.get('week_in_phase'),
             'weekInProgram': cur_idx + 1,
             'totalWeeks': len(ctx.weeks),
-            'focus': _phase_focus(ctx.goal, cur_week.get('phase')),
+            'focus': entry.get('focus'),
+            'description': entry.get('description'),
             'isDeload': ctx.is_deload_week(cur_week),
         }
 
@@ -67,9 +73,11 @@ def build(ctx: Context, specs: list) -> dict:
         'philosophies': philosophies,
         'framework': _framework_summary(fw),
         'phase': phase,
+        'track': ctx.goal.get('track'),
         'phaseSequence': [
-            {'phase': e.get('phase'), 'weeks': e.get('weeks'),
-             'frameworkId': e.get('framework_id'), 'focus': e.get('focus')}
+            {'phase': e.get('phase'), 'phaseId': e.get('phase_id'), 'name': e.get('name'),
+             'weeks': e.get('weeks'), 'frameworkId': e.get('framework_id'),
+             'focus': e.get('focus'), 'description': e.get('description')}
             for e in (ctx.goal.get('phase_sequence') or [])],
         'planFidelity': _plan_fidelity(fw, ctx),
     }
@@ -90,10 +98,18 @@ def _framework_summary(fw: dict | None) -> dict | None:
     }
 
 
-def _phase_focus(goal: dict, phase: str | None) -> str | None:
-    for entry in goal.get('phase_sequence') or []:
-        if entry.get('phase') == phase and entry.get('focus'):
-            return entry['focus']
+def _phase_entry(goal: dict, week: dict) -> dict | None:
+    """The goal's phase entry for a week: by phase id, else (a program stored
+    before tracks) the first entry of the week's kind."""
+    seq = goal.get('phase_sequence') or []
+    pid = week.get('phase_id')
+    if pid:
+        for entry in seq:
+            if entry.get('phase_id') == pid:
+                return entry
+    for entry in seq:
+        if entry.get('phase') == week.get('phase'):
+            return entry
     return None
 
 

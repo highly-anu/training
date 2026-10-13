@@ -7,7 +7,7 @@ training_levels:
   - advanced
   - elite
 duration_estimate_minutes: 40
-applicable_phases: [build, peak]
+applicable_phases: [build, peak, base, maintenance]
 
 slots:
   - role: warmup

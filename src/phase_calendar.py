@@ -4,6 +4,8 @@ from __future__ import annotations
 import math
 from datetime import date
 
+from . import phases
+
 
 def compute_phase_from_date(
     goal: dict,
@@ -15,7 +17,8 @@ def compute_phase_from_date(
     which phase and week the athlete is in today.
 
     Returns a dict with:
-        phase            : str  — current phase name
+        phase            : str  — current phase kind
+        phase_id         : str  — current phase's id in the track
         week_in_phase    : int  — 1-indexed week within the current phase
         week_in_program  : int  — 1-indexed overall program week
         total_weeks      : int  — sum of all phase weeks in the sequence
@@ -28,15 +31,7 @@ def compute_phase_from_date(
 
     sequence = goal.get('phase_sequence', [])
     if not sequence:
-        return {
-            'phase': 'base',
-            'week_in_phase': 1,
-            'week_in_program': 1,
-            'total_weeks': 0,
-            'weeks_until_event': 0,
-            'phase_sequence': [],
-            'message': 'No phase_sequence defined in goal; defaulting to base week 1.',
-        }
+        raise phases.PhaseResolutionError('The goal has no phase sequence.')
 
     days_until = (event_date - today).days
 
@@ -45,6 +40,7 @@ def compute_phase_from_date(
         total = sum(p.get('weeks', 1) for p in sequence)
         return {
             'phase': last['phase'],
+            'phase_id': last.get('phase_id'),
             'week_in_phase': last.get('weeks', 1),
             'week_in_program': total,
             'total_weeks': total,
@@ -63,34 +59,37 @@ def compute_phase_from_date(
 
     # Walk the sequence to find which phase contains program_week
     cumulative = 0
-    current_phase = sequence[0]['phase']
+    current = sequence[0]
     week_in_phase = 1
     for entry in sequence:
         phase_weeks = entry.get('weeks', 1)
         if cumulative + phase_weeks >= program_week:
-            current_phase = entry['phase']
+            current = entry
             week_in_phase = program_week - cumulative
             break
         cumulative += phase_weeks
     else:
         # program_week exceeds total — clamp to final phase, final week
-        last = sequence[-1]
-        current_phase = last['phase']
-        week_in_phase = last.get('weeks', 1)
+        current = sequence[-1]
+        week_in_phase = current.get('weeks', 1)
+    current_phase = current['phase']
+    current_name = current.get('name') or current.get('phase_id') or current_phase
 
     seq_str = ' -> '.join(
-        f"{p['phase']}({p.get('weeks', '?')}w)" for p in sequence
+        f"{p.get('name') or p.get('phase_id') or p['phase']}({p.get('weeks', '?')}w)"
+        for p in sequence
     )
     plural = 's' if weeks_until != 1 else ''
     message = (
         f"Event in {weeks_until} week{plural} | "
         f"Program week {program_week}/{total_weeks} | "
-        f"Phase: {current_phase.title()}, week {week_in_phase} | "
+        f"Phase: {current_name}, week {week_in_phase} | "
         f"Sequence: {seq_str}"
     )
 
     return {
         'phase': current_phase,
+        'phase_id': current.get('phase_id'),
         'week_in_phase': week_in_phase,
         'week_in_program': program_week,
         'total_weeks': total_weeks,
@@ -105,10 +104,10 @@ def build_remaining_schedule(calendar: dict) -> list[dict]:
     Return one entry per remaining week from today through the event,
     spanning all remaining phases.
 
-    Each entry:
-        phase          : str — phase name for that week
-        week_in_phase  : int — 1-indexed week within that phase
-        week_in_program: int — 1-indexed absolute program week
+    Each entry is `phases.week_entry`: the phase's kind, id, name and
+    framework, plus week_in_phase and the absolute week_in_program. It used to
+    carry only the kind, so every week to an event ran the goal's default
+    framework — Uphill's specific and taper weeks on its base framework.
     """
     sequence = calendar['phase_sequence']
     start_program_week = calendar['week_in_program']
@@ -116,16 +115,11 @@ def build_remaining_schedule(calendar: dict) -> list[dict]:
     weeks = []
     cumulative = 0
     for entry in sequence:
-        phase_name = entry['phase']
         phase_weeks = entry.get('weeks', 1)
         for w in range(1, phase_weeks + 1):
             prog_wk = cumulative + w
             if prog_wk >= start_program_week:
-                weeks.append({
-                    'phase': phase_name,
-                    'week_in_phase': w,
-                    'week_in_program': prog_wk,
-                })
+                weeks.append(phases.week_entry(entry, w, prog_wk))
         cumulative += phase_weeks
 
     return weeks

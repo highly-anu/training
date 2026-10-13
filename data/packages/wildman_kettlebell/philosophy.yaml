@@ -37,12 +37,113 @@ notes: >
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-primary_framework_id: kb_general_practice
-
-framework_groups:
-  - id: alternatives
-    name: "Training Focus"
-    type: alternatives
-    frameworks:
-      - kb_general_practice
-      - kb_pentathlon
+# Two tracks, because Wildman offers two goals: general practice for the
+# non-competitor, and preparation for the IKMF pentathlon. Each runs its own
+# phases on its own framework. Phase text is drafted from this package's own
+# notes and framework notes — review before relying on it.
+primary_track_id: general_practice
+tracks:
+  - id: general_practice
+    name: "General Practice"
+    description: >
+      Kettlebell practice for the non-competitor: climb the movement complexity
+      ladder, keep sets anti-glycolic, and let RPM and timed-set length lead
+      before load does.
+    phases:
+      - id: foundations
+        name: "Foundations"
+        kind: base
+        weeks: 6
+        framework_id: kb_general_practice
+        focus: "Deadlift, swing and get-up groove"
+        description: >
+          The bottom of the complexity ladder: deadlift, swing and the get-up,
+          practiced until the hinge, the breathing and the bell path are
+          automatic. Sets stay below the glycolytic threshold — nasal breathing
+          and clean mechanics decide when a set ends, not fatigue.
+        adaptations:
+          - "Hinge and ballistic mechanics"
+          - "Breathing matched to the movement"
+          - "Get-up and windmill skill"
+        intensity: "Anti-glycolic — nasal breathing throughout"
+      - id: ladder
+        name: "The Ladder"
+        kind: build
+        weeks: 6
+        framework_id: kb_general_practice
+        focus: "Clean, press, snatch and jerk"
+        description: >
+          Move up the ladder — clean, press, push press, snatch, jerk — one rung
+          at a time. RPM targets and timed-set length grow as technique matures;
+          load goes up only when the RPM target is met with clean mechanics and
+          nasal breathing.
+        adaptations:
+          - "Movement complexity"
+          - "Sustained output at a target RPM"
+          - "Strength through the overhead lifts"
+        intensity: "Moderate; RPM targets before load"
+      - id: practice
+        name: "Practice"
+        kind: maintenance
+        weeks: 4
+        repeatable: true
+        framework_id: kb_general_practice
+        focus: "Operator-readiness practice"
+        description: >
+          Ongoing practice across the whole ladder. Each day's session is
+          chosen by how the athlete actually feels — operator readiness — and
+          the get-up and windmill stay in the week as skill and durability
+          work. Repeat the block as long as practice continues.
+        adaptations:
+          - "Retained skill across all lifts"
+          - "Durability through the get-up and windmill"
+        intensity: "Readiness-driven"
+  - id: pentathlon
+    name: "Pentathlon Prep"
+    description: >
+      Sport preparation for the IKMF kettlebell pentathlon: clean, long cycle
+      press, jerk, half snatch and strict push press, six minutes each. Not for
+      novices — every one of the five lifts must already be proficient.
+    phases:
+      - id: event_technique
+        name: "Event Technique"
+        kind: base
+        weeks: 4
+        framework_id: kb_pentathlon
+        focus: "All five events, below scoring pace"
+        description: >
+          Practice each of the five events at a pace below its scoring cap,
+          with hand changes and racking positions rehearsed until they cost
+          nothing. Anti-glycolic volume underneath builds the base the timed
+          sets will draw on.
+        adaptations:
+          - "Efficiency in all five lifts"
+          - "Hand-change and rack-position economy"
+        intensity: "Below scoring pace"
+      - id: timed_sets
+        name: "Timed Sets"
+        kind: build
+        weeks: 6
+        framework_id: kb_pentathlon
+        focus: "Six-minute sets toward each event's cap"
+        description: >
+          Sessions build toward six-minute timed sets paced against each
+          event's scoring cap (20, 10, 20, 18 and 20 RPM), with the five-minute
+          rest the competition gives between events.
+        adaptations:
+          - "Six-minute strength endurance per event"
+          - "Pacing against the RPM cap"
+        intensity: "Event pace, rising toward the cap"
+      - id: competition
+        name: "Competition"
+        kind: peak
+        weeks: 2
+        framework_id: kb_pentathlon
+        focus: "Full pentathlon at target pace"
+        description: >
+          Full pentathlon simulations at target pace, then the test itself.
+          Volume comes down so the event is met fresh.
+        adaptations:
+          - "Five events back to back"
+          - "Arriving fresh for the test"
+        intensity: "Target pace; reduced volume"

@@ -1,0 +1,61 @@
+# Phase kinds — the shared vocabulary the engine keys on.
+#
+# A philosophy names and describes its own phases (philosophy.yaml → tracks →
+# phases). Each phase declares one `kind` from this list, and the kind is the
+# only thing the engine reads: archetype `applicable_phases`, the time and
+# distance multipliers, the cadence choice, the taper exercise filter and the
+# analytics deload reading.
+#
+# Nothing here describes a methodology. Definitions are one neutral line; the
+# words an athlete reads about a phase come from the package that owns it.
+#
+#   volume_multiplier   ceiling on time-to-task and distance prescriptions,
+#                       relative to the slot's base duration/distance
+#   spread_cadence      always use the framework's most spread-out cadence
+#                       option instead of rotating week to week
+#   excludes_max_effort the selector skips exercises with effort: max
+#   counts_as_deload    analytics read every week of this kind as a deload
+#                       (never a stall, fresh-vs-fatigued reading)
+
+transition:
+  definition: "Re-entry after a break or event; low stress, movement preparation."
+  volume_multiplier: 1.0
+base:
+  definition: "General preparation; builds capacity at low to moderate intensity."
+  volume_multiplier: 1.0
+build:
+  definition: "Increasing load or intensity on top of an established base."
+  volume_multiplier: 1.25
+specific:
+  definition: "Work shaped to the target event or sport."
+  volume_multiplier: 1.0
+peak:
+  definition: "Highest specific demand before a test or event."
+  volume_multiplier: 1.40
+taper:
+  definition: "Reduced volume to arrive fresh for a test or event."
+  volume_multiplier: 0.60
+  spread_cadence: true
+  excludes_max_effort: true
+  counts_as_deload: true
+maintenance:
+  definition: "Holds what was built at a sustainable dose."
+  volume_multiplier: 1.0
+deload:
+  definition: "Planned unloading to absorb previous training."
+  volume_multiplier: 0.60
+  spread_cadence: true
+  counts_as_deload: true
+recovery:
+  definition: "Restorative block between harder blocks."
+  volume_multiplier: 1.0
+rehab:
+  definition: "Return from injury; forced by an injury flag."
+  volume_multiplier: 1.0
+  spread_cadence: true
+post_op:
+  definition: "After surgery; forced by an injury flag."
+  volume_multiplier: 1.0
+active:
+  definition: "Unstructured general activity."
+  volume_multiplier: 1.0

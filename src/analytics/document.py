@@ -11,6 +11,7 @@ from datetime import date
 
 from src.analytics import archetypes, benchmarks, frame, intensity, movement, scorecard
 from src.analytics import spec as spec_mod
+from src import phases
 from src.analytics.context import AnalyticsInputs, Context
 from src.analytics.primitives import run as run_primitive
 
@@ -79,7 +80,7 @@ def _reframe_load(load: dict | None, ctx: Context) -> dict:
     if tsb is not None and not has_load:
         reading = 'no_load_data'
     elif tsb is not None:
-        if deload or phase == 'taper':
+        if deload or phase in phases.deload_kinds():
             reading = ('fresh' if tsb >= 0 else 'still_fatigued_in_recovery')   # deload or taper
         else:
             reading = ('loading_as_expected' if -25 <= tsb < 5 else

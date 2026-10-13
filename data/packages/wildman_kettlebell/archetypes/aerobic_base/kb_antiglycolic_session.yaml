@@ -12,6 +12,8 @@ applicable_phases:
 - base
 - maintenance
 - transition
+- build
+- peak
 slots:
 - role: main
   slot_type: time_domain

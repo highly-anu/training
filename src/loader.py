@@ -234,6 +234,17 @@ def load_watch_specs() -> dict:
     return specs
 
 
+_phase_kinds_cache: dict | None = None
+
+
+def load_phase_kinds() -> dict:
+    """Return kind_id -> semantics from data/commons/phase_kinds.yaml (cached)."""
+    global _phase_kinds_cache
+    if _phase_kinds_cache is None:
+        _phase_kinds_cache = _load_yaml(os.path.join(_COMMONS_DIR, 'phase_kinds.yaml')) or {}
+    return _phase_kinds_cache
+
+
 def load_philosophies() -> list:
     """Return list of philosophy dicts, each with a system_connections key."""
     fw_map: dict = {}
