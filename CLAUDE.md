@@ -104,6 +104,8 @@ All prefixed `/api/`:
 | GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
 | POST | `/health/wellness` | one day's watch reading into `daily_wellness`; 422 invalid, 503 on a failed write (the watch retries), 200 `stored: false` when the Garmin toggle is off |
 | GET | `/health/wellness/latest` | the newest watch reading, with the model named from its part number |
+| GET | `/health/workouts/<id>` | one workout with its series and `analysis` — zones, TRIMP, training effect, recovery, decoupling, best efforts (`src/analytics/workout_analysis.py`) |
+| GET | `/health/load/summary?period=&today=` | Analytics ▸ Load's totals vs the prior period, modality/activity mix, 12-week consistency, zone minutes, 28-day focus (`src/analytics/load_summary.py`) |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
 
@@ -697,7 +699,18 @@ zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing chec
 SUPABASE_URL='' .venv/bin/python test_program_analytics.py   # engine, specs, primitives, routing (no DB)
 .venv/bin/python test_development_analytics.py               # development across programs, on a throwaway history (no DB)
 SUPABASE_URL='' .venv/bin/python test_workout_metrics.py     # the per-workout metrics cache and the load routes' reader (no DB)
+SUPABASE_URL='' .venv/bin/python test_workout_analysis.py    # one workout's analysis, pinned to the browser's golden values (no DB)
+SUPABASE_URL='' .venv/bin/python test_load_summary.py        # Analytics ▸ Load's summary and its route (no DB)
 ```
+
+**Numbers are computed on the server and shown by both clients** — a workout's
+zones, TRIMP, training effect, recovery, decoupling and best efforts
+(`analysis`), Analytics ▸ Load's totals and mixes (`/health/load/summary`) and
+Today's completion (`scorecard.weeks`). The phone's `AnalyticsEngine` is only a
+labelled fallback; the web has none. When the two clients' copies existed they
+disagreed: the phone bucketed with the old Friel edges, both clients' normal
+CDF was wrong (Φ(mean) ≈ 0), and two different numbers were called
+"Development". Add a new number to the server, not to a client.
 
 Before anything that changes production structure (a migration, a backfill):
 

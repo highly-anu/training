@@ -640,7 +640,17 @@ server. Left open:
    `useEquipment` is never called; the phone's `fetchEquipmentProfiles` has no
    caller. Offer them on both Equipment sections or delete the route.
 3. **Dead code (S).** `FITFileParser.swift` and `Swiss3DMapView.swift` (iOS);
-   `usePlannedSessions`, `fetchProgressionHistory` and `useEquipment` (web).
+   `usePlannedSessions`, `fetchProgressionHistory` and `useEquipment` (web);
+   `computeWeekInsights` and `computeDevelopmentTrends` in `lib/sessionAnalysis.ts`
+   since Today's card reads the scorecard; the phone's `AnalyticsEngine`
+   weekly-consistency and modality helpers once the fallback is retired.
+5. **Session insights are still client-side (M).** `lib/sessionAnalysis.ts`
+   `computeSessionInsight` (prescribed vs actual on a matched workout) runs only
+   on the web; the phone has no equivalent. Serve it with the workout analysis
+   so both clients show it.
+6. **Weekly zone summary (S).** Analytics ▸ Recovery's `WeeklyZoneSummary` on the
+   web still splits zones in the browser; read `/health/load/summary`'s zone
+   minutes instead.
 4. **Profile's fifth segment truncates on the phone (S).** "Benchmarks" shows as
    "Benchm…" in the segmented control (it did in fourth place too). Either a
    shorter label on both clients or a scrolling selector in `AppSubTabPicker`.
