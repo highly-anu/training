@@ -7,9 +7,8 @@ import { PHASE_COLORS } from '@/lib/phaseColors'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceArea,
 } from 'recharts'
-import type { GeneratedProgram, ModalityId, TrainingPhase } from '@/api/types'
+import type { GeneratedProgram, ModalityId } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
-import { useBuilderStore } from '@/store/builderStore'
 import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 
@@ -22,83 +21,10 @@ const VOL_CATEGORIES = [
   { id: 'Mobility',     color: '#10b981' },
 ] as const
 
-// ── Phase theory content ───────────────────────────────────────────────────────
-
-interface PhaseTheory {
-  theory: string
-  keyAdaptations: string[]
-  intensityProfile: string
-  methodology: string
-}
-
-const PHASE_THEORY: Record<TrainingPhase, PhaseTheory> = {
-  base: {
-    theory: 'Establishes aerobic infrastructure and structural resilience before any intensification. Volume is the primary driver; intensity stays submaximal. Mirrors the Uphill Athlete base period and Lydiard\'s aerobic foundation model — you are building the engine, not testing it.',
-    keyAdaptations: ['Mitochondrial density', 'Cardiac output', 'Capillary development', 'Connective tissue tolerance', 'Movement economy'],
-    intensityProfile: '80–90% low intensity (Z1–Z2), 10–20% moderate',
-    methodology: 'Uphill Athlete · Polarized 80/20',
-  },
-  build: {
-    theory: 'Layers specific intensity onto the aerobic base. Threshold work and strength accumulation rise together. This is the "load" block in Gym Jones concurrent programming and the specific preparation phase in classical periodization. Fitness is built here; the base phase made it sustainable.',
-    keyAdaptations: ['Lactate threshold', 'Neuromuscular recruitment', 'Glycolytic capacity', 'Strength–endurance coupling'],
-    intensityProfile: '70% low intensity, 20% threshold, 10% high intensity',
-    methodology: 'Gym Jones · Block Periodization',
-  },
-  peak: {
-    theory: 'Sharpens event-specific fitness through high-intensity, reduced-volume work. The accumulated base is leveraged for top-end expression. Marcus Filly\'s functional peak and CrossFit Endurance race-prep inform this phase — it reveals what was built, not where more is added.',
-    keyAdaptations: ['VO₂max expression', 'Power output', 'Sport-specific sharpening', 'Neuromuscular peak'],
-    intensityProfile: '60% moderate, 30% high, 10% maximal',
-    methodology: 'CrossFit Endurance · Marcus Filly',
-  },
-  taper: {
-    theory: 'Reduces training volume 40–60% while maintaining intensity to allow supercompensation. Fatigue dissipates faster than fitness — the taper captures the gap. Research supports a 1–3 week taper for endurance athletes; strength athletes typically need less.',
-    keyAdaptations: ['Fatigue clearance', 'Glycogen supercompensation', 'Neural readiness', 'Hormonal recovery'],
-    intensityProfile: '~50% of peak-week volume · intensity maintained',
-    methodology: 'Uphill Athlete · Evidence-based taper',
-  },
-  deload: {
-    theory: 'A structured deload prevents accumulated fatigue from compounding into overreaching. Volume drops 40–60%; intensity is maintained or modestly reduced. Starting Strength\'s "light day" principle scales to a full week when systemic fatigue is present.',
-    keyAdaptations: ['Connective tissue repair', 'Neural recovery', 'Hormonal reset', 'Adaptation consolidation'],
-    intensityProfile: '40–60% of normal volume · similar or reduced intensity',
-    methodology: 'Starting Strength · Auto-regulation',
-  },
-  maintenance: {
-    theory: 'Sustains all fitness qualities without driving further adaptation. Minimum effective dose — enough stimulus to prevent detraining. Used between focused blocks or during high life-stress periods when additional loading is counterproductive.',
-    keyAdaptations: ['Fitness retention', 'Movement quality', 'Structural integrity'],
-    intensityProfile: 'Balanced across qualities · moderate volume and intensity',
-    methodology: 'Concurrent · Minimum Effective Dose',
-  },
-  rehab: {
-    theory: 'Restores movement quality and tissue health before progressive loading. ATG and Ido Portal movement restoration principles guide selection. Pain-free range of motion and tissue tolerance precede any strength expression.',
-    keyAdaptations: ['Range of motion restoration', 'Tissue remodeling', 'Pattern re-education', 'Pain reduction'],
-    intensityProfile: 'Low load · high frequency · below pain threshold',
-    methodology: 'ATG · Ido Portal · Movement Restoration',
-  },
-  post_op: {
-    theory: 'Protects healing tissues while maintaining non-affected systems. Loading follows surgical protocol timelines. Movement is used as medicine within prescribed constraints — adjacent fitness is maintained, not lost.',
-    keyAdaptations: ['Tissue healing', 'Edema reduction', 'Muscle inhibition reversal', 'Proprioceptive re-training'],
-    intensityProfile: 'Minimal load · protocol-guided · protect surgical site',
-    methodology: 'Surgical protocol compliance · Conservative loading',
-  },
-  active: {
-    theory: 'Maintains movement quality and parasympathetic tone between intensive training blocks. Low-intensity aerobic work accelerates recovery without adding stress. Horsemen GPP principles of constant low-level movement underpin this phase.',
-    keyAdaptations: ['Active recovery', 'Movement quality maintenance', 'Aerobic maintenance'],
-    intensityProfile: 'Low intensity only · Z1–Z2 ceiling',
-    methodology: 'Horsemen GPP · Active Recovery',
-  },
-  transition: {
-    theory: 'Rebuilds movement quality and general work capacity after a rest period or following an objective. Intensity stays strictly aerobic (Z1–Z2 only — nose-breathing). Strength work is general and progressed linearly. No anaerobic work. Uphill Athlete describes this as "filling the tank" before structured loading begins — the training age of the tissue must catch up to the ambition of the athlete.',
-    keyAdaptations: ['Movement pattern restoration', 'Aerobic re-priming', 'Connective tissue tolerance', 'General work capacity', 'Training habit re-establishment'],
-    intensityProfile: '90–100% low intensity (Z1–Z2) · no anaerobic',
-    methodology: 'Uphill Athlete — Transition Period · Starting Strength linear reload',
-  },
-  specific: {
-    theory: 'Applies accumulated base fitness directly to the demands of the target objective. Muscular endurance (ME) — the mountain-specific quality — peaks here through weighted box step-ups and uphill carries. Interval intensity rises to approach AnT. Long days back-to-back simulate the event. Volume is near peak; progression shifts from "more volume" to "higher specificity." This is the phase that separates mountain athletes from general endurance athletes.',
-    keyAdaptations: ['Muscular endurance (ME)', 'Sport-specific power', 'AnT approach', 'Back-to-back long-day tolerance', 'Load-bearing capacity'],
-    intensityProfile: '80% low intensity · 15% threshold · 5% high intensity',
-    methodology: 'Uphill Athlete — Specific Period · ME box step-ups · AnT intervals',
-  },
-}
+// Phase words come only from the program's own goal (src/phases.py): each
+// philosophy names and describes its own phases. There used to be one map of
+// text per phase kind here, written from Uphill Athlete, Gym Jones, CrossFit
+// and Filly, so a Wildman program's base phase read as Uphill's.
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -202,8 +128,6 @@ interface ProgramOverviewProps {
 export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set())
 
-  const sourceMode = useBuilderStore((s) => s.sourceMode)
-  const selectedPhilosophyIds = useBuilderStore((s) => s.selectedPhilosophyIds)
   const { data: philosophies } = usePhilosophies()
 
   const { goal, volume_summary } = program as GeneratedProgram & {
@@ -278,64 +202,52 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
   return (
     <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
 
-      {/* 1. Program rationale */}
-      {sourceMode !== null ? (
-        <div>
-          <h2 className="text-sm font-semibold mb-2">About this Program</h2>
-          {sourceMode === 'philosophy' && (() => {
-            const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-            return phil ? (
-              <>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Built from the <span className="font-medium text-foreground">{phil.name}</span> philosophy.
-                </p>
-                <div className="flex flex-wrap items-center gap-3 mt-3">
-                  <Badge variant="secondary" className="text-xs">{phil.id}</Badge>
+      {/* 1. Program rationale — from the stored program, not the builder draft */}
+      {(() => {
+        const sources = goal.primary_sources ?? []
+        const phils = sources
+          .map((id) => philosophies?.find((p) => p.id === id))
+          .filter((p): p is NonNullable<typeof p> => !!p)
+        if (!sources.length && !goal.notes) return null
+        const track = goal.track
+        const trackOwner = philosophies?.find((p) => p.id === track?.philosophy_id)
+        return (
+          <div>
+            <h2 className="text-sm font-semibold mb-2">About this Program</h2>
+            {phils.length === 1 ? (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Built from the <span className="font-medium text-foreground">{phils[0].name}</span> methodology
+                {track ? <>, on its <span className="font-medium text-foreground">{track.name}</span> track.</> : '.'}
+              </p>
+            ) : phils.length > 1 ? (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Blended from {phils.map((p) => p.name).join(', ')}
+                {track && trackOwner ? <> — phases from {trackOwner.name}&apos;s <span className="font-medium text-foreground">{track.name}</span> track.</> : '.'}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
+            )}
+            {track?.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">{track.description}</p>
+            )}
+            {phils.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                {phils.map((p) => (
+                  <Badge key={p.id} variant="secondary" className="text-xs">{p.id}</Badge>
+                ))}
+                {phils.length === 1 && (
                   <Link
-                    to={`/explore?topic=philosophies&id=${phil.id}`}
+                    to={`/explore?topic=philosophies&id=${phils[0].id}`}
                     className="text-xs text-primary hover:underline"
                   >
                     About this methodology →
                   </Link>
-                </div>
-              </>
-            ) : null
-          })()}
-          {sourceMode === 'blend' && (() => {
-            const phils = philosophies?.filter((p) => selectedPhilosophyIds.includes(p.id)) ?? []
-            return (
-              <>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Blended from {phils.length} philosoph{phils.length === 1 ? 'y' : 'ies'}:{' '}
-                  {phils.map((p) => p.name).join(', ')}.
-                </p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {phils.map((p) => (
-                    <Badge key={p.id} variant="secondary" className="text-xs">{p.id}</Badge>
-                  ))}
-                </div>
-              </>
-            )
-          })()}
-          {sourceMode === 'custom' && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Built from custom modality priorities. Priorities are set directly — no source philosophy.
-            </p>
-          )}
-        </div>
-      ) : goal?.notes ? (
-        <div>
-          <h2 className="text-sm font-semibold mb-2">About this Program</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
-          {(goal?.primary_sources?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {goal.primary_sources?.map((src) => (
-                <Badge key={src} variant="secondary" className="text-xs">{src}</Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* 1b. Where the sessions actually came from */}
       {(sourceMix.packages.some((p) => p.borrowed) ||
@@ -380,9 +292,12 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
           <div className="space-y-4">
             {segments.map((seg) => {
               const colors = PHASE_COLORS[seg.phase]
-              const phaseKey = `${seg.phase}-${seg.startWeek}`
+              const phaseLabel = seg.name ?? colors.label
+              const phaseKey = `${seg.phaseId ?? seg.phase}-${seg.startWeek}`
               const isExpanded = expandedPhases.has(phaseKey)
-              const theory = PHASE_THEORY[seg.phase]
+              // This phase's own words, from the philosophy that owns it.
+              const entry = seg.entry
+              const hasText = !!(entry?.description || entry?.adaptations?.length || entry?.intensity)
 
               // Volume data
               const phaseVolWeeks = (volume_summary ?? []).filter(
@@ -422,7 +337,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                             'text-xs font-semibold px-2 py-0.5 rounded-full shrink-0',
                             colors.bg, colors.text
                           )}>
-                            {colors.label}
+                            {phaseLabel}
                           </span>
                           <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
                             Theory
@@ -464,43 +379,45 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                           </div>
                         )}
 
-                        {/* Expanded: theory detail */}
+                        {/* Expanded: the phase's own description */}
                         {isExpanded && (
                           <div className="border-t pt-4 mt-1 space-y-4">
-                            <div>
+                            {!hasText && (
                               <p className="text-xs text-muted-foreground leading-relaxed">
-                                {theory.theory}
+                                No description is stored with this program&apos;s phase. Programs generated
+                                before phases carried their own text show only the focus — regenerate to see it.
                               </p>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                                Key Adaptations
+                            )}
+                            {entry?.description && (
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {entry.description}
+                              </p>
+                            )}
+                            {(entry?.adaptations?.length ?? 0) > 0 && (
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                                  Key Adaptations
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {entry!.adaptations!.map((a) => (
+                                    <span key={a} className={cn(
+                                      'text-[10px] px-1.5 py-0.5 rounded-md border font-medium',
+                                      colors.bg, colors.text
+                                    )}>
+                                      {a}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="flex flex-wrap gap-1">
-                                {theory.keyAdaptations.map((a) => (
-                                  <span key={a} className={cn(
-                                    'text-[10px] px-1.5 py-0.5 rounded-md border font-medium',
-                                    colors.bg, colors.text
-                                  )}>
-                                    {a}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-2">
+                            )}
+                            {entry?.intensity && (
                               <div>
                                 <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">
                                   Intensity Profile
                                 </div>
-                                <p className="text-xs text-muted-foreground">{theory.intensityProfile}</p>
+                                <p className="text-xs text-muted-foreground">{entry.intensity}</p>
                               </div>
-                              <div>
-                                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">
-                                  Methodology
-                                </div>
-                                <p className="text-xs text-muted-foreground">{theory.methodology}</p>
-                              </div>
-                            </div>
+                            )}
                           </div>
                         )}
 
@@ -518,7 +435,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                             'text-xs font-semibold px-2 py-0.5 rounded-full shrink-0',
                             colors.bg, colors.text
                           )}>
-                            {colors.label}
+                            {phaseLabel}
                           </span>
                           <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
                             Your Program
@@ -697,7 +614,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                   fillOpacity={0.06}
                   stroke={PHASE_COLORS[seg.phase]?.hex}
                   strokeOpacity={0.25}
-                  label={{ value: PHASE_COLORS[seg.phase]?.label, position: 'insideTopLeft', fontSize: 8, fill: PHASE_COLORS[seg.phase]?.hex, opacity: 0.7 }}
+                  label={{ value: seg.name ?? PHASE_COLORS[seg.phase]?.label, position: 'insideTopLeft', fontSize: 8, fill: PHASE_COLORS[seg.phase]?.hex, opacity: 0.7 }}
                 />
               ))}
 

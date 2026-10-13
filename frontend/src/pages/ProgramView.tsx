@@ -21,7 +21,7 @@ import { useProgramStore } from '@/store/programStore'
 import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
-import { regenerateSource } from '@/lib/programSource'
+import { regenerateSource, tailResume } from '@/lib/programSource'
 
 type ProgramTab = 'calendar' | 'overview' | 'history'
 const PROGRAM_TABS: ProgramTab[] = ['calendar', 'overview', 'history']
@@ -104,13 +104,15 @@ export function ProgramView() {
   function handleRegenerate() {
     if (!program || !currentWeekData) return
     const { sourceGoalIds: storedIds, sourceGoalWeights } = useProgramStore.getState()
+    const resume = tailResume(program, weekIndex)
     regenerate.mutate(
       {
         ...regenerateSource(storedIds, sourceGoalWeights, program),
+        trackId: resume.trackId,
+        startPhaseId: resume.startPhaseId,
         constraints: {
-          ...program.constraints ?? {},
+          ...resume.constraints,
           injury_flags: localFlags,
-          periodization_week: currentWeekData.week_in_phase,
         },
         // The stored program's length, never the methodology's canonical
         // plan: sizing from the latter asked for 18 weeks on a 4-week plan.
@@ -200,6 +202,7 @@ export function ProgramView() {
                 week={currentWeekData.week_number}
                 totalWeeks={totalWeeks}
                 phase={currentWeekData.phase}
+                phaseLabel={currentWeekData.phase_name}
                 isDeload={currentWeekData.is_deload}
                 onPrev={() => setWeekIndex((i) => Math.max(0, i - 1))}
                 onNext={() => setWeekIndex((i) => Math.min(program.weeks.length - 1, i + 1))}
@@ -230,7 +233,7 @@ export function ProgramView() {
                   <span className="text-sm font-semibold text-foreground">
                     Week {weekData.week_number}
                   </span>
-                  <PhaseBadge phase={weekData.phase as TrainingPhase} />
+                  <PhaseBadge phase={weekData.phase as TrainingPhase} label={weekData.phase_name} />
                   {weekData.is_deload && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30">
                       Deload

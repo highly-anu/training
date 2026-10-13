@@ -10,7 +10,7 @@ import { useBuilderStore } from '@/store/builderStore'
 
 const STEP_TITLES = {
   1: { title: 'Programming Source', sub: 'Philosophy, blend, or custom modality priorities' },
-  2: { title: 'Tune & Periodize', sub: 'Framework selection, priorities, and program duration' },
+  2: { title: 'Tune & Periodize', sub: 'Track, priorities, and program duration' },
   3: { title: 'Athlete Constraints', sub: 'Schedule, equipment, training level, and injuries' },
   4: { title: 'Review & Generate', sub: 'Verify configuration and create your program' },
 }

@@ -14,18 +14,27 @@ export type ModalityId =
   | 'combat_sport'
   | 'rehab'
 
-export type TrainingPhase =
-  | 'active'
+/**
+ * Shared phase kinds (data/commons/phase_kinds.yaml). A philosophy names and
+ * describes its own phases; each declares one of these kinds, which is what the
+ * engine and the colour palette key on. Never shown as a phase's description.
+ */
+export type PhaseKind =
+  | 'transition'
   | 'base'
   | 'build'
+  | 'specific'
   | 'peak'
   | 'taper'
-  | 'deload'
   | 'maintenance'
+  | 'deload'
+  | 'recovery'
   | 'rehab'
   | 'post_op'
-  | 'transition'
-  | 'specific'
+  | 'active'
+
+/** @deprecated the phase kind; use PhaseKind. */
+export type TrainingPhase = PhaseKind
 
 export type TrainingLevel = 'novice' | 'intermediate' | 'advanced' | 'elite'
 
@@ -96,11 +105,27 @@ export interface DaySchedule {
 
 export type GoalPriorities = Partial<Record<ModalityId, number>>
 
+/** One phase on a goal's phase_sequence: the kind plus the philosophy's own phase. */
 export interface PhaseEntry {
-  phase: TrainingPhase
+  phase: PhaseKind
+  phase_id?: string
+  name?: string
   weeks: number
+  framework_id?: string | null
   focus?: string
+  description?: string
+  adaptations?: string[]
+  intensity?: string
+  repeatable?: boolean
   priority_override?: GoalPriorities
+}
+
+/** The track a goal was built from. */
+export interface GoalTrack {
+  id: string
+  name: string
+  description?: string | null
+  philosophy_id: string
 }
 
 export interface FrameworkSelection {
@@ -115,6 +140,7 @@ export interface GoalProfile {
   priorities: GoalPriorities
   primary_sources: string[]
   phase_sequence: PhaseEntry[]
+  track?: GoalTrack
   minimum_prerequisites: Record<string, number>
   incompatible_with: Array<string | { goal_id: string; reason?: string }>
   framework_selection: FrameworkSelection
@@ -155,7 +181,11 @@ export interface AthleteConstraints {
   training_level: TrainingLevel
   injury_flags: InjuryFlagId[]
   avoid_movements: string[]
-  training_phase: TrainingPhase
+  /** Legacy start: a phase kind, mapped to the first phase of that kind. */
+  training_phase?: PhaseKind
+  /** Start phase id from the chosen track. */
+  start_phase?: string
+  track_id?: string
   periodization_week: number
   fatigue_state: FatigueState
   event_date?: string
@@ -405,7 +435,12 @@ export interface WeekVolumeSummary {
 export interface WeekData {
   week_number: number
   week_in_phase: number
-  phase: TrainingPhase
+  /** The phase kind. */
+  phase: PhaseKind
+  /** The philosophy's own phase id and name (absent on programs stored before tracks). */
+  phase_id?: string
+  phase_name?: string
+  track_id?: string
   is_deload: boolean
   schedule: Record<string, Session[]>
   framework?: string
@@ -573,19 +608,26 @@ export interface PhilosophyConnections {
   goals: string[]
 }
 
-export interface FrameworkPhaseEntry {
-  phase: string
-  weeks: number
-  framework_id?: string
-  focus?: string
-}
-
-export interface FrameworkGroup {
+/** A philosophy's own phase (philosophy.yaml → tracks → phases). */
+export interface Phase {
   id: string
   name: string
-  type: 'alternatives' | 'sequential'
-  frameworks: string[]  // Framework IDs
-  canonical_phase_sequence?: FrameworkPhaseEntry[]  // Required when type=sequential
+  kind: PhaseKind
+  weeks: number
+  framework_id: string
+  focus?: string
+  description?: string
+  adaptations?: string[]
+  intensity?: string
+  repeatable?: boolean
+}
+
+/** One way to follow a philosophy: an ordered list of its own phases. */
+export interface Track {
+  id: string
+  name: string
+  description?: string
+  phases: Phase[]
 }
 
 export interface Philosophy {
@@ -601,13 +643,9 @@ export interface Philosophy {
   sources: string[]
   notes: string
   system_connections: PhilosophyConnections
-  primary_framework_id?: string
-  framework_groups?: FrameworkGroup[]  // NEW - replaces frameworks_are_phases
-  expectations?: GoalExpectations  // Full program expectations (for phased/sequential programs)
-
-  // DEPRECATED - kept for backward compatibility during transition
-  frameworks_are_phases?: boolean
-  canonical_phase_sequence?: FrameworkPhaseEntry[]
+  primary_track_id?: string
+  tracks: Track[]
+  expectations?: GoalExpectations  // Full program expectations (for phased programs)
 }
 
 // ─── Framework ────────────────────────────────────────────────────────────────
@@ -1255,8 +1293,10 @@ export interface AnalyticsFrame {
     modalityPriority: Record<string, string[]> | null
     notes: string | null
   } | null
-  phase: { name: string; weekInPhase: number | null; weekInProgram: number; totalWeeks: number; focus: string | null; isDeload: boolean } | null
-  phaseSequence: Array<{ phase: string; weeks: number; frameworkId: string | null; focus: string | null }>
+  /** `name` is the phase kind; `label` and `description` are the philosophy's own. */
+  phase: { name: string; id?: string | null; label?: string | null; weekInPhase: number | null; weekInProgram: number; totalWeeks: number; focus: string | null; description?: string | null; isDeload: boolean } | null
+  track?: GoalTrack | null
+  phaseSequence: Array<{ phase: string; phaseId?: string | null; name?: string | null; weeks: number; frameworkId: string | null; focus: string | null; description?: string | null }>
   planFidelity: Array<{ field: string; ideal: number; minimum: number | null; actual: number; unit: string; status: 'below_minimum' | 'below_ideal' | 'meets_ideal' }>
 }
 

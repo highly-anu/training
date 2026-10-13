@@ -14,9 +14,11 @@ interface WeekSelectorProps {
   prevDisabled?: boolean
   /** Override next disabled state (default: week >= totalWeeks) */
   nextDisabled?: boolean
+  /** The philosophy's own phase name; the badge falls back to the kind. */
+  phaseLabel?: string
 }
 
-export function WeekSelector({ week, totalWeeks, phase, isDeload, onPrev, onNext, prevDisabled, nextDisabled }: WeekSelectorProps) {
+export function WeekSelector({ week, totalWeeks, phase, phaseLabel, isDeload, onPrev, onNext, prevDisabled, nextDisabled }: WeekSelectorProps) {
   return (
     <div className="flex items-center gap-3">
       <Button variant="outline" size="icon" onClick={onPrev} disabled={prevDisabled ?? week <= 1} className="size-8" aria-label="Previous week">
@@ -26,7 +28,7 @@ export function WeekSelector({ week, totalWeeks, phase, isDeload, onPrev, onNext
         <span className="text-sm font-semibold text-foreground">
           Week {week} <span className="text-muted-foreground font-normal">/ {totalWeeks}</span>
         </span>
-        <PhaseBadge phase={phase} />
+        <PhaseBadge phase={phase} label={phaseLabel} />
         {isDeload && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30">
             Deload

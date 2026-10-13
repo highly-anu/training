@@ -14,6 +14,7 @@ import { useGenerateProgram } from '@/api/programs'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
+import { builderTrack, mainFramework } from '@/lib/tracks'
 import type { AthleteConstraints } from '@/api/types'
 
 export function ReviewGenerate() {
@@ -27,7 +28,8 @@ export function ReviewGenerate() {
     constraints,
     eventDate,
     startDate,
-    selectedFrameworkId,
+    selectedTrackId,
+    startPhaseId,
     priorityOverrides,
     numWeeks,
   } = useBuilderStore()
@@ -84,7 +86,8 @@ export function ReviewGenerate() {
         eventDate: eventDate ?? undefined,
         startDate: startDate ?? undefined,
         numWeeks: numWeeks ?? undefined,
-        frameworkId: selectedFrameworkId,
+        trackId: selectedTrackId,
+        startPhaseId,
         priorityOverrides: priorityOverrides,
         customInjuryFlags,
       },
@@ -115,56 +118,19 @@ export function ReviewGenerate() {
     return '—'
   })()
 
-  // Detect if "Full Program (All Phases)" is selected
-  // Full program mode means: no specific framework selected + philosophy has sequential phases
-  const isFullProgram = useMemo(() => {
-    if (selectedFrameworkId !== null) return false
-    if (sourceMode !== 'philosophy') return false
-
-    const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-    if (!phil) return false
-
-    // Check if philosophy has sequential framework groups or canonical_phase_sequence
-    const hasSequential = phil.framework_groups?.some((g) => g.type === 'sequential')
-    const hasCanonical = phil.canonical_phase_sequence && phil.canonical_phase_sequence.length > 0
-
-    return hasSequential || hasCanonical
-  }, [selectedFrameworkId, sourceMode, selectedPhilosophyIds, philosophies])
-
-  const frameworkLabel = (() => {
-    if (selectedFrameworkId) {
-      return frameworks?.find((f) => f.id === selectedFrameworkId)?.name ?? selectedFrameworkId.replace(/_/g, ' ')
-    }
-    if (isFullProgram) {
-      return 'Full Program (All Phases)'
-    }
-    return 'Auto-select'
-  })()
-
-  // Get phase sequence for display
-  const phaseSequence = useMemo(() => {
-    if (!isFullProgram) return null
-    const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-    if (!phil) return null
-
-    return phil.framework_groups?.find((g) => g.type === 'sequential')?.canonical_phase_sequence
-           ?? phil.canonical_phase_sequence
-           ?? null
-  }, [isFullProgram, philosophies, selectedPhilosophyIds])
+  // The track that will run, and its phases
+  const picked = useMemo(
+    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId),
+    [philosophies, selectedPhilosophyIds, selectedTrackId],
+  )
+  const activeTrack = sourceMode === 'philosophy' || sourceMode === 'blend' ? picked?.track : undefined
+  const trackLabel = activeTrack?.name ?? 'Auto-select'
+  const startPhaseName = activeTrack?.phases.find((p) => p.id === startPhaseId)?.name
 
   // Compute ideal schedule from framework expectations
   const idealSchedule = useMemo(() => {
-    // Try to get framework expectations
-    let framework = frameworks?.find((f) => f.id === selectedFrameworkId)
-
-    // If no specific framework selected, try to get from philosophy's primary framework
-    if (!framework && sourceMode === 'philosophy' && philosophies) {
-      const phil = philosophies.find((p) => p.id === selectedPhilosophyIds[0])
-      const primaryFwId = phil?.primary_framework_id
-      if (primaryFwId) {
-        framework = frameworks?.find((f) => f.id === primaryFwId)
-      }
-    }
+    // The expectations of the framework that stands for the track
+    const framework = mainFramework(activeTrack, frameworks)
 
     if (!framework?.expectations) {
       // Fallback to constraint-based estimation
@@ -217,7 +183,7 @@ export function ReviewGenerate() {
       mobilitySessions: 0,
       totalMinutes: targetMinutes,
     }
-  }, [frameworks, selectedFrameworkId, sourceMode, philosophies, selectedPhilosophyIds, constraints])
+  }, [frameworks, activeTrack, constraints])
 
   // Compute actual schedule from user's weekly schedule
   const actualSchedule = useMemo(() => {
@@ -311,7 +277,7 @@ export function ReviewGenerate() {
         <Separator />
         <dl className="space-y-2 text-sm">
           <Row label="Source" value={sourceLabel} />
-          <Row label="Framework" value={frameworkLabel} />
+          <Row label="Track" value={trackLabel} />
           {numWeeks && <Row label="Duration" value={`${numWeeks} weeks`} />}
           <Row label="Days / week" value={String(scheduleOverride.days_per_week ?? constraints.days_per_week ?? 4)} />
           <Row
@@ -325,22 +291,21 @@ export function ReviewGenerate() {
             }
           />
           <Row label="Level" value={constraints.training_level ?? 'intermediate'} />
-          {isFullProgram && phaseSequence ? (
+          {activeTrack && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground shrink-0">Phases</dt>
               <dd className="font-medium text-foreground text-right">
                 <div className="flex flex-wrap gap-1 justify-end">
-                  {phaseSequence.map((p, i) => (
-                    <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary capitalize">
-                      {p.phase} ({p.weeks}w)
+                  {activeTrack.phases.map((p) => (
+                    <span key={p.id} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                      {p.name} ({p.weeks}w)
                     </span>
                   ))}
                 </div>
               </dd>
             </div>
-          ) : (
-            <Row label="Phase" value={constraints.training_phase ?? 'base'} />
           )}
+          {startPhaseName && !eventDate && <Row label="Starts at" value={startPhaseName} />}
           <Row label="Fatigue" value={constraints.fatigue_state ?? 'normal'} />
           <Row label="Equipment" value={`${(constraints.equipment ?? []).length} items`} />
           <Row label="Injuries" value={(constraints.injury_flags ?? []).length === 0 ? 'None' : (constraints.injury_flags ?? []).length + ' flags'} />

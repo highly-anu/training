@@ -1,5 +1,6 @@
 import type { Framework, ModalityId, Philosophy } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { mainFramework, resolveTrack } from '@/lib/tracks'
 
 /**
  * How a philosophy becomes a priority vector for the builder. Lived inside
@@ -18,15 +19,17 @@ export const DEFAULT_PRIORITIES = Object.fromEntries(
 ) as Record<ModalityId, number>
 
 /**
- * Normalised priorities from the philosophy's primary framework's
- * sessions-per-week; equal weight across its bias modalities when it has none.
+ * Normalised priorities from the track's main framework's sessions-per-week
+ * (the primary track unless one is named — the same framework the server's
+ * goal takes its priorities from); equal weight across the philosophy's bias
+ * modalities when it has none.
  */
 export function derivePhilosophyPriorities(
   phil: Philosophy,
-  frameworks: Framework[]
+  frameworks: Framework[],
+  trackId?: string | null,
 ): Record<ModalityId, number> {
-  const philFrameworks = frameworks.filter((f) => f.source_philosophy === phil.id)
-  const sessions = philFrameworks[0]?.sessions_per_week
+  const sessions = mainFramework(resolveTrack(phil, trackId), frameworks)?.sessions_per_week
 
   if (sessions && Object.keys(sessions).length > 0) {
     const total = Object.values(sessions).reduce((s, v) => s + (v ?? 0), 0)
@@ -42,14 +45,4 @@ export function derivePhilosophyPriorities(
   return Object.fromEntries(
     MODALITY_ORDER.map((id) => [id, biasIds.includes(id) ? 1 / n : 0])
   ) as Record<ModalityId, number>
-}
-
-/** A philosophy with sequential phases runs as a "Full Program" with no fixed framework. */
-export function philosophyHasSequentialPhases(phil: Philosophy): boolean {
-  return !!(phil.framework_groups?.some((g) => g.type === 'sequential')
-    || (phil.canonical_phase_sequence && phil.canonical_phase_sequence.length > 0))
-}
-
-export function primaryFrameworkFor(phil: Philosophy, frameworks: Framework[]): Framework | undefined {
-  return frameworks.find((f) => f.source_philosophy === phil.id)
 }

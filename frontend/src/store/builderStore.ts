@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AthleteConstraints, Framework, ModalityId, Philosophy } from '@/api/types'
-import { derivePhilosophyPriorities, philosophyHasSequentialPhases, primaryFrameworkFor } from '@/lib/philosophyPriorities'
+import { derivePhilosophyPriorities } from '@/lib/philosophyPriorities'
+import { trackForFramework } from '@/lib/tracks'
 
 type Step = 1 | 2 | 3 | 4
 type Direction = 'forward' | 'backward'
@@ -24,7 +25,10 @@ interface BuilderStore {
   startDate: string | null
 
   // Step 2 — tune
-  selectedFrameworkId: string | null
+  /** The track to run; null = the (dominant) philosophy's primary track. */
+  selectedTrackId: string | null
+  /** The phase of that track to start at; null = its first phase. */
+  startPhaseId: string | null
   priorityOverrides: Partial<Record<ModalityId, number>> | null
   numWeeks: number | null
 
@@ -40,7 +44,9 @@ interface BuilderStore {
   updateConstraints: (patch: Partial<AthleteConstraints>) => void
   setEventDate: (date: string | null) => void
   setStartDate: (date: string | null) => void
-  setFramework: (id: string | null) => void
+  /** Pick a track; the start phase resets to the track's first. */
+  setTrack: (id: string | null) => void
+  setStartPhase: (id: string | null) => void
   setPriorityOverrides: (overrides: Partial<Record<ModalityId, number>> | null) => void
   setNumWeeks: (n: number | null) => void
   reset: () => void
@@ -50,7 +56,7 @@ interface BuilderStore {
    * so a stale half-finished wizard is cleared first.
    */
   prefillFromPhilosophy: (phil: Philosophy, frameworks: Framework[]) => void
-  /** Same, with the framework fixed rather than left to the phase sequence. */
+  /** Same, starting at the track and phase that run this framework. */
   prefillFromFramework: (fw: Framework, phil: Philosophy, frameworks: Framework[]) => void
   loadFromProgram: (opts: {
     goalIds: string[]
@@ -75,7 +81,6 @@ const defaultConstraints: Partial<AthleteConstraints> = {
     7: { minutes: 90, has_secondary: false },
   },
   training_level: 'intermediate',
-  training_phase: 'base',
   periodization_week: 1,
   fatigue_state: 'normal',
   equipment: [],
@@ -95,13 +100,15 @@ const freshState = () => ({
   constraints: defaultConstraints,
   eventDate: null as string | null,
   startDate: null as string | null,
-  selectedFrameworkId: null as string | null,
+  selectedTrackId: null as string | null,
+  startPhaseId: null as string | null,
   priorityOverrides: null as Partial<Record<ModalityId, number>> | null,
   numWeeks: null as number | null,
 })
 
-function prefilled(phil: Philosophy, frameworks: Framework[], frameworkId: string | null) {
-  const priorities = derivePhilosophyPriorities(phil, frameworks)
+function prefilled(phil: Philosophy, frameworks: Framework[],
+                   trackId: string | null, startPhaseId: string | null) {
+  const priorities = derivePhilosophyPriorities(phil, frameworks, trackId)
   return {
     ...freshState(),
     step: 2 as Step,
@@ -110,7 +117,8 @@ function prefilled(phil: Philosophy, frameworks: Framework[], frameworkId: strin
     selectedPhilosophyIds: [phil.id],
     sourcePriorities: priorities,
     priorityOverrides: priorities,
-    selectedFrameworkId: frameworkId,
+    selectedTrackId: trackId,
+    startPhaseId,
   }
 }
 
@@ -128,16 +136,17 @@ export const useBuilderStore = create<BuilderStore>()(
       constraints: defaultConstraints,
       eventDate: null,
       startDate: null,
-      selectedFrameworkId: null,
+      selectedTrackId: null,
+      startPhaseId: null,
       priorityOverrides: null,
       numWeeks: null,
 
       setStep: (step, dir = 'forward') => set({ step, direction: dir }),
       // Clearing source mode also resets philosophy context
       setSourceMode: (mode) => set({ sourceMode: mode, selectedPhilosophyIds: [], philosophyWeights: {}, sourcePriorities: null }),
-      setGoalIds: (ids) => set({ selectedGoalIds: ids, selectedFrameworkId: null, priorityOverrides: null, numWeeks: null }),
+      setGoalIds: (ids) => set({ selectedGoalIds: ids, selectedTrackId: null, startPhaseId: null, priorityOverrides: null, numWeeks: null }),
       setGoalWeightsBulk: (weights) => set({ goalWeights: weights }),
-      setPhilosophyIds: (ids) => set({ selectedPhilosophyIds: ids, selectedFrameworkId: null, priorityOverrides: null }),
+      setPhilosophyIds: (ids) => set({ selectedPhilosophyIds: ids, selectedTrackId: null, startPhaseId: null, priorityOverrides: null }),
       setPhilosophyWeights: (weights) => set({ philosophyWeights: weights }),
       setSourcePriorities: (p) => set({ sourcePriorities: p }),
       toggleGoal: (id) =>
@@ -145,7 +154,8 @@ export const useBuilderStore = create<BuilderStore>()(
           selectedGoalIds: s.selectedGoalIds.includes(id)
             ? s.selectedGoalIds.filter((gid) => gid !== id)
             : [...s.selectedGoalIds, id],
-          selectedFrameworkId: null,
+          selectedTrackId: null,
+          startPhaseId: null,
           priorityOverrides: null,
           numWeeks: null,
         })),
@@ -155,17 +165,16 @@ export const useBuilderStore = create<BuilderStore>()(
         set((s) => ({ constraints: { ...s.constraints, ...patch } })),
       setEventDate: (date) => set({ eventDate: date }),
       setStartDate: (date) => set({ startDate: date }),
-      setFramework: (id) => set({ selectedFrameworkId: id }),
+      setTrack: (id) => set({ selectedTrackId: id, startPhaseId: null }),
+      setStartPhase: (id) => set({ startPhaseId: id }),
       setPriorityOverrides: (overrides) => set({ priorityOverrides: overrides }),
       setNumWeeks: (n) => set({ numWeeks: n }),
       reset: () => set(freshState()),
-      prefillFromPhilosophy: (phil, frameworks) =>
-        set(prefilled(
-          phil, frameworks,
-          // A sequential-phase philosophy runs as a Full Program with no fixed framework.
-          philosophyHasSequentialPhases(phil) ? null : (primaryFrameworkFor(phil, frameworks)?.id ?? null),
-        )),
-      prefillFromFramework: (fw, phil, frameworks) => set(prefilled(phil, frameworks, fw.id)),
+      prefillFromPhilosophy: (phil, frameworks) => set(prefilled(phil, frameworks, null, null)),
+      prefillFromFramework: (fw, phil, frameworks) => {
+        const hit = trackForFramework(phil, fw.id)
+        set(prefilled(phil, frameworks, hit?.track.id ?? null, hit?.phaseId ?? null))
+      },
       loadFromProgram: ({ goalIds, goalWeights, constraints, numWeeks, eventDate }) =>
         set({
           step: goalIds.length > 1 ? 2 : 3,
@@ -174,13 +183,24 @@ export const useBuilderStore = create<BuilderStore>()(
           goalWeights,
           constraints,
           eventDate,
-          selectedFrameworkId: null,
+          selectedTrackId: null,
+          startPhaseId: null,
           priorityOverrides: null,
           numWeeks,
         }),
     }),
     {
       name: 'training-builder-v2',
+      // v1: tracks replaced the framework pick. A persisted selectedFrameworkId
+      // cannot be mapped without the philosophy data, so it is dropped and the
+      // draft falls back to the primary track.
+      version: 1,
+      migrate: (persisted) => {
+        const { selectedFrameworkId: _dropped, ...rest } =
+          (persisted ?? {}) as Record<string, unknown> & { selectedFrameworkId?: unknown }
+        void _dropped
+        return { ...rest, selectedTrackId: null, startPhaseId: null } as unknown as BuilderStore
+      },
       partialize: (s) => ({
         step: s.step,
         sourceMode: s.sourceMode,
@@ -190,7 +210,8 @@ export const useBuilderStore = create<BuilderStore>()(
         philosophyWeights: s.philosophyWeights,
         sourcePriorities: s.sourcePriorities,
         eventDate: s.eventDate,
-        selectedFrameworkId: s.selectedFrameworkId,
+        selectedTrackId: s.selectedTrackId,
+        startPhaseId: s.startPhaseId,
         priorityOverrides: s.priorityOverrides,
         numWeeks: s.numWeeks,
       }),

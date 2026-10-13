@@ -1,13 +1,16 @@
 import { cn } from '@/lib/utils'
 import { PHASE_COLORS } from '@/lib/phaseColors'
-import type { TrainingPhase } from '@/api/types'
+import type { PhaseKind } from '@/api/types'
 
 interface PhaseBadgeProps {
-  phase: TrainingPhase
+  /** The phase kind: sets the colour. */
+  phase: PhaseKind
+  /** The philosophy's own phase name; falls back to the kind's label. */
+  label?: string
   className?: string
 }
 
-export function PhaseBadge({ phase, className }: PhaseBadgeProps) {
+export function PhaseBadge({ phase, label, className }: PhaseBadgeProps) {
   const colors = PHASE_COLORS[phase]
   if (!colors) return null
 
@@ -20,7 +23,7 @@ export function PhaseBadge({ phase, className }: PhaseBadgeProps) {
         className
       )}
     >
-      {colors.label}
+      {label ?? colors.label}
     </span>
   )
 }

@@ -1,4 +1,5 @@
 import type { GoalProfile, AthleteConstraints, GoalExpectations, Framework, Philosophy } from '@/api/types'
+import { builderTrack } from '@/lib/tracks'
 
 export interface FeasibilitySignal {
   code: string
@@ -22,28 +23,24 @@ export function blendExpectations(
   opts?: {
     sourceMode?: 'philosophy' | 'blend' | 'custom' | null
     frameworks?: Framework[]
-    selectedFrameworkId?: string | null
+    selectedTrackId?: string | null
     selectedPhilosophyIds?: string[]
     philosophies?: Philosophy[]
   },
 ): GoalExpectations | null {
-  // For philosophy mode with sequential framework group, aggregate framework expectations
+  // Philosophy mode: the expectations of the track the athlete will run.
   if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
-    const phil = opts.philosophies.find((p) => p.id === opts.selectedPhilosophyIds?.[0])
+    const picked = builderTrack(opts.philosophies, opts.selectedPhilosophyIds ?? [], opts.selectedTrackId)
+    const phases = picked?.track.phases
 
-    // An explicitly chosen style wins over the phase blend — the athlete is
-    // running that framework, not the philosophy's whole sequence.
-    if (opts.selectedFrameworkId) {
-      const chosen = opts.frameworks.find((f) => f.id === opts.selectedFrameworkId)
-      if (chosen?.expectations) return chosen.expectations
+    // A one-phase track is its framework: use that framework's own block,
+    // which knows a minimum shorter than the phase's default length.
+    if (phases && phases.length === 1) {
+      const only = opts.frameworks.find((f) => f.id === phases[0].framework_id)
+      if (only?.expectations) return only.expectations
     }
 
-    // Find sequential group (new approach)
-    const sequentialGroup = phil?.framework_groups?.find((g) => g.type === 'sequential')
-    const phases = sequentialGroup?.canonical_phase_sequence
-      || (phil?.frameworks_are_phases && phil.canonical_phase_sequence)  // Legacy fallback
-
-    if (phases) {
+    if (phases && phases.length > 1) {
       // Keep each phase paired with its framework. These used to be a filtered
       // array of frameworks indexed alongside the UNfiltered `phases`, so a
       // phase whose framework was missing or had no expectations shifted every
@@ -91,9 +88,6 @@ export function blendExpectations(
       }
     }
 
-    // No explicit style and no sequential group — fall back to the primary framework.
-    const primary = opts.frameworks.find((f) => f.id === phil?.primary_framework_id)
-    if (primary?.expectations) return primary.expectations
   }
 
   // Fall back to goal-based expectations

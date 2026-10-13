@@ -9,7 +9,10 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { sortPriorities } from '@/lib/prioritySort'
 import { frameworkImpliedPriorities } from '@/lib/frameworkPriorities'
 import { checkStyleCompatibility, blockingReason } from '@/lib/styleCompatibility'
+import { blendExpectations } from '@/lib/feasibility'
+import { builderTrack, mainFramework, trackWeeks, tracksOf } from '@/lib/tracks'
 import { FrameworkDetailModal } from './FrameworkDetailModal'
+import { PhaseSpine } from '@/components/shared/PhaseSpine'
 import type { Framework, ModalityId } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
@@ -17,7 +20,7 @@ const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foregrou
 export function ProgramTuner() {
   const {
     selectedGoalIds,
-    selectedFrameworkId,
+    selectedTrackId,
     selectedPhilosophyIds,
     sourcePriorities,
     sourceMode,
@@ -26,7 +29,7 @@ export function ProgramTuner() {
     eventDate,
     constraints,
     updateConstraints,
-    setFramework,
+    setTrack,
     setPriorityOverrides,
     setNumWeeks,
     setEventDate,
@@ -36,9 +39,20 @@ export function ProgramTuner() {
   const { data: philosophies } = usePhilosophies()
   const [detailFramework, setDetailFramework] = useState<Framework | null>(null)
 
-  // Get active philosophy and its framework groups
-  const activePhilosophy = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-  const frameworkGroups = activePhilosophy?.framework_groups ?? []
+  // The track the program will run, and every track the selection offers
+  // (a blend may run any member's track).
+  const picked = useMemo(
+    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId),
+    [philosophies, selectedPhilosophyIds, selectedTrackId],
+  )
+  const activeTrack = picked?.track
+  const trackOptions = useMemo(() => {
+    if (sourceMode !== 'philosophy' && sourceMode !== 'blend') return []
+    return selectedPhilosophyIds.flatMap((pid) => {
+      const phil = philosophies?.find((p) => p.id === pid)
+      return tracksOf(phil).map((track) => ({ philosophy: phil!, track }))
+    })
+  }, [philosophies, selectedPhilosophyIds, sourceMode])
 
   // ── Blended priorities ─────────────────────────────────────────────────────
   // Use the priorities that ProgramSource computed (philosophy-based)
@@ -53,79 +67,37 @@ export function ProgramTuner() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Framework options ──────────────────────────────────────────────────────
-  const relevantFrameworks = useMemo(() => {
-    if (!frameworks) return []
-    if (sourceMode === 'philosophy') {
-      return frameworks.filter((f) => f.source_philosophy === selectedPhilosophyIds[0])
-    }
-    if (sourceMode === 'blend') {
-      return frameworks.filter((f) =>
-        selectedPhilosophyIds.includes(f.source_philosophy ?? '')
-      )
-    }
-    if (sourceMode === 'custom') {
-      // No philosophy-specific frameworks; show all
-      return frameworks
-    }
-    // No source mode selected - show no frameworks
-    return []
-  }, [frameworks, sourceMode, selectedPhilosophyIds])
+  // The framework that stands for the track (its longest phase's) — the one
+  // its priorities and the reset button come from.
+  const activeFw = mainFramework(activeTrack, frameworks) ?? null
 
-  // Default framework for this source mode
-  const defaultFrameworkId = useMemo(() => {
-    if (sourceMode === 'philosophy') {
-      return frameworks?.find((f) => f.source_philosophy === selectedPhilosophyIds[0])?.id ?? null
-    }
-    return null
-  }, [frameworks, sourceMode, selectedPhilosophyIds])
-
-  // When the user picks a different framework, suggest its implied priorities.
+  // When the user picks a different track, suggest its implied priorities.
   const isMounted = useRef(false)
-  const prevFwId = useRef(selectedFrameworkId)
+  const prevTrackId = useRef(selectedTrackId)
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return }
-    if (selectedFrameworkId === prevFwId.current) return
-    prevFwId.current = selectedFrameworkId
+    if (selectedTrackId === prevTrackId.current) return
+    prevTrackId.current = selectedTrackId
 
-    if (selectedFrameworkId === null) {
+    if (selectedTrackId === null) {
       setPriorityOverrides({ ...blendedPriorities })
-    } else {
-      const fw = frameworks?.find((f) => f.id === selectedFrameworkId)
-      if (fw) {
-        setPriorityOverrides(frameworkImpliedPriorities(fw, blendedPriorities))
-      }
+    } else if (activeFw) {
+      setPriorityOverrides(frameworkImpliedPriorities(activeFw, blendedPriorities))
     }
-  }, [selectedFrameworkId, frameworks, blendedPriorities]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedTrackId, activeFw, blendedPriorities]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The active framework object
-  const activeFw = frameworks?.find(
-    (f) => f.id === (selectedFrameworkId ?? defaultFrameworkId),
-  ) ?? null
-
-  // Detect if "Full Program (All Phases)" is selected
-  // Full program mode means: no specific framework selected + philosophy has sequential phases
-  const isFullProgram = useMemo(() => {
-    if (selectedFrameworkId !== null) return false
-    if (sourceMode !== 'philosophy') return false
-
-    const phil = philosophies?.find((p) => p.id === selectedPhilosophyIds[0])
-    if (!phil) return false
-
-    // Check if philosophy has sequential framework groups or canonical_phase_sequence
-    const hasSequential = phil.framework_groups?.some((g) => g.type === 'sequential')
-    const hasCanonical = phil.canonical_phase_sequence && phil.canonical_phase_sequence.length > 0
-
-    return hasSequential || hasCanonical
-  }, [selectedFrameworkId, sourceMode, selectedPhilosophyIds, philosophies])
-
-  // Get expectations to display (philosophy-level for full program, framework-level otherwise)
+  // Expectations of the track: its framework's, or the weeks-weighted blend
+  // of its phases' frameworks.
   const displayExpectations = useMemo(() => {
-    if (isFullProgram && activePhilosophy?.expectations) {
-      return activePhilosophy.expectations
-    }
-    return activeFw?.expectations ?? null
-  }, [isFullProgram, activePhilosophy, activeFw])
+    if (!frameworks || !philosophies) return null
+    return blendExpectations([], [], {}, {
+      sourceMode: 'philosophy',
+      frameworks,
+      philosophies,
+      selectedPhilosophyIds,
+      selectedTrackId,
+    })
+  }, [frameworks, philosophies, selectedPhilosophyIds, selectedTrackId])
 
   // Framework-implied defaults for the reset button
   const fwDefaultPriorities = useMemo(() => {
@@ -143,17 +115,11 @@ export function ProgramTuner() {
 
   // ── Duration + event date ──────────────────────────────────────────────────
   const defaultNumWeeks = useMemo(() => {
-    // If full program is selected, use total from phases
-    if (isFullProgram && activePhilosophy) {
-      const phaseSeq = activePhilosophy.framework_groups?.find((g) => g.type === 'sequential')?.canonical_phase_sequence
-                       ?? activePhilosophy.canonical_phase_sequence
-      if (phaseSeq) {
-        return phaseSeq.reduce((sum, p) => sum + (p.weeks ?? 0), 0)
-      }
-    }
-    // Otherwise use expectations or fallback to 12
-    return displayExpectations?.ideal_weeks ?? 12
-  }, [isFullProgram, activePhilosophy, displayExpectations])
+    // A multi-phase track runs all of its phases; a single repeatable block
+    // takes its framework's ideal length.
+    if (activeTrack && activeTrack.phases.length > 1) return trackWeeks(activeTrack)
+    return displayExpectations?.ideal_weeks ?? trackWeeks(activeTrack) ?? 12
+  }, [activeTrack, displayExpectations])
 
   const effectiveNumWeeks = numWeeks ?? defaultNumWeeks
 
@@ -203,7 +169,7 @@ export function ProgramTuner() {
           Tune your program.
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-          Select framework, adjust modality priorities, and set program duration.
+          Choose a track, adjust modality priorities, and set program duration.
         </p>
       </div>
 
@@ -211,7 +177,7 @@ export function ProgramTuner() {
       {displayExpectations && (
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
           <p className="text-[10px] uppercase tracking-widest text-primary/70 font-medium mb-2">
-            {isFullProgram ? 'Full program recommendations' : 'Framework recommendations'}
+            {activeTrack && activeTrack.phases.length > 1 ? 'Full track recommendations' : 'Framework recommendations'}
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
             <div className="flex justify-between">
@@ -242,356 +208,140 @@ export function ProgramTuner() {
         </div>
       )}
 
-      {/* ── Framework selection ── */}
+      {/* ── Track selection ── */}
       <section className="space-y-3">
         <div>
           <p className={SECTION_LABEL}>Periodization</p>
-          <h2 className="text-sm font-semibold text-foreground mt-0.5">Programming Framework</h2>
+          <h2 className="text-sm font-semibold text-foreground mt-0.5">Training Track</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {frameworkGroups.length > 1
-              ? 'This philosophy offers multiple training approaches — choose one below.'
-              : 'Controls how sessions are structured and periodized each week.'}
+            {trackOptions.length > 1
+              ? 'Each track is one way to follow this methodology, in its own phases. Choose one.'
+              : 'The phases this methodology runs, in order.'}
           </p>
         </div>
 
-        {frameworkGroups.length > 0 ? (
-          <div className="space-y-4">
-            {frameworkGroups.map((group) => {
-              const groupFrameworks = relevantFrameworks.filter((f) =>
-                group.frameworks.includes(f.id)
-              )
-
-              return (
-                <div key={group.id} className="space-y-2">
-                  <p className="text-xs font-medium text-foreground">{group.name}</p>
-
-                  {group.type === 'sequential' ? (
-                    // Sequential group: Show "Full Program" button
-                    <button
-                      onClick={() => {
-                        setFramework(null)
-                        // Reset numWeeks to null so effectiveNumWeeks = defaultNumWeeks
-                        // (the full phase total). Don't pass the hardcoded total here —
-                        // the tightChoice effect owns numWeeks when event date is set.
-                        if (!eventDate) setNumWeeks(null)
-                      }}
-                      className={cn(
-                        'w-full rounded-xl border p-4 text-left transition-all',
-                        'bg-card hover:shadow-md',
-                        selectedFrameworkId === null
-                          ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        {selectedFrameworkId === null && (
-                          <span className="flex size-5 items-center justify-center rounded-full bg-primary shrink-0 mt-0.5">
-                            <Check className="size-3 text-primary-foreground" />
-                          </span>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground">Full Program (All Phases)</p>
-                          <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                            Includes all sequential phases: {group.canonical_phase_sequence?.map((p) => p.phase).join(' → ')}
-                          </p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {group.canonical_phase_sequence?.map((phase) => (
-                              <span key={phase.phase} className="text-[9px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                {phase.phase}: {phase.weeks}w
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ) : (
-                    // Alternatives group: Show framework picker
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {groupFrameworks.map((fw) => {
-                        const isDefault = fw.id === (defaultFrameworkId)
-                        const isSelected = selectedFrameworkId === fw.id
-                        const compat = checkStyleCompatibility(fw, constraints)
-                        const blocker = blockingReason(compat)
-
-                        return (
-                          <div
-                            key={fw.id}
-                            className={cn(
-                              'relative flex flex-col gap-1.5 rounded-xl border p-4 transition-shadow',
-                              'bg-card',
-                              !compat.selectable && !isSelected
-                                ? 'opacity-55 border-border'
-                                : 'hover:shadow-md',
-                              isSelected
-                                ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                                : compat.selectable && 'border-border hover:border-primary/50'
-                            )}
-                          >
-                            {isSelected && (
-                              <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary">
-                                <Check className="size-3 text-primary-foreground" />
-                              </span>
-                            )}
-
-                            <button
-                              onClick={() => setFramework(isSelected ? null : fw.id)}
-                              disabled={!compat.selectable && !isSelected}
-                              title={blocker?.message}
-                              className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
-                            >
-                              <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-                              <div>
-                                <p className="text-xs font-semibold text-foreground">{fw.name}</p>
-                                {isDefault && (
-                                  <span className="text-[9px] text-primary font-medium">
-                                    Primary for this philosophy
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-
-                            {fw.notes && (
-                              <button
-                                onClick={() => setFramework(isSelected ? null : fw.id)}
-                                disabled={!compat.selectable && !isSelected}
-                                className="text-left disabled:cursor-not-allowed"
-                              >
-                                <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-3">
-                                  {fw.notes}
-                                </p>
-                              </button>
-                            )}
-
-                            {compat.issues.length > 0 && (
-                              <div className="mt-1 space-y-1">
-                                {compat.issues.map((issue) => (
-                                  <div
-                                    key={issue.label}
-                                    className={cn(
-                                      'flex items-start gap-1.5 text-[10px] leading-relaxed',
-                                      issue.severity === 'error'
-                                        ? 'text-destructive'
-                                        : 'text-amber-600 dark:text-amber-500'
-                                    )}
-                                  >
-                                    <AlertTriangle className="size-3 mt-px shrink-0" />
-                                    <span className="flex-1">{issue.message}</span>
-                                  </div>
-                                ))}
-                                {blocker?.constraintPatch && (
-                                  <button
-                                    onClick={() => updateConstraints(blocker.constraintPatch!)}
-                                    className="text-[10px] font-medium text-primary hover:underline"
-                                  >
-                                    {blocker.label} — apply
-                                  </button>
-                                )}
-                              </div>
-                            )}
-
-                            <div className="flex items-end justify-between gap-2 mt-1">
-                              <div className="flex flex-wrap gap-2">
-                                {fw.applicable_when?.training_level && (
-                                  <span className="text-[9px] text-muted-foreground">
-                                    Level: {fw.applicable_when.training_level.join(', ')}
-                                  </span>
-                                )}
-                                {fw.applicable_when?.days_per_week_min !== undefined && (
-                                  <span className="text-[9px] text-muted-foreground">
-                                    {fw.applicable_when.days_per_week_min}–{fw.applicable_when.days_per_week_max} days/wk
-                                  </span>
-                                )}
-                                {fw.progression_model && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                    {fw.progression_model.replace(/_/g, ' ')}
-                                  </span>
-                                )}
-                              </div>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setDetailFramework(fw)
-                                }}
-                                className="flex-none flex items-center gap-1 text-[10px] font-medium rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                              >
-                                <Info className="size-3" />
-                                Details
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        ) : relevantFrameworks.length === 0 ? (
+        {trackOptions.length === 0 ? (
           <div className="rounded-xl border border-border/50 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-            No framework filter applied — framework will be auto-selected based on your constraints.
-          </div>
-        ) : activePhilosophy?.canonical_phase_sequence ? (
-          // Legacy fallback: Philosophy has canonical_phase_sequence but no framework_groups
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setFramework(null)
-                if (!eventDate) setNumWeeks(null)
-              }}
-              className={cn(
-                'w-full rounded-xl border p-4 text-left transition-all',
-                'bg-card hover:shadow-md',
-                selectedFrameworkId === null
-                  ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                  : 'border-border hover:border-primary/50'
-              )}
-            >
-              <div className="flex items-start gap-3">
-                {selectedFrameworkId === null && (
-                  <span className="flex size-5 items-center justify-center rounded-full bg-primary shrink-0 mt-0.5">
-                    <Check className="size-3 text-primary-foreground" />
-                  </span>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground">Full Program (All Phases)</p>
-                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                    Includes all sequential phases: {activePhilosophy.canonical_phase_sequence.map((p) => p.phase).join(' → ')}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {activePhilosophy.canonical_phase_sequence.map((phase) => (
-                      <span key={phase.phase} className="text-[9px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {phase.phase}: {phase.weeks}w
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <details className="group">
-              <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                Advanced: Override with single phase
-              </summary>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-3">
-                {relevantFrameworks.map((fw) => {
-                  const isSelected = selectedFrameworkId === fw.id
-                  return (
-                    <button
-                      key={fw.id}
-                      onClick={() => setFramework(isSelected ? null : fw.id)}
-                      className={cn(
-                        'relative flex flex-col gap-1.5 rounded-xl border p-3 transition-shadow text-left',
-                        'bg-card hover:shadow-md',
-                        isSelected
-                          ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      )}
-                    >
-                      {isSelected && (
-                        <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary">
-                          <Check className="size-2.5 text-primary-foreground" />
-                        </span>
-                      )}
-                      <p className="text-xs font-medium pr-6">{fw.name}</p>
-                      <p className="text-[9px] text-muted-foreground">{fw.notes?.slice(0, 80)}...</p>
-                    </button>
-                  )
-                })}
-              </div>
-            </details>
+            No methodology selected — the framework will be auto-selected based on your constraints.
           </div>
         ) : (
-          // Standard framework picker for philosophies without groups or phases
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {relevantFrameworks.map((fw) => {
-              const isDefault = fw.id === (defaultFrameworkId)
-              const isSelected = selectedFrameworkId === fw.id
-              const isAuto = selectedFrameworkId === null && isDefault
+          <div className="grid grid-cols-1 gap-3">
+            {trackOptions.map(({ philosophy, track }) => {
+              const isSelected = activeTrack?.id === track.id && picked?.philosophy.id === philosophy.id
+              const trackFws = Array.from(new Set(track.phases.map((p) => p.framework_id)))
+                .map((id) => frameworks?.find((f) => f.id === id))
+                .filter((f): f is Framework => !!f)
+              const issues = trackFws.flatMap((fw) => checkStyleCompatibility(fw, constraints).issues)
+                .filter((issue, i, all) => all.findIndex((x) => x.label === issue.label) === i)
+              const blocker = trackFws
+                .map((fw) => blockingReason(checkStyleCompatibility(fw, constraints)))
+                .find(Boolean)
+              const selectable = trackFws.every((fw) => checkStyleCompatibility(fw, constraints).selectable)
+              const isPrimary = (philosophy.primary_track_id ?? philosophy.tracks[0]?.id) === track.id
+              const main = mainFramework(track, frameworks)
 
               return (
                 <div
-                  key={fw.id}
+                  key={`${philosophy.id}/${track.id}`}
                   className={cn(
-                    'relative flex flex-col gap-1.5 rounded-xl border p-4 transition-shadow',
-                    'bg-card hover:shadow-md',
-                    isSelected || isAuto
+                    'relative flex flex-col gap-2 rounded-xl border p-4 transition-shadow bg-card',
+                    !selectable && !isSelected ? 'opacity-55 border-border' : 'hover:shadow-md',
+                    isSelected
                       ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                      : 'border-border hover:border-primary/50'
+                      : selectable && 'border-border hover:border-primary/50'
                   )}
                 >
-                  {(isSelected || isAuto) && (
+                  {isSelected && (
                     <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary">
                       <Check className="size-3 text-primary-foreground" />
                     </span>
                   )}
 
                   <button
-                    onClick={() => setFramework(isSelected ? null : fw.id)}
-                    className="flex items-start gap-2 pr-6 text-left"
+                    onClick={() => {
+                      setTrack(track.id)
+                      // Let effectiveNumWeeks fall back to the track's length; the
+                      // tight-event effect owns numWeeks when an event date is set.
+                      if (!eventDate) setNumWeeks(null)
+                    }}
+                    disabled={!selectable && !isSelected}
+                    title={blocker?.message}
+                    className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
                   >
                     <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">{fw.name}</p>
-                      {isDefault && (
-                        <span className="text-[9px] text-primary font-medium">
-                          {sourceMode === 'philosophy' ? 'Primary for this philosophy' : 'Default for this goal'}
-                        </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-foreground">{track.name}</p>
+                      <div className="flex flex-wrap gap-x-2">
+                        {sourceMode === 'blend' && (
+                          <span className="text-[9px] text-muted-foreground">{philosophy.name}</span>
+                        )}
+                        {isPrimary && (
+                          <span className="text-[9px] text-primary font-medium">Primary for this methodology</span>
+                        )}
+                      </div>
+                      {track.description && (
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mt-1 line-clamp-3">
+                          {track.description}
+                        </p>
                       )}
                     </div>
                   </button>
 
-                  {fw.notes && (
-                    <button onClick={() => setFramework(isSelected ? null : fw.id)} className="text-left">
-                      <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-3">
-                        {fw.notes}
-                      </p>
-                    </button>
-                  )}
+                  <PhaseSpine phases={track.phases} />
 
-                  <div className="flex items-end justify-between gap-2 mt-1">
-                    <div className="flex flex-wrap gap-2">
-                      {fw.applicable_when?.training_level && (
-                        <span className="text-[9px] text-muted-foreground">
-                          Level: {fw.applicable_when.training_level.join(', ')}
-                        </span>
-                      )}
-                      {fw.applicable_when?.days_per_week_min !== undefined && (
-                        <span className="text-[9px] text-muted-foreground">
-                          {fw.applicable_when.days_per_week_min}–{fw.applicable_when.days_per_week_max} days/wk
-                        </span>
-                      )}
-                      {fw.progression_model && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {fw.progression_model.replace(/_/g, ' ')}
-                        </span>
+                  {issues.length > 0 && (
+                    <div className="space-y-1">
+                      {issues.map((issue) => (
+                        <div
+                          key={issue.label}
+                          className={cn(
+                            'flex items-start gap-1.5 text-[10px] leading-relaxed',
+                            issue.severity === 'error'
+                              ? 'text-destructive'
+                              : 'text-amber-600 dark:text-amber-500'
+                          )}
+                        >
+                          <AlertTriangle className="size-3 mt-px shrink-0" />
+                          <span className="flex-1">{issue.message}</span>
+                        </div>
+                      ))}
+                      {blocker?.constraintPatch && (
+                        <button
+                          onClick={() => updateConstraints(blocker.constraintPatch!)}
+                          className="text-[10px] font-medium text-primary hover:underline"
+                        >
+                          {blocker.label} — apply
+                        </button>
                       )}
                     </div>
+                  )}
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDetailFramework(fw)
-                      }}
-                      className="flex-none flex items-center gap-1 text-[10px] font-medium rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    >
-                      <Info className="size-3" />
-                      Details
-                    </button>
-                  </div>
+                  {main && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDetailFramework(main)
+                        }}
+                        className="flex-none flex items-center gap-1 text-[10px] font-medium rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        <Info className="size-3" />
+                        Framework details
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             })}
           </div>
         )}
 
-        {selectedFrameworkId && (
+        {selectedTrackId && (
           <button
-            onClick={() => setFramework(null)}
+            onClick={() => setTrack(null)}
             className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
           >
-            Reset to auto-select
+            Reset to the primary track
           </button>
         )}
       </section>

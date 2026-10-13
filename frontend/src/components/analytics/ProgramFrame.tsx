@@ -30,7 +30,7 @@ export function ProgramFrame({ frame }: { frame: AnalyticsFrame }) {
         {frame.phase && (
           <div className="text-right">
             <div className="flex items-center justify-end gap-2">
-              <PhaseBadge phase={frame.phase.name as TrainingPhase} />
+              <PhaseBadge phase={frame.phase.name as TrainingPhase} label={frame.phase.label ?? undefined} />
               {frame.phase.isDeload && (
                 <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">deload</span>
               )}

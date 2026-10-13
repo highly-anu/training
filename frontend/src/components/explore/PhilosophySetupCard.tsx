@@ -1,8 +1,6 @@
-import { useMemo } from 'react'
-import type { Framework, FrameworkPhaseEntry, ModalityId, Philosophy, TrainingPhase } from '@/api/types'
-import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
-import { PhaseBar } from '@/components/program/PhaseBar'
-import { PHASE_COLORS } from '@/lib/phaseColors'
+import type { Framework, ModalityId, Philosophy } from '@/api/types'
+import { PhaseSpine } from '@/components/shared/PhaseSpine'
+import { mainFramework, primaryTrack, tracksOf, trackWeeks } from '@/lib/tracks'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { Section, StatCell } from './ExploreSection'
@@ -10,35 +8,18 @@ import { SessionsPerWeekRows } from './SessionsPerWeekRows'
 
 const TIER_COLORS = { committed: '#ef4444', core: '#f97316', supplementary: '#64748b' } as const
 
-function toSegments(phases: FrameworkPhaseEntry[]): PhaseSegment[] {
-  const segments: PhaseSegment[] = []
-  let cursor = 1
-  for (const p of phases) {
-    segments.push({ phase: p.phase as TrainingPhase, weeks: p.weeks, focus: p.focus, startWeek: cursor, endWeek: cursor + p.weeks - 1 })
-    cursor += p.weeks
-  }
-  return segments
-}
-
 /**
- * How a philosophy is set up, before any program exists: its phase spine (or
- * the styles it offers), the weekly shape of the framework that leads it, and
- * what it asks of the athlete. Everything here is authored in the package.
+ * How a philosophy is set up, before any program exists: each of its tracks
+ * with its own phases, the weekly shape of the framework that leads the
+ * primary track, and what it asks of the athlete. Everything here is authored
+ * in the package.
  */
 export function PhilosophySetupCard({ phil, frameworks, accentHex }: {
   phil: Philosophy; frameworks: Framework[]; accentHex: string
 }) {
-  const fwById = useMemo(() => Object.fromEntries(frameworks.map((f) => [f.id, f])), [frameworks])
-  const sequential = phil.framework_groups?.find((g) => g.type === 'sequential')
-  const phases = useMemo(
-    () => sequential?.canonical_phase_sequence ?? phil.canonical_phase_sequence ?? [],
-    [sequential, phil.canonical_phase_sequence],
-  )
-  const alternatives = (phil.framework_groups ?? []).filter((g) => g.type === 'alternatives')
-  const segments = useMemo(() => toSegments(phases), [phases])
-  const totalWeeks = segments.reduce((s, seg) => s + seg.weeks, 0)
-
-  const primary = fwById[phil.primary_framework_id ?? ''] ?? frameworks[0]
+  const tracks = tracksOf(phil)
+  const lead = primaryTrack(phil)
+  const primary = mainFramework(lead, frameworks) ?? frameworks[0]
   const expectations = phil.expectations ?? primary?.expectations
   const intensity = primary?.intensity_distribution
     ? INTENSITY_BUCKETS.map((b) => ({ ...b, pct: primary.intensity_distribution![b.key] ?? 0 })).filter((b) => b.pct > 0)
@@ -49,47 +30,20 @@ export function PhilosophySetupCard({ phil, frameworks, accentHex }: {
       <div>
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">How it's set up</p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
-          {phases.length
-            ? `${phases.length} phases over ${totalWeeks} weeks`
-            : alternatives.length
-              ? `${frameworks.length} style${frameworks.length === 1 ? '' : 's'} to pick from`
-              : `${frameworks.length} framework${frameworks.length === 1 ? '' : 's'}`}
+          {tracks.length > 1
+            ? `${tracks.length} tracks to pick from`
+            : lead
+              ? `${lead.phases.length} phase${lead.phases.length === 1 ? '' : 's'} over ${trackWeeks(lead)} weeks`
+              : 'No phases declared'}
         </p>
       </div>
 
-      {segments.length > 0 && (
-        <Section label={sequential ? `Phases — ${sequential.name}` : 'Phases'}>
-          <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={0} />
-          <ul className="space-y-1 pt-1">
-            {phases.map((p, i) => {
-              const c = PHASE_COLORS[p.phase as TrainingPhase]
-              const fw = p.framework_id ? fwById[p.framework_id] : undefined
-              return (
-                <li key={`${p.phase}-${i}`} className="flex items-baseline gap-2 text-[10px]">
-                  <span className="w-16 shrink-0 font-medium" style={{ color: c?.hex }}>{c?.label ?? p.phase}</span>
-                  <span className="w-8 shrink-0 font-mono text-muted-foreground">{p.weeks}wk</span>
-                  <span className="min-w-0 text-muted-foreground">
-                    {fw && <span className="text-foreground/80">{fw.name}</span>}
-                    {fw && p.focus && ' — '}
-                    {p.focus}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        </Section>
-      )}
-
-      {alternatives.map((g) => (
-        <Section key={g.id} label={`Pick one style — ${g.name}`}>
-          <div className="flex flex-wrap gap-1">
-            {g.frameworks.map((id) => (
-              <span key={id} className="text-[10px] px-1.5 py-0.5 rounded font-mono border"
-                style={{ color: accentHex, backgroundColor: `${accentHex}15`, borderColor: `${accentHex}30` }}>
-                {fwById[id]?.name ?? id.replace(/_/g, ' ')}
-              </span>
-            ))}
-          </div>
+      {tracks.map((t) => (
+        <Section key={t.id} label={tracks.length > 1 ? `Track — ${t.name}` : `Phases — ${t.name}`}>
+          {t.description && (
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{t.description}</p>
+          )}
+          <PhaseSpine phases={t.phases} frameworks={frameworks} showFrameworks />
         </Section>
       ))}
 
