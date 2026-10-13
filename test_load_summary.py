@@ -32,13 +32,15 @@ WORKOUTS = [
 
 def test_totals_and_prior():
     s = ls.summarize(WORKOUTS, 190, '30d', TODAY)
-    assert s['from'] == '2026-09-13' and s['to'] == '2026-10-13'
+    assert s['from'] == '2026-09-14', 'thirty days including today' and s['to'] == '2026-10-13'
     t = s['totals']
     assert t['sessions'] == 3 and t['minutes'] == 180
     assert t['distanceKm'] == 25.0, 'metres are converted; the phone summed them as km'
     assert t['elevationGainM'] == 100 and t['calories'] == 600
     assert s['prior'] == {'sessions': 1, 'minutes': 45.0, 'distanceKm': 8.0,
                           'elevationGainM': None, 'elevationLossM': None, 'calories': None}
+    edge = ls.summarize([_w('x', '2026-10-07'), _w('y', '2026-10-06')], 190, '7d', TODAY)['totals']
+    assert edge['sessions'] == 1, '7d is seven days including today: the 7th, not the 6th'
     assert ls.summarize(WORKOUTS, 190, 'all', TODAY)['prior'] is None
     assert ls.summarize(WORKOUTS, 190, 'all', TODAY)['totals']['sessions'] == 4
 

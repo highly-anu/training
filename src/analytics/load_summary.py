@@ -78,7 +78,8 @@ def summarize(workouts: list[dict], max_hr: float, period: str, today: date) -> 
         prior = None
         start = min((d for d, _ in dated), default=today)
     else:
-        start = today - timedelta(days=days)
+        # `days` calendar days ending today, as the clients' filters were.
+        start = today - timedelta(days=days - 1)
         current = [w for d, w in dated if d >= start]
         prior_start = start - timedelta(days=days)
         prior = _totals([w for d, w in dated if prior_start <= d < start])

@@ -598,7 +598,7 @@ struct TodayView: View {
             if !stats.weekRows.isEmpty {
                 Divider()
                 VStack(spacing: 4) {
-                    ForEach(stats.weekRows.suffix(4), id: \.weekNumber) { row in
+                    ForEach(stats.weekRows.suffix(4), id: \.weekIndex) { row in
                         HStack {
                             Text("Wk \(row.weekNumber)")
                                 .font(.caption2)
@@ -639,7 +639,7 @@ struct TodayView: View {
         let scheduled: Int
         let weekTrend: Int?
         let weekRows: [WeekRow]
-        struct WeekRow { let weekNumber: Int; let pct: Int }
+        struct WeekRow { let weekIndex: Int; let weekNumber: Int; let pct: Int }
     }
 
     /// The server's completion (`/analytics/program` scorecard), the number
@@ -651,7 +651,7 @@ struct TodayView: View {
         guard let sc = appState.programAnalytics?.scorecard, sc.plannedSessions != nil else {
             return ComplianceStats(overall: 0, completed: 0, scheduled: 0, weekTrend: nil, weekRows: [])
         }
-        let rows = sc.weeks.map { ComplianceStats.WeekRow(weekNumber: $0.weekNumber, pct: Int(($0.pct ?? 0).rounded())) }
+        let rows = sc.weeks.map { ComplianceStats.WeekRow(weekIndex: $0.weekIndex, weekNumber: $0.weekNumber, pct: Int(($0.pct ?? 0).rounded())) }
         let trend = rows.count >= 2 ? rows[rows.count - 1].pct - rows[rows.count - 2].pct : nil
         return ComplianceStats(overall: Int((sc.overallPct ?? 0).rounded()),
                                completed: sc.completedSessions ?? 0, scheduled: sc.plannedSessions ?? 0,

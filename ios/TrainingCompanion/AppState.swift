@@ -96,8 +96,14 @@ final class AppState: ObservableObject {
 
     var api: APIClient?
     private let iso = ISO8601DateFormatter()
+    /// Gregorian and POSIX: a phone set to the Buddhist or Japanese calendar
+    /// would otherwise write "2569-10-13", which the server rejects.
     private let dayFormatter: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
     }()
 
     // MARK: - Configuration
@@ -375,6 +381,8 @@ final class AppState: ObservableObject {
         )
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
         rescheduleNotifications()
+        // Today's completion is the program scorecard's.
+        await loadProgramAnalytics()
     }
 
     /// Store what was done for one exercise of a session — sets, or the
@@ -426,6 +434,7 @@ final class AppState: ObservableObject {
         // without this call the completion came back on the next sync.
         try? await api?.clearSessionCompletion(sessionKey: sessionKey)
         rescheduleNotifications()
+        await loadProgramAnalytics()
     }
 
     // MARK: - Bio Logs
@@ -944,5 +953,6 @@ final class AppState: ObservableObject {
             peakHR: workout.heartRate?.max,
             matchedWorkoutId: workout.id
         )
+        await loadProgramAnalytics()
     }
 }

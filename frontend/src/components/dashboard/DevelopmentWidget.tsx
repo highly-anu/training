@@ -1,7 +1,11 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgramAnalytics } from '@/api/analytics'
+import { queryKeys } from '@/api/queryKeys'
+import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
 
 const STATUS_LABEL = { green: 'On Track', yellow: 'Mixed', red: 'Off Track' } as const
@@ -25,6 +29,16 @@ function statusFor(pct: number): 'green' | 'yellow' | 'red' {
 export function DevelopmentWidget() {
   const { data, isLoading } = useProgramAnalytics()
   const sc = data?.scorecard
+
+  // A completion, an undo or a match changes the scorecard: refetch rather
+  // than wait out the query's staleTime.
+  const queryClient = useQueryClient()
+  const completions = useBioStore((s) =>
+    Object.values(s.sessionPerformanceLogs).filter((l) => l?.completedAt).length)
+  const matches = useBioStore((s) => s.workoutMatches.length)
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.analytics.program })
+  }, [completions, matches, queryClient])
 
   if (isLoading) {
     return (
@@ -56,7 +70,7 @@ export function DevelopmentWidget() {
   const overall = Math.round(sc.overallPct ?? 0)
   const status = statusFor(overall)
   const styles = STATUS_STYLES[status]
-  const weeks = (sc.weeks ?? []).map((w) => ({ weekNumber: w.weekNumber, pct: Math.round(w.pct ?? 0) }))
+  const weeks = (sc.weeks ?? []).map((w) => ({ weekIndex: w.weekIndex, weekNumber: w.weekNumber, pct: Math.round(w.pct ?? 0) }))
   const trend = weeks.length >= 2 ? weeks[weeks.length - 1].pct - weeks[weeks.length - 2].pct : null
 
   return (
@@ -90,7 +104,7 @@ export function DevelopmentWidget() {
       {weeks.length > 0 && (
         <div className="space-y-1 border-t pt-2">
           {weeks.slice(-4).map((w) => (
-            <div key={w.weekNumber} className="flex items-center gap-2">
+            <div key={w.weekIndex} className="flex items-center gap-2">
               <span className="w-10 text-[10px] text-muted-foreground tabular-nums">Wk {w.weekNumber}</span>
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
                 <div
