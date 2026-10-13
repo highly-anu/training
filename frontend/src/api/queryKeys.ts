@@ -30,6 +30,9 @@ export const queryKeys = {
     plannedSessions: (from?: string, to?: string) =>
       ['programs', 'plannedSessions', from ?? '', to ?? ''] as const,
   },
+  health: {
+    recentSessions: ['health', 'recentSessions'] as const,
+  },
   analytics: {
     program: ['analytics', 'program'] as const,
     development: ['analytics', 'development'] as const,

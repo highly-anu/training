@@ -9,6 +9,7 @@ import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
 import { SuggestionRow } from '@/components/bio/SuggestionRow'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { WorkoutList } from '@/components/workout/WorkoutList'
+import { SessionsTab } from '@/components/log/SessionsTab'
 import type { WorkoutMatchStatus } from '@/components/workout/WorkoutRow'
 import { parseAppleHealthXml, parseStravaJson } from '@/lib/importParsers'
 import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
@@ -25,11 +26,12 @@ import type { ImportedWorkout, PendingMatch } from '@/api/types'
  *
  * One list of recorded workouts (this used to be three: Import ▸ History,
  * Import ▸ Matched and Analytics ▸ Activity), the suggestions inbox, and
- * Import as an action rather than a page. Analytics interprets; this is the
- * ledger it reads.
+ * Import as an action rather than a page, and Sessions — what was logged
+ * against planned sessions, across programs, as on the phone. Analytics
+ * interprets; this is the ledger it reads.
  */
 
-type LogTab = 'workouts' | 'suggestions'
+type LogTab = 'workouts' | 'suggestions' | 'sessions'
 type Filter = 'all' | 'matched' | 'unmatched' | 'pending'
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
@@ -242,7 +244,8 @@ export function Log() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const linkToSession = searchParams.get('linkTo')
-  const activeTab: LogTab = searchParams.get('tab') === 'suggestions' ? 'suggestions' : 'workouts'
+  const tabParam = searchParams.get('tab')
+  const activeTab: LogTab = tabParam === 'suggestions' || tabParam === 'sessions' ? tabParam : 'workouts'
   // ?linkTo= (from a session) and ?import=1 (from Home) open the sheet directly.
   const [importOpen, setImportOpen] = useState(() => !!linkToSession || searchParams.get('import') === '1')
   const [filter, setFilter] = useState<Filter>('all')
@@ -414,6 +417,7 @@ export function Log() {
   const tabs: { id: LogTab; label: string }[] = [
     { id: 'workouts',    label: 'Workouts' },
     { id: 'suggestions', label: pendingMatches.length > 0 ? `Suggestions (${pendingMatches.length})` : 'Suggestions' },
+    { id: 'sessions',    label: 'Sessions' },
   ]
 
   return (
@@ -499,6 +503,7 @@ export function Log() {
             onDismiss={dismissSuggestion}
           />
         )}
+        {activeTab === 'sessions' && <SessionsTab />}
       </div>
 
       {/* Import — an action, not a place */}

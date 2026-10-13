@@ -7,6 +7,9 @@ import type {
   MatchSuggestion,
 } from '@/api/types'
 import type { ReadinessResult } from '@/lib/readiness'
+import type { RecentSessionLog } from '@/lib/logSessions'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './queryKeys'
 
 export interface HealthSnapshot {
   workouts: ImportedWorkout[]
@@ -20,6 +23,20 @@ const BASE = '/health'
 
 export async function fetchHealthSnapshot(): Promise<HealthSnapshot> {
   return apiClient.get(`${BASE}/snapshot`) as unknown as Promise<HealthSnapshot>
+}
+
+/** Every session log, each named by the server from the plan it was logged
+ *  against — Log ▸ Sessions, as on the phone. */
+export async function fetchRecentSessionLogs(): Promise<RecentSessionLog[]> {
+  return apiClient.get(`${BASE}/sessions/recent`) as unknown as Promise<RecentSessionLog[]>
+}
+
+export function useRecentSessionLogs() {
+  return useQuery({
+    queryKey: queryKeys.health.recentSessions,
+    queryFn: fetchRecentSessionLogs,
+    staleTime: 30_000,
+  })
 }
 
 export function saveWorkouts(workouts: ImportedWorkout[]): void {
