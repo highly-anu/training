@@ -61,8 +61,44 @@ def session_calendar_date(program_start_date: str, week_index: int, day_name: st
     return (start + timedelta(days=week_index * 7 + day_index)).isoformat()
 
 
-def score_match(workout: dict, session_modality: str, session_duration) -> int:
-    """0-5. Modality agreement is worth more than duration agreement."""
+def activity_gate(workout: dict) -> dict | None:
+    """The rules' activity gate a workout falls under (cycling, rowing,
+    swimming), from its activity type; None for anything else."""
+    activity = str(workout.get('activityType') or '').lower()
+    if not activity:
+        return None
+    for gate in RULES['activityGates'].values():
+        if any(k in activity for k in gate['activity']):
+            return gate
+    return None
+
+
+def session_equipment(session: dict) -> list[str]:
+    """Every piece of equipment the session's exercises need."""
+    out: set[str] = set()
+    for ea in (session or {}).get('exercises') or []:
+        ex = (ea or {}).get('exercise') or {}
+        out.update(e for e in (ex.get('equipment') or []) if isinstance(e, str))
+    return sorted(out)
+
+
+def score_match(workout: dict, session_modality: str, session_duration,
+                session_equipment_list=()) -> int:
+    """0-5. Modality agreement is worth more than duration agreement.
+
+    A cycling, rowing or swimming workout scores at most one below the auto
+    threshold against a session none of whose exercises needs a bike, a rower
+    or a pool (RULES['activityGates']): sharing a modality with a kettlebell
+    session does not make a bike ride that session.
+    """
+    score = _base_score(workout, session_modality, session_duration)
+    gate = activity_gate(workout)
+    if gate and not set(gate['equipment']) & set(session_equipment_list or ()):
+        score = min(score, RULES['autoThreshold'] - 1)
+    return score
+
+
+def _base_score(workout: dict, session_modality: str, session_duration) -> int:
     score = 0
 
     inferred = workout.get('inferredModalityId')
@@ -104,6 +140,7 @@ def index_sessions_by_date(program: dict, program_start_date: str) -> dict[str, 
                     'duration': pick(archetype, 'duration_estimate_minutes',
                                      'durationEstimateMinutes')
                                 or RULES['defaultSessionMinutes'],
+                    'equipment': session_equipment(session),
                 })
     return index
 
@@ -161,7 +198,8 @@ def auto_match_indexed(workouts: list[dict], date_index: dict[str, list[dict]],
             continue
 
         scored = [
-            {**c, 'score': score_match(workout, c['modality'], c['duration'])}
+            {**c, 'score': score_match(workout, c['modality'], c['duration'],
+                                       c.get('equipment') or ())}
             for c in candidates
         ]
         # First-wins on ties, matching the TS reduce (a.score >= b.score).
@@ -229,11 +267,39 @@ def history_aware_index(user_id: str, dates: list[str]) -> dict[str, list[dict]]
 
     try:
         from src import program_history
-        index.update(program_history.sessions_on_dates(user_id, dates))
+        current = {(d, c['sessionKey']): c for d, cs in index.items() for c in cs}
+        history = program_history.sessions_on_dates(user_id, dates)
+        _attach_equipment(user_id, history, current)
+        index.update(history)
     except Exception:
         pass
 
     return index
+
+
+def _attach_equipment(user_id: str, history: dict, current: dict) -> None:
+    """Give history candidates the equipment the activity gate reads.
+
+    planned_sessions stores no exercises. The same session in the stored
+    program (same date, same key) is the cheap source; anything else is read
+    from its version snapshot, bounded to these candidates' uids.
+    """
+    missing = []
+    for day, cands in history.items():
+        for c in cands:
+            same = current.get((day, c['sessionKey']))
+            if same and same.get('modality') == c.get('modality'):
+                c['equipment'] = same.get('equipment') or []
+            elif c.get('sessionUid'):
+                missing.append(c)
+    if not missing:
+        return
+    from src import program_history
+    found = {r['session_uid']: session_equipment(r.get('session') or {})
+             for r in program_history.session_lookup(
+                 user_id, [c['sessionUid'] for c in missing])}
+    for c in missing:
+        c['equipment'] = found.get(c['sessionUid'], [])
 
 
 def match_and_store(user_id: str, workouts: list[dict]) -> dict:

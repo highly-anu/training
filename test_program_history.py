@@ -248,12 +248,14 @@ def test_flatten_matches_the_matchers_own_index() -> None:
 
     check('same dates', sorted(from_history) == sorted(from_program),
           f'{sorted(from_history)} vs {sorted(from_program)}')
+    # equipment is attached to history candidates afterwards
+    # (workout_matcher._attach_equipment): planned_sessions stores no exercises.
     same = all(
         [{k: v for k, v in c.items() if k != 'sessionUid'} for c in from_history[d]]
-        == from_program[d]
+        == [{k: v for k, v in c.items() if k != 'equipment'} for c in from_program[d]]
         for d in from_program
     )
-    check('same candidates modulo sessionUid', same)
+    check('same candidates modulo sessionUid and equipment', same)
 
     # The parity that actually matters: the matcher agrees on both indexes.
     workouts = [{'id': 'w1', 'date': '2026-03-04',
@@ -364,6 +366,29 @@ def test_intervals() -> None:
           ph.clamp_effective_to(d('2026-09-29'), d('2026-03-02')) == d('2026-09-29'))
 
 
+def test_annotate_logs() -> None:
+    print('\nrecent logs name their planned session')
+    vid = 'b2840d32b7b5040d376c067f331a97c2'
+    planned = {f'{vid}:w0-Wednesday-0': {
+        'legacy_key': '1-Wednesday-0', 'archetype_name': 'KB Anti-Glycolytic Practice',
+        'modality': 'aerobic_base', 'date': '2026-10-14', 'program_version_id': vid,
+        'week_index': 0, 'day_name': 'Wednesday'}}
+    logs = [
+        {'session_key': '1-Wednesday', 'session_uid': f'{vid}:w0-Wednesday-0',
+         'in_current_program': True},
+        {'session_key': '1-Wednesday', 'session_uid': f'{vid}:w0-Wednesday-0',
+         'in_current_program': False},
+        {'session_key': '6-Monday-0', 'session_uid': None, 'in_current_program': False},
+    ]
+    ph.annotate_logs(logs, planned)
+    check("a current day-level log reaches the phone under its session's full key",
+          logs[0]['session_key'] == '1-Wednesday-0', logs[0]['session_key'])
+    check('and is named', logs[0].get('planned_name') == 'KB Anti-Glycolytic Practice')
+    check('a log outside the current program keeps its own key',
+          logs[1]['session_key'] == '1-Wednesday')
+    check('a log with no uid is left alone', 'planned_name' not in logs[2])
+
+
 if __name__ == '__main__':
     test_hash_invariance()
     test_hash_sensitivity()
@@ -374,6 +399,7 @@ if __name__ == '__main__':
     test_spliced_program_uids_stay_unique()
     test_flatten_edge_cases()
     test_intervals()
+    test_annotate_logs()
 
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))

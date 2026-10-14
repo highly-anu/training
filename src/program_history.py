@@ -945,6 +945,34 @@ def active_plan_dates(user_id: str) -> tuple[str | None, dict]:
     return vid, dates
 
 
+def annotate_logs(logs: list[dict], planned: dict[str, dict]) -> list[dict]:
+    """Name the planned session each recent log belongs to (in place).
+
+    `planned` is planned_rows_for_uids' answer for the logs' uids. Pure.
+
+    The web writes a day-level key ('1-Wednesday'); the phone looks sessions up
+    by '1-Wednesday-0' and so found neither the completion nor the linked
+    workout. The uid names the exact session, so a current-program log is
+    handed over under its full key — and a write back under that key resolves
+    to the same uid, the same row.
+    """
+    for log in logs:
+        row = planned.get(log.get('session_uid') or '')
+        if not row:
+            continue
+        log['planned_name'] = row.get('archetype_name')
+        log['planned_modality'] = row.get('modality')
+        log['planned_date'] = row.get('date')
+        log['program_version_id'] = row.get('program_version_id')
+        log['week_index'] = row.get('week_index')
+        log['day_name'] = row.get('day_name')
+        full = row.get('legacy_key')
+        if (log.get('in_current_program') and full
+                and full.startswith(log['session_key'] + '-')):
+            log['session_key'] = full
+    return logs
+
+
 def planned_rows_for_uids(user_id: str, uids: list[str]) -> dict[str, dict]:
     """The flat `planned_sessions` rows for named sessions, keyed by uid —
     name, modality, date and position, without loading any version snapshot.
@@ -954,7 +982,8 @@ def planned_rows_for_uids(user_id: str, uids: list[str]) -> dict[str, dict]:
         return {}
     rows = _query(
         'SELECT session_uid, program_version_id, date, week_index, week_number, '
-        'day_name, session_index, modality, archetype_id, archetype_name, phase, is_deload '
+        'day_name, session_index, legacy_key, modality, archetype_id, archetype_name, '
+        'phase, is_deload '
         'FROM planned_sessions WHERE user_id = %s AND session_uid = ANY(%s::text[])',
         (user_id, wanted))
     out = {}

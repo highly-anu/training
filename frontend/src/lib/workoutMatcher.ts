@@ -47,7 +47,48 @@ export function sessionCalendarDate(programStartDate: string, weekIndex: number,
   return format(addDays(start, offset), 'yyyy-MM-dd')
 }
 
-export function scoreMatch(workout: ImportedWorkout, sessionModality: ModalityId, sessionDuration: number): number {
+type ActivityGate = { activity: string[]; equipment: string[] }
+
+/** The rules' activity gate a workout falls under (cycling, rowing, swimming). */
+function activityGate(workout: Pick<ImportedWorkout, 'activityType'>): ActivityGate | null {
+  const activity = (workout.activityType ?? '').toLowerCase()
+  if (!activity) return null
+  for (const gate of Object.values(rules.activityGates) as ActivityGate[]) {
+    if (gate.activity.some((k) => activity.includes(k))) return gate
+  }
+  return null
+}
+
+/** Every piece of equipment the session's exercises need. */
+export function sessionEquipment(session: { exercises?: { exercise?: { equipment?: string[] } }[] }): string[] {
+  const out = new Set<string>()
+  for (const ea of session.exercises ?? []) {
+    for (const e of ea?.exercise?.equipment ?? []) out.add(e)
+  }
+  return [...out].sort()
+}
+
+/**
+ * 0-5. A cycling, rowing or swimming workout scores at most one below the auto
+ * threshold against a session none of whose exercises needs a bike, a rower or
+ * a pool (`rules.activityGates`) — sharing a modality with a kettlebell session
+ * does not make a bike ride that session.
+ */
+export function scoreMatch(
+  workout: ImportedWorkout,
+  sessionModality: ModalityId,
+  sessionDuration: number,
+  equipment: readonly string[] = [],
+): number {
+  const score = baseScore(workout, sessionModality, sessionDuration)
+  const gate = activityGate(workout)
+  if (gate && !gate.equipment.some((e) => equipment.includes(e))) {
+    return Math.min(score, rules.autoThreshold - 1)
+  }
+  return score
+}
+
+function baseScore(workout: ImportedWorkout, sessionModality: ModalityId, sessionDuration: number): number {
   let score = 0
 
   if (workout.inferredModalityId) {
@@ -86,7 +127,7 @@ export function autoMatchWorkouts(
   const existingIds = new Set(existingMatches.map((m) => m.importedWorkoutId))
 
   // Build date → { sessionKey, modality, duration }[] index
-  const dateIndex: Map<string, { sessionKey: string; modality: ModalityId; duration: number }[]> =
+  const dateIndex: Map<string, { sessionKey: string; modality: ModalityId; duration: number; equipment: string[] }[]> =
     new Map()
 
   for (let weekIndex = 0; weekIndex < program.weeks.length; weekIndex++) {
@@ -100,6 +141,7 @@ export function autoMatchWorkouts(
           sessionKey,
           modality: session.modality,
           duration: session.archetype?.duration_estimate_minutes ?? rules.defaultSessionMinutes,
+          equipment: sessionEquipment(session),
         }
         const existing = dateIndex.get(calDate) ?? []
         existing.push(entry)
@@ -116,7 +158,7 @@ export function autoMatchWorkouts(
 
     if (candidates.length === 1) {
       const c = candidates[0]
-      const score = scoreMatch(workout, c.modality, c.duration)
+      const score = scoreMatch(workout, c.modality, c.duration, c.equipment)
       if (score >= rules.autoThreshold) {
         confirmed.push({
           importedWorkoutId: workout.id,
@@ -131,7 +173,7 @@ export function autoMatchWorkouts(
     // Score all candidates and pick best or surface for manual confirmation
     const scored = candidates.map((c) => ({
       ...c,
-      score: scoreMatch(workout, c.modality, c.duration),
+      score: scoreMatch(workout, c.modality, c.duration, c.equipment),
     }))
     const best = scored.reduce((a, b) => (a.score >= b.score ? a : b))
 

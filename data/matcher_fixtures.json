@@ -71,6 +71,38 @@
       "sessionModality": "aerobic_base",
       "sessionDuration": 60,
       "expectedScore": 4
+    },
+    {
+      "name": "a bike ride against a kettlebell session of the same modality is capped below auto",
+      "workout": { "activityType": "Cycling", "inferredModalityId": "aerobic_base", "durationMinutes": 20 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 40,
+      "sessionEquipment": ["kettlebell"],
+      "expectedScore": 3
+    },
+    {
+      "name": "a bike ride against a session with a bike exercise keeps its score",
+      "workout": { "activityType": "Cycling", "inferredModalityId": "aerobic_base", "durationMinutes": 20 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 40,
+      "sessionEquipment": ["bike"],
+      "expectedScore": 4
+    },
+    {
+      "name": "Strava's 'VirtualRide' is cycling too",
+      "workout": { "activityType": "VirtualRide", "inferredModalityId": "aerobic_base", "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "sessionEquipment": ["open_space"],
+      "expectedScore": 3
+    },
+    {
+      "name": "an ungated activity is unaffected by equipment",
+      "workout": { "activityType": "Running", "inferredModalityId": "aerobic_base", "durationMinutes": 60 },
+      "sessionModality": "aerobic_base",
+      "sessionDuration": 60,
+      "sessionEquipment": ["kettlebell"],
+      "expectedScore": 5
     }
   ],
 
@@ -310,6 +342,40 @@
         "confirmed": [{ "importedWorkoutId": "garmin-noarch", "sessionKey": "1-Monday-0" }],
         "suggested": []
       }
+    },
+    {
+      "name": "a bike ride on a kettlebell aerobic day is suggested, not auto-matched (production, 2026-10-14)",
+      "programStartDate": "2026-10-12",
+      "program": {
+        "weeks": [
+          { "week_number": 1, "schedule": { "Wednesday": [
+            { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 40 },
+              "exercises": [{ "exercise": { "id": "x", "equipment": ["kettlebell"] } }] }
+          ] } }
+        ]
+      },
+      "workouts": [
+        { "id": "garmin-ride", "date": "2026-10-14", "activityType": "Cycling", "inferredModalityId": "aerobic_base", "durationMinutes": 20 }
+      ],
+      "existingMatches": [],
+      "expected": { "confirmed": [], "suggested": [{ "importedWorkoutId": "garmin-ride", "sessionKey": "1-Wednesday-0", "score": 3 }] }
+    },
+    {
+      "name": "a bike ride on a bike day is auto-matched",
+      "programStartDate": "2026-10-12",
+      "program": {
+        "weeks": [
+          { "week_number": 1, "schedule": { "Wednesday": [
+            { "modality": "aerobic_base", "archetype": { "duration_estimate_minutes": 40 },
+              "exercises": [{ "exercise": { "id": "x", "equipment": ["bike"] } }] }
+          ] } }
+        ]
+      },
+      "workouts": [
+        { "id": "garmin-ride", "date": "2026-10-14", "activityType": "Cycling", "inferredModalityId": "aerobic_base", "durationMinutes": 20 }
+      ],
+      "existingMatches": [],
+      "expected": { "confirmed": [{ "importedWorkoutId": "garmin-ride", "sessionKey": "1-Wednesday-0" }], "suggested": [] }
     }
   ]
 }

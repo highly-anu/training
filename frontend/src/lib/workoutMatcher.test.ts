@@ -42,7 +42,8 @@ describe('scoreMatch — shared fixtures', () => {
       const score = scoreMatch(
         c.workout as unknown as ImportedWorkout,
         c.sessionModality as ModalityId,
-        c.sessionDuration
+        c.sessionDuration,
+        (c as { sessionEquipment?: string[] }).sessionEquipment ?? []
       )
       expect(score).toBe(c.expectedScore)
     })

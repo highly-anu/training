@@ -11,5 +11,11 @@
   "durationTiers": [[15, 2], [30, 1]],
   "defaultSessionMinutes": 60,
   "autoThreshold": 4,
-  "suggestThreshold": 2
+  "suggestThreshold": 2,
+  "_activityGates": "A workout whose activity type contains one of a gate's keywords (case-insensitive) cannot auto-match a session unless one of the session's exercises needs that gate's equipment; its score is capped one below autoThreshold, so it can still be suggested. Modality alone is not enough: a Wildman anti-glycolytic swing session is aerobic_base, and so is a bike ride.",
+  "activityGates": {
+    "cycling": { "activity": ["cycl", "bik", "ride", "spin"], "equipment": ["bike"] },
+    "rowing": { "activity": ["rowing", "rower", "indoor_row"], "equipment": ["rower"] },
+    "swimming": { "activity": ["swim"], "equipment": ["pool"] }
+  }
 }
