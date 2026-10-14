@@ -26,6 +26,13 @@ A training logic system that algorithmically generates periodized training progr
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
   falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
   runs as the same `local-dev-user`.
+- **Production serves on four threads in one process** (Dockerfile: gunicorn
+  `gthread --threads 4`, 256 MB machine). `src/db.get_conn()` is per thread;
+  `api._bound_send` fails a send that makes no progress for 30 s and `api._gzip`
+  compresses large JSON (never for a `ciqdev_` watch request). With the old single
+  sync worker, a phone that stopped reading mid-download of `/user/program` held
+  it until the 120 s kill, again and again overnight on 2026-10-12, and the
+  watch's morning sync queued behind it (`test_worker_stalls.py`).
 - **npm 11.4.2 cannot rebuild this lockfile's ideal tree** (`npm update`, `npm audit fix`
   and plain `npm install <pkg>` die with `Cannot read properties of null (reading 'edgesOut')`
   in arborist's peer-set loader). `npm ci`, `npm ls` and `npm audit` are fine. To change
@@ -595,7 +602,7 @@ another's row.
   `DATABASE_URL`, and indexing it alone would stop all auto-matching.
 - **`session_uid` is resolved in `health_store`, not in the matcher**, so all
   five match writers get it. Resolve it **before** opening a connection:
-  `get_conn()` hands out one process-global connection and a nested `with` on it
+  `get_conn()` hands out one connection per thread and a nested `with` on it
   returns nothing while swallowing the reason.
 - **`session_logs` is scoped to a version** (`migrations/006_session_log_scope.sql`):
   `log_key` is `COALESCE(session_uid, session_key)` and the primary key moved to

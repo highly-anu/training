@@ -7,13 +7,17 @@ from __future__ import annotations
 
 import os
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
-# Use psycopg2 for production Supabase connection
-_pg_conn = None
+# One connection per thread. gunicorn runs a pool of request threads
+# (gthread, see the Dockerfile) beside the Garmin drain thread and the async
+# parse threads; a single shared connection let one thread's `with conn:`
+# commit or roll back another's work, and it serialised every query.
+_local = threading.local()
 _pg_dsn: str = ''
 
 if DATABASE_URL:
@@ -22,40 +26,50 @@ if DATABASE_URL:
         import psycopg2.extras
         # Supabase pooler requires SSL
         _pg_dsn = DATABASE_URL if 'sslmode=' in DATABASE_URL else DATABASE_URL + ('&' if '?' in DATABASE_URL else '?') + 'sslmode=require'
-        _pg_conn = psycopg2.connect(_pg_dsn)
-        _pg_conn.autocommit = True
+        _local.conn = psycopg2.connect(_pg_dsn)
+        _local.conn.autocommit = True
         print("Connected to Supabase PostgreSQL")
     except Exception as e:
         print(f"Warning: Could not connect to PostgreSQL: {e}")
-        _pg_conn = None
+        _local.conn = None
 
 
 def _get_pg_conn():
-    """Return a live PostgreSQL connection, reconnecting if the link is broken."""
-    global _pg_conn
+    """This thread's live PostgreSQL connection, reconnecting if the link is broken."""
     if not _pg_dsn:
         return None
     import psycopg2
-    # Check if existing connection is still alive
-    if _pg_conn is not None:
+    conn = getattr(_local, 'conn', None)
+    if conn is not None:
         try:
-            _pg_conn.cursor().execute('SELECT 1')
-            return _pg_conn
+            conn.cursor().execute('SELECT 1')
+            return conn
         except Exception:
             try:
-                _pg_conn.close()
+                conn.close()
             except Exception:
                 pass
-            _pg_conn = None
-    # Reconnect
+            _local.conn = None
     try:
-        _pg_conn = psycopg2.connect(_pg_dsn)
-        _pg_conn.autocommit = True
-        return _pg_conn
+        conn = psycopg2.connect(_pg_dsn)
+        conn.autocommit = True
+        _local.conn = conn
+        return conn
     except Exception as e:
         print(f"Warning: Could not reconnect to PostgreSQL: {e}")
-        _pg_conn = None
+        _local.conn = None
         return None
+
+
+def close_conn():
+    """Close this thread's connection, if it has one."""
+    conn = getattr(_local, 'conn', None)
+    _local.conn = None
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 # Local dev fallback: JSON file storage
 _local_storage_dir = Path(__file__).parent.parent / 'data' / 'user_profiles'
@@ -72,13 +86,12 @@ def get_conn():
 def new_conn(autocommit: bool = False):
     """A connection of one's own, for work that needs a real transaction.
 
-    `get_conn()` hands out one process-global connection with
-    `autocommit = True`, and it is shared by everything — the Garmin drain
-    thread (src/garmin_worker.py) and the async parse threads (api.py) included.
-    Flipping autocommit off on that object to get a transaction would enrol
-    another thread's INSERT in ours, to be rolled back by our `except` or
-    committed early by our `commit()`. So callers that need atomicity take a
-    fresh connection instead and close it when they are done.
+    `get_conn()` hands out the thread's connection with `autocommit = True`,
+    and everything that runs on the thread shares it: flipping autocommit off
+    on it to get a transaction would enrol an unrelated INSERT made later on
+    the same thread, to be rolled back by our `except` or committed early by
+    our `commit()`. So callers that need atomicity take a fresh connection
+    instead and close it when they are done.
 
     Returns None when there is no database configured, so a caller in local-dev
     mode can degrade rather than raise.

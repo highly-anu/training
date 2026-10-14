@@ -555,7 +555,7 @@ def _log_session_uid(user_id: str, log: dict) -> str | None:
     """Which program version's session this log belongs to.
 
     Resolved outside any connection block — `get_conn()` hands out one
-    process-global connection and a nested `with` on it silently returns
+    connection per thread and a nested `with` on it silently returns
     nothing (see _session_uid_for).
     """
     given = log.get('sessionUid')
@@ -969,7 +969,7 @@ def _session_uid_for(user_id: str, workout_id: str, session_key: str,
     alone, exactly as before.
 
     Call this BEFORE opening a connection, never inside a `with get_conn()`
-    block. `get_conn()` hands out one process-global connection and a nested
+    block. `get_conn()` hands out one connection per thread and a nested
     `with` on it makes the inner query return nothing while swallowing the
     reason, so this quietly stored no uid at all the first time round.
     """
