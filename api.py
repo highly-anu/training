@@ -3342,15 +3342,7 @@ def health_recent_sessions():
     except Exception as exc:
         app.logger.warning('recent sessions: planned lookup failed: %s', exc)
         planned = {}
-    for log in logs:
-        row = planned.get(log.get('session_uid') or '')
-        if row:
-            log['planned_name'] = row.get('archetype_name')
-            log['planned_modality'] = row.get('modality')
-            log['planned_date'] = row.get('date')
-            log['program_version_id'] = row.get('program_version_id')
-            log['week_index'] = row.get('week_index')
-            log['day_name'] = row.get('day_name')
+    program_history.annotate_logs(logs, planned)
     return jsonify(logs)
 
 

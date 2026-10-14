@@ -35,7 +35,8 @@ def check(label: str, condition: bool, detail: str = '') -> None:
 def test_score_cases() -> None:
     print('\nscore_match (shared fixtures)')
     for case in FIXTURES['scoreCases']:
-        got = wm.score_match(case['workout'], case['sessionModality'], case['sessionDuration'])
+        got = wm.score_match(case['workout'], case['sessionModality'], case['sessionDuration'],
+                             case.get('sessionEquipment') or ())
         check(case['name'], got == case['expectedScore'],
               f"expected {case['expectedScore']}, got {got}")
 

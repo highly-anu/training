@@ -766,6 +766,42 @@ def test_rows_from_before_the_program_stay_off_it() -> None:
           str(wk2_row.get('matched_workout_id')))
 
 
+def test_a_bike_ride_is_not_an_old_blocks_run() -> None:
+    """The activity gate on the import path, for a workout inside a replaced
+    block: planned_sessions carries no exercises, so the old session's
+    equipment comes from its version snapshot. On 2026-10-14 a 20-minute ride
+    auto-matched a kettlebell swing session because both were aerobic_base."""
+    print('\nthe activity gate across a replaced program')
+    reset()
+    import json as _json
+    ph.record_version(U, PROG_A, source='heal', source_revision='rev-1')
+    vid_a = ph.version_id(U, PROG_A)
+    with conn.cursor() as c:     # pin A so the regenerate cannot squash it
+        c.execute("INSERT INTO session_logs (session_key, user_id, session_uid, "
+                  "completed_at) VALUES ('1-Monday-0', %s, %s, NOW())",
+                  (U, ph.session_uid(vid_a, 0, 'Monday', 0)))
+    ph.record_version(U, PROG_B, source='put', source_revision='rev-2')
+    with conn.cursor() as c:
+        c.execute('INSERT INTO user_programs (user_id, program_data) VALUES (%s, %s) '
+                  'ON CONFLICT (user_id) DO UPDATE SET program_data = EXCLUDED.program_data',
+                  (U, _json.dumps(PROG_B)))
+        when = START_A + timedelta(days=14)      # week 3 Monday of A: a 60-min z2 run
+        c.execute("""INSERT INTO workouts (id, user_id, source, date, start_time, end_time,
+                       duration_minutes, activity_type, inferred_modality_id)
+                     VALUES ('garmin-ride', %s, 'garmin', %s, %s, %s, 60, 'Cycling', 'aerobic_base'),
+                            ('garmin-run', %s, 'garmin', %s, %s, %s, 60, 'Running', 'aerobic_base')""",
+                  (U, when, when, when, U, when, when, when))
+    ride = {'id': 'garmin-ride', 'date': when.isoformat(), 'activityType': 'Cycling',
+            'inferredModalityId': 'aerobic_base', 'durationMinutes': 60}
+    run = {**ride, 'id': 'garmin-run', 'activityType': 'Running'}
+
+    out = wm.match_and_store(U, [ride])
+    check('the ride is not auto-matched to the run', out['confirmed'] == 0, str(out))
+    check('...it is suggested instead', out['suggested'] == 1, str(out))
+    out = wm.match_and_store(U, [run])
+    check('a run on the same day still auto-matches', out['confirmed'] == 1, str(out))
+
+
 if __name__ == '__main__':
     test_bootstrap()
     test_idempotent_under_a_heal_storm()
@@ -784,6 +820,7 @@ if __name__ == '__main__':
     test_logs_no_longer_merge_across_programs()
     test_progression_sees_finished_blocks()
     test_rows_from_before_the_program_stay_off_it()
+    test_a_bike_ride_is_not_an_old_blocks_run()
 
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))
