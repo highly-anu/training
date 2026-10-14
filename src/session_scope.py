@@ -93,7 +93,7 @@ def log_in_active(uid: str | None, key: str | None, completed_at,
     done = _as_date(completed_at)
     if scoped and done is None:
         return True                       # this program's sets, not yet completed
-    when = planned_date(planned, key)
+    when = (planned.get(uid) if scoped else None) or planned_date(planned, key)
     if when is None or done is None:
         return False
     # Stamped by key alone (program_history.active_session_uid), so a stale

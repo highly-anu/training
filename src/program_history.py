@@ -921,13 +921,15 @@ def active_version_id(user_id: str) -> str | None:
 
 
 def active_plan_dates(user_id: str) -> tuple[str | None, dict]:
-    """(active version id, {legacy_key: planned date}) — what session_scope
-    checks a row's dates against. A spliced program can carry one legacy key
-    twice; such a key is left out rather than guessed."""
+    """(active version id, {legacy_key or session_uid: planned date}) — what
+    session_scope checks a row's dates against. A spliced program can carry
+    one legacy key twice; such a key is left out rather than guessed, and a
+    row scoped to it is dated by its uid instead (uids contain ':', keys never
+    do, so one dict holds both)."""
     vid = active_version_id(user_id)
     if not vid:
         return None, {}
-    rows = _query('SELECT legacy_key, date FROM planned_sessions '
+    rows = _query('SELECT legacy_key, session_uid, date FROM planned_sessions '
                   'WHERE user_id = %s AND program_version_id = %s', (user_id, vid))
     dates: dict = {}
     dup: set = set()
@@ -938,6 +940,8 @@ def active_plan_dates(user_id: str) -> tuple[str | None, dict]:
         dates[k] = r['date']
     for k in dup:
         dates.pop(k, None)
+    for r in rows:
+        dates[r['session_uid']] = r['date']
     return vid, dates
 
 

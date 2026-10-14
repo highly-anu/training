@@ -90,6 +90,17 @@ def test_stale_client() -> None:
           not sc.log_in_active(f'{OLD}:w5-Monday-0', '6-Monday-0', '2026-10-14', VID, PLANNED))
 
 
+def test_a_spliced_program() -> None:
+    print('\na week number that appears twice')
+    # active_plan_dates leaves a duplicated key out and dates each uid instead.
+    planned = {k: v for k, v in PLANNED.items() if k != '3-Monday-0'}
+    planned[f'{VID}:w2-Monday-0'] = date(2026, 10, 26)
+    check('a scoped log on a duplicated key is dated by its uid',
+          sc.log_in_active(f'{VID}:w2-Monday-0', '3-Monday-0', '2026-10-26', VID, planned))
+    check('an unscoped one cannot be placed',
+          not sc.log_in_active(None, '3-Monday-0', '2026-10-26', VID, planned))
+
+
 def test_keys_and_fallbacks() -> None:
     print('\nkey shapes and no history')
     check('a day-level key resolves when the day has one session',
@@ -106,6 +117,7 @@ if __name__ == '__main__':
     test_the_production_rows()
     test_this_programs_rows()
     test_stale_client()
+    test_a_spliced_program()
     test_keys_and_fallbacks()
     if _failures:
         print(f'\n{len(_failures)} failed')
