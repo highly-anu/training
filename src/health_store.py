@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import psycopg2.extras as _pg_extras
 
+from src import session_scope
+
 
 def init_db() -> None:
     """No-op: tables are managed in Supabase. Kept for call-site compatibility."""
@@ -551,6 +553,17 @@ def _row_to_workout(row, summary_only: bool = False) -> dict:
 
 # ── Session logs ──────────────────────────────────────────────────────────────
 
+def _active_scope(user_id: str) -> tuple[str | None, dict]:
+    """The active version and its planned dates, for session_scope. Resolved
+    outside any connection block (see _session_uid_for); (None, {}) without
+    history, which session_scope reads as "keep every row, as before"."""
+    try:
+        from src import program_history
+        return program_history.active_plan_dates(user_id)
+    except Exception:
+        return None, {}
+
+
 def _log_session_uid(user_id: str, log: dict) -> str | None:
     """Which program version's session this log belongs to.
 
@@ -649,6 +662,7 @@ def clear_session_completion(user_id: str, session_key: str) -> None:
 def get_recent_session_logs(user_id: str) -> list[dict]:
     """Return all session logs as a list with snake_case keys (matches iOS SessionLogEntry model)."""
     from src.db import get_conn
+    active_vid, planned = _active_scope(user_id)
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
@@ -660,11 +674,18 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
                        FROM session_logs sl
                        LEFT JOIN workout_matches wm
                            ON wm.user_id = sl.user_id
+                          AND wm.match_confidence <> 'rejected'
+                          -- By uid when both have one; by key only when neither
+                          -- does. A scoped log joined to an unscoped match by
+                          -- key picked up another program's workout.
                           AND CASE
                                 WHEN sl.session_uid IS NOT NULL
                                  AND wm.session_uid IS NOT NULL
                                 THEN wm.session_uid = sl.session_uid
-                                ELSE wm.session_key = sl.session_key
+                                WHEN sl.session_uid IS NULL
+                                 AND wm.session_uid IS NULL
+                                THEN wm.session_key = sl.session_key
+                                ELSE FALSE
                               END
                        WHERE sl.user_id = %s
                        ORDER BY sl.completed_at DESC NULLS LAST''',
@@ -685,6 +706,11 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
                 # The sets and outcomes, so a phone can show and extend what
                 # was logged (the web reads them from the snapshot).
                 'exercises':          _exercises_dict(row.get('exercises')),
+                # Whether the log is the active program's (session_scope); the
+                # phone builds its completion marks from these only.
+                'in_current_program': session_scope.log_in_active(
+                    row.get('session_uid'), row['session_key'], row['completed_at'],
+                    active_vid, planned),
             }
             for row in rows
         ]
@@ -709,25 +735,24 @@ def get_session_logs(user_id: str) -> dict:
     (migrations/006_session_log_scope.sql), the same '3-Monday-0' can exist for
     this program and for one the athlete has since replaced. Callers all want
     "what did I do in *this* session", so when a key has more than one row the
-    one belonging to the active plan wins, an unscoped legacy row is the
-    fallback, and a row that provably belongs to a different program is not
-    offered at all — showing it is how a brand-new session used to render as
-    already complete with the previous block's numbers in it.
+    one belonging to the active plan wins, and a row whose uid or dates do not
+    fit the active plan (session_scope.log_in_active) is not offered at all —
+    showing it is how a brand-new session used to render as already complete
+    with the previous block's numbers in it, and how a March log marked an
+    October program's week 6 done.
     """
     from src.db import get_conn
     # Resolved before the connection opens — see _session_uid_for.
-    try:
-        from src import program_history
-        active_vid = program_history.active_version_id(user_id)
-    except Exception:
-        active_vid = None
+    active_vid, planned = _active_scope(user_id)
 
-    def rank(uid: str | None) -> int:
-        if not uid or not active_vid:
-            # Either the log predates history, or we cannot tell which plan is
-            # current. Assume it is ours rather than hiding real data.
-            return 1
-        return 2 if uid.startswith(active_vid + ':') else 0
+    def rank(row: dict) -> int:
+        # A key is not enough: the row's dates must fit the session it names
+        # in the active program (src/session_scope.py).
+        if not session_scope.log_in_active(row.get('session_uid'), row['session_key'],
+                                           row.get('completed_at'), active_vid, planned):
+            return 0
+        uid = row.get('session_uid')
+        return 2 if uid and active_vid and uid.startswith(active_vid + ':') else 1
 
     try:
         with get_conn() as conn:
@@ -762,9 +787,9 @@ def get_session_logs(user_id: str) -> dict:
                 entry['sessionUid'] = row['session_uid']
 
             key = row['session_key']
-            row_rank = rank(row.get('session_uid'))
+            row_rank = rank(row)
             if row_rank == 0:
-                continue                  # provably another program's session
+                continue                  # another program's session, or undatable
             if key in ranks and ranks[key] >= row_rank:
                 continue
             ranks[key] = row_rank
@@ -1043,22 +1068,38 @@ def upsert_match(user_id: str, match: dict) -> None:
 
 
 def get_matches(user_id: str) -> list[dict]:
+    """Every stored match, old programs' included — the matcher and the
+    history readers need them all. `inCurrentProgram` says whether the match
+    belongs to the active program by its dates (session_scope.match_in_active);
+    a calendar shows only those, so a March workout keyed '6-Monday-0' never
+    links an October program's week 6."""
     from src.db import get_conn
+    # Resolved before the connection opens — see _session_uid_for.
+    active_vid, planned = _active_scope(user_id)
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute('SELECT * FROM workout_matches WHERE user_id = %s', (user_id,))
                 rows = cur.fetchall()
-        return [
-            {
+                ids = [r['imported_workout_id'] for r in rows]
+                dates = {}
+                if ids:
+                    cur.execute('SELECT id, date FROM workouts '
+                                'WHERE user_id = %s AND id = ANY(%s)', (user_id, ids))
+                    dates = {r['id']: r['date'] for r in cur.fetchall()}
+        out = []
+        for row in rows:
+            match = {
                 'importedWorkoutId': row['imported_workout_id'],
                 'sessionKey':        row['session_key'],
                 'sessionUid':        row.get('session_uid'),
                 'matchConfidence':   row['match_confidence'],
                 'matchedAt':         str(row['matched_at']),
             }
-            for row in rows
-        ]
+            match['inCurrentProgram'] = session_scope.match_in_active(
+                match, dates.get(row['imported_workout_id']), active_vid, planned)
+            out.append(match)
+        return out
     except Exception:
         return []
 

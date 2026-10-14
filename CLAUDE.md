@@ -758,6 +758,7 @@ Run these after touching program history, the matcher or the session-log path:
 
 ```bash
 .venv/bin/python test_program_history.py      # hashing, flattening, intervals (no DB)
+.venv/bin/python test_session_scope.py        # a match or log belongs to the active program by its dates (no DB)
 .venv/bin/python test_workout_matcher.py      # the cross-language parity contract
 ```
 

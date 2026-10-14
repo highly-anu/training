@@ -79,6 +79,18 @@ describe('findSessionMatch', () => {
       .toBe(legacy)
   })
 
+  // The production case: a March workout keyed '6-Monday-0', no uid, showed as
+  // linked on an October program's week 6. The server's date check rejects it.
+  it('drops a match the server placed outside the current program', () => {
+    const march = match({ sessionKey: '6-Monday-0', inCurrentProgram: false })
+    expect(findSessionMatch([march], sessionKeyVariants('6-Monday', 0), CURRENT))
+      .toBeUndefined()
+    expect(hasSessionMatch([march], sessionKeyVariants('6-Monday', 0), null)).toBe(false)
+    const today = match({ sessionKey: '6-Monday-0', inCurrentProgram: true })
+    expect(findSessionMatch([march, today], sessionKeyVariants('6-Monday', 0), CURRENT))
+      .toBe(today)
+  })
+
   it('keeps a scoped match when the current version is unknown', () => {
     const scoped = match({ sessionKey: '3-Monday-0', sessionUid: `${OLD}:w2-Monday-0` })
     expect(findSessionMatch([scoped], sessionKeyVariants('3-Monday', 0), null)).toBe(scoped)

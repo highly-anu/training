@@ -153,7 +153,7 @@ struct LogSessionsTab: View {
     @Binding var selectedSession: AppState.LocatedSession?
 
     private var rows: [LogSessionRow] {
-        LogSessions.rows(logs: Array(appState.sessionLogs.values),
+        LogSessions.rows(logs: Array(appState.sessionLogs.values) + appState.earlierSessionLogs,
                          locate: { appState.locateSession(key: $0) },
                          exerciseNames: appState.exerciseCatalog.mapValues(\.name),
                          currentProgramStart: LogSessions.parseServerDate(appState.serverProgram?.programStartDate))

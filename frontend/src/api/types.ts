@@ -908,6 +908,13 @@ export interface WorkoutMatch {
   sessionUid?: string | null
   matchConfidence: MatchConfidence
   matchedAt: string
+  /**
+   * The server's answer to "is this the active program's match", by dates as
+   * well as uid (src/session_scope.py): false for another version's uid, and
+   * for an unscoped match whose workout does not fall on the active program's
+   * date for its key. Absent on a match made in this browser and not reloaded.
+   */
+  inCurrentProgram?: boolean
 }
 
 /** One activation of one program: what was in force, and when. */
