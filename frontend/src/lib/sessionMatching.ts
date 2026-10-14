@@ -14,9 +14,11 @@ import type { WorkoutMatch } from '@/api/types'
  * When a match has one and it belongs to another version, it is not a match for
  * this session and must be rejected outright.
  *
- * A match with no uid is kept on the legacy key path: it predates program
- * history, or nothing could resolve it without guessing. Silently dropping those
- * would hide real data, so they behave exactly as they always did.
+ * A match with no uid used to be kept on the key alone, which put a March
+ * workout keyed '6-Monday-0' on an October program's week 6. The server now
+ * checks its dates against the active program and says so in
+ * `inCurrentProgram`; a match it rejects never belongs. One with no verdict (made
+ * here, not yet reloaded, or from an older server) keeps the key path.
  */
 
 /** Both spellings of a session key in circulation: indexed, and day-level. */
@@ -25,7 +27,8 @@ export function sessionKeyVariants(dayKey: string, sessionIndex?: number): strin
 }
 
 function belongsToVersion(match: WorkoutMatch, programVersionId?: string | null): boolean {
-  if (!match.sessionUid) return true          // predates history — trust the key
+  if (match.inCurrentProgram === false) return false  // the server checked the dates
+  if (!match.sessionUid) return true          // no verdict — trust the key
   if (!programVersionId) return true          // we do not know; do not hide data
   return match.sessionUid.startsWith(`${programVersionId}:`)
 }

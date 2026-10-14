@@ -16,7 +16,8 @@ import os
 import sys
 from datetime import date, timedelta
 
-TEST_DSN = 'postgresql://localhost:5432/training_test?sslmode=disable'
+TEST_DSN = os.environ.get('TEST_DATABASE_URL',
+                          'postgresql://localhost:5432/training_test?sslmode=disable')
 import psycopg2
 try:
     psycopg2.connect(TEST_DSN).close()
@@ -595,7 +596,10 @@ def test_logs_no_longer_merge_across_programs() -> None:
     health_store.upsert_session_log(U, {
         'sessionKey': '3-Monday-0',
         'exercises': {'squat_day_ex': [{'weightKg': 100, 'reps': 5}]},
-        'notes': 'the new block', 'completedAt': '2026-06-01T10:00:00+00:00',
+        # On the session's own day: a log completed before its week is not
+        # the active program's (src/session_scope.py).
+        'notes': 'the new block',
+        'completedAt': (START_A + timedelta(days=14)).isoformat() + 'T10:00:00+00:00',
     })
 
     with conn.cursor() as c:
@@ -703,6 +707,65 @@ def test_progression_sees_finished_blocks() -> None:
               pt0.get('program_version_id') == vid_a, str(pt0.get('program_version_id')))
 
 
+def test_rows_from_before_the_program_stay_off_it() -> None:
+    """The production case of 2026-10-14. A program in its first week showed
+    week 6 completed and linked, from a March workout and an April log keyed
+    '6-Monday-0' with no session_uid — rows from before program history, which
+    every reader assumed were the current program's on their key alone."""
+    print('\nrows from before the program stay off it')
+    reset()
+    ph.record_version(U, PROG_B, source='put')
+    vid = ph.version_id(U, PROG_B)
+    old_day = START_A - timedelta(days=200)
+    insert_workout('fit_file-march', old_day, 'aerobic_base', 60)
+    with conn.cursor() as c:
+        # Exactly what production holds: no uid on either.
+        c.execute("INSERT INTO workout_matches (imported_workout_id, user_id, session_key, "
+                  "match_confidence, matched_at) VALUES (%s, %s, '6-Monday-0', 'auto', %s)",
+                  ('fit_file-march', U, old_day))
+        c.execute("INSERT INTO session_logs (session_key, user_id, completed_at, source) "
+                  "VALUES ('6-Monday-0', %s, %s, 'manual')", (U, old_day))
+        c.execute("INSERT INTO session_logs (session_key, user_id, source) "
+                  "VALUES ('5-Monday-0', %s, 'fit_file')", (U,))
+
+    # This program's own week 2 Monday, matched and logged the normal way.
+    wk2 = START_A + timedelta(days=7)
+    insert_workout('fit_file-wk2', wk2, 'max_strength', 60)
+    health_store.upsert_match(U, {'importedWorkoutId': 'fit_file-wk2',
+                                  'sessionKey': '2-Monday-0', 'matchConfidence': 'auto'})
+    health_store.upsert_session_log(U, {'sessionKey': '2-Monday-0', 'exercises': {},
+                                        'completedAt': wk2.isoformat() + 'T18:00:00+00:00'})
+    # A stale client logging "week 7 Monday" today: stamped with this
+    # version's uid by key alone, two weeks before week 7 begins.
+    health_store.upsert_session_log(U, {'sessionKey': '7-Monday-0', 'exercises': {},
+                                        'completedAt': TODAY.isoformat() + 'T07:00:00+00:00'})
+
+    logs = health_store.get_session_logs(U)
+    check("this program's week 2 log is offered", '2-Monday-0' in logs, str(sorted(logs)))
+    check('the April log does not complete week 6', '6-Monday-0' not in logs, str(sorted(logs)))
+    check('an undated unscoped log is not offered', '5-Monday-0' not in logs)
+    check('a log completed before its week is not offered', '7-Monday-0' not in logs)
+
+    by_wid = {m['importedWorkoutId']: m for m in health_store.get_matches(U)}
+    check('the March match is still returned (history needs it)', 'fit_file-march' in by_wid)
+    check('...flagged outside the current program',
+          by_wid.get('fit_file-march', {}).get('inCurrentProgram') is False,
+          str(by_wid.get('fit_file-march')))
+    check("this program's match is flagged inside it",
+          by_wid.get('fit_file-wk2', {}).get('inCurrentProgram') is True
+          and (by_wid['fit_file-wk2'].get('sessionUid') or '').startswith(vid + ':'),
+          str(by_wid.get('fit_file-wk2')))
+
+    recent = {(r['session_key'], r['session_uid']): r for r in health_store.get_recent_session_logs(U)}
+    flags = {k[0]: r['in_current_program'] for k, r in recent.items()}
+    check('the phone gets the same verdicts',
+          flags.get('2-Monday-0') is True and flags.get('6-Monday-0') is False
+          and flags.get('7-Monday-0') is False, str(flags))
+    wk2_row = next((r for k, r in recent.items() if k[0] == '2-Monday-0'), {})
+    check("and week 2's log links its own workout", wk2_row.get('matched_workout_id') == 'fit_file-wk2',
+          str(wk2_row.get('matched_workout_id')))
+
+
 if __name__ == '__main__':
     test_bootstrap()
     test_idempotent_under_a_heal_storm()
@@ -720,6 +783,7 @@ if __name__ == '__main__':
     test_session_log_timeline_column_is_added_on_demand()
     test_logs_no_longer_merge_across_programs()
     test_progression_sees_finished_blocks()
+    test_rows_from_before_the_program_stay_off_it()
 
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))

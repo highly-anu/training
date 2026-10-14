@@ -373,12 +373,19 @@ struct SessionLogEntry: Codable, Identifiable {
     let programVersionId: String?
     let weekIndex: Int?
     let dayName: String?
+    /// The server's verdict on whether this log is the active program's, by
+    /// its dates as well as its uid (`src/session_scope.py`). `false` for a
+    /// log of an earlier program whose key happens to exist in this one — a
+    /// March log keyed "6-Monday-0" used to mark an October program's week 6
+    /// done. `nil` from an older server or for a log made on the phone.
+    let inCurrentProgram: Bool?
 
     init(sessionKey: String, completedAt: String?, source: String?, notes: String?,
          fatigueRating: Int?, avgHR: Int?, peakHR: Int?, matchedWorkoutId: String?,
          exercises: [String: ExercisePerformanceLog] = [:],
          plannedName: String? = nil, plannedModality: String? = nil, plannedDate: String? = nil,
-         programVersionId: String? = nil, weekIndex: Int? = nil, dayName: String? = nil) {
+         programVersionId: String? = nil, weekIndex: Int? = nil, dayName: String? = nil,
+         inCurrentProgram: Bool? = nil) {
         self.sessionKey = sessionKey
         self.completedAt = completedAt
         self.source = source
@@ -394,6 +401,7 @@ struct SessionLogEntry: Codable, Identifiable {
         self.programVersionId = programVersionId
         self.weekIndex = weekIndex
         self.dayName = dayName
+        self.inCurrentProgram = inCurrentProgram
     }
 
     enum CodingKeys: String, CodingKey {
@@ -410,6 +418,7 @@ struct SessionLogEntry: Codable, Identifiable {
         case programVersionId = "program_version_id"
         case weekIndex = "week_index"
         case dayName = "day_name"
+        case inCurrentProgram = "in_current_program"
     }
 
     init(from decoder: Decoder) throws {
@@ -430,6 +439,7 @@ struct SessionLogEntry: Codable, Identifiable {
         programVersionId = try? c.decodeIfPresent(String.self, forKey: .programVersionId)
         weekIndex = try? c.decodeIfPresent(Int.self, forKey: .weekIndex)
         dayName = try? c.decodeIfPresent(String.self, forKey: .dayName)
+        inCurrentProgram = try? c.decodeIfPresent(Bool.self, forKey: .inCurrentProgram)
     }
 }
 

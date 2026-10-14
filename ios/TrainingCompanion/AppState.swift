@@ -37,7 +37,13 @@ final class AppState: ObservableObject {
 
     // MARK: - Session Logs (completion tracking)
 
+    /// The active program's logs by session key — every completion mark and
+    /// every logged set on the phone reads this. Only logs the server places in
+    /// the active program (`inCurrentProgram`), because a key like "6-Monday-0"
+    /// exists in every program the athlete has had.
     @Published var sessionLogs: [String: SessionLogEntry] = [:]
+    /// Earlier programs' logs, for Log ▸ Sessions only.
+    @Published var earlierSessionLogs: [SessionLogEntry] = []
 
     // MARK: - FIT File Import
 
@@ -360,7 +366,9 @@ final class AppState: ObservableObject {
         guard let api else { return }
         do {
             let logs = try await api.fetchRecentSessionLogs()
-            sessionLogs = Dictionary(logs.map { ($0.sessionKey, $0) }, uniquingKeysWith: { _, last in last })
+            let split = SessionLogScope.split(logs)
+            sessionLogs = split.current
+            earlierSessionLogs = split.earlier
             rescheduleNotifications()   // a session completed elsewhere cancels its reminder
         } catch {}
     }

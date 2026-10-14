@@ -3078,10 +3078,11 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
 def _today_match_sets(matches: list[dict]) -> tuple[set, set]:
     """(session uids, legacy keys) of the athlete's live matches. A match that
     carries a uid is known only by it, so another version's '3-Friday-0' never
-    marks this version's session done."""
+    marks this version's session done, and an unscoped match whose workout
+    does not fall on this program's date for its key is not live either."""
     uids, keys = set(), set()
     for m in matches:
-        if m.get('matchConfidence') == 'rejected':
+        if m.get('matchConfidence') == 'rejected' or m.get('inCurrentProgram') is False:
             continue
         if m.get('sessionUid'):
             uids.add(m['sessionUid'])

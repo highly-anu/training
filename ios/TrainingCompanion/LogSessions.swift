@@ -5,6 +5,8 @@ import Foundation
 /// and a lookup into the current program, so a test can pin the order and
 /// the wording without a view.
 struct LogSessionRow: Identifiable, Equatable {
+    /// Unique across programs: one key can be logged in several of them.
+    let id: String
     let key: String
     let title: String
     let subtitle: String
@@ -14,7 +16,6 @@ struct LogSessionRow: Identifiable, Equatable {
     let completedAt: Date?
     /// Whether the session is in the current program and can be opened.
     let isLocatable: Bool
-    var id: String { key }
 }
 
 enum LogSessions {
@@ -59,6 +60,7 @@ enum LogSessions {
             guard isComplete || !logged.isEmpty else { return nil }
             let plannedDay = log.plannedDate.flatMap(parseServerDate)
             let precedesCurrent: Bool = {
+                if log.inCurrentProgram == false { return true }   // the server checked its dates
                 guard let plannedDay, let currentProgramStart else { return false }
                 return plannedDay < currentProgramStart
             }()
@@ -86,7 +88,7 @@ enum LogSessions {
             }
             if let day = located?.dayName {
                 parts.append("week \(located!.weekIndex + 1) · \(day)")
-            } else if log.plannedName != nil || log.plannedModality != nil {
+            } else if log.plannedName != nil || log.plannedModality != nil || log.inCurrentProgram == false {
                 parts.append("earlier program")
                 if let week = log.weekIndex, let day = log.dayName { parts.append("week \(week + 1) · \(day)") }
             }
@@ -100,16 +102,38 @@ enum LogSessions {
                     ?? id.replacingOccurrences(of: "_", with: " ").capitalized
                 return "\(name) — \(summary)"
             }
-            return LogSessionRow(key: log.sessionKey, title: title, subtitle: parts.joined(separator: " · "),
+            return LogSessionRow(id: [log.sessionKey, log.programVersionId ?? "", log.completedAt ?? ""].joined(separator: "|"),
+                                 key: log.sessionKey, title: title, subtitle: parts.joined(separator: " · "),
                                  lines: lines, isComplete: isComplete, completedAt: date, isLocatable: located != nil)
         }
         return built.sorted { a, b in
             switch (a.completedAt, b.completedAt) {
             case let (x?, y?): return x > y
-            case (nil, nil): return a.key < b.key
+            case (nil, nil): return a.id < b.id
             case (nil, _): return false
             case (_, nil): return true
             }
         }
+    }
+}
+
+/// Which of the server's session logs are the active program's.
+enum SessionLogScope {
+    /// `current` keyed by session key, for completion marks and logged sets;
+    /// `earlier` everything the server placed in another program. A log with
+    /// no verdict (an older server) stays current, as it always was. When a
+    /// key still has two current rows the one completed most recently wins —
+    /// the server lists them newest first.
+    static func split(_ logs: [SessionLogEntry]) -> (current: [String: SessionLogEntry], earlier: [SessionLogEntry]) {
+        var current: [String: SessionLogEntry] = [:]
+        var earlier: [SessionLogEntry] = []
+        for log in logs {
+            if log.inCurrentProgram == false {
+                earlier.append(log)
+            } else if current[log.sessionKey] == nil {
+                current[log.sessionKey] = log
+            }
+        }
+        return (current, earlier)
     }
 }
