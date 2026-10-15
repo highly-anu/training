@@ -122,7 +122,7 @@ function SessionCard({ session, onDate, complete, armed, onPick, onOpen }: {
   onOpen: () => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `s|${onDate}|${session.key}`, data: { session } })
-  const colors = MODALITY_COLORS[session.session.modality]
+  const colors = MODALITY_COLORS[session.modality]
   return (
     <div
       ref={setNodeRef}
@@ -143,7 +143,7 @@ function SessionCard({ session, onDate, complete, armed, onPick, onOpen }: {
           <p className="text-sm font-medium truncate">{session.name}</p>
           <p className="text-[11px] text-muted-foreground truncate">
             {session.date !== onDate && <span className="font-medium text-foreground/70">{shortDay(session.date)} · </span>}
-            Wk {session.weekNumber} · {colors?.label ?? session.session.modality} · ~{session.durationMinutes} min
+            Wk {session.weekNumber} · {colors?.label ?? session.modality} · ~{session.durationMinutes} min
           </p>
         </div>
         {complete && <CheckCircle2 className={cn('size-3.5 shrink-0', COMPLETION.text)} aria-label="Logged complete" />}
@@ -193,12 +193,14 @@ function Connector({ kind, onAction, onDismiss, label }: {
 
 // ── Day card ───────────────────────────────────────────────────────────────────
 
-function DayCard({ day, armed, selectedId, draggingId, completeKeys, onSelect, onPick, onLink, onUnlink, onDismiss, onOpenWorkout, onOpenSession }: {
+function DayCard({ day, programLabel, armed, selectedId, draggingId, isComplete, onSelect, onPick, onLink, onUnlink, onDismiss, onOpenWorkout, onOpenSession }: {
   day: LinkingDay
+  /** The earlier program's name, on a day that belongs to one. */
+  programLabel?: string
   armed: boolean
   selectedId: string | null
   draggingId: string | null
-  completeKeys: Set<string>
+  isComplete: (s: LinkSession) => boolean
   onSelect: (w: ImportedWorkout) => void
   onPick: (s: LinkSession) => void
   onLink: (w: ImportedWorkout, s: LinkSession) => void
@@ -213,7 +215,7 @@ function DayCard({ day, armed, selectedId, draggingId, completeKeys, onSelect, o
     onSelect: () => onSelect(w), onOpen: () => onOpenWorkout(w),
   })
   const sessionProps = (s: LinkSession) => ({
-    session: s, onDate: day.date, complete: completeKeys.has(s.key), armed,
+    session: s, onDate: day.date, complete: isComplete(s), armed,
     onPick: () => onPick(s), onOpen: () => onOpenSession(s),
   })
   const rest = Math.max(day.workouts.length, day.sessions.length)
@@ -231,6 +233,11 @@ function DayCard({ day, armed, selectedId, draggingId, completeKeys, onSelect, o
     >
       <header className="flex items-center gap-2">
         <h3 className="text-sm font-semibold">{dayLabel(day.date)}</h3>
+        {day.historical && (
+          <span className="text-[10px] rounded border border-border px-1.5 py-px text-muted-foreground truncate">
+            {programLabel ? `Earlier program · ${programLabel}` : 'Earlier program'}
+          </span>
+        )}
         {day.needsAttention && (
           <span className="text-[10px] rounded border border-amber-500/40 px-1.5 py-px text-amber-700 dark:text-amber-300">to link</span>
         )}
@@ -289,9 +296,11 @@ function DayCard({ day, armed, selectedId, draggingId, completeKeys, onSelect, o
 
 // ── Tab ────────────────────────────────────────────────────────────────────────
 
-export function LinkingTab({ days, hasProgram, onImport }: {
+export function LinkingTab({ days, hasProgram, programLabels = {}, onImport }: {
   days: LinkingDay[]
   hasProgram: boolean
+  /** Program version id → its name, for earlier programs' days. */
+  programLabels?: Record<string, string>
   onImport: () => void
 }) {
   const navigate = useNavigate()
@@ -324,11 +333,18 @@ export function LinkingTab({ days, hasProgram, onImport }: {
   // A day with an unpaired session stays in view as a drop target, unless the
   // session was logged complete by hand; the count is the workouts waiting.
   const openCount = days.filter((d) => d.needsAttention).length
-  const isOpen = (d: LinkingDay) => d.needsAttention || d.sessions.some((s) => !completeKeys.has(s.key))
+  // An earlier program's unpaired sessions do not hold a day in view: months
+  // of them would bury the workouts still waiting.
+  const isComplete = (s: LinkSession) => (s.historical ? Boolean(s.completedAt) : completeKeys.has(s.legacyKey))
+  const isOpen = (d: LinkingDay) =>
+    d.needsAttention || d.sessions.some((s) => !s.historical && !isComplete(s))
   const visible = filter === 'open' ? days.filter(isOpen) : days
 
   function link(w: ImportedWorkout, s: LinkSession) {
-    confirmMatch(w.id, s.key)
+    // The uid pins the session, so a link across days or into a finished
+    // program lands where it was dropped; an earlier program's session leaves
+    // this program's completion marks alone.
+    confirmMatch(w.id, s.legacyKey, { sessionUid: s.uid, markComplete: !s.historical })
     setSelected(null)
   }
 
@@ -355,7 +371,7 @@ export function LinkingTab({ days, hasProgram, onImport }: {
         <EmptyState
           icon={<Link2 className="size-8 opacity-40" />}
           title="No program to link to"
-          description="Linking pairs recorded workouts with the current program's planned sessions. Build a program first."
+          description="Linking pairs recorded workouts with the planned sessions of your programs. Build a program first."
         />
       </div>
     )
@@ -386,7 +402,7 @@ export function LinkingTab({ days, hasProgram, onImport }: {
             ))}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Suggestions stay within a day. Drag a workout onto any session to link across days.
+            Suggestions stay within a day. Drag a workout onto any session to link across days — earlier programs' days are under All days.
           </p>
         </div>
 
@@ -406,7 +422,7 @@ export function LinkingTab({ days, hasProgram, onImport }: {
             title={days.length === 0 ? 'Nothing to link yet' : 'Everything is linked'}
             description={days.length === 0
               ? 'Recorded workouts and planned sessions appear here day by day once the program has started.'
-              : 'Every recorded workout in this program is linked or set aside.'}
+              : 'Every recorded workout is linked or set aside.'}
             action={days.length === 0 ? { label: 'Import a file', onClick: onImport }
               : { label: 'Show all days', onClick: () => setFilter('all') }}
           />
@@ -418,14 +434,17 @@ export function LinkingTab({ days, hasProgram, onImport }: {
               armed={selected != null || dragging != null}
               selectedId={selected?.id ?? null}
               draggingId={dragging?.id ?? null}
-              completeKeys={completeKeys}
+              programLabel={day.programVersionId ? programLabels[day.programVersionId] : undefined}
+              isComplete={isComplete}
               onSelect={(w) => setSelected((cur) => (cur?.id === w.id ? null : w))}
               onPick={(s) => { if (selected) link(selected, s) }}
               onLink={link}
               onUnlink={(w) => rejectMatch(w.id)}
               onDismiss={dismiss}
               onOpenWorkout={(w) => navigate(`/log/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
-              onOpenSession={(s) => navigate(`/program/${s.weekNumber}/${s.dayName}`)}
+              onOpenSession={(s) => navigate(s.historical && s.programVersionId
+                ? `/program/history/${encodeURIComponent(s.programVersionId)}`
+                : `/program/${s.weekNumber}/${s.dayName}`)}
             />
           ))
         )}
