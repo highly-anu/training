@@ -31,21 +31,17 @@ struct LogView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                AppSubTabPicker(selection: $selectedSegment)
-
-                AppSubTabContent(selection: $selectedSegment) { tab in
-                    switch tab {
-                    case .workouts:
-                        LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
-                            .environmentObject(appState)
-                    case .suggestions:
-                        LogSuggestionsTab(reviewWorkout: $selectedWorkout)
-                            .environmentObject(appState)
-                    case .sessions:
-                        LogSessionsTab(selectedSession: $selectedSession)
-                            .environmentObject(appState)
-                    }
+            AppSubTabScreen(selection: $selectedSegment) { tab in
+                switch tab {
+                case .workouts:
+                    LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
+                        .environmentObject(appState)
+                case .suggestions:
+                    LogSuggestionsTab(reviewWorkout: $selectedWorkout)
+                        .environmentObject(appState)
+                case .sessions:
+                    LogSessionsTab(selectedSession: $selectedSession)
+                        .environmentObject(appState)
                 }
             }
             .navigationTitle("Log")

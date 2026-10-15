@@ -9,15 +9,14 @@ import SwiftUI
 /// inventing a third. See §6.8 of `ios/docs/design-system.md` for the rules.
 ///
 /// Conform a sub-section enum to `AppSubTab` and the screen gets the selector
-/// and the paged content for free:
+/// pinned under the navigation bar and the selected section beneath it:
 ///
 ///     private enum ProfileTab: Int, AppSubTab {
 ///         case equipment, injuries
 ///         var label: String { … }
 ///     }
 ///
-///     AppSubTabPicker(selection: $tab)
-///     AppSubTabContent(selection: $tab) { tab in
+///     AppSubTabScreen(selection: $tab) { tab in
 ///         switch tab { … }
 ///     }
 protocol AppSubTab: CaseIterable, Hashable, Identifiable {
@@ -48,19 +47,36 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
     }
 }
 
-/// The content pane beneath it. A paged `TabView` so the sections can also be
-/// swiped between — the selector is not the only way to move.
-struct AppSubTabContent<Tab: AppSubTab, Content: View>: View {
+/// A whole sectioned screen: the paged content, with the selector pinned
+/// under the navigation bar in a `safeAreaBar`, so the content scrolls
+/// beneath it, the large title collapses as it does on Today, and the
+/// selector gets the system's scroll-edge effect (§6.8).
+struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
     @Binding var selection: Tab
     @ViewBuilder var content: (Tab) -> Content
 
+    /// False for the screen's first moment. A deep link picks its section
+    /// in `onAppear`; a section swapped in while the screen is still
+    /// appearing left the bar tracking the discarded one, with the large
+    /// title stuck under the scroll-edge blur. Holding the content back
+    /// until then means the first section the bar sees is the right one.
+    @State private var hasAppeared = false
+
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(Array(Tab.allCases)) { tab in
-                content(tab).tag(tab)
+        // The selected section only, not a paged TabView: the navigation
+        // bar collapses its large title by watching the screen's scroll
+        // view, and a paging container hides it.
+        Group {
+            if hasAppeared {
+                content(selection).id(selection)
+            } else {
+                Color.clear
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(AppAnimation.springStandard, value: selection)
+        .task { hasAppeared = true }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaBar(edge: .top) {
+            AppSubTabPicker(selection: $selection)
+        }
     }
 }

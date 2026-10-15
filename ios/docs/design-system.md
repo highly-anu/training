@@ -523,8 +523,9 @@ scrolling row of bordered, icon-bearing pills with neither. Same job, two
 languages, and nothing stopping the next screen from inventing a third. Both
 now use `AppSubTabs.swift`.
 
-Conform the section enum to `AppSubTab` and the screen gets the selector and
-the paged content:
+Conform the section enum to `AppSubTab` and wrap the sections in
+`AppSubTabScreen`, which pins the selector under the navigation bar (a
+`safeAreaBar`) and shows the selected section beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
@@ -540,16 +541,12 @@ private enum ProfileTab: Int, AppSubTab {
     }
 }
 
-VStack(spacing: 0) {
-    AppSubTabPicker(selection: $selectedTab)
-
-    AppSubTabContent(selection: $selectedTab) { tab in
-        switch tab {
-        case .equipment:  EquipmentTab()
-        case .injuries:   InjuriesTab()
-        case .benchmarks: BenchmarksTab()
-        case .schedule:   ScheduleTab()
-        }
+AppSubTabScreen(selection: $selectedTab) { tab in
+    switch tab {
+    case .equipment:  EquipmentTab()
+    case .injuries:   InjuriesTab()
+    case .benchmarks: BenchmarksTab()
+    case .schedule:   ScheduleTab()
     }
 }
 .navigationTitle("Profile")
@@ -567,12 +564,20 @@ VStack(spacing: 0) {
 - **Two to five sections.** One is not a choice. Beyond five the labels
   truncate on the narrowest iPhone — split the screen or push a level of
   navigation instead of shrinking the text.
-- **The selector is never the only way to move.** `AppSubTabContent` pages, so
-  sections can be swiped between as well as tapped.
+- **Every tab's large title collapses on scroll**, as Today's does — the
+  system behaviour (Health, Fitness, Music) — and the selector rides up under
+  the inline title. Two things keep it working. The navigation bar must see
+  the section's own scroll view, so the content is the selected section
+  alone: until 2026-10-15 it was a paged `TabView`, which hid the scroll
+  view and left four tabs' titles pinned while Today's collapsed. Sections
+  are no longer swiped between; the selector is the way to move. And a
+  section puts anything above its rows *inside* its list or scroll view (a
+  header), never in a `VStack` above it — Log ▸ Workouts' scope line is the
+  list's section header.
 - **Selection is always haptic** (`AppHaptics.selection()`), wired into
   `AppSubTabPicker` so no call site has to remember.
-- **No `Divider()` under the selector.** The segmented control already reads as
-  a discrete band; a rule beneath it doubles the boundary.
+- **No `Divider()` under the selector.** The `safeAreaBar` gives it the
+  scroll-edge effect; a rule beneath it doubles the boundary.
 - Spacing is fixed in the component — `.padding(.horizontal)` and
   `.padding(.vertical, 8)`. Do not re-pad at the call site.
 

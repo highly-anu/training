@@ -15,15 +15,19 @@ struct LogWorkoutsTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            WorkoutFilterScopeLine(filter: $filter, count: filtered.count)
             if appState.isLoadingWorkouts && appState.importedWorkouts.isEmpty {
                 Spacer()
                 ProgressView().scaleEffect(1.2)
                 Spacer()
             } else if filtered.isEmpty {
+                WorkoutFilterScopeLine(filter: $filter, count: 0)
                 emptyState
             } else {
+                // The scope line is the list's header, so it scrolls with
+                // the rows and the list stays the scroll view the navigation
+                // bar collapses its title by (§6.8).
                 List {
+                    Section {
                     ForEach(filtered) { workout in
                         WorkoutRow(workout: workout, trimp: trimpCache[workout.id])
                             .contentShape(Rectangle())
@@ -35,11 +39,14 @@ struct LogWorkoutsTab: View {
                             Task { try? await appState.deleteWorkout(id: w.id) }
                         }
                     }
+                    } header: {
+                        WorkoutFilterScopeLine(filter: $filter, count: filtered.count)
+                            .textCase(nil)
+                            .listRowInsets(EdgeInsets())
+                            .padding(.horizontal, -16)
+                    }
                 }
                 .listStyle(.insetGrouped)
-                // The scope line is the list's header; the inset-grouped
-                // default top margin would double it.
-                .contentMargins(.top, 4, for: .scrollContent)
                 .refreshable {
                     await AppRefresh.perform { await appState.loadWorkouts() }
                 }

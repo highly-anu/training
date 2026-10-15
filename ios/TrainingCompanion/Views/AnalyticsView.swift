@@ -36,27 +36,23 @@ struct AnalyticsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                AppSubTabPicker(selection: $selectedSegment)
-
-                AppSubTabContent(selection: $selectedSegment) { tab in
-                    switch tab {
-                    case .program:
-                        AnalyticsProgramTab()
-                            .environmentObject(appState)
-                    case .progress:
-                        ProgressionView()
-                            .environmentObject(appState)
-                    case .blocks:
-                        AnalyticsDevelopmentTab()
-                            .environmentObject(appState)
-                    case .load:
-                        AnalyticsOverviewTab(period: $period)
-                            .environmentObject(appState)
-                    case .recovery:
-                        AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
-                            .environmentObject(appState)
-                    }
+            AppSubTabScreen(selection: $selectedSegment) { tab in
+                switch tab {
+                case .program:
+                    AnalyticsProgramTab()
+                        .environmentObject(appState)
+                case .progress:
+                    ProgressionView()
+                        .environmentObject(appState)
+                case .blocks:
+                    AnalyticsDevelopmentTab()
+                        .environmentObject(appState)
+                case .load:
+                    AnalyticsOverviewTab(period: $period)
+                        .environmentObject(appState)
+                case .recovery:
+                    AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
+                        .environmentObject(appState)
                 }
             }
             .navigationTitle("Analytics")
