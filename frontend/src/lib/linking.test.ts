@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildLinkingDays, dismissKey, programSessions, suggestForDay } from './linking'
-import type { GeneratedProgram, ImportedWorkout, WorkoutMatch } from '@/api/types'
+import type { GeneratedProgram, ImportedWorkout, PlannedSession, WorkoutMatch } from '@/api/types'
 
 // Starts Monday 2026-10-05.
 const program = {
@@ -134,5 +134,86 @@ describe('buildLinkingDays', () => {
     const old = workout('old', '2026-09-30', 'aerobic_base', 45)
     const days = buildLinkingDays({ ...base, workouts: [old], matches: [] })
     expect(days.some((d) => d.date === '2026-09-30')).toBe(false)
+  })
+})
+
+// An earlier program, in force the week before: 2026-09-28 → 2026-10-04.
+const planned = (vid: string, date: string, dayName: string, modality: string, minutes: number, name: string,
+  extra: Partial<PlannedSession> = {}): PlannedSession => ({
+  sessionUid: `${vid}:w0-${dayName}-0`, programVersionId: vid, date, weekIndex: 0, weekNumber: 1,
+  dayName, sessionIndex: 0, sessionKey: `1-${dayName}-0`, modality: modality as PlannedSession['modality'],
+  archetypeId: null, archetypeName: name, durationMinutes: minutes, phase: 'base', isDeload: false, ...extra,
+})
+
+const history = [
+  planned('old', '2026-09-28', 'Monday', 'aerobic_base', 45, 'Old Zone 2'),
+  planned('old', '2026-10-01', 'Thursday', 'max_strength', 60, 'Old Heavy', { completedAt: '2026-10-01T18:00:00Z' }),
+  // The current version's own row: the program above already has it.
+  planned('cur', '2026-10-05', 'Monday', 'max_strength', 60, 'Heavy Day'),
+]
+
+const withHistory = { ...base, programVersionId: 'cur', history }
+
+describe('buildLinkingDays — earlier programs', () => {
+  it('adds the earlier program’s days, marked as such', () => {
+    const days = buildLinkingDays({ ...withHistory, workouts: [], matches: [] })
+    expect(days.map((d) => [d.date, d.historical])).toEqual([
+      ['2026-10-07', false], ['2026-10-05', false], ['2026-10-01', true], ['2026-09-28', true],
+    ])
+    expect(days.find((d) => d.date === '2026-09-28')!.programVersionId).toBe('old')
+    // The current version's archived row is not shown twice.
+    expect(days.find((d) => d.date === '2026-10-05')!.sessions.map((s) => s.name)).toEqual(['Heavy Day', 'Zone 2'])
+  })
+
+  it('gives a day an earlier program ran to that program, keeping links to this one', () => {
+    // This program starts Monday the 5th but was activated on the 7th.
+    const overlap = [
+      planned('old', '2026-10-05', 'Monday', 'mobility', 30, 'Old Mobility', { sessionUid: 'old:w1-Monday-0', weekIndex: 1, weekNumber: 2, sessionKey: '2-Monday-0' }),
+    ]
+    const lift = workout('lift', '2026-10-05', 'max_strength', 60)
+    const days = buildLinkingDays({
+      ...withHistory, history: overlap, workouts: [lift], matches: [match('lift', '1-Monday-0', { sessionUid: 'cur:w0-Monday-0' })],
+    })
+    const mon = days.find((d) => d.date === '2026-10-05')!
+    expect(mon.historical).toBe(true)
+    expect(mon.sessions.map((s) => s.name)).toEqual(['Old Mobility'])
+    expect(mon.links.map((l) => l.session.name)).toEqual(['Heavy Day'])
+    expect(days.find((d) => d.date === '2026-10-07')!.historical).toBe(false)
+  })
+
+  it('suggests within an earlier program’s day', () => {
+    const run = workout('run', '2026-09-28', 'aerobic_base', 44)
+    const days = buildLinkingDays({ ...withHistory, workouts: [run], matches: [] })
+    const mon = days.find((d) => d.date === '2026-09-28')!
+    expect(mon.suggestions.map((p) => [p.workout.id, p.session.uid, p.session.historical]))
+      .toEqual([['run', 'old:w0-Monday-0', true]])
+  })
+
+  it('gives the current program’s sessions their uid', () => {
+    const s = programSessions(program, '2026-10-05', 'cur')
+    expect(s.get('1-Wednesday-0')?.uid).toBe('cur:w0-Wednesday-0')
+    expect(programSessions(program, '2026-10-05').get('1-Wednesday-0')?.uid).toBeNull()
+  })
+
+  it('resolves a match by its uid, across days', () => {
+    const tue = workout('tue', '2026-09-29', 'aerobic_base', 45)
+    const days = buildLinkingDays({
+      ...withHistory, workouts: [tue], matches: [match('tue', '1-Monday-0', { sessionUid: 'old:w0-Monday-0' })],
+    })
+    expect(days.find((d) => d.date === '2026-09-28')!.links.map((l) => l.session.name)).toEqual(['Old Zone 2'])
+    expect(days.find((d) => d.date === '2026-09-29')!.links).toHaveLength(1)
+    // The current program's "1-Monday-0" is not the one it names.
+    expect(days.find((d) => d.date === '2026-10-05')!.links).toEqual([])
+  })
+
+  it('places an old unscoped match by its key on the workout’s date', () => {
+    const lift = workout('lift', '2026-10-01', 'max_strength', 60)
+    const days = buildLinkingDays({
+      ...withHistory, workouts: [lift],
+      matches: [match('lift', '1-Thursday-0', { inCurrentProgram: false })],
+    })
+    const thu = days.find((d) => d.date === '2026-10-01')!
+    expect(thu.links.map((l) => l.session.uid)).toEqual(['old:w0-Thursday-0'])
+    expect(thu.elsewhere).toEqual([])
   })
 })

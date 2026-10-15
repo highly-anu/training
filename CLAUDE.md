@@ -143,7 +143,12 @@ History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workou
 Linking · Sessions, Import as a sheet; Linking is one card per day, workouts beside
 sessions, suggestions scored within the day only, drag a workout onto any session to
 link across days — `lib/linking.ts`, `components/log/LinkingTab.tsx`; `?tab=suggestions`
-aliases it; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+aliases it. Earlier programs' days come from `GET /programs/planned-sessions` back to the
+oldest workout, and a date an earlier program has rows on is that program's day, as in
+the server matcher's index. Every link sends `sessionUid` (the server keeps a given uid
+only if it is planned for the athlete, else resolves the key on the workout's date, which
+finds nothing across days), and one into an earlier program skips the completion
+side effects, whose key would tick this program's session of that name; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
 `/analytics` (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks). Library — Explore
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the

@@ -22,6 +22,7 @@ import { parseWorkoutFile, startAsyncParse, pollParseJob } from '@/api/workouts'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
 import { useCurrentProgram } from '@/api/programs'
+import { usePlannedSessions, useProgramHistory } from '@/api/programHistory'
 import type { ImportedWorkout, PendingMatch } from '@/api/types'
 
 /**
@@ -369,6 +370,19 @@ export function Log() {
     return c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allImported, workoutMatches, pendingMatches])
+  // Earlier programs' planned sessions, back to the oldest recorded workout:
+  // a day before that has nothing to link.
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const oldestWorkout = useMemo(
+    () => importedWorkouts.reduce<string | undefined>((min, w) => (!min || w.date < min ? w.date : min), undefined),
+    [importedWorkouts]
+  )
+  const { data: planned } = usePlannedSessions(oldestWorkout ?? today, today)
+  const { data: programHistory } = useProgramHistory()
+  const programLabels = useMemo(
+    () => Object.fromEntries((programHistory ?? []).map((e) => [e.versionId, e.goalName ?? e.label])),
+    [programHistory]
+  )
   const linkingDays = useMemo(() => buildLinkingDays({
     workouts: importedWorkouts,
     matches: workoutMatches,
@@ -376,9 +390,10 @@ export function Log() {
     program,
     programStartDate,
     programVersionId,
-    today: format(new Date(), 'yyyy-MM-dd'),
+    history: planned?.sessions,
+    today,
     dismissed: dismissedLinks,
-  }), [importedWorkouts, workoutMatches, pendingMatches, program, programStartDate, programVersionId, dismissedLinks])
+  }), [importedWorkouts, workoutMatches, pendingMatches, program, programStartDate, programVersionId, planned, today, dismissedLinks])
   const openLinkDays = linkingDays.filter((d) => d.needsAttention).length
 
   const visible = filter === 'all' ? allImported : allImported.filter((w) => statusFor(w) === filter)
@@ -472,7 +487,12 @@ export function Log() {
           )
         )}
         {activeTab === 'linking' && (
-          <LinkingTab days={linkingDays} hasProgram={!!program && !!programStartDate} onImport={() => setImportOpen(true)} />
+          <LinkingTab
+            days={linkingDays}
+            hasProgram={(!!program && !!programStartDate) || linkingDays.length > 0}
+            programLabels={programLabels}
+            onImport={() => setImportOpen(true)}
+          />
         )}
         {activeTab === 'sessions' && <SessionsTab />}
       </div>

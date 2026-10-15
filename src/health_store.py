@@ -998,12 +998,16 @@ def _session_uid_for(user_id: str, workout_id: str, session_key: str,
     `with` on it makes the inner query return nothing while swallowing the
     reason, so this quietly stored no uid at all the first time round.
     """
-    if given:
-        return given
     if not session_key or not workout_id:
         return None                       # a rejection carries no session
     try:
         from src import program_history
+        # A client that names the session (Log ▸ Linking, which links across
+        # days and into finished programs) is taken at its word only for a
+        # session this athlete actually had planned; the workout's own date
+        # cannot find a session on another day.
+        if given and program_history.resolve_session(user_id, session_uid=given):
+            return given
         workout = get_workout(user_id, workout_id)
         if not workout or not workout.get('date'):
             return None

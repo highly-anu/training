@@ -34,7 +34,14 @@ interface BioStore {
   // Matching
   setPendingMatches: (pending: PendingMatch[]) => void
   addAutoMatch: (importedWorkoutId: string, sessionKey: string) => void
-  confirmMatch: (importedWorkoutId: string, sessionKey: string) => void
+  /**
+   * `sessionUid` names the session exactly — Log ▸ Linking sends it, because the
+   * server otherwise resolves the key on the workout's own date and finds
+   * nothing for a link across days. `markComplete: false` for a session of an
+   * earlier program: its key would tick this program's session of that name.
+   */
+  confirmMatch: (importedWorkoutId: string, sessionKey: string,
+    opts?: { sessionUid?: string | null; markComplete?: boolean }) => void
   rejectMatch: (importedWorkoutId: string) => void
   /**
    * Server-side weak matches (Garmin webhook, iOS Apple Health relay) merged
@@ -72,12 +79,12 @@ function upsertMatch(
   matches: WorkoutMatch[],
   importedWorkoutId: string,
   sessionKey: string,
-  matchConfidence: MatchConfidence
+  matchConfidence: MatchConfidence,
+  sessionUid?: string | null,
 ): WorkoutMatch[] {
-  return [
-    ...matches.filter((m) => m.importedWorkoutId !== importedWorkoutId),
-    { importedWorkoutId, sessionKey, matchConfidence, matchedAt: new Date().toISOString() },
-  ]
+  const match: WorkoutMatch = { importedWorkoutId, sessionKey, matchConfidence, matchedAt: new Date().toISOString() }
+  if (sessionUid) match.sessionUid = sessionUid
+  return [...matches.filter((m) => m.importedWorkoutId !== importedWorkoutId), match]
 }
 
 function emptyLog(sessionKey: string): SessionPerformanceLog {
@@ -185,14 +192,22 @@ export const useBioStore = create<BioStore>()((set, get) => ({
     })
   },
 
-  confirmMatch: (importedWorkoutId, sessionKey) => {
+  confirmMatch: (importedWorkoutId, sessionKey, opts) => {
     const match: WorkoutMatch = {
       importedWorkoutId,
       sessionKey,
       matchConfidence: 'manual',
       matchedAt: new Date().toISOString(),
     }
+    if (opts?.sessionUid) match.sessionUid = opts.sessionUid
     healthApi.saveMatch(match)
+    if (opts?.markComplete === false) {
+      set((s) => ({
+        workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'manual', opts.sessionUid),
+        pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
+      }))
+      return
+    }
     const parsed = parsePerSessionKey(sessionKey)
     if (parsed) {
       const { dayKey, sessionIdx } = parsed
@@ -207,7 +222,7 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       const updated = existing.completedAt ? existing : { ...existing, completedAt: new Date().toISOString() }
       if (!existing.completedAt) healthApi.saveSessionLog(updated)
       return {
-        workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'manual'),
+        workoutMatches: upsertMatch(s.workoutMatches, importedWorkoutId, sessionKey, 'manual', opts?.sessionUid),
         pendingMatches: s.pendingMatches.filter((p) => p.importedWorkout.id !== importedWorkoutId),
         sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated },
       }

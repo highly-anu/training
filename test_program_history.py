@@ -389,6 +389,26 @@ def test_annotate_logs() -> None:
     check('a log with no uid is left alone', 'planned_name' not in logs[2])
 
 
+def test_given_session_uid_is_checked() -> None:
+    """A client-named session_uid is stored only when the athlete had it planned."""
+    print('\ngiven session_uid')
+    from src import health_store as hs
+    planned = {'v1:w0-Monday-0'}
+    real_resolve, real_get = ph.resolve_session, hs.get_workout
+    ph.resolve_session = lambda user_id, session_uid=None, legacy_key=None, date_str=None, widen=False: (
+        {'session_uid': session_uid} if session_uid in planned
+        else ({'session_uid': 'v2:w0-Tuesday-0'} if legacy_key == '1-Tuesday-0' else None))
+    hs.get_workout = lambda user_id, workout_id: {'date': '2026-10-06'}
+    try:
+        check('a planned uid is kept, whatever the workout date',
+              hs._session_uid_for('u', 'w', '1-Monday-0', 'v1:w0-Monday-0') == 'v1:w0-Monday-0')
+        check('an unknown uid falls back to the key on the workout date',
+              hs._session_uid_for('u', 'w', '1-Tuesday-0', 'other:w9-Monday-0') == 'v2:w0-Tuesday-0')
+        check('a rejection carries none', hs._session_uid_for('u', 'w', '', 'v1:w0-Monday-0') is None)
+    finally:
+        ph.resolve_session, hs.get_workout = real_resolve, real_get
+
+
 if __name__ == '__main__':
     test_hash_invariance()
     test_hash_sensitivity()
@@ -400,6 +420,7 @@ if __name__ == '__main__':
     test_flatten_edge_cases()
     test_intervals()
     test_annotate_logs()
+    test_given_session_uid_is_checked()
 
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))
