@@ -41,7 +41,8 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
             }
         }
         .pickerStyle(.segmented)
-        .padding(.horizontal)
+        // The bar's large-subtitle area supplies the side margins.
+        .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .onChange(of: selection) { AppHaptics.selection() }
     }
@@ -61,11 +62,14 @@ struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
         content(selection)
             .id(selection)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // An inset, not a `safeAreaBar`: under the bar a List section
-            // left the large title blurred by the scroll-edge effect with
-            // nothing scrolled (Profile ▸ Athlete, Schedule).
-            .safeAreaInset(edge: .top, spacing: 0) {
-                AppSubTabPicker(selection: $selection)
+            // Under the large title, in the navigation bar (iOS 26
+            // `largeSubtitle`), so a pull-to-refresh moves title and picker
+            // down together as Today's header moves. Pinned in a safe-area
+            // inset it stayed put while the title slid down beneath it.
+            .toolbar {
+                ToolbarItem(placement: .largeSubtitle) {
+                    AppSubTabPicker(selection: $selection)
+                }
             }
     }
 }

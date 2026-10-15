@@ -4263,9 +4263,19 @@ def progression_review():
             'adjustments':       [],
         })
 
-    # Check snapshot cache
+    # Check snapshot cache. Keyed on everything the review reads — the
+    # program analytics digest (revision, day, logs, matches, PRs, bio,
+    # profile) — not on the session logs alone: a regenerate or a deploy that
+    # changed the findings' wording left a stale review standing (production
+    # said "completion rate is low" beside 100 % and "+0exercises").
+    from src.db import get_program_revision
     period_key   = _pt._current_period_key(period)
-    session_hash = _pt.compute_session_hash(session_logs)
+    analytics_in = _program_analytics_inputs(g.user_id)
+    if analytics_in is not None:
+        base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
+    else:
+        base = _pt.compute_session_hash(session_logs)
+    session_hash = f'{base}:{period}:review-2'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])
@@ -4292,7 +4302,7 @@ def progression_review():
     # so iOS ProgressionView and the Dashboard keep their shape.
     try:
         from src.analytics.document import compute_program_analytics, progression_findings
-        got = _program_analytics_inputs(g.user_id)
+        got = analytics_in
         if got is not None:
             doc = compute_program_analytics(got[0])
             findings = progression_findings(doc)
