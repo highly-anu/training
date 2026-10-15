@@ -1083,7 +1083,7 @@ extension ImportedWorkout {
     /// already written by a person — the watch records the archetype's,
     /// "KB Movement Skill Session (Wildman)" — is kept as written, because
     /// `capitalized` turned KB into "Kb" and ME into "Me".
-    static func activityLabel(_ raw: String) -> String {
+    nonisolated static func activityLabel(_ raw: String) -> String {
         let spaced = raw.replacingOccurrences(of: "_", with: " ")
         let isIdentifier = raw == raw.lowercased() || raw == raw.uppercased()
         return isIdentifier ? spaced.capitalized : spaced
