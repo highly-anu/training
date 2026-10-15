@@ -690,6 +690,14 @@ iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a
 Settings ▸ API target shows the current target and, in debug builds, the switch.
 Never generate, adjust or swap from a simulator pointed at production.
 
+**Releases.** `ios/VERSION` is the version testers see (MAJOR.MINOR.PATCH:
+minor for a batch of features, patch for fixes only; started at 1.1.0 on
+2026-10-15 after every build had shipped as 1.0); the build number is the
+commit count. `./ios/archive.sh` passes both to all five targets and refuses
+to archive when the project's `MARKETING_VERSION` differs from `ios/VERSION`,
+so bump both in one change. Upload from Xcode's Organizer (the command-line
+upload fails "Failed to Use Accounts"), then tag it `ios-v<VERSION>`.
+
 The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
 the `TrainingCompanionTests` target, so a new test file needs no project edit:
 

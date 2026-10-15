@@ -8,7 +8,14 @@
 # watch app and both widgets must carry the same one as the phone app. The
 # project keeps CURRENT_PROJECT_VERSION at 1; this script overrides it for all
 # targets with the commit count (BUILD_NUMBER= wins), so nothing is edited per
-# release. The version shown to testers is MARKETING_VERSION in the project.
+# release.
+#
+# The version testers see — "1.1.0 (383)" — is ios/VERSION, passed to every
+# target as MARKETING_VERSION the same way, so the five targets cannot drift.
+# MAJOR.MINOR.PATCH: minor for a batch of features, patch for a fixes-only
+# build. The project's MARKETING_VERSION is kept equal to it for local builds;
+# the script refuses to archive when they differ. Tag what you upload:
+# ios-v<VERSION> (the script prints the command).
 #
 # Without the key the archive is left for Xcode: Window ▸ Organizer ▸
 # Distribute App ▸ TestFlight & App Store.
@@ -19,6 +26,16 @@ SCHEME="TrainingCompanion"
 OUT="$PROJECT_DIR/build"
 ARCHIVE="$OUT/TrainingCompanion.xcarchive"
 BUILD_NUMBER="${BUILD_NUMBER:-$(git -C "$PROJECT_DIR" rev-list --count HEAD)}"
+VERSION="$(tr -d '[:space:]' < "$PROJECT_DIR/VERSION")"
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "error: ios/VERSION must be MAJOR.MINOR.PATCH, not '$VERSION'" >&2
+    exit 1
+fi
+if grep "MARKETING_VERSION = " "$PROJECT_DIR/TrainingCompanion.xcodeproj/project.pbxproj" \
+        | grep -qv "MARKETING_VERSION = $VERSION;"; then
+    echo "error: the project's MARKETING_VERSION differs from ios/VERSION ($VERSION); set every target to it" >&2
+    exit 1
+fi
 
 if [ -n "$(git -C "$PROJECT_DIR" status --porcelain -- .)" ]; then
     echo "warning: ios/ has uncommitted changes; build $BUILD_NUMBER will not match a commit" >&2
@@ -32,7 +49,7 @@ if [ -n "${ASC_KEY_ID:-}" ]; then
           -authenticationKeyPath "$ASC_KEY_PATH")
 fi
 
-echo "Archiving $SCHEME, build $BUILD_NUMBER"
+echo "Archiving $SCHEME $VERSION ($BUILD_NUMBER)"
 rm -rf "$ARCHIVE"
 xcodebuild archive \
     -project "$PROJECT_DIR/TrainingCompanion.xcodeproj" \
@@ -42,9 +59,11 @@ xcodebuild archive \
     -archivePath "$ARCHIVE" \
     -allowProvisioningUpdates ${auth[@]+"${auth[@]}"} \
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+    MARKETING_VERSION="$VERSION" \
     -quiet
 
-echo "Archive: $ARCHIVE"
+echo "Archive: $ARCHIVE — $VERSION ($BUILD_NUMBER)"
+echo "After the upload, tag it: git tag ios-v$VERSION && git push origin ios-v$VERSION"
 if [ ${#auth[@]} -eq 0 ]; then
     echo "No ASC_KEY_ID set — upload from Xcode's Organizer (Distribute App ▸ TestFlight & App Store)."
     exit 0
