@@ -697,6 +697,9 @@ period" and offered no way to do it.
 - Give it its own line — do not fold it into a horizontal scroller of sort and
   filter pills, where it reads as one more chip rather than the scope of
   everything below.
+- **A list with several filters takes them into one menu** (§6.24): Log ▸
+  Workouts sets its period in the toolbar's filter menu, and its scope line
+  ("4 workouts · Last 30 Days") keeps the period on screen.
 
 **When NOT to use it**
 
@@ -1063,9 +1066,10 @@ selection; the sheet is the one methodology reference on the phone.
 `Views/LogView.swift`, the third tab, three sections:
 
 - *Workouts* (`LogWorkoutsTab`, the list that was Analytics ▸ Workouts until
-  2026-10-01): recorded activities with the period filter, sort, activity
-  filter, swipe-to-delete and the TRIMP badge; the `.fit` importer is the
-  toolbar action; a row pushes `WorkoutDetailView`.
+  2026-10-01): recorded activities (`WorkoutRow`, §6.23) with
+  swipe-to-delete and the TRIMP badge; the period, sort and activity filter
+  are the toolbar's filter menu (§6.24) beside the `.fit` importer; a row
+  pushes `WorkoutDetailView`.
 - *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
   as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
   first three of the same list (`AppState.pendingMatchSuggestions()`) with
@@ -1202,3 +1206,28 @@ session log's `matched_workout_id`. A match the server dates outside the
 active program (`inCurrentProgram: false` on the snapshot) never links —
 "4-Monday-0" names a session of every program the athlete has had
 (`LinkedWorkoutTests`).
+
+---
+
+### 6.24 Filter Menu
+
+**Several filters on one list are one toolbar button, not rows of pills.**
+`Views/WorkoutFilterMenu.swift`. Log ▸ Workouts used to stack three bands
+under the title — the section picker, the period pills and a scroller of
+sort and activity chips — so the list started a third of the way down the
+screen. The system's own apps (Mail, Files, Photos) put filtering behind
+one `line.3.horizontal.decrease.circle` button.
+
+- **One value.** `WorkoutListFilter` (period, sort, activity) is held by the
+  screen and passed as a binding to the menu and the list, so they cannot
+  disagree. `isDefault` and `apply(to:)` live on it (`WorkoutListFilterTests`).
+- **Submenus that name their value.** Each dimension is a `Picker` with
+  `.pickerStyle(.menu)` inside the `Menu`, so the menu reads "Sort By — Date"
+  without opening it. Reset appears only when something differs.
+- **The glyph fills while a filter is on**, the convention for "this list is
+  narrowed".
+- **Never invisible.** A scope line heads the list — the count and period
+  always, and a removable chip for each narrowing — so a filter set in the
+  menu is visible and one tap clears it (§6.11).
+- The section picker (§6.8) stays the only band under the title. Analytics
+  keeps `AnalyticsPeriodPicker`: there the period is the only filter.

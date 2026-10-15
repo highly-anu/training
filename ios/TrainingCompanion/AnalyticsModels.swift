@@ -202,6 +202,17 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     }
 
     var label: String { rawValue }
+
+    /// The period in words, for a menu or a sentence.
+    var longLabel: String {
+        switch self {
+        case .sevenDays:   return "Last 7 Days"
+        case .thirtyDays:  return "Last 30 Days"
+        case .threeMonths: return "Last 3 Months"
+        case .oneYear:     return "Last Year"
+        case .all:         return "All Time"
+        }
+    }
 }
 
 enum WorkoutSortKey: String, CaseIterable, Identifiable {
