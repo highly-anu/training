@@ -256,6 +256,9 @@ is the source of the patterns, not the neighbouring screen:
   same change, then document it in §6. Profile and Analytics each grew their
   own sub-tab selector before that rule existed; both now use
   `AppSubTabs.swift` (§6.8).
+- **Custom icons** (what SF Symbols lacks, e.g. `kettlebell`): `ios/docs/custom-icons.md`
+  — the drawing rules, `ios/tools/make_*_symbol.py` + `preview_symbol.swift`, and
+  `Image(symbol:)`, without which a custom name draws nothing.
 - **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
 - **iOS tabs**: Today · Program · Log · Analytics · Profile (`AppRouter.Tab`); Settings
   (connections, devices & sync, notifications, appearance, account) is pushed from

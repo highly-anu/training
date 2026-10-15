@@ -116,8 +116,8 @@ enum ActivityIcon {
 }
 
 /// Symbols the app draws itself, from the asset catalog, for what SF Symbols
-/// has no glyph for (design-system §6.12). `kettlebell.symbolset` is written by
-/// `ios/tools/make_kettlebell_symbol.py`.
+/// has no glyph for (design-system §6.12). Each is written by an
+/// `ios/tools/make_<name>_symbol.py`; ios/docs/custom-icons.md is how to add one.
 enum AppSymbol {
     static let kettlebell = "kettlebell"
     static let custom: Set<String> = [kettlebell]

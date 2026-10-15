@@ -753,7 +753,9 @@ Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
 - **What SF Symbols lacks, the app draws.** There is no kettlebell glyph
   (checked against the iOS 26.3 runtime's 9,184 names), so
   `kettlebell.symbolset` is a custom SF Symbol written by
-  `ios/tools/make_kettlebell_symbol.py`. A custom name must be drawn with
+  `ios/tools/make_kettlebell_symbol.py`. How to make another in the same
+  style — when, the drawing rules, the preview, the wiring — is
+  `ios/docs/custom-icons.md`. A custom name must be drawn with
   `Image(symbol:)`, which sends `AppSymbol.custom` names to the asset
   catalog — `Image(systemName:)` draws nothing for them
   (`ActivityIconTests` loads each from the catalog).
