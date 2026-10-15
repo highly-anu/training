@@ -29,6 +29,13 @@ final class ReadinessSourceTests: XCTestCase {
                        "Resting HR from your Garmin watch's heart-rate low; HRV and sleep from Apple Health and check-ins.")
     }
 
+    func testTheWatchsRecoveryReadingsDecodeAndAreNamed() throws {
+        let r = try readiness(#"{\#(base), "watch": {"bodyBattery": 60, "recoveryLeftH": 68.0}, "sources": {"rhr": "daily_bio", "hrv": null, "sleep": "daily_bio", "recovery": "garmin_watch"}}"#)
+        XCTAssertEqual(r.watch, ReadinessWatch(bodyBattery: 60, recoveryLeftH: 68))
+        XCTAssertEqual(r.sourceNote,
+                       "Resting HR and sleep from Apple Health and check-ins; Body Battery and recovery time from your Garmin watch.")
+    }
+
     func testNothingScoredMeansNoNote() throws {
         let r = try readiness(#"{\#(base), "sources": {"rhr": null, "hrv": null, "sleep": null}}"#)
         XCTAssertNil(r.sourceNote)

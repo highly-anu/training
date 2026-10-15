@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import tempfile
-from datetime import date as _date, timedelta as _timedelta
+from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
 from dotenv import load_dotenv
@@ -3638,11 +3638,55 @@ def _bio_for_scoring(user_id: str, days: int) -> tuple[list[dict], dict]:
                                       wellness_store.recent(user_id, days=days))
 
 
+def _watch_recovery(bio_list: list[dict], now: _datetime | None = None) -> dict | None:
+    """The watch's newest Body Battery peak and the recovery hours still left,
+    from a reading dated today or yesterday — older says nothing about this
+    morning. Recovery time counts down from when the watch read it."""
+    now = now or _datetime.now(_timezone.utc)
+    cutoff = (now.date() - _timedelta(days=1)).isoformat()
+    rows = [b for b in bio_list if str(b['date']) >= cutoff
+            and (b.get('body_battery_max') is not None or b.get('recovery_time_h') is not None)]
+    if not rows:
+        return None
+    row = max(rows, key=lambda b: str(b['date']))
+    left = row.get('recovery_time_h')
+    read_at = row.get('recovery_read_at')
+    if left is not None and read_at is not None:
+        if isinstance(read_at, (int, float)):
+            read_at = _datetime.fromtimestamp(read_at, _timezone.utc)
+        elif isinstance(read_at, str):
+            read_at = _datetime.fromisoformat(read_at.replace('Z', '+00:00'))
+        if read_at.tzinfo is None:
+            read_at = read_at.replace(tzinfo=_timezone.utc)
+        left = max(0.0, left - (now - read_at).total_seconds() / 3600)
+    return {'body_battery': row.get('body_battery_max'), 'recovery_left_h': left}
+
+
+def _score_watch_recovery(watch: dict) -> int:
+    """HRV's 35 points from the watch, when there is no HRV: the morning's Body
+    Battery peak (20 points, full at 80, none at 20) and the recovery time
+    left (15 points, full at none, none at 72 h or more). With one of the two,
+    it carries all 35."""
+    bb, left = watch.get('body_battery'), watch.get('recovery_left_h')
+    bb_part = None if bb is None else min(1.0, max(0.0, (bb - 20) / 60))
+    rec_part = None if left is None else 1 - min(left, 72) / 72
+    if bb_part is not None and rec_part is not None:
+        return round(20 * bb_part + 15 * rec_part)
+    return round(35 * (bb_part if bb_part is not None else rec_part))
+
+
 def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | None = None,
                        sources: dict | None = None) -> dict:
     flags: list[str] = []
     rhr     = _score_rhr(bio_list, flags)
-    hrv     = _score_hrv(bio_list, flags)
+    watch   = _watch_recovery(bio_list)
+    has_hrv = sum(1 for b in _recent_bio(bio_list, 14) if b.get('hrv') is not None) >= 3
+    if not has_hrv and watch:
+        # No HRV (Garmin does not pass it to Apple Health): the watch's
+        # recovery signals carry its weight instead of a neutral 17.
+        hrv = _score_watch_recovery(watch)
+    else:
+        hrv = _score_hrv(bio_list, flags)
     sleep   = _score_sleep(bio_list, flags)      # capped at 10 (was 15)
     fatigue = _score_fatigue(session_dict, flags)  # capped at 10 (was 15)
     tsb     = _score_tsb(user_id, flags) if user_id else 5
@@ -3651,6 +3695,13 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
     sleep   = min(sleep, 10)
     fatigue = min(fatigue, 10)
     score = min(100, max(0, rhr + hrv + sleep + fatigue + tsb))
+    # Recovery the watch still counts is a ceiling, as it is for Garmin's own
+    # readiness: a steady resting HR used to score 67 with 68 h of recovery left.
+    if watch and watch.get('recovery_left_h') is not None:
+        ceiling = max(10, round(100 - watch['recovery_left_h']))
+        if score > ceiling:
+            score = ceiling
+            flags.append('recovery_pending')
     status = 'green' if score >= 70 else 'yellow' if score >= 45 else 'red'
     out = {
         'score':      score,
@@ -3658,8 +3709,14 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
         'flags':      flags,
         'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue, 'tsb': tsb},
     }
+    if watch:
+        out['watch'] = {'bodyBattery': watch['body_battery'],
+                        'recoveryLeftH': None if watch['recovery_left_h'] is None
+                        else round(watch['recovery_left_h'], 1)}
     if sources is not None:
-        out['sources'] = sources        # where rhr / hrv / sleep came from
+        out['sources'] = dict(sources)  # where rhr / hrv / sleep came from
+        if watch:
+            out['sources']['recovery'] = 'garmin_watch'
     return out
 
 

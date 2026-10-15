@@ -483,7 +483,10 @@ struct TodayView: View {
                                 let h = sleep / 60; let m = sleep % 60
                                 readinessStat(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
                             }
+                            watchStats(result.watch)
                         }
+                    } else if result.watch != nil {
+                        VStack(alignment: .trailing, spacing: 6) { watchStats(result.watch) }
                     }
                     Image(systemName: "chevron.right")
                         .font(.caption)
@@ -540,6 +543,17 @@ struct TodayView: View {
         }
     }
 
+    /// Body Battery and the recovery time left, when the score used them.
+    @ViewBuilder
+    private func watchStats(_ watch: ReadinessWatch?) -> some View {
+        if let bb = watch?.bodyBattery {
+            readinessStat(label: "Body Battery", value: "\(bb)")
+        }
+        if let left = watch?.recoveryLeftH, left >= 1 {
+            readinessStat(label: "Recovery", value: "\(Int(left.rounded())) h")
+        }
+    }
+
     private func readinessStat(label: String, value: String) -> some View {
         HStack(spacing: 4) {
             Text(label).font(.caption2).foregroundStyle(.secondary)
@@ -555,6 +569,7 @@ struct TodayView: View {
         case "insufficient_sleep":       return "Less than 5h sleep last night"
         case "poor_sleep_3d":            return "Poor sleep 3+ nights in a row"
         case "overreached":              return "Training stress balance deeply negative — overreached"
+        case "recovery_pending":         return "Recovery still running on your watch — score capped"
         default:                         return key
         }
     }

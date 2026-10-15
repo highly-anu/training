@@ -365,7 +365,15 @@ training data; only sign-in goes to Supabase.
   `api._bio_for_scoring`, which takes resting HR from **one** series (the one
   with more readings, ties to `daily_bio`; `wellness.merge_for_scoring`) and
   never mixes methods day by day. Readiness says which in `sources`. With no
-  watch rows every score is what it was. The watch's series is its
+  watch rows every score is what it was. **Body Battery and recovery time
+  are scored** (since 2026-10-15, `api._score_watch_recovery`): with no HRV —
+  Garmin does not pass it to Apple Health — the morning's Body Battery peak
+  and the recovery hours left carry HRV's 35 points instead of a neutral 17,
+  and recovery left caps the score at `100 − hours` (min 10, flag
+  `recovery_pending`), counted down from the watch's `read_at`. Only a reading
+  dated today or yesterday counts. Production read 67 against Garmin's 17
+  with 68 h of recovery left; it now reads 32. The response carries `watch`
+  and `sources.recovery` (`test_wellness.py`). The watch's series is its
   heart-rate low `hr_min`, **never** `resting_hr`: the SDK's
   `UserProfile.restingHeartRate` is the zone setting (46 on three mornings
   while the watch showed 46, 45, 49). Garmin's exact daily resting HR reaches

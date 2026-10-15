@@ -13,10 +13,11 @@ export type ReadinessFlag =
   | 'poor_sleep_3d'
   | 'insufficient_data'
   | 'overreached'
+  | 'recovery_pending'
 
 /** Where a scored component's data came from: `daily_bio` is the Apple Health
  *  relay and the daily check-ins, `garmin_ciq` the Connect IQ watch. */
-export type ReadinessSource = 'daily_bio' | 'garmin_ciq'
+export type ReadinessSource = 'daily_bio' | 'garmin_ciq' | 'garmin_watch'
 
 export interface ReadinessResult {
   score: number // 0–100
@@ -24,7 +25,17 @@ export interface ReadinessResult {
   flags: ReadinessFlag[]
   components: { rhr: number; hrv: number; fatigue: number; sleep: number; tsb?: number }
   /** Absent from servers older than the wellness merge. */
-  sources?: { rhr: ReadinessSource | null; hrv: ReadinessSource | null; sleep: ReadinessSource | null }
+  sources?: {
+    rhr: ReadinessSource | null
+    hrv: ReadinessSource | null
+    sleep: ReadinessSource | null
+    /** The watch's Body Battery and recovery time, when the score used them. */
+    recovery?: ReadinessSource | null
+  }
+  /** Body Battery stands in for missing HRV and the recovery time left caps
+   *  the score (api._score_watch_recovery); absent without a reading from
+   *  today or yesterday. */
+  watch?: { bodyBattery: number | null; recoveryLeftH: number | null }
 }
 
 const SOURCE_LABEL: Record<ReadinessSource, string> = {
@@ -32,6 +43,7 @@ const SOURCE_LABEL: Record<ReadinessSource, string> = {
   // The watch's series is its overnight heart-rate low, not Garmin's daily
   // resting HR (the SDK does not expose that; src/wellness.merge_for_scoring).
   garmin_ciq: "your Garmin watch's heart-rate low",
+  garmin_watch: 'your Garmin watch',
 }
 
 /**
@@ -42,9 +54,9 @@ const SOURCE_LABEL: Record<ReadinessSource, string> = {
  */
 export function readinessSourceNote(sources: ReadinessResult['sources']): string | null {
   if (!sources) return null
-  const names = { rhr: 'resting HR', hrv: 'HRV', sleep: 'sleep' } as const
+  const names = { rhr: 'resting HR', hrv: 'HRV', sleep: 'sleep', recovery: 'Body Battery and recovery time' } as const
   const bySource = new Map<ReadinessSource, string[]>()
-  for (const k of ['rhr', 'hrv', 'sleep'] as const) {
+  for (const k of ['rhr', 'hrv', 'sleep', 'recovery'] as const) {
     const src = sources[k]
     if (src) bySource.set(src, [...(bySource.get(src) ?? []), names[k]])
   }

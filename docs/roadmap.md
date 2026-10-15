@@ -114,9 +114,14 @@ Decisions:
   HRV columns in v1.
 - Readiness scores resting HR from **one series**, never mixed across sources
   or methods (`src/wellness.merge_for_scoring`: the series with the most
-  readings wins, ties go to `daily_bio`). Body Battery and recovery time are
-  display-only, there are no new flags, the scoring functions are untouched,
-  and the response gains `sources` saying where each component's data came from.
+  readings wins, ties go to `daily_bio`), and the response gains `sources`
+  saying where each component's data came from. Body Battery and recovery
+  time were display-only in v1; since 2026-10-15 they are scored — they stand
+  in for missing HRV and recovery left caps the score (`recovery_pending`),
+  because a steady resting HR read 67 against Garmin's 17 (CLAUDE.md, Watch
+  wellness). Garmin's Training Readiness and overnight HRV stay out of reach:
+  Connect IQ SDK 9.2 exposes neither (its complications add a sleep score and
+  training status, which a device app may not be able to read — untested).
 - The device token is scoped before the endpoint ships: today a claimed token
   is accepted on every authenticated route.
 - A hardware spike gates every watch-side slice. The simulator fabricates

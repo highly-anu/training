@@ -89,10 +89,12 @@ extension ReadinessResult {
     var sourceNote: String? {
         guard let sources else { return nil }
         let label = ["daily_bio": "Apple Health and check-ins",
-                     "garmin_ciq": "your Garmin watch's heart-rate low"]
+                     "garmin_ciq": "your Garmin watch's heart-rate low",
+                     "garmin_watch": "your Garmin watch"]
         var order: [String] = []
         var bySource: [String: [String]] = [:]
-        for (name, source) in [("resting HR", sources.rhr), ("HRV", sources.hrv), ("sleep", sources.sleep)] {
+        for (name, source) in [("resting HR", sources.rhr), ("HRV", sources.hrv), ("sleep", sources.sleep),
+                               ("Body Battery and recovery time", sources.recovery)] {
             guard let source, label[source] != nil else { continue }
             if bySource[source] == nil { order.append(source) }
             bySource[source, default: []].append(name)

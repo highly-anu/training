@@ -149,7 +149,14 @@ def test_merge() -> None:
           sources == {'rhr': 'garmin_ciq', 'hrv': None, 'sleep': None} and merged[0]['resting_hr'] == 46,
           str(sources))
     merged, sources = merge_for_scoring([], [{'date': bio(0)['date'], 'body_battery_max': 95}])
-    check('a watch row without an HR low leaves rhr unsourced', sources['rhr'] is None and merged == [])
+    check('a watch row without an HR low leaves rhr unsourced',
+          sources['rhr'] is None and not any('resting_hr' in b for b in merged), str(merged))
+    check('…but its Body Battery rides on that day', merged[0].get('body_battery_max') == 95, str(merged))
+    merged, _ = merge_for_scoring(apple, [{'date': bio(0)['date'], 'recovery_time_h': 40, 'read_at': 1}])
+    today_row = {b['date']: b for b in merged}[bio(0)['date']]
+    check('recovery joins the day\'s Apple row, which keeps its readings',
+          today_row.get('recovery_time_h') == 40 and today_row.get('recovery_read_at') == 1
+          and today_row['hrv'] == 60.0, str(today_row))
 
     # The spike's finding: UserProfile.restingHeartRate read 46 on three
     # mornings while the watch showed 46, 45, 49. A profile value alone must
@@ -173,6 +180,54 @@ def test_readiness_unchanged() -> None:
           and after['components'] == before['components'], f'{before} vs {after}')
     check('readiness names its sources', after.get('sources', {}).get('rhr') == 'daily_bio')
     check('without sources the shape is the old one', 'sources' not in before)
+
+
+def test_readiness_from_the_watch() -> None:
+    import api
+    from datetime import datetime, timezone
+    from src.wellness import merge_for_scoring
+    print('readiness from the watch')
+    now = datetime.now(timezone.utc)
+    # The production morning of 2026-10-15: steady RHR, no HRV, 7.4 h sleep;
+    # the watch: Body Battery peak 60, 68 h of recovery left.
+    apple = [bio(d, resting_hr=46 + (d == 0), sleep_duration_min=444) for d in range(7)]
+    watch = [{'date': bio(0)['date'], 'body_battery_max': 60, 'recovery_time_h': 68, 'read_at': now}]
+    before = api._compute_readiness(apple, {}, user_id=None)
+    merged, sources = merge_for_scoring(apple, watch)
+    after = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('without HRV the watch carries its 35 points',
+          after['components']['hrv'] == round(20 * 40 / 60 + 15 * 4 / 72), str(after['components']))
+    check('68 h of recovery left caps the score at 32', after['score'] == 32, f"{before['score']} → {after['score']}")
+    check('…and says why', 'recovery_pending' in after['flags'], str(after['flags']))
+    check('…which is red', after['status'] == 'red')
+    check('no insufficient_data for the HRV the watch stood in for',
+          'insufficient_data' not in after['flags'], str(after['flags']))
+    check('the response names the watch', after['sources'].get('recovery') == 'garmin_watch'
+          and after['watch'] == {'bodyBattery': 60, 'recoveryLeftH': 68.0}, str(after.get('watch')))
+
+    earlier = [{**watch[0], 'read_at': now.timestamp() - 10 * 3600}]
+    merged, sources = merge_for_scoring(apple, earlier)
+    later = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('recovery counts down from the reading (10 h ago: 58 h left, ceiling 42)',
+          later['watch']['recoveryLeftH'] == 58.0 and later['score'] <= 42, str(later))
+
+    with_hrv = [bio(d, resting_hr=46, hrv=60.0, sleep_duration_min=444) for d in range(7)]
+    plain = api._compute_readiness(with_hrv, {}, user_id=None)
+    merged, sources = merge_for_scoring(with_hrv, [{**watch[0], 'recovery_time_h': 0}])
+    rested = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('with HRV the HRV score stands', rested['components']['hrv'] == plain['components']['hrv'])
+    check('…and no recovery left changes nothing', rested['score'] == plain['score']
+          and 'recovery_pending' not in rested['flags'], f"{plain['score']} vs {rested['score']}")
+
+    stale = [{'date': bio(3)['date'], 'body_battery_max': 20, 'recovery_time_h': 90, 'read_at': now}]
+    merged, sources = merge_for_scoring(apple, stale)
+    old = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('a reading older than yesterday is ignored', old['score'] == before['score']
+          and 'watch' not in old, f"{before['score']} vs {old['score']}")
+
+    bb_only = [{'date': bio(0)['date'], 'body_battery_max': 80}]
+    merged, sources = merge_for_scoring(apple, bb_only)
+    check('Body Battery alone carries all 35', api._compute_readiness(merged, {}, user_id=None)['components']['hrv'] == 35)
 
 
 # ── SQL ───────────────────────────────────────────────────────────────────────
@@ -302,6 +357,7 @@ if __name__ == '__main__':
     test_watch_parity()
     test_merge()
     test_readiness_unchanged()
+    test_readiness_from_the_watch()
     sql_suite()
     print()
     if _failures:

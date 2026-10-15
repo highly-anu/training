@@ -18,6 +18,7 @@ const FLAG_LABELS: Record<ReadinessFlag, string> = {
   poor_sleep_3d: 'Poor sleep 3+ nights in a row',
   insufficient_data: 'Limited data — add daily check-ins',
   overreached: 'Training stress balance deeply negative — overreached',
+  recovery_pending: 'Recovery still running on your watch — score capped',
 }
 
 
@@ -102,6 +103,18 @@ export function ReadinessWidget() {
           </div>
         )}
       </div>
+
+      {/* The watch readings the score used */}
+      {result?.watch && (result.watch.bodyBattery != null || (result.watch.recoveryLeftH ?? 0) >= 1) && (
+        <p className="text-[11px] text-muted-foreground tabular-nums">
+          {[
+            result.watch.bodyBattery != null ? `Body Battery ${result.watch.bodyBattery}` : null,
+            (result.watch.recoveryLeftH ?? 0) >= 1 ? `Recovery ${Math.round(result.watch.recoveryLeftH!)} h` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
 
       {/* Flags */}
       {actionableFlags.length > 0 && (

@@ -706,14 +706,26 @@ struct ReadinessResult: Codable {
     /// Where resting HR, HRV and sleep came from; absent from servers older
     /// than the wellness merge (src/wellness.merge_for_scoring).
     var sources: ReadinessSources? = nil
+    /// The watch's recovery readings the score used — Body Battery stands in
+    /// for missing HRV, and recovery time left caps the score
+    /// (api._score_watch_recovery). Absent without a reading from today or
+    /// yesterday, and from older servers.
+    var watch: ReadinessWatch? = nil
+}
+
+struct ReadinessWatch: Codable, Equatable {
+    var bodyBattery: Int? = nil
+    var recoveryLeftH: Double? = nil
 }
 
 /// `daily_bio` is the Apple Health relay and the check-ins; `garmin_ciq` the
-/// Connect IQ watch's heart-rate low. Nil when nothing fed that component.
+/// Connect IQ watch's heart-rate low; `garmin_watch` (recovery only) the
+/// watch's Body Battery and recovery time. Nil when nothing fed that component.
 struct ReadinessSources: Codable, Equatable {
     let rhr: String?
     let hrv: String?
     let sleep: String?
+    var recovery: String? = nil
 }
 
 /// One day's reading from the Connect IQ watch (GET /health/wellness/latest).
