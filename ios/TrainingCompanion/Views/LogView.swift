@@ -17,8 +17,8 @@ enum LogTab: Int, AppSubTab {
 /// The record and the decision queue — the phone's counterpart to the web's
 /// Log area (design-system §6.19). Workouts is the recorded-activity list
 /// that used to be a section of Analytics, with the `.fit` importer;
-/// Linking is the inbox of server matches to accept, review or dismiss
-/// (the web lays the same section out as one card per day);
+/// Linking is one section per day, workouts beside planned sessions, with
+/// same-day suggestions and links across days (`LogLinkingTab`);
 /// Sessions is what was logged against planned sessions, across the program.
 struct LogView: View {
     @EnvironmentObject var appState: AppState
@@ -38,7 +38,7 @@ struct LogView: View {
                     LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
                         .environmentObject(appState)
                 case .linking:
-                    LogSuggestionsTab(reviewWorkout: $selectedWorkout)
+                    LogLinkingTab(reviewWorkout: $selectedWorkout)
                         .environmentObject(appState)
                 case .sessions:
                     LogSessionsTab(selectedSession: $selectedSession)
@@ -95,55 +95,6 @@ struct LogView: View {
             withAnimation(AppAnimation.springStandard) { selectedSegment = requested }
         }
         router.clearLogSection()
-    }
-}
-
-// MARK: - Suggestions
-
-struct LogSuggestionsTab: View {
-    @EnvironmentObject var appState: AppState
-    @Binding var reviewWorkout: ImportedWorkout?
-
-    var body: some View {
-        let pending = appState.pendingMatchSuggestions()
-        Group {
-            if pending.isEmpty {
-                VStack(spacing: 16) {
-                    Spacer()
-                    Image(systemName: "tray")
-                        .font(.system(size: 48)).foregroundStyle(.secondary)
-                    Text("Nothing to decide").font(.headline)
-                    Text("When a recorded workout looks like a planned session but the server is not sure, it lands here for you to accept, review or dismiss.")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center).padding(.horizontal, 24)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-            } else {
-                ScrollView {
-                    VStack(spacing: 8) {
-                        ForEach(pending, id: \.suggestion.id) { item in
-                            SuggestionRowView(
-                                suggestion: item.suggestion, workout: item.workout,
-                                planned: appState.locateSession(key: item.suggestion.sessionKey)?.session,
-                                onAccept: {
-                                    Task { try? await appState.matchAndComplete(workout: item.workout,
-                                                                                sessionKey: item.suggestion.sessionKey) }
-                                },
-                                onReview: { reviewWorkout = item.workout },
-                                onDismiss: { Task { await appState.dismissSuggestion(workoutId: item.workout.id) } })
-                        }
-                    }
-                    .padding()
-                }
-            }
-        }
-        .refreshable {
-            await AppRefresh.perform {
-                await appState.loadMatchSuggestions()
-                await appState.loadWorkouts()
-            }
-        }
     }
 }
 

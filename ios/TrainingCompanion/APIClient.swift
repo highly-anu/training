@@ -286,6 +286,12 @@ final class APIClient {
         return (try? JSONDecoder().decode([MatchSuggestion].self, from: data)) ?? []
     }
 
+    /// Log ▸ Linking's day cards (`GET /health/linking`, `Linking.query`).
+    func fetchLinking(today: String, dismissed: Set<String>) async throws -> LinkingDocument {
+        let data = try await get("/health/linking?" + Linking.query(today: today, dismissed: dismissed))
+        return try JSONDecoder().decode(LinkingDocument.self, from: data)
+    }
+
     func dismissMatchSuggestion(workoutId: String) async throws {
         let encoded = workoutId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? workoutId
         _ = try await deleteRaw("/health/matches/suggestions/\(encoded)")

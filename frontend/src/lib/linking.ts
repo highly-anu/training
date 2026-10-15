@@ -17,6 +17,8 @@
  * finished block's key.
  *
  * Pure: no store, no fetch. `components/log/LinkingTab.tsx` lays it out.
+ * `src/linking.py` is the server's copy for the phone (`GET
+ * /api/health/linking`); change a rule in both, with `test_linking.py`.
  */
 import rules from '@shared/matching_rules.json'
 import { scoreMatch, sessionCalendarDate, sessionEquipment } from '@/lib/workoutMatcher'
