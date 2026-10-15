@@ -5,6 +5,7 @@ struct ContentView: View {
     @StateObject private var sync = SyncManager()
     @StateObject private var appState = AppState()
     @StateObject private var router = AppRouter()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         if auth.isSignedIn {
@@ -47,6 +48,9 @@ struct ContentView: View {
                     scheduleNextSync()
                     // A section asked for at launch (run_sim.sh ROUTE=…).
                     if let link = DeepLink.fromLaunchEnvironment() { router.open(link) }
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { Task { await appState.refreshIfStale() } }
                 }
                 .onOpenURL { url in
                     // .fit file import

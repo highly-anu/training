@@ -121,9 +121,19 @@ final class AppState: ObservableObject {
 
     // MARK: - Initial Load
 
+    /// When `loadAll` last finished — what `refreshIfStale` measures against.
+    private(set) var lastFullLoad: Date? = nil
+
     func loadAll() async {
+        defer { lastFullLoad = Date() }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
+            // Today's Development card is the program scorecard. It was loaded
+            // once and refreshed only after the phone itself completed a
+            // session, so matches from the watch, Garmin or the web, and a
+            // program regenerated on the web, left it days old (0 % on a
+            // week the server had at 100 %).
+            group.addTask { await self.loadProgramAnalytics() }
             group.addTask { await self.loadProfile() }
             group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
@@ -133,6 +143,15 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProgressionReview() }
             group.addTask { await self.loadMatchSuggestions() }
         }
+    }
+
+    /// Coming back to the foreground: reload what Today shows when the last
+    /// full load is older than `maxAge`. The app had no foreground refresh,
+    /// so a phone left in the background overnight opened on yesterday's
+    /// readiness and scorecard.
+    func refreshIfStale(maxAge: TimeInterval = 300) async {
+        if let last = lastFullLoad, Date().timeIntervalSince(last) < maxAge { return }
+        await loadAll()
     }
 
     /// Called on first appear — loads everything the Today tab needs without fetching workouts,

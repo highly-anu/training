@@ -126,7 +126,10 @@ def progression_findings(doc: dict) -> list[dict]:
             delta = (last - first) if isinstance(first, (int, float)) and isinstance(last, (int, float)) else None
             weeks = (latest.get('week') or 0) - (series[0].get('week') or 0)
             unit = pr.get('unit', '')
-            change = (f"{'+' if delta >= 0 else ''}{round(delta, 1)}{unit} over {max(weeks, 1)} wk"
+            # A symbol sits on the number ("+5kg", "+3%"); a word is spaced
+            # ("+2 exercises", not "+2exercises").
+            sep = '' if unit in ('kg', '%', 's', 'km', 'm') else ' '
+            change = (f"{'+' if delta >= 0 else ''}{round(delta, 1)}{sep}{unit} over {max(weeks, 1)} wk"
                       if delta is not None else 'Not enough data — log at least 2 sessions.')
             status = ex.get('status') or pr.get('status')
             out.append({
