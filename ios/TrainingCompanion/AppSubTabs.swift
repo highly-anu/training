@@ -41,8 +41,7 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
             }
         }
         .pickerStyle(.segmented)
-        // The bar's large-subtitle area supplies the side margins.
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal)
         .padding(.vertical, 8)
         .onChange(of: selection) { AppHaptics.selection() }
     }
@@ -54,6 +53,8 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
 struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
     @Binding var selection: Tab
     @ViewBuilder var content: (Tab) -> Content
+    /// How far a pull-to-refresh has dragged the section past its top.
+    @State private var pull: CGFloat = 0
 
     var body: some View {
         // The selected section only, not a paged TabView: the navigation
@@ -62,14 +63,20 @@ struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
         content(selection)
             .id(selection)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // Under the large title, in the navigation bar (iOS 26
-            // `largeSubtitle`), so a pull-to-refresh moves title and picker
-            // down together as Today's header moves. Pinned in a safe-area
-            // inset it stayed put while the title slid down beneath it.
-            .toolbar {
-                ToolbarItem(placement: .largeSubtitle) {
-                    AppSubTabPicker(selection: $selection)
-                }
+            // Read from the section's scroll view, whichever kind it is.
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                max(0, -(geometry.contentOffset.y + geometry.contentInsets.top))
+            } action: { _, overscroll in
+                pull = overscroll
+            }
+            // An inset, moved down by the pull so it follows the large title
+            // the way Today's header does. Not the bar's `largeSubtitle`
+            // slot: over a List or Form section that slot takes no touches
+            // at all (Log, Profile; 1.1.1). Not a `safeAreaBar`: it left
+            // List sections' titles blurred with nothing scrolled.
+            .safeAreaInset(edge: .top, spacing: 0) {
+                AppSubTabPicker(selection: $selection)
+                    .offset(y: pull)
             }
     }
 }
