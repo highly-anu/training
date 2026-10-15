@@ -524,8 +524,9 @@ languages, and nothing stopping the next screen from inventing a third. Both
 now use `AppSubTabs.swift`.
 
 Conform the section enum to `AppSubTab` and wrap the sections in
-`AppSubTabScreen`, which pins the selector under the navigation bar (a
-`safeAreaInset`) and shows the selected section beneath it:
+`AppSubTabScreen`, which puts the selector in the navigation bar under the
+large title (`ToolbarItem(placement: .largeSubtitle)`, iOS 26) and shows the
+selected section beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
@@ -573,12 +574,18 @@ AppSubTabScreen(selection: $selectedTab) { tab in
   are no longer swiped between; the selector is the way to move. And a
   section puts anything above its rows *inside* its list or scroll view (a
   header), never in a `VStack` above it — Log ▸ Workouts' scope line is the
-  list's section header. Two traps, both seen on 2026-10-15: a
-  `safeAreaBar` for the selector left List sections' titles blurred under
-  the scroll-edge effect with nothing scrolled, so it is a `safeAreaInset`;
-  and a section chosen in `onAppear` (a deep link) swaps the scroll view
-  while the screen is still appearing, with the same result — screens
-  apply a requested section in `.task`, after the first frame.
+  list's section header. A section chosen in `onAppear` (a deep link) swaps
+  the scroll view while the screen is still appearing and left the title
+  blurred, so screens apply a requested section in `.task`, after the first
+  frame.
+- **The selector belongs to the title.** In the bar's large-subtitle slot it
+  moves down with the title on a pull-to-refresh and collapses with it on a
+  scroll, as Today's header does; to switch sections from far down a list,
+  scroll back to the top. Two placements were tried first (2026-10-15): a
+  `safeAreaBar` left List sections' titles blurred at rest, and a
+  `safeAreaInset` stayed pinned while a pull slid the large title down
+  *beneath* the selector (seen with a UI-test drag and held
+  screenshots). Check a gesture change with a real drag, not by reasoning.
 - **A section is rebuilt on every switch** (`.id(selection)`), so it starts at
   the top. Keeping visited sections alive and hidden was tried on 2026-10-15
   and dropped: the navigation bar's tracking of the visible one could not be
