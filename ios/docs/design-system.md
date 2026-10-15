@@ -523,8 +523,9 @@ scrolling row of bordered, icon-bearing pills with neither. Same job, two
 languages, and nothing stopping the next screen from inventing a third. Both
 now use `AppSubTabs.swift`.
 
-Conform the section enum to `AppSubTab` and the screen gets the selector and
-the paged content:
+Conform the section enum to `AppSubTab` and wrap the sections in
+`AppSubTabScreen`, which pins the selector under the navigation bar (a
+`safeAreaInset`) and shows the selected section beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
@@ -540,16 +541,12 @@ private enum ProfileTab: Int, AppSubTab {
     }
 }
 
-VStack(spacing: 0) {
-    AppSubTabPicker(selection: $selectedTab)
-
-    AppSubTabContent(selection: $selectedTab) { tab in
-        switch tab {
-        case .equipment:  EquipmentTab()
-        case .injuries:   InjuriesTab()
-        case .benchmarks: BenchmarksTab()
-        case .schedule:   ScheduleTab()
-        }
+AppSubTabScreen(selection: $selectedTab) { tab in
+    switch tab {
+    case .equipment:  EquipmentTab()
+    case .injuries:   InjuriesTab()
+    case .benchmarks: BenchmarksTab()
+    case .schedule:   ScheduleTab()
     }
 }
 .navigationTitle("Profile")
@@ -567,12 +564,33 @@ VStack(spacing: 0) {
 - **Two to five sections.** One is not a choice. Beyond five the labels
   truncate on the narrowest iPhone — split the screen or push a level of
   navigation instead of shrinking the text.
-- **The selector is never the only way to move.** `AppSubTabContent` pages, so
-  sections can be swiped between as well as tapped.
+- **Every tab's large title collapses on scroll**, as Today's does — the
+  system behaviour (Health, Fitness, Music) — and the selector rides up under
+  the inline title. Two things keep it working. The navigation bar must see
+  the section's own scroll view, so the content is the selected section
+  alone: until 2026-10-15 it was a paged `TabView`, which hid the scroll
+  view and left four tabs' titles pinned while Today's collapsed. Sections
+  are no longer swiped between; the selector is the way to move. And a
+  section puts anything above its rows *inside* its list or scroll view (a
+  header), never in a `VStack` above it — Log ▸ Workouts' scope line is the
+  list's section header. Two traps, both seen on 2026-10-15: a
+  `safeAreaBar` for the selector left List sections' titles blurred under
+  the scroll-edge effect with nothing scrolled, so it is a `safeAreaInset`;
+  and a section chosen in `onAppear` (a deep link) swaps the scroll view
+  while the screen is still appearing, with the same result — screens
+  apply a requested section in `.task`, after the first frame.
+- **A section is rebuilt on every switch** (`.id(selection)`), so it starts at
+  the top. Keeping visited sections alive and hidden was tried on 2026-10-15
+  and dropped: the navigation bar's tracking of the visible one could not be
+  verified. What the rebuild used to cost — every section's `.task`
+  refetching — is gone: a section's load goes through
+  `AppState.loadIfStale(key)`, which runs once per program revision and per
+  full load (launch, pull-to-refresh, foreground refresh). A pull-to-refresh
+  inside a section calls its loader directly.
 - **Selection is always haptic** (`AppHaptics.selection()`), wired into
   `AppSubTabPicker` so no call site has to remember.
-- **No `Divider()` under the selector.** The segmented control already reads as
-  a discrete band; a rule beneath it doubles the boundary.
+- **No `Divider()` under the selector.** The segmented control already reads
+  as a discrete band; a rule beneath it doubles the boundary.
 - Spacing is fixed in the component — `.padding(.horizontal)` and
   `.padding(.vertical, 8)`. Do not re-pad at the call site.
 
@@ -697,6 +715,9 @@ period" and offered no way to do it.
 - Give it its own line — do not fold it into a horizontal scroller of sort and
   filter pills, where it reads as one more chip rather than the scope of
   everything below.
+- **A list with several filters takes them into one menu** (§6.24): Log ▸
+  Workouts sets its period in the toolbar's filter menu, and its scope line
+  ("4 workouts · Last 30 Days") keeps the period on screen.
 
 **When NOT to use it**
 
@@ -737,6 +758,21 @@ Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
   `ActivityIcon.forWorkout(activityType:modalityId:)`, which falls back to the
   modality only when the activity string names nothing specific ("Workout",
   `watch_16-Saturday-0`).
+- **What SF Symbols lacks, the app draws.** There is no kettlebell glyph
+  (checked against the iOS 26.3 runtime's 9,184 names), so
+  `kettlebell.symbolset` is a custom SF Symbol written by
+  `ios/tools/make_kettlebell_symbol.py`. How to make another in the same
+  style — when, the drawing rules, the preview, the wiring — is
+  `ios/docs/custom-icons.md`. A custom name must be drawn with
+  `Image(symbol:)`, which sends `AppSymbol.custom` names to the asset
+  catalog — `Image(systemName:)` draws nothing for them
+  (`ActivityIconTests` loads each from the catalog).
+- **Match whole words.** The watch records a session's archetype name as
+  its activity type, so substring matching read "KB Movement Skill" as
+  skiing and "Box Step-Ups" as boxing. Kettlebell sessions (`kb`,
+  `kettlebell`) are `AppSymbol.kettlebell`. Names are shown
+  through `ImportedWorkout.activityLabel`, which title-cases device
+  identifiers and leaves a written name ("KB …", "(ME)") alone.
 - **Colour still comes from the modality.** The icon says what you did; the
   colour says where it sits in the training palette. Keeping the colour on
   `ModalityStyle` is what lets a list stay readable when every row is a bike.
@@ -1057,9 +1093,10 @@ selection; the sheet is the one methodology reference on the phone.
 `Views/LogView.swift`, the third tab, three sections:
 
 - *Workouts* (`LogWorkoutsTab`, the list that was Analytics ▸ Workouts until
-  2026-10-01): recorded activities with the period filter, sort, activity
-  filter, swipe-to-delete and the TRIMP badge; the `.fit` importer is the
-  toolbar action; a row pushes `WorkoutDetailView`.
+  2026-10-01): recorded activities (`WorkoutRow`, §6.23) with
+  swipe-to-delete and the TRIMP badge; the period, sort and activity filter
+  are the toolbar's filter menu (§6.24) beside the `.fit` importer; a row
+  pushes `WorkoutDetailView`.
 - *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
   as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
   first three of the same list (`AppState.pendingMatchSuggestions()`) with
@@ -1175,3 +1212,49 @@ both from the week it starts at (`ProgramConstraintsDiff.merged`). A
 methodology with one track shows it without a choice; a track with one phase
 shows no start picker.
 
+
+---
+
+### 6.23 Workout Row and Linked Workouts
+
+**A recorded workout looks the same wherever it is listed.**
+`Views/WorkoutRow.swift` is one recorded workout: the activity icon (§6.12),
+what the device recorded, date, time and duration, distance and average HR,
+the source chip, the linked-session chip and the TRIMP badge. Log ▸ Workouts
+lists them; the session detail's *Recorded Workout* section shows the one
+linked to that session (with `showsSession: false`, since the row already
+sits on its session, and `showsChevron: false` inside a `NavigationLink`)
+and pushes `WorkoutDetailView`.
+
+A session card on Today shows a `link` glyph beside the completion check
+when a workout is linked. Both read `AppState.linkedWorkout(forSessionKey:)`,
+the reverse of `matchedSessionKey(for:)`: confirmed matches first, then a
+session log's `matched_workout_id`. A match the server dates outside the
+active program (`inCurrentProgram: false` on the snapshot) never links —
+"4-Monday-0" names a session of every program the athlete has had
+(`LinkedWorkoutTests`).
+
+---
+
+### 6.24 Filter Menu
+
+**Several filters on one list are one toolbar button, not rows of pills.**
+`Views/WorkoutFilterMenu.swift`. Log ▸ Workouts used to stack three bands
+under the title — the section picker, the period pills and a scroller of
+sort and activity chips — so the list started a third of the way down the
+screen. The system's own apps (Mail, Files, Photos) put filtering behind
+one `line.3.horizontal.decrease.circle` button.
+
+- **One value.** `WorkoutListFilter` (period, sort, activity) is held by the
+  screen and passed as a binding to the menu and the list, so they cannot
+  disagree. `isDefault` and `apply(to:)` live on it (`WorkoutListFilterTests`).
+- **Submenus that name their value.** Each dimension is a `Picker` with
+  `.pickerStyle(.menu)` inside the `Menu`, so the menu reads "Sort By — Date"
+  without opening it. Reset appears only when something differs.
+- **The glyph fills while a filter is on**, the convention for "this list is
+  narrowed".
+- **Never invisible.** A scope line heads the list — the count and period
+  always, and a removable chip for each narrowing — so a filter set in the
+  menu is visible and one tap clears it (§6.11).
+- The section picker (§6.8) stays the only band under the title. Analytics
+  keeps `AnalyticsPeriodPicker`: there the period is the only filter.

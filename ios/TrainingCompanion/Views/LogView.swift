@@ -24,37 +24,37 @@ struct LogView: View {
     @EnvironmentObject var router: AppRouter
 
     @State private var selectedSegment: LogTab = .workouts
-    @State private var period: AnalyticsPeriod = .thirtyDays
+    @State private var workoutFilter = WorkoutListFilter()
     @State private var selectedWorkout: ImportedWorkout? = nil
     @State private var selectedSession: AppState.LocatedSession? = nil
     @State private var showImportPicker = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                AppSubTabPicker(selection: $selectedSegment)
-
-                AppSubTabContent(selection: $selectedSegment) { tab in
-                    switch tab {
-                    case .workouts:
-                        LogWorkoutsTab(period: $period, selectedWorkout: $selectedWorkout)
-                            .environmentObject(appState)
-                    case .suggestions:
-                        LogSuggestionsTab(reviewWorkout: $selectedWorkout)
-                            .environmentObject(appState)
-                    case .sessions:
-                        LogSessionsTab(selectedSession: $selectedSession)
-                            .environmentObject(appState)
-                    }
+            AppSubTabScreen(selection: $selectedSegment) { tab in
+                switch tab {
+                case .workouts:
+                    LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
+                        .environmentObject(appState)
+                case .suggestions:
+                    LogSuggestionsTab(reviewWorkout: $selectedWorkout)
+                        .environmentObject(appState)
+                case .sessions:
+                    LogSessionsTab(selectedSession: $selectedSession)
+                        .environmentObject(appState)
                 }
             }
             .navigationTitle("Log")
             .appTabStyle()
-            .onAppear { applyRequestedSection() }
+            .task { applyRequestedSection() }
             .onChange(of: router.logSection) { applyRequestedSection() }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if selectedSegment == .workouts {
+                // Filtering is a toolbar menu, not rows of pills above the
+                // list (§6.24): the section picker stays the only band.
+                if selectedSegment == .workouts {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        WorkoutFilterMenu(filter: $workoutFilter,
+                                          activities: workoutFilter.activities(in: appState.importedWorkouts))
                         Button {
                             showImportPicker = true
                         } label: {

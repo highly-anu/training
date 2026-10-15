@@ -50,22 +50,18 @@ struct ProgramView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // §6.8: screen-level sub-navigation goes through AppSubTabs, so
-                // this screen does not invent a third selector.
-                AppSubTabPicker(selection: $section)
-
-                AppSubTabContent(selection: $section) { tab in
-                    switch tab {
-                    case .calendar: currentProgramSection
-                    case .overview: ProgramOverviewTab()
-                    case .history: ProgramHistoryView()
-                    }
+            // §6.8: screen-level sub-navigation goes through AppSubTabs, so
+            // this screen does not invent a third selector.
+            AppSubTabScreen(selection: $section) { tab in
+                switch tab {
+                case .calendar: currentProgramSection
+                case .overview: ProgramOverviewTab()
+                case .history: ProgramHistoryView()
                 }
             }
             .navigationTitle("Program")
             .appTabStyle()
-            .onAppear { applyRequestedSection() }
+            .task { applyRequestedSection() }
             .onChange(of: router.programSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

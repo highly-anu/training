@@ -545,6 +545,9 @@ struct WorkoutMatch {
     let workoutId: String
     let sessionKey: String
     let confidence: String
+    /// False when the server dated the match outside the active program: the
+    /// key ("6-Monday-0") names a session of an earlier block.
+    var inCurrentProgram: Bool = true
 }
 
 /// One row of `GET /health/snapshot`'s `matches`, as the server emits it.
@@ -557,8 +560,10 @@ struct WorkoutMatchRecord: Decodable, Equatable {
     let sessionUid: String?
     let matchConfidence: String
     let matchedAt: String?
+    /// The server's `session_scope` verdict; absent from older servers.
+    var inCurrentProgram: Bool? = nil
 
-    enum CodingKeys: String, CodingKey { case importedWorkoutId, sessionKey, sessionUid, matchConfidence, matchedAt }
+    enum CodingKeys: String, CodingKey { case importedWorkoutId, sessionKey, sessionUid, matchConfidence, matchedAt, inCurrentProgram }
 
     init(importedWorkoutId: String, sessionKey: String, sessionUid: String? = nil,
          matchConfidence: String, matchedAt: String? = nil) {
@@ -582,12 +587,14 @@ struct WorkoutMatchRecord: Decodable, Equatable {
             matchConfidence = ""
         }
         matchedAt = try? c.decodeIfPresent(String.self, forKey: .matchedAt)
+        inCurrentProgram = try? c.decodeIfPresent(Bool.self, forKey: .inCurrentProgram)
     }
 
     /// The app's match, or nil for a rejected decision.
     var asMatch: WorkoutMatch? {
         guard matchConfidence != "rejected" else { return nil }
-        return WorkoutMatch(workoutId: importedWorkoutId, sessionKey: sessionKey, confidence: matchConfidence)
+        return WorkoutMatch(workoutId: importedWorkoutId, sessionKey: sessionKey, confidence: matchConfidence,
+                            inCurrentProgram: inCurrentProgram ?? true)
     }
 }
 
@@ -699,14 +706,26 @@ struct ReadinessResult: Codable {
     /// Where resting HR, HRV and sleep came from; absent from servers older
     /// than the wellness merge (src/wellness.merge_for_scoring).
     var sources: ReadinessSources? = nil
+    /// The watch's recovery readings the score used — Body Battery stands in
+    /// for missing HRV, and recovery time left caps the score
+    /// (api._score_watch_recovery). Absent without a reading from today or
+    /// yesterday, and from older servers.
+    var watch: ReadinessWatch? = nil
+}
+
+struct ReadinessWatch: Codable, Equatable {
+    var bodyBattery: Int? = nil
+    var recoveryLeftH: Double? = nil
 }
 
 /// `daily_bio` is the Apple Health relay and the check-ins; `garmin_ciq` the
-/// Connect IQ watch's heart-rate low. Nil when nothing fed that component.
+/// Connect IQ watch's heart-rate low; `garmin_watch` (recovery only) the
+/// watch's Body Battery and recovery time. Nil when nothing fed that component.
 struct ReadinessSources: Codable, Equatable {
     let rhr: String?
     let hrv: String?
     let sleep: String?
+    var recovery: String? = nil
 }
 
 /// One day's reading from the Connect IQ watch (GET /health/wellness/latest).
@@ -1051,12 +1070,23 @@ extension ImportedWorkout {
         let raw = activityType
         let placeholders = ["apple_watch_live", "watch", "workout"]
         if !placeholders.contains(raw.lowercased()) && !raw.hasPrefix("watch_") {
-            return raw.replacingOccurrences(of: "_", with: " ").capitalized
+            return Self.activityLabel(raw)
         }
         if let modality = inferredModalityId {
             return ModalityStyle.label(for: modality)
         }
         return "Workout"
+    }
+
+    /// An activity type as a person reads it. Device identifiers
+    /// ("cross_country_skiing", "TRAIL_RUNNING") are title-cased; a name
+    /// already written by a person — the watch records the archetype's,
+    /// "KB Movement Skill Session (Wildman)" — is kept as written, because
+    /// `capitalized` turned KB into "Kb" and ME into "Me".
+    static func activityLabel(_ raw: String) -> String {
+        let spaced = raw.replacingOccurrences(of: "_", with: " ")
+        let isIdentifier = raw == raw.lowercased() || raw == raw.uppercased()
+        return isIdentifier ? spaced.capitalized : spaced
     }
 }
 

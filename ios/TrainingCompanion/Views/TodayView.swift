@@ -68,7 +68,12 @@ struct TodayView: View {
             // while it is on screen, and the program may still be loading.
             .onAppear { openPendingSession() }
             .onChange(of: router.pendingSessionKey) { openPendingSession() }
-            .onChange(of: appState.serverProgram?.revision) { openPendingSession() }
+            // A regenerate (here or on the web) is a new program: its
+            // scorecard, not the last one's, on the Development card.
+            .onChange(of: appState.serverProgram?.revision) {
+                openPendingSession()
+                Task { await appState.loadProgramAnalytics() }
+            }
             // A suggestion's "Review" lands on the workout, whose Link to
             // Session flow is the one matching UI the app has.
             .navigationDestination(item: $reviewWorkout) { workout in
@@ -310,6 +315,7 @@ struct TodayView: View {
 
     private func sessionCard(_ session: ProgramSession, key: String) -> some View {
         let done = appState.isSessionComplete(key)
+        let linked = appState.linkedWorkout(forSessionKey: key) != nil
         let color = ModalityStyle.color(for: session.modality)
         let arch = session.archetype
 
@@ -329,6 +335,12 @@ struct TodayView: View {
                         .background(color.opacity(0.12))
                         .clipShape(Capsule())
                     Spacer()
+                    if linked {
+                        Image(systemName: "link")
+                            .font(.caption).fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("Linked to a recorded workout")
+                    }
                     if done {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     }
@@ -471,7 +483,10 @@ struct TodayView: View {
                                 let h = sleep / 60; let m = sleep % 60
                                 readinessStat(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
                             }
+                            watchStats(result.watch)
                         }
+                    } else if result.watch != nil {
+                        VStack(alignment: .trailing, spacing: 6) { watchStats(result.watch) }
                     }
                     Image(systemName: "chevron.right")
                         .font(.caption)
@@ -528,6 +543,17 @@ struct TodayView: View {
         }
     }
 
+    /// Body Battery and the recovery time left, when the score used them.
+    @ViewBuilder
+    private func watchStats(_ watch: ReadinessWatch?) -> some View {
+        if let bb = watch?.bodyBattery {
+            readinessStat(label: "Body Battery", value: "\(bb)")
+        }
+        if let left = watch?.recoveryLeftH, left >= 1 {
+            readinessStat(label: "Recovery", value: "\(Int(left.rounded())) h")
+        }
+    }
+
     private func readinessStat(label: String, value: String) -> some View {
         HStack(spacing: 4) {
             Text(label).font(.caption2).foregroundStyle(.secondary)
@@ -542,6 +568,8 @@ struct TodayView: View {
         case "high_accumulated_fatigue": return "High accumulated fatigue"
         case "insufficient_sleep":       return "Less than 5h sleep last night"
         case "poor_sleep_3d":            return "Poor sleep 3+ nights in a row"
+        case "overreached":              return "Training stress balance deeply negative — overreached"
+        case "recovery_pending":         return "Recovery still running on your watch — score capped"
         default:                         return key
         }
     }
@@ -555,8 +583,47 @@ struct TodayView: View {
         }
     }
 
+    /// The scorecard, or why there is none. "0 % · Off Track" is a verdict;
+    /// it used to stand in for a document still loading, one that failed, one
+    /// from an older server without counts, and a week whose first session
+    /// is still ahead.
+    @ViewBuilder
     private var developmentCard: some View {
-        let stats = complianceStats
+        if let stats = complianceStats, stats.scheduled > 0 {
+            developmentScoreCard(stats)
+        } else if complianceStats != nil {
+            developmentNote(icon: "calendar", title: "No sessions due yet",
+                            detail: "Completion counts from the first session whose day has come.")
+        } else if appState.isLoadingProgramAnalytics {
+            developmentNote(icon: nil, title: "Measuring the program…", detail: nil)
+        } else {
+            developmentNote(icon: "chart.bar.xaxis", title: "Not measured yet",
+                            detail: "The program's scorecard is not available — pull to refresh.")
+        }
+    }
+
+    private func developmentNote(icon: String?, title: String, detail: String?) -> some View {
+        HStack(spacing: 12) {
+            if let icon {
+                Image(systemName: icon).foregroundStyle(.secondary)
+            } else {
+                ProgressView()
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline).fontWeight(.medium)
+                if let detail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func developmentScoreCard(_ stats: ComplianceStats) -> some View {
         let color = complianceColor(stats.overall)
 
         return VStack(alignment: .leading, spacing: 12) {
@@ -647,9 +714,10 @@ struct TodayView: View {
     /// when it was logged complete or has a matched workout, and only
     /// sessions whose day has come count as scheduled — this card used to
     /// count the whole current week, so the days ahead read as missed.
-    private var complianceStats: ComplianceStats {
+    /// Nil when there is no scorecard with counts to show.
+    private var complianceStats: ComplianceStats? {
         guard let sc = appState.programAnalytics?.scorecard, sc.plannedSessions != nil else {
-            return ComplianceStats(overall: 0, completed: 0, scheduled: 0, weekTrend: nil, weekRows: [])
+            return nil
         }
         let rows = sc.weeks.map { ComplianceStats.WeekRow(weekIndex: $0.weekIndex, weekNumber: $0.weekNumber, pct: Int(($0.pct ?? 0).rounded())) }
         let trend = rows.count >= 2 ? rows[rows.count - 1].pct - rows[rows.count - 2].pct : nil

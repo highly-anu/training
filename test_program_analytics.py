@@ -975,6 +975,18 @@ def test_describe() -> None:
     check('and is gone once removed', '_zz_test' not in describe.describe_all()['philosophies'])
 
 
+def test_change_summary_units():
+    print('\nprogression_findings: change summaries')
+    from src.analytics.document import progression_findings
+
+    def summary(unit):
+        doc = {'progress': [{'id': f'p_{unit}', 'unit': unit, 'status': 'on_track',
+                             'series': [{'value': 1, 'week': 1}, {'value': 3, 'week': 2}]}]}
+        return progression_findings(doc)[0]['change_summary']
+    check('a symbol sits on the number', summary('kg') == '+2kg over 1 wk', summary('kg'))
+    check('a word is spaced from it', summary('exercises') == '+2 exercises over 1 wk', summary('exercises'))
+
+
 if __name__ == '__main__':
     test_families()
     test_zones()
@@ -995,6 +1007,7 @@ if __name__ == '__main__':
     test_document()
     test_notes_route_and_fatigue()
     test_describe()
+    test_change_summary_units()
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))
         sys.exit(1)

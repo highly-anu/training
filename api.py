@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import tempfile
-from datetime import date as _date, timedelta as _timedelta
+from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
 from dotenv import load_dotenv
@@ -3638,11 +3638,74 @@ def _bio_for_scoring(user_id: str, days: int) -> tuple[list[dict], dict]:
                                       wellness_store.recent(user_id, days=days))
 
 
+_WATCH_READING_MAX_AGE_H = 36
+
+
+def _as_utc(value) -> _datetime | None:
+    """A reading time as an aware datetime: the store returns ISO strings,
+    the watch posts epoch seconds, tests pass datetimes."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return _datetime.fromtimestamp(value, _timezone.utc)
+    if isinstance(value, str):
+        value = _datetime.fromisoformat(value.replace('Z', '+00:00'))
+    return value if value.tzinfo else value.replace(tzinfo=_timezone.utc)
+
+
+def _watch_recovery(bio_list: list[dict], now: _datetime | None = None) -> dict | None:
+    """The watch's newest Body Battery peak and the recovery hours still left,
+    from a reading taken in the last 36 hours — older says nothing about this
+    morning. Freshness is the reading's age, not its date: the server's UTC
+    date runs a day ahead of the athlete's every evening west of Greenwich.
+    Rows without a reading time fall back to their date (today or yesterday,
+    UTC). Recovery time counts down from the post it came from."""
+    now = now or _datetime.now(_timezone.utc)
+    cutoff = (now.date() - _timedelta(days=1)).isoformat()
+
+    def fresh(b: dict) -> bool:
+        read = _as_utc(b.get('wellness_read_at'))
+        if read is not None:
+            return (now - read).total_seconds() <= _WATCH_READING_MAX_AGE_H * 3600
+        return str(b['date']) >= cutoff
+
+    rows = [b for b in bio_list
+            if (b.get('body_battery_max') is not None or b.get('recovery_time_h') is not None) and fresh(b)]
+    if not rows:
+        return None
+    row = max(rows, key=lambda b: str(b['date']))
+    left = row.get('recovery_time_h')
+    read_at = _as_utc(row.get('recovery_read_at'))
+    if left is not None and read_at is not None:
+        left = max(0.0, left - (now - read_at).total_seconds() / 3600)
+    return {'body_battery': row.get('body_battery_max'), 'recovery_left_h': left}
+
+
+def _score_watch_recovery(watch: dict) -> int:
+    """HRV's 35 points from the watch, when there is no HRV: the morning's Body
+    Battery peak (20 points, full at 80, none at 20) and the recovery time
+    left (15 points, full at none, none at 72 h or more). With one of the two,
+    it carries all 35."""
+    bb, left = watch.get('body_battery'), watch.get('recovery_left_h')
+    bb_part = None if bb is None else min(1.0, max(0.0, (bb - 20) / 60))
+    rec_part = None if left is None else 1 - min(left, 72) / 72
+    if bb_part is not None and rec_part is not None:
+        return round(20 * bb_part + 15 * rec_part)
+    return round(35 * (bb_part if bb_part is not None else rec_part))
+
+
 def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | None = None,
                        sources: dict | None = None) -> dict:
     flags: list[str] = []
     rhr     = _score_rhr(bio_list, flags)
-    hrv     = _score_hrv(bio_list, flags)
+    watch   = _watch_recovery(bio_list)
+    has_hrv = sum(1 for b in _recent_bio(bio_list, 14) if b.get('hrv') is not None) >= 3
+    if not has_hrv and watch:
+        # No HRV (Garmin does not pass it to Apple Health): the watch's
+        # recovery signals carry its weight instead of a neutral 17.
+        hrv = _score_watch_recovery(watch)
+    else:
+        hrv = _score_hrv(bio_list, flags)
     sleep   = _score_sleep(bio_list, flags)      # capped at 10 (was 15)
     fatigue = _score_fatigue(session_dict, flags)  # capped at 10 (was 15)
     tsb     = _score_tsb(user_id, flags) if user_id else 5
@@ -3651,6 +3714,13 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
     sleep   = min(sleep, 10)
     fatigue = min(fatigue, 10)
     score = min(100, max(0, rhr + hrv + sleep + fatigue + tsb))
+    # Recovery the watch still counts is a ceiling, as it is for Garmin's own
+    # readiness: a steady resting HR used to score 67 with 68 h of recovery left.
+    if watch and watch.get('recovery_left_h') is not None:
+        ceiling = max(10, round(100 - watch['recovery_left_h']))
+        if score > ceiling:
+            score = ceiling
+            flags.append('recovery_pending')
     status = 'green' if score >= 70 else 'yellow' if score >= 45 else 'red'
     out = {
         'score':      score,
@@ -3658,8 +3728,14 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
         'flags':      flags,
         'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue, 'tsb': tsb},
     }
+    if watch:
+        out['watch'] = {'bodyBattery': watch['body_battery'],
+                        'recoveryLeftH': None if watch['recovery_left_h'] is None
+                        else round(watch['recovery_left_h'], 1)}
     if sources is not None:
-        out['sources'] = sources        # where rhr / hrv / sleep came from
+        out['sources'] = dict(sources)  # where rhr / hrv / sleep came from
+        if watch:
+            out['sources']['recovery'] = 'garmin_watch'
     return out
 
 
@@ -3973,6 +4049,14 @@ def _program_analytics_inputs(user_id: str):
     ), stored
 
 
+def _watch_digest(bio_logs: list[dict]) -> dict | None:
+    watch = _watch_recovery(bio_logs)
+    if not watch:
+        return None
+    left = watch['recovery_left_h']
+    return {'bb': watch['body_battery'], 'left_h': None if left is None else round(left)}
+
+
 def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     """Everything that can change the document. The old progression cache
     hashed session keys and exercise counts only, so adding sets to a logged
@@ -3993,6 +4077,10 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         # corrected Apple Health night, has to bust the cache too.
         _j.dumps(sorted((b.get('date', ''), b.get('resting_hr'), b.get('hrv'), b.get('sleep_duration_min'))
                         for b in inputs.bio_logs), default=str),
+        # The watch's recovery readings readiness scores, with the hours left
+        # to the hour: a later Body Battery or recovery post, and the
+        # countdown itself, change the readiness this document carries.
+        _j.dumps(_watch_digest(inputs.bio_logs), sort_keys=True),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
         # The document's shape: bump when a section gains keys, so stored

@@ -256,6 +256,9 @@ is the source of the patterns, not the neighbouring screen:
   same change, then document it in §6. Profile and Analytics each grew their
   own sub-tab selector before that rule existed; both now use
   `AppSubTabs.swift` (§6.8).
+- **Custom icons** (what SF Symbols lacks, e.g. `kettlebell`): `ios/docs/custom-icons.md`
+  — the drawing rules, `ios/tools/make_*_symbol.py` + `preview_symbol.swift`, and
+  `Image(symbol:)`, without which a custom name draws nothing.
 - **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
 - **iOS tabs**: Today · Program · Log · Analytics · Profile (`AppRouter.Tab`); Settings
   (connections, devices & sync, notifications, appearance, account) is pushed from
@@ -362,7 +365,20 @@ training data; only sign-in goes to Supabase.
   `api._bio_for_scoring`, which takes resting HR from **one** series (the one
   with more readings, ties to `daily_bio`; `wellness.merge_for_scoring`) and
   never mixes methods day by day. Readiness says which in `sources`. With no
-  watch rows every score is what it was. The watch's series is its
+  watch rows every score is what it was. **Body Battery and recovery time
+  are scored** (since 2026-10-15, `api._score_watch_recovery`): with no HRV —
+  Garmin does not pass it to Apple Health — the morning's Body Battery peak
+  and the recovery hours left carry HRV's 35 points instead of a neutral 17,
+  and recovery left caps the score at `100 − hours` (min 10, flag
+  `recovery_pending`), counted down from `recovery_read_at` — the post the
+  hours came from (`migrations/010`, lazily added by `wellness_store`; the
+  row's `read_at` moves on with a later post that carries none). Only a
+  reading taken in the last 36 hours counts — by its age, not its date, since
+  the server's UTC date runs ahead of the athlete's every evening west of
+  Greenwich. The program analytics digest keys on these readings
+  (`api._watch_digest`). Production read 67 against Garmin's 17
+  with 68 h of recovery left; it now reads 32. The response carries `watch`
+  and `sources.recovery` (`test_wellness.py`). The watch's series is its
   heart-rate low `hr_min`, **never** `resting_hr`: the SDK's
   `UserProfile.restingHeartRate` is the zone setting (46 on three mornings
   while the watch showed 46, 45, 49). Garmin's exact daily resting HR reaches

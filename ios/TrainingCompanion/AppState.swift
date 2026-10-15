@@ -121,9 +121,28 @@ final class AppState: ObservableObject {
 
     // MARK: - Initial Load
 
+    /// When `loadAll` last finished — what `refreshIfStale` measures against.
+    private(set) var lastFullLoad: Date? = nil
+    /// A `loadAll` is running. The launch path already runs two loads back to
+    /// back (`loadAllExceptWorkouts`, then `loadAll` after the sync); a
+    /// foreground refresh on top would race them and could land last with
+    /// older data.
+    private var isLoadingAll = false
+
     func loadAll() async {
+        isLoadingAll = true
+        defer {
+            isLoadingAll = false
+            lastFullLoad = Date()
+        }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
+            // Today's Development card is the program scorecard. It was loaded
+            // once and refreshed only after the phone itself completed a
+            // session, so matches from the watch, Garmin or the web, and a
+            // program regenerated on the web, left it days old (0 % on a
+            // week the server had at 100 %).
+            group.addTask { await self.loadProgramAnalytics() }
             group.addTask { await self.loadProfile() }
             group.addTask { await self.loadPerformanceLogs() }
             group.addTask { await self.loadRecentBioLogs() }
@@ -133,6 +152,35 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProgressionReview() }
             group.addTask { await self.loadMatchSuggestions() }
         }
+    }
+
+    /// What each section's load last ran against (`loadIfStale`).
+    private var sectionLoads: [String: String] = [:]
+
+    /// Run a section's load unless it already ran since the program's revision
+    /// or the last full load changed. Sections are rebuilt on every switch
+    /// (`AppSubTabScreen`), and their `.task`s used to refetch each time; a
+    /// pull-to-refresh, a foreground refresh or a regenerate still reloads
+    /// them the next time they are shown.
+    func loadIfStale(_ key: String, _ load: () async -> Void) async {
+        let stamp = "\(serverProgram?.revision ?? "-")|\(lastFullLoad?.timeIntervalSince1970 ?? 0)"
+        guard sectionLoads[key] != stamp else { return }
+        await load()
+        sectionLoads[key] = stamp
+    }
+
+    /// Coming back to the foreground: reload what Today shows when the last
+    /// full load is older than `maxAge`. The app had no foreground refresh,
+    /// so a phone left in the background overnight opened on yesterday's
+    /// readiness and scorecard.
+    ///
+    /// Nothing before the first full load has finished: at launch the scene
+    /// turns active (and again after the HealthKit permission sheet) while the
+    /// launch loads are still running.
+    func refreshIfStale(maxAge: TimeInterval = 300, now: Date = Date()) async {
+        guard !isLoadingAll, let last = lastFullLoad,
+              now.timeIntervalSince(last) >= maxAge else { return }
+        await loadAll()
     }
 
     /// Called on first appear — loads everything the Today tab needs without fetching workouts,
@@ -200,6 +248,21 @@ final class AppState: ObservableObject {
     func matchedSessionKey(for workoutId: String) -> String? {
         if let key = workoutMatches[workoutId]?.sessionKey { return key }
         return sessionLogs.values.first { $0.matchedWorkoutId == workoutId }?.sessionKey
+    }
+
+    /// The recorded workout linked to a planned session of the active
+    /// program, if any — the reverse of `matchedSessionKey(for:)`. A match the
+    /// server dated to an earlier block is skipped: its key is program-relative
+    /// and names a session of this program too.
+    func linkedWorkout(forSessionKey key: String) -> ImportedWorkout? {
+        let matched = workoutMatches.values
+            .filter { $0.sessionKey == key && $0.inCurrentProgram }
+            .map(\.workoutId)
+        let ids = matched.isEmpty ? [sessionLogs[key]?.matchedWorkoutId].compactMap { $0 } : matched
+        // Several workouts can be linked to one session; show the longest.
+        return importedWorkouts
+            .filter { ids.contains($0.id) }
+            .max { ($0.durationMinutes ?? 0) < ($1.durationMinutes ?? 0) }
     }
 
     func deleteWorkout(id: String) async throws {

@@ -71,26 +71,38 @@ enum ActivityIcon {
     /// The icon for an activity type, or nil when the string names no
     /// particular activity ("workout", "watch_16-Saturday-0", …) and the
     /// caller should fall back to the modality.
+    ///
+    /// Matches whole words, never substrings. The watch records a session's
+    /// archetype name as its activity type ("KB Movement Skill Session
+    /// (Wildman)"), and substring matching read "skill" as skiing and
+    /// "Weighted Box Step-Ups" as boxing.
     static func forActivityType(_ activityType: String) -> String? {
-        let t = activityType.lowercased()
-        if t.contains("run")                        { return "figure.run" }
-        if t.contains("cycl") || t.contains("bike") { return "figure.outdoor.cycle" }
-        if t.contains("swim")                       { return "figure.pool.swim" }
-        if t.contains("hik")                        { return "figure.hiking" }
-        if t.contains("walk")                       { return "figure.walk" }
-        if t.contains("row")                        { return "figure.rowing" }
-        if t.contains("elliptical")                 { return "figure.elliptical" }
-        if t.contains("yoga")                       { return "figure.yoga" }
-        if t.contains("flexib") || t.contains("mobility") { return "figure.flexibility" }
-        if t.contains("strength") || t.contains("weight") {
-            return "figure.strengthtraining.traditional"
+        let words = activityType.lowercased()
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            .map(String.init)
+        func word(_ exact: Set<String>) -> Bool { words.contains { exact.contains($0) } }
+        func stem(_ prefixes: String...) -> Bool {
+            words.contains { w in prefixes.contains { w.hasPrefix($0) } }
         }
-        if t.contains("core")                       { return "figure.core.training" }
-        if t.contains("box")                        { return "figure.boxing" }
-        if t.contains("climb")                      { return "figure.climbing" }
-        if t.contains("ski")                        { return "figure.skiing.crosscountry" }
-        if t.contains("hiit") || t.contains("interval") { return "figure.highintensity.intervaltraining" }
-        if t.contains("watch")                      { return "applewatch.watchface" }
+
+        if word(["kb", "kettlebell", "kettlebells"]) { return AppSymbol.kettlebell }
+        if stem("run")                               { return "figure.run" }
+        if stem("cycl", "bike", "biking")            { return "figure.outdoor.cycle" }
+        if stem("swim")                              { return "figure.pool.swim" }
+        if stem("hik")                               { return "figure.hiking" }
+        if stem("walk")                              { return "figure.walk" }
+        if word(["row", "rowing", "rower", "erg"])   { return "figure.rowing" }
+        if word(["ruck", "rucking"])                 { return "figure.hiking" }
+        if stem("elliptical")                        { return "figure.elliptical" }
+        if stem("yoga")                              { return "figure.yoga" }
+        if stem("flexib", "mobility")                { return "figure.flexibility" }
+        if stem("strength", "weight", "bodyweight")  { return "figure.strengthtraining.traditional" }
+        if word(["core"])                            { return "figure.core.training" }
+        if word(["boxing", "kickboxing"])            { return "figure.boxing" }
+        if stem("climb")                             { return "figure.climbing" }
+        if word(["ski", "skiing", "skier", "skierg"]) { return "figure.skiing.crosscountry" }
+        if word(["hiit"]) || stem("interval")        { return "figure.highintensity.intervaltraining" }
+        if word(["watch"])                           { return "applewatch.watchface" }
         return nil
     }
 
@@ -100,5 +112,26 @@ enum ActivityIcon {
         if let icon = forActivityType(activityType) { return icon }
         if let modalityId { return ModalityStyle.icon(for: modalityId) }
         return "figure.mixed.cardio"
+    }
+}
+
+/// Symbols the app draws itself, from the asset catalog, for what SF Symbols
+/// has no glyph for (design-system §6.12). Each is written by an
+/// `ios/tools/make_<name>_symbol.py`; ios/docs/custom-icons.md is how to add one.
+enum AppSymbol {
+    static let kettlebell = "kettlebell"
+    static let custom: Set<String> = [kettlebell]
+}
+
+extension Image {
+    /// An icon name from `ActivityIcon` or `ModalityStyle`: one of the app's
+    /// own symbols from the asset catalog, any other from SF Symbols.
+    /// `Image(systemName:)` draws nothing for a custom name.
+    init(symbol name: String) {
+        if AppSymbol.custom.contains(name) {
+            self.init(name)
+        } else {
+            self.init(systemName: name)
+        }
     }
 }

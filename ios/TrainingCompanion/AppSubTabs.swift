@@ -9,15 +9,14 @@ import SwiftUI
 /// inventing a third. See §6.8 of `ios/docs/design-system.md` for the rules.
 ///
 /// Conform a sub-section enum to `AppSubTab` and the screen gets the selector
-/// and the paged content for free:
+/// pinned under the navigation bar and the selected section beneath it:
 ///
 ///     private enum ProfileTab: Int, AppSubTab {
 ///         case equipment, injuries
 ///         var label: String { … }
 ///     }
 ///
-///     AppSubTabPicker(selection: $tab)
-///     AppSubTabContent(selection: $tab) { tab in
+///     AppSubTabScreen(selection: $tab) { tab in
 ///         switch tab { … }
 ///     }
 protocol AppSubTab: CaseIterable, Hashable, Identifiable {
@@ -48,19 +47,25 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
     }
 }
 
-/// The content pane beneath it. A paged `TabView` so the sections can also be
-/// swiped between — the selector is not the only way to move.
-struct AppSubTabContent<Tab: AppSubTab, Content: View>: View {
+/// A whole sectioned screen: the selected section, with the selector pinned
+/// under the navigation bar, so the large title collapses as it does on Today
+/// and the selector rides up under the inline title (§6.8).
+struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
     @Binding var selection: Tab
     @ViewBuilder var content: (Tab) -> Content
 
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(Array(Tab.allCases)) { tab in
-                content(tab).tag(tab)
+        // The selected section only, not a paged TabView: the navigation
+        // bar collapses its large title by watching the screen's scroll
+        // view, and a paging container hides it.
+        content(selection)
+            .id(selection)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // An inset, not a `safeAreaBar`: under the bar a List section
+            // left the large title blurred by the scroll-edge effect with
+            // nothing scrolled (Profile ▸ Athlete, Schedule).
+            .safeAreaInset(edge: .top, spacing: 0) {
+                AppSubTabPicker(selection: $selection)
             }
-        }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(AppAnimation.springStandard, value: selection)
     }
 }

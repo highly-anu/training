@@ -202,6 +202,17 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     }
 
     var label: String { rawValue }
+
+    /// The period in words, for a menu or a sentence.
+    var longLabel: String {
+        switch self {
+        case .sevenDays:   return "Last 7 Days"
+        case .thirtyDays:  return "Last 30 Days"
+        case .threeMonths: return "Last 3 Months"
+        case .oneYear:     return "Last Year"
+        case .all:         return "All Time"
+        }
+    }
 }
 
 enum WorkoutSortKey: String, CaseIterable, Identifiable {
@@ -301,7 +312,7 @@ struct LoadSummary: Decodable, Equatable {
     var activityEntries: [ActivityTypeEntry] {
         let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
         return activities.enumerated().map { i, a in
-            ActivityTypeEntry(name: a.activityType.replacingOccurrences(of: "_", with: " ").capitalized,
+            ActivityTypeEntry(name: ImportedWorkout.activityLabel(a.activityType),
                               hours: a.minutes / 60, sessions: Double(a.sessions), color: colors[i % colors.count])
         }
     }

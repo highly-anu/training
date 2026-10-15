@@ -36,35 +36,32 @@ struct AnalyticsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                AppSubTabPicker(selection: $selectedSegment)
-
-                AppSubTabContent(selection: $selectedSegment) { tab in
-                    switch tab {
-                    case .program:
-                        AnalyticsProgramTab()
-                            .environmentObject(appState)
-                    case .progress:
-                        ProgressionView()
-                            .environmentObject(appState)
-                    case .blocks:
-                        AnalyticsDevelopmentTab()
-                            .environmentObject(appState)
-                    case .load:
-                        AnalyticsOverviewTab(period: $period)
-                            .environmentObject(appState)
-                    case .recovery:
-                        AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
-                            .environmentObject(appState)
-                    }
+            AppSubTabScreen(selection: $selectedSegment) { tab in
+                switch tab {
+                case .program:
+                    AnalyticsProgramTab()
+                        .environmentObject(appState)
+                case .progress:
+                    ProgressionView()
+                        .environmentObject(appState)
+                case .blocks:
+                    AnalyticsDevelopmentTab()
+                        .environmentObject(appState)
+                case .load:
+                    AnalyticsOverviewTab(period: $period)
+                        .environmentObject(appState)
+                case .recovery:
+                    AnalyticsRecoveryTab(showBioEntry: $showBioEntry)
+                        .environmentObject(appState)
                 }
             }
             .navigationTitle("Analytics")
             .appTabStyle()
             // A section asked for from another tab. Handled in both places
-            // because the router may set it before this view exists (onAppear
-            // catches that) or while it is already on screen (onChange does).
-            .onAppear { applyRequestedSection() }
+            // because the router may set it before this view exists (.task
+            // catches that, after the first frame — §6.8) or while it is
+            // already on screen (onChange does).
+            .task { applyRequestedSection() }
             .onChange(of: router.analyticsSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

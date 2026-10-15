@@ -149,7 +149,14 @@ def test_merge() -> None:
           sources == {'rhr': 'garmin_ciq', 'hrv': None, 'sleep': None} and merged[0]['resting_hr'] == 46,
           str(sources))
     merged, sources = merge_for_scoring([], [{'date': bio(0)['date'], 'body_battery_max': 95}])
-    check('a watch row without an HR low leaves rhr unsourced', sources['rhr'] is None and merged == [])
+    check('a watch row without an HR low leaves rhr unsourced',
+          sources['rhr'] is None and not any('resting_hr' in b for b in merged), str(merged))
+    check('…but its Body Battery rides on that day', merged[0].get('body_battery_max') == 95, str(merged))
+    merged, _ = merge_for_scoring(apple, [{'date': bio(0)['date'], 'recovery_time_h': 40, 'read_at': 1}])
+    today_row = {b['date']: b for b in merged}[bio(0)['date']]
+    check('recovery joins the day\'s Apple row, which keeps its readings',
+          today_row.get('recovery_time_h') == 40 and today_row.get('recovery_read_at') == 1
+          and today_row['hrv'] == 60.0, str(today_row))
 
     # The spike's finding: UserProfile.restingHeartRate read 46 on three
     # mornings while the watch showed 46, 45, 49. A profile value alone must
@@ -173,6 +180,84 @@ def test_readiness_unchanged() -> None:
           and after['components'] == before['components'], f'{before} vs {after}')
     check('readiness names its sources', after.get('sources', {}).get('rhr') == 'daily_bio')
     check('without sources the shape is the old one', 'sources' not in before)
+
+
+def test_readiness_from_the_watch() -> None:
+    import api
+    from datetime import datetime, timezone
+    from src.wellness import merge_for_scoring
+    print('readiness from the watch')
+    now = datetime.now(timezone.utc)
+    # The production morning of 2026-10-15: steady RHR, no HRV, 7.4 h sleep;
+    # the watch: Body Battery peak 60, 68 h of recovery left.
+    apple = [bio(d, resting_hr=46 + (d == 0), sleep_duration_min=444) for d in range(7)]
+    watch = [{'date': bio(0)['date'], 'body_battery_max': 60, 'recovery_time_h': 68, 'read_at': now}]
+    before = api._compute_readiness(apple, {}, user_id=None)
+    merged, sources = merge_for_scoring(apple, watch)
+    after = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('without HRV the watch carries its 35 points',
+          after['components']['hrv'] == round(20 * 40 / 60 + 15 * 4 / 72), str(after['components']))
+    check('68 h of recovery left caps the score at 32', after['score'] == 32, f"{before['score']} → {after['score']}")
+    check('…and says why', 'recovery_pending' in after['flags'], str(after['flags']))
+    check('…which is red', after['status'] == 'red')
+    check('no insufficient_data for the HRV the watch stood in for',
+          'insufficient_data' not in after['flags'], str(after['flags']))
+    check('the response names the watch', after['sources'].get('recovery') == 'garmin_watch'
+          and after['watch'] == {'bodyBattery': 60, 'recoveryLeftH': 68.0}, str(after.get('watch')))
+
+    earlier = [{**watch[0], 'read_at': now.timestamp() - 10 * 3600}]
+    merged, sources = merge_for_scoring(apple, earlier)
+    later = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('recovery counts down from the reading (10 h ago: 58 h left, ceiling 42)',
+          later['watch']['recoveryLeftH'] == 58.0 and later['score'] <= 42, str(later))
+
+    with_hrv = [bio(d, resting_hr=46, hrv=60.0, sleep_duration_min=444) for d in range(7)]
+    plain = api._compute_readiness(with_hrv, {}, user_id=None)
+    merged, sources = merge_for_scoring(with_hrv, [{**watch[0], 'recovery_time_h': 0}])
+    rested = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('with HRV the HRV score stands', rested['components']['hrv'] == plain['components']['hrv'])
+    check('…and no recovery left changes nothing', rested['score'] == plain['score']
+          and 'recovery_pending' not in rested['flags'], f"{plain['score']} vs {rested['score']}")
+
+    stale = [{'date': bio(3)['date'], 'body_battery_max': 20, 'recovery_time_h': 90,
+              'read_at': now - timedelta(days=3)}]
+    merged, sources = merge_for_scoring(apple, stale)
+    old = api._compute_readiness(merged, {}, user_id=None, sources=sources)
+    check('a reading older than yesterday is ignored', old['score'] == before['score']
+          and 'watch' not in old, f"{before['score']} vs {old['score']}")
+
+    # The countdown runs from the post the hours came from, not the row's
+    # newest read_at (a later post without recovery time moves that on).
+    split = [{'date': bio(0)['date'], 'recovery_time_h': 40, 'read_at': now.isoformat(),
+              'recovery_read_at': (now - timedelta(hours=9)).isoformat()}]
+    merged, sources = merge_for_scoring(apple, split)
+    w = api._compute_readiness(merged, {}, user_id=None, sources=sources)['watch']
+    check('counts down from recovery_read_at (40 h read 9 h ago: 31 h)', w['recoveryLeftH'] == 31.0, str(w))
+    legacy = [{'date': bio(0)['date'], 'recovery_time_h': 40, 'read_at': (now - timedelta(hours=2)).isoformat()}]
+    merged, _ = merge_for_scoring(apple, legacy)
+    check('…or from read_at for a row written before the column',
+          round(api._watch_recovery(merged)['recovery_left_h'], 1) == 38.0, str(api._watch_recovery(merged)))
+
+    # Freshness is the reading's age: west of Greenwich in the evening the
+    # server's UTC date is already tomorrow, and yesterday's row is two "days" old.
+    evening = [{'date': bio(2)['date'], 'body_battery_max': 70,
+                'read_at': (now - timedelta(hours=30)).isoformat()}]
+    merged, _ = merge_for_scoring(apple, evening)
+    check('a reading 30 h old counts whatever its date', api._watch_recovery(merged) is not None)
+    too_old = [{'date': bio(1)['date'], 'body_battery_max': 70,
+                'read_at': (now - timedelta(hours=40)).isoformat()}]
+    merged, _ = merge_for_scoring(apple, too_old)
+    check('…one 40 h old does not', api._watch_recovery(merged) is None)
+
+    # The program analytics cache keys on what readiness used.
+    a, _ = merge_for_scoring(apple, watch)
+    b, _ = merge_for_scoring(apple, [{**watch[0], 'body_battery_max': 80}])
+    check('a new Body Battery changes the analytics digest', api._watch_digest(a) != api._watch_digest(b))
+    check('…no watch reading gives no digest entry', api._watch_digest(apple) is None)
+
+    bb_only = [{'date': bio(0)['date'], 'body_battery_max': 80}]
+    merged, sources = merge_for_scoring(apple, bb_only)
+    check('Body Battery alone carries all 35', api._compute_readiness(merged, {}, user_id=None)['components']['hrv'] == 35)
 
 
 # ── SQL ───────────────────────────────────────────────────────────────────────
@@ -252,6 +337,30 @@ def _sql_checks(dsn: str) -> None:
     r = row_now()
     check('a newer reading with fewer values keeps the others', r[0] == 47 and r[4] == 40, str(r))
 
+    def recovery_times(uid):
+        c = psycopg2.connect(dsn)
+        with c.cursor() as cur:
+            cur.execute('SELECT recovery_time_h, extract(epoch FROM recovery_read_at)::bigint, '
+                        'extract(epoch FROM read_at)::bigint FROM daily_wellness '
+                        'WHERE user_id = %s AND date = %s', (uid, day))
+            r = cur.fetchone()
+        c.close()
+        return r
+    check('recovery_read_at stays with the post the hours came from',
+          recovery_times(user) == (40, t0 + 3 * 3600, t0 + 4 * 3600), str(recovery_times(user)))
+
+    # Out of order: a newer post without recovery time, then an older one with it.
+    other = 'order-test-user'
+    newer, _ = wellness.validate({'date': day, 'readAt': t0 + 8 * 3600, 'stress': 20}, today=today)
+    older, _ = wellness.validate({'date': day, 'readAt': t0, 'recoveryTimeH': 40}, today=today)
+    wellness_store.upsert(other, newer)
+    wellness_store.upsert(other, older)
+    check('a late post fills recovery time with its own read time',
+          recovery_times(other) == (40, t0, t0 + 8 * 3600), str(recovery_times(other)))
+    got = wellness_store.recent(other)[0]
+    check('recent() carries recovery_read_at', got.get('recovery_read_at', '').startswith(
+          '20'), str(got))
+
     rows = wellness_store.recent(user, days=14)
     check('recent() reads it back', len(rows) == 1 and rows[0]['resting_hr'] == 47
           and rows[0]['date'] == day, str(rows))
@@ -302,6 +411,7 @@ if __name__ == '__main__':
     test_watch_parity()
     test_merge()
     test_readiness_unchanged()
+    test_readiness_from_the_watch()
     sql_suite()
     print()
     if _failures:

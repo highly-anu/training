@@ -35,7 +35,7 @@ struct AnalyticsDevelopmentTab: View {
         }
         // A new revision means a program was saved or generated, which is
         // what moves the history; the server caches the document otherwise.
-        .task(id: appState.serverProgram?.revision) { await appState.loadDevelopmentAnalytics() }
+        .task(id: appState.serverProgram?.revision) { await appState.loadIfStale("development") { await appState.loadDevelopmentAnalytics() } }
         .refreshable {
             await AppRefresh.perform { await appState.loadDevelopmentAnalytics(fresh: true) }
         }

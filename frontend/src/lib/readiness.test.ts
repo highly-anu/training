@@ -21,4 +21,9 @@ describe('readinessSourceNote', () => {
     expect(readinessSourceNote({ rhr: 'garmin_ciq', hrv: null, sleep: null }))
       .toBe("Resting HR from your Garmin watch's heart-rate low.")
   })
+  it('names the watch for Body Battery and recovery time', () => {
+    expect(
+      readinessSourceNote({ rhr: 'daily_bio', hrv: null, sleep: 'daily_bio', recovery: 'garmin_watch' }),
+    ).toBe('Resting HR and sleep from Apple Health and check-ins; Body Battery and recovery time from your Garmin watch.')
+  })
 })

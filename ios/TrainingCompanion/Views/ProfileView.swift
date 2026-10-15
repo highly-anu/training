@@ -747,21 +747,17 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                AppSubTabPicker(selection: $selectedTab)
-                    .onAppear { applyRequestedSection() }
-                    .onChange(of: router.profileSection) { applyRequestedSection() }
-
-                AppSubTabContent(selection: $selectedTab) { tab in
-                    switch tab {
-                    case .athlete:    AthleteTab()
-                    case .equipment:  EquipmentTab()
-                    case .injuries:   InjuriesTab()
-                    case .benchmarks: BenchmarksTab()
-                    case .schedule:   ScheduleTab()
-                    }
+            AppSubTabScreen(selection: $selectedTab) { tab in
+                switch tab {
+                case .athlete:    AthleteTab()
+                case .equipment:  EquipmentTab()
+                case .injuries:   InjuriesTab()
+                case .benchmarks: BenchmarksTab()
+                case .schedule:   ScheduleTab()
                 }
             }
+            .task { applyRequestedSection() }
+            .onChange(of: router.profileSection) { applyRequestedSection() }
             .navigationTitle("Profile")
             .appTabStyle()
             .toolbar {

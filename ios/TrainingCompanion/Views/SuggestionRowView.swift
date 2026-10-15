@@ -15,7 +15,7 @@ struct SuggestionRowView: View {
     var body: some View {
         let modalityId = workout.inferredModalityId ?? planned?.modality ?? "aerobic_base"
         HStack(spacing: 12) {
-            Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
+            Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType,
                                                       modalityId: workout.inferredModalityId))
                 .foregroundStyle(ModalityStyle.color(for: modalityId))
                 .font(.title3)

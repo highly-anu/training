@@ -123,6 +123,13 @@ def merge_for_scoring(bio_logs: list[dict], wellness_rows: list[dict]) -> tuple[
     which is why daily_bio wins ties: the watch fills in only where that path
     has fewer readings.
 
+    Each day's Body Battery peak and recovery time ride along on that day's
+    entry (`body_battery_max`, `recovery_time_h`, `recovery_read_at`,
+    `wellness_read_at`) for the
+    readiness scorer, which uses them when there is no HRV and to cap the
+    score while recovery is pending (api._score_watch_recovery). They are the
+    watch's own figures, so no series question arises.
+
     With no wellness rows the result equals `bio_logs`, so readiness is
     unchanged for anyone who never pairs a watch. Inputs are not mutated.
     """
@@ -145,6 +152,30 @@ def merge_for_scoring(bio_logs: list[dict], wellness_rows: list[dict]) -> tuple[
         merged.sort(key=lambda b: b['date'], reverse=True)
     else:
         rhr_source = 'daily_bio' if bio_rhr else None
+
+    # The watch's recovery readings, on the day they were read.
+    by_date = {b['date']: b for b in merged}
+    for w in wellness_rows:
+        extra = {k: w[k] for k in ('body_battery_max', 'recovery_time_h') if w.get(k) is not None}
+        if not extra:
+            continue
+        # The countdown runs from the post the recovery hours came from
+        # (wellness_store, migrations/010); rows from before it have only the
+        # row's read_at. `wellness_read_at` dates the reading for the scorer's
+        # freshness check.
+        recovery_at = w.get('recovery_read_at') or w.get('read_at')
+        if 'recovery_time_h' in extra and recovery_at is not None:
+            extra['recovery_read_at'] = recovery_at
+        if w.get('read_at') is not None:
+            extra['wellness_read_at'] = w['read_at']
+        day = str(w['date'])
+        if day in by_date:
+            by_date[day].update(extra)
+        else:
+            row = {'date': day, 'source': SOURCE, **extra}
+            merged.append(row)
+            by_date[day] = row
+    merged.sort(key=lambda b: b['date'], reverse=True)
 
     sources = {
         'rhr':   rhr_source,

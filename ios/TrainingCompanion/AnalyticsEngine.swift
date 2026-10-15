@@ -411,7 +411,7 @@ nonisolated enum AnalyticsEngine {
     static func activityTypeBreakdown(workouts: [ImportedWorkout], topN: Int = 8) -> [ActivityTypeEntry] {
         var byType: [String: (hours: Double, count: Double)] = [:]
         for w in workouts {
-            let key = w.activityType.replacingOccurrences(of: "_", with: " ").capitalized
+            let key = ImportedWorkout.activityLabel(w.activityType)
             let h = (w.durationMinutes ?? 0) / 60.0
             let cur = byType[key] ?? (0, 0)
             byType[key] = (cur.hours + h, cur.count + 1)
