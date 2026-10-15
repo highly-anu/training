@@ -98,11 +98,12 @@ struct AnalyticsOverviewTab: View {
             await recomputePMC()
         }
         .task(id: period) {
-            await appState.loadLoadSummary(period)
+            await appState.loadIfStale("loadSummary-\(period.rawValue)") { await appState.loadLoadSummary(period) }
         }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadWorkouts()
+                await appState.loadLoadAnalytics()   // past loadIfStale: asked for
                 await recomputePMC()
                 await appState.loadLoadSummary(period)
             }
@@ -479,7 +480,7 @@ struct AnalyticsOverviewTab: View {
     /// The server first; the on-device engine only when it cannot answer.
     private func recomputePMC() async {
         isLoadingPMC = true
-        await appState.loadLoadAnalytics()
+        await appState.loadIfStale("loadAnalytics") { await appState.loadLoadAnalytics() }
         if let server = appState.serverPMC, !server.isEmpty {
             pmcEntries = server
             loadSource = .server

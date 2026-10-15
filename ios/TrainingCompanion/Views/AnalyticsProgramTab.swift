@@ -30,7 +30,7 @@ struct AnalyticsProgramTab: View {
         }
         // Reload whenever the stored program changes revision; the server
         // caches the document, so a visit with nothing new is one cheap read.
-        .task(id: appState.serverProgram?.revision) { await appState.loadProgramAnalytics() }
+        .task(id: appState.serverProgram?.revision) { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }

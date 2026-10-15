@@ -3638,26 +3638,45 @@ def _bio_for_scoring(user_id: str, days: int) -> tuple[list[dict], dict]:
                                       wellness_store.recent(user_id, days=days))
 
 
+_WATCH_READING_MAX_AGE_H = 36
+
+
+def _as_utc(value) -> _datetime | None:
+    """A reading time as an aware datetime: the store returns ISO strings,
+    the watch posts epoch seconds, tests pass datetimes."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return _datetime.fromtimestamp(value, _timezone.utc)
+    if isinstance(value, str):
+        value = _datetime.fromisoformat(value.replace('Z', '+00:00'))
+    return value if value.tzinfo else value.replace(tzinfo=_timezone.utc)
+
+
 def _watch_recovery(bio_list: list[dict], now: _datetime | None = None) -> dict | None:
     """The watch's newest Body Battery peak and the recovery hours still left,
-    from a reading dated today or yesterday — older says nothing about this
-    morning. Recovery time counts down from when the watch read it."""
+    from a reading taken in the last 36 hours — older says nothing about this
+    morning. Freshness is the reading's age, not its date: the server's UTC
+    date runs a day ahead of the athlete's every evening west of Greenwich.
+    Rows without a reading time fall back to their date (today or yesterday,
+    UTC). Recovery time counts down from the post it came from."""
     now = now or _datetime.now(_timezone.utc)
     cutoff = (now.date() - _timedelta(days=1)).isoformat()
-    rows = [b for b in bio_list if str(b['date']) >= cutoff
-            and (b.get('body_battery_max') is not None or b.get('recovery_time_h') is not None)]
+
+    def fresh(b: dict) -> bool:
+        read = _as_utc(b.get('wellness_read_at'))
+        if read is not None:
+            return (now - read).total_seconds() <= _WATCH_READING_MAX_AGE_H * 3600
+        return str(b['date']) >= cutoff
+
+    rows = [b for b in bio_list
+            if (b.get('body_battery_max') is not None or b.get('recovery_time_h') is not None) and fresh(b)]
     if not rows:
         return None
     row = max(rows, key=lambda b: str(b['date']))
     left = row.get('recovery_time_h')
-    read_at = row.get('recovery_read_at')
+    read_at = _as_utc(row.get('recovery_read_at'))
     if left is not None and read_at is not None:
-        if isinstance(read_at, (int, float)):
-            read_at = _datetime.fromtimestamp(read_at, _timezone.utc)
-        elif isinstance(read_at, str):
-            read_at = _datetime.fromisoformat(read_at.replace('Z', '+00:00'))
-        if read_at.tzinfo is None:
-            read_at = read_at.replace(tzinfo=_timezone.utc)
         left = max(0.0, left - (now - read_at).total_seconds() / 3600)
     return {'body_battery': row.get('body_battery_max'), 'recovery_left_h': left}
 
@@ -4030,6 +4049,14 @@ def _program_analytics_inputs(user_id: str):
     ), stored
 
 
+def _watch_digest(bio_logs: list[dict]) -> dict | None:
+    watch = _watch_recovery(bio_logs)
+    if not watch:
+        return None
+    left = watch['recovery_left_h']
+    return {'bb': watch['body_battery'], 'left_h': None if left is None else round(left)}
+
+
 def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     """Everything that can change the document. The old progression cache
     hashed session keys and exercise counts only, so adding sets to a logged
@@ -4050,6 +4077,10 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         # corrected Apple Health night, has to bust the cache too.
         _j.dumps(sorted((b.get('date', ''), b.get('resting_hr'), b.get('hrv'), b.get('sleep_duration_min'))
                         for b in inputs.bio_logs), default=str),
+        # The watch's recovery readings readiness scores, with the hours left
+        # to the hour: a later Body Battery or recovery post, and the
+        # countdown itself, change the readiness this document carries.
+        _j.dumps(_watch_digest(inputs.bio_logs), sort_keys=True),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
         # The document's shape: bump when a section gains keys, so stored

@@ -579,6 +579,14 @@ AppSubTabScreen(selection: $selectedTab) { tab in
   and a section chosen in `onAppear` (a deep link) swaps the scroll view
   while the screen is still appearing, with the same result — screens
   apply a requested section in `.task`, after the first frame.
+- **A section is rebuilt on every switch** (`.id(selection)`), so it starts at
+  the top. Keeping visited sections alive and hidden was tried on 2026-10-15
+  and dropped: the navigation bar's tracking of the visible one could not be
+  verified. What the rebuild used to cost — every section's `.task`
+  refetching — is gone: a section's load goes through
+  `AppState.loadIfStale(key)`, which runs once per program revision and per
+  full load (launch, pull-to-refresh, foreground refresh). A pull-to-refresh
+  inside a section calls its loader directly.
 - **Selection is always haptic** (`AppHaptics.selection()`), wired into
   `AppSubTabPicker` so no call site has to remember.
 - **No `Divider()` under the selector.** The segmented control already reads

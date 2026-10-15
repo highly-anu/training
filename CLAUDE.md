@@ -370,8 +370,13 @@ training data; only sign-in goes to Supabase.
   Garmin does not pass it to Apple Health — the morning's Body Battery peak
   and the recovery hours left carry HRV's 35 points instead of a neutral 17,
   and recovery left caps the score at `100 − hours` (min 10, flag
-  `recovery_pending`), counted down from the watch's `read_at`. Only a reading
-  dated today or yesterday counts. Production read 67 against Garmin's 17
+  `recovery_pending`), counted down from `recovery_read_at` — the post the
+  hours came from (`migrations/010`, lazily added by `wellness_store`; the
+  row's `read_at` moves on with a later post that carries none). Only a
+  reading taken in the last 36 hours counts — by its age, not its date, since
+  the server's UTC date runs ahead of the athlete's every evening west of
+  Greenwich. The program analytics digest keys on these readings
+  (`api._watch_digest`). Production read 67 against Garmin's 17
   with 68 h of recovery left; it now reads 32. The response carries `watch`
   and `sources.recovery` (`test_wellness.py`). The watch's series is its
   heart-rate low `hr_min`, **never** `resting_hr`: the SDK's

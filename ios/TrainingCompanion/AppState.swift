@@ -123,9 +123,18 @@ final class AppState: ObservableObject {
 
     /// When `loadAll` last finished — what `refreshIfStale` measures against.
     private(set) var lastFullLoad: Date? = nil
+    /// A `loadAll` is running. The launch path already runs two loads back to
+    /// back (`loadAllExceptWorkouts`, then `loadAll` after the sync); a
+    /// foreground refresh on top would race them and could land last with
+    /// older data.
+    private var isLoadingAll = false
 
     func loadAll() async {
-        defer { lastFullLoad = Date() }
+        isLoadingAll = true
+        defer {
+            isLoadingAll = false
+            lastFullLoad = Date()
+        }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             // Today's Development card is the program scorecard. It was loaded
@@ -145,12 +154,32 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// What each section's load last ran against (`loadIfStale`).
+    private var sectionLoads: [String: String] = [:]
+
+    /// Run a section's load unless it already ran since the program's revision
+    /// or the last full load changed. Sections are rebuilt on every switch
+    /// (`AppSubTabScreen`), and their `.task`s used to refetch each time; a
+    /// pull-to-refresh, a foreground refresh or a regenerate still reloads
+    /// them the next time they are shown.
+    func loadIfStale(_ key: String, _ load: () async -> Void) async {
+        let stamp = "\(serverProgram?.revision ?? "-")|\(lastFullLoad?.timeIntervalSince1970 ?? 0)"
+        guard sectionLoads[key] != stamp else { return }
+        await load()
+        sectionLoads[key] = stamp
+    }
+
     /// Coming back to the foreground: reload what Today shows when the last
     /// full load is older than `maxAge`. The app had no foreground refresh,
     /// so a phone left in the background overnight opened on yesterday's
     /// readiness and scorecard.
-    func refreshIfStale(maxAge: TimeInterval = 300) async {
-        if let last = lastFullLoad, Date().timeIntervalSince(last) < maxAge { return }
+    ///
+    /// Nothing before the first full load has finished: at launch the scene
+    /// turns active (and again after the HealthKit permission sheet) while the
+    /// launch loads are still running.
+    func refreshIfStale(maxAge: TimeInterval = 300, now: Date = Date()) async {
+        guard !isLoadingAll, let last = lastFullLoad,
+              now.timeIntervalSince(last) >= maxAge else { return }
         await loadAll()
     }
 

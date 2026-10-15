@@ -23,7 +23,7 @@ struct ProgramHistoryView: View {
                 list
             }
         }
-        .task { await appState.loadProgramHistory() }
+        .task { await appState.loadIfStale("programHistory") { await appState.loadProgramHistory() } }
         .refreshable { await AppRefresh.perform { await appState.loadProgramHistory() } }
     }
 
