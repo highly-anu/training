@@ -140,7 +140,10 @@ in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — r
 a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
 History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
-Suggestions · Sessions, Import as a sheet; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
+Linking · Sessions, Import as a sheet; Linking is one card per day, workouts beside
+sessions, suggestions scored within the day only, drag a workout onto any session to
+link across days — `lib/linking.ts`, `components/log/LinkingTab.tsx`; `?tab=suggestions`
+aliases it; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
 `/analytics` (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks). Library — Explore
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
@@ -682,7 +685,7 @@ LOCAL_API=0 ./ios/run_sim.sh                                                    
 
 Routes: `today`, `program?section=calendar|overview|history`,
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
-still alias Load and Blocks), `log?section=workouts|suggestions|sessions`,
+still alias Load and Blocks), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

@@ -44,6 +44,8 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://profile?section=equipment"), .profile(.equipment))
         XCTAssertEqual(parse("trainingcompanion://log"), .tab(.log))
         XCTAssertEqual(parse("trainingcompanion://log?section=sessions"), .log(.sessions))
+        XCTAssertEqual(parse("trainingcompanion://log?section=linking"), .log(.linking))
+        XCTAssertEqual(parse("trainingcompanion://log?section=suggestions"), .log(.linking))  // the old name
         XCTAssertEqual(parse("trainingcompanion://profile?section=nope"), .tab(.profile))
         XCTAssertEqual(parse("trainingcompanion://analytics"), .tab(.analytics))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=program"), .analytics(.program))

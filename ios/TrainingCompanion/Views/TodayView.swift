@@ -403,7 +403,7 @@ struct TodayView: View {
                     }
                     if pending.count > 3 {
                         Button {
-                            router.showLog(.suggestions)
+                            router.showLog(.linking)
                         } label: {
                             HStack {
                                 Text("All \(pending.count) in Log")

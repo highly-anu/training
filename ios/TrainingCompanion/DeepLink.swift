@@ -18,7 +18,7 @@ enum DeepLink: Equatable {
     case session(String)
     /// `profile?section=athlete|equipment|injuries|benchmarks|schedule`.
     case profile(ProfileTab)
-    /// `log?section=workouts|suggestions|sessions`.
+    /// `log?section=workouts|linking|sessions` (`suggestions`, the old name, still works).
     case log(LogTab)
     /// `program?section=calendar|overview|history`.
     case program(ProgramTab)
@@ -51,7 +51,9 @@ enum DeepLink: Equatable {
             }
             return .tab(.program)
         case "log":
-            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
+            // "suggestions" is the section's old name.
+            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased()
+                .replacingOccurrences(of: "suggestions", with: "linking"),
                let section = LogTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
                 return .log(section)
             }

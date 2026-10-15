@@ -33,7 +33,7 @@ export function SuggestionsCard() {
             {n} workout{n === 1 ? ' looks' : 's look'} like {n === 1 ? 'a planned session' : 'planned sessions'}
           </p>
         </div>
-        <Link to="/log?tab=suggestions" className="text-xs text-primary hover:underline">
+        <Link to="/log?tab=linking" className="text-xs text-primary hover:underline">
           {n > PREVIEW ? `All ${n} →` : 'Open →'}
         </Link>
       </div>

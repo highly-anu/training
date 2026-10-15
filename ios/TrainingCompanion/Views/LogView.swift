@@ -3,12 +3,12 @@ import UniformTypeIdentifiers
 
 /// The Log tab's sections. Internal so `AppRouter` can name one.
 enum LogTab: Int, AppSubTab {
-    case workouts, suggestions, sessions
+    case workouts, linking, sessions
 
     var label: String {
         switch self {
         case .workouts: return "Workouts"
-        case .suggestions: return "Suggestions"
+        case .linking: return "Linking"
         case .sessions: return "Sessions"
         }
     }
@@ -17,7 +17,8 @@ enum LogTab: Int, AppSubTab {
 /// The record and the decision queue — the phone's counterpart to the web's
 /// Log area (design-system §6.19). Workouts is the recorded-activity list
 /// that used to be a section of Analytics, with the `.fit` importer;
-/// Suggestions is the inbox of server matches to accept, review or dismiss;
+/// Linking is the inbox of server matches to accept, review or dismiss
+/// (the web lays the same section out as one card per day);
 /// Sessions is what was logged against planned sessions, across the program.
 struct LogView: View {
     @EnvironmentObject var appState: AppState
@@ -36,7 +37,7 @@ struct LogView: View {
                 case .workouts:
                     LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
                         .environmentObject(appState)
-                case .suggestions:
+                case .linking:
                     LogSuggestionsTab(reviewWorkout: $selectedWorkout)
                         .environmentObject(appState)
                 case .sessions:

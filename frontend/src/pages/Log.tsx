@@ -1,18 +1,21 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Upload, CheckCircle2, AlertCircle, Link2, Inbox, ClipboardList, ArrowDownToLine } from 'lucide-react'
+import { format } from 'date-fns'
+import { Upload, CheckCircle2, AlertCircle, Link2, ClipboardList, ArrowDownToLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
-import { SuggestionRow } from '@/components/bio/SuggestionRow'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { WorkoutList } from '@/components/workout/WorkoutList'
 import { SessionsTab } from '@/components/log/SessionsTab'
+import { LinkingTab } from '@/components/log/LinkingTab'
+import { useDismissedLinks } from '@/hooks/useDismissedLinks'
 import type { WorkoutMatchStatus } from '@/components/workout/WorkoutRow'
 import { parseAppleHealthXml, parseStravaJson } from '@/lib/importParsers'
 import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
+import { buildLinkingDays } from '@/lib/linking'
 import { parseSessionKey, sessionLabel } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
 import { parseWorkoutFile, startAsyncParse, pollParseJob } from '@/api/workouts'
@@ -25,13 +28,14 @@ import type { ImportedWorkout, PendingMatch } from '@/api/types'
  * Log — the record of what happened and the decisions waiting on it.
  *
  * One list of recorded workouts (this used to be three: Import ▸ History,
- * Import ▸ Matched and Analytics ▸ Activity), the suggestions inbox, and
+ * Import ▸ Matched and Analytics ▸ Activity), Linking — each day's workouts
+ * beside its planned sessions, with the matcher's suggestions for that day —
  * Import as an action rather than a page, and Sessions — what was logged
  * against planned sessions, across programs, as on the phone. Analytics
  * interprets; this is the ledger it reads.
  */
 
-type LogTab = 'workouts' | 'suggestions' | 'sessions'
+type LogTab = 'workouts' | 'linking' | 'sessions'
 type Filter = 'all' | 'matched' | 'unmatched' | 'pending'
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
@@ -52,7 +56,7 @@ function TabSelector({ active, onChange, tabs }: {
           type="button"
           onClick={() => onChange(tab.id)}
           className={cn(
-            'px-3 py-1 text-xs rounded border transition-colors',
+            'px-3 py-1 text-xs rounded border transition-colors whitespace-nowrap',
             tab.id === active
               ? 'bg-primary/15 border-primary/40 text-primary'
               : 'border-border text-muted-foreground hover:bg-muted'
@@ -194,50 +198,6 @@ function ImportPanel({
   )
 }
 
-// ── Suggestions ────────────────────────────────────────────────────────────────
-
-/**
- * Weak matches waiting for a decision: the browser's own auto-matcher after an
- * upload, and the server's suggestions (GET /api/health/matches/suggestions)
- * written by the Garmin webhook and the iOS Apple Health relay.
- */
-function SuggestionsTab({ pendingMatches, onReview, onDismiss }: {
-  pendingMatches: PendingMatch[]
-  onReview: (p: PendingMatch) => void
-  onDismiss: (id: string) => void
-}) {
-  if (pendingMatches.length === 0) {
-    return (
-      <div className="max-w-2xl mx-auto px-8 py-12">
-        <EmptyState
-          icon={<Inbox className="size-8 opacity-40" />}
-          title="No suggestions"
-          description="Workouts that look like a planned session but could not be matched with confidence wait here for your decision."
-        />
-      </div>
-    )
-  }
-  return (
-    <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
-      <div>
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Needs a decision ({pendingMatches.length})
-        </h2>
-        <ul className="space-y-2">
-          {pendingMatches.map((p) => (
-            <SuggestionRow
-              key={p.importedWorkout.id}
-              match={p}
-              onReview={() => onReview(p)}
-              onDismiss={() => onDismiss(p.importedWorkout.id)}
-            />
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
-
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export function Log() {
@@ -245,7 +205,9 @@ export function Log() {
   const [searchParams, setSearchParams] = useSearchParams()
   const linkToSession = searchParams.get('linkTo')
   const tabParam = searchParams.get('tab')
-  const activeTab: LogTab = tabParam === 'suggestions' || tabParam === 'sessions' ? tabParam : 'workouts'
+  // 'suggestions' is the tab's old name; Home's card and older links still send it.
+  const activeTab: LogTab = tabParam === 'linking' || tabParam === 'suggestions' ? 'linking'
+    : tabParam === 'sessions' ? 'sessions' : 'workouts'
   // ?linkTo= (from a session) and ?import=1 (from Home) open the sheet directly.
   const [importOpen, setImportOpen] = useState(() => !!linkToSession || searchParams.get('import') === '1')
   const [filter, setFilter] = useState<Filter>('all')
@@ -265,10 +227,11 @@ export function Log() {
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const pendingMatches = useBioStore((s) => s.pendingMatches)
-  const dismissSuggestion = useBioStore((s) => s.dismissSuggestion)
 
   const program = useCurrentProgram()
   const programStartDate = useProgramStore((s) => s.programStartDate)
+  const programVersionId = useProgramStore((s) => s.programVersionId)
+  const dismissedLinks = useDismissedLinks()
 
   function setActiveTab(tab: LogTab) {
     setSearchParams(
@@ -406,6 +369,18 @@ export function Log() {
     return c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allImported, workoutMatches, pendingMatches])
+  const linkingDays = useMemo(() => buildLinkingDays({
+    workouts: importedWorkouts,
+    matches: workoutMatches,
+    pending: pendingMatches,
+    program,
+    programStartDate,
+    programVersionId,
+    today: format(new Date(), 'yyyy-MM-dd'),
+    dismissed: dismissedLinks,
+  }), [importedWorkouts, workoutMatches, pendingMatches, program, programStartDate, programVersionId, dismissedLinks])
+  const openLinkDays = linkingDays.filter((d) => d.needsAttention).length
+
   const visible = filter === 'all' ? allImported : allImported.filter((w) => statusFor(w) === filter)
 
   const filters: { id: Filter; label: string }[] = [
@@ -416,7 +391,7 @@ export function Log() {
   ]
   const tabs: { id: LogTab; label: string }[] = [
     { id: 'workouts',    label: 'Workouts' },
-    { id: 'suggestions', label: pendingMatches.length > 0 ? `Suggestions (${pendingMatches.length})` : 'Suggestions' },
+    { id: 'linking',     label: openLinkDays > 0 ? `Linking (${openLinkDays})` : 'Linking' },
     { id: 'sessions',    label: 'Sessions' },
   ]
 
@@ -496,12 +471,8 @@ export function Log() {
             </div>
           )
         )}
-        {activeTab === 'suggestions' && (
-          <SuggestionsTab
-            pendingMatches={pendingMatches}
-            onReview={setActivePending}
-            onDismiss={dismissSuggestion}
-          />
+        {activeTab === 'linking' && (
+          <LinkingTab days={linkingDays} hasProgram={!!program && !!programStartDate} onImport={() => setImportOpen(true)} />
         )}
         {activeTab === 'sessions' && <SessionsTab />}
       </div>
