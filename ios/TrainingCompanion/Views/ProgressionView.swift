@@ -113,12 +113,12 @@ struct ProgressionView: View {
                     .fontWeight(.medium)
                 HStack(spacing: 6) {
                     if let actual = finding.actualValue {
-                        Text("\(formatValue(actual))\(finding.unit)")
+                        Text(Self.withUnit(formatValue(actual), finding.unit))
                             .font(.caption)
                             .foregroundStyle(.primary)
                     }
                     if let expected = finding.expectedValue {
-                        Text("(target \(formatValue(expected))\(finding.unit))")
+                        Text("(target \(Self.withUnit(formatValue(expected), finding.unit)))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -252,6 +252,12 @@ struct ProgressionView: View {
         case "stalled":          return "⚠"
         default:                 return "–"
         }
+    }
+
+    /// "80kg", "45s", but "3 exercises" — the server's own rule for its
+    /// change line (`progression_findings`), so the two lines agree.
+    static func withUnit(_ value: String, _ unit: String) -> String {
+        ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
     }
 
     private func formatValue(_ v: Double) -> String {

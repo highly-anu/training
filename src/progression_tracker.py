@@ -797,21 +797,17 @@ def compute_progression_review(
     philosophy_weights: dict = program.get('philosophy_weights') or {}
     progression_model  = _infer_progression_model(program)
 
-    # Compliance — over the weeks that have actually happened. Counting every
-    # week of a 16-week program in week 2 reported ~12% by construction.
-    elapsed = _elapsed_weeks(program, weeks)
-    total_scheduled = sum(
-        len(sessions)
-        for w in elapsed
-        for sessions in w.get('schedule', {}).values()
-    )
+    # Compliance — over the sessions whose day has come, as the program
+    # analytics scorecard counts them (context.sessions(elapsed_only=True)).
+    # Counting every week of a 16-week program in week 2 reported ~12% by
+    # construction; counting the whole current week read 2 of 2 sessions done
+    # by Wednesday as 50%, beside the Program tab's 100%.
+    due = _due_sessions(program, weeks)
+    total_scheduled = len(due)
     total_completed = sum(
-        1
-        for w in elapsed
-        for day_name, day_sessions in w.get('schedule', {}).items()
-        for s_idx, _ in enumerate(day_sessions)
-        if (f"{w['week_number']}-{day_name}" in session_logs
-            or f"{w['week_number']}-{day_name}-{s_idx}" in session_logs)
+        1 for week_number, day_name, s_idx in due
+        if (f"{week_number}-{day_name}" in session_logs
+            or f"{week_number}-{day_name}-{s_idx}" in session_logs)
     )
     compliance_pct = round(total_completed / total_scheduled * 100) if total_scheduled else 0
 
@@ -946,18 +942,21 @@ def compute_progression_review(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _elapsed_weeks(program: dict, weeks: list) -> list:
-    """Weeks whose Monday is on or before today, when a start date is known."""
-    from datetime import date, timedelta
+def _due_sessions(program: dict, weeks: list, today=None) -> list[tuple]:
+    """(week_number, day name, index) of every session dated on or before
+    today. Without a start date every session counts, as before."""
+    from datetime import date
+    from src.workout_matcher import session_calendar_date
     start_raw = program.get('program_start_date') or program.get('programStartDate')
-    if not start_raw:
-        return weeks
-    try:
-        start = date.fromisoformat(str(start_raw)[:10])
-    except ValueError:
-        return weeks
-    today = date.today()
-    return [w for i, w in enumerate(weeks) if start + timedelta(days=7 * i) <= today]
+    today = (today or date.today()).isoformat()
+    out = []
+    for i, w in enumerate(weeks):
+        for day_name, day_sessions in (w.get('schedule') or {}).items():
+            when = session_calendar_date(str(start_raw), i, day_name) if start_raw else ''
+            if start_raw and when and when > today:
+                continue
+            out.extend((w.get('week_number'), day_name, s_idx) for s_idx in range(len(day_sessions)))
+    return out
 
 
 def _infer_progression_model(program: dict, modality: str | None = None) -> str:
