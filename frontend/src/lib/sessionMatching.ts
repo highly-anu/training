@@ -26,7 +26,8 @@ export function sessionKeyVariants(dayKey: string, sessionIndex?: number): strin
   return sessionIndex == null ? [dayKey] : [`${dayKey}-${sessionIndex}`, dayKey]
 }
 
-function belongsToVersion(match: WorkoutMatch, programVersionId?: string | null): boolean {
+/** Whether a stored match was made against the program version on screen. */
+export function belongsToVersion(match: WorkoutMatch, programVersionId?: string | null): boolean {
   if (match.inCurrentProgram === false) return false  // the server checked the dates
   if (!match.sessionUid) return true          // no verdict — trust the key
   if (!programVersionId) return true          // we do not know; do not hide data
