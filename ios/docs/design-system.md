@@ -1181,3 +1181,24 @@ both from the week it starts at (`ProgramConstraintsDiff.merged`). A
 methodology with one track shows it without a choice; a track with one phase
 shows no start picker.
 
+
+---
+
+### 6.23 Workout Row and Linked Workouts
+
+**A recorded workout looks the same wherever it is listed.**
+`Views/WorkoutRow.swift` is one recorded workout: the activity icon (§6.12),
+what the device recorded, date, time and duration, distance and average HR,
+the source chip, the linked-session chip and the TRIMP badge. Log ▸ Workouts
+lists them; the session detail's *Recorded Workout* section shows the one
+linked to that session (with `showsSession: false`, since the row already
+sits on its session, and `showsChevron: false` inside a `NavigationLink`)
+and pushes `WorkoutDetailView`.
+
+A session card on Today shows a `link` glyph beside the completion check
+when a workout is linked. Both read `AppState.linkedWorkout(forSessionKey:)`,
+the reverse of `matchedSessionKey(for:)`: confirmed matches first, then a
+session log's `matched_workout_id`. A match the server dates outside the
+active program (`inCurrentProgram: false` on the snapshot) never links —
+"4-Monday-0" names a session of every program the athlete has had
+(`LinkedWorkoutTests`).

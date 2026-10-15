@@ -37,6 +37,8 @@ struct SessionDetailView: View {
         var id: Int { exerciseIndex }
     }
 
+    @State private var linkedTrimp: Int? = nil
+
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
     /// Live session read from the store (updated after replace/move).
@@ -52,6 +54,7 @@ struct SessionDetailView: View {
         NavigationStack {
             List {
                 headerSection
+                if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
                 if canEditProgram { actionsSection }
                 if isDone { notesSection }
@@ -175,6 +178,32 @@ struct SessionDetailView: View {
                         .font(.footnote)
                 }
             }
+        }
+    }
+
+    // MARK: - Recorded Workout
+
+    private var linkedWorkout: ImportedWorkout? { appState.linkedWorkout(forSessionKey: sessionKey) }
+
+    /// What was recorded for this session — the same row Log ▸ Workouts
+    /// shows, pushing the full workout. Without the session chip: the row
+    /// already sits on its session.
+    private func linkedWorkoutSection(_ workout: ImportedWorkout) -> some View {
+        Section("Recorded Workout") {
+            NavigationLink {
+                WorkoutDetailView(workout: workout)
+                    .environmentObject(appState)
+            } label: {
+                WorkoutRow(workout: workout, trimp: linkedTrimp,
+                           showsSession: false, showsChevron: false)
+            }
+        }
+        .task(id: workout.id) {
+            let hrConfig = appState.profile.hrConfig
+            let dob = appState.profile.dateOfBirth
+            linkedTrimp = await Task.detached(priority: .background) {
+                AnalyticsEngine.computeWorkoutTRIMP(workout: workout, hrConfig: hrConfig, dateOfBirth: dob)
+            }.value
         }
     }
 

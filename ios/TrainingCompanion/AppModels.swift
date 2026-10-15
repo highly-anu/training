@@ -545,6 +545,9 @@ struct WorkoutMatch {
     let workoutId: String
     let sessionKey: String
     let confidence: String
+    /// False when the server dated the match outside the active program: the
+    /// key ("6-Monday-0") names a session of an earlier block.
+    var inCurrentProgram: Bool = true
 }
 
 /// One row of `GET /health/snapshot`'s `matches`, as the server emits it.
@@ -557,8 +560,10 @@ struct WorkoutMatchRecord: Decodable, Equatable {
     let sessionUid: String?
     let matchConfidence: String
     let matchedAt: String?
+    /// The server's `session_scope` verdict; absent from older servers.
+    var inCurrentProgram: Bool? = nil
 
-    enum CodingKeys: String, CodingKey { case importedWorkoutId, sessionKey, sessionUid, matchConfidence, matchedAt }
+    enum CodingKeys: String, CodingKey { case importedWorkoutId, sessionKey, sessionUid, matchConfidence, matchedAt, inCurrentProgram }
 
     init(importedWorkoutId: String, sessionKey: String, sessionUid: String? = nil,
          matchConfidence: String, matchedAt: String? = nil) {
@@ -582,12 +587,14 @@ struct WorkoutMatchRecord: Decodable, Equatable {
             matchConfidence = ""
         }
         matchedAt = try? c.decodeIfPresent(String.self, forKey: .matchedAt)
+        inCurrentProgram = try? c.decodeIfPresent(Bool.self, forKey: .inCurrentProgram)
     }
 
     /// The app's match, or nil for a rejected decision.
     var asMatch: WorkoutMatch? {
         guard matchConfidence != "rejected" else { return nil }
-        return WorkoutMatch(workoutId: importedWorkoutId, sessionKey: sessionKey, confidence: matchConfidence)
+        return WorkoutMatch(workoutId: importedWorkoutId, sessionKey: sessionKey, confidence: matchConfidence,
+                            inCurrentProgram: inCurrentProgram ?? true)
     }
 }
 

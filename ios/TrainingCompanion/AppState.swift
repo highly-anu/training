@@ -202,6 +202,21 @@ final class AppState: ObservableObject {
         return sessionLogs.values.first { $0.matchedWorkoutId == workoutId }?.sessionKey
     }
 
+    /// The recorded workout linked to a planned session of the active
+    /// program, if any — the reverse of `matchedSessionKey(for:)`. A match the
+    /// server dated to an earlier block is skipped: its key is program-relative
+    /// and names a session of this program too.
+    func linkedWorkout(forSessionKey key: String) -> ImportedWorkout? {
+        let matched = workoutMatches.values
+            .filter { $0.sessionKey == key && $0.inCurrentProgram }
+            .map(\.workoutId)
+        let ids = matched.isEmpty ? [sessionLogs[key]?.matchedWorkoutId].compactMap { $0 } : matched
+        // Several workouts can be linked to one session; show the longest.
+        return importedWorkouts
+            .filter { ids.contains($0.id) }
+            .max { ($0.durationMinutes ?? 0) < ($1.durationMinutes ?? 0) }
+    }
+
     func deleteWorkout(id: String) async throws {
         guard let api else { throw APIError.unauthenticated }
         try await api.deleteWorkout(id: id)

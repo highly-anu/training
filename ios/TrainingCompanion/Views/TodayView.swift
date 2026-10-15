@@ -310,6 +310,7 @@ struct TodayView: View {
 
     private func sessionCard(_ session: ProgramSession, key: String) -> some View {
         let done = appState.isSessionComplete(key)
+        let linked = appState.linkedWorkout(forSessionKey: key) != nil
         let color = ModalityStyle.color(for: session.modality)
         let arch = session.archetype
 
@@ -329,6 +330,12 @@ struct TodayView: View {
                         .background(color.opacity(0.12))
                         .clipShape(Capsule())
                     Spacer()
+                    if linked {
+                        Image(systemName: "link")
+                            .font(.caption).fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("Linked to a recorded workout")
+                    }
                     if done {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     }
