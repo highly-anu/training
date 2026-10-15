@@ -301,7 +301,7 @@ struct LoadSummary: Decodable, Equatable {
     var activityEntries: [ActivityTypeEntry] {
         let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
         return activities.enumerated().map { i, a in
-            ActivityTypeEntry(name: a.activityType.replacingOccurrences(of: "_", with: " ").capitalized,
+            ActivityTypeEntry(name: ImportedWorkout.activityLabel(a.activityType),
                               hours: a.minutes / 60, sessions: Double(a.sessions), color: colors[i % colors.count])
         }
     }

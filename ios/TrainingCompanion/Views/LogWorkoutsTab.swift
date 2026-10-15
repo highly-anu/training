@@ -17,7 +17,7 @@ struct LogWorkoutsTab: View {
     private var filtered: [ImportedWorkout] {
         var ws = AnalyticsEngine.filter(appState.importedWorkouts, withinDays: period.days)
         if let f = activityFilter {
-            ws = ws.filter { $0.activityType.replacingOccurrences(of: "_", with: " ").capitalized == f }
+            ws = ws.filter { ImportedWorkout.activityLabel($0.activityType) == f }
         }
         switch sortKey {
         case .date:     return ws.sorted { $0.date > $1.date }
@@ -29,7 +29,7 @@ struct LogWorkoutsTab: View {
 
     private var uniqueActivityTypes: [String] {
         Array(Set(AnalyticsEngine.filter(appState.importedWorkouts, withinDays: period.days)
-            .map { $0.activityType.replacingOccurrences(of: "_", with: " ").capitalized }
+            .map { ImportedWorkout.activityLabel($0.activityType) }
         )).sorted()
     }
 

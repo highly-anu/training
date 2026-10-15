@@ -737,6 +737,12 @@ Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
   `ActivityIcon.forWorkout(activityType:modalityId:)`, which falls back to the
   modality only when the activity string names nothing specific ("Workout",
   `watch_16-Saturday-0`).
+- **Match whole words.** The watch records a session's archetype name as
+  its activity type, so substring matching read "KB Movement Skill" as
+  skiing and "Box Step-Ups" as boxing. Kettlebell sessions (`kb`,
+  `kettlebell`) are `figure.strengthtraining.functional`. Names are shown
+  through `ImportedWorkout.activityLabel`, which title-cases device
+  identifiers and leaves a written name ("KB …", "(ME)") alone.
 - **Colour still comes from the modality.** The icon says what you did; the
   colour says where it sits in the training palette. Keeping the colour on
   `ModalityStyle` is what lets a list stay readable when every row is a bike.

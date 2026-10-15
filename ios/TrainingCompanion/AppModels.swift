@@ -1051,12 +1051,23 @@ extension ImportedWorkout {
         let raw = activityType
         let placeholders = ["apple_watch_live", "watch", "workout"]
         if !placeholders.contains(raw.lowercased()) && !raw.hasPrefix("watch_") {
-            return raw.replacingOccurrences(of: "_", with: " ").capitalized
+            return Self.activityLabel(raw)
         }
         if let modality = inferredModalityId {
             return ModalityStyle.label(for: modality)
         }
         return "Workout"
+    }
+
+    /// An activity type as a person reads it. Device identifiers
+    /// ("cross_country_skiing", "TRAIL_RUNNING") are title-cased; a name
+    /// already written by a person — the watch records the archetype's,
+    /// "KB Movement Skill Session (Wildman)" — is kept as written, because
+    /// `capitalized` turned KB into "Kb" and ME into "Me".
+    static func activityLabel(_ raw: String) -> String {
+        let spaced = raw.replacingOccurrences(of: "_", with: " ")
+        let isIdentifier = raw == raw.lowercased() || raw == raw.uppercased()
+        return isIdentifier ? spaced.capitalized : spaced
     }
 }
 

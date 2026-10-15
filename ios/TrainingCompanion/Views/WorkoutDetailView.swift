@@ -180,7 +180,7 @@ struct WorkoutDetailView: View {
                     .foregroundStyle(.blue)
                     .frame(width: 36)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(detail.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
+                    Text(ImportedWorkout.activityLabel(detail.activityType))
                         .font(.headline)
                     Text(formattedDate(workout.date))
                         .font(.subheadline).foregroundStyle(.secondary)
@@ -625,7 +625,7 @@ struct WorkoutDetailView: View {
             Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId))
                 .foregroundStyle(.blue).font(.title3)
             VStack(alignment: .leading, spacing: 2) {
-                Text(workout.activityType.replacingOccurrences(of: "_", with: " ").capitalized)
+                Text(ImportedWorkout.activityLabel(workout.activityType))
                     .font(.headline)
                 Text(formattedDate(workout.date)).font(.caption).foregroundStyle(.secondary)
             }
@@ -702,7 +702,7 @@ struct WorkoutDetailView: View {
 
     private func titleFor(_ s: SheetState) -> String {
         switch s {
-        case .viewing:    return workout.activityType.replacingOccurrences(of: "_", with: " ").capitalized
+        case .viewing:    return ImportedWorkout.activityLabel(workout.activityType)
         case .matching:   return "Link to Session"
         case .manualPick: return "Pick Session"
         case .confirmed:  return "Linked"
