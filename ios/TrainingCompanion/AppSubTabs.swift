@@ -47,36 +47,25 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
     }
 }
 
-/// A whole sectioned screen: the paged content, with the selector pinned
-/// under the navigation bar in a `safeAreaBar`, so the content scrolls
-/// beneath it, the large title collapses as it does on Today, and the
-/// selector gets the system's scroll-edge effect (§6.8).
+/// A whole sectioned screen: the selected section, with the selector pinned
+/// under the navigation bar, so the large title collapses as it does on Today
+/// and the selector rides up under the inline title (§6.8).
 struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
     @Binding var selection: Tab
     @ViewBuilder var content: (Tab) -> Content
-
-    /// False for the screen's first moment. A deep link picks its section
-    /// in `onAppear`; a section swapped in while the screen is still
-    /// appearing left the bar tracking the discarded one, with the large
-    /// title stuck under the scroll-edge blur. Holding the content back
-    /// until then means the first section the bar sees is the right one.
-    @State private var hasAppeared = false
 
     var body: some View {
         // The selected section only, not a paged TabView: the navigation
         // bar collapses its large title by watching the screen's scroll
         // view, and a paging container hides it.
-        Group {
-            if hasAppeared {
-                content(selection).id(selection)
-            } else {
-                Color.clear
+        content(selection)
+            .id(selection)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // An inset, not a `safeAreaBar`: under the bar a List section
+            // left the large title blurred by the scroll-edge effect with
+            // nothing scrolled (Profile ▸ Athlete, Schedule).
+            .safeAreaInset(edge: .top, spacing: 0) {
+                AppSubTabPicker(selection: $selection)
             }
-        }
-        .task { hasAppeared = true }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .safeAreaBar(edge: .top) {
-            AppSubTabPicker(selection: $selection)
-        }
     }
 }

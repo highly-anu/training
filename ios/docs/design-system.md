@@ -525,7 +525,7 @@ now use `AppSubTabs.swift`.
 
 Conform the section enum to `AppSubTab` and wrap the sections in
 `AppSubTabScreen`, which pins the selector under the navigation bar (a
-`safeAreaBar`) and shows the selected section beneath it:
+`safeAreaInset`) and shows the selected section beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
@@ -573,11 +573,16 @@ AppSubTabScreen(selection: $selectedTab) { tab in
   are no longer swiped between; the selector is the way to move. And a
   section puts anything above its rows *inside* its list or scroll view (a
   header), never in a `VStack` above it — Log ▸ Workouts' scope line is the
-  list's section header.
+  list's section header. Two traps, both seen on 2026-10-15: a
+  `safeAreaBar` for the selector left List sections' titles blurred under
+  the scroll-edge effect with nothing scrolled, so it is a `safeAreaInset`;
+  and a section chosen in `onAppear` (a deep link) swaps the scroll view
+  while the screen is still appearing, with the same result — screens
+  apply a requested section in `.task`, after the first frame.
 - **Selection is always haptic** (`AppHaptics.selection()`), wired into
   `AppSubTabPicker` so no call site has to remember.
-- **No `Divider()` under the selector.** The `safeAreaBar` gives it the
-  scroll-edge effect; a rule beneath it doubles the boundary.
+- **No `Divider()` under the selector.** The segmented control already reads
+  as a discrete band; a rule beneath it doubles the boundary.
 - Spacing is fixed in the component — `.padding(.horizontal)` and
   `.padding(.vertical, 8)`. Do not re-pad at the call site.
 
@@ -745,10 +750,17 @@ Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
   `ActivityIcon.forWorkout(activityType:modalityId:)`, which falls back to the
   modality only when the activity string names nothing specific ("Workout",
   `watch_16-Saturday-0`).
+- **What SF Symbols lacks, the app draws.** There is no kettlebell glyph
+  (checked against the iOS 26.3 runtime's 9,184 names), so
+  `kettlebell.symbolset` is a custom SF Symbol written by
+  `ios/tools/make_kettlebell_symbol.py`. A custom name must be drawn with
+  `Image(symbol:)`, which sends `AppSymbol.custom` names to the asset
+  catalog — `Image(systemName:)` draws nothing for them
+  (`ActivityIconTests` loads each from the catalog).
 - **Match whole words.** The watch records a session's archetype name as
   its activity type, so substring matching read "KB Movement Skill" as
   skiing and "Box Step-Ups" as boxing. Kettlebell sessions (`kb`,
-  `kettlebell`) are `figure.strengthtraining.functional`. Names are shown
+  `kettlebell`) are `AppSymbol.kettlebell`. Names are shown
   through `ImportedWorkout.activityLabel`, which title-cases device
   identifiers and leaves a written name ("KB …", "(ME)") alone.
 - **Colour still comes from the modality.** The icon says what you did; the

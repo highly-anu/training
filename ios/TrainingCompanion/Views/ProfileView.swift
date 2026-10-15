@@ -756,7 +756,7 @@ struct ProfileView: View {
                 case .schedule:   ScheduleTab()
                 }
             }
-            .onAppear { applyRequestedSection() }
+            .task { applyRequestedSection() }
             .onChange(of: router.profileSection) { applyRequestedSection() }
             .navigationTitle("Profile")
             .appTabStyle()

@@ -61,7 +61,7 @@ struct ProgramView: View {
             }
             .navigationTitle("Program")
             .appTabStyle()
-            .onAppear { applyRequestedSection() }
+            .task { applyRequestedSection() }
             .onChange(of: router.programSection) { applyRequestedSection() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

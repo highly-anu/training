@@ -46,7 +46,7 @@ struct LogView: View {
             }
             .navigationTitle("Log")
             .appTabStyle()
-            .onAppear { applyRequestedSection() }
+            .task { applyRequestedSection() }
             .onChange(of: router.logSection) { applyRequestedSection() }
             .toolbar {
                 // Filtering is a toolbar menu, not rows of pills above the
