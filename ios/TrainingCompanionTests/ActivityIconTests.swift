@@ -7,7 +7,7 @@ final class ActivityIconTests: XCTestCase {
     private func icon(_ s: String) -> String? { ActivityIcon.forActivityType(s) }
 
     func testSkillIsNotSkiing() {
-        XCTAssertEqual(icon("KB Movement Skill Session (Wildman)"), "figure.strengthtraining.functional")
+        XCTAssertEqual(icon("KB Movement Skill Session (Wildman)"), AppSymbol.kettlebell)
         XCTAssertNil(icon("Skill Ladder (10–15 min Progressive Blocks)"))
         XCTAssertEqual(ActivityIcon.forWorkout(activityType: "Skill Ladder", modalityId: "movement_skill"),
                        ModalityStyle.icon(for: "movement_skill"))
@@ -19,8 +19,19 @@ final class ActivityIconTests: XCTestCase {
     }
 
     func testKettlebellArchetypes() {
-        XCTAssertEqual(icon("Double KB Strength Session (Wildman)"), "figure.strengthtraining.functional")
-        XCTAssertEqual(icon("Kettlebell"), "figure.strengthtraining.functional")
+        XCTAssertEqual(icon("Double KB Strength Session (Wildman)"), AppSymbol.kettlebell)
+        XCTAssertEqual(icon("Kettlebell"), AppSymbol.kettlebell)
+    }
+
+    /// A custom symbol Xcode rejects compiles to nothing, and `Image` draws
+    /// nothing for it — so every name `Image(symbol:)` routes to the catalog
+    /// must load there, as a symbol.
+    func testCustomSymbolsLoadFromTheCatalog() {
+        for name in AppSymbol.custom {
+            let image = UIImage(named: name)
+            XCTAssertNotNil(image, name)
+            XCTAssertEqual(image?.isSymbolImage, true, name)
+        }
     }
 
     func testBoxStepUpsAreNotBoxing() {

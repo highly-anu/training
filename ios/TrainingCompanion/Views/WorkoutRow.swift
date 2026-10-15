@@ -26,7 +26,7 @@ struct WorkoutRow: View {
         let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? Color.blue
 
         return HStack(spacing: 12) {
-            Image(systemName: iconName)
+            Image(symbol: iconName)
                 .foregroundStyle(iconColor)
                 .font(.title3)
                 .frame(width: 28)

@@ -258,7 +258,7 @@ struct FITImportSheet: View {
     private func workoutSummaryCard(_ workout: ImportedWorkout) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: nil))
+                Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: nil))
                     .foregroundStyle(.blue).font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(ImportedWorkout.activityLabel(workout.activityType))

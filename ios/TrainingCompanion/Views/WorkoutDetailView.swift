@@ -175,7 +175,7 @@ struct WorkoutDetailView: View {
     private var workoutHeaderSection: some View {
         Section {
             HStack(spacing: 12) {
-                Image(systemName: ActivityIcon.forWorkout(activityType: detail.activityType, modalityId: detail.inferredModalityId))
+                Image(symbol: ActivityIcon.forWorkout(activityType: detail.activityType, modalityId: detail.inferredModalityId))
                     .font(.title2)
                     .foregroundStyle(.blue)
                     .frame(width: 36)
@@ -622,7 +622,7 @@ struct WorkoutDetailView: View {
 
     private var workoutSummaryCard: some View {
         HStack(spacing: 12) {
-            Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId))
+            Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId))
                 .foregroundStyle(.blue).font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(ImportedWorkout.activityLabel(workout.activityType))

@@ -85,7 +85,7 @@ enum ActivityIcon {
             words.contains { w in prefixes.contains { w.hasPrefix($0) } }
         }
 
-        if word(["kb", "kettlebell", "kettlebells"]) { return "figure.strengthtraining.functional" }
+        if word(["kb", "kettlebell", "kettlebells"]) { return AppSymbol.kettlebell }
         if stem("run")                               { return "figure.run" }
         if stem("cycl", "bike", "biking")            { return "figure.outdoor.cycle" }
         if stem("swim")                              { return "figure.pool.swim" }
@@ -112,5 +112,26 @@ enum ActivityIcon {
         if let icon = forActivityType(activityType) { return icon }
         if let modalityId { return ModalityStyle.icon(for: modalityId) }
         return "figure.mixed.cardio"
+    }
+}
+
+/// Symbols the app draws itself, from the asset catalog, for what SF Symbols
+/// has no glyph for (design-system §6.12). `kettlebell.symbolset` is written by
+/// `ios/tools/make_kettlebell_symbol.py`.
+enum AppSymbol {
+    static let kettlebell = "kettlebell"
+    static let custom: Set<String> = [kettlebell]
+}
+
+extension Image {
+    /// An icon name from `ActivityIcon` or `ModalityStyle`: one of the app's
+    /// own symbols from the asset catalog, any other from SF Symbols.
+    /// `Image(systemName:)` draws nothing for a custom name.
+    init(symbol name: String) {
+        if AppSymbol.custom.contains(name) {
+            self.init(name)
+        } else {
+            self.init(systemName: name)
+        }
     }
 }
