@@ -1107,10 +1107,19 @@ selection; the sheet is the one methodology reference on the phone.
   swipe-to-delete and the TRIMP badge; the period, sort and activity filter
   are the toolbar's filter menu (§6.24) beside the `.fit` importer; a row
   pushes `WorkoutDetailView`.
-- *Suggestions* (`LogSuggestionsTab`): every server match still to decide,
-  as `SuggestionRowView` with Accept, Review and Dismiss. Today shows the
-  first three of the same list (`AppState.pendingMatchSuggestions()`) with
-  the same three actions, and links here when there are more.
+- *Linking* (`LogLinkingTab`): one section per day, the workouts recorded
+  that day beside the sessions planned for it — the current program's and
+  every earlier program's, the header naming the program and marking an
+  earlier one. A day holds its links (a check; swipe to unlink), same-day
+  suggestions with Link and Not this, and the workouts and sessions still
+  free. Linking across days is Link… on a workout, then Link here on any
+  session — the phone's form of the web's drag. The days are built on the
+  server (`GET /health/linking`, `src/linking.py`, the copy of the web's
+  `lib/linking.ts`), since the phone has no matcher; every link sends the
+  session's `sessionUid`, and one into an earlier program only links — its
+  key would tick this program's session of that name. "Not this" is kept on
+  the phone and sent with each request (`Linking`, `LinkingTests`). Today
+  still shows the server's own suggestions (`SuggestionRowView`).
 - *Sessions* (`LogSessionsTab`): what was logged against planned sessions
   across the program, newest completion first — `LogSessions.rows` builds
   the rows from the server's session logs: the session's name when the key
@@ -1133,7 +1142,7 @@ the row keeps the earlier plan's name and does not open this program's
 session of the same key (`LogSessionsTests`).
 
 Rules: the record is listed once, here; Analytics never grows a list again;
-a suggestion is decided here or on Today, through the same row.
+a suggestion is decided here or on Today.
 
 ---
 

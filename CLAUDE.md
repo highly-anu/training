@@ -112,6 +112,7 @@ All prefixed `/api/`:
 | POST | `/health/wellness` | one day's watch reading into `daily_wellness`; 422 invalid, 503 on a failed write (the watch retries), 200 `stored: false` when the Garmin toggle is off |
 | GET | `/health/wellness/latest` | the newest watch reading, with the model named from its part number |
 | GET | `/health/workouts/<id>` | one workout with its series and `analysis` — zones, TRIMP, training effect, recovery, decoupling, best efforts (`src/analytics/workout_analysis.py`) |
+| GET | `/health/linking?today=&dismissed=` | Log ▸ Linking's day cards for the phone — workouts beside each day's planned sessions across programs, links, same-day suggestions (`src/linking.py`, the server's copy of `lib/linking.ts`; change both) |
 | GET | `/health/load/summary?period=&today=` | Analytics ▸ Load's totals vs the prior period, modality/activity mix, 12-week consistency, zone minutes, 28-day focus (`src/analytics/load_summary.py`) |
 
 `POST /programs/generate` body: `{ philosophy_id: string, constraints: AthleteConstraints, num_weeks?: number }` or `{ philosophy_ids: string[], philosophy_weights: Record<string, number>, constraints: AthleteConstraints, num_weeks?: number }`
@@ -792,6 +793,7 @@ Run these after touching program history, the matcher or the session-log path:
 .venv/bin/python test_program_history.py      # hashing, flattening, intervals (no DB)
 .venv/bin/python test_session_scope.py        # a match or log belongs to the active program by its dates (no DB)
 .venv/bin/python test_workout_matcher.py      # the cross-language parity contract
+SUPABASE_URL='' .venv/bin/python test_linking.py  # Log ▸ Linking's day cards, the same cases as lib/linking.test.ts
 ```
 
 Run these after touching watch pairing, device tokens or wellness (the SQL half

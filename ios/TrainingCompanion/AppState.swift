@@ -55,6 +55,8 @@ final class AppState: ObservableObject {
     @Published var isLoadingWorkouts = false
     /// Confirmed `workout_matches` rows, keyed by imported workout id.
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
+    /// Log ▸ Linking's day cards; nil until loaded.
+    @Published var linking: LinkingDocument?
     /// Weak server-side matches still waiting for a decision (Today card).
     @Published var matchSuggestions: [MatchSuggestion] = []
 
@@ -234,6 +236,52 @@ final class AppState: ObservableObject {
     }
 
     /// Forget a suggestion without deciding the workout; the server forgets it too.
+    // MARK: - Log ▸ Linking
+
+    /// Pairs waved away on this phone ("not this"), as the web keeps them per
+    /// browser. Sent with every request so the day is re-suggested without them.
+    @Published private(set) var dismissedLinks: Set<String> =
+        Set(UserDefaults.standard.stringArray(forKey: "linking.dismissed") ?? [])
+
+    func loadLinking() async {
+        guard let api else { return }
+        let today = dayFormatter.string(from: Date())
+        if let doc = try? await api.fetchLinking(today: today, dismissed: dismissedLinks) {
+            linking = doc
+        }
+    }
+
+    /// Link a workout to a session on any day. A session of the current
+    /// program is also marked complete; one of an earlier program is only
+    /// linked — its key would tick this program's session of that name.
+    func link(workoutId: String, to session: LinkSession) async {
+        guard let api else { return }
+        if !session.historical, let workout = importedWorkouts.first(where: { $0.id == workoutId }) {
+            try? await matchAndComplete(workout: workout, sessionKey: session.legacyKey ?? session.key,
+                                        session: session)
+        } else {
+            try? await api.saveWorkoutMatch(Linking.linkPayload(workoutId: workoutId, session: session))
+            workoutMatches[workoutId] = WorkoutMatch(workoutId: workoutId,
+                                                     sessionKey: session.legacyKey ?? session.key,
+                                                     confidence: "manual", inCurrentProgram: false)
+            matchSuggestions.removeAll { $0.importedWorkoutId == workoutId }
+        }
+        await loadLinking()
+    }
+
+    func unlink(workoutId: String) async {
+        guard let api else { return }
+        try? await api.saveWorkoutMatch(Linking.unlinkPayload(workoutId: workoutId))
+        workoutMatches[workoutId] = WorkoutMatch(workoutId: workoutId, sessionKey: "", confidence: "rejected")
+        await loadLinking()
+    }
+
+    func dismissLink(workoutId: String, sessionKey: String) async {
+        dismissedLinks.insert(Linking.dismissKey(workoutId: workoutId, sessionKey: sessionKey))
+        UserDefaults.standard.set(Array(dismissedLinks), forKey: "linking.dismissed")
+        await loadLinking()
+    }
+
     func dismissSuggestion(workoutId: String) async {
         matchSuggestions.removeAll { $0.importedWorkoutId == workoutId }
         try? await api?.dismissMatchSuggestion(workoutId: workoutId)
@@ -1004,10 +1052,19 @@ final class AppState: ObservableObject {
 
     /// Link a recorded workout to a planned session and mark the session
     /// complete, through the API (which also clears any suggestion for it).
-    func matchAndComplete(workout: ImportedWorkout, sessionKey: String) async throws {
+    ///
+    /// `session` names the session exactly (Log ▸ Linking): its uid goes with
+    /// the match, since the server otherwise resolves the key on the
+    /// workout's own date and finds nothing for a link across days.
+    func matchAndComplete(workout: ImportedWorkout, sessionKey: String,
+                          session: LinkSession? = nil) async throws {
         guard let api else { throw APIError.unauthenticated }
         let completedAt = workout.startTime ?? ISO8601DateFormatter().string(from: Date())
-        try await api.linkWorkout(workoutId: workout.id, sessionKey: sessionKey)
+        if let session {
+            try await api.saveWorkoutMatch(Linking.linkPayload(workoutId: workout.id, session: session))
+        } else {
+            try await api.linkWorkout(workoutId: workout.id, sessionKey: sessionKey)
+        }
         try await api.saveSessionWithWorkout(sessionKey: sessionKey, completedAt: completedAt,
                                              workoutId: workout.id,
                                              avgHR: workout.heartRate?.avg, peakHR: workout.heartRate?.max)

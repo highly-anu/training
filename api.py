@@ -2730,31 +2730,16 @@ def programs_history_version(version_id: str):
     return jsonify(version)
 
 
-@app.get('/api/programs/planned-sessions')
-@require_auth
-def programs_planned_sessions():
-    """What was actually planned on each day in a range, across every program.
-
-    `from` and `to` are inclusive ISO dates; the range defaults to the last 90
-    days. Each session carries the match and the log attached to it, so a
-    calendar or a confirm dialog can show planned against actual for a date that
-    belongs to a block the athlete has long since replaced.
-    """
+def _planned_sessions_json(user_id: str, from_date: str, to_date: str) -> list[dict]:
+    """What was planned on each day in a range, across every program, each row
+    with the match and the log attached (`GET /programs/planned-sessions`,
+    `GET /health/linking`)."""
     from src import program_history
-    try:
-        to_date = _date.fromisoformat(request.args.get('to') or str(_date.today()))
-        from_date = _date.fromisoformat(
-            request.args.get('from') or str(to_date - _timedelta(days=90)))
-    except ValueError:
-        return jsonify({'error': 'bad_date'}), 400
-    if from_date > to_date:
-        from_date, to_date = to_date, from_date
+    rows = program_history.planned_sessions_between(user_id, from_date, to_date)
 
-    rows = program_history.planned_sessions_between(g.user_id, str(from_date), str(to_date))
-
-    matches = {m['sessionUid']: m for m in _health.get_matches(g.user_id)
+    matches = {m['sessionUid']: m for m in _health.get_matches(user_id)
                if m.get('sessionUid') and m['matchConfidence'] != 'rejected'}
-    logs = _health.get_session_logs_by_uid(g.user_id)
+    logs = _health.get_session_logs_by_uid(user_id)
 
     out = []
     for row in rows:
@@ -2778,6 +2763,30 @@ def programs_planned_sessions():
             'matchedWorkoutId': match['importedWorkoutId'] if match else None,
             'completedAt':     (logs.get(uid) or {}).get('completedAt') or None,
         })
+    return out
+
+
+@app.get('/api/programs/planned-sessions')
+@require_auth
+def programs_planned_sessions():
+    """What was actually planned on each day in a range, across every program.
+
+    `from` and `to` are inclusive ISO dates; the range defaults to the last 90
+    days. Each session carries the match and the log attached to it, so a
+    calendar or a confirm dialog can show planned against actual for a date that
+    belongs to a block the athlete has long since replaced.
+    """
+    from src import program_history
+    try:
+        to_date = _date.fromisoformat(request.args.get('to') or str(_date.today()))
+        from_date = _date.fromisoformat(
+            request.args.get('from') or str(to_date - _timedelta(days=90)))
+    except ValueError:
+        return jsonify({'error': 'bad_date'}), 400
+    if from_date > to_date:
+        from_date, to_date = to_date, from_date
+
+    out = _planned_sessions_json(g.user_id, str(from_date), str(to_date))
     return jsonify({'from': str(from_date), 'to': str(to_date), 'sessions': out})
 
 
@@ -3264,6 +3273,53 @@ def health_snapshot():
         'matches':         _health.get_matches(g.user_id),
         'performanceLogs': _health.get_performance_logs(g.user_id),
     })
+
+
+@app.get('/api/health/linking')
+@require_auth
+def health_linking():
+    """Log ▸ Linking for a client with no matcher of its own (the phone): one
+    card per day, workouts beside the sessions planned that day, existing
+    links, and same-day suggestions (`src/linking.py`, the server's copy of
+    the web's `lib/linking.ts`).
+
+    `today` is the athlete's date (the server's is UTC); `dismissed` repeats,
+    each `<workoutId>|<session key>` the athlete waved away on that device.
+    """
+    from src import linking, program_history
+    from src.db import get_user_program
+    try:
+        today = str(_date.fromisoformat(request.args.get('today') or str(_date.today())))
+    except ValueError:
+        return jsonify({'error': 'bad_date'}), 400
+    dismissed = frozenset(d for d in request.args.getlist('dismissed') if '|' in d)
+
+    workouts = _health.get_workouts(g.user_id, summary_only=True)
+    envelope = get_user_program(g.user_id)
+    envelope = _normalize_program_keys(envelope) if isinstance(envelope, dict) else {}
+    try:
+        version_id = program_history.active_version_id(g.user_id)
+        oldest = min((w['date'] for w in workouts if w.get('date')), default=today)
+        history = _planned_sessions_json(g.user_id, min(oldest, today), today)
+        labels = {a['versionId']: a.get('goalName') or a['label']
+                  for a in program_history.list_activations(g.user_id)}
+    except Exception as hist_err:            # no history tables: current program only
+        app.logger.warning('linking history unavailable: %s', hist_err)
+        version_id, history, labels = None, [], {}
+
+    days = linking.build_linking_days(
+        workouts=workouts,
+        matches=_health.get_matches(g.user_id),
+        pending=_health.get_match_suggestions(g.user_id),
+        program=envelope.get('currentProgram'),
+        program_start_date=envelope.get('programStartDate'),
+        program_version_id=version_id,
+        history=history,
+        today=today,
+        dismissed=dismissed,
+    )
+    return jsonify({'today': today, 'programVersionId': version_id,
+                    'days': linking.to_wire(days, labels)})
 
 
 @app.post('/api/health/workouts')
