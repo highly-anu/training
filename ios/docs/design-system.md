@@ -1118,7 +1118,11 @@ selection; the sheet is the one methodology reference on the phone.
   `lib/linking.ts`), since the phone has no matcher; every link sends the
   session's `sessionUid`, and one into an earlier program only links — its
   key would tick this program's session of that name. "Not this" is kept on
-  the phone and sent with each request (`Linking`, `LinkingTests`). Today
+  the phone and sent with each request (`Linking`, `LinkingTests`). A link,
+  an unlink or a "Not this" changes the list at once (`Linking.applying…`)
+  and the server's reload, a couple of seconds, replaces it; the list is
+  never disabled while it runs — doing so froze scrolling and every button
+  until the reload landed, which read as a hung screen. Today
   still shows the server's own suggestions (`SuggestionRowView`).
 - *Sessions* (`LogSessionsTab`): what was logged against planned sessions
   across the program, newest completion first — `LogSessions.rows` builds

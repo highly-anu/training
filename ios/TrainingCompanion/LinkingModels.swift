@@ -8,7 +8,7 @@ import Foundation
 struct LinkingDocument: Decodable, Equatable {
     let today: String
     let programVersionId: String?
-    let days: [LinkingDay]
+    var days: [LinkingDay]
 }
 
 struct LinkingDay: Decodable, Equatable, Identifiable {
@@ -18,18 +18,18 @@ struct LinkingDay: Decodable, Equatable, Identifiable {
     let historical: Bool
     let programVersionId: String?
     let programLabel: String?
-    let links: [LinkPair]
-    let suggestions: [LinkSuggestion]
+    var links: [LinkPair]
+    var suggestions: [LinkSuggestion]
     /// This day's workouts in neither a link nor a suggestion.
-    let workouts: [LinkWorkout]
+    var workouts: [LinkWorkout]
     /// This day's sessions in neither a link nor a suggestion.
-    let sessions: [LinkSession]
+    var sessions: [LinkSession]
     /// Workouts linked to a session the page has no row for.
-    let elsewhere: [LinkElsewhere]
+    var elsewhere: [LinkElsewhere]
     /// Workouts the athlete said belong to no session.
-    let declined: [LinkWorkout]
+    var declined: [LinkWorkout]
     /// An unlinked workout, or a suggestion, is waiting.
-    let needsAttention: Bool
+    var needsAttention: Bool
 }
 
 /// A recorded workout, summarised — the series stay on the server.
@@ -126,6 +126,84 @@ enum Linking {
                                             matchedAt: matchedAt)
         if let uid = session.uid { body["sessionUid"] = uid }
         return body
+    }
+
+    // MARK: - Applied on the phone at once
+
+    /// A tap shows at once; the server's reload, which takes a couple of
+    /// seconds, then replaces the document. Each mirrors what
+    /// `src/linking.py` would lay out after the write.
+
+    /// The workout is linked: it leaves every suggestion and unlinked list,
+    /// the session leaves its day's, and the pair shows on the workout's day
+    /// and, across days, on the session's too.
+    static func applyingLink(_ doc: LinkingDocument, workoutId: String, session: LinkSession) -> LinkingDocument {
+        guard let workout = findWorkout(doc, id: workoutId) else { return doc }
+        let pair = LinkPair(workout: workout, session: session)
+        var out = doc
+        for i in out.days.indices {
+            var d = out.days[i]
+            // A suggestion that loses its workout or its session frees the other half.
+            for s in d.suggestions where (s.workout.id == workoutId) != (s.session.key == session.key) {
+                if s.workout.id != workoutId { d.workouts.append(s.workout) }
+                if s.session.key != session.key { d.sessions.append(s.session) }
+            }
+            d.suggestions.removeAll { $0.workout.id == workoutId || $0.session.key == session.key }
+            d.workouts.removeAll { $0.id == workoutId }
+            d.declined.removeAll { $0.id == workoutId }
+            d.elsewhere.removeAll { $0.workout.id == workoutId }
+            d.links.removeAll { $0.workout.id == workoutId }
+            d.sessions.removeAll { $0.key == session.key }
+            if d.date == workout.date || d.date == session.date { d.links.append(pair) }
+            d.needsAttention = !d.suggestions.isEmpty || !d.workouts.isEmpty
+            out.days[i] = d
+        }
+        return out
+    }
+
+    /// "Not this": the pair is no longer offered; both halves are left unlinked.
+    static func applyingDismiss(_ doc: LinkingDocument, workoutId: String, sessionKey: String) -> LinkingDocument {
+        var out = doc
+        for i in out.days.indices {
+            var d = out.days[i]
+            guard let s = d.suggestions.first(where: { $0.workout.id == workoutId && $0.session.key == sessionKey })
+            else { continue }
+            d.suggestions.removeAll { $0.id == s.id }
+            d.workouts.append(s.workout)
+            d.sessions.append(s.session)
+            d.needsAttention = true
+            out.days[i] = d
+        }
+        return out
+    }
+
+    /// Unlinked: the workout belongs to no session, the session is open again.
+    static func applyingUnlink(_ doc: LinkingDocument, workoutId: String) -> LinkingDocument {
+        var out = doc
+        let pairs = doc.days.flatMap(\.links).filter { $0.workout.id == workoutId }
+        guard let pair = pairs.first else { return doc }
+        for i in out.days.indices {
+            var d = out.days[i]
+            d.links.removeAll { $0.workout.id == workoutId }
+            if d.date == pair.workout.date { d.declined.append(pair.workout) }
+            if d.date == pair.session.date, !d.sessions.contains(where: { $0.key == pair.session.key }) {
+                d.sessions.append(pair.session)
+            }
+            d.needsAttention = !d.suggestions.isEmpty || !d.workouts.isEmpty
+            out.days[i] = d
+        }
+        return out
+    }
+
+    private static func findWorkout(_ doc: LinkingDocument, id: String) -> LinkWorkout? {
+        for d in doc.days {
+            if let w = d.workouts.first(where: { $0.id == id })
+                ?? d.suggestions.first(where: { $0.workout.id == id })?.workout
+                ?? d.declined.first(where: { $0.id == id })
+                ?? d.elsewhere.first(where: { $0.workout.id == id })?.workout
+                ?? d.links.first(where: { $0.workout.id == id })?.workout { return w }
+        }
+        return nil
     }
 
     /// Unlinking records a decision, as the web does: a rejected match with no session.

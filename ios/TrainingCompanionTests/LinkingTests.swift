@@ -73,4 +73,57 @@ final class LinkingTests: XCTestCase {
         XCTAssertNotNil(LogLinkingTab.instant("2026-10-12T07:30:00.123Z"))
         XCTAssertEqual(LogLinkingTab.instant("2026-10-13 20:00:00+02:00"), LogLinkingTab.instant("2026-10-13T18:00:00Z"))
     }
+
+    // MARK: - A tap shows before the server answers
+
+    /// A day with a suggestion, as the screenshot of 2026-10-16 had it:
+    /// a strength workout offered for KB Ballistic Power, a second one unlinked.
+    private func suggested() throws -> LinkingDocument {
+        var d = try doc()
+        let session = d.days[2].sessions[0]
+        let w = LinkWorkout(id: "lift", date: "2026-10-09", startTime: nil, source: "garmin",
+                            activityType: "strength_training", name: nil, durationMinutes: 41,
+                            inferredModalityId: "max_strength")
+        d.days[2].sessions = []
+        d.days[2].suggestions = [LinkSuggestion(workout: w, session: session, score: 60, fromPending: false)]
+        d.days[2].needsAttention = true
+        return d
+    }
+
+    func testLinkShowsAtOnce() throws {
+        let before = try suggested()
+        let s = before.days[2].suggestions[0]
+        let day = Linking.applyingLink(before, workoutId: "lift", session: s.session).days[2]
+        XCTAssertEqual(day.suggestions, [])
+        XCTAssertEqual(day.links.map(\.workout.id), ["lift"])
+        XCTAssertFalse(day.needsAttention)
+    }
+
+    func testLinkAcrossDaysShowsOnBoth() throws {
+        let before = try doc()
+        let session = before.days[2].sessions[0]   // Friday 9th, earlier program
+        let after = Linking.applyingLink(before, workoutId: "boxstep", session: session)
+        XCTAssertEqual(after.days[0].workouts, [])
+        XCTAssertFalse(after.days[0].needsAttention)
+        XCTAssertEqual(after.days[0].links.map(\.session.key), [session.key])
+        XCTAssertEqual(after.days[2].sessions, [])
+        XCTAssertEqual(after.days[2].links.map(\.workout.id), ["boxstep"])
+    }
+
+    func testNotThisLeavesBothHalvesUnlinked() throws {
+        let before = try suggested()
+        let s = before.days[2].suggestions[0]
+        let day = Linking.applyingDismiss(before, workoutId: "lift", sessionKey: s.session.key).days[2]
+        XCTAssertEqual(day.suggestions, [])
+        XCTAssertEqual(day.workouts.map(\.id), ["lift"])
+        XCTAssertEqual(day.sessions.map(\.key), [s.session.key])
+        XCTAssertTrue(day.needsAttention, "the workout still waits for a session")
+    }
+
+    func testUnlinkShowsAtOnce() throws {
+        let day = Linking.applyingUnlink(try doc(), workoutId: "kbpower").days[1]
+        XCTAssertEqual(day.links, [])
+        XCTAssertEqual(day.declined.map(\.id), ["kbpower"])
+        XCTAssertEqual(day.sessions.map(\.key), ["4-Monday-0"])
+    }
 }
