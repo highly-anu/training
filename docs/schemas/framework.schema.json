@@ -76,6 +76,15 @@
       },
       "additionalProperties": false
     },
+    "progression_overrides": {
+      "type": "object",
+      "description": "Modality id -> progression model that writes the load for that modality's sessions in this framework's weeks. Without an entry the modality's own progression_model does, as for every other framework (src/generator.py). Marcus Filly's RPE framework prescribes its strength work as RPE targets this way; the framework-level progression_model never drove a prescription.",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["linear_load", "density", "volume_block", "complexity", "time_to_task",
+                 "intensity_split_shift", "rpe_autoregulation", "pentathlon_rpm", "range_progression"]
+      }
+    },
     "progression_model": {
       "type": "string",
       "description": "ID of the progression model that governs advancement in this framework.",

@@ -4243,9 +4243,14 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     import json as _j
     parts = [
         str(revision), inputs.today.isoformat(),
-        _j.dumps({k: (v.get('completedAt'), sorted((ex, len((d or {}).get('sets') or []),
-                                                     (d or {}).get('rounds'), (d or {}).get('durationSec'))
-                                                    for ex, d in (v.get('exercises') or {}).items()))
+        # Each set's values, not only how many: the set logger edits a set's
+        # kg, reps or seconds in place.
+        _j.dumps({k: (v.get('completedAt'), sorted(
+                      (ex, [((s or {}).get('completed'), (s or {}).get('repsActual'), (s or {}).get('weightKg'),
+                             (s or {}).get('rpe'), (s or {}).get('durationSeconds'))
+                            for s in ((d or {}).get('sets') or []) if isinstance(s, dict)],
+                       (d or {}).get('rounds'), (d or {}).get('durationSec'), (d or {}).get('distanceKm'))
+                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)))
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
@@ -4260,11 +4265,29 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         _j.dumps(_watch_digest(inputs.bio_logs), sort_keys=True),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
+        # What the packages declare progress to be: a changed analytics.yaml
+        # rebuilds the stored documents by itself.
+        _analytics_specs_digest(),
         # The document's shape: bump when a section gains keys, so stored
         # copies are rebuilt (2: scorecard.weeks, for the Today card).
         'doc-4',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
+
+
+_SPECS_DIGEST: str | None = None
+
+
+def _analytics_specs_digest() -> str:
+    """A digest of every package's analytics.yaml, once per process: the
+    files change only with a deploy, and a deploy starts a new process."""
+    global _SPECS_DIGEST
+    if _SPECS_DIGEST is None:
+        import hashlib as _h
+        import json as _j
+        _SPECS_DIGEST = _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
+                                           default=str).encode()).hexdigest()[:16]
+    return _SPECS_DIGEST
 
 
 @app.get('/api/analytics/specs')

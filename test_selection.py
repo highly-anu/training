@@ -257,12 +257,28 @@ def test_single_session_routes() -> None:
     check('with it they are not', bool(with_phase) and not with_phase & banned, str(with_phase))
 
 
+def test_a_framework_prescribes_its_own_way() -> None:
+    print('Progression overrides: Filly prescribes RPE, Starting Strength kg')
+    prog = program('marcus_filly', 4, days_per_week=5)
+    strength = [ea['load'] for _, s in sessions(prog) if s['modality'] == 'max_strength'
+                for ea in s['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps']
+    check('Filly strength sets carry a target RPE, not a fixed kg',
+          strength and all(l.get('target_rpe') in (6, 8) and 'weight_kg' not in l for l in strength),
+          str(strength[:2]))
+    check('with a suggested starting weight where the lift has one',
+          any(l.get('suggested_weight_kg') for l in strength))
+    ss = program('starting_strength', 2, training_level='novice')
+    loads = [ea['load'] for _, s in sessions(ss) for ea in s['exercises'] if ea.get('exercise')]
+    check('a framework without overrides is unchanged (SS: kg, no RPE)',
+          any(l.get('weight_kg') for l in loads) and not any('target_rpe' in l for l in loads))
+
+
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
               test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
               test_pins_never_repeat_a_lift, test_unfilled_cache,
               test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
-              test_single_session_routes):
+              test_single_session_routes, test_a_framework_prescribes_its_own_way):
         t()
     print()
     if FAILURES:

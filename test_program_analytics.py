@@ -1042,6 +1042,27 @@ def test_headline_summary_words() -> None:
           h['text'] is None and not h['measurable'] and h['reason'] == 'timed_sets_not_logged')
 
 
+def test_cache_key_sees_set_values_and_specs() -> None:
+    """The stored document is rebuilt when a set's value changes in place
+    (the set logger edits kg, reps or seconds without adding a set) and when
+    a package's analytics.yaml changes — not only when the shape tag moves."""
+    print('\ncache key: set values and the specs digest')
+    import copy
+    import api
+    logs = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'back_squat': {'sets': _sets((100, 5))}})}
+    inp = AnalyticsInputs(fixture_program(), START, TODAY, logs)
+    a = api._program_analytics_hash(inp, {}, 'r1')
+    logs2 = copy.deepcopy(logs)
+    logs2['1-Monday-0']['exercises']['back_squat']['sets'][0]['weightKg'] = 102.5
+    b = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs2), {}, 'r1')
+    check('a set edited in place changes the key', a != b)
+    check('the same inputs give the same key', a == api._program_analytics_hash(inp, {}, 'r1'))
+    real = api._SPECS_DIGEST
+    api._SPECS_DIGEST = 'something-else'
+    check('a changed spec digest changes the key', api._program_analytics_hash(inp, {}, 'r1') != a)
+    api._SPECS_DIGEST = real
+
+
 def test_notes_route_and_fatigue() -> None:
     print('\napi: the iOS notes route, and fatigue on one scale')
     import os
@@ -1160,6 +1181,7 @@ if __name__ == '__main__':
     test_document()
     test_headline_follows_the_track()
     test_headline_summary_words()
+    test_cache_key_sees_set_values_and_specs()
     test_notes_route_and_fatigue()
     test_describe()
     test_change_summary_units()

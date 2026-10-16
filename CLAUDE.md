@@ -486,7 +486,10 @@ writes.
   Prep and movements earned in General Practice. "Now available" in `unlocks` is
   what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
-  `generator.py` reads the modality yaml's. Default primitives key on
+  `generator.py` reads the modality yaml's, unless the week's framework
+  declares `progression_overrides` (modality → model): Marcus Filly's strength
+  work is prescribed as RPE targets that way (since 2026-10-16), and his spec
+  leads with load at the target RPE. Default primitives key on
   `(modality.progression_model, slot_type)`; the framework's model informs
   only the intensity section.
 - **Slot roles are free-form (144 strings).** Never scope by guessing a role

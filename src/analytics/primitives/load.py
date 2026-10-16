@@ -107,7 +107,13 @@ def set_load(entry, ctx) -> dict:
                 'increment': increment_for(ctx, ex_id),
                 'kg': False, 'repPoints': [], 'repExpected': [], 'repsWithoutKg': False,
             })
-            prescribed = (ea.get('load') or {}).get('weight_kg')
+            # An RPE prescription suggests a starting weight rather than
+            # fixing one (progression._rpe_autoregulation): it is still the
+            # program's word on the load.
+            load_ = ea.get('load') or {}
+            prescribed = load_.get('weight_kg')
+            if not isinstance(prescribed, (int, float)):
+                prescribed = load_.get('suggested_weight_kg')
             prescribed = float(prescribed) if isinstance(prescribed, (int, float)) else None
             rec['prescribedNow'] = prescribed
             if prescribed is not None:

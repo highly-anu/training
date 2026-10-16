@@ -714,10 +714,10 @@ phases A–E. Open:
   clients (`lib/outcomeFields.ts`, `SessionLogging.outcomeFields`), and the
   Apple Watch writes each set's `durationSeconds`. Still open: an optional
   "clean" tick so *movements earned* counts quality, not attendance.
-- **Marcus Filly prescribes kg, not RPE.** The framework is
-  `rpe_autoregulation` but the modality's `linear_load` writes the load, so
-  `load_at_rpe` could only say "no RPE target"; the spec measures working load
-  until the generator prescribes RPE.
+- ~~Marcus Filly prescribes kg, not RPE~~ — closed 2026-10-16: a framework's
+  `progression_overrides` (modality → model) writes the load; Filly's strength
+  work is RPE 8 (6 in a deload) with a suggested starting weight, and his spec
+  leads with load at the target RPE.
 - **A standard per track.** Benchmarks are spec-level, so Wildman's pentathlon
   standards (IKMF-sourced) cannot be declared for Pentathlon Prep alone.
 - **Decision: does the review's score keep completion?** It is
