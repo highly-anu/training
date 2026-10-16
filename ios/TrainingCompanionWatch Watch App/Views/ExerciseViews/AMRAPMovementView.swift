@@ -27,7 +27,7 @@ struct AMRAPMovementView: View {
 
             Button("Done") {
                 sessionState.markExerciseComplete(id: exercise.exerciseId)
-                sessionState.phase = .active(exerciseIndex: exerciseIndex + 1, setIndex: 0)
+                sessionState.advance(to: exerciseIndex + 1)
             }
             .font(.caption)
             .buttonStyle(.plain)

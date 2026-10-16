@@ -594,6 +594,29 @@ def test_set_load() -> None:
     check('three flat sessions after the first → stalled', r2['exercises'][0]['stalled']
           and r2['status'] == 'stalled', str(r2['exercises'][0]['status']))
 
+    # A lift with no kg prescribed or logged is measured in reps (Gym Jones'
+    # air squats, BJJ's pull-ups): logging its reps read "no sets logged".
+    bw = fixture_program(weeks=2, deload_week=99)
+    for w in bw['weeks']:
+        w['schedule']['Monday'][0]['exercises'] = [
+            {'exercise': {'id': 'pull_up', 'name': 'Pull-up', 'movement_patterns': ['vertical_pull']},
+             'slot_role': 'primary_pull', 'slot_type': 'sets_reps', 'load': {'sets': 4, 'reps': '6-8'}}]
+    bw_logs = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'pull_up': {'sets': _sets((None, 6), (None, 7))}}),
+               '2-Monday-0': _log('2026-03-09T10:00:00+00:00', {'pull_up': {'sets': _sets((None, 8), (None, 7))}})}
+    eb = E('pull', 'set_load', 'bjj', scope={'slot_roles': ['primary_*']}, expected='prescribed')
+    rb = run_primitive(eb, _ctx(bw, bw_logs, today=START + timedelta(days=10)))
+    pu = rb['exercises'][0]
+    check('a kg-less lift is measured in reps: best set per session',
+          pu['unit'] == 'reps' and [p['value'] for p in pu['series']] == [7.0, 8.0], str(pu['series']))
+    check('against the prescribed reps (the low end of 6-8)', pu['expected'][0]['value'] == 6.0)
+    check('the entry says reps, and is measured', rb['unit'] == 'reps' and rb['metric'] == 'best_set_reps'
+          and rb['coverage']['measured'] == 2, str(rb['coverage']))
+    # Reps logged on a lift prescribed in kg, without the kg: say that.
+    nokg = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'back_squat': {'sets': _sets((None, 5), (None, 5))}})}
+    rk = run_primitive(e, _ctx(prog, nokg, today=START + timedelta(days=3)))
+    check('reps without the prescribed kg → no_kg_logged, not no_sets_logged',
+          rk['coverage']['reason'] == 'no_kg_logged' and rk['unit'] == 'kg', str(rk['coverage']))
+
     # Completed but unlogged: counts for coverage denominator, not measured.
     partial = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00'), '1-Wednesday-0': logs['1-Wednesday-0']}
     r3 = run_primitive(e, _ctx(prog, partial, today=START + timedelta(days=5)))
@@ -802,6 +825,18 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     twice = run_primitive(e, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
     walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
     check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
+    # require_clean: attendance does not earn it; two clean ticks do.
+    ec = E('u', 'unlocks', 'ido_portal', min_sessions=2, require_clean=True)
+    unticked = run_primitive(ec, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
+    check('require_clean: two attended sessions earn nothing, and say why',
+          not unticked['practised'] and unticked['coverage']['reason'] == 'clean_not_logged',
+          str(unticked['coverage']))
+    clean_logs = {k: _log(v['completedAt'], {'handstand_hold': {'sets': [], 'clean': True}})
+                  for k, v in ido_logs.items()}
+    ticked = run_primitive(ec, _ctx(ido, clean_logs, today=START + timedelta(days=10)))
+    check('two clean sessions earn the hold and open the walk',
+          [p['exerciseId'] for p in ticked['practised']] == ['handstand_hold']
+          and 'handstand_walk' in {a['exerciseId'] for a in ticked['available']})
     check('handstand_hold practised twice opens handstand_walk',
           'handstand_walk' in {a['exerciseId'] for a in twice['available']},
           str([a['exerciseId'] for a in twice['available']][:8]))
@@ -978,6 +1013,14 @@ def test_headline_follows_the_track() -> None:
               sum(p['headline'] for p in doc['progress']) == 1)
         check(f'{track}: applicable counts only entries the program schedules',
               m['applicable'] == sum(p['applies'] for p in doc['progress']) and m['applicable'] <= m['total'])
+        jerk = next((b for b in doc['benchmarks']['benchmarks'] if b['benchmarkId'] == 'kb_pentathlon_jerk_reps'), None)
+        if track == 'pentathlon':
+            check('Pentathlon Prep: the jerk standard is declared, and primary',
+                  jerk and 'declared' in jerk['why'] and jerk['primary'], str(jerk and jerk['why']))
+        else:
+            check('GP: the pentathlon standards are not declared (at most a same-domain extra)',
+                  jerk is None or ('declared' not in jerk['why'] and not jerk['primary']),
+                  str(jerk and jerk['why']))
         if track == 'general_practice':
             check('GP: cadence does not apply and says it applies in Pentathlon Prep',
                   not by_id['jerk_rpm']['applies']
@@ -1017,6 +1060,31 @@ def test_headline_summary_words() -> None:
           headline_summary(assumed)['text'] is None)
     check('nothing measured: no sentence, the reason code instead',
           h['text'] is None and not h['measurable'] and h['reason'] == 'timed_sets_not_logged')
+
+
+def test_cache_key_sees_set_values_and_specs() -> None:
+    """The stored document is rebuilt when a set's value changes in place
+    (the set logger edits kg, reps or seconds without adding a set) and when
+    a package's analytics.yaml changes — not only when the shape tag moves."""
+    print('\ncache key: set values and the specs digest')
+    import copy
+    import api
+    logs = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'back_squat': {'sets': _sets((100, 5))}})}
+    inp = AnalyticsInputs(fixture_program(), START, TODAY, logs)
+    a = api._program_analytics_hash(inp, {}, 'r1')
+    logs2 = copy.deepcopy(logs)
+    logs2['1-Monday-0']['exercises']['back_squat']['sets'][0]['weightKg'] = 102.5
+    b = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs2), {}, 'r1')
+    check('a set edited in place changes the key', a != b)
+    check('the same inputs give the same key', a == api._program_analytics_hash(inp, {}, 'r1'))
+    logs3 = copy.deepcopy(logs)
+    logs3['1-Monday-0']['exercises']['back_squat']['clean'] = True
+    c = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs3), {}, 'r1')
+    check('ticking Clean changes the key', a != c)
+    real = api._SPECS_DIGEST
+    api._SPECS_DIGEST = 'something-else'
+    check('a changed spec digest changes the key', api._program_analytics_hash(inp, {}, 'r1') != a)
+    api._SPECS_DIGEST = real
 
 
 def test_notes_route_and_fatigue() -> None:
@@ -1137,6 +1205,7 @@ if __name__ == '__main__':
     test_document()
     test_headline_follows_the_track()
     test_headline_summary_words()
+    test_cache_key_sees_set_values_and_specs()
     test_notes_route_and_fatigue()
     test_describe()
     test_change_summary_units()

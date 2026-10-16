@@ -16,6 +16,7 @@ from __future__ import annotations
 from datetime import date
 
 from src.analytics import benchmarks_data as bd
+from src.analytics import spec as spec_mod
 from src.analytics.context import Context
 
 # benchmark id → exercise ids whose logged sets estimate it
@@ -61,7 +62,12 @@ def _best_est1rm(ctx: Context, exercise_ids: tuple) -> tuple[float, date] | None
 def build(ctx: Context, specs: list) -> dict:
     sources = set(ctx.goal.get('primary_sources') or [])
     priority_domains = {m for m, w in (ctx.goal.get('priorities') or {}).items() if w}
-    declared = {b for s in specs for b in (s.benchmarks or [])}
+    # A standard scoped to frameworks is declared only for a program that runs
+    # one of them: Wildman's pentathlon events in Pentathlon Prep, not in
+    # General Practice.
+    program_frameworks = {spec_mod.framework_id_of(w) for w in ctx.weeks} - {None}
+    declared = {b for s in specs for b in (s.benchmarks or [])
+                if b not in s.benchmark_frameworks or s.benchmark_frameworks[b] & program_frameworks}
     declared |= {b for s in specs for e in s.entries for b in (e.benchmarks or [])}
     sex = (ctx.profile.get('sex') or 'male').lower()
     sex = sex if sex in ('male', 'female') else 'male'

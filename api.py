@@ -1231,6 +1231,16 @@ def generate_session():
         raise
 
 
+def _prog_model_for(modality: str, body: dict, data: dict) -> str:
+    """The progression model that writes a single session's loads: the week's
+    framework's `progression_overrides` (Filly prescribes RPE), else the
+    modality's — as the generator decides, so a swapped or regenerated
+    session matches the rest of its week."""
+    fw = loader.load_all_frameworks().get(body.get('framework_id')) if body.get('framework_id') else None
+    override = ((fw or {}).get('progression_overrides') or {}).get(modality)
+    return override or data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+
+
 def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None]:
     """(exclude_exercises, deload share) for the week a single-session route edits.
 
@@ -1324,7 +1334,7 @@ def _generate_session_inner(body):
         return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
 
     # Apply progression loads
-    prog_model = data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+    prog_model = _prog_model_for(modality, body, data)
     for ea in populated.get('exercises', []):
         if ea.get('exercise') is None:
             continue
@@ -1410,7 +1420,7 @@ def substitute_exercise():
         return_trace=True, primary_sources=set(goal['primary_sources']),
         policy=policy, modality=modality,
     )
-    prog_model = data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+    prog_model = _prog_model_for(modality, body, data)
     pattern = (slot.get('exercise_filter') or {}).get('movement_pattern')
     alternatives = []
     for cand in (trace or {}).get('candidates') or []:
@@ -3291,9 +3301,10 @@ def get_today_session():
     if spec_level >= 1:
         try:
             from src import last_time as _last_time
+            tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
             last = _last_time.last_by_exercise(
                 list(session_logs.values()) + list(_health.get_session_logs_by_uid(g.user_id).values()),
-                str(today))
+                str(today), tz=tz)
         except Exception as e:
             app.logger.warning('today-session: last time failed: %s', e)
 
@@ -4243,9 +4254,15 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     import json as _j
     parts = [
         str(revision), inputs.today.isoformat(),
-        _j.dumps({k: (v.get('completedAt'), sorted((ex, len((d or {}).get('sets') or []),
-                                                     (d or {}).get('rounds'), (d or {}).get('durationSec'))
-                                                    for ex, d in (v.get('exercises') or {}).items()))
+        # Each set's values, not only how many: the set logger edits a set's
+        # kg, reps or seconds in place.
+        _j.dumps({k: (v.get('completedAt'), sorted(
+                      (ex, [((s or {}).get('completed'), (s or {}).get('repsActual'), (s or {}).get('weightKg'),
+                             (s or {}).get('rpe'), (s or {}).get('durationSeconds'))
+                            for s in ((d or {}).get('sets') or []) if isinstance(s, dict)],
+                       (d or {}).get('rounds'), (d or {}).get('durationSec'), (d or {}).get('distanceKm'),
+                       (d or {}).get('clean'))
+                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)))
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
@@ -4260,11 +4277,29 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         _j.dumps(_watch_digest(inputs.bio_logs), sort_keys=True),
         _j.dumps(inputs.profile.get('hrConfig') or {}, sort_keys=True), str(inputs.profile.get('dateOfBirth')),
         str(inputs.profile.get('sex')),
+        # What the packages declare progress to be: a changed analytics.yaml
+        # rebuilds the stored documents by itself.
+        _analytics_specs_digest(),
         # The document's shape: bump when a section gains keys, so stored
         # copies are rebuilt (2: scorecard.weeks, for the Today card).
-        'doc-3',
+        'doc-4',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
+
+
+_SPECS_DIGEST: str | None = None
+
+
+def _analytics_specs_digest() -> str:
+    """A digest of every package's analytics.yaml, once per process: the
+    files change only with a deploy, and a deploy starts a new process."""
+    global _SPECS_DIGEST
+    if _SPECS_DIGEST is None:
+        import hashlib as _h
+        import json as _j
+        _SPECS_DIGEST = _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
+                                           default=str).encode()).hexdigest()[:16]
+    return _SPECS_DIGEST
 
 
 @app.get('/api/analytics/specs')
@@ -4452,7 +4487,7 @@ def progression_review():
         base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
     else:
         base = _pt.compute_session_hash(session_logs)
-    session_hash = f'{base}:{period}:review-6'
+    session_hash = f'{base}:{period}:review-7'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])

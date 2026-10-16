@@ -486,7 +486,10 @@ writes.
   Prep and movements earned in General Practice. "Now available" in `unlocks` is
   what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
-  `generator.py` reads the modality yaml's. Default primitives key on
+  `generator.py` reads the modality yaml's, unless the week's framework
+  declares `progression_overrides` (modality → model): Marcus Filly's strength
+  work is prescribed as RPE targets that way (since 2026-10-16), and his spec
+  leads with load at the target RPE. Default primitives key on
   `(modality.progression_model, slot_type)`; the framework's model informs
   only the intensity section.
 - **Slot roles are free-form (144 strings).** Never scope by guessing a role
@@ -532,7 +535,10 @@ writes.
   primitive at zero coverage. The phone logs from the session detail
   (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
   (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
-  carries `exercises` so it can read back. Bodyweight
+  carries `exercises` so it can read back. A skill-practice row on both
+  clients has a **Clean** toggle (`exercises[id].clean`: every rep owned); an
+  `unlocks` entry with `require_clean: true` (Ido, Wildman) earns a movement
+  only by clean sessions and says `clean_not_logged` until one is ticked. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
   iOS app had been posting notes into a phantom key — and fatigue is folded to
@@ -542,11 +548,15 @@ writes.
   scorecard (`completion=`), so Progress, Today and the Program tab show one
   number. Its own count read this version's logs only, and moving a single
   session mints a version: on 2026-10-16 Progress read 0 % beside 2 of 2.
-  `src/analytics/review.py` then rescores and explains it: a finding joins
-  the score only once it has a trend (no neutral 50 — week 1 used to read
-  exactly 70 "On Track"), and the review carries the sum, the band and why,
-  what the compliance covers and the measures still waiting for data, so
-  both clients show the server's words (`test_progression_review.py`).
+  `src/analytics/review.py` then rescores and explains it. **The score is the
+  trends alone** (since 2026-10-16): the mean status points of the findings
+  that have a trend; with none, no score (`basis: collecting`). Completion is
+  context beside it (`compliance_pct`, `scope_label`), never part of it — at
+  `0.4 × completion + 0.6 × trends` the score *was* completion until a trend
+  existed, the number Today's Adherence card already shows. The review
+  carries the band and why, each measure behind it, and the measures still
+  waiting for data, so both clients show the server's words
+  (`test_progression_review.py`).
 - **iOS load charts are server-side.** Analytics ▸ Overview reads
   `/health/load/pmc` and `/health/load/weekly`; `AnalyticsEngine` is the
   fallback when the request fails, and the footnote says which was used, so
@@ -610,8 +620,10 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   Garmin app's activity menu has a Progress page (week, programme, the
   headline); the Apple Watch complication rings the week around today's
   session. With `?spec=1` each exercise carries `last` — what was done last
-  time ("24kg × 10", `src/last_time.py`) — shown on the Garmin Steps list and
-  under the Apple Watch's current exercise.
+  time ("24kg × 10", `src/last_time.py`) — shown on the Garmin Steps list, in
+  a sets workout until its first set is done (the vocabulary's
+  `last_then_next` line, the sets template's default), and under the Apple
+  Watch's current exercise.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the

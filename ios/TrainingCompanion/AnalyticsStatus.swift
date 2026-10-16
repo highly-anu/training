@@ -50,6 +50,7 @@ enum AnalyticsStatusStyle {
     static func coverageReason(_ code: String?) -> String {
         switch code {
         case "no_sets_logged": return "No sets logged yet. Log reps and kg on a completed session."
+        case "no_kg_logged": return "Reps are logged but not the kg. Add the weight to each set."
         case "rounds_not_logged": return "Rounds are not being logged. Enter rounds on an AMRAP or EMOM session."
         case "duration_not_logged": return "Minutes are not being captured. Match a workout or log the session duration."
         case "distance_not_logged": return "Distance is not being captured. Match a workout or log kilometres."
@@ -61,6 +62,7 @@ enum AnalyticsStatusStyle {
         case "no_heart_rate": return "No heart-rate data on the matched workouts."
         case "no_gps_hr": return "Needs a matched run or ride with GPS and heart-rate samples."
         case "no_exercises_in_scope": return "No exercises in this scope have been completed yet."
+        case "clean_not_logged": return "A movement is earned by clean sessions. Tick \"Clean\" on a skill when every rep was owned."
         case "no_pr_logged": return "No PR logged for these standards. Add one under Profile ▸ Benchmarks."
         default: return "Nothing logged for this metric yet."
         }

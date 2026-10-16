@@ -1323,7 +1323,9 @@ one `line.3.horizontal.decrease.circle` button.
 shows the score (2026-10-16): it shows the methodology's headline measure, worded
 by the server (`headlineSummary`), and Adherence beside it carries completion. Analytics ▸ Progress read 70 "On Track" in week 1 for an athlete who
 had done every session: compliance × 0.4 plus a neutral 50 × 0.6 for a measure
-with no data, a number nobody could reconstruct.
+with no data, a number nobody could reconstruct. Since 2026-10-16 the score is
+the measures' trends alone; before any has one there is no score, and the card
+says why under "Not enough data yet".
 
 - **The words are the server's** (`score_breakdown`, `score_status`,
   `scope_label`, `pending_measures`, `purpose` from `src/analytics/review.py`),

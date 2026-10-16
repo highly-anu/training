@@ -305,6 +305,9 @@ struct ExercisePerformanceLog: Codable, Equatable {
     var distanceKm: Double?
     var rpe: Int?
     var notes: String?
+    /// A skill practised clean — every rep owned. Movements earned counts
+    /// these where the package asks (`require_clean`).
+    var clean: Bool? = nil
 
     init(sets: [WatchSetLog] = [], rounds: Int? = nil, durationSec: Int? = nil,
          distanceKm: Double? = nil, rpe: Int? = nil, notes: String? = nil) {
@@ -316,7 +319,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         self.notes = notes
     }
 
-    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes }
+    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes, clean }
 
     /// Rows were written by three clients over time; a malformed set is
     /// dropped and a number stored as 1800.0 reads as 1800.
@@ -328,6 +331,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         distanceKm = try? c.decodeIfPresent(Double.self, forKey: .distanceKm)
         rpe = Self.whole(c, .rpe)
         notes = try? c.decodeIfPresent(String.self, forKey: .notes)
+        clean = try? c.decodeIfPresent(Bool.self, forKey: .clean)
     }
 
     private static func whole(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Int? {
@@ -343,6 +347,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         try c.encodeIfPresent(durationSec, forKey: .durationSec)
         try c.encodeIfPresent(distanceKm, forKey: .distanceKm)
         try c.encodeIfPresent(rpe, forKey: .rpe)
+        try c.encodeIfPresent(clean, forKey: .clean)
         try c.encodeIfPresent(notes, forKey: .notes)
     }
 
@@ -998,7 +1003,9 @@ struct ExerciseFinding: Codable, Identifiable {
 /// How the review's score was made: sessions done, plus lift and skill
 /// trends once any measure has one.
 struct ScoreBreakdown: Codable, Equatable {
-    /// "compliance_only" | "compliance_and_trends" | "not_started"
+    /// "trends" (the score is the measures' trends) | "collecting" (none has a
+    /// trend yet: no score) | "not_started"; older servers sent
+    /// "compliance_only" | "compliance_and_trends"
     let basis: String
     let summary: String
     let parts: [ScorePart]

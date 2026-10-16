@@ -8,6 +8,7 @@ import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
 import { isHoldSlot, outcomeFieldsFor } from '@/lib/outcomeFields'
 import { useBioStore } from '@/store/bioStore'
+import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
 import { useExerciseMedia } from '@/api/exercises'
@@ -159,6 +160,9 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
               prescribedSeconds={assignment.load.hold_seconds}
             />
           )}
+          {assignment.slot_type === 'skill_practice' && (
+            <CleanToggle sessionKey={sessionKey} exerciseId={assignment.exercise.id} clean={logged?.clean === true} />
+          )}
           {hasOutcome && (
             <OutcomeLogger
               slotType={assignment.slot_type!}
@@ -198,6 +202,28 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 }
 
 /** "12 rounds · 20 min · 5.2 km" from the outcome fields; null when none is logged. */
+/** "Clean": the skill was practised with every rep owned — how movements are
+ *  earned where the package asks for quality, not attendance. */
+function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; exerciseId: string; clean: boolean }) {
+  const setExerciseClean = useBioStore((s) => s.setExerciseClean)
+  return (
+    <button
+      type="button"
+      onClick={() => setExerciseClean(sessionKey, exerciseId, !clean)}
+      aria-pressed={clean}
+      aria-label={`Clean: ${exerciseId}`}
+      title="Every rep owned"
+      className={cn(
+        'rounded border px-2 py-0.5 text-[10px] font-medium transition-colors',
+        clean ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              : 'border-border text-muted-foreground hover:bg-muted',
+      )}
+    >
+      {clean ? 'Clean ✓' : 'Clean?'}
+    </button>
+  )
+}
+
 function formatOutcomeLine(p: ExercisePerformance, outcomeRow: boolean): string | null {
   const parts: string[] = []
   if (p.rounds != null) parts.push(`${p.rounds} rounds`)

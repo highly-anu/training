@@ -9,6 +9,13 @@ session granularity: an exercise is *practised* once it has appeared in
 practice opens it: everything it requires is practised or known at the
 athlete's level (the generator's own resolution), and the level alone had not
 already opened it.
+
+Attendance is exposure, not mastery. An entry with `require_clean: true`
+counts a session for an exercise only when the athlete ticked it **clean**
+(every rep owned; `exercises[id].clean` in the session log, a toggle on
+both clients' skill-practice rows) — Ido's and Wildman's movements are
+earned that way. Until a clean tick exists the coverage says so
+(`clean_not_logged`) rather than a silent zero.
 """
 from __future__ import annotations
 
@@ -29,12 +36,18 @@ def unlocks(entry, ctx) -> dict:
     practised: set[str] = set()
     in_scope = with_exercises = 0
     min_sessions = max(1, int(entry.min_sessions or 2))
+    require_clean = bool(getattr(entry, 'require_clean', False))
+    any_clean = False
 
     for h in hits:
         if not h['completed']:
             continue
         in_scope += 1
         seen_here = {ea['exercise']['id'] for ea in h['assignments']}
+        if require_clean:
+            logged = (h['log'] or {}).get('exercises') or {}
+            seen_here = {e for e in seen_here if isinstance(logged.get(e), dict) and logged[e].get('clean') is True}
+            any_clean = any_clean or bool(seen_here)
         if seen_here:
             with_exercises += 1
         for ex_id in seen_here:
@@ -86,11 +99,13 @@ def unlocks(entry, ctx) -> dict:
               'insufficient_data' if t.direction == 'insufficient_data' else 'behind')
     return result(entry, metric='exercises_practised', unit='exercises', series=series,
                   status=status if series else 'insufficient_data', trend=trend_dict(t),
-                  coverage_=coverage(in_scope, with_exercises, 'no_exercises_in_scope'),
+                  coverage_=coverage(in_scope, with_exercises,
+                                     'clean_not_logged' if require_clean and not any_clean else 'no_exercises_in_scope'),
                   practised=[{'exerciseId': e, 'name': names[e], 'sessions': counts[e]}
                              for e in sorted(practised, key=lambda e: -counts[e])],
                   inProgress=[{'exerciseId': e, 'name': names[e], 'sessions': c, 'needed': min_sessions}
                               for e, c in sorted(counts.items(), key=lambda kv: -kv[1]) if e not in practised],
                   available=available[:20], lockedCount=len(locked), minSessions=min_sessions,
+                  requireClean=require_clean,
                   programTotal=len(in_program | practised),
                   assumedCount=sum(1 for e in by_level if e in pool and (pool[e].get('requires') or [])))

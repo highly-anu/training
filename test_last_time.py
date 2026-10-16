@@ -45,6 +45,19 @@ def test_a_bad_row_is_skipped_not_raised():
     assert last_by_exercise(logs, '2026-10-09') == {'run': '25 min'}
 
 
+
+def test_the_athletes_day_decides():
+    # Finished at 20:30 in Los Angeles on the 8th = 03:30 UTC on the 9th.
+    logs = [{'completedAt': '2026-10-09T03:30:00+00:00', 'exercises': {'squat': {
+                'sets': [{'completed': True, 'repsActual': 5, 'weightKg': 105}]}}},
+            {'completedAt': '2026-10-06T16:00:00+00:00', 'exercises': {'squat': {
+                'sets': [{'completed': True, 'repsActual': 5, 'weightKg': 100}]}}}]
+    assert last_by_exercise(logs, '2026-10-09') == {'squat': '100kg × 5'}, 'UTC: the 9th, not before today'
+    assert last_by_exercise(logs, '2026-10-09', tz='America/Los_Angeles') == {'squat': '105kg × 5'}, \
+        "the athlete's day: yesterday evening"
+    assert last_by_exercise(logs, '2026-10-09', tz='Not/AZone') == {'squat': '100kg × 5'}, 'a bad zone falls back to UTC'
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

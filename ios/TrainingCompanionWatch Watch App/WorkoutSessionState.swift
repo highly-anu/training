@@ -147,6 +147,15 @@ final class WorkoutSessionState: ObservableObject {
         completedExerciseIds.insert(id)
     }
 
+    /// Move on to an exercise's first set and start its set clock now. The
+    /// views used to set the phase directly, so the next exercise's first set
+    /// also counted the time spent on the previous screen (its
+    /// `durationSeconds` is start → logger open).
+    func advance(to exerciseIndex: Int) {
+        currentSetStartOffset = elapsedSeconds
+        phase = .active(exerciseIndex: exerciseIndex, setIndex: 0)
+    }
+
     // MARK: - Timed work
 
     func startTimedWork(exerciseIndex: Int) {

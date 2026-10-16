@@ -81,6 +81,7 @@ class Entry:
     target_level: str | None = None
     rpm_target: float | None = None
     min_sessions: int = 2
+    require_clean: bool = False
     notes: str = ''
 
 
@@ -91,7 +92,9 @@ class Spec:
     entries: list
     balance: list                       # declared warnings; [] means information only
     balance_declared: bool
-    benchmarks: list
+    benchmarks: list                    # every declared id
+    # id -> frameworks: declared only where the program runs one of them
+    benchmark_frameworks: dict = field(default_factory=dict)
 
 
 # ── Loading and synthesis ────────────────────────────────────────────────────
@@ -123,11 +126,24 @@ def _from_declared(raw: dict, package_id: str, weight: float, philosophy: dict |
             benchmarks=list(item.get('benchmarks') or []),
             target_level=item.get('target_level'), rpm_target=item.get('rpm_target'),
             min_sessions=int(item.get('min_sessions') or 2), notes=item.get('notes') or '',
+            require_clean=bool(item.get('require_clean')),
         ))
     _mark_headline(entries, philosophy or _philosophy(package_id))
     balance = list((raw.get('movement') or {}).get('balance') or [])
-    return Spec(package_id, 'declared', entries, balance, bool(balance),
-                list(raw.get('benchmarks') or []))
+    ids, scoped = benchmark_ids(raw.get('benchmarks'))
+    return Spec(package_id, 'declared', entries, balance, bool(balance), ids, scoped)
+
+
+def benchmark_ids(items) -> tuple[list, dict]:
+    """A spec's `benchmarks:` as (every id, {id: frameworks} for the scoped)."""
+    ids, scoped = [], {}
+    for item in items or []:
+        if isinstance(item, dict):
+            ids.append(item['id'])
+            scoped[item['id']] = set(item.get('frameworks') or [])
+        else:
+            ids.append(item)
+    return ids, scoped
 
 
 def _synthesise(package_id: str, frameworks: dict, modalities: dict,

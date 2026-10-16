@@ -41,8 +41,18 @@
     },
     "benchmarks": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-      "description": "Benchmark ids to show for this methodology, in addition to any whose `sources` name this package."
+      "items": {
+        "oneOf": [
+          { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          { "type": "object", "required": ["id", "frameworks"], "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+              "frameworks": { "type": "array", "minItems": 1, "items": { "type": "string" },
+                              "description": "Declared only for a program that runs one of these frameworks — a track's own standards (Wildman's pentathlon events in Pentathlon Prep)." }
+            } }
+        ]
+      },
+      "description": "Benchmark ids to show for this methodology, in addition to any whose `sources` name this package. An object scopes one to frameworks."
     },
     "notes": { "type": "string" }
   },
@@ -107,6 +117,7 @@
         "target_level": { "type": "string", "enum": ["entry", "intermediate", "advanced", "elite"], "description": "For benchmark_level: the level this methodology considers its end state." },
         "rpm_target":   { "type": "number", "minimum": 0, "description": "For rate: reps per minute the methodology trains toward." },
         "min_sessions": { "type": "integer", "minimum": 1, "default": 2, "description": "For unlocks: sessions before an exercise counts as practised." },
+        "require_clean": { "type": "boolean", "default": false, "description": "For unlocks: count only sessions the athlete ticked clean (every rep owned) — earned by quality, not attendance." },
         "notes":        { "type": "string" }
       }
     }

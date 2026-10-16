@@ -462,7 +462,10 @@ def generate(
 
                 # Calculate load for each exercise slot
                 mod_id = session['modality']
-                prog = prog_model_for.get(mod_id, 'linear_load')
+                # The week's framework may prescribe a modality its own way
+                # (Filly's strength work as RPE targets); else the modality's.
+                prog = ((framework.get('progression_overrides') or {}).get(mod_id)
+                        or prog_model_for.get(mod_id, 'linear_load'))
 
                 for ea in populated.get('exercises', []):
                     if ea.get('exercise') is None:

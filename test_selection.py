@@ -257,12 +257,50 @@ def test_single_session_routes() -> None:
     check('with it they are not', bool(with_phase) and not with_phase & banned, str(with_phase))
 
 
+def test_a_framework_prescribes_its_own_way() -> None:
+    print('Progression overrides: Filly prescribes RPE, Starting Strength kg')
+    prog = program('marcus_filly', 4, days_per_week=5)
+    strength = [ea['load'] for _, s in sessions(prog) if s['modality'] == 'max_strength'
+                for ea in s['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps']
+    check('Filly strength sets carry a target RPE, not a fixed kg',
+          strength and all(l.get('target_rpe') in (6, 8) and 'weight_kg' not in l for l in strength),
+          str(strength[:2]))
+    check('with a suggested starting weight where the lift has one',
+          any(l.get('suggested_weight_kg') for l in strength))
+    # A deload cuts the sets as well as the RPE (it kept the full four).
+    long = program('marcus_filly', 10, days_per_week=5)
+    by_week = {}
+    for w, s in sessions(long):
+        for ea in s['exercises']:
+            if ea.get('exercise', {}) and (ea.get('exercise') or {}).get('id') == 'mf_back_squat':
+                by_week.setdefault(bool(w.get('is_deload')), set()).add(ea['load'].get('sets'))
+    check('an RPE deload week has fewer sets than a working week',
+          by_week.get(True) and by_week.get(False) and max(by_week[True]) < min(by_week[False]), str(by_week))
+    # A swap in a Filly week is prescribed the same way as the week around it.
+    import os
+    os.environ.setdefault('SUPABASE_URL', '')
+    import api
+    r = api.app.test_client().post('/api/exercises/substitute', json={
+        'archetype_id': 'functional_bodybuilding_strength', 'slot_role': 'primary_compound',
+        'philosophy_ids': ['marcus_filly'], 'phase': 'build', 'week_in_phase': 1,
+        'framework_id': 'rpe_autoregulation',
+        'constraints': {'equipment': list(ALL_EQUIPMENT), 'training_level': 'intermediate'}, 'limit': 5})
+    alts = (r.get_json() or {}).get('alternatives') or []
+    check('a swapped Filly lift carries an RPE target, not a kg',
+          alts and all('target_rpe' in a['assignment']['load'] and 'weight_kg' not in a['assignment']['load']
+                       for a in alts), str([a['assignment']['load'] for a in alts[:2]]))
+    ss = program('starting_strength', 2, training_level='novice')
+    loads = [ea['load'] for _, s in sessions(ss) for ea in s['exercises'] if ea.get('exercise')]
+    check('a framework without overrides is unchanged (SS: kg, no RPE)',
+          any(l.get('weight_kg') for l in loads) and not any('target_rpe' in l for l in loads))
+
+
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
               test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
               test_pins_never_repeat_a_lift, test_unfilled_cache,
               test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
-              test_single_session_routes):
+              test_single_session_routes, test_a_framework_prescribes_its_own_way):
         t()
     print()
     if FAILURES:

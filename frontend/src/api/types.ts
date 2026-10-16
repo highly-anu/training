@@ -898,6 +898,9 @@ export interface ExercisePerformance {
   sets: SetPerformance[]
   rpe?: RPE
   notes?: string
+  /** A skill practised clean — every rep owned. Movements earned counts these
+   *  where the package asks (`require_clean`). */
+  clean?: boolean
   /**
    * Outcomes for slots that are not sets × reps — what the OutcomeLogger
    * writes and what src/progression_tracker.py and the analytics engine
@@ -1092,7 +1095,9 @@ export interface ExerciseFinding {
 
 /** How the review's score was made (src/analytics/review.py). */
 export interface ScoreBreakdown {
-  basis: 'compliance_only' | 'compliance_and_trends' | 'not_started'
+  /** trends: the score is the measures' trends; collecting: none has one yet, no score.
+   *  (compliance_only / compliance_and_trends from servers before 2026-10-16.) */
+  basis: 'trends' | 'collecting' | 'not_started' | 'compliance_only' | 'compliance_and_trends'
   summary: string
   parts: { id: string; label: string; value: number; weight: number; points: number }[]
   completed: number
@@ -1337,6 +1342,8 @@ export interface AnalyticsTrend { direction: 'improving' | 'stable' | 'declining
 export interface AnalyticsExerciseResult {
   exerciseId: string
   name: string
+  /** set_load: kg, or reps for a lift with no kg prescribed or logged. */
+  unit?: string
   series: AnalyticsSeriesPoint[]
   expected: AnalyticsExpectedPoint[]
   trend: AnalyticsTrend

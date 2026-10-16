@@ -1,16 +1,23 @@
 # What progress means for Functional Bodybuilding. Feel-based: the load
-# moves when the reps feel crisp, never on a fixed increment, so the
-# expectation is the prescription. The generator prescribes these sets in kg
-# with no RPE target (the modality's linear_load model writes the load, not
-# the framework's rpe_autoregulation), so load-at-RPE could only ever say "no
-# RPE target"; the working load is the measure until it does.
+# moves when the reps feel crisp, never on a fixed increment. The strength
+# work is prescribed as RPE targets (the framework's progression_overrides),
+# so the headline is the load lifted at the target RPE; the working load
+# beside it is read against the suggested starting weight.
 id: marcus_filly
 
 progress:
+  - id: load_at_rpe
+    label: Load at target RPE
+    primitive: load_at_rpe
+    headline: true
+    scope:
+      modalities: [max_strength]
+      slot_roles: ["primary_*", "secondary_*", "weighted_*"]
+    expected: prescribed
+
   - id: working_load
     label: Working load
     primitive: set_load
-    headline: true
     scope:
       modalities: [max_strength]
       slot_roles: ["primary_*", "secondary_*", "weighted_*"]

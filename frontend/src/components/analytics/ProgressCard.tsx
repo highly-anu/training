@@ -136,6 +136,8 @@ export function ProgressCard({ entry }: { entry: AnalyticsProgressEntry }) {
   const expected = ex ? ex.expected : entry.expected
   const status = ex ? ex.status : entry.status
   const trend = ex ? ex.trend : entry.trend
+  // A bodyweight lift beside a loaded one: each exercise says its own unit.
+  const unit = ex?.unit ?? entry.unit
 
   return (
     <div className={cn('rounded-lg border bg-card p-4 space-y-3', entry.headline && 'border-primary/40')}>
@@ -143,7 +145,7 @@ export function ProgressCard({ entry }: { entry: AnalyticsProgressEntry }) {
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">{entry.label}</p>
           <p className="text-[11px] text-muted-foreground">
-            {entry.metric.replace(/_/g, ' ')}{entry.unit ? ` · ${entry.unit}` : ''}
+            {entry.metric.replace(/_/g, ' ')}{unit ? ` · ${unit}` : ''}
             {trend.direction !== 'insufficient_data' && <> · {trend.direction} ({trend.slopePct > 0 ? '+' : ''}{trend.slopePct}%/pt)</>}
             {entry.headline && <> · headline</>}
           </p>
@@ -158,7 +160,7 @@ export function ProgressCard({ entry }: { entry: AnalyticsProgressEntry }) {
         : (
           <>
             <ExercisePicker exercises={exercises} selected={selected} onSelect={setSelected} />
-            <SeriesChart series={series} expected={expected} unit={entry.unit} />
+            <SeriesChart series={series} expected={expected} unit={unit} />
             {ex?.stalled && (
               <p className="text-xs text-red-700 dark:text-red-300">
                 Stalled: {ex.name} has not moved for the last sessions this methodology allows.

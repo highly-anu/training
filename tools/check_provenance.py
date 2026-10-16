@@ -296,6 +296,11 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
                 if b not in benchmark_ids:
                     problems.append(f"{where} names unknown benchmark {b!r}")
         for b in spec.get('benchmarks') or []:
+            if isinstance(b, dict):
+                for fw in b.get('frameworks') or []:
+                    if fw not in frameworks:
+                        problems.append(f"{pkg}/analytics.yaml: benchmark {b.get('id')!r} names unknown framework {fw!r}")
+                b = b.get('id')
             if b not in benchmark_ids:
                 problems.append(f"{pkg}/analytics.yaml: names unknown benchmark {b!r}")
     return problems

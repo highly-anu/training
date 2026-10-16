@@ -17,7 +17,7 @@ module Vocab {
     // A template's default screen, as a fresh dictionary.
     function templateDefaults(t) {
         if ("sets".equals(t)) {
-            return { "title" => ["name", "side", "load"], "a" => "reps", "b" => "rpe_or_set", "gauge" => "set", "lines" => "next_step", "lap" => "complete_set", "template" => "sets" };
+            return { "title" => ["name", "side", "load"], "a" => "reps", "b" => "rpe_or_set", "gauge" => "set", "lines" => "last_then_next", "lap" => "complete_set", "template" => "sets" };
         } else if ("hold".equals(t)) {
             return { "title" => ["name", "side", "load"], "a" => "hold", "b" => "set", "lines" => "hold_prompt", "lap" => "toggle_hold", "template" => "hold", "gauge" => "hold" };
         } else if ("interval".equals(t)) {

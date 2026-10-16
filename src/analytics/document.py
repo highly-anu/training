@@ -272,7 +272,7 @@ def progression_findings(doc: dict) -> list[dict]:
     out: list[dict] = []
     seen: set[str] = set()
     unit_metric = {'kg': 'weight', 'min': 'time', 'km': 'distance', 'rounds': 'rounds',
-                   's': 'time', 'rpm': 'reps', 'exercises': 'complexity'}
+                   's': 'time', 'rpm': 'reps', 'reps': 'reps', 'exercises': 'complexity'}
     for pr in doc.get('progress') or []:
         exercises = pr.get('exercises')
         if exercises is None:
@@ -290,7 +290,7 @@ def progression_findings(doc: dict) -> list[dict]:
             first, last = series[0]['value'], latest['value']
             delta = (last - first) if isinstance(first, (int, float)) and isinstance(last, (int, float)) else None
             weeks = (latest.get('week') or 0) - (series[0].get('week') or 0)
-            unit = pr.get('unit', '')
+            unit = ex.get('unit') or pr.get('unit', '')
             # A symbol sits on the number ("+5kg", "+3%"); a word is spaced
             # ("+2 exercises", not "+2exercises").
             sep = '' if unit in ('kg', '%', 's', 'km', 'm') else ' '

@@ -24,6 +24,12 @@ intensity_distribution:
   max_effort_pct: 0.50
 
 progression_model: rpe_autoregulation
+# The strength work is prescribed as it is coached: a target RPE (8, 6 in a
+# deload) with reps in reserve and a suggested starting weight, the load set
+# by feel — not a linear kg increment, which the modalities' own model writes.
+progression_overrides:
+  max_strength: rpe_autoregulation
+  relative_strength: rpe_autoregulation
 
 applicable_when:
   training_level:
