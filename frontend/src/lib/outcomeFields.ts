@@ -36,7 +36,11 @@ export function outcomeFieldsFor(slotType: string | undefined, exercise?: Outcom
   return base
 }
 
-/** A slot logged per set whose sets are holds: seconds, not reps. */
-export function isHoldSlot(slotType: string | undefined, load: { hold_seconds?: number | null }): boolean {
+/** A slot logged per set whose sets are holds: seconds, not reps — a static
+ *  hold, or an isometric practised in sets (Ido's skill ladders prescribe
+ *  `sets: 3`, so they get the set logger, and it must ask for seconds). */
+export function isHoldSlot(slotType: string | undefined, load: { hold_seconds?: number | null },
+                           exercise?: OutcomeExercise | null): boolean {
   return slotType === 'static_hold' || load.hold_seconds != null
+    || (slotType === 'skill_practice' && !!exercise?.movement_patterns?.includes('isometric'))
 }

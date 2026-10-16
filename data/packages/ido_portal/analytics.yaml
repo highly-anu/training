@@ -24,6 +24,7 @@ progress:
     scope:
       exercises: [handstand_hold, handstand_freestanding, l_sit, tuck_sit, bridge_low,
                   bridge_high, balance_frog_stance]
+      slot_types: [skill_practice]     # not the warm-up and cool-down passes
     expected: {load_field: hold_seconds}
 
   - id: attendance

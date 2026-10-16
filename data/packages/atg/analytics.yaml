@@ -8,7 +8,6 @@ progress:
   - id: loaded_range
     label: Load through range
     primitive: set_load
-    headline: true
     scope:
       modalities: [mobility, rehab, durability]
       slot_types: [sets_reps]
@@ -18,6 +17,10 @@ progress:
   - id: rehab_holds
     label: Isometric holds
     primitive: hold_seconds
+    # Leads: ATG's loaded work is mostly prescribed by reps alone (split squat,
+    # tibialis raise), so "load through range" has a kg only where one is
+    # logged; the holds are what every rehab session measures.
+    headline: true
     scope: {archetypes: [rehab_protocol], slot_types: [static_hold]}
     expected: {load_field: hold_seconds}
 

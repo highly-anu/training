@@ -87,6 +87,19 @@ describe('ExerciseRow logger dispatch', () => {
     expect(set0?.completed).toBe(true)
   })
 
+  it('logs seconds per set for an isometric practised in sets (Ido\'s ladders prescribe sets: 3)', () => {
+    renderRow({
+      exercise: { id: 'tuck_sit', name: 'Tuck Sit', category: 'skill', movement_patterns: ['isometric'] },
+      load: { sets: 3, duration_minutes: 10 },
+      slot_type: 'skill_practice',
+    })
+    fireEvent.click(screen.getByLabelText('Log set details'))
+    expect(screen.getByText('Sec')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Seconds for set 1'), { target: { value: '20' } })
+    const set0 = useBioStore.getState().sessionPerformanceLogs['1-Monday-0']?.exercises.tuck_sit?.sets[0]
+    expect(set0?.durationSeconds).toBe(20)
+  })
+
   it('logs seconds, not reps, per set of a static hold', () => {
     renderRow({
       exercise: { id: 'copenhagen', name: 'Copenhagen Plank', category: 'rehab', movement_patterns: ['isometric'] },
