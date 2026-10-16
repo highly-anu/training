@@ -11,7 +11,8 @@ import type { GeneratedProgram, ModalityId } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
 import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { PhaseChangeList, PhaseMatrix, findPhaseSummary } from './PhaseChanges'
+import { PhaseChangeList, PhaseMatrix } from './PhaseChanges'
+import { findPhaseSummary } from '@/lib/phaseSummary'
 
 // ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 

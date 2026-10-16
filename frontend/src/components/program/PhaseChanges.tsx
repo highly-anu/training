@@ -12,17 +12,6 @@ import { cn } from '@/lib/utils'
 const modalityHex = (m: string) => MODALITY_COLORS[m as ModalityId]?.hex ?? '#6366f1'
 const modalityLabel = (m: string) => MODALITY_COLORS[m as ModalityId]?.label ?? m.replace(/_/g, ' ')
 
-/** The summary for the i-th phase segment. Both are the program's phases in
- *  order; week numbers cannot be compared, because the calendar counts weeks
- *  from 1 while `week_number` may start later (an event-date program, or a
- *  regenerate that kept its head). */
-export function findPhaseSummary(
-  summaries: PhaseSummary[] | undefined, index: number, segmentCount: number,
-): PhaseSummary | undefined {
-  if (!summaries || summaries.length !== segmentCount) return undefined
-  return summaries[index]
-}
-
 function kg(n: number) {
   return `${Number.isInteger(n) ? n : n.toFixed(1)} kg`
 }
