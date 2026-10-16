@@ -18,6 +18,10 @@ struct ProgramAnalytics: Decodable {
     let methodologies: [Methodology]
     let progress: [ProgressEntry]
     let movement: Movement?
+    /// Per session shape: how each archetype in the block is going.
+    let archetypes: [ArchetypeRow]?
+    /// The standards this program is measured by, and where the athlete stands.
+    let benchmarks: Benchmarks?
     let load: Load?
     /// Sections the server could not compute, by name, with its reason.
     let sectionErrors: [String: String]
@@ -25,7 +29,8 @@ struct ProgramAnalytics: Decodable {
     var hasProgram: Bool { status != "no_program" }
 
     private enum CodingKeys: String, CodingKey {
-        case status, revision, generatedAt, frame, scorecard, intensity, methodologies, progress, movement, load
+        case status, revision, generatedAt, frame, scorecard, intensity, methodologies, progress, movement,
+             archetypes, benchmarks, load
     }
 
     private struct SectionError: Decodable { let error: String }
@@ -51,6 +56,8 @@ struct ProgramAnalytics: Decodable {
         scorecard = section(Scorecard.self, .scorecard)
         intensity = section(Intensity.self, .intensity)
         movement = section(Movement.self, .movement)
+        archetypes = section([Lossy<ArchetypeRow>].self, .archetypes)?.compactMap(\.value)
+        benchmarks = section(Benchmarks.self, .benchmarks)
         load = section(Load.self, .load)
         methodologies = ((try? c.decodeIfPresent([Lossy<Methodology>].self, forKey: .methodologies)) ?? [])?.compactMap(\.value) ?? []
         progress = ((try? c.decodeIfPresent([Lossy<ProgressEntry>].self, forKey: .progress)) ?? [])?.compactMap(\.value) ?? []
@@ -65,6 +72,8 @@ struct ProgramAnalytics: Decodable {
             let name: String
             let weight: Double?
             let analytics: String?        // "declared" | "default"
+            let progressionPhilosophy: String?
+            let intensityModel: String?
         }
         struct Framework: Decodable {
             let id: String
@@ -473,19 +482,39 @@ struct ProgramAnalytics: Decodable {
                 plannedPct = try? c.decodeIfPresent([String: Double].self, forKey: .plannedPct)
             }
         }
+        /// One framework's split over its weeks: actual and planned shares in
+        /// percent, keyed by bucket (`zone1_2_pct` …), and the deviation.
+        struct ByFramework: Decodable {
+            let frameworkId: String?
+            let classifiedMinutes: Double?
+            let actualPct: [String: Double?]
+            let plannedPct: [String: Double]?
+            let deviationPts: [String: Double]?
+        }
+        /// Working sets as a share of estimated 1RM — max-effort frameworks only.
+        struct Pct1RM: Decodable {
+            let sessions: Int
+            let meanPct: Double?
+        }
         let status: String
         let coverage: Coverage?
         let maxHr: Int?
+        /// Each week's bucket fields (`zone12Pct` …) are **minutes**, despite
+        /// the `_pct` in the server's keys; the shares are `actualPct`.
         let weeks: [Week]
         let maxDeviationPts: Double?
+        let byFramework: [ByFramework]
+        let pct1rm: Pct1RM?
 
-        private enum CodingKeys: String, CodingKey { case status, coverage, maxHr, weeks, maxDeviationPts }
+        private enum CodingKeys: String, CodingKey { case status, coverage, maxHr, weeks, maxDeviationPts, byFramework, pct1rm }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             status = (try? c.decodeIfPresent(String.self, forKey: .status)) ?? "insufficient_data"
             coverage = try? c.decodeIfPresent(Coverage.self, forKey: .coverage)
             maxHr = try? c.decodeIfPresent(Int.self, forKey: .maxHr)
             weeks = ((try? c.decodeIfPresent([Lossy<Week>].self, forKey: .weeks)) ?? [])?.compactMap(\.value) ?? []
+            byFramework = ((try? c.decodeIfPresent([Lossy<ByFramework>].self, forKey: .byFramework)) ?? [])?.compactMap(\.value) ?? []
+            pct1rm = try? c.decodeIfPresent(Pct1RM.self, forKey: .pct1rm)
             maxDeviationPts = try? c.decodeIfPresent(Double.self, forKey: .maxDeviationPts)
         }
     }
@@ -504,12 +533,142 @@ struct ProgramAnalytics: Decodable {
             let declared: Bool
             var id: String { "\(a)/\(b)" }
         }
+        /// Done against planned per rolled-up pattern (push, pull, hinge…).
+        struct Rollup: Decodable {
+            let planned: Double
+            let done: Double
+        }
+        struct Table: Decodable {
+            let rollups: [String: Rollup]
+            /// Minutes only: prescribed minutes counted for completed sessions
+            /// with no matched workout.
+            let assumed: Double?
+            private enum CodingKeys: String, CodingKey { case rollups, assumed }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                rollups = (try? c.decodeIfPresent([String: Rollup].self, forKey: .rollups)) ?? [:]
+                assumed = try? c.decodeIfPresent(Double.self, forKey: .assumed)
+            }
+            /// Largest planned first, as on the web.
+            var rows: [(pattern: String, value: Rollup)] {
+                rollups.map { ($0.key, $0.value) }.sorted { $0.value.planned > $1.value.planned }
+            }
+        }
+        struct Share: Decodable {
+            let planned: Double?
+            let done: Double?
+        }
         let balance: [Balance]
+        let sets: Table?
+        let minutes: Table?
+        let unilateralShare: Share?
 
-        private enum CodingKeys: String, CodingKey { case balance }
+        private enum CodingKeys: String, CodingKey { case balance, sets, minutes, unilateralShare }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             balance = ((try? c.decodeIfPresent([Lossy<Balance>].self, forKey: .balance)) ?? [])?.compactMap(\.value) ?? []
+            sets = try? c.decodeIfPresent(Table.self, forKey: .sets)
+            minutes = try? c.decodeIfPresent(Table.self, forKey: .minutes)
+            unilateralShare = try? c.decodeIfPresent(Share.self, forKey: .unilateralShare)
+        }
+
+        var isEmpty: Bool {
+            balance.isEmpty && (sets?.rollups.isEmpty ?? true) && (minutes?.rollups.isEmpty ?? true)
+        }
+    }
+
+    // MARK: Session shapes — one row per archetype in the block
+
+    struct ArchetypeRow: Decodable, Identifiable {
+        struct HR: Decodable { let avg: Int?; let max: Int? }
+        struct LeadLift: Decodable {
+            let exerciseId: String
+            let firstEst1rm: Double?
+            let latestEst1rm: Double?
+        }
+        let archetypeId: String
+        let name: String
+        let modality: String?
+        let scheduled: Int
+        let completed: Int
+        let meanDurationDeltaPct: Double?
+        let hr: HR?
+        let leadLift: LeadLift?
+        var id: String { archetypeId }
+
+        private enum CodingKeys: String, CodingKey {
+            case archetypeId, name, modality, scheduled, completed, meanDurationDeltaPct, hr, leadLift
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            archetypeId = try c.decode(String.self, forKey: .archetypeId)
+            name = (try? c.decodeIfPresent(String.self, forKey: .name)) ?? archetypeId
+            modality = try? c.decodeIfPresent(String.self, forKey: .modality)
+            scheduled = (try? c.decodeIfPresent(Int.self, forKey: .scheduled)) ?? 0
+            completed = (try? c.decodeIfPresent(Int.self, forKey: .completed)) ?? 0
+            meanDurationDeltaPct = try? c.decodeIfPresent(Double.self, forKey: .meanDurationDeltaPct)
+            hr = try? c.decodeIfPresent(HR.self, forKey: .hr)
+            leadLift = try? c.decodeIfPresent(LeadLift.self, forKey: .leadLift)
+        }
+    }
+
+    // MARK: Standards — the program's benchmark ladder
+
+    struct Benchmarks: Decodable {
+        struct Row: Decodable, Identifiable {
+            let benchmarkId: String
+            let name: String
+            let unit: String
+            let lowerIsBetter: Bool
+            /// philosophy | priority_modality | declared
+            let why: [String]
+            /// Declared, this methodology's own, or already has a number; the
+            /// rest wait behind "More standards". Absent on older documents.
+            let primary: Bool
+            let standards: [String: Double]
+            let value: Double?
+            let valueSource: String?      // logged | derived
+            let level: String?
+            let next: String?
+            let gapToNext: Double?
+            let derivedReason: String?
+            var id: String { benchmarkId }
+
+            private struct Derived: Decodable { let reason: String? }
+            private enum CodingKeys: String, CodingKey {
+                case benchmarkId, name, unit, lowerIsBetter, why, primary, standards, value, valueSource,
+                     level, next, gapToNext, derived
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                benchmarkId = try c.decode(String.self, forKey: .benchmarkId)
+                name = (try? c.decodeIfPresent(String.self, forKey: .name)) ?? benchmarkId
+                unit = (try? c.decodeIfPresent(String.self, forKey: .unit)) ?? ""
+                lowerIsBetter = (try? c.decodeIfPresent(Bool.self, forKey: .lowerIsBetter)) ?? false
+                why = (try? c.decodeIfPresent([String].self, forKey: .why)) ?? []
+                primary = (try? c.decodeIfPresent(Bool.self, forKey: .primary)) ?? true
+                standards = (try? c.decodeIfPresent([String: Double].self, forKey: .standards)) ?? [:]
+                value = try? c.decodeIfPresent(Double.self, forKey: .value)
+                valueSource = try? c.decodeIfPresent(String.self, forKey: .valueSource)
+                level = try? c.decodeIfPresent(String.self, forKey: .level)
+                next = try? c.decodeIfPresent(String.self, forKey: .next)
+                gapToNext = try? c.decodeIfPresent(Double.self, forKey: .gapToNext)
+                derivedReason = (try? c.decodeIfPresent(Derived.self, forKey: .derived))?.reason
+            }
+
+            /// The ladder's rungs in order, entry → elite, those the standard has.
+            var rungs: [(level: String, value: Double)] {
+                ["entry", "intermediate", "advanced", "elite"].compactMap { l in standards[l].map { (l, $0) } }
+            }
+        }
+        let bodyweightKg: Double?
+        let rows: [Row]
+
+        private enum CodingKeys: String, CodingKey { case bodyweightKg, benchmarks }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            bodyweightKg = try? c.decodeIfPresent(Double.self, forKey: .bodyweightKg)
+            rows = ((try? c.decodeIfPresent([Lossy<Row>].self, forKey: .benchmarks)) ?? [])?.compactMap(\.value) ?? []
         }
     }
 

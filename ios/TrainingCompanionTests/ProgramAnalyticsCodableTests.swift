@@ -182,6 +182,72 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(AnalyticsStatusStyle.label("off_plan"), "Off plan")
     }
 
+    func testStandardsShapesMovementAndIntensityDecode() throws {
+        // Shapes as the engine serves them (benchmarks.py, archetypes.py,
+        // movement.py, primitives/aerobic.py), trimmed.
+        let json = Data("""
+        {"benchmarks": {"sex": "male", "bodyweightKg": 82, "benchmarks": [
+            {"benchmarkId": "ssst_reps", "name": "SSST", "unit": " reps", "lowerIsBetter": false,
+             "why": ["declared", "philosophy"], "primary": true,
+             "standards": {"entry": 100, "intermediate": 150, "advanced": 200, "elite": 250},
+             "value": 160, "valueSource": "logged", "level": "intermediate", "next": "advanced", "gapToNext": 40,
+             "derived": null},
+            {"benchmarkId": "cell_strength_squat", "name": "Squat", "unit": "×BW", "lowerIsBetter": false,
+             "why": ["priority_modality"], "primary": false, "standards": {"entry": 1, "elite": 2.5},
+             "value": null, "derived": {"value": null, "est1rm": 120, "bodyweightKg": null, "reason": "no_bodyweight_logged"}}]},
+         "archetypes": [
+            {"archetypeId": "kb_ballistic_session", "name": "KB Ballistic", "modality": "power", "scheduled": 2,
+             "completed": 1, "matched": 1, "meanDurationDeltaPct": -22.2, "hr": {"avg": 131, "max": 171}, "leadLift": null},
+            {"archetypeId": "broken"}],
+         "movement": {"sets": {"patterns": [], "rollups": {"push": {"planned": 9, "done": 6}, "hinge": {"planned": 12, "done": 3}}},
+                      "minutes": {"patterns": [], "rollups": {"carry": {"planned": 20, "done": 20}}, "assumed": 20},
+                      "unilateralShare": {"planned": 30.0, "done": 25.0}, "balance": []},
+         "intensity": {"status": "off_target", "weeks": [{"week": 1, "zone1_2_pct": 42, "zone3_pct": 0, "zone4_5_pct": 0, "max_effort_pct": 35}],
+                       "byFramework": [{"frameworkId": "kb_general_practice", "classifiedMinutes": 77,
+                         "actualPct": {"zone1_2_pct": 54.2, "zone3_pct": 0.3, "zone4_5_pct": 0.0, "max_effort_pct": 45.5},
+                         "plannedPct": {"zone1_2_pct": 60.0, "zone3_pct": 30.0, "zone4_5_pct": 10.0, "max_effort_pct": 0.0},
+                         "deviationPts": {"zone1_2_pct": -5.8, "zone3_pct": -29.7, "zone4_5_pct": -10.0, "max_effort_pct": 45.5}}],
+                       "pct1rm": {"sessions": 4, "meanPct": 81.5, "rows": []}},
+         "frame": {"status": "active", "philosophies": [{"id": "wildman_kettlebell", "name": "Mark Wildman Kettlebell",
+                   "progressionPhilosophy": "rpm_based", "intensityModel": "operator_readiness"}]}}
+        """.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+
+        let rows = try XCTUnwrap(doc.benchmarks?.rows)
+        XCTAssertEqual(rows.map(\.benchmarkId), ["ssst_reps", "cell_strength_squat"])
+        XCTAssertTrue(rows[0].primary)
+        XCTAssertFalse(rows[1].primary)
+        XCTAssertEqual(rows[0].rungs.map(\.level), ["entry", "intermediate", "advanced", "elite"])
+        XCTAssertEqual(rows[1].rungs.map(\.level), ["entry", "elite"], "only the rungs the standard has")
+        XCTAssertEqual(rows[1].derivedReason, "no_bodyweight_logged")
+        XCTAssertEqual(doc.benchmarks?.bodyweightKg, 82)
+
+        XCTAssertEqual(doc.archetypes?.map(\.archetypeId), ["kb_ballistic_session", "broken"])
+        XCTAssertEqual(doc.archetypes?.first?.hr?.max, 171)
+        XCTAssertEqual(doc.archetypes?.last?.scheduled, 0, "a sparse row decodes with defaults")
+
+        let movement = try XCTUnwrap(doc.movement)
+        XCTAssertEqual(movement.sets?.rows.map(\.pattern), ["hinge", "push"], "largest planned first")
+        XCTAssertEqual(movement.minutes?.assumed, 20)
+        XCTAssertEqual(movement.unilateralShare?.done, 25)
+        XCTAssertFalse(movement.isEmpty, "a movement section with no balance pairs still shows")
+
+        let intensity = try XCTUnwrap(doc.intensity)
+        XCTAssertEqual(intensity.weeks.first?.zone12Pct, 42, "the week's bucket is minutes")
+        XCTAssertEqual(intensity.byFramework.first?.plannedPct?["zone3_pct"], 30)
+        XCTAssertEqual(intensity.byFramework.first?.deviationPts?["zone1_2_pct"], -5.8)
+        XCTAssertEqual(intensity.pct1rm?.meanPct, 81.5)
+        XCTAssertEqual(doc.frame?.philosophies.first?.progressionPhilosophy, "rpm_based")
+    }
+
+    func testAFailedShapesOrStandardsSectionIsReported() throws {
+        let json = Data(#"{"archetypes": {"error": "KeyError: 'x'"}, "benchmarks": {"error": "boom"}}"#.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+        XCTAssertNil(doc.archetypes)
+        XCTAssertNil(doc.benchmarks)
+        XCTAssertEqual(Set(doc.sectionErrors.keys), ["archetypes", "benchmarks"])
+    }
+
     func testAFailedSectionIsReportedNotFatal() throws {
         let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: fixture)
         XCTAssertNil(doc.movement)
