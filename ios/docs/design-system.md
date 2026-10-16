@@ -1058,7 +1058,9 @@ and measures — the web's Progress tab:
   does not schedule fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; a rung ladder per standard filled to the
-  level reached.
+  level reached in the colour of the modality it measures (the row's
+  `domain`, through `ModalityStyle`), with that modality's symbol before the
+  name; the accent for a standard with none.
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
   a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
