@@ -310,6 +310,7 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
                     f"{aid} runs {arch.get('duration_estimate_minutes')} min against a "
                     f"{session_cap}-min session", wn)
 
+        in_session = {(ea.get('exercise') or {}).get('id') for ea in _work(s)} - {None}
         for ea in _work(s):
             ex = ea.get('exercise')
             if ex is None:
@@ -322,7 +323,7 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
                             f"{aid} slot '{ea.get('slot_role')}' is empty with no reason given", wn)
                 elif ea.get('injury_skip'):
                     sub = _available_substitute(ea, flagged, injury_flags, library, equipment,
-                                                excl_patterns, excl_ids)
+                                                excl_patterns, excl_ids, in_session)
                     if sub:
                         out.add('injury_substitute_unused', 'warn', phase_id,
                                 f"{aid}:{ea.get('slot_role')}",
@@ -375,17 +376,25 @@ def _check_recovery(out, phase_id, wn, placed: dict, modalities: dict, allowed: 
                                 f"{m1} and {m2} are both high-cost, {hours} h apart", wn)
 
 
-def _available_substitute(ea, flagged, injury_flags, library, equipment, excl_patterns, excl_ids):
+def _available_substitute(ea, flagged, injury_flags, library, equipment, excl_patterns, excl_ids,
+                          in_session=frozenset()):
     """The flag's own `modified_exercises` substitute that would fill this slot:
     an entry whose `instead_of` fits the slot and whose `use` is in the
     library, unexcluded and within the athlete's equipment (the rule
-    `selector._explain_unfilled` applies)."""
+    `selector._explain_unfilled` applies, short of the level check): not
+    already in the session, not contraindicated by a flag, clear of every
+    other flag's excluded patterns."""
     exercises = library.get('exercises') or {}
     ex_filter = (ea.get('slot') or {}).get('exercise_filter') or {}
     for fid in flagged:
         for mod in (injury_flags.get(fid) or {}).get('modified_exercises') or []:
             was, use = exercises.get(mod.get('instead_of')), exercises.get(mod.get('use'))
             if not was or not use or use['id'] in excl_ids or not _equipment_ok(use, equipment):
+                continue
+            others = {pat for f in flagged if f != fid
+                      for pat in (injury_flags.get(f) or {}).get('excluded_movement_patterns') or []}
+            if use['id'] in in_session or set(use.get('movement_patterns') or []) & others \
+                    or set(use.get('contraindicated_with') or []) & set(flagged):
                 continue
             if _matches_slot_filter(was, ex_filter, set()):
                 return use['id']

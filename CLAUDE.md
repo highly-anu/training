@@ -220,8 +220,14 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
 - **Phase summary** (`src/phase_summary.py`): `currentProgram.phase_summary` — each phase's
   weekly shape, minutes, intensity, archetypes/exercises marked new or continued, dropped
   ones, lifts and plain `changes` lines — is built on generate and on every
-  `GET /user/program`, and `db.save_user_program` strips it. Program ▸ Overview on both
-  clients lays it out (web `program/PhaseChanges.tsx`, iOS `PhaseSummaryModels.swift`).
+  `GET /user/program`, and `db.save_user_program` strips it. `PUT /user/program` answers with
+  `phaseSummary` of the weeks it saved and `POST /programs/adjust` returns its envelope with
+  one, so an edit never leaves a stale summary; both clients apply it. Program ▸ Overview on
+  both clients lays it out (web `program/PhaseChanges.tsx`, iOS `PhaseSummaryModels.swift`).
+- **Single-session routes take the week's phase.** `POST /sessions/generate` and
+  `/exercises/substitute` accept `phase_id` + `framework_id` (both clients send them) and
+  apply that phase's `exclude_exercises` and the framework's deload share
+  (`api._week_phase_rules`, `phases.phase_rules`); without them they behave as before.
 - **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
   (keyed by days per week, several patterns rotating week to week) is the only source of
   day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of

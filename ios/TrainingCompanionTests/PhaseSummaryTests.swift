@@ -20,7 +20,7 @@ final class PhaseSummaryTests: XCTestCase {
          "dropped": {"archetypes": [], "exercises": []}, "changes": []},
         {"phase_id": "build", "name": "Build", "kind": "build", "week_start": 4, "week_end": 4, "weeks": 2,
          "sessions_per_week": {"anaerobic_intervals": 1},
-         "archetypes": [{"id": "z2", "name": "Zone 2", "modality": "aerobic_base", "sessions": 3, "status": "continued"},
+         "archetypes": [{"id": "z2", "name": "Zone 2", "modality": "aerobic_base", "sessions": 3, "per_week": 1.0, "status": "continued"},
                         {"id": "ant", "name": "AnT Intervals", "modality": "anaerobic_intervals", "sessions": 2, "status": "new"}],
          "dropped": {"archetypes": [{"id": "lift", "name": "Gym Strength", "modality": "max_strength"}]},
          "changes": ["Anaerobic intervals enters, 1×/week"]},
@@ -53,9 +53,10 @@ final class PhaseSummaryTests: XCTestCase {
         XCTAssertEqual(build.changes, ["Anaerobic intervals enters, 1×/week"])
     }
 
-    func testPerWeekDividesByThePhaseLength() throws {
+    func testPerWeekIsTheServersElseTheCountOverTheWeeks() throws {
         let build = PhaseSummary.list(from: try program().extra)[1]
-        XCTAssertEqual(build.perWeek("z2"), 1.5)
+        XCTAssertEqual(build.perWeek("z2"), 1.0, "the server's per_week")
+        XCTAssertEqual(build.perWeek("ant"), 1.0, "an older server: 2 sessions over 2 weeks")
         XCTAssertNil(build.perWeek("lift"))
     }
 

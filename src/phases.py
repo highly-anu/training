@@ -214,6 +214,28 @@ def legacy_kind_missing(phase_seq: list, start_phase: str | None,
                    for e in phase_seq)
 
 
+def phase_rules(philosophies: list, phase_id: str | None, framework_id: str | None = None) -> dict:
+    """The generator-read keys of one phase, for routes that build a single
+    session or swap one exercise rather than generate weeks.
+
+    The phase is looked up by id among the given philosophies, narrowed by the
+    framework it runs on when one is given (phase ids like 'base' recur across
+    packages; a framework id does not). Nothing found is the empty rule set.
+    """
+    if not phase_id:
+        return {'exclude_exercises': [], 'rotate_main_lifts': False}
+    for phil in philosophies or []:
+        for track in tracks_of(phil):
+            for ph in track.get('phases') or []:
+                if ph.get('id') != phase_id:
+                    continue
+                if framework_id and ph.get('framework_id') != framework_id:
+                    continue
+                return {'exclude_exercises': list(ph.get('exclude_exercises') or []),
+                        'rotate_main_lifts': bool(ph.get('rotate_main_lifts'))}
+    return {'exclude_exercises': [], 'rotate_main_lifts': False}
+
+
 def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> dict:
     """One generator week entry. The single constructor both the plain
     generate path and the event-date calendar use, so neither can drop the

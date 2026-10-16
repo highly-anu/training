@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import sys
 
-from src import goals, loader, scheduler
+from src import goals, loader, progression, scheduler, selector
 from src.selector import is_main_lift_slot
 from src.generator import generate
 from tools.check_styles import ALL_EQUIPMENT
@@ -135,9 +135,134 @@ def test_phase_exclusions() -> None:
     check('foundations stops before the snatch and the jerk', not used & banned, str(used & banned))
 
 
+# ── Review fixes (2026-10-16), on synthetic libraries ─────────────────────────
+
+def _ex(eid, patterns=('squat',), **kw):
+    return {'id': eid, 'name': eid, 'category': 'barbell', 'equipment': [],
+            'movement_patterns': list(patterns), **kw}
+
+
+SLOT = {'role': 'main', 'slot_type': 'sets_reps', 'sets': 3, 'reps': 5, 'intensity': 'heavy',
+        'exercise_filter': {'movement_pattern': 'squat'}}
+FLAGS = {'knee': {'excluded_movement_patterns': ['squat'],
+                  'modified_exercises': [{'instead_of': 'back_squat', 'use': 'box_squat'}]}}
+
+
+def explain(exercises, unlocked=None, flags=('knee',), phase_excluded=frozenset()):
+    constraints = {'equipment': [], 'injury_flags': list(flags), 'training_level': 'intermediate'}
+    _, excl_ids = selector._injury_exclusions(constraints, FLAGS)
+    pool = (set(exercises) if unlocked is None else set(unlocked)) - excl_ids - set(phase_excluded)
+    return selector._explain_unfilled(SLOT, constraints, exercises, pool, excl_ids, FLAGS,
+                                      'base', set(), None, 'max_strength',
+                                      phase_excluded=phase_excluded)
+
+
+def test_injury_substitute_rules() -> None:
+    print('injury substitutes')
+    lib = {'back_squat': _ex('back_squat'), 'box_squat': _ex('box_squat')}
+    reason, sub, was = explain(lib)
+    check('a flag substitute fills the slot', reason == 'injury' and sub and sub['id'] == 'box_squat'
+          and was == 'back_squat')
+    reason, sub, _ = explain(lib, phase_excluded=frozenset({'box_squat'}))
+    check('never one the phase leaves out', reason == 'injury' and sub is None)
+    reason, sub, _ = explain(lib, unlocked={'back_squat'})
+    check('never one locked at the athlete\'s level', reason == 'injury' and sub is None)
+    lib2 = {**lib, 'box_squat': _ex('box_squat', contraindicated_with=['knee'])}
+    check('never one a flag contraindicates', explain(lib2)[1] is None)
+
+
+def test_gap_reasons() -> None:
+    print('why a slot is empty')
+    lib = {'snatch': _ex('snatch')}
+    reason, _, _ = explain(lib, flags=(), phase_excluded=frozenset({'snatch'}))
+    check('a phase exclusion is the phase, not the level', reason == 'phase', str(reason))
+    reason, _, _ = explain({'snatch': _ex('snatch', requires=['zz_unknown_skill'])},
+                           unlocked=set(), flags=())
+    check('a locked lift is the level', reason == 'level', str(reason))
+
+
+def _populate(exercises, slots, pins, cache=None, flags=()):
+    arch = {'id': 'a', 'name': 'A', 'modality': 'max_strength', 'slots': slots,
+            'duration_estimate_minutes': 60}
+    constraints = {'equipment': [], 'injury_flags': list(flags), 'training_level': 'intermediate',
+                   'session_time_minutes': 75}
+    return selector.populate_session({'modality': 'max_strength', 'is_deload': False}, {'primary_sources': []},
+                                     constraints, exercises, [arch], FLAGS, 'base', 1,
+                                     forced_archetype=arch, pinned_lifts=pins, unfilled_cache=cache)
+
+
+def test_pins_never_repeat_a_lift() -> None:
+    print('pinned lifts within a session')
+    lib = {'back_squat': _ex('back_squat'), 'front_squat': _ex('front_squat')}
+    two = [dict(SLOT, role='first'), dict(SLOT, role='second')]
+    out = _populate(lib, two, {('a', 0): 'zz_gone', ('a', 1): 'back_squat'})
+    ids = [ea['exercise']['id'] for ea in out['exercises'] if ea.get('exercise')]
+    check('a fresh pick leaves the other slot its pin', ids == ['front_squat', 'back_squat'], str(ids))
+    out = _populate(lib, two, {('a', 0): 'back_squat', ('a', 1): 'back_squat'})
+    ids = [ea['exercise']['id'] for ea in out['exercises'] if ea.get('exercise')]
+    check('a pin already used this session is not reused', len(ids) == len(set(ids)), str(ids))
+
+
+def test_unfilled_cache() -> None:
+    print('an empty slot is explained once per phase')
+    calls = []
+    real = selector._explain_unfilled
+    selector._explain_unfilled = lambda *a, **k: calls.append(1) or real(*a, **k)
+    try:
+        cache: dict = {}
+        lib = {'back_squat': _ex('back_squat')}
+        for _ in range(3):
+            _populate(lib, [SLOT], {}, cache, flags=('knee',))
+    finally:
+        selector._explain_unfilled = real
+    check('three weeks, one explanation', len(calls) == 1, str(len(calls)))
+
+
+def test_taper_keeps_the_framework_share_for_sets() -> None:
+    print('a taper cuts sets by the framework share')
+    check('time and distance are corrected for the kind',
+          abs(progression._kind_adjusted_keep('taper', 0.5, 0.6) - 0.5 / 0.6) < 1e-9)
+    check('outside a taper the share is as given', progression._kind_adjusted_keep('base', 0.5, 0.6) == 0.5)
+    ex = {'id': 'back_squat', 'starting_load_kg': {'intermediate': 100}}
+    load = progression.calculate_load(ex, {'slot_type': 'sets_reps', 'sets': 4, 'reps': 5}, 'linear_load',
+                                      2, 'taper', 'intermediate', True, deload_keep=0.5)
+    check('4 sets keep 2 in a taper deload', load['sets'] == 2, str(load))
+
+
+def test_declared_deloads() -> None:
+    print('deload protocols')
+    for phil, weeks in (('marcus_filly', 10), ('horsemen_gpp', 8), ('ido_portal', 12)):
+        kw = {'track_id': 'gpp_circuits'} if phil == 'horsemen_gpp' else {}
+        prog = program(phil, weeks, days_per_week=5, **kw)
+        check(f'{phil} deloads on schedule', any(w['is_deload'] for w in prog['weeks']))
+
+
+def test_single_session_routes() -> None:
+    print('swap and session regenerate apply the phase')
+    import os
+    os.environ.setdefault('SUPABASE_URL', '')
+    import api
+    client = api.app.test_client()
+    body = {'archetype_id': 'kb_double_strength', 'slot_role': 'main', 'exercise_id': 'kb_press_double',
+            'philosophy_ids': ['wildman_kettlebell'], 'phase': 'base', 'week_in_phase': 1,
+            'constraints': {'equipment': ['kettlebell', 'open_space'], 'training_level': 'intermediate'},
+            'limit': 10}
+    banned = {'wk_kb_snatch', 'wk_kb_half_snatch', 'kb_jerk_single', 'kb_jerk_double', 'wk_kb_long_cycle_press'}
+    def offered(extra):
+        r = client.post('/api/exercises/substitute', json={**body, **extra})
+        return {a['assignment']['exercise']['id'] for a in (r.get_json() or {}).get('alternatives') or []}
+    without = offered({})
+    with_phase = offered({'phase_id': 'foundations', 'framework_id': 'kb_general_practice'})
+    check('without the phase the banned lifts are on offer', bool(without & banned), str(without))
+    check('with it they are not', bool(with_phase) and not with_phase & banned, str(with_phase))
+
+
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
-              test_cadence, test_phase_exclusions):
+              test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
+              test_pins_never_repeat_a_lift, test_unfilled_cache,
+              test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
+              test_single_session_routes):
         t()
     print()
     if FAILURES:

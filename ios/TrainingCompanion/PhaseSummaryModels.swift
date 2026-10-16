@@ -13,10 +13,12 @@ struct PhaseSummary: Decodable, Identifiable, Equatable {
         let name: String
         let modality: String
         let sessions: Int
+        /// Appearances per working week, from the server (nil from an older one).
+        let perWeek: Double?
         /// "new" or "continued"; nil in the first phase.
         let status: String?
 
-        enum CodingKeys: String, CodingKey { case id, name, modality, sessions, status }
+        enum CodingKeys: String, CodingKey { case id, name, modality, sessions, status, perWeek = "per_week" }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -24,6 +26,7 @@ struct PhaseSummary: Decodable, Identifiable, Equatable {
             name = (try? c.decode(String.self, forKey: .name)) ?? id
             modality = (try? c.decode(String.self, forKey: .modality)) ?? ""
             sessions = (try? c.decode(Int.self, forKey: .sessions)) ?? 0
+            perWeek = try? c.decodeIfPresent(Double.self, forKey: .perWeek)
             status = try? c.decodeIfPresent(String.self, forKey: .status)
         }
     }
@@ -103,10 +106,11 @@ struct PhaseSummary: Decodable, Identifiable, Equatable {
 
     var newArchetypes: [Item] { archetypes.filter { $0.status == "new" } }
 
-    /// Appearances per week of one archetype or exercise in this phase, or nil.
+    /// Appearances per week of one archetype or exercise in this phase, or nil:
+    /// the server's `per_week`, else (an older server) its count over the weeks.
     func perWeek(_ itemId: String, exercises useExercises: Bool = false) -> Double? {
         guard let item = (useExercises ? exercises : archetypes).first(where: { $0.id == itemId }) else { return nil }
-        return (Double(item.sessions) / Double(max(weeks, 1)) * 10).rounded() / 10
+        return item.perWeek ?? (Double(item.sessions) / Double(max(weeks, 1)) * 10).rounded() / 10
     }
 
     /// The program's summaries, read from the stored program's extras.

@@ -33,6 +33,9 @@ export interface ServerProgram {
    *  skeleton hash would then have to learn to ignore it. */
   programVersionId?: string | null
   currentProgram: GeneratedProgram | null
+  /** Response-only: PUT answers with the saved weeks' phase summary, which
+   *  saveUserProgram leaves here for the store to show. Never sent. */
+  phaseSummary?: GeneratedProgram['phase_summary']
   programStartDate: string | null
   eventDate: string | null
   sourceGoalIds: string[]
@@ -84,14 +87,17 @@ export let lastProgramSaveError: string | null = null
 export async function saveUserProgram(program: ServerProgram): Promise<boolean> {
   const body = { ...program, baseRevision: program.revision ?? null }
   delete (body as { revision?: unknown }).revision
+  delete (body as { phaseSummary?: unknown }).phaseSummary
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = (await apiClient.put('/user/program', body)) as unknown as {
         revision?: string
+        phaseSummary?: GeneratedProgram['phase_summary']
       }
       // Track the new revision so the next save is based on it.
       program.revision = res?.revision ?? program.revision
+      program.phaseSummary = res?.phaseSummary
       lastProgramSaveError = null
       return true
     } catch (err) {

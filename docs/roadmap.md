@@ -685,15 +685,15 @@ branch, 0 after; the 330 left are warnings). What is left, cheapest first:
    three weeks" in the base phase's prose is flat from week 1
    (`volume_ramp`). Needs a ramp that restarts after each deload instead of a
    kind ceiling.
-4. **BJJ class blocks ignore the deload (S).** Meta slots carry their YAML
-   duration through a deload (`deload_size`: 60 % kept against 40 %).
-5. **The single-session routes miss the phase.** `POST /sessions/generate` and
-   `/exercises/substitute` call `populate_session` without the week's
-   `exclude_exercises`, pinned lifts or the framework's `deload_keep`.
-6. **Real two-a-days and per-day session time (M).** `_add_split_sessions` only
+4. **Deloads keep more than declared (S).** Slots with a fixed length (BJJ
+   class blocks, skill practice, static holds) and archetypes'
+   `scaling.deload` overrides do not follow `volume_reduction_pct`, so a deload
+   week keeps 60–85 % where the framework says 40–60 % (`deload_size`; BJJ,
+   Wildman, Horsemen GPP circuits, Filly at 45 minutes).
+5. **Real two-a-days and per-day session time (M).** `_add_split_sessions` only
    ever adds mobility, and `weekly_schedule`'s per-day minutes never reach
    `session_time_minutes`.
-7. **The framework's `progression_model` still drives no prescription.**
+6. **The framework's `progression_model` still drives no prescription.**
    Filly, BJJ and ATG declare `rpe_autoregulation`; no modality uses it, so no
    RPE target is ever written.
 

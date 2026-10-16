@@ -77,6 +77,9 @@ def test_build() -> None:
           str(base['lifts']))
     check('the first phase marks nothing', all(a['status'] is None for a in base['archetypes']))
     statuses = {a['id']: a['status'] for a in build['archetypes']}
+    lift = next(a for a in base['archetypes'] if a['id'] == 'lift')
+    check('per_week counts working weeks only', lift['sessions'] == 5 and lift['per_week'] == 2.0,
+          str(lift))
     check('new and continued archetypes',
           statuses == {'threshold': 'new', 'z2': 'continued', 'lift': 'continued'}, str(statuses))
     check('a new exercise', any(e['id'] == 'hill_repeat' and e['status'] == 'new' for e in build['exercises']))
@@ -119,9 +122,41 @@ def test_api() -> None:
     check('save strips it', 'phase_summary' not in saved.get('currentProgram', {'phase_summary': 1}))
 
 
+def test_put_answers_with_the_summary() -> None:
+    print('a save answers with the summary of the weeks it saved')
+    os.environ.setdefault('SUPABASE_URL', '')
+    import api
+    from src import db
+    stored = {}
+    patches = {
+        'get_user_program': lambda uid: stored.get(uid),
+        'save_user_program': lambda uid, data: stored.__setitem__(uid, data),
+        'get_program_revision': lambda uid: 'r1',
+    }
+    saved_db = {k: getattr(db, k) for k in patches}
+    saved_hist = api._record_program_history
+    try:
+        for k, v in patches.items():
+            setattr(db, k, v)
+        api._record_program_history = lambda *a, **k: {}
+        weeks = [base_week(1, 100), build_week(2)]
+        resp = api.app.test_client().put('/api/user/program', json={
+            'currentProgram': {'weeks': weeks, 'goal': {'phase_sequence': []}},
+            'sourceGoalIds': [], 'baseRevision': 'r1'})
+        body = resp.get_json() or {}
+        summary = body.get('phaseSummary') or []
+        check('PUT returns phaseSummary', resp.status_code == 200 and [p['phase_id'] for p in summary] == ['base', 'build'],
+              f"{resp.status_code} {body}")
+    finally:
+        for k, v in saved_db.items():
+            setattr(db, k, v)
+        api._record_program_history = saved_hist
+
+
 def main() -> int:
     test_build()
     test_api()
+    test_put_answers_with_the_summary()
     print()
     if FAILURES:
         print(f"{len(FAILURES)} failure(s)")

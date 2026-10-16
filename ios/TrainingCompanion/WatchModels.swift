@@ -143,6 +143,8 @@ struct ProgramWeek: Codable {
     var phaseId: String? { extra["phase_id"]?.stringValue }
     var phaseName: String? { extra["phase_name"]?.stringValue }
     var trackId: String? { extra["track_id"]?.stringValue }
+    /// The framework that built this week (the phase's), round-tripped in `extra`.
+    var frameworkId: String? { extra["framework"]?.stringValue }
 
     /// What to call this week's phase: the methodology's name for it, else
     /// the kind, capitalised.
@@ -578,6 +580,9 @@ struct GenerateSessionRequest: Encodable {
     let isDeload: Bool
     let constraints: GenerateSessionConstraints
     let archetypeId: String?
+    /// The week's phase and framework (see `SubstituteRequest`).
+    var phaseId: String? = nil
+    var frameworkId: String? = nil
     enum CodingKeys: String, CodingKey {
         case primarySources = "primary_sources"
         case modality, phase
@@ -585,6 +590,8 @@ struct GenerateSessionRequest: Encodable {
         case isDeload       = "is_deload"
         case constraints
         case archetypeId    = "archetype_id"
+        case phaseId        = "phase_id"
+        case frameworkId    = "framework_id"
     }
 }
 

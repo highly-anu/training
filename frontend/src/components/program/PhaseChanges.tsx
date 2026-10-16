@@ -104,7 +104,8 @@ function matrixRows(summaries: PhaseSummary[], key: 'archetypes' | 'exercises'):
         row = { id: item.id, name: item.name, modality: item.modality, perWeek: summaries.map(() => null) }
         rows.set(item.id, row)
       }
-      row.perWeek[i] = Math.round((item.sessions / Math.max(1, s.weeks)) * 10) / 10
+      // The server's rate; an older server sent only the phase's count.
+      row.perWeek[i] = item.per_week ?? Math.round((item.sessions / Math.max(1, s.weeks)) * 10) / 10
     })
   })
   // Grouped by modality, each group in order of first appearance.

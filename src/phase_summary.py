@@ -10,8 +10,9 @@ Per phase, in program order:
 - the weekly shape (sessions per modality, averaged over working weeks),
 - planned minutes per week (first, last, mean) and the intensity split,
   both from `src/fidelity.py` so the check and the display count alike,
-- every archetype and exercise with how often it appears, marked `new` or
-  `continued` against the previous phase, plus what the phase `dropped`,
+- every archetype and exercise with how often it appears (`sessions` in the
+  phase, `per_week` over its working weeks), marked `new` or `continued`
+  against the previous phase, plus what the phase `dropped`,
 - the loaded lifts with their first and last prescribed weight,
 - `changes`: a few plain lines naming what is different from the previous
   phase.
@@ -79,6 +80,11 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
     archetypes: dict[str, dict] = {}
     exercises: dict[str, dict] = {}
     lifts: dict[str, dict] = {}
+    # Appearances in working weeks, for `per_week`; deloads still count
+    # towards `sessions` (the item is in the phase) but not towards the rate,
+    # so the rate agrees with `sessions_per_week`.
+    work_ids = {id(w) for w in work}
+    in_work: Counter = Counter()
     for w in pweeks:
         for _, s in fidelity._sessions(w):
             arch = s.get('archetype') or {}
@@ -87,6 +93,8 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
                     'id': arch['id'], 'name': arch.get('name') or arch['id'],
                     'modality': s.get('modality'), 'sessions': 0})
                 a['sessions'] += 1
+                if id(w) in work_ids:
+                    in_work[('a', arch['id'])] += 1
             for ea in s.get('exercises') or []:
                 ex = ea.get('exercise') or {}
                 if ea.get('meta') or not ex.get('id'):
@@ -95,11 +103,18 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
                     'id': ex['id'], 'name': ex.get('name') or ex['id'],
                     'modality': s.get('modality'), 'sessions': 0})
                 e['sessions'] += 1
+                if id(w) in work_ids:
+                    in_work[('e', ex['id'])] += 1
                 kg = (ea.get('load') or {}).get('weight_kg')
                 if isinstance(kg, (int, float)) and not w.get('is_deload'):
                     lift = lifts.setdefault(ex['id'], {'id': ex['id'], 'name': e['name'],
                                                        'first_kg': kg, 'last_kg': kg})
                     lift['last_kg'] = kg
+
+    for a in archetypes.values():
+        a['per_week'] = round(in_work[('a', a['id'])] / len(work), 1)
+    for e in exercises.values():
+        e['per_week'] = round(in_work[('e', e['id'])] / len(work), 1)
 
     return {
         'phase_id': phase_id,

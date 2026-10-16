@@ -336,6 +336,7 @@ def generate(
     # Each phase's main lifts, (archetype id, slot index) -> exercise id; reset
     # when the phase changes, because a new phase may move to a new lift.
     pinned_lifts: dict = {}
+    unfilled_cache: dict = {}  # why a slot came up empty, explained once per phase
     pinned_phase = None
     all_compromises: list[str] = []  # Collect compromises from all weeks
 
@@ -359,7 +360,7 @@ def generate(
         phase_excluded = frozenset(entry.get('exclude_exercises') or ())
         phase_key = entry.get('phase_id') or phase
         if phase_key != pinned_phase:
-            pinned_lifts, pinned_phase = {}, phase_key
+            pinned_lifts, unfilled_cache, pinned_phase = {}, {}, phase_key
         week_pins = None if entry.get('rotate_main_lifts') else pinned_lifts
 
         # 1. Build the modality→day schedule
@@ -370,12 +371,6 @@ def generate(
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
         deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
-        # In a kind that is itself the deload (a taper), the kind's volume
-        # multiplier already cuts time and distance; the framework's share is
-        # the total, not a second cut on top. Uphill's taper kept 0.6 x 0.5 =
-        # 30 % where its prose says volume drops 40-60 %.
-        if deload_keep is not None and phases.kind_flag(phase, 'counts_as_deload'):
-            deload_keep = min(1.0, deload_keep / (phases.volume_multiplier(phase) or 1.0))
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
@@ -440,6 +435,7 @@ def generate(
                     exclude_exercise_ids=phase_excluded,
                     pinned_lifts=week_pins,
                     deload_keep=deload_keep,
+                    unfilled_cache=unfilled_cache,
                 )
 
                 session_trace: dict | None = None

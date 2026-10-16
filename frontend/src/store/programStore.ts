@@ -71,6 +71,12 @@ async function persistProgram(
     // saveUserProgram advances the revision in place on success.
     revision: payload.revision ?? null,
   })
+  // The server's summary of the weeks just saved (a move, a swap, a spliced
+  // regenerate). Applied only while that copy is still the one on screen.
+  const current = useProgramStore.getState().currentProgram
+  if (ok && payload.phaseSummary && current && current === payload.currentProgram) {
+    set({ currentProgram: { ...current, phase_summary: payload.phaseSummary } })
+  }
 }
 
 /** The fields a program load owns, in their empty form. */

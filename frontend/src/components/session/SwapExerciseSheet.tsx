@@ -50,6 +50,8 @@ export function SwapExerciseSheet({
         phase: weekData.phase,
         weekInPhase: weekData.week_in_phase ?? 1,
         isDeload: !!weekData.is_deload,
+        phaseId: weekData.phase_id,
+        frameworkId: weekData.framework,
         exclude: session.exercises.map((e) => e.exercise?.id).filter((id): id is string => !!id),
       },
       {

@@ -85,6 +85,8 @@ notes: >
   AMRAP 20 min) targets mixed-modal work capacity. Can be used as a standalone
   conditioning framework or as conditioning days within a concurrent training block.
 
+# No deload_protocol on purpose: the method runs no blocks and no scheduled
+# unloads; variation and scaling do that work.
 expectations:
   min_weeks: 8
   ideal_weeks: 12

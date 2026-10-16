@@ -300,7 +300,9 @@ struct ReplaceWorkoutSheet: View {
                 sessionTimeMinutes: arch.durationEstimateMinutes ?? Int(sessionMinutes),
                 fatigueState: fatigueState.rawValue
             ),
-            archetypeId: arch.id
+            archetypeId: arch.id,
+            phaseId: week?.phaseId,
+            frameworkId: week?.frameworkId
         )
         do {
             preview = try await api.generateSession(request)
@@ -324,7 +326,9 @@ struct ReplaceWorkoutSheet: View {
                 sessionTimeMinutes: Int(sessionMinutes),
                 fatigueState: fatigueState.rawValue
             ),
-            archetypeId: nil
+            archetypeId: nil,
+            phaseId: week?.phaseId,
+            frameworkId: week?.frameworkId
         )
         do {
             preview = try await api.generateSession(request)

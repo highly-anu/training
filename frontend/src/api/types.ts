@@ -473,6 +473,9 @@ export interface PhaseSummaryItem {
   modality: string
   /** Appearances in the phase (deload weeks included). */
   sessions: number
+  /** Appearances per working week (deloads left out, like sessions_per_week).
+   *  Absent from servers before it was added. */
+  per_week?: number
   /** null in the first phase. */
   status: 'new' | 'continued' | null
 }

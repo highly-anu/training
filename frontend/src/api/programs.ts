@@ -114,6 +114,9 @@ export function useRegenerateFromWeek() {
         const keep = Math.max(0, current.weeks.length - newPartial.weeks.length)
         const merged: GeneratedProgram = {
           ...newPartial,
+          // The response summarised the tail alone; the save answers with
+          // the summary of the spliced weeks.
+          phase_summary: undefined,
           weeks: [...current.weeks.slice(0, keep), ...newPartial.weeks],
           volume_summary: [
             ...(current.volume_summary ?? []).slice(0, keep),
@@ -127,6 +130,7 @@ export function useRegenerateFromWeek() {
       const keepCount = Math.max(0, current.weeks.length - params.numWeeks)
       const spliced: GeneratedProgram = {
         ...newPartial,
+        phase_summary: undefined,  // the tail's alone; the save answers with the whole
         weeks: [...current.weeks.slice(0, keepCount), ...newPartial.weeks],
         volume_summary: [
           ...(current.volume_summary ?? []).slice(0, keepCount),
@@ -158,6 +162,10 @@ export interface GenerateSessionParams {
   }
   customInjuryFlags?: CustomInjuryFlag[]
   archetypeId?: string
+  /** The week's phase and framework, so the server applies the phase's
+   *  exclude_exercises and the framework's deload share. */
+  phaseId?: string
+  frameworkId?: string
 }
 
 export function useGenerateSession() {
@@ -172,6 +180,8 @@ export function useGenerateSession() {
         constraints: p.constraints,
         custom_injury_flags: p.customInjuryFlags ?? [],
         ...(p.archetypeId ? { archetype_id: p.archetypeId } : {}),
+        ...(p.phaseId ? { phase_id: p.phaseId } : {}),
+        ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
       }) as unknown as Promise<Session>,
   })
 }
@@ -198,6 +208,9 @@ export interface SubstituteParams {
   isDeload: boolean
   exclude?: string[]
   limit?: number
+  /** The week's phase and framework (see GenerateSessionParams). */
+  phaseId?: string
+  frameworkId?: string
 }
 
 /**
@@ -221,6 +234,8 @@ export function useSubstituteExercise() {
         is_deload: p.isDeload,
         exclude: p.exclude ?? [],
         limit: p.limit ?? 8,
+        ...(p.phaseId ? { phase_id: p.phaseId } : {}),
+        ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
       }) as unknown as Promise<{ alternatives: ExerciseAlternative[] }>,
   })
 }

@@ -85,6 +85,13 @@ notes: >
   e.g. "10 min of locomotion practice daily." Overlaps with GTG (Pavel): practice
   a lift or skill at 50-60% effort multiple times per day, never to failure.
 
+# Practice keeps its frequency; a lighter week every six lets the joints and
+# the attention recover without breaking the daily habit.
+deload_protocol:
+  frequency_weeks: 6
+  volume_reduction_pct: 0.7   # share of volume kept
+  intensity_change: maintain
+
 expectations:
   min_weeks: 12
   ideal_weeks: 24

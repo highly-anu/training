@@ -636,43 +636,65 @@ def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: st
 
 
 def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
-                      phase, primary_sources, policy, modality) -> tuple[str | None, dict | None, str | None]:
+                      phase, primary_sources, policy, modality,
+                      phase_excluded=frozenset()) -> tuple[str | None, dict | None, str | None]:
     """Why a slot found no exercise, and the injury flag's substitute if one fits.
 
-    Returns (reason, substitute, instead_of). The reason is 'injury' when the
-    slot fills once the athlete's flags are lifted, 'equipment' when it fills
-    with every piece of equipment, 'level' when it fills with every exercise
-    unlocked, else None (the package's coverage gap, labelled by the caller).
+    Returns (reason, substitute, instead_of), cheapest test first:
+
+    - 'coverage': no exercise in the allowed packages matches the slot at all;
+    - 'injury': it fills once the athlete's flags are lifted;
+    - 'equipment': it fills with every piece of equipment;
+    - 'level': it fills with every exercise unlocked;
+    - 'phase': it fills only with the phase's `exclude_exercises` back in
+      (the method has not reached the lift; not the athlete's level);
+    - None: nothing explains it.
+
     The substitute comes from a flag's `modified_exercises`: an entry whose
-    `instead_of` would have fitted this slot and whose `use` is in the
-    program's library, unexcluded and within the athlete's equipment.
+    `instead_of` fits the slot and whose `use` the athlete could be given
+    anyway: unlocked at their level and not left out by the phase, within
+    their equipment and the program's packages, not excluded or
+    contraindicated by any flag, and clear of every other flag's excluded
+    patterns (the flag that names it vouches only for its own).
     """
     common = dict(primary_sources=primary_sources, policy=policy, modality=modality)
-    no_flags = {**constraints, 'injury_flags': []}
-    everything = unlocked | (set(excl_ids) & set(exercises))
-    if select_exercise(slot, no_flags, exercises, everything, set(), set(), [], phase, **common):
-        available = set(constraints.get('equipment', []))
-        ex_filter = slot.get('exercise_filter') or {}
-        for flag_id in constraints.get('injury_flags', []):
-            for mod in (injury_flags_data.get(flag_id) or {}).get('modified_exercises') or []:
-                was, use = exercises.get(mod.get('instead_of')), exercises.get(mod.get('use'))
-                if not was or not use or use['id'] in excl_ids:
-                    continue
-                if not _matches_slot_filter(was, ex_filter, set()):
-                    continue
-                if not _equipment_ok(use, available):
-                    continue
-                if policy is not None and not provenance.allows_exercise(use, policy, modality):
-                    continue
-                return 'injury', use, was['id']
-        return 'injury', None, None
+    if policy is not None and policy.strict and _slot_unfillable_in_policy(slot, exercises, policy, modality):
+        return 'coverage', None, None
+    flags = list(constraints.get('injury_flags') or [])
+    if flags:
+        no_flags = {**constraints, 'injury_flags': []}
+        everything = unlocked | (set(excl_ids) & set(exercises))
+        if select_exercise(slot, no_flags, exercises, everything, set(), set(), [], phase, **common):
+            available = set(constraints.get('equipment', []))
+            ex_filter = slot.get('exercise_filter') or {}
+            for flag_id in flags:
+                others = {pat for fid in flags if fid != flag_id
+                          for pat in (injury_flags_data.get(fid) or {}).get('excluded_movement_patterns') or []}
+                for mod in (injury_flags_data.get(flag_id) or {}).get('modified_exercises') or []:
+                    was, use = exercises.get(mod.get('instead_of')), exercises.get(mod.get('use'))
+                    if not was or not use or use['id'] in excl_ids or use['id'] not in unlocked:
+                        continue
+                    if not _matches_slot_filter(was, ex_filter, set()):
+                        continue
+                    if not _equipment_ok(use, available) or set(use.get('movement_patterns') or []) & others:
+                        continue
+                    if set(use.get('contraindicated_with') or []) & set(flags):
+                        continue
+                    if policy is not None and not provenance.allows_exercise(use, policy, modality):
+                        continue
+                    return 'injury', use, was['id']
+            return 'injury', None, None
     all_equipment = {e for ex in exercises.values() for e in ex.get('equipment', [])}
     if select_exercise(slot, {**constraints, 'equipment': sorted(all_equipment)}, exercises,
                        unlocked, set(), excl_ids, [], phase, **common):
         return 'equipment', None, None
-    if select_exercise(slot, constraints, exercises, set(exercises) - set(excl_ids),
+    every_level = set(exercises) - set(excl_ids)
+    if select_exercise(slot, constraints, exercises, every_level - set(phase_excluded),
                        set(), excl_ids, [], phase, **common):
         return 'level', None, None
+    if phase_excluded and select_exercise(slot, constraints, exercises, every_level,
+                                          set(), excl_ids, [], phase, **common):
+        return 'phase', None, None
     return None, None, None
 
 
@@ -698,6 +720,7 @@ def populate_session(
     exclude_exercise_ids: set | frozenset | None = None,
     pinned_lifts: dict | None = None,
     deload_keep: float | None = None,
+    unfilled_cache: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -710,7 +733,14 @@ def populate_session(
     (`is_main_lift_slot`) reuses the exercise it got first in the phase while
     that exercise still passes every filter, and records it otherwise. None
     turns pinning off (a phase that rotates its lifts, a single-session
-    regenerate).
+    regenerate). A pinned lift already in the session is not reused, and a
+    fresh pick steers clear of the other slots' pins, so a session never
+    prescribes one lift twice.
+
+    `unfilled_cache` (also caller-owned, per phase) remembers why a slot came
+    up empty, keyed (archetype id, slot index, phase kind): the athlete's
+    constraints do not change within a program, so a gap that repeats every
+    week is explained once.
 
     When collect_trace=True the result dict includes a 'session_trace' key with
     archetype selection and per-slot exercise selection trace data.
@@ -834,8 +864,15 @@ def populate_session(
 
         pin_key = (arch.get('id'), i)
         pinned_id = None
+        reserved: list[str] = []
         if pinned_lifts is not None and is_main_lift_slot(slot):
             pinned_id = pinned_lifts.get(pin_key)
+            if pinned_id in session_used_ids:
+                pinned_id = None
+        if pinned_lifts is not None:
+            reserved = [eid for (aid, idx), eid in pinned_lifts.items()
+                        if aid == arch.get('id') and idx != i]
+        fresh_used = session_used_ids + reserved
         ex = None
         ex_trace: dict = {}
         if pinned_id:
@@ -855,7 +892,7 @@ def populate_session(
             ex_result = select_exercise(
                 slot, constraints, exercises, unlocked,
                 excl_patterns, excl_ids, used_ex_ids, phase,
-                session_used_ids=session_used_ids,
+                session_used_ids=fresh_used,
                 return_trace=True,
                 primary_sources=primary_sources,
                 policy=policy,
@@ -866,18 +903,27 @@ def populate_session(
             ex = select_exercise(
                 slot, constraints, exercises, unlocked,
                 excl_patterns, excl_ids, used_ex_ids, phase,
-                session_used_ids=session_used_ids,
+                session_used_ids=fresh_used,
                 primary_sources=primary_sources,
                 policy=policy,
                 modality=modality,
             )
 
         substituted_for = None
+        reason = None
         if ex is None:
-            reason, sub, instead_of = _explain_unfilled(
-                slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
-                phase, primary_sources, policy, modality)
-            if sub is not None:
+            cache_key = (arch.get('id'), i, phase)
+            if unfilled_cache is not None and cache_key in unfilled_cache:
+                reason, sub_id, instead_of = unfilled_cache[cache_key]
+                sub = exercises.get(sub_id) if sub_id else None
+            else:
+                reason, sub, instead_of = _explain_unfilled(
+                    slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
+                    phase, primary_sources, policy, modality,
+                    phase_excluded=frozenset(exclude_exercise_ids or ()))
+                if unfilled_cache is not None:
+                    unfilled_cache[cache_key] = (reason, sub['id'] if sub else None, instead_of)
+            if sub is not None and sub['id'] not in session_used_ids:
                 ex, substituted_for = sub, instead_of
 
         if ex is None:
@@ -887,13 +933,11 @@ def populate_session(
             # coverage gap to author, the second is an athlete constraint.
             # Every empty slot says which; one used to be left empty with no
             # reason whenever equipment or an excluded exercise emptied it.
-            coverage_gap = bool(
-                not injury_blocked and policy is not None and policy.strict
-                and _slot_unfillable_in_policy(slot, exercises, policy, modality)
-            )
+            coverage_gap = reason == 'coverage' and not injury_blocked
             gap_reason = ('NO_EXERCISE_IN_ALLOWED_PACKAGES' if coverage_gap
                           else 'EQUIPMENT_UNAVAILABLE' if reason == 'equipment'
-                          else 'LEVEL_LOCKED' if reason == 'level' else None)
+                          else 'LEVEL_LOCKED' if reason == 'level'
+                          else 'PHASE_EXCLUDED' if reason == 'phase' else None)
             exercise_assignments.append({
                 'slot_index': i,
                 'slot_role': slot_role,
@@ -908,6 +952,7 @@ def populate_session(
                     "skipped — excluded by injury flag" if injury_blocked
                     else "No exercise fits the available equipment" if reason == 'equipment'
                     else "No exercise unlocked at this training level" if reason == 'level'
+                    else "Not part of this phase yet" if reason == 'phase'
                     else f"No exercise for slot '{slot.get('role')}'"
                 ),
             })

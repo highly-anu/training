@@ -139,6 +139,22 @@ def zone_band(intensity) -> tuple[Optional[int], Optional[int], Optional[str]]:
     return entry[0], entry[1], entry[2]
 
 
+def _kind_adjusted_keep(phase: str, deload_keep: float | None, default: float) -> float:
+    """The deload share for time and distance, which the phase kind already caps.
+
+    In a kind that is itself the deload (a taper), `volume_multiplier` has
+    already cut a slot's time and distance, and the framework's share is the
+    total, not a second cut on top: Uphill's taper kept 0.6 x 0.5 = 30 % where
+    its prose says volume drops 40-60 %. Sets, rounds and session length are
+    not capped by the kind, so they take the framework's share as it is.
+    """
+    if deload_keep is None:
+        return default
+    if phases.kind_flag(phase, 'counts_as_deload'):
+        return min(1.0, deload_keep / (phases.volume_multiplier(phase) or 1.0))
+    return deload_keep
+
+
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
                   max_minutes: int | None = None, deload_keep: float | None = None) -> dict:
     # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
@@ -153,7 +169,7 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     # 10% weekly ramp up to target
     current_sec = min(base_sec * (1 + (week - 1) * 0.10), target_sec)
     if is_deload:
-        current_sec *= deload_keep if deload_keep is not None else 0.60
+        current_sec *= _kind_adjusted_keep(phase, deload_keep, 0.60)
 
     minutes = max(1, round(current_sec / 60))
     # Never exceed the athlete's session time limit
@@ -196,7 +212,7 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
                   * (1 + (week - 1) * 0.08))
 
     if is_deload:
-        distance_m *= deload_keep if deload_keep is not None else 0.60
+        distance_m *= _kind_adjusted_keep(phase, deload_keep, 0.60)
 
     out = {'distance_km': round(distance_m / 1000, 1), 'intensity': intensity}
     if pack is not None:
