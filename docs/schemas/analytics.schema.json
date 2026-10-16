@@ -117,6 +117,7 @@
         "target_level": { "type": "string", "enum": ["entry", "intermediate", "advanced", "elite"], "description": "For benchmark_level: the level this methodology considers its end state." },
         "rpm_target":   { "type": "number", "minimum": 0, "description": "For rate: reps per minute the methodology trains toward." },
         "min_sessions": { "type": "integer", "minimum": 1, "default": 2, "description": "For unlocks: sessions before an exercise counts as practised." },
+        "require_clean": { "type": "boolean", "default": false, "description": "For unlocks: count only sessions the athlete ticked clean (every rep owned) — earned by quality, not attendance." },
         "notes":        { "type": "string" }
       }
     }

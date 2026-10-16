@@ -37,6 +37,16 @@ final class SessionLoggingTests: XCTestCase {
         XCTAssertEqual(SessionLogging.summary(perf, slotType: "skill_practice"), "35 s hold")
     }
 
+    func testCleanRoundTripsAndIsAbsentUntilTicked() throws {
+        var perf = ExercisePerformanceLog()
+        let untouched = try JSONSerialization.jsonObject(with: JSONEncoder().encode(perf)) as? [String: Any]
+        XCTAssertNil(untouched?["clean"], "nothing ticked, nothing sent")
+        perf.clean = true
+        let back = try JSONDecoder().decode(ExercisePerformanceLog.self, from: JSONEncoder().encode(perf))
+        XCTAssertEqual(back.clean, true)
+        XCTAssertTrue(AnalyticsStatusStyle.coverageReason("clean_not_logged").contains("Clean"))
+    }
+
     func testPerformanceEncodesTheKeysTheEngineReads() throws {
         let perf = ExercisePerformanceLog(
             sets: [WatchSetLog(setIndex: 0, repsActual: 5, weightKg: 80, rpe: 8, completed: true,

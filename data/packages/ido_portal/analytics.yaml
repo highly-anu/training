@@ -9,6 +9,7 @@ progress:
     headline: true
     scope: {modalities: [movement_skill]}
     min_sessions: 2
+    require_clean: true      # earned when owned, not when attended
 
   - id: practice_time
     label: Practice time

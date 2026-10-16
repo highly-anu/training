@@ -28,6 +28,7 @@ struct ExerciseLogSheet: View {
     @State private var rounds: Int? = nil
     @State private var reps: Int? = nil
     @State private var holdSeconds: Int? = nil
+    @State private var clean = false
     @State private var isSaving = false
     @State private var loaded = false
 
@@ -51,6 +52,13 @@ struct ExerciseLogSheet: View {
                     }
                 }
                 if logsSets { setsSection } else { outcomeSection }
+                if slotType == "skill_practice" {
+                    Section {
+                        Toggle("Clean", isOn: $clean)
+                    } footer: {
+                        Text("Every rep owned. Where the methodology asks, a movement is earned by clean sessions, not by attendance.")
+                    }
+                }
             }
             .navigationTitle(logsSets ? "Log sets" : "Log result")
             .navigationBarTitleDisplayMode(.inline)
@@ -155,6 +163,7 @@ struct ExerciseLogSheet: View {
     private func prefill() {
         let load = assignment.load
         let existing = exerciseId.flatMap { appState.sessionLogs[sessionKey]?.exercises[$0] }
+        clean = existing?.clean ?? false
         if logsSets {
             if let existing, !existing.sets.isEmpty {
                 sets = existing.sets.sorted { $0.setIndex < $1.setIndex }.map {
@@ -202,6 +211,7 @@ struct ExerciseLogSheet: View {
                                          durationSeconds: s, startOffset: nil, endOffset: nil)]
             }
         }
+        if slotType == "skill_practice" { perf.clean = clean }
         await appState.logExercise(sessionKey: sessionKey, exerciseId: exerciseId, performance: perf)
         AppHaptics.success()
         dismiss()

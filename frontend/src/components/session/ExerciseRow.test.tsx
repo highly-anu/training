@@ -100,6 +100,19 @@ describe('ExerciseRow logger dispatch', () => {
     expect(set0?.durationSeconds).toBe(20)
   })
 
+  it('ticks a skill clean, and only skills offer it', () => {
+    renderRow({
+      exercise: { id: 'balance_frog_stance', name: 'Frog Stance', category: 'skill', movement_patterns: ['isometric'] },
+      load: { sets: 3, duration_minutes: 10 },
+      slot_type: 'skill_practice',
+    })
+    fireEvent.click(screen.getByLabelText('Clean: balance_frog_stance'))
+    expect(useBioStore.getState().sessionPerformanceLogs['1-Monday-0']?.exercises.balance_frog_stance?.clean).toBe(true)
+    cleanup()
+    renderRow({ exercise: { id: 'squat', name: 'Squat', category: 'barbell' }, load: { sets: 3, reps: 5 }, slot_type: 'sets_reps' })
+    expect(screen.queryByLabelText('Clean: squat')).toBeNull()
+  })
+
   it('logs seconds, not reps, per set of a static hold', () => {
     renderRow({
       exercise: { id: 'copenhagen', name: 'Copenhagen Plank', category: 'rehab', movement_patterns: ['isometric'] },

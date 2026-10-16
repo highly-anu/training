@@ -81,6 +81,7 @@ class Entry:
     target_level: str | None = None
     rpm_target: float | None = None
     min_sessions: int = 2
+    require_clean: bool = False
     notes: str = ''
 
 
@@ -125,6 +126,7 @@ def _from_declared(raw: dict, package_id: str, weight: float, philosophy: dict |
             benchmarks=list(item.get('benchmarks') or []),
             target_level=item.get('target_level'), rpm_target=item.get('rpm_target'),
             min_sessions=int(item.get('min_sessions') or 2), notes=item.get('notes') or '',
+            require_clean=bool(item.get('require_clean')),
         ))
     _mark_headline(entries, philosophy or _philosophy(package_id))
     balance = list((raw.get('movement') or {}).get('balance') or [])

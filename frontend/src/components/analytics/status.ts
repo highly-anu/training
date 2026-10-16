@@ -48,5 +48,6 @@ export const COVERAGE_REASONS: Record<string, string> = {
   no_heart_rate: 'No heart-rate data on the matched workouts.',
   no_gps_hr: 'Needs a matched run or ride with GPS and heart-rate samples.',
   no_exercises_in_scope: 'No exercises in this scope have been completed yet.',
+  clean_not_logged: 'A movement is earned by clean sessions. Tick "Clean" on a skill when every rep was owned.',
   no_pr_logged: 'No PR logged for these standards. Add one on the Profile page.',
 }

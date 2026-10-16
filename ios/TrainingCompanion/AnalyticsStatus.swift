@@ -62,6 +62,7 @@ enum AnalyticsStatusStyle {
         case "no_heart_rate": return "No heart-rate data on the matched workouts."
         case "no_gps_hr": return "Needs a matched run or ride with GPS and heart-rate samples."
         case "no_exercises_in_scope": return "No exercises in this scope have been completed yet."
+        case "clean_not_logged": return "A movement is earned by clean sessions. Tick \"Clean\" on a skill when every rep was owned."
         case "no_pr_logged": return "No PR logged for these standards. Add one under Profile ▸ Benchmarks."
         default: return "Nothing logged for this metric yet."
         }

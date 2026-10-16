@@ -58,6 +58,7 @@ progress:
     primitive: unlocks
     scope: {modalities: [movement_skill, power, strength_endurance]}
     min_sessions: 2
+    require_clean: true      # earned when owned, not when attended
 
 benchmarks:
   - ssst_reps

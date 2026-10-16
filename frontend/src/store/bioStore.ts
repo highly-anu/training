@@ -64,6 +64,8 @@ interface BioStore {
   /** Outcome of a non-set slot — rounds, minutes, kilometres — the fields the analytics engine reads. */
   setExerciseOutcome: (sessionKey: string, exerciseId: string,
     outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number; holdSec?: number }) => void
+  /** Tick (or untick) a skill as practised clean. */
+  setExerciseClean: (sessionKey: string, exerciseId: string, clean: boolean) => void
   setSessionNotes: (sessionKey: string, notes: string, fatigueRating?: FatigueRating) => void
 
   // Daily bio
@@ -311,6 +313,18 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       return {
         sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated },
       }
+    }),
+
+  setExerciseClean: (sessionKey, exerciseId, clean) =>
+    set((s) => {
+      const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
+      const existingEx = existing.exercises[exerciseId] ?? { sets: [] }
+      const updated: SessionPerformanceLog = {
+        ...existing,
+        exercises: { ...existing.exercises, [exerciseId]: { ...existingEx, clean } },
+      }
+      healthApi.saveSessionLog(updated)
+      return { sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated } }
     }),
 
   setExerciseOutcome: (sessionKey, exerciseId, outcome) =>

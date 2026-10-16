@@ -825,6 +825,18 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     twice = run_primitive(e, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
     walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
     check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
+    # require_clean: attendance does not earn it; two clean ticks do.
+    ec = E('u', 'unlocks', 'ido_portal', min_sessions=2, require_clean=True)
+    unticked = run_primitive(ec, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
+    check('require_clean: two attended sessions earn nothing, and say why',
+          not unticked['practised'] and unticked['coverage']['reason'] == 'clean_not_logged',
+          str(unticked['coverage']))
+    clean_logs = {k: _log(v['completedAt'], {'handstand_hold': {'sets': [], 'clean': True}})
+                  for k, v in ido_logs.items()}
+    ticked = run_primitive(ec, _ctx(ido, clean_logs, today=START + timedelta(days=10)))
+    check('two clean sessions earn the hold and open the walk',
+          [p['exerciseId'] for p in ticked['practised']] == ['handstand_hold']
+          and 'handstand_walk' in {a['exerciseId'] for a in ticked['available']})
     check('handstand_hold practised twice opens handstand_walk',
           'handstand_walk' in {a['exerciseId'] for a in twice['available']},
           str([a['exerciseId'] for a in twice['available']][:8]))

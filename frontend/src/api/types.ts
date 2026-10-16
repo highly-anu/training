@@ -898,6 +898,9 @@ export interface ExercisePerformance {
   sets: SetPerformance[]
   rpe?: RPE
   notes?: string
+  /** A skill practised clean — every rep owned. Movements earned counts these
+   *  where the package asks (`require_clean`). */
+  clean?: boolean
   /**
    * Outcomes for slots that are not sets × reps — what the OutcomeLogger
    * writes and what src/progression_tracker.py and the analytics engine
