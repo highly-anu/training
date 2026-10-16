@@ -144,6 +144,11 @@ struct SessionListView: View {
                     Text("This Week")
                         .font(.caption)
                     Spacer()
+                    // Done of the week's sessions, any device — the server's count.
+                    if let week = connectivity.weekDone {
+                        Text("\(week.done)/\(week.sessions)")
+                            .font(.caption2).monospacedDigit()
+                    }
                     Image(systemName: showThisWeek ? "chevron.up" : "chevron.down")
                         .font(.caption2)
                 }

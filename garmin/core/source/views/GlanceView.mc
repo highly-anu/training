@@ -19,6 +19,11 @@ using Toybox.Lang;
 //                                    TODAY  DONE          3 sessions  1:42  17 sets
 //   all done, evening the same ring  TOMORROW             Ruck  90 min
 //
+// On a rest day, in the evening and once the day is done, the label adds the
+// program week's sessions done of its total — "REST DAY  3/5 THIS WK" — from
+// the server's `progress.week` (GlanceCache keeps the two numbers). Before
+// then the day itself is the message, and the label stays its own.
+//
 // Before any training the ring is readiness, which is what matters then; once a
 // session is done it is the day's progress. A session is done when this watch
 // saved it (DayLog) or the server says so (a log or a matched workout from
@@ -30,6 +35,7 @@ class GlanceView extends Ui.GlanceView {
     const GOOD  = 0x10B981;
 
     hidden var _demoReadiness = null;   // a demo day's own readiness, from its glance copy
+    hidden var _localOnly = 0;          // today's sessions done here that the server has not counted
 
     function initialize() {
         // Qualified: this class is also named GlanceView, so the bare name is itself
@@ -43,6 +49,7 @@ class GlanceView extends Ui.GlanceView {
         dc.clear();
 
         var label = "TRAINING";
+        _localOnly = 0;
         var value = "Open to sync";
         var ring = :none;          // :none | :readiness | :progress | :done
         var sessions = null;
@@ -63,12 +70,16 @@ class GlanceView extends Ui.GlanceView {
                 var mins = 0;
                 var sets = 0;
                 var next = null;
+                _localOnly = 0;
                 for (var i = 0; i < n; i += 1) {
                     var s = sessions[i] as Lang.Dictionary;
                     var id = s.hasKey("sessionId") ? s["sessionId"] : null;
                     var d = (s.hasKey("completed") && s["completed"] == true)
                             || (id != null && log.hasKey(id));
                     doneFlags[i] = d;
+                    // Saved on this watch but not yet counted by the server's
+                    // progress (the upload and the fetch race; offline it waits).
+                    if (d && !(s.hasKey("completed") && s["completed"] == true)) { _localOnly += 1; }
                     if (d) {
                         done += 1;
                         if (id != null && log.hasKey(id)) {
@@ -92,17 +103,17 @@ class GlanceView extends Ui.GlanceView {
                 } else if (System.getClockTime().hour >= Config.GLANCE_EVENING_HOUR
                            && tomorrow != null) {
                     ring = :done;
-                    label = "TOMORROW";
+                    label = "TOMORROW" + weekTag(today);
                     value = describeDay(tomorrow);
                 } else {
                     ring = :done;
-                    label = "TODAY  DONE";
+                    label = "TODAY  DONE" + weekTag(today);
                     value = n + ((n == 1) ? " session  " : " sessions  ") + hm(mins)
                           + ((sets > 0) ? ("  " + sets + " sets") : "");
                 }
             } else if (status.equals("ok")) {
                 ring = :readiness;
-                label = "REST DAY";
+                label = "REST DAY" + weekTag(today);
                 value = (tomorrow != null) ? ("Tomorrow: " + describeDay(tomorrow)) : "Recover well";
             }
         }
@@ -149,6 +160,18 @@ class GlanceView extends Ui.GlanceView {
         dc.drawText(tx, ty, fl, clip(dc, label, fl, avail), Gfx.TEXT_JUSTIFY_LEFT);
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
         dc.drawText(tx, ty + hl, fv, clip(dc, value, fv, avail), Gfx.TEXT_JUSTIFY_LEFT);
+    }
+
+    // "  3/5 THIS WK", or nothing when the cache predates `progress` or the
+    // week holds no sessions.
+    hidden function weekTag(today) {
+        var wk = today.hasKey("week") ? today["week"] : null;
+        if (!(wk instanceof Lang.Array) || wk.size() < 2 || wk[0] == null || wk[1] == null || wk[1] == 0) {
+            return "";
+        }
+        var done = wk[0] + _localOnly;
+        if (done > wk[1]) { done = wk[1]; }
+        return "  " + done + "/" + wk[1] + " THIS WK";
     }
 
     // The cache is another day's (stamped with the local date the watch asked for).

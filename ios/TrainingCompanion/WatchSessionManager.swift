@@ -78,8 +78,12 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
             let week = program.weeks[weekIndex]
             let sessions = week.schedule[dayName] ?? []
+            // The server's word on today: what is done on any device, the
+            // week's progress, and each exercise's last time.
+            let day = try? await api.fetchWatchDay(date: todayStr)
             let watchSessions = sessions.enumerated().map { (i, s) in
-                encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality)
+                encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality,
+                              last: day?.last ?? [:])
             }
 
             // Cache session metadata so handleWorkoutComplete can label uploads correctly.
@@ -101,6 +105,14 @@ final class WatchSessionManager: NSObject, ObservableObject {
                 "weeklyOverview": encodedJSON(weeklyOverview),
             ]
             if let readiness { payload["readiness"] = encodedJSON(readiness) }
+            // The server's word on what is done today — a session logged on the
+            // web or matched to another device's workout — and the week's
+            // progress. The watch tracked completion only for what it recorded
+            // itself, so a session done elsewhere still read as to do.
+            if let day {
+                payload["completedIds"] = day.completedIds
+                if let progress = day.progress { payload["progress"] = progress }
+            }
 
             WCSession.default.transferUserInfo(payload)
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
@@ -119,11 +131,16 @@ final class WatchSessionManager: NSObject, ObservableObject {
         weekNumber: Int,
         dayName: String,
         index: Int,
-        modality: String
+        modality: String,
+        last: [String: String] = [:]
     ) -> WatchSession {
         let exercises = s.exercises
             .filter { !$0.injurySkip && $0.exercise != nil }
-            .map { encodeExercise($0, modality: modality) }
+            .map { ea -> WatchExercise in
+                var e = encodeExercise(ea, modality: modality)
+                e.lastTime = last[e.exerciseId]
+                return e
+            }
 
         return WatchSession(
             sessionId:        "\(weekNumber)-\(dayName)-\(index)",

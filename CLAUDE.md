@@ -598,6 +598,20 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   None ships yet.
 - **The glance reads `GlanceCache`'s slim copy** (`todayGlance`), never the
   payload: it runs in 64 KB.
+- **today-session carries `progress`** in every payload, `?spec=1` or not (an
+  older build ignores the key) (`api._watch_progress`): this program
+  week's sessions done / due / in all, the program's done of due, and the
+  methodology's headline sentence read from the cached `/analytics/program`
+  snapshot — never computed on the watch's sync. The Garmin glance adds
+  "3/5 THIS WK" to its label on a rest day, in the evening and once the day is
+  done (GlanceCache keeps the two numbers); the phone forwards the server's
+  completed session ids and `progress` to the Apple Watch, which joins them to
+  what it recorded itself and shows the week's count under This Week. The
+  Garmin app's activity menu has a Progress page (week, programme, the
+  headline); the Apple Watch complication rings the week around today's
+  session. With `?spec=1` each exercise carries `last` — what was done last
+  time ("24kg × 10", `src/last_time.py`) — shown on the Garmin Steps list and
+  under the Apple Watch's current exercise.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the
@@ -812,7 +826,8 @@ Run these after touching engine code or package data:
 SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ownership, start phase, event date, legacy picks
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
-SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1
+SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1, progress
+.venv/bin/python test_last_time.py                       # each exercise's last time, for the watches
 .venv/bin/python tools/check_fidelity.py                 # every philosophy x track x profile against its theory; gates on tools/fidelity_baseline.json
 .venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)

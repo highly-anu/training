@@ -113,6 +113,9 @@ class WorkoutExercise {
     function repsPerRound()    { return g("repsPerRound"); }
     function packLoadKg()      { return g("packLoadKg"); }
     function focus()           { return g("focus"); }
+    // What was done last time ("24kg × 10"), from the server's session logs
+    // (src/last_time.py); null on a first time, a demo day or an older server.
+    function last()            { return g("last"); }
     function rir()             { return g("rir"); }
     // Set on an amrap_movement to name the amrap slot it belongs to.
     function parentSlotRole()  { return g("parentSlotRole"); }

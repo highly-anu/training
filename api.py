@@ -3095,7 +3095,7 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
 
 
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
-                         spec_level: int = 0) -> dict:
+                         spec_level: int = 0, last: dict | None = None) -> dict:
     """One stored session in the watch's shape.
 
     With spec_level >= 1 the session also says which package owns it and
@@ -3129,6 +3129,9 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
         )
         for e, key in zip(exercises, keys):
             e['screen'] = key
+            # What was done last time ("24kg × 10"), src/last_time.py.
+            if last and e.get('exerciseId') in last:
+                e['last'] = last[e['exerciseId']]
         out['packageId'] = package_id
         out['watch'] = _watch_spec.session_identity(package_id)
         out['screens'] = table
@@ -3164,6 +3167,55 @@ def _program_history_uid(vid: str | None, week_index: int, day_name: str, i: int
         return None
     from src import program_history
     return program_history.session_uid(vid, week_index, day_name, i)
+
+
+def _watch_progress(user_id: str, program: dict, weeks: list, start: _date, today: _date,
+                    week_index: int, is_done) -> dict:
+    """Progress for a watch: this program week's sessions done of those due
+    and of all it holds, the program's so far, and the methodology's headline
+    sentence (Today's Progress card).
+
+    The counts are the same done test as each session's `completed` — a log
+    with a completion time or a matched workout — over dates, never the
+    analytics engine, so the morning sync stays a few dict lookups. The
+    headline is the program analytics document's cached copy, which the
+    phone and the web write when they open it; a watch never computes one.
+    """
+    def tally(w_index: int, until: _date | None):
+        done = due = total = 0
+        w = weeks[w_index]
+        for offset in range(7):
+            d = start + _timedelta(days=w_index * 7 + offset)
+            d_name = _DAY_NAMES[d.weekday()]
+            for i, _s in enumerate((w.get('schedule') or {}).get(d_name) or []):
+                total += 1
+                finished = is_done(w_index, d_name, i)
+                done += int(finished)
+                if until is None or d <= until or finished:
+                    due += 1
+        return done, due, total
+
+    w_done, w_due, w_total = tally(week_index, today)
+    p_done = p_due = 0
+    for wi in range(week_index + 1):
+        d, due, _ = tally(wi, today)
+        p_done += d
+        p_due += due
+    out = {
+        'week': {'number': week_index + 1, 'of': len(weeks), 'done': w_done, 'due': w_due, 'sessions': w_total},
+        'program': {'done': p_done, 'due': p_due,
+                    'pct': round(100 * p_done / p_due) if p_due else None},
+    }
+    try:
+        key = f"{start.isoformat()}:{(program.get('sourceGoalIds') or ['-'])[0]}"
+        cached = _health.get_progression_snapshot(user_id, key, 'program')
+        method = (((cached or {}).get('data') or {}).get('methodologies') or [None])[0] or {}
+        h = method.get('headlineSummary')
+        if h:
+            out['headline'] = {k: h.get(k) for k in ('label', 'text', 'trendText', 'status')}
+    except Exception:
+        pass
+    return out
 
 
 @app.get('/api/user/today-session')
@@ -3224,18 +3276,35 @@ def get_today_session():
     except ValueError:
         spec_level = 0
 
+    def is_done(w_index: int, d_name: str, i: int) -> bool:
+        w = weeks[w_index]
+        session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
+        log = session_logs.get(session_key) or {}
+        uid = _program_history_uid(vid, w_index, d_name, i)
+        matched = (uid in matched_uids) if uid else False
+        return bool(log.get('completedAt')) or matched or session_key in matched_keys
+
+    # What was done last time, per exercise: this program's logs and earlier
+    # programs' (a regenerate mints a new version and would otherwise empty
+    # it). Never fails the sync: without it the watch shows no "last".
+    last = None
+    if spec_level >= 1:
+        try:
+            from src import last_time as _last_time
+            last = _last_time.last_by_exercise(
+                list(session_logs.values()) + list(_health.get_session_logs_by_uid(g.user_id).values()),
+                str(today))
+        except Exception as e:
+            app.logger.warning('today-session: last time failed: %s', e)
+
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]
         out = []
         for i, s in enumerate((w.get('schedule') or {}).get(d_name) or []):
             session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
-            log = session_logs.get(session_key) or {}
-            uid = _program_history_uid(vid, w_index, d_name, i)
-            matched = (uid in matched_uids) if uid else False
             out.append(encode_watch_session(
-                s, session_key,
-                completed=bool(log.get('completedAt')) or matched or session_key in matched_keys,
-                spec_level=level,
+                s, session_key, completed=is_done(w_index, d_name, i), spec_level=level,
+                last=last if level >= 1 else None,
             ))
         return out
 
@@ -3285,6 +3354,7 @@ def get_today_session():
         'readiness': readiness,
         'sessions': out_sessions,
         'tomorrow': tomorrow,
+        'progress': _watch_progress(g.user_id, program, weeks, start, today, week_index, is_done),
     }
     if spec_level >= 1:
         body['specVersion'] = _watch_spec.spec_version()

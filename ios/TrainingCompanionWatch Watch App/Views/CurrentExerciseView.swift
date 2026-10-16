@@ -24,6 +24,12 @@ struct CurrentExerciseView: View {
                         Text(exercise.loadDescription)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        // Last time, to beat: "Last: 24kg × 10".
+                        if let last = exercise.lastTime {
+                            Text("Last: \(last)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                         if let note = exercise.loadNote {
                             Text(note)
                                 .font(.caption2)

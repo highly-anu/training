@@ -21,6 +21,19 @@ struct WidgetTodayData: Codable {
     let date: String            // "YYYY-MM-DD" — the day these sessions belong to
     let sessions: [WidgetSession]
     let updatedAt: Date
+    /// Written by the watch app (nil from the phone and from older data): the
+    /// ids of today's sessions done on any device, this program week's sessions
+    /// done and in all (the server's `progress.week`), and readiness 0–100.
+    var completedIds: [String]? = nil
+    var weekDone: Int? = nil
+    var weekSessions: Int? = nil
+    var readinessScore: Int? = nil
+    var readinessSignal: String? = nil
+
+    /// Every one of today's sessions is done.
+    var allDone: Bool {
+        !sessions.isEmpty && sessions.allSatisfy { (completedIds ?? []).contains($0.id) }
+    }
 }
 
 extension WidgetTodayData {

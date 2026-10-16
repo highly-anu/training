@@ -164,6 +164,17 @@ class SessionListView extends Ui.View {
         return title;
     }
     function readiness() { return _readiness; }
+
+    // The server's `progress` for today (week and program counts, the
+    // methodology's headline), or null — a demo day and an older server have
+    // none.
+    function progress() {
+        if (DemoSession.enabled()) { return null; }
+        var t = SyncCache.cachedToday();
+        if (t == null) { return null; }
+        var p = t["progress"];
+        return (p instanceof Lang.Dictionary) ? p : null;
+    }
     function status()    { return _status; }
 
     // The session START would begin, or null.

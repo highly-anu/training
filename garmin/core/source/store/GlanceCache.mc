@@ -17,6 +17,13 @@ module GlanceCache {
         // A demo day carries its own readiness and is never stale; it lives only
         // here, so the real cached day and readiness survive demo mode.
         if (today.hasKey("demo")) { out["demo"] = today["demo"]; out["readiness"] = today["readiness"]; }
+        // This program week's sessions done and in all ("3/5 THIS WK"): two
+        // numbers from the server's `progress.week`, nothing else of it.
+        var progress = today["progress"];
+        if (progress instanceof Lang.Dictionary && progress["week"] instanceof Lang.Dictionary) {
+            var wk = progress["week"] as Lang.Dictionary;
+            out["week"] = [wk["done"], wk["sessions"]];
+        }
         var sessions = today["sessions"];
         if (sessions instanceof Lang.Array) {
             var slim = [];
