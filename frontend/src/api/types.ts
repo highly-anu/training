@@ -1213,6 +1213,7 @@ export interface ExerciseHistoryPoint {
 
 export interface ExerciseExpectedPoint {
   week_number: number
+  week_index?: number
   expected_value: number | null
   unit: string
   metric_type: ProgressionMetricType
@@ -1225,6 +1226,11 @@ export interface ExerciseHistoryItem {
   expected: ExerciseExpectedPoint[]
   /** In a session whose day has come. Absent from an older server. */
   scheduledSoFar?: boolean
+  /** From the stored prescription's slot: what the card measures, in what. */
+  metricType?: ProgressionMetricType
+  unit?: string
+  /** This week's prescription (else the first): what "Target" means. */
+  target?: { value: number | null; weekNumber: number } | null
 }
 
 export interface ExerciseHistoryResponse {

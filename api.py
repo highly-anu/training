@@ -4463,9 +4463,6 @@ def progression_exercises():
     session_logs = _health.get_session_logs(g.user_id)
     ex_filter    = request.args.get('exercise_id')
 
-    constraints = program.get('constraints', {})
-    level       = constraints.get('training_level', 'intermediate')
-    prog_model  = _pt._infer_progression_model(program)
     weeks       = program.get('weeks', [])
 
     # Build matched-workout list for endurance exercise auto-population
@@ -4509,16 +4506,15 @@ def progression_exercises():
     for ex_id, (ex, slot) in ex_index.items():
         if ex_filter and ex_id != ex_filter:
             continue
-        trajectory = _pt.compute_expected_trajectory(
-            exercise=ex, slot=slot, progression_model=prog_model,
-            philosophy_weights=program.get('philosophy_weights') or {},
-            weeks=weeks, level=level,
-        )
+        presc = _pt.prescribed_trajectory(weeks, ex_id, start, today)
         result.append({
             'exerciseId': ex_id,
             'name':       ex.get('name', ex_id),
             'history':    history.get(ex_id, []),
-            'expected':   trajectory,
+            'expected':   presc['expected'],
+            'metricType': presc['metricType'],
+            'unit':       presc['unit'],
+            'target':     presc['target'],
             'scheduledSoFar': ex_id in so_far,
         })
 

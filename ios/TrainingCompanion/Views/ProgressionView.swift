@@ -15,10 +15,12 @@ struct ProgressionView: View {
             }
         }
         .task { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
+        .task { await appState.loadIfStale("exerciseHistory") { await appState.loadExerciseHistory() } }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadProgressionReview()
                 await appState.loadProgramAnalytics()
+                await appState.loadExerciseHistory()
             }
         }
     }
@@ -43,6 +45,9 @@ struct ProgressionView: View {
                     if let benchmarks = doc.benchmarks, !benchmarks.rows.isEmpty {
                         ProgramStandardsCard(benchmarks: benchmarks)
                     }
+                }
+                if let history = appState.exerciseHistory, !history.exercises.isEmpty {
+                    ExerciseProgressSection(response: history, findings: review.exerciseFindings)
                 }
                 if !review.recommendations.isEmpty {
                     recommendationsSection(recommendations: review.recommendations)

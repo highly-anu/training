@@ -68,6 +68,8 @@ final class AppState: ObservableObject {
     // MARK: - Progression
 
     @Published var progressionReview: ProgressionReview? = nil
+    /// Analytics ▸ Progress's exercise cards (`/progression/exercises`).
+    @Published var exerciseHistory: ExerciseHistoryResponse? = nil
     /// `GET /analytics/program` — the methodology scorecard (Analytics ▸ Program).
     @Published var programAnalytics: ProgramAnalytics? = nil
     @Published var isLoadingProgramAnalytics = false
@@ -614,6 +616,16 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             developmentError = error.localizedDescription
             AppLogger.logFromBackground("analytics: development fetch failed — \(error.localizedDescription)")
+        }
+    }
+
+    func loadExerciseHistory() async {
+        guard let api else { return }
+        do {
+            exerciseHistory = try await api.fetchExerciseHistory(today: dayFormatter.string(from: Date()))
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            AppLogger.logFromBackground("progression: exercises fetch failed — \(error.localizedDescription)")
         }
     }
 

@@ -1041,6 +1041,12 @@ and measures — the web's Progress tab:
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; a rung ladder per standard filled to the
   level reached.
+- *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
+  "N in this program · N so far · N with data", a segmented filter on the
+  three (the first that shows something until the athlete picks), and a card
+  per exercise — latest value, this week's prescription as the target, a
+  sparkline, HR from a linked workout, the finding's change line. "No trend
+  yet" when logged but unmeasured, "Not tracked" when nothing is logged.
 
 Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.

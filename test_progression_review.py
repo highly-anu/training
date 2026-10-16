@@ -178,6 +178,30 @@ def test_exercises_scheduled_by_today():
     assert pt.exercises_scheduled_by(weeks, None, '2026-10-19') == set(), 'no start date: nothing is due'
 
 
+
+def test_prescribed_trajectory_reads_the_stored_load():
+    # The cards' expected line is what the program prescribed — a run in
+    # minutes, a lift in kg, the heavier of two days — never a replay that
+    # treats every exercise as sets x reps.
+    def lift(kg):
+        return {'exercise': {'id': 'squat'}, 'slot_type': 'sets_reps', 'load': {'sets': 3, 'reps': 5, 'weight_kg': kg}}
+    run = {'exercise': {'id': 'run'}, 'slot_type': 'time_domain', 'load': {'duration_minutes': 40}}
+    weeks = [{'week_number': 1, 'schedule': {'Monday': [{'exercises': [lift(100)]}],
+                                             'Wednesday': [{'exercises': [lift(102.5), run]}]}},
+             {'week_number': 2, 'schedule': {'Monday': [{'exercises': [lift(105)]}]}},
+             {'week_number': 3, 'schedule': {'Monday': [{'exercises': [lift(107.5), run]}]}}]
+    sq = pt.prescribed_trajectory(weeks, 'squat', '2026-10-12', '2026-10-20')   # Tuesday of week 2
+    assert sq['metricType'] == 'weight' and sq['unit'] == 'kg'
+    assert [p['expected_value'] for p in sq['expected']] == [102.5, 105.0, 107.5]
+    assert sq['target'] == {'value': 105.0, 'weekNumber': 2}, 'this week, not week one'
+    r = pt.prescribed_trajectory(weeks, 'run', '2026-10-12', '2026-10-20')
+    assert r['metricType'] == 'time' and r['unit'] == 'min'
+    assert [p['week_number'] for p in r['expected']] == [1, 3], 'only the weeks it is in'
+    assert r['target'] == {'value': 40.0, 'weekNumber': 1}
+    ahead = pt.prescribed_trajectory(weeks, 'squat', '2026-10-12', '2026-10-01')
+    assert ahead['target'] == {'value': 102.5, 'weekNumber': 1}, 'before the start: the first week'
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

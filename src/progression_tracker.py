@@ -500,6 +500,74 @@ def compute_exercise_history(
 # Expected trajectory
 # ---------------------------------------------------------------------------
 
+# slot type → (metric, unit, the stored load's field for it)
+_PRESCRIBED = {
+    'sets_reps':       ('weight', 'kg', 'weight_kg'),
+    'static_hold':     ('time', 's', 'hold_seconds'),
+    'time_domain':     ('time', 'min', 'duration_minutes'),
+    'skill_practice':  ('time', 'min', 'duration_minutes'),
+    'distance':        ('distance', 'km', 'distance_km'),
+    'amrap':           ('rounds', 'rounds', 'target_rounds'),
+    'emom':            ('rounds', 'rounds', 'target_rounds'),
+    'rounds_for_time': ('rounds', 'rounds', 'target_rounds'),
+}
+
+
+def prescribed_trajectory(weeks: list, exercise_id: str, start_date: str | None = None,
+                          today: str | None = None) -> dict:
+    """What the stored program prescribed for one exercise, week by week.
+
+    The exercise cards' expected line. It was `compute_expected_trajectory`,
+    which re-ran the generator against the assignment's slot — but the stored
+    program has no slot (api._clean_exercise_assignment strips it), so every
+    exercise was replayed as sets × reps and a run's expected line came from a
+    weight calculation. The analytics engine stopped replaying on the same
+    grounds; this reads `ea.load`, as it does.
+
+    Returns {metricType, unit, expected: [{week_number, week_index,
+    expected_value, unit, metric_type}], target: {value, weekNumber} | None}.
+    The target is the prescription of the latest week the exercise has come
+    up in by `today`, else its first week — not week one's, which is what the
+    card used to call the target all program long.
+    """
+    from src.workout_matcher import session_calendar_date
+    metric, unit, field = 'weight', 'kg', 'weight_kg'
+    expected: list = []
+    target = None
+    first = None
+    for wi, week in enumerate(weeks or []):
+        best = None
+        due = False
+        for day, sessions in (week.get('schedule') or {}).items():
+            for session in sessions or []:
+                for ea in session.get('exercises') or []:
+                    if (ea.get('exercise') or {}).get('id') != exercise_id or ea.get('meta'):
+                        continue
+                    st = ea.get('slot_type') or ('static_hold' if (ea.get('load') or {}).get('hold_seconds') is not None
+                                                 else 'sets_reps')
+                    metric, unit, field = _PRESCRIBED.get(st, (metric, unit, field))
+                    v = (ea.get('load') or {}).get(field)
+                    if isinstance(v, (int, float)) and (best is None or v > best):
+                        best = float(v)
+                    if start_date and today:
+                        d = session_calendar_date(start_date, wi, day)
+                        due = due or bool(d and d <= today)
+        if best is None and not any(
+                (ea.get('exercise') or {}).get('id') == exercise_id
+                for ss in (week.get('schedule') or {}).values() for s in ss or [] for ea in s.get('exercises') or []):
+            continue
+        point = {'week_number': week.get('week_number', wi + 1), 'week_index': wi,
+                 'expected_value': best, 'unit': unit, 'metric_type': metric}
+        expected.append(point)
+        if first is None and best is not None:
+            first = point
+        if due and best is not None:
+            target = point
+    target = target or first
+    return {'metricType': metric, 'unit': unit, 'expected': expected,
+            'target': {'value': target['expected_value'], 'weekNumber': target['week_number']} if target else None}
+
+
 def compute_expected_trajectory(
     exercise: dict,
     slot: dict,

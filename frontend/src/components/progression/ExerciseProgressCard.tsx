@@ -9,10 +9,11 @@ import type {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function primaryValue(pt: ExerciseHistoryPoint, metricType: ProgressionMetricType): number | null {
+function primaryValue(pt: ExerciseHistoryPoint, metricType: ProgressionMetricType, unit?: string): number | null {
   switch (metricType) {
     case 'weight':   return pt.best_weight_kg
-    case 'time':     return pt.duration_sec != null ? +(pt.duration_sec / 60).toFixed(1) : null
+    case 'time':     if (pt.duration_sec == null) return null
+                     return unit === 's' ? pt.duration_sec : +(pt.duration_sec / 60).toFixed(1)
     case 'distance': return pt.distance_km
     case 'rounds':   return pt.rounds_completed
     case 'reps':     return pt.best_reps
@@ -94,21 +95,28 @@ interface ExerciseProgressCardProps {
 }
 
 export function ExerciseProgressCard({ item, finding }: ExerciseProgressCardProps) {
+  // The finding's metric when the engine measures it, else the stored
+  // prescription's slot (the server's `metricType`).
   const metricType: ProgressionMetricType =
-    finding?.metric_type ?? item.expected[0]?.metric_type ?? 'weight'
-  const unit = finding?.unit ?? item.expected[0]?.unit ?? METRIC_LABELS[metricType]
+    finding?.metric_type ?? item.metricType ?? item.expected[0]?.metric_type ?? 'weight'
+  const unit = finding?.unit ?? item.unit ?? item.expected[0]?.unit ?? METRIC_LABELS[metricType]
 
   const status: ProgressionStatus = finding?.status ?? 'insufficient_data'
-  const badge = STATUS_BADGE[status]
+  // Logged but without a trend is not "not tracked".
+  const badge = status === 'insufficient_data' && item.history.length > 0
+    ? { ...STATUS_BADGE.insufficient_data, label: 'No trend yet' }
+    : STATUS_BADGE[status]
   const sparkColor = STATUS_SPARKLINE_COLOR[status]
 
   // Sparkline values: primary metric extracted from each history point
   const sparkValues = item.history
-    .map((pt) => primaryValue(pt, metricType))
+    .map((pt) => primaryValue(pt, metricType, unit))
     .filter((v): v is number => v !== null)
 
   const latestActual = finding?.actual_value ?? sparkValues[sparkValues.length - 1] ?? null
-  const target = finding?.expected_value ?? item.expected.find((e) => e.expected_value != null)?.expected_value ?? null
+  // This week's prescription — it read week one's all program long.
+  const target = finding?.expected_value ?? item.target?.value
+    ?? item.expected.find((e) => e.expected_value != null)?.expected_value ?? null
 
   const hasData = latestActual !== null
   const fromImport = item.history.length > 0 && item.history.every((p) => p.source === 'matched_workout')
