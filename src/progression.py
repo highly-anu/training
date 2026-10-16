@@ -76,10 +76,17 @@ def _linear_load(exercise: dict, slot: dict, week: int,
     return {'sets': sets, 'reps': reps, 'weight_kg': _round_kg(weight), 'load_note': load_note}
 
 
-def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool) -> dict:
+def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool,
+                        deload_keep: float | None = None) -> dict:
     sets = slot.get('sets', 3)
     reps = slot.get('reps', 5)
     target_rpe = 6 if is_deload else int(slot.get('rpe_target', 8))
+    if is_deload:
+        # A deload cuts volume as well as effort, the same share _linear_load
+        # keeps (the slot's own scaling first, then the framework's protocol).
+        deload_sc = slot.get('scaling', {}) if isinstance(slot.get('scaling'), dict) else {}
+        vol_mult = deload_sc.get('volume_multiplier', deload_keep if deload_keep is not None else 0.6)
+        sets = max(1, round(sets * vol_mult))
     rir = 10 - target_rpe  # reps in reserve
 
     base_load = (exercise.get('starting_load_kg') or {}).get(level)
@@ -341,7 +348,7 @@ def _calculate_load(
         if progression_model in ('linear_load', 'volume_block', 'density'):
             return _linear_load(exercise, slot, week_number, training_level, is_deload, deload_keep)
         elif progression_model == 'rpe_autoregulation':
-            return _rpe_autoregulation(exercise, slot, training_level, is_deload)
+            return _rpe_autoregulation(exercise, slot, training_level, is_deload, deload_keep)
         else:
             sets = slot.get('sets', 3)
             reps = slot.get('reps', 5)

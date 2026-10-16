@@ -178,6 +178,9 @@ def set_load(entry, ctx) -> dict:
         })
     exercises.sort(key=lambda e: -len(e['series']))
 
+    # Measured = a session that put a point on some exercise's final series:
+    # reps read on a lift that turned out to carry kg add nothing.
+    measured = len({p['x'] for e in exercises for p in e['series']})
     lead = exercises[0] if exercises else None
     reason = None
     if not measured and in_scope:

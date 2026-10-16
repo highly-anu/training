@@ -56,7 +56,10 @@ progress:
   - id: skills
     label: Movements earned
     primitive: unlocks
-    scope: {modalities: [movement_skill, power, strength_endurance]}
+    # Skill-practice slots: where the movements are learned, and where both
+    # clients offer the Clean tick. The ballistics' timed blocks are measured
+    # by ballistic_time and the cadences.
+    scope: {modalities: [movement_skill, power, strength_endurance], slot_types: [skill_practice]}
     min_sessions: 2
     require_clean: true      # earned when owned, not when attended
 

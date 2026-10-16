@@ -1077,6 +1077,10 @@ def test_cache_key_sees_set_values_and_specs() -> None:
     b = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs2), {}, 'r1')
     check('a set edited in place changes the key', a != b)
     check('the same inputs give the same key', a == api._program_analytics_hash(inp, {}, 'r1'))
+    logs3 = copy.deepcopy(logs)
+    logs3['1-Monday-0']['exercises']['back_squat']['clean'] = True
+    c = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs3), {}, 'r1')
+    check('ticking Clean changes the key', a != c)
     real = api._SPECS_DIGEST
     api._SPECS_DIGEST = 'something-else'
     check('a changed spec digest changes the key', api._program_analytics_hash(inp, {}, 'r1') != a)
