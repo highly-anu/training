@@ -617,8 +617,10 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   Garmin app's activity menu has a Progress page (week, programme, the
   headline); the Apple Watch complication rings the week around today's
   session. With `?spec=1` each exercise carries `last` — what was done last
-  time ("24kg × 10", `src/last_time.py`) — shown on the Garmin Steps list and
-  under the Apple Watch's current exercise.
+  time ("24kg × 10", `src/last_time.py`) — shown on the Garmin Steps list, in
+  a sets workout until its first set is done (the vocabulary's
+  `last_then_next` line, the sets template's default), and under the Apple
+  Watch's current exercise.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the

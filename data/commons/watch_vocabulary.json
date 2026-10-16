@@ -19,7 +19,7 @@
     "sets": {
       "doc": "Counted sets: LAP ends a set, rest follows.",
       "actions": ["complete_set", "skip"],
-      "defaults": { "title": ["name", "side", "load"], "a": "reps", "b": "rpe_or_set", "gauge": "set", "lines": "next_step", "lap": "complete_set" }
+      "defaults": { "title": ["name", "side", "load"], "a": "reps", "b": "rpe_or_set", "gauge": "set", "lines": "last_then_next", "lap": "complete_set" }
     },
     "hold": {
       "doc": "Timed holds: LAP starts the hold and ends it early.",
@@ -92,6 +92,7 @@
   },
   "lines": {
     "next_step": "Next: the step after this one.",
+    "last_then_next": "Last time (the exercise's `last`, e.g. 24kg × 10) until its first set is done, then next_step.",
     "focus": "The prescription's focus, else next_step.",
     "components": "The movements of one round, else next_step.",
     "ladder_total": "Reps so far on the ladder, then next_step.",

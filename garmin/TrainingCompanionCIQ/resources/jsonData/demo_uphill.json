@@ -211,7 +211,7 @@
        "a": "reps",
        "b": "rpe_or_set",
        "gauge": "set",
-       "lines": "next_step",
+       "lines": "last_then_next",
        "lap": "complete_set",
        "template": "sets"
       },
@@ -516,7 +516,7 @@
        "a": "reps",
        "b": "rpe_or_set",
        "gauge": "set",
-       "lines": "next_step",
+       "lines": "last_then_next",
        "lap": "complete_set",
        "template": "sets"
       }

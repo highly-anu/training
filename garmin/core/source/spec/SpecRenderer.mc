@@ -173,6 +173,14 @@ class SpecRenderer extends Renderer {
         if (id.equals("focus")) {
             return (ex.focus() != null) ? [ex.focus(), next] : Renderer.lines(ctl, ex);
         }
+        if (id.equals("last_then_next")) {
+            // What was done last time, to beat — until this exercise's first
+            // set is done (and never over a rest, which says what comes next).
+            if (ex.last() != null && ctl.setsDoneFor(ex) == 0 && ctl.state() != WorkoutController.RESTING) {
+                return ["Last time", ex.last()];
+            }
+            return Renderer.lines(ctl, ex);
+        }
         if (id.equals("components")) {
             var comps = ctl.componentsForCurrent();
             if (comps == null || comps.size() == 0) { return Renderer.lines(ctl, ex); }
