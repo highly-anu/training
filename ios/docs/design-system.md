@@ -1007,17 +1007,33 @@ against what the program is *for*, per methodology, in its own currency
 (`ProgramAnalyticsModels.swift`, every section decoded on its own so a failed
 or future section cannot blank the screen):
 
-- *Where you are*: methodology, framework, phase and week, plan fidelity.
+The sections, titles and order are the web's (`components/analytics/ProgramTab.tsx`);
+the phone lacked Standards and Session shapes, half of Movement and the
+intensity footer until 2026-10-16.
+
+- *Program*: methodology, how it progresses, framework, phase and week, plan
+  fidelity.
 - *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
   row per modality with completion against the plan to date and the weekly
   dose against the framework's range.
-- *Intensity*: status, coverage and the weekly zone split when there is one.
-- A section per methodology: its measurable count, then a `ProgressEntryCard`
-  per metric — status badge, `CoverageNoticeView` ("not measurable yet, and
-  why"), the exercise picker, the actual-against-expected chart (actual green,
-  expected indigo dashed, deload points hollow), the stall line, the evidence.
-  Unlocks and benchmark-level entries render their own bodies.
-- *Movement balance* and *Load* (TSB read in the phase's terms).
+- *Intensity split*: **minutes** per bucket per week (the week keys say `_pct`
+  but hold minutes), then each bucket's actual share against the framework's
+  (`byFramework`), and % of 1RM for max-effort frameworks.
+- A section per methodology: measurable of applicable, "About this
+  methodology" (§6.18), then a `ProgressEntryCard` per metric that applies —
+  status badge, `CoverageNoticeView` ("not measurable yet, and why"), the
+  exercise picker, the actual-against-expected chart (actual green, expected
+  indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
+  and benchmark-level entries render their own bodies; entries the program
+  does not schedule are one "Not in this program" line.
+- *Movement*: sets and minutes done against planned by pattern (planned the
+  grey track, done over it), balance ratios, unilateral share, assumed minutes.
+- *Standards* (`ProgramStandardsCard`, `Views/AnalyticsProgramSections.swift`):
+  the program's own (`primary`), the rest behind "More standards"; a rung
+  ladder per standard filled to the level reached.
+- *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
+  the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
+- *Load* (TSB read in the phase's terms).
 
 Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.

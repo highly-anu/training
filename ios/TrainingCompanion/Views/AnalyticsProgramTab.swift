@@ -9,6 +9,7 @@ import Charts
 struct AnalyticsProgramTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
+    @State private var methodologySheet: PhilosophyCard?
 
     var body: some View {
         Group {
@@ -34,6 +35,10 @@ struct AnalyticsProgramTab: View {
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }
+        .task { await appState.loadPhilosophiesIfNeeded() }
+        .sheet(item: $methodologySheet) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
     }
 
     // MARK: - Layout
@@ -47,7 +52,9 @@ struct AnalyticsProgramTab: View {
                 ForEach(doc.methodologies) { method in
                     methodologySection(method, doc: doc)
                 }
-                if let movement = doc.movement, !movement.balance.isEmpty { MovementCard(movement: movement) }
+                if let movement = doc.movement, !movement.isEmpty { MovementCard(movement: movement) }
+                if let benchmarks = doc.benchmarks, !benchmarks.rows.isEmpty { ProgramStandardsCard(benchmarks: benchmarks) }
+                if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
                 if let load = doc.load { LoadCard(load: load) }
                 if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
                 Spacer(minLength: 24)
@@ -78,10 +85,15 @@ struct AnalyticsProgramTab: View {
     // MARK: - Frame
 
     private func frameCard(_ frame: ProgramAnalytics.Frame) -> some View {
-        AnalyticsCard(header: "Where you are") {
+        AnalyticsCard(header: "Program") {
             VStack(alignment: .leading, spacing: 8) {
                 Text(frame.philosophies.map(\.name).joined(separator: " + "))
                     .font(.subheadline).fontWeight(.semibold)
+                if let lead = frame.philosophies.first, let how = lead.progressionPhilosophy {
+                    Text("Progresses by \(how.replacingOccurrences(of: "_", with: " "))"
+                         + (lead.intensityModel.map { " · \($0.replacingOccurrences(of: "_", with: " "))" } ?? ""))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if let framework = frame.framework {
                     Text(framework.name)
                         .font(.caption).foregroundStyle(.secondary)
@@ -136,8 +148,13 @@ struct AnalyticsProgramTab: View {
         }
     }
 
+    /// Up to two decimals, trailing zeros dropped: ×BW standards sit at
+    /// 0.75 and 1.25, which one decimal showed as 0.8 and 1.2.
     static func number(_ v: Double) -> String {
-        v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v)
+        if v == v.rounded() { return String(Int(v)) }
+        var s = String(format: "%.2f", v)
+        while s.hasSuffix("0") { s.removeLast() }
+        return s
     }
 
     // MARK: - Methodology
@@ -148,9 +165,24 @@ struct AnalyticsProgramTab: View {
         // An entry no session of this program is in scope for gets a line, not a card.
         let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
         let elsewhere = mine.filter { !$0.applies }
+        let card = appState.philosophies.first { $0.id == method.philosophy }
         return VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(name).font(.subheadline).fontWeight(.semibold)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(name).font(.subheadline).fontWeight(.semibold)
+                    Spacer()
+                    // The web links into Explore; the phone's methodology
+                    // reference is the sheet (design-system §6.18).
+                    if let card {
+                        Button { methodologySheet = card } label: {
+                            HStack(spacing: 2) {
+                                Text("About this methodology")
+                                Image(systemName: "chevron.right").imageScale(.small)
+                            }
+                        }
+                        .font(.caption2)
+                    }
+                }
                 HStack(spacing: 6) {
                     Text("\(method.measurable) of \(method.applicable ?? method.total) metrics measurable")
                     if method.weight < 1 { Text("· \(Int((method.weight * 100).rounded()))% of the blend") }
@@ -285,34 +317,41 @@ private struct IntensityCard: View {
     private struct Slice: Identifiable {
         let week: Int
         let zone: String
-        let pct: Double
+        let minutes: Double
         var id: String { "\(week)-\(zone)" }
     }
 
+    /// The server's bucket keys, labels and the chart's colours.
+    private static let buckets: [(key: String, label: String, color: Color)] = [
+        ("zone1_2_pct", "Z1–2", .green), ("zone3_pct", "Z3", .yellow),
+        ("zone4_5_pct", "Z4–5", .orange), ("max_effort_pct", "Max effort", .red),
+    ]
+
+    /// Minutes per bucket per week. The week fields carry `_pct` in their
+    /// keys but hold minutes; this chart called them "Share" and drew them
+    /// against a % axis until 2026-10-16.
     private var slices: [Slice] {
         intensity.weeks.flatMap { w in
-            [Slice(week: w.week, zone: "Z1–2", pct: w.zone12Pct),
-             Slice(week: w.week, zone: "Z3", pct: w.zone3Pct),
-             Slice(week: w.week, zone: "Z4–5", pct: w.zone45Pct),
-             Slice(week: w.week, zone: "Max effort", pct: w.maxEffortPct)]
+            [Slice(week: w.week, zone: "Z1–2", minutes: w.zone12Pct),
+             Slice(week: w.week, zone: "Z3", minutes: w.zone3Pct),
+             Slice(week: w.week, zone: "Z4–5", minutes: w.zone45Pct),
+             Slice(week: w.week, zone: "Max effort", minutes: w.maxEffortPct)]
         }
     }
 
     var body: some View {
-        AnalyticsCard(header: "Intensity") {
+        AnalyticsCard(header: "Intensity split") {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    if let dev = intensity.maxDeviationPts, intensity.status != "insufficient_data" {
-                        Text("Largest deviation from plan: \(Int(dev.rounded())) pts")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
+                HStack(alignment: .top) {
+                    Text("Minutes per bucket, against what the framework prescribes.")
+                        .font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     AnalyticsStatusBadge(status: intensity.status)
                 }
                 if let coverage = intensity.coverage { CoverageNoticeView(coverage: coverage) }
                 if !intensity.weeks.isEmpty {
                     Chart(slices) { slice in
-                        BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Share", slice.pct))
+                        BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
                             .foregroundStyle(by: .value("Zone", slice.zone))
                     }
                     .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
@@ -321,13 +360,32 @@ private struct IntensityCard: View {
                         AxisMarks(position: .leading) { value in
                             AxisValueLabel {
                                 if let v = value.as(Double.self) {
-                                    Text("\(Int(v))%").font(.caption2).foregroundStyle(.secondary)
+                                    Text("\(Int(v)) min").font(.caption2).foregroundStyle(.secondary)
                                 }
                             }
                         }
                     }
                     .chartLegend(position: .bottom, spacing: 6)
                     .frame(height: 160)
+                }
+                if let current = intensity.byFramework.last, let planned = current.plannedPct,
+                   let dev = current.deviationPts {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Self.buckets, id: \.key) { b in
+                            let d = dev[b.key] ?? 0
+                            HStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 2).fill(b.color).frame(width: 8, height: 8)
+                                Text("\(b.label) \(AnalyticsProgramTab.number((current.actualPct[b.key] ?? nil) ?? 0))% vs \(AnalyticsProgramTab.number(planned[b.key] ?? 0))%")
+                                Text("(\(d > 0 ? "+" : "")\(AnalyticsProgramTab.number(d)))")
+                                    .foregroundStyle(abs(d) > 10 ? Color.yellow : Color.secondary)
+                            }
+                        }
+                    }
+                    .font(.caption2).foregroundStyle(.secondary)
+                }
+                if let pct = intensity.pct1rm, let mean = pct.meanPct {
+                    Text("Working sets averaged \(AnalyticsProgramTab.number(mean))% of estimated 1RM across \(pct.sessions) logged lifts.")
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
             }
         }
@@ -466,7 +524,7 @@ struct ProgressEntryCard: View {
     private var unlocksBody: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.programTotal.map { "Practised (\(entry.practised.count) of \($0) in this program)" }
+                Text(entry.programTotal.flatMap { $0 > 0 ? "Practised (\(entry.practised.count) of \($0) in this program)" : nil }
                      ?? "Practised (\(entry.practised.count))").font(.caption).fontWeight(.semibold)
                 ForEach(entry.practised.prefix(6)) { p in
                     Text(p.sessions.map { "\(p.name) · \($0)×" } ?? p.name)
@@ -549,11 +607,15 @@ private struct MovementCard: View {
     let movement: ProgramAnalytics.Movement
 
     var body: some View {
-        AnalyticsCard(header: "Movement balance") {
-            VStack(alignment: .leading, spacing: 6) {
+        AnalyticsCard(header: "Movement") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Done against planned, by pattern. Sets and minutes are kept apart.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let sets = movement.sets, !sets.rollups.isEmpty { bars("Sets", sets) }
+                if let minutes = movement.minutes, !minutes.rollups.isEmpty { bars("Minutes", minutes) }
                 ForEach(movement.balance) { pair in
                     HStack {
-                        Text("\(pair.a) / \(pair.b)".replacingOccurrences(of: "_", with: " "))
+                        Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
                             .font(.caption)
                         if pair.declared {
                             Text("declared").font(.caption2).foregroundStyle(.secondary)
@@ -565,6 +627,43 @@ private struct MovementCard: View {
                             .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
                     }
                 }
+                if let unilateral = movement.unilateralShare?.done {
+                    Text("Unilateral \(AnalyticsProgramTab.number(unilateral))%")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if let assumed = movement.minutes?.assumed, assumed > 0 {
+                    Text("\(AnalyticsProgramTab.number(assumed)) min assumed from completed-but-unmatched sessions.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    /// Planned as the grey track, done over it, both against the largest row.
+    private func bars(_ title: String, _ table: ProgramAnalytics.Movement.Table) -> some View {
+        let rows = table.rows
+        let top = max(rows.map { max($0.value.planned, $0.value.done) }.max() ?? 1, 1)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary)
+            ForEach(rows, id: \.pattern) { row in
+                HStack(spacing: 8) {
+                    Text(row.pattern.capitalized).font(.caption2).foregroundStyle(.secondary)
+                        .frame(width: 70, alignment: .leading)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color(.systemFill)).frame(height: 6)
+                            Capsule().fill(Color(.systemGray3))
+                                .frame(width: geo.size.width * row.value.planned / top, height: 6)
+                            Capsule().fill(Color.accentColor)
+                                .frame(width: geo.size.width * min(row.value.done, top) / top, height: 6)
+                        }
+                    }
+                    .frame(height: 6)
+                    Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
+                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned)) \(title.lowercased())")
             }
         }
     }
