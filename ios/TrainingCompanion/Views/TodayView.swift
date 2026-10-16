@@ -101,7 +101,7 @@ struct TodayView: View {
                 // The header names the program's methodology; the catalog is
                 // static and small.
                 await appState.loadPhilosophiesIfNeeded()
-                // The development card's completion is the program scorecard.
+                // Both cards below read the program's analytics document.
                 if appState.programAnalytics == nil { await appState.loadProgramAnalytics() }
             }
         }
@@ -116,8 +116,8 @@ struct TodayView: View {
                 todaySection
                 suggestionsSection
                 readinessSection
-                developmentSection
-                progressionSection
+                adherenceSection
+                progressSection
                 Spacer(minLength: 40)
             }
             .padding()
@@ -574,35 +574,47 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Development Section
+    // MARK: - Adherence Section
 
-    private var developmentSection: some View {
+    /// Am I doing the plan? The program scorecard — completion so far, this
+    /// week, the last four weeks — under the scorecard's own verdict: under
+    /// 70 % of the committed work is off plan whatever the total says. Called
+    /// Development until 2026-10-16, when it had no tap target and its badge
+    /// was a threshold on the total, so Today could read "On Track" while
+    /// Analytics ▸ Program said off plan. The web's `AdherenceWidget`.
+    private var adherenceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Development")
-            developmentCard
+            sectionLabel("Adherence")
+            adherenceCard
         }
     }
 
-    /// The scorecard, or why there is none. "0 % · Off Track" is a verdict;
-    /// it used to stand in for a document still loading, one that failed, one
-    /// from an older server without counts, and a week whose first session
-    /// is still ahead.
+    /// The scorecard, or why there is none. "0 % · Off plan" is a verdict;
+    /// it must not stand in for a document still loading, one that failed,
+    /// one from an older server without counts, or a week whose first
+    /// session is still ahead.
     @ViewBuilder
-    private var developmentCard: some View {
+    private var adherenceCard: some View {
         if let stats = complianceStats, stats.scheduled > 0 {
-            developmentScoreCard(stats)
+            Button {
+                router.showAnalytics(.program)
+            } label: {
+                adherenceScoreCard(stats)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens Analytics, Program")
         } else if complianceStats != nil {
-            developmentNote(icon: "calendar", title: "No sessions due yet",
-                            detail: "Completion counts from the first session whose day has come.")
+            todayNote(icon: "calendar", title: "No sessions due yet",
+                      detail: "Completion counts from the first session whose day has come.")
         } else if appState.isLoadingProgramAnalytics {
-            developmentNote(icon: nil, title: "Measuring the program…", detail: nil)
+            todayNote(icon: nil, title: "Measuring the program…", detail: nil)
         } else {
-            developmentNote(icon: "chart.bar.xaxis", title: "Not measured yet",
-                            detail: "The program's scorecard is not available — pull to refresh.")
+            todayNote(icon: "chart.bar.xaxis", title: "Not measured yet",
+                      detail: "The program's scorecard is not available — pull to refresh.")
         }
     }
 
-    private func developmentNote(icon: String?, title: String, detail: String?) -> some View {
+    private func todayNote(icon: String?, title: String, detail: String?) -> some View {
         HStack(spacing: 12) {
             if let icon {
                 Image(systemName: icon).foregroundStyle(.secondary)
@@ -623,8 +635,8 @@ struct TodayView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private func developmentScoreCard(_ stats: ComplianceStats) -> some View {
-        let color = complianceColor(stats.overall)
+    private func adherenceScoreCard(_ stats: ComplianceStats) -> some View {
+        let color = AnalyticsStatusStyle.color(stats.verdict)
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
@@ -633,11 +645,11 @@ struct TodayView: View {
                         Text("\(stats.overall)")
                             .font(.system(size: 42, weight: .bold, design: .rounded))
                             .foregroundStyle(color)
-                        Text("% compliance")
+                        Text("% done")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    Text(complianceLabel(stats.overall))
+                    Text(AnalyticsStatusStyle.label(stats.verdict))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(color)
@@ -648,7 +660,7 @@ struct TodayView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     readinessStat(label: "Done", value: "\(stats.completed)")
-                    readinessStat(label: "Scheduled", value: "\(stats.scheduled)")
+                    readinessStat(label: "Due", value: "\(stats.scheduled)")
                     if let trend = stats.weekTrend {
                         HStack(spacing: 4) {
                             Image(systemName: trend >= 0 ? "arrow.up.right" : "arrow.down.right")
@@ -659,7 +671,17 @@ struct TodayView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
+            }
+
+            if let cw = stats.currentWeek {
+                Text("This week: \(cw.completed) of \(cw.due) due so far · \(cw.total) in the week"
+                     + ((cw.isDeload ?? false) ? " · deload" : ""))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if !stats.weekRows.isEmpty {
@@ -678,7 +700,7 @@ struct TodayView: View {
                                         .frame(height: 6)
                                     RoundedRectangle(cornerRadius: 3)
                                         .fill(complianceColor(row.pct))
-                                        .frame(width: geo.size.width * CGFloat(row.pct) / 100, height: 6)
+                                        .frame(width: geo.size.width * CGFloat(min(row.pct, 100)) / 100, height: 6)
                                 }
                             }
                             .frame(height: 6)
@@ -704,6 +726,8 @@ struct TodayView: View {
         let overall: Int
         let completed: Int
         let scheduled: Int
+        let verdict: String               // the scorecard's headline: on_plan | off_plan | not_started
+        let currentWeek: ProgramAnalytics.Scorecard.CurrentWeek?
         let weekTrend: Int?
         let weekRows: [WeekRow]
         struct WeekRow { let weekIndex: Int; let weekNumber: Int; let pct: Int }
@@ -712,9 +736,8 @@ struct TodayView: View {
     /// The server's completion (`/analytics/program` scorecard), the number
     /// Analytics ▸ Program and the web's Today card show. A session counts
     /// when it was logged complete or has a matched workout, and only
-    /// sessions whose day has come count as scheduled — this card used to
-    /// count the whole current week, so the days ahead read as missed.
-    /// Nil when there is no scorecard with counts to show.
+    /// sessions whose day has come count as due. Nil when there is no
+    /// scorecard with counts to show.
     private var complianceStats: ComplianceStats? {
         guard let sc = appState.programAnalytics?.scorecard, sc.plannedSessions != nil else {
             return nil
@@ -723,115 +746,89 @@ struct TodayView: View {
         let trend = rows.count >= 2 ? rows[rows.count - 1].pct - rows[rows.count - 2].pct : nil
         return ComplianceStats(overall: Int((sc.overallPct ?? 0).rounded()),
                                completed: sc.completedSessions ?? 0, scheduled: sc.plannedSessions ?? 0,
+                               verdict: sc.headline, currentWeek: sc.currentWeek,
                                weekTrend: trend, weekRows: rows)
     }
 
+    /// A week's bar: 70 % and 45 %, as on the web.
     private func complianceColor(_ pct: Int) -> Color {
         if pct >= 70 { return .green }
         if pct >= 45 { return .yellow }
         return .red
     }
 
-    private func complianceLabel(_ pct: Int) -> String {
-        if pct >= 70 { return "On Track" }
-        if pct >= 45 { return "Mixed" }
-        return "Off Track"
-    }
+    // MARK: - Progress Section
 
-    // MARK: - Progression Section
-
-    private var progressionSection: some View {
+    /// Is the training working, in the methodology's own currency — the
+    /// headline of the program's first methodology, worded by the server
+    /// (`headlineSummary`) so the web's `ProgressWidget` says the same
+    /// sentence. It used to show the progression review's score, which was
+    /// the adherence number until a measure had a trend; the score stays on
+    /// Analytics ▸ Progress, which this card opens.
+    private var progressSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Progression")
-            if let review = appState.progressionReview {
-                progressionCard(review: review)
+            sectionLabel("Progress")
+            if let method = appState.programAnalytics?.methodologies.first,
+               let summary = method.headlineSummary {
+                progressCard(summary, methodology: appState.programAnalytics?.frame?.philosophies
+                                .first { $0.id == method.philosophy }?.name)
+            } else if appState.isLoadingProgramAnalytics {
+                todayNote(icon: nil, title: "Measuring the program…", detail: nil)
             } else {
-                Text("Log sessions to track progression.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 4)
+                todayNote(icon: "chart.line.uptrend.xyaxis", title: "Nothing measured yet",
+                          detail: "Complete a few sessions and this program's own measure appears here.")
             }
         }
     }
 
-    private func progressionCard(review: ProgressionReview) -> some View {
-        let score = review.overallScore
-        let band = ProgressionScore.band(review)
-        let color = ProgressionScore.color(band?.id)
+    private func progressCard(_ h: ProgramAnalytics.HeadlineSummary, methodology: String?) -> some View {
+        let color = AnalyticsStatusStyle.color(h.status)
+        let trendIcon = h.trendDirection == "improving" ? "arrow.up.right"
+            : h.trendDirection == "declining" ? "arrow.down.right" : "arrow.right"
 
-        // The review lives in Analytics ▸ Progress; this card is the §6.9
-        // whole-card link to it, not a second copy of the screen.
         return Button {
             router.showAnalytics(.progress)
         } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if let s = score {
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text("\(s)")
-                                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                                    .foregroundStyle(color)
-                                Text("/ 100")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            if let band {
-                                Text(band.label)
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(color)
-                                    .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(color.opacity(0.12))
-                                    .clipShape(Capsule())
-                            }
-                            if let reason = review.scoreStatus?.reason {
-                                Text(reason)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        } else {
-                            Text("Insufficient data")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(h.label).font(.subheadline).fontWeight(.semibold)
                     Spacer()
+                    if h.text != nil {
+                        Text(AnalyticsStatusStyle.label(h.status))
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(color)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(color.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
-
-                if !review.exerciseFindings.isEmpty {
-                    Divider()
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(review.exerciseFindings.prefix(3)) { finding in
-                            HStack(spacing: 6) {
-                                Text(progressionStatusIcon(finding.status))
-                                    .font(.caption2)
-                                    .foregroundStyle(progressionStatusColor(finding.status))
-                                    .frame(width: 12, alignment: .center)
-                                Text(finding.name)
-                                    .font(.caption2)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                Text(finding.changeSummary)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
+                if let methodology {
+                    Text(methodology).font(.caption2).foregroundStyle(.secondary)
                 }
-
-                if let rec = review.recommendations.first {
-                    Text("· \(rec)")
-                        .font(.caption2)
+                if let text = h.text {
+                    Text(text)
+                        .font(.system(.title3, design: .rounded)).fontWeight(.bold)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let trend = h.trendText {
+                        Label(trend, systemImage: trendIcon)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text(h.inScope == 0
+                         ? "None of the sessions it measures has been done yet."
+                         : AnalyticsStatusStyle.coverageReason(h.reason))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(.background.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
@@ -841,25 +838,6 @@ struct TodayView: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Opens Analytics, Progress")
-    }
-
-    private func progressionStatusIcon(_ status: String) -> String {
-        switch status {
-        case "ahead":            return "↑"
-        case "on_track":         return "✓"
-        case "behind":           return "↓"
-        case "stalled":          return "⚠"
-        default:                 return "–"
-        }
-    }
-
-    private func progressionStatusColor(_ status: String) -> Color {
-        switch status {
-        case "ahead", "on_track": return .green
-        case "behind":            return .yellow
-        case "stalled":           return .red
-        default:                  return .secondary
-        }
     }
 
     // MARK: - Shared Helpers

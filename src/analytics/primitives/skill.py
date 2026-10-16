@@ -6,11 +6,15 @@ the graph: every exercise's `requires` and `unlocks`. But skill sessions are
 `skill_practice` / `time_domain` slots that log no sets, so this counts at
 session granularity: an exercise is *practised* once it has appeared in
 `min_sessions` completed sessions, and an exercise becomes *available* when
-everything it requires is practised (or seeded for the athlete's level).
+practice opens it: everything it requires is practised or known at the
+athlete's level (the generator's own resolution), and the level alone had not
+already opened it.
 """
 from __future__ import annotations
 
 from src import loader
+from src import selector as _selector
+from src.analytics import spec as spec_mod
 from src.analytics import trend as trend_mod
 from src.analytics.primitives import coverage, primitive, result, scoped_hits, trend_dict
 from src.provenance import resolve_source_policy
@@ -43,25 +47,36 @@ def unlocks(entry, ctx) -> dict:
 
     policy = resolve_source_policy(ctx.goal)
     level = str(ctx.constraints.get('training_level') or 'intermediate')
-    seeds: set[str] = set()
-    for pkg, by_level in loader.load_level_seeds().items():
-        if pkg in policy.allowed_packages or not policy.owner_packages:
-            seeds |= set(by_level.get(level) or ())
-    satisfied = practised | seeds
-
+    seeds = {pkg: by_level for pkg, by_level in loader.load_level_seeds().items()
+             if pkg in policy.allowed_packages or not policy.owner_packages}
     universe, _ = loader.load_all_exercises()
+    pool = {ex_id: ex for ex_id, ex in universe.items()
+            if not policy.owner_packages or set(ex.get('_packages') or []) & policy.allowed_packages}
+    # What the generator already treats as open at this level — the same
+    # resolution, concepts and seeds it selects with — and what is open once
+    # the practised movements count too. A movement is "now available" when
+    # practice opened it, not when the level granted it on day one: before, the
+    # level's concepts (hip_hinge, bracing_mechanics…) were never consulted, so
+    # Wildman's swing and press read as locked for an intermediate who was
+    # already being programmed them.
+    by_level = _selector._get_unlocked(level, pool, seeds)
+    by_practice = _selector._get_unlocked(level, pool, seeds, also_known=practised)
+    satisfied = practised | by_practice | by_level | _selector._level_known(level, seeds)
     available, locked = [], []
-    for ex_id, ex in universe.items():
-        if policy.owner_packages and not (set(ex.get('_packages') or []) & policy.allowed_packages):
-            continue
+    for ex_id, ex in pool.items():
         reqs = list(ex.get('requires') or [])
-        if not reqs or ex_id in practised:
+        if not reqs or ex_id in practised or ex_id in by_level:
             continue
-        missing = [r for r in reqs if r not in satisfied]
         record = {'exerciseId': ex_id, 'name': ex.get('name', ex_id), 'requires': reqs,
-                  'missing': missing, 'unlocksNext': list(ex.get('unlocks') or [])}
-        (available if not missing else locked).append(record)
+                  'missing': [r for r in reqs if r not in satisfied],
+                  'unlocksNext': list(ex.get('unlocks') or [])}
+        (available if ex_id in by_practice else locked).append(record)
     available.sort(key=lambda r: r['name'])
+
+    # The movements the whole program draws on in this scope, elapsed or not:
+    # the ceiling the practised count climbs toward over the block.
+    in_program = {ea['exercise']['id'] for h in spec_mod.select(entry, ctx.weeks)
+                  for ea in h['assignments']}
 
     series = [{'week': wk, 'x': wk, 'value': n, 'isDeload': False}
               for wk, n in sorted(weekly_practised.items())]
@@ -76,4 +91,6 @@ def unlocks(entry, ctx) -> dict:
                              for e in sorted(practised, key=lambda e: -counts[e])],
                   inProgress=[{'exerciseId': e, 'name': names[e], 'sessions': c, 'needed': min_sessions}
                               for e, c in sorted(counts.items(), key=lambda kv: -kv[1]) if e not in practised],
-                  available=available[:20], lockedCount=len(locked), minSessions=min_sessions)
+                  available=available[:20], lockedCount=len(locked), minSessions=min_sessions,
+                  programTotal=len(in_program | practised),
+                  assumedCount=sum(1 for e in by_level if e in pool and (pool[e].get('requires') or [])))

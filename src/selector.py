@@ -60,18 +60,9 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 _LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
 
 
-def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None = None) -> set:
-    """Return set of exercise IDs accessible at this training level.
-
-    level_seeds: {package_id: {level: set}} from loader.load_level_seeds, already
-    narrowed to the packages this goal may use. A package seeds the concepts its
-    own athletes are assumed to arrive with — Starting Strength teaches a novice
-    to brace and hinge in the first session, and without that seed every one of
-    its 13 exercises stayed locked for the novices it is written for.
-    """
-    if training_level == 'elite':
-        return set(exercises.keys())
-
+def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
+    """The concepts and exercise ids assumed known at a level: the built-in
+    concepts plus every package seed at that level or below."""
     known = set(_LEVEL_CONCEPTS.get(training_level, set()))
     if level_seeds:
         # Seeds cascade upward: what a novice knows, an advanced athlete knows.
@@ -79,6 +70,27 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
         for seeds in level_seeds.values():
             for level in _LEVEL_ORDER[:cutoff + 1]:
                 known |= set(seeds.get(level, ()))
+    return known
+
+
+def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None = None,
+                  also_known: set | None = None) -> set:
+    """Return set of exercise IDs accessible at this training level.
+
+    level_seeds: {package_id: {level: set}} from loader.load_level_seeds, already
+    narrowed to the packages this goal may use. A package seeds the concepts its
+    own athletes are assumed to arrive with — Starting Strength teaches a novice
+    to brace and hinge in the first session, and without that seed every one of
+    its 13 exercises stayed locked for the novices it is written for.
+
+    also_known: exercise ids the athlete has earned on top of the level — the
+    analytics' "movements earned" passes what has been practised, to ask what
+    that practice opens.
+    """
+    if training_level == 'elite':
+        return set(exercises.keys())
+
+    known = _level_known(training_level, level_seeds) | set(also_known or ())
 
     # Resolve prerequisite chains to a fixed point. A requirement is satisfied
     # when it is a known concept OR an exercise that is itself unlocked, so a

@@ -96,6 +96,12 @@ def build(ctx: Context, specs: list) -> dict:
             'benchmarkId': b['id'], 'name': b['name'], 'category': b['category'], 'domain': b.get('domain'),
             'unit': b['unit'], 'metricType': b['metric_type'], 'lowerIsBetter': b['lower_is_better'],
             'why': why, 'sources': b.get('sources', []),
+            # The program's own standards: what its package declares or its
+            # philosophy wrote, plus anything the athlete has a number for. A
+            # standard that is only in the same domain as a priority — every
+            # max-strength table for any program that lifts, The Cell's
+            # included — waits behind "More standards".
+            'primary': bool({'declared', 'philosophy'} & set(why)) or value is not None,
             'standards': {lvl: b['levels'][lvl].get(sex, b['levels'][lvl]['male']) for lvl in b['levels']},
             'latest': latest['value'] if latest else None,
             'latestDate': latest['date'].isoformat() if latest else None,

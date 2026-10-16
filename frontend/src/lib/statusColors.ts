@@ -7,7 +7,7 @@
  * but they are never rendered on the same mark.
  *
  * Extracted after finding this exact triplet duplicated verbatim in
- * ReadinessWidget, DevelopmentWidget and ProgressionReviewCard. `label` stays
+ * ReadinessWidget, AdherenceWidget and ProgressionReviewCard. `label` stays
  * with the consumer: the scale is shared, the vocabulary is not ("Ready" vs
  * "On Track" vs "Ahead").
  *

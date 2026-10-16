@@ -75,8 +75,13 @@ def duration(entry, ctx) -> dict:
     weekly: dict = {}
     in_scope = measured = 0
     vertical, pack = [], []
+    # Scoped to slots (Wildman's main timed set, not the whole ballistic
+    # session), the workout's or the log's span measures the session, not the
+    # slot: only the slot's own logged minutes are a measurement, and without
+    # them the prescription stands in, marked assumed.
+    narrowed = any(entry.scope.get(k) for k in ('exercises', 'patterns', 'slot_types', 'slot_roles'))
     for h in hits:
-        if not h['completed']:
+        if not h['completed'] or (narrowed and not h['assignments']):
             continue
         in_scope += 1
         planned = sum(float(_load(ea).get('duration_minutes') or 0) for ea in h['assignments'])
@@ -89,6 +94,8 @@ def duration(entry, ctx) -> dict:
                           for ea in h['assignments'])
         if logged_secs > 0:
             minutes, source = logged_secs / 60.0, 'logged'
+        elif narrowed:
+            minutes, source = planned, 'prescribed'
         else:
             minutes, source = ctx.duration_minutes(h)
         is_measured = source in _MEASURED_SOURCES

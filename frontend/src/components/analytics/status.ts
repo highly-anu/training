@@ -8,7 +8,7 @@ import type { StatusLevel } from '@/lib/statusColors'
  */
 export function statusLevel(status: AnalyticsStatus | string): StatusLevel | 'neutral' {
   switch (status) {
-    case 'ahead': case 'on_track': case 'met': case 'on_target': case 'stable_by_design':
+    case 'ahead': case 'on_track': case 'met': case 'on_target': case 'stable_by_design': case 'on_plan':
       return 'green'
     case 'behind': case 'partial': case 'off_target': case 'no_target':
       return 'yellow'

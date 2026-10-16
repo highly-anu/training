@@ -510,6 +510,9 @@ def test_scorecard() -> None:
     empty = scorecard_mod.build(Context(AnalyticsInputs(fixture_program(), START, START - timedelta(days=3)),
                                         frameworks=TEST_FW))
     check('nothing elapsed → not_started', empty['headline'] == 'not_started')
+    cw = sc['currentWeek']
+    check("this week: Mon and Wed due by Thursday, three in the week",
+          cw and cw['weekIndex'] == 2 and cw['due'] == 2 and cw['total'] == 3, str(cw))
 
 
 # ── primitives ───────────────────────────────────────────────────────────────
@@ -749,9 +752,38 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     check('back_squat and press practised after ≥2 sessions', {'back_squat', 'press'} <= names, str(names))
     check('cumulative series per week', [p['value'] for p in r['series']] == [2, 2, 2] or r['series'][0]['value'] <= r['series'][-1]['value'])
     avail = {a['exerciseId'] for a in r['available']}
-    check('box_squat becomes available once back_squat is practised (SS requires graph)',
-          'box_squat' in avail, str(sorted(avail)[:8]))
-    check('front_squat stays locked: it requires more than the squat', 'front_squat' not in avail)
+    # A novice's own concepts (hip_hinge, bracing_mechanics) open back_squat,
+    # and back_squat opens box_squat — the generator programs both from day
+    # one, so practice opens nothing the level had not.
+    check('nothing in SS is "now available" by practice: the level already opens it all',
+          not avail and r['lockedCount'] == 0, str(sorted(avail)[:8]))
+    check('the level-opened movements are counted, box_squat among them', r['assumedCount'] > 0)
+    check('practised out of the movements the program draws on (squat, press, easy run)', r['programTotal'] == 3, str(r['programTotal']))
+
+    # Ido Portal: handstand_walk requires handstand_hold, which no level grants.
+    def _skill(ex_id, name):
+        return {'exercise': {'id': ex_id, 'name': name, 'movement_patterns': ['isometric']},
+                'slot_role': 'skill', 'slot_type': 'skill_practice', 'load': {'duration_minutes': 10}}
+    ido = {'goal': {'id': '_phil_ido_portal', 'primary_sources': ['ido_portal'],
+                    'priorities': {'movement_skill': 1.0},
+                    'framework_selection': {'default_framework': 'test_fw'}},
+           'constraints': {'training_level': 'intermediate'},
+           'weeks': [{'week_number': n, 'week_in_phase': n, 'phase': 'base', 'framework': 'test_fw',
+                      'schedule': {'Monday': [{'modality': 'movement_skill',
+                                               'archetype': {'id': 'ladder', 'name': 'Ladder'},
+                                               'exercises': [_skill('handstand_hold', 'Handstand hold')]}]}}
+                     for n in (1, 2, 3)]}
+    ido_logs = {f'{n}-Monday-0': _log(f'2026-03-{2 + (n-1)*7:02d}T10:00:00+00:00') for n in (1, 2)}
+    e = E('u', 'unlocks', 'ido_portal', min_sessions=2)
+    once = run_primitive(e, _ctx(ido, {'1-Monday-0': ido_logs['1-Monday-0']}, today=START + timedelta(days=3)))
+    check('one handstand session: the walk is not open yet',
+          'handstand_walk' not in {a['exerciseId'] for a in once['available']})
+    twice = run_primitive(e, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
+    walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
+    check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
+    check('handstand_hold practised twice opens handstand_walk',
+          'handstand_walk' in {a['exerciseId'] for a in twice['available']},
+          str([a['exerciseId'] for a in twice['available']][:8]))
 
     perf = {'back_squat_bw_ratio': [{'value': 1.2, 'date': '2026-02-01'}, {'value': 1.55, 'date': '2026-03-10'}],
             'strict_press_bw_ratio': [{'value': 0.6, 'date': '2026-03-10'}],
@@ -857,6 +889,11 @@ def test_sections() -> None:
           sq['valueSource'] == 'derived' and sq['derived']['bodyweightKg'] == 82.0
           and sq['derived']['value'] == round(round(101.25 * (1 + 0.0333 * 5), 1) / 82.0, 2), str(sq['derived']))
     check('bodyweight surfaced', bm['bodyweightKg'] == 82.0)
+    check("the methodology's own standard is primary", ids['back_squat_bw_ratio']['primary'])
+    check('a priority-domain standard with a logged PR is primary', ids['run_3mile_minutes']['primary'])
+    domain_only = [b for b in bm['benchmarks'] if b['why'] == ['priority_modality'] and b['value'] is None]
+    check('a priority-domain standard with no number waits behind "More standards"',
+          domain_only and not any(b['primary'] for b in domain_only), str(len(domain_only)))
     ctx_nobw = _ctx(prog, logs, [run], matches, perf={})
     sq2 = {b['benchmarkId']: b for b in benchmarks_mod.build(ctx_nobw, specs)['benchmarks']}['back_squat_bw_ratio']
     check('without bodyweight the derivation says why it cannot',
@@ -893,6 +930,73 @@ def test_document() -> None:
 
 
 # ── API boundary: routing and fatigue normalisation ──────────────────────────
+
+def test_headline_follows_the_track() -> None:
+    """A headline that does not apply to the program gives way. Wildman's
+    cadence measures only Pentathlon Prep; in General Practice movements
+    earned leads, and the cadence entries say where they apply instead of
+    counting against "N of M measurable"."""
+    print('\ndocument: headline and applicability follow the track')
+    from src import generator, goals, loader
+    frameworks = list(loader.load_all_frameworks().values())
+    cons = {'training_level': 'intermediate', 'days_per_week': 4, 'session_time_minutes': 60,
+            'equipment': ['kettlebell', 'open_space'], 'injury_flags': [],
+            'periodization_week': 1, 'fatigue_state': 'normal'}
+    for track, lead in (('general_practice', 'skills'), ('pentathlon', 'jerk_rpm')):
+        goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id=track)
+        prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
+                                  num_weeks=4, output_format='dict')
+        prog = {'goal': goal, 'constraints': cons, 'weeks': prog['weeks']}
+        doc = compute_program_analytics(AnalyticsInputs(prog, START, TODAY))
+        m = doc['methodologies'][0]
+        by_id = {p['id']: p for p in doc['progress']}
+        check(f'{track}: leads with {lead}', m['headlineId'] == lead, str(m['headlineId']))
+        check(f'{track}: the headline summary names the lead entry',
+              m['headlineSummary'] and m['headlineSummary']['entryId'] == lead)
+        check(f'{track}: exactly one entry flagged headline',
+              sum(p['headline'] for p in doc['progress']) == 1)
+        check(f'{track}: applicable counts only entries the program schedules',
+              m['applicable'] == sum(p['applies'] for p in doc['progress']) and m['applicable'] <= m['total'])
+        if track == 'general_practice':
+            check('GP: cadence does not apply and says it applies in Pentathlon Prep',
+                  not by_id['jerk_rpm']['applies']
+                  and by_id['jerk_rpm']['appliesIn'][0]['trackId'] == 'pentathlon')
+            check('GP: ballistic timed sets apply (the power session\'s main time block)',
+                  by_id['ballistic_time']['applies'])
+            check('GP: bell weight applies (double-bell strength day)', by_id['bell_weight']['applies'])
+
+
+def test_headline_summary_words() -> None:
+    print('\ndocument: the headline in one sentence, for Today')
+    from src.analytics.document import headline_summary
+    load = {'id': 'bar_load', 'label': 'Load on the bar', 'primitive': 'set_load', 'unit': 'kg',
+            'status': 'on_track', 'coverage': {'inScope': 3, 'measured': 3},
+            'trend': {'direction': 'improving', 'slopePct': 1.25},
+            'series': [{'value': 100.0}, {'value': 102.5}], 'leadExerciseId': 'back_squat',
+            'exercises': [{'exerciseId': 'back_squat', 'name': 'Back squat'}]}
+    h = headline_summary(load)
+    check('a lift reads "Back squat 102.5kg", +1.2% per session',
+          h['text'] == 'Back squat 102.5kg' and h['trendText'] == '+1.2% per session',
+          str((h['text'], h['trendText'])))
+    unl = {'id': 'skills', 'label': 'Movements earned', 'primitive': 'unlocks', 'unit': 'exercises',
+           'coverage': {'inScope': 4, 'measured': 4}, 'trend': {'direction': 'stable'},
+           'series': [{'value': 3}], 'practised': [{}, {}, {}], 'programTotal': 12}
+    h = headline_summary(unl)
+    check('movements earned reads "3 of 12 movements practised", holding',
+          h['text'] == '3 of 12 movements practised' and h['trendText'] == 'Holding steady', str(h))
+    none = {'id': 'jerk_rpm', 'label': 'Jerk cadence', 'primitive': 'rate', 'unit': 'rpm',
+            'coverage': {'inScope': 2, 'measured': 0, 'reason': 'timed_sets_not_logged'},
+            'trend': {'direction': 'insufficient_data'}, 'series': []}
+    h = headline_summary(none)
+    assumed = {'id': 'aerobic_volume', 'label': 'Aerobic volume', 'primitive': 'duration', 'unit': 'min',
+               'coverage': {'inScope': 1, 'measured': 0, 'reason': 'duration_not_logged'},
+               'trend': {'direction': 'insufficient_data'},
+               'series': [{'value': 60.0, 'assumed': True, 'source': 'prescribed'}]}
+    check('a prescribed duration is not read as "60 min last session"',
+          headline_summary(assumed)['text'] is None)
+    check('nothing measured: no sentence, the reason code instead',
+          h['text'] is None and not h['measurable'] and h['reason'] == 'timed_sets_not_logged')
+
 
 def test_notes_route_and_fatigue() -> None:
     print('\napi: the iOS notes route, and fatigue on one scale')
@@ -1005,6 +1109,8 @@ if __name__ == '__main__':
     test_unlocks_benchmarks_completion_and_errors()
     test_sections()
     test_document()
+    test_headline_follows_the_track()
+    test_headline_summary_words()
     test_notes_route_and_fatigue()
     test_describe()
     test_change_summary_units()

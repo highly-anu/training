@@ -152,8 +152,9 @@ deltas, weekly load by block, the standards ladder over time), Load (weekly TRIM
 zones — the single load surface), Recovery (readiness, sleep, HRV, RHR, check-in and
 history — the current Bio Log). The Overview KPIs fold into Load; Activity is deleted
 in favour of Log ▸ Workouts. Tabs are URL-driven (`?tab=`) so Home cards and redirects
-can land on one. Home's Development card stays about the current program and links to
-the tab.
+can land on one. Home's Adherence card (Development until 2026-10-16) stays about the
+current program and links to the tab; its Progress card shows the methodology's headline
+measure (`methodologies[].headlineSummary`) and opens Progress.
 
 **Explore** gains a Standards topic (benchmarks) and one CTA per topic where it makes
 sense: philosophy → "Build a program with this" (prefills source and priorities),
