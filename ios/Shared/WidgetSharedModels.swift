@@ -53,3 +53,64 @@ extension WidgetTodayData {
         updatedAt: Date()
     )
 }
+
+// MARK: - Home-screen: week overview and status row
+
+/// The program week, Monday to Sunday — the web's Week overview strip, for
+/// the full-width Week widget. Written by the phone (AppState.writeHomeWidgets)
+/// whenever the program, a completion, readiness or the analytics change.
+struct WidgetWeekData: Codable {
+    struct Session: Codable, Hashable {
+        let modalityId: String
+        let name: String
+        let minutes: Int
+        let done: Bool
+    }
+    struct Day: Codable, Hashable {
+        let dayName: String          // "Monday"
+        let date: String             // yyyy-MM-dd
+        let sessions: [Session]
+    }
+    let updatedAt: Date
+    let weekNumber: Int
+    let totalWeeks: Int
+    let phase: String?
+    let isDeload: Bool
+    let days: [Day]
+}
+
+/// The status row — Today · Readiness · Adherence · Progress — the web's four
+/// cards in one full-width widget. Every number is the server's (readiness,
+/// the scorecard, the methodology's headline sentence); the phone only copies.
+struct WidgetStatusData: Codable {
+    struct Today: Codable {
+        let date: String
+        let sessionCount: Int
+        let doneCount: Int
+        let firstName: String?
+        let firstModality: String?
+        let minutes: Int?
+    }
+    struct Readiness: Codable {
+        let score: Int
+        let status: String           // green | yellow | red
+    }
+    struct Adherence: Codable {
+        let pct: Int
+        let verdict: String          // on_plan | off_plan | not_started
+        let weekDone: Int?
+        let weekDue: Int?
+    }
+    struct Progress: Codable {
+        let label: String
+        let text: String?            // nil until a measure has data
+        let status: String
+    }
+    let updatedAt: Date
+    let today: Today?
+    let readiness: Readiness?
+    let adherence: Adherence?
+    let progress: Progress?
+    /// When the readiness was fetched: a day-old score is not shown as today's.
+    var readinessAt: Date? = nil
+}

@@ -24,6 +24,52 @@ enum WidgetDataStore {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    static let weekKey = "widget_week_data"
+    static let statusKey = "widget_status_data"
+
+    /// The week strip and the status row; redraws only those two widgets.
+    static func writeHome(week: WidgetWeekData?, status: WidgetStatusData) {
+        guard let defaults = sharedDefaults else { return }
+        // Compare without the timestamps, and redraw only what changed:
+        // background loads (HealthKit, BGAppRefresh) count against the
+        // widgets' reload budget.
+        let weekBlob = week.flatMap { try? encoder.encode(WidgetWeekData(updatedAt: .distantPast, weekNumber: $0.weekNumber,
+                                                                          totalWeeks: $0.totalWeeks, phase: $0.phase,
+                                                                          isDeload: $0.isDeload, days: $0.days)) }
+        if weekBlob != defaults.data(forKey: weekKey + "_cmp") {
+            if let week, let encoded = try? encoder.encode(week) {
+                defaults.set(encoded, forKey: weekKey)
+            } else {
+                defaults.removeObject(forKey: weekKey)
+            }
+            defaults.set(weekBlob, forKey: weekKey + "_cmp")
+            WidgetCenter.shared.reloadTimelines(ofKind: "WeekOverviewWidget")
+        }
+        var cmp = status
+        cmp = WidgetStatusData(updatedAt: .distantPast, today: cmp.today, readiness: cmp.readiness,
+                               adherence: cmp.adherence, progress: cmp.progress, readinessAt: nil)
+        let statusBlob = try? encoder.encode(cmp)
+        if statusBlob != defaults.data(forKey: statusKey + "_cmp") {
+            if let encoded = try? encoder.encode(status) { defaults.set(encoded, forKey: statusKey) }
+            defaults.set(statusBlob, forKey: statusKey + "_cmp")
+            WidgetCenter.shared.reloadTimelines(ofKind: "StatusRowWidget")
+        }
+    }
+
+    private static let encoder: JSONEncoder = {
+        let e = JSONEncoder(); e.outputFormatting = .sortedKeys; return e
+    }()
+
+    static func readWeek() -> WidgetWeekData? {
+        guard let data = sharedDefaults?.data(forKey: weekKey) else { return nil }
+        return try? JSONDecoder().decode(WidgetWeekData.self, from: data)
+    }
+
+    static func readStatus() -> WidgetStatusData? {
+        guard let data = sharedDefaults?.data(forKey: statusKey) else { return nil }
+        return try? JSONDecoder().decode(WidgetStatusData.self, from: data)
+    }
+
     /// Read the last saved WidgetTodayData from the App Group container.
     static func read() -> WidgetTodayData? {
         guard let defaults = sharedDefaults,

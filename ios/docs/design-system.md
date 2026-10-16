@@ -1361,3 +1361,28 @@ nothing.
   phases than the screen is wide.
 - **Summaries match segments by order**, and only when the counts agree, so a
   mismatch shows nothing rather than another phase's changes.
+
+---
+
+### 6.27 Home-Screen Widgets
+
+**One full-width row each** (`systemMedium`, `TrainingWidgets/HomeWidgets.swift`):
+
+- **Week Overview** — the program week, Monday to Sunday, one column a day:
+  each session a modality-coloured disc (a tick once done, its minutes under
+  it, red minutes once its day has passed undone), "rest" on an empty day,
+  today outlined in orange; the header says the week, the phase and done of
+  all. Taps open Program ▸ Calendar.
+- **Training Status** — Today · Readiness · Adherence · Progress, the web's
+  Today cards as four cells, each a link to its own screen (Today, Analytics
+  ▸ Recovery, ▸ Program, ▸ Progress). A coloured rule tops each cell: the
+  session's modality, the readiness status, the scorecard's verdict, the
+  headline's status.
+
+Rules: the phone writes both snapshots (`AppState.writeHomeWidgets` →
+`WidgetWeekData`, `WidgetStatusData` in the App Group) whenever the program,
+a completion, readiness or `/analytics/program` changes, and reloads only
+these two kinds; the widgets compute nothing. A `Link` tints and centres its
+label, so a status cell sets its own foreground and alignment. To look at a
+widget, render its view with `ImageRenderer` in a throwaway test — nothing
+can add one to the simulator's home screen.
