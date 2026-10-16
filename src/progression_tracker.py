@@ -850,7 +850,15 @@ def compute_progression_review(
     # Need ≥ 2 exercises with ≥ 2 data points
     usable = {eid: pts for eid, pts in ex_history.items() if len(pts) >= 2}
     if len(usable) < 1:
-        return {
+        # No lift series yet — but missed sessions are still worth saying:
+        # this branch used to drop the low-completion advice, so 2 of 7 done
+        # read "nothing to change".
+        flags = ['insufficient_data']
+        recommendations = ['Log at least 2 sessions with set data to see progression analysis.']
+        if total_scheduled and compliance_pct < 60:
+            flags.append('low_compliance')
+            recommendations.append('Session completion rate is low — prioritise showing up over intensity.')
+        review = {
             'period_key':        period_key,
             'period_type':       period,
             'generated_at':      datetime.utcnow().isoformat(),
@@ -859,10 +867,13 @@ def compute_progression_review(
             'avg_readiness':     avg_readiness,
             'compliance_pct':    compliance_pct,
             'exercise_findings': [],
-            'flags':             ['insufficient_data'],
-            'recommendations':   ['Log at least 2 sessions with set data to see progression analysis.'],
+            'flags':             flags,
+            'recommendations':   recommendations,
             'adjustments':       [],
         }
+        if total_scheduled:
+            review['adjustments'] = suggest_adjustments(review, program)
+        return review
 
     # Build per-exercise findings. A deload week — flagged, or a taper — is the
     # program asking for less, and must not read as a stall.

@@ -35,7 +35,9 @@ def compute_program_analytics(inputs: AnalyticsInputs, *, load: dict | None = No
     progress = []
     for s in specs:
         for entry in s.entries:
-            progress.append(run_primitive(entry, ctx))
+            r = run_primitive(entry, ctx)
+            r['programScope'] = _program_scope(entry, ctx)
+            progress.append(r)
 
     methodologies = []
     for s in specs:
@@ -94,6 +96,23 @@ def _reframe_load(load: dict | None, ctx: Context) -> dict:
 
 
 # ── Compatibility: the shape the old progression review served ───────────────
+
+def _program_scope(entry, ctx: Context) -> dict:
+    """How many sessions this entry measures across the whole program, and
+    when the next one is — elapsed or not. Zero means the entry does not
+    apply to this program at all (a pentathlon cadence in General Practice);
+    the review leaves those out instead of listing them as waiting."""
+    narrowed = any(entry.scope.get(k) for k in ('exercises', 'patterns', 'slot_types', 'slot_roles'))
+    planned, upcoming = 0, None
+    for h in spec_mod.select(entry, ctx.weeks):
+        if narrowed and not h['assignments']:
+            continue
+        planned += 1
+        d = ctx.session_date(h['week_index'], h['day'])
+        if d is not None and d > ctx.today and (upcoming is None or d < upcoming):
+            upcoming = d
+    return {'planned': planned, 'nextDate': upcoming.isoformat() if upcoming else None}
+
 
 def progression_findings(doc: dict) -> list[dict]:
     """The engine's per-lift results in the `ExerciseFinding` shape.

@@ -24,15 +24,32 @@ struct ProgressionView: View {
     private func reviewContent(review: ProgressionReview) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if let purpose = review.purpose {
+                    Text(purpose)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 overviewCard(review: review)
                 if !review.exerciseFindings.isEmpty {
                     findingsSection(findings: review.exerciseFindings)
+                }
+                if let pending = review.pendingMeasures, !pending.isEmpty {
+                    pendingSection(pending)
                 }
                 if !review.recommendations.isEmpty {
                     recommendationsSection(recommendations: review.recommendations)
                 }
                 if !review.adjustments.isEmpty {
                     adjustmentsSection(adjustments: review.adjustments)
+                }
+                if review.overallScore != nil, review.recommendations.isEmpty, review.adjustments.isEmpty {
+                    Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.background.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 Spacer(minLength: 32)
             }
@@ -44,10 +61,11 @@ struct ProgressionView: View {
 
     private func overviewCard(review: ProgressionReview) -> some View {
         let score = review.overallScore
-        let color: Color = score.map { scoreColor($0) } ?? .secondary
+        let band = ProgressionScore.band(review)
+        let color = ProgressionScore.color(band?.id)
 
         return VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     if let s = score {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -58,13 +76,15 @@ struct ProgressionView: View {
                                 .font(.title3)
                                 .foregroundStyle(.secondary)
                         }
-                        Text(scoreLabel(s))
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(color)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(color.opacity(0.12))
-                            .clipShape(Capsule())
+                        if let band {
+                            Text(band.label)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(color)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(color.opacity(0.12))
+                                .clipShape(Capsule())
+                        }
                     } else {
                         Text("Not enough data yet")
                             .font(.headline)
@@ -72,10 +92,27 @@ struct ProgressionView: View {
                     }
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 6) {
-                    statPill(label: "Compliance", value: "\(review.compliancePct)%")
-                    statPill(label: "Period", value: review.periodType == "biweekly" ? "Bi-weekly" : "Weekly")
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(review.compliancePct)%")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                    Text("Sessions done")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    if let scope = review.scopeLabel {
+                        Text(scope)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
+            }
+            if let status = review.scoreStatus {
+                Text(status.reason)
+                    .font(.subheadline)
+            }
+            if review.scoreBreakdown != nil || review.scoreStatus != nil {
+                ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus)
             }
         }
         .padding(16)
@@ -85,6 +122,30 @@ struct ProgressionView: View {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(color.opacity(0.4), lineWidth: 1)
         )
+    }
+
+    // MARK: - Waiting for data
+
+    /// Measures of the methodology with nothing logged yet, and what starts them.
+    private func pendingSection(_ pending: [PendingMeasure]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader("Waiting for data")
+            VStack(spacing: 8) {
+                ForEach(pending) { m in
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(m.label).font(.subheadline).fontWeight(.medium)
+                        if let d = m.description {
+                            Text(d).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Text(m.reason).font(.caption)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(.background.secondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+        }
     }
 
     // MARK: - Findings section
@@ -126,6 +187,16 @@ struct ProgressionView: View {
                 Text(finding.changeSummary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let d = finding.description {
+                    Text(d)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let waiting = finding.waitingFor {
+                    Text(waiting)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                }
             }
             Spacer()
         }
@@ -228,18 +299,6 @@ struct ProgressionView: View {
         }
     }
 
-    private func scoreColor(_ score: Int) -> Color {
-        if score >= 70 { return .green }
-        if score >= 45 { return .yellow }
-        return .red
-    }
-
-    private func scoreLabel(_ score: Int) -> String {
-        if score >= 70 { return "On Track" }
-        if score >= 45 { return "Mixed" }
-        return "Off Track"
-    }
-
     private func statusColor(_ status: String) -> Color {
         AnalyticsStatusStyle.color(status)
     }
@@ -264,6 +323,67 @@ struct ProgressionView: View {
         v.truncatingRemainder(dividingBy: 1) == 0
             ? String(Int(v))
             : String(format: "%.1f", v)
+    }
+}
+
+/// "How is this scored?": the sum behind the number and the three bands,
+/// the current one marked. Folded by default — the reason line above it
+/// says what matters.
+struct ScoreExplanation: View {
+    let breakdown: ScoreBreakdown?
+    let status: ScoreStatus?
+    @State private var open = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                AppHaptics.selection()
+                withAnimation(AppAnimation.springStandard) { open.toggle() }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("How is this scored?")
+                    Image(systemName: "chevron.down")
+                        .rotationEffect(.degrees(open ? 180 : 0))
+                }
+                .font(.footnote.weight(.medium))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Color.accentColor)
+
+            if open {
+                if let b = breakdown {
+                    Text(b.summary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    // One part (sessions only) is the summary already; two are a sum.
+                    ForEach(b.parts.count > 1 ? b.parts : []) { part in
+                        HStack {
+                            Text(part.label)
+                            Spacer()
+                            Text("\(part.value) × \(part.weight.formatted(.number.precision(.fractionLength(0...1)))) = \(part.points)")
+                                .monospacedDigit()
+                        }
+                        .font(.footnote)
+                    }
+                }
+                if let s = status {
+                    Divider()
+                    ForEach(Array(s.bands.enumerated()), id: \.element.id) { i, band in
+                        HStack {
+                            Circle()
+                                .fill(ProgressionScore.color(band.id))
+                                .frame(width: 8, height: 8)
+                            Text(band.label)
+                                .fontWeight(band.id == s.id ? .semibold : .regular)
+                            Spacer()
+                            Text(ProgressionScore.range(s.bands, at: i))
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.footnote)
+                    }
+                }
+            }
+        }
     }
 }
 

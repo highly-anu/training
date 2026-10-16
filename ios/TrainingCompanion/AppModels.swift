@@ -936,8 +936,23 @@ struct ProgressionReview: Codable {
     let flags: [String]
     let recommendations: [String]
     let adjustments: [ProgressionAdjustment]
+    // What the server says about its own number (`src/analytics/review.py`);
+    // absent from a server that predates it.
+    let scoreBreakdown: ScoreBreakdown?
+    let scoreStatus: ScoreStatus?
+    /// What the compliance covers: "2 of 2 sessions so far · week 1".
+    let scopeLabel: String?
+    /// Measures of the methodology with no data yet, and how to start them.
+    let pendingMeasures: [PendingMeasure]?
+    /// The section's job in one line.
+    let purpose: String?
 
     enum CodingKeys: String, CodingKey {
+        case scoreBreakdown  = "score_breakdown"
+        case scoreStatus     = "score_status"
+        case scopeLabel      = "scope_label"
+        case pendingMeasures = "pending_measures"
+        case purpose
         case periodKey       = "period_key"
         case periodType      = "period_type"
         case generatedAt     = "generated_at"
@@ -960,6 +975,10 @@ struct ExerciseFinding: Codable, Identifiable {
     let status: String   // "ahead" | "on_track" | "behind" | "stalled" | "insufficient_data"
     let trend: String    // "improving" | "stable" | "declining"
     let changeSummary: String
+    /// What the measure counts, in the analytics vocabulary's words.
+    let description: String?
+    /// How far a measure without a trend is from one: "1 of 2 sessions logged…".
+    let waitingFor: String?
 
     var id: String { exerciseId }
 
@@ -971,7 +990,58 @@ struct ExerciseFinding: Codable, Identifiable {
         case actualValue   = "actual_value"
         case unit, status, trend
         case changeSummary = "change_summary"
+        case description
+        case waitingFor    = "waiting_for"
     }
+}
+
+/// How the review's score was made: sessions done, plus lift and skill
+/// trends once any measure has one.
+struct ScoreBreakdown: Codable, Equatable {
+    /// "compliance_only" | "compliance_and_trends" | "not_started"
+    let basis: String
+    let summary: String
+    let parts: [ScorePart]
+    let completed: Int
+    let scheduled: Int
+    let measured: Int
+    let waiting: Int
+}
+
+struct ScorePart: Codable, Equatable, Identifiable {
+    let id: String
+    let label: String
+    let value: Int
+    let weight: Double
+    let points: Int
+}
+
+/// The band the score falls in, why, and every band — the server's, so both
+/// clients use one set of labels.
+struct ScoreStatus: Codable, Equatable {
+    let id: String        // "on_track" | "mixed" | "off_track"
+    let label: String
+    let reason: String
+    let bands: [ScoreBand]
+}
+
+struct ScoreBand: Codable, Equatable, Identifiable {
+    let id: String
+    let label: String
+    let min: Int
+}
+
+struct PendingMeasure: Codable, Equatable, Identifiable {
+    let id: String
+    let label: String
+    let description: String?
+    let reason: String
+    let needs: [MeasureNeed]
+}
+
+struct MeasureNeed: Codable, Equatable {
+    let label: String
+    let `where`: String
 }
 
 struct ProgressionAdjustment: Codable, Identifiable {

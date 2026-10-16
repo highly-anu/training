@@ -1028,6 +1028,38 @@ export interface ExerciseFinding {
   status: ProgressionStatus
   trend: TrendDirection
   change_summary: string
+  /** What the measure counts, in the analytics vocabulary's words. */
+  description?: string
+  /** How far a measure without a trend is from one. */
+  waiting_for?: string
+}
+
+/** How the review's score was made (src/analytics/review.py). */
+export interface ScoreBreakdown {
+  basis: 'compliance_only' | 'compliance_and_trends' | 'not_started'
+  summary: string
+  parts: { id: string; label: string; value: number; weight: number; points: number }[]
+  completed: number
+  scheduled: number
+  measured: number
+  waiting: number
+}
+
+/** The band the score falls in, why, and every band — one set of labels for both clients. */
+export interface ScoreStatus {
+  id: 'on_track' | 'mixed' | 'off_track'
+  label: string
+  reason: string
+  bands: { id: 'on_track' | 'mixed' | 'off_track'; label: string; min: number }[]
+}
+
+/** A measure of the methodology with no data yet, and what starts it. */
+export interface PendingMeasure {
+  id: string
+  label: string
+  description: string | null
+  reason: string
+  needs: { label: string; where: string }[]
 }
 
 export interface ProgressionAdjustment {
@@ -1093,6 +1125,14 @@ export interface ProgressionReview {
   flags: string[]
   recommendations: string[]
   adjustments: ProgressionAdjustment[]
+  // Absent from a server that predates src/analytics/review.py.
+  score_breakdown?: ScoreBreakdown
+  score_status?: ScoreStatus | null
+  /** What the compliance covers: "2 of 2 sessions so far · week 1". */
+  scope_label?: string
+  pending_measures?: PendingMeasure[]
+  /** The section's job in one line. */
+  purpose?: string
 }
 
 export interface ExerciseHistoryPoint {

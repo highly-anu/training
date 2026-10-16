@@ -756,7 +756,8 @@ struct TodayView: View {
 
     private func progressionCard(review: ProgressionReview) -> some View {
         let score = review.overallScore
-        let color: Color = score.map { complianceColor($0) } ?? .secondary
+        let band = ProgressionScore.band(review)
+        let color = ProgressionScore.color(band?.id)
 
         // The review lives in Analytics ▸ Progress; this card is the §6.9
         // whole-card link to it, not a second copy of the screen.
@@ -775,13 +776,21 @@ struct TodayView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
-                            Text(complianceLabel(s))
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(color)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(color.opacity(0.12))
-                                .clipShape(Capsule())
+                            if let band {
+                                Text(band.label)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(color)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(color.opacity(0.12))
+                                    .clipShape(Capsule())
+                            }
+                            if let reason = review.scoreStatus?.reason {
+                                Text(reason)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         } else {
                             Text("Insufficient data")
                                 .font(.subheadline)

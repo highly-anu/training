@@ -4331,7 +4331,7 @@ def progression_review():
         base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
     else:
         base = _pt.compute_session_hash(session_logs)
-    session_hash = f'{base}:{period}:review-4'
+    session_hash = f'{base}:{period}:review-6'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])
@@ -4378,10 +4378,6 @@ def progression_review():
             findings = progression_findings(doc)
             if findings:
                 review['exercise_findings'] = findings
-                statuses = [f['status'] for f in findings]
-                score_map = {'ahead': 100, 'on_track': 80, 'behind': 40, 'stalled': 20, 'insufficient_data': 50}
-                finding_score = round(sum(score_map.get(st, 50) for st in statuses) / len(statuses))
-                review['overall_score'] = round(review.get('compliance_pct', 0) * 0.4 + finding_score * 0.6)
                 review['flags'] = [f for f in review.get('flags', []) if not f.startswith(('stalled', 'behind_target', 'insufficient_data'))]
                 stalled = [f['name'] for f in findings if f['status'] == 'stalled']
                 behind = [f['name'] for f in findings if f['status'] == 'behind']
@@ -4391,6 +4387,15 @@ def progression_review():
                     review['flags'].append('behind_target: ' + ', '.join(behind))
     except Exception as engine_err:
         app.logger.warning('progression review: engine findings unavailable: %s', engine_err)
+
+    # The score, recomputed from what is measured, and the words that explain
+    # it — the sum, the band, what the compliance covers, what is still
+    # waiting for data (src/analytics/review.py).
+    try:
+        from src.analytics.review import explain
+        review = explain(review, doc)
+    except Exception as explain_err:
+        app.logger.warning('progression review: explanation unavailable: %s', explain_err)
 
     _health.save_progression_snapshot(g.user_id, period_key, period, session_hash, review)
     return jsonify(review)

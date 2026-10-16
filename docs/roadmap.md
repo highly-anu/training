@@ -665,6 +665,12 @@ server. Left open:
 Larger items from the IA review. Each needs a backend step first; none is
 scheduled ahead of the ranked list.
 
+- **Progress as a section of Program** — Analytics ▸ Progress answers "is it
+  working?" (lift and skill trends, the adjustments), Program "am I doing the
+  plan?". Since 2026-10-16 Progress takes its compliance from Program's
+  scorecard and explains its score (`src/analytics/review.py`); the two could
+  become one tab with a Trends section, once trends carry enough data to be
+  worth their own place. Both clients, one change (§2 of the IA).
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
 - **iOS Library tab** — the contextual exercise sheet exists
