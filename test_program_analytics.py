@@ -779,6 +779,8 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     check('one handstand session: the walk is not open yet',
           'handstand_walk' not in {a['exerciseId'] for a in once['available']})
     twice = run_primitive(e, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
+    walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
+    check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
     check('handstand_hold practised twice opens handstand_walk',
           'handstand_walk' in {a['exerciseId'] for a in twice['available']},
           str([a['exerciseId'] for a in twice['available']][:8]))
@@ -986,6 +988,12 @@ def test_headline_summary_words() -> None:
             'coverage': {'inScope': 2, 'measured': 0, 'reason': 'timed_sets_not_logged'},
             'trend': {'direction': 'insufficient_data'}, 'series': []}
     h = headline_summary(none)
+    assumed = {'id': 'aerobic_volume', 'label': 'Aerobic volume', 'primitive': 'duration', 'unit': 'min',
+               'coverage': {'inScope': 1, 'measured': 0, 'reason': 'duration_not_logged'},
+               'trend': {'direction': 'insufficient_data'},
+               'series': [{'value': 60.0, 'assumed': True, 'source': 'prescribed'}]}
+    check('a prescribed duration is not read as "60 min last session"',
+          headline_summary(assumed)['text'] is None)
     check('nothing measured: no sentence, the reason code instead',
           h['text'] is None and not h['measurable'] and h['reason'] == 'timed_sets_not_logged')
 

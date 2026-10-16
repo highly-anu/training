@@ -61,14 +61,14 @@ def unlocks(entry, ctx) -> dict:
     # already being programmed them.
     by_level = _selector._get_unlocked(level, pool, seeds)
     by_practice = _selector._get_unlocked(level, pool, seeds, also_known=practised)
+    satisfied = practised | by_practice | by_level | _selector._level_known(level, seeds)
     available, locked = [], []
     for ex_id, ex in pool.items():
         reqs = list(ex.get('requires') or [])
         if not reqs or ex_id in practised or ex_id in by_level:
             continue
         record = {'exerciseId': ex_id, 'name': ex.get('name', ex_id), 'requires': reqs,
-                  'missing': [r for r in reqs if r not in practised and r not in by_practice
-                              and r not in by_level],
+                  'missing': [r for r in reqs if r not in satisfied],
                   'unlocksNext': list(ex.get('unlocks') or [])}
         (available if ex_id in by_practice else locked).append(record)
     available.sort(key=lambda r: r['name'])

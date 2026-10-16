@@ -33,19 +33,20 @@ def compute_program_analytics(inputs: AnalyticsInputs, *, load: dict | None = No
     specs = spec_mod.compose(ctx.goal, ctx.philosophy_weights)
 
     progress = []
+    phil_cache: dict = {}
     for s in specs:
         for entry in s.entries:
             r = run_primitive(entry, ctx)
             r['programScope'] = _program_scope(entry, ctx)
             r['applies'] = r['programScope']['planned'] > 0
             if not r['applies']:
-                r['appliesIn'] = _applies_in(entry)
+                r['appliesIn'] = _applies_in(entry, phil_cache)
             progress.append(r)
 
     methodologies = []
     for s in specs:
         entries = [p for p in progress if p['philosophy'] == s.philosophy]
-        lead = _lead_entry(entries, s, ctx)
+        lead = _lead_entry(entries, s, ctx, phil_cache)
         for p in entries:
             p['headline'] = p is lead
         applicable = [p for p in entries if p['applies']]
@@ -103,7 +104,18 @@ def _reframe_load(load: dict | None, ctx: Context) -> dict:
     return load
 
 
-def _lead_entry(entries: list[dict], spec, ctx: Context) -> dict | None:
+def _philosophy(pid: str, cache: dict) -> dict:
+    """One parse per philosophy per document: loader.load_philosophy re-reads
+    every philosophy and framework file on each call."""
+    if pid not in cache:
+        try:
+            cache[pid] = loader.load_philosophy(pid)
+        except (FileNotFoundError, KeyError):
+            cache[pid] = {}
+    return cache[pid]
+
+
+def _lead_entry(entries: list[dict], spec, ctx: Context, phil_cache: dict) -> dict | None:
     """The entry a methodology's section leads with, among those that apply.
 
     The spec's headline is chosen per package, but a package can offer tracks
@@ -123,15 +135,18 @@ def _lead_entry(entries: list[dict], spec, ctx: Context) -> dict | None:
         return declared
     wanted = []
     idx = ctx.current_week_index
-    week = ctx.weeks[idx] if idx is not None else (ctx.weeks[0] if ctx.weeks else None)
+    if idx is None and ctx.weeks:
+        # Before the start the first week leads; after the end, the last.
+        idx = 0 if ctx.today < ctx.start_date else len(ctx.weeks) - 1
+    week = ctx.weeks[idx] if idx is not None else None
     fw = ctx.framework_for_week(week) if week else None
-    model = (fw or {}).get('progression_model')
-    if model in spec_mod.DEFAULT_FOR_MODEL:
-        wanted.append(spec_mod.DEFAULT_FOR_MODEL[model][0])
-    try:
-        phil = loader.load_philosophy(spec.philosophy)
-    except (FileNotFoundError, KeyError):
-        phil = {}
+    # In a blend the week runs one philosophy's framework; its model says
+    # nothing about another methodology's currency.
+    if fw and fw.get('source_philosophy') in (None, spec.philosophy):
+        model = fw.get('progression_model')
+        if model in spec_mod.DEFAULT_FOR_MODEL:
+            wanted.append(spec_mod.DEFAULT_FOR_MODEL[model][0])
+    phil = _philosophy(spec.philosophy, phil_cache)
     pref = spec_mod.HEADLINE_FOR_PHILOSOPHY.get(phil.get('progression_philosophy') or '')
     if pref:
         wanted.append(pref)
@@ -183,8 +198,10 @@ def headline_summary(entry: dict) -> dict:
         pct = (entry.get('totals') or {}).get('pct')
         if pct is not None:
             out['value'], out['text'] = pct, f'{_num(pct)}% of sessions done'
-    elif series:
-        v = series[-1]['value']
+    elif measured_points := [p for p in series if not p.get('assumed')]:
+        # A duration filled in from the prescription is not a measurement:
+        # "60 min last session" beside "Not enough data" read as one.
+        v = measured_points[-1]['value']
         out['value'] = v
         lead = next((e for e in entry.get('exercises') or []
                      if e.get('exerciseId') == entry.get('leadExerciseId')), None)
@@ -205,7 +222,7 @@ def headline_summary(entry: dict) -> dict:
     return out
 
 
-def _applies_in(entry) -> list[dict]:
+def _applies_in(entry, phil_cache: dict) -> list[dict]:
     """The tracks and phases of the entry's own philosophy that run a framework
     its scope names — "applies in Pentathlon Prep" for a cadence measure that
     General Practice never schedules. Empty when the scope is not framework-bound
@@ -213,10 +230,7 @@ def _applies_in(entry) -> list[dict]:
     frameworks = set(entry.scope.get('frameworks') or [])
     if not frameworks:
         return []
-    try:
-        phil = loader.load_philosophy(entry.philosophy)
-    except (FileNotFoundError, KeyError):
-        return []
+    phil = _philosophy(entry.philosophy, phil_cache)
     out = []
     for track in phases.tracks_of(phil):
         names = [ph.get('name') or ph.get('id') for ph in track.get('phases') or []

@@ -60,6 +60,19 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 _LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
 
 
+def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
+    """The concepts and exercise ids assumed known at a level: the built-in
+    concepts plus every package seed at that level or below."""
+    known = set(_LEVEL_CONCEPTS.get(training_level, set()))
+    if level_seeds:
+        # Seeds cascade upward: what a novice knows, an advanced athlete knows.
+        cutoff = _LEVEL_ORDER.index(training_level) if training_level in _LEVEL_ORDER else 0
+        for seeds in level_seeds.values():
+            for level in _LEVEL_ORDER[:cutoff + 1]:
+                known |= set(seeds.get(level, ()))
+    return known
+
+
 def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None = None,
                   also_known: set | None = None) -> set:
     """Return set of exercise IDs accessible at this training level.
@@ -77,13 +90,7 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
     if training_level == 'elite':
         return set(exercises.keys())
 
-    known = set(_LEVEL_CONCEPTS.get(training_level, set())) | set(also_known or ())
-    if level_seeds:
-        # Seeds cascade upward: what a novice knows, an advanced athlete knows.
-        cutoff = _LEVEL_ORDER.index(training_level) if training_level in _LEVEL_ORDER else 0
-        for seeds in level_seeds.values():
-            for level in _LEVEL_ORDER[:cutoff + 1]:
-                known |= set(seeds.get(level, ()))
+    known = _level_known(training_level, level_seeds) | set(also_known or ())
 
     # Resolve prerequisite chains to a fixed point. A requirement is satisfied
     # when it is a known concept OR an exercise that is itself unlocked, so a
