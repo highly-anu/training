@@ -35,6 +35,7 @@ class GlanceView extends Ui.GlanceView {
     const GOOD  = 0x10B981;
 
     hidden var _demoReadiness = null;   // a demo day's own readiness, from its glance copy
+    hidden var _localOnly = 0;          // today's sessions done here that the server has not counted
 
     function initialize() {
         // Qualified: this class is also named GlanceView, so the bare name is itself
@@ -48,6 +49,7 @@ class GlanceView extends Ui.GlanceView {
         dc.clear();
 
         var label = "TRAINING";
+        _localOnly = 0;
         var value = "Open to sync";
         var ring = :none;          // :none | :readiness | :progress | :done
         var sessions = null;
@@ -68,12 +70,16 @@ class GlanceView extends Ui.GlanceView {
                 var mins = 0;
                 var sets = 0;
                 var next = null;
+                _localOnly = 0;
                 for (var i = 0; i < n; i += 1) {
                     var s = sessions[i] as Lang.Dictionary;
                     var id = s.hasKey("sessionId") ? s["sessionId"] : null;
                     var d = (s.hasKey("completed") && s["completed"] == true)
                             || (id != null && log.hasKey(id));
                     doneFlags[i] = d;
+                    // Saved on this watch but not yet counted by the server's
+                    // progress (the upload and the fetch race; offline it waits).
+                    if (d && !(s.hasKey("completed") && s["completed"] == true)) { _localOnly += 1; }
                     if (d) {
                         done += 1;
                         if (id != null && log.hasKey(id)) {
@@ -163,7 +169,9 @@ class GlanceView extends Ui.GlanceView {
         if (!(wk instanceof Lang.Array) || wk.size() < 2 || wk[0] == null || wk[1] == null || wk[1] == 0) {
             return "";
         }
-        return "  " + wk[0] + "/" + wk[1] + " THIS WK";
+        var done = wk[0] + _localOnly;
+        if (done > wk[1]) { done = wk[1]; }
+        return "  " + done + "/" + wk[1] + " THIS WK";
     }
 
     // The cache is another day's (stamped with the local date the watch asked for).

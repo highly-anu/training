@@ -33,6 +33,18 @@ def test_most_recent_earlier_log_wins():
     assert 'press' not in last, 'a log that says nothing about the exercise is skipped'
 
 
+
+def test_a_bad_row_is_skipped_not_raised():
+    logs = [
+        {'completedAt': '2026-10-08T10:00:00Z', 'exercises': {'run': {'durationSec': '300'}, 'x': {'sets': ['x']},
+                                                               'y': {'rounds': 'abc'}}},
+        {'completedAt': '2026-10-07T10:00:00Z', 'exercises': 'garbage'},
+        'not a log',
+        {'completedAt': '2026-10-06T10:00:00Z', 'exercises': {'run': {'sets': [], 'durationSec': 1500}}},
+    ]
+    assert last_by_exercise(logs, '2026-10-09') == {'run': '25 min'}
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

@@ -598,7 +598,8 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   None ships yet.
 - **The glance reads `GlanceCache`'s slim copy** (`todayGlance`), never the
   payload: it runs in 64 KB.
-- **today-session carries `progress`** (`api._watch_progress`): this program
+- **today-session carries `progress`** in every payload, `?spec=1` or not (an
+  older build ignores the key) (`api._watch_progress`): this program
   week's sessions done / due / in all, the program's done of due, and the
   methodology's headline sentence read from the cached `/analytics/program`
   snapshot — never computed on the watch's sync. The Garmin glance adds

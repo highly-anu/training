@@ -90,6 +90,16 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
 
+    /// Two yyyy-MM-dd dates in the same Monday-based week.
+    nonisolated static func sameWeek(_ a: String, _ b: String) -> Bool {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX")
+        var cal = Calendar(identifier: .iso8601); cal.firstWeekday = 2
+        guard let da = f.date(from: a), let db = f.date(from: b),
+              let wa = cal.dateInterval(of: .weekOfYear, for: da), let wb = cal.dateInterval(of: .weekOfYear, for: db)
+        else { return false }
+        return wa.start == wb.start
+    }
+
     /// `progress.week` → (done, sessions); nil when the week holds none.
     nonisolated static func weekDone(from progress: [String: Any]) -> (done: Int, sessions: Int)? {
         guard let week = progress["week"] as? [String: Any],
@@ -142,7 +152,11 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
            let overview = try? JSONDecoder().decode([WeeklyOverviewDay].self, from: overviewData) {
             weeklyOverview = overview
         }
+        // Last week's count must not stand in on a Monday before the first sync:
+        // keep it only while it is from this week (program weeks start Monday).
         if let data = UserDefaults.standard.data(forKey: progressKey),
+           let saved = UserDefaults.standard.string(forKey: progressKey + "_date"),
+           Self.sameWeek(saved, todayDateString),
            let progress = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
             weekDone = Self.weekDone(from: progress)
         }
@@ -212,6 +226,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 if let progress = userInfo["progress"] as? [String: Any],
                    let data = try? JSONSerialization.data(withJSONObject: progress) {
                     UserDefaults.standard.set(data, forKey: progressKey)
+                    UserDefaults.standard.set(todayDateString, forKey: progressKey + "_date")
                     weekDone = Self.weekDone(from: progress)
                 }
                 if let profile = userInfo["profile"] as? [String: Any],

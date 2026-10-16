@@ -3284,8 +3284,18 @@ def get_today_session():
         matched = (uid in matched_uids) if uid else False
         return bool(log.get('completedAt')) or matched or session_key in matched_keys
 
-    from src import last_time as _last_time
-    last = _last_time.last_by_exercise(session_logs, str(today)) if spec_level >= 1 else None
+    # What was done last time, per exercise: this program's logs and earlier
+    # programs' (a regenerate mints a new version and would otherwise empty
+    # it). Never fails the sync: without it the watch shows no "last".
+    last = None
+    if spec_level >= 1:
+        try:
+            from src import last_time as _last_time
+            last = _last_time.last_by_exercise(
+                list(session_logs.values()) + list(_health.get_session_logs_by_uid(g.user_id).values()),
+                str(today))
+        except Exception as e:
+            app.logger.warning('today-session: last time failed: %s', e)
 
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]

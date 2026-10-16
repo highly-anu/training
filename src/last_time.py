@@ -43,20 +43,33 @@ def describe(perf: dict) -> str | None:
     return None
 
 
-def last_by_exercise(session_logs: dict, before: str) -> dict[str, str]:
+def last_by_exercise(session_logs, before: str) -> dict[str, str]:
     """{exercise id: short line} from the most recent completed log before
-    `before` (an ISO date) that says something about the exercise."""
+    `before` (an ISO date) that says something about the exercise.
+
+    `session_logs` is a dict of logs or an iterable of them. The logs are
+    client JSON nobody validates, and this runs on the watch's sync: a row
+    that cannot be read is skipped, never raised."""
+    logs = session_logs.values() if isinstance(session_logs, dict) else (session_logs or [])
     dated = []
-    for log in (session_logs or {}).values():
+    for log in logs:
+        if not isinstance(log, dict):
+            continue
         at = str(log.get('completedAt') or '')[:10]
         if at and at < before:
-            dated.append((at, log))
+            dated.append((str(log.get('completedAt')), log))
     out: dict[str, str] = {}
     for _, log in sorted(dated, key=lambda t: t[0], reverse=True):
-        for ex_id, perf in (log.get('exercises') or {}).items():
+        exercises = log.get('exercises')
+        if not isinstance(exercises, dict):
+            continue
+        for ex_id, perf in exercises.items():
             if ex_id in out or not isinstance(perf, dict):
                 continue
-            line = describe(perf)
+            try:
+                line = describe(perf)
+            except (TypeError, ValueError, AttributeError):
+                continue
             if line:
                 out[ex_id] = line
     return out
