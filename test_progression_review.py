@@ -151,6 +151,79 @@ def test_pending_measures_say_how_to_start():
     assert got['ballistic_load']['needs'][0]['label'] == 'Reps and kg per set'
 
 
+
+def test_breakdown_names_each_measure():
+    review = {'compliance_pct': 100, 'exercise_findings': [
+        {'exercise_id': 'back_squat', 'name': 'Back squat', 'status': 'on_track', 'change_summary': '+5kg over 2 wk'},
+        {'exercise_id': 'skills', 'name': 'Movements earned', 'status': 'insufficient_data',
+         'change_summary': '+0 exercises over 1 wk'}]}
+    doc = {'scorecard': {'completedSessions': 4, 'plannedSessions': 4, 'elapsedWeeks': 2}, 'progress': []}
+    got = rv.explain(review, doc)['score_breakdown']['measures']
+    assert [m['name'] for m in got] == ['Back squat', 'Movements earned']
+    assert got[0]['points'] == 80 and got[0]['detail'] == '+5kg over 2 wk'
+    assert got[1]['points'] is None, 'a measure still collecting adds no points'
+    assert got[1]['detail'], 'and says how far it is from a trend'
+
+
+def test_exercises_scheduled_by_today():
+    # The Progress tab's "so far": only sessions whose day has come, by the
+    # week's array index (week 2 is numbered 9 here, as after a regenerate).
+    def ex(i):
+        return {'exercise': {'id': i}}
+    weeks = [{'week_number': 8, 'schedule': {'Monday': [{'exercises': [ex('swing'), {'meta': True}]}],
+                                            'Friday': [{'exercises': [ex('press')]}]}},
+             {'week_number': 9, 'schedule': {'Monday': [{'exercises': [ex('snatch')]}]}}]
+    assert pt.exercises_scheduled_by(weeks, '2026-10-12', '2026-10-15') == {'swing'}
+    assert pt.exercises_scheduled_by(weeks, '2026-10-12', '2026-10-19') == {'swing', 'press', 'snatch'}
+    assert pt.exercises_scheduled_by(weeks, None, '2026-10-19') == set(), 'no start date: nothing is due'
+
+
+
+def test_prescribed_trajectory_reads_the_stored_load():
+    # The cards' expected line is what the program prescribed — a run in
+    # minutes, a lift in kg, the heavier of two days — never a replay that
+    # treats every exercise as sets x reps.
+    def lift(kg):
+        return {'exercise': {'id': 'squat'}, 'slot_type': 'sets_reps', 'load': {'sets': 3, 'reps': 5, 'weight_kg': kg}}
+    run = {'exercise': {'id': 'run'}, 'slot_type': 'time_domain', 'load': {'duration_minutes': 40}}
+    weeks = [{'week_number': 1, 'schedule': {'Monday': [{'exercises': [lift(100)]}],
+                                             'Wednesday': [{'exercises': [lift(102.5), run]}]}},
+             {'week_number': 2, 'schedule': {'Monday': [{'exercises': [lift(105)]}]}},
+             {'week_number': 3, 'schedule': {'Monday': [{'exercises': [lift(107.5), run]}]}}]
+    sq = pt.prescribed_trajectory(weeks, 'squat', '2026-10-12', '2026-10-20')   # Tuesday of week 2
+    assert sq['metricType'] == 'weight' and sq['unit'] == 'kg'
+    assert [p['expected_value'] for p in sq['expected']] == [102.5, 105.0, 107.5]
+    assert sq['target'] == {'value': 105.0, 'weekNumber': 2}, 'this week, not week one'
+    r = pt.prescribed_trajectory(weeks, 'run', '2026-10-12', '2026-10-20')
+    assert r['metricType'] == 'time' and r['unit'] == 'min'
+    assert [p['week_number'] for p in r['expected']] == [1, 3], 'only the weeks it is in'
+    assert r['target'] == {'value': 40.0, 'weekNumber': 1}
+    ahead = pt.prescribed_trajectory(weeks, 'squat', '2026-10-12', '2026-10-01')
+    assert ahead['target'] == {'value': 102.5, 'weekNumber': 1}, 'before the start: the first week'
+
+
+def test_prescribed_trajectory_keeps_one_unit():
+    # Wildman's double press is a sets slot three times and skill practice
+    # once: its line is kg, and the 15 minutes of practice is not a point on it.
+    def press(kg):
+        return {'exercise': {'id': 'press'}, 'slot_type': 'sets_reps', 'load': {'sets': 5, 'reps': 5, 'weight_kg': kg}}
+    practice = {'exercise': {'id': 'press'}, 'slot_type': 'skill_practice', 'load': {'duration_minutes': 15}}
+    weeks = [{'week_number': 1, 'schedule': {'Monday': [{'exercises': [press(22)]}]}},
+             {'week_number': 2, 'schedule': {'Monday': [{'exercises': [practice]}]}},
+             {'week_number': 3, 'schedule': {'Monday': [{'exercises': [press(24)]}], 'Friday': [{'exercises': [press(20)]}]}}]
+    t = pt.prescribed_trajectory(weeks, 'press')
+    assert t['unit'] == 'kg'
+    assert [p['expected_value'] for p in t['expected']] == [22.0, None, 24.0]
+    # A for-time slot is minutes, a chin-up with no kg counts reps.
+    ft = pt.prescribed_trajectory([{'schedule': {'Monday': [{'exercises': [
+        {'exercise': {'id': 'row'}, 'slot_type': 'for_time', 'load': {'time_minutes': 8}}]}]}}], 'row')
+    assert (ft['metricType'], ft['unit'], ft['expected'][0]['expected_value']) == ('time', 'min', 8.0)
+    bw = pt.prescribed_trajectory([{'schedule': {'Monday': [{'exercises': [
+        {'exercise': {'id': 'chin_up'}, 'slot_type': 'sets_reps', 'load': {'sets': 4, 'reps': 6}}]}]}}], 'chin_up')
+    assert (bw['metricType'], bw['unit'], bw['target']['value']) == ('reps', 'reps', 6.0)
+    assert pt.prescribed_trajectory([], 'nothing')['target'] is None
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

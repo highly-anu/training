@@ -9,10 +9,11 @@ const BAND_DOT = { on_track: 'bg-emerald-500', mixed: 'bg-amber-500', off_track:
 
 /**
  * The top of Analytics ▸ Progress: what the section is for, the score with
- * its band and why, the sum behind it, what the compliance covers, each
- * measure and how far it is from a trend, and the methodology's measures
- * still waiting for data. Every word comes from the review
- * (src/analytics/review.py), so the phone says the same.
+ * its band and why, and — behind "How is this scored?" — the sum, each
+ * measure it counts or is still collecting, and the measures waiting for data.
+ * Every word comes from the review (src/analytics/review.py), so the phone
+ * says the same. The measures had lists of their own here until 2026-10-16,
+ * beside the methodology cards that show them in full.
  */
 export function ProgressSummary({ review }: { review: ProgressionReview }) {
   const [open, setOpen] = useState(false)
@@ -20,7 +21,7 @@ export function ProgressSummary({ review }: { review: ProgressionReview }) {
   const styles = STATUS_STYLES[band?.level ?? 'red']
   const breakdown = review.score_breakdown
   const status = review.score_status
-  const findings = review.exercise_findings
+  const measures = breakdown?.measures ?? []
   const pending = review.pending_measures ?? []
 
   return (
@@ -76,6 +77,27 @@ export function ProgressSummary({ review }: { review: ProgressionReview }) {
                     ))}
                   </ul>
                 )}
+                {measures.length > 0 && (
+                  <ul className="space-y-0.5 border-t border-border/40 pt-2">
+                    {measures.map((m) => (
+                      <li key={m.id} className="flex justify-between gap-2">
+                        <span>{m.name}{m.detail && <span className="text-muted-foreground"> · {m.detail}</span>}</span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {m.points != null ? `${m.points} pts` : 'collecting'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {pending.length > 0 && (
+                  <ul className="space-y-0.5 border-t border-border/40 pt-2">
+                    {pending.map((m) => (
+                      <li key={m.id}>
+                        {m.label}<span className="text-muted-foreground"> · {m.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {status && (
                   <ul className="space-y-0.5 border-t border-border/40 pt-2">
                     {status.bands.map((b, i) => (
@@ -95,34 +117,6 @@ export function ProgressSummary({ review }: { review: ProgressionReview }) {
         )}
       </div>
 
-      {findings.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Measures</h3>
-          {findings.map((f) => (
-            <div key={f.exercise_id} className="rounded-xl border border-border/60 bg-card px-4 py-3 space-y-0.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="text-sm font-medium">{f.name}</p>
-                <p className="text-[11px] text-muted-foreground tabular-nums">{f.change_summary}</p>
-              </div>
-              {f.description && <p className="text-[11px] text-muted-foreground">{f.description}</p>}
-              {f.waiting_for && <p className="text-[11px]">{f.waiting_for}</p>}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {pending.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Waiting for data</h3>
-          {pending.map((m) => (
-            <div key={m.id} className="rounded-xl border border-border/60 bg-card px-4 py-3 space-y-0.5">
-              <p className="text-sm font-medium">{m.label}</p>
-              {m.description && <p className="text-[11px] text-muted-foreground">{m.description}</p>}
-              <p className="text-[11px]">{m.reason}</p>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

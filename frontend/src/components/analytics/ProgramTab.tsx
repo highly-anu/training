@@ -6,16 +6,18 @@ import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ProgramFrame } from './ProgramFrame'
 import { Scorecard } from './Scorecard'
 import { IntensitySplit } from './IntensitySplit'
-import { MethodologySection } from './MethodologySection'
 import { MovementBalance } from './MovementBalance'
 import { ArchetypeTable } from './ArchetypeTable'
-import { BenchmarkLadder } from './BenchmarkLadder'
 import { StatusBadge } from './StatusBadge'
 
 /**
- * How the athlete is doing against what the active program is for — per
- * methodology, in that methodology's own currency. Everything here comes from
- * one server document (src/analytics); this tab only lays it out.
+ * Am I doing the plan? The frame, the scorecard, the intensity split, movement
+ * by pattern, session shapes and load — from one server document
+ * (src/analytics); this tab only lays it out. Whether the training is working
+ * — each methodology's own measures and the standards — is Analytics ▸
+ * Progress, which reads the same document (moved there 2026-10-16; the
+ * Progress tab's purpose line always said "the Program tab shows how closely
+ * you follow the plan").
  */
 export function ProgramTab() {
   const { data, isLoading, isError, error } = useProgramAnalytics()
@@ -42,15 +44,13 @@ export function ProgramTab() {
         {sectionErr(data.intensity) ? <ErrorBanner error={new Error(sectionErr(data.intensity)!)} title="Intensity" /> : <IntensitySplit intensity={data.intensity} />}
       </div>
 
-      {data.methodologies.map((m) => (
-        <MethodologySection key={m.philosophy} method={m} frame={data.frame}
-                            entries={data.progress.filter((p) => p.philosophy === m.philosophy)} />
-      ))}
+      {!sectionErr(data.movement) && <MovementBalance movement={data.movement} />}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {!sectionErr(data.movement) && <MovementBalance movement={data.movement} />}
-        {!sectionErr(data.benchmarks) && <BenchmarkLadder benchmarks={data.benchmarks} />}
-      </div>
+      <Link to="/analytics?tab=progress"
+            className="block rounded-lg border bg-card p-4 text-xs text-muted-foreground hover:border-primary/40 transition-colors">
+        What {data.frame.philosophies.map((p) => p.name).join(' + ') || 'this program'} measures progress by, and the
+        standards, are on <span className="font-medium text-foreground">Progress →</span>
+      </Link>
 
       {!sectionErr(data.archetypes) && <ArchetypeTable rows={data.archetypes} />}
 

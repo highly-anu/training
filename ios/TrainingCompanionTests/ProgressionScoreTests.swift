@@ -18,7 +18,9 @@ final class ProgressionScoreTests: XCTestCase {
      "score_breakdown": {"basis": "compliance_only",
        "summary": "Sessions only for now: 2 of 2 done. Trends count once a measure has data from 2 sessions.",
        "parts": [{"id": "compliance", "label": "Sessions done", "value": 100, "weight": 1.0, "points": 100}],
-       "completed": 2, "scheduled": 2, "measured": 0, "waiting": 1},
+       "completed": 2, "scheduled": 2, "measured": 0, "waiting": 1,
+       "measures": [{"id": "skills", "name": "Movements earned", "status": "insufficient_data", "points": null,
+                     "detail": "1 of 2 sessions logged — the trend starts at 2."}]},
      "score_status": {"id": "on_track", "label": "On Track",
        "reason": "Every session due so far is done; no lift or skill trend yet.",
        "bands": [{"id": "on_track", "label": "On Track", "min": 70}, {"id": "mixed", "label": "Mixed", "min": 45},
@@ -48,6 +50,13 @@ final class ProgressionScoreTests: XCTestCase {
         XCTAssertEqual(r.pendingMeasures?.first?.needs.first?.where, "The session logger")
         XCTAssertEqual(r.exerciseFindings.first?.waitingFor, "1 of 2 sessions logged — the trend starts at 2.")
         XCTAssertEqual(ProgressionScore.band(r)?.label, "On Track")
+    }
+
+    func testTheBreakdownNamesEachMeasure() throws {
+        let measures = try XCTUnwrap(try decode(explained).scoreBreakdown?.measures)
+        XCTAssertEqual(measures.map(\.name), ["Movements earned"])
+        XCTAssertNil(measures.first?.points, "a measure still collecting adds no points")
+        XCTAssertEqual(measures.first?.detail, "1 of 2 sessions logged — the trend starts at 2.")
     }
 
     func testOlderServerStillReads() throws {

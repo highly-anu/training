@@ -14,8 +14,14 @@ struct ProgressionView: View {
                 emptyState
             }
         }
+        .task { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
+        .task { await appState.loadIfStale("exerciseHistory") { await appState.loadExerciseHistory() } }
         .refreshable {
-            await AppRefresh.perform { await appState.loadProgressionReview() }
+            await AppRefresh.perform {
+                await appState.loadProgressionReview()
+                await appState.loadProgramAnalytics()
+                await appState.loadExerciseHistory()
+            }
         }
     }
 
@@ -30,11 +36,18 @@ struct ProgressionView: View {
                         .foregroundStyle(.secondary)
                 }
                 overviewCard(review: review)
-                if !review.exerciseFindings.isEmpty {
-                    findingsSection(findings: review.exerciseFindings)
+                // Each methodology in its own currency, then where the athlete
+                // stands — the web's Progress tab, from the same document.
+                if let doc = appState.programAnalytics, doc.hasProgram {
+                    ForEach(doc.methodologies) { method in
+                        MethodologySectionView(method: method, doc: doc)
+                    }
+                    if let benchmarks = doc.benchmarks, !benchmarks.rows.isEmpty {
+                        ProgramStandardsCard(benchmarks: benchmarks)
+                    }
                 }
-                if let pending = review.pendingMeasures, !pending.isEmpty {
-                    pendingSection(pending)
+                if let history = appState.exerciseHistory, !history.exercises.isEmpty {
+                    ExerciseProgressSection(response: history, findings: review.exerciseFindings)
                 }
                 if !review.recommendations.isEmpty {
                     recommendationsSection(recommendations: review.recommendations)
@@ -112,7 +125,8 @@ struct ProgressionView: View {
                     .font(.subheadline)
             }
             if review.scoreBreakdown != nil || review.scoreStatus != nil {
-                ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus)
+                ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus,
+                                 pending: review.pendingMeasures ?? [])
             }
         }
         .padding(16)
@@ -121,91 +135,6 @@ struct ProgressionView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(color.opacity(0.4), lineWidth: 1)
-        )
-    }
-
-    // MARK: - Waiting for data
-
-    /// Measures of the methodology with nothing logged yet, and what starts them.
-    private func pendingSection(_ pending: [PendingMeasure]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Waiting for data")
-            VStack(spacing: 8) {
-                ForEach(pending) { m in
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(m.label).font(.subheadline).fontWeight(.medium)
-                        if let d = m.description {
-                            Text(d).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Text(m.reason).font(.caption)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
-                    .background(.background.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-            }
-        }
-    }
-
-    // MARK: - Findings section
-
-    private func findingsSection(findings: [ExerciseFinding]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Exercise Findings")
-            VStack(spacing: 8) {
-                ForEach(findings) { finding in
-                    findingRow(finding: finding)
-                }
-            }
-        }
-    }
-
-    private func findingRow(finding: ExerciseFinding) -> some View {
-        let color = statusColor(finding.status)
-        return HStack(alignment: .top, spacing: 10) {
-            Text(statusIcon(finding.status))
-                .font(.body)
-                .foregroundStyle(color)
-                .frame(width: 20, alignment: .center)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(finding.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                HStack(spacing: 6) {
-                    if let actual = finding.actualValue {
-                        Text(Self.withUnit(formatValue(actual), finding.unit))
-                            .font(.caption)
-                            .foregroundStyle(.primary)
-                    }
-                    if let expected = finding.expectedValue {
-                        Text("(target \(Self.withUnit(formatValue(expected), finding.unit)))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Text(finding.changeSummary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if let d = finding.description {
-                    Text(d)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                if let waiting = finding.waitingFor {
-                    Text(waiting)
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                }
-            }
-            Spacer()
-        }
-        .padding(10)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(color.opacity(0.3), lineWidth: 1)
         )
     }
 
@@ -299,39 +228,22 @@ struct ProgressionView: View {
         }
     }
 
-    private func statusColor(_ status: String) -> Color {
-        AnalyticsStatusStyle.color(status)
-    }
-
-    private func statusIcon(_ status: String) -> String {
-        switch status {
-        case "ahead":            return "↑"
-        case "on_track":         return "✓"
-        case "behind":           return "↓"
-        case "stalled":          return "⚠"
-        default:                 return "–"
-        }
-    }
-
     /// "80kg", "45s", but "3 exercises" — the server's own rule for its
     /// change line (`progression_findings`), so the two lines agree.
     static func withUnit(_ value: String, _ unit: String) -> String {
         ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
     }
-
-    private func formatValue(_ v: Double) -> String {
-        v.truncatingRemainder(dividingBy: 1) == 0
-            ? String(Int(v))
-            : String(format: "%.1f", v)
-    }
 }
 
-/// "How is this scored?": the sum behind the number and the three bands,
-/// the current one marked. Folded by default — the reason line above it
-/// says what matters.
+/// "How is this scored?": the sum behind the number, each measure it counts
+/// or is still collecting, the measures waiting for data, and the three bands,
+/// the current one marked. Folded by default — the reason line above it says
+/// what matters. The measures had sections of their own until 2026-10-16,
+/// beside the methodology cards that show them in full.
 struct ScoreExplanation: View {
     let breakdown: ScoreBreakdown?
     let status: ScoreStatus?
+    var pending: [PendingMeasure] = []
     @State private var open = false
 
     var body: some View {
@@ -364,6 +276,26 @@ struct ScoreExplanation: View {
                                 .monospacedDigit()
                         }
                         .font(.footnote)
+                    }
+                }
+                if let measures = breakdown?.measures, !measures.isEmpty {
+                    Divider()
+                    ForEach(measures) { m in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(m.name) + Text(m.detail.map { " · \($0)" } ?? "").foregroundColor(.secondary)
+                            Spacer()
+                            Text(m.points.map { "\($0) pts" } ?? "collecting")
+                                .monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        .font(.footnote)
+                    }
+                }
+                if !pending.isEmpty {
+                    Divider()
+                    ForEach(pending) { m in
+                        (Text(m.label) + Text(" · \(m.reason)").foregroundColor(.secondary))
+                            .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 if let s = status {

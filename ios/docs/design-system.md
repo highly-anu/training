@@ -1002,10 +1002,9 @@ red / neutral and put into words, the same mapping as the web's
 the coverage reason copy. `ProgressionView` reads its colours from it.
 
 **Analytics ▸ Program** (`Views/AnalyticsProgramTab.swift`) lays out the
-server's `GET /api/analytics/program` document — how the athlete is doing
-against what the program is *for*, per methodology, in its own currency
-(`ProgramAnalyticsModels.swift`, every section decoded on its own so a failed
-or future section cannot blank the screen):
+server's `GET /api/analytics/program` document — how closely the plan is
+being followed (`ProgramAnalyticsModels.swift`, every section decoded on its
+own so a failed or future section cannot blank the screen):
 
 The sections, titles and order are the web's (`components/analytics/ProgramTab.tsx`);
 the phone lacked Standards and Session shapes, half of Movement and the
@@ -1019,21 +1018,35 @@ intensity footer until 2026-10-16.
 - *Intensity split*: **minutes** per bucket per week (the week keys say `_pct`
   but hold minutes), then each bucket's actual share against the framework's
   (`byFramework`), and % of 1RM for max-effort frameworks.
-- A section per methodology: measurable of applicable, "About this
+- *Movement*: sets and minutes done against planned by pattern (planned the
+  grey track, done over it), balance ratios, unilateral share, assumed minutes.
+- A row pointing to Progress, where the methodologies' measures and the
+  standards went on 2026-10-16: Program is adherence, Progress is whether it
+  is working.
+- *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
+  the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
+- *Load* (TSB read in the phase's terms).
+
+**Analytics ▸ Progress** (`Views/ProgressionView.swift`) reads the same
+document for what it measures progress by, after the review's score (§6.25)
+and measures — the web's Progress tab:
+
+- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, "About this
   methodology" (§6.18), then a `ProgressEntryCard` per metric that applies —
   status badge, `CoverageNoticeView` ("not measurable yet, and why"), the
   exercise picker, the actual-against-expected chart (actual green, expected
   indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
   and benchmark-level entries render their own bodies; entries the program
   does not schedule are one "Not in this program" line.
-- *Movement*: sets and minutes done against planned by pattern (planned the
-  grey track, done over it), balance ratios, unilateral share, assumed minutes.
-- *Standards* (`ProgramStandardsCard`, `Views/AnalyticsProgramSections.swift`):
-  the program's own (`primary`), the rest behind "More standards"; a rung
-  ladder per standard filled to the level reached.
-- *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
-  the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
-- *Load* (TSB read in the phase's terms).
+- *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
+  rest behind "More standards"; a rung ladder per standard filled to the
+  level reached.
+- *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
+  "N in this program · N so far · N with data", a segmented filter on the
+  three (the first that shows something until the athlete picks), and a card
+  per exercise — latest value, this week's prescription as the target, a
+  sparkline, HR from a linked workout, the finding's change line. "No trend
+  yet" when logged but unmeasured, "Not tracked" when nothing is logged.
 
 Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.

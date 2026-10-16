@@ -1,44 +1,33 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Upload, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fetchProgressionReview, fetchExerciseHistory, fetchMatchedSessions } from '@/api/progression'
+import { fetchProgressionReview, fetchExerciseHistory } from '@/api/progression'
+import { useProgramAnalytics } from '@/api/analytics'
 import { useApplyAdjustment } from '@/api/programs'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { fetchHealthSnapshot } from '@/api/health'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
-import { MatchedSessionCard } from './MatchedSessionCard'
 import { ProgressSummary } from './ProgressSummary'
-import { useProfileStore } from '@/store/profileStore'
-import { useBioStore } from '@/store/bioStore'
+import { MethodologySection } from '@/components/analytics/MethodologySection'
+import { BenchmarkLadder } from '@/components/analytics/BenchmarkLadder'
 import { useProgramStore } from '@/store/programStore'
-import { findSessionMatch } from '@/lib/sessionMatching'
-import { parseSessionKey } from '@/lib/sessionKeys'
 import type { ExerciseFinding, ProgressionAdjustment } from '@/api/types'
-import { COMPLETION } from '@/lib/completionColors'
 
-type SessionFilter = 'all' | 'linked'
+type ExerciseFilter = 'data' | 'soFar' | 'all'
 
-const DAY_ORDER: Record<string, number> = {
-  Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4,
-  Friday: 5, Saturday: 6, Sunday: 7,
-}
-
+/**
+ * Is the training working? The review's score and measures, then each
+ * methodology's own measures and the standards (from the program analytics
+ * document; they sat on the Program tab until 2026-10-16), then the
+ * exercises. Adherence — how closely the plan is followed — is the Program
+ * tab. Completed sessions are Log ▸ Sessions; this tab carried a second copy
+ * of that list until the same day.
+ */
 export function ProgressionTab() {
   // The review's period changes nothing it computes — compliance covers the
   // program so far (its scope_label says so) — so there is no toggle.
   const period = 'weekly'
-  const [showAll, setShowAll] = useState(false)
-  const [showAllSessions, setShowAllSessions] = useState(false)
-  const [sessionFilter, setSessionFilter] = useState<SessionFilter>('all')
-
-  const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const currentProgram = useProgramStore((s) => s.currentProgram)
-  const programVersionId = useProgramStore((s) => s.programVersionId)
-  const workoutMatches = useBioStore((s) => s.workoutMatches)
-  const importedWorkouts = useBioStore((s) => s.importedWorkouts)
-  const initBio = useBioStore((s) => s.init)
+  const [filter, setFilter] = useState<ExerciseFilter | null>(null)
 
   const {
     data: review,
@@ -54,27 +43,13 @@ export function ProgressionTab() {
     data: historyData,
     isLoading: exercisesLoading,
   } = useQuery({
-    queryKey: ['progression', 'exercises'],
+    // The athlete's date decides "so far": a new day is a new answer.
+    queryKey: ['progression', 'exercises', format(new Date(), 'yyyy-MM-dd')],
     queryFn:  () => fetchExerciseHistory(),
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: sessions } = useQuery({
-    queryKey: ['progression', 'sessions'],
-    queryFn:  fetchMatchedSessions,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // If sessions references workout IDs not yet in the local store (watch workouts saved
-  // after the initial hydration), re-fetch the health snapshot to sync the store.
-  useEffect(() => {
-    if (!sessions || sessions.length === 0) return
-    const storeIds = new Set(importedWorkouts.map((w) => w.id))
-    const missing = sessions.some((s) => s.importedWorkoutId && !storeIds.has(s.importedWorkoutId))
-    if (missing) {
-      fetchHealthSnapshot().then(initBio).catch(() => {})
-    }
-  }, [sessions, importedWorkouts, initBio])
+  const { data: analytics } = useProgramAnalytics()
 
   const findingMap = useMemo(() => {
     const m = new Map<string, ExerciseFinding>()
@@ -82,44 +57,17 @@ export function ProgressionTab() {
     return m
   }, [review?.exercise_findings])
 
-  const matchedSessionMap = useMemo(() => {
-    const m = new Map<string, NonNullable<typeof sessions>[number]>()
-    for (const s of sessions ?? []) m.set(s.sessionKey, s)
-    return m
-  }, [sessions])
-
-  const allCompleted = useMemo(() => {
-    if (!currentProgram) return []
-    return Object.entries(sessionLogs)
-      .filter(([, completions]) => completions.some((c) => c === true))
-      .map(([key]) => {
-        const parsed = parseSessionKey(key)
-        const weekNumber = parsed?.weekNumber ?? NaN
-        const dayName = parsed?.dayName ?? ''
-        const weekData = currentProgram.weeks.find((w) => w.week_number === weekNumber)
-        const daySessions = weekData?.schedule[dayName] ?? []
-        const archetypeName =
-          daySessions[0]?.archetype?.name ??
-          daySessions[0]?.modality.replace(/_/g, ' ') ??
-          'Session'
-        // Per-session and legacy day-level keys, excluding any match recorded
-        // against a program that has since been replaced.
-        const matchEntry = findSessionMatch(workoutMatches, [key], programVersionId)
-        const matched = matchEntry ? importedWorkouts.find((w) => w.id === matchEntry.importedWorkoutId) : undefined
-        return { sessionKey: key, weekNumber, dayName, archetypeName, matchedWorkout: matched }
-      })
-      .sort((a, b) => {
-        if (a.weekNumber !== b.weekNumber) return b.weekNumber - a.weekNumber
-        return (DAY_ORDER[b.dayName] ?? 0) - (DAY_ORDER[a.dayName] ?? 0)
-      })
-  }, [sessionLogs, currentProgram, workoutMatches, importedWorkouts, programVersionId])
-
-  const linkedCount = allCompleted.filter((s) => s.matchedWorkout).length
-
+  // Three windows, each named: the program's movements, those whose day has
+  // come, those with a logged or matched point. "Tracked (3) / All (20)" mixed
+  // future weeks into the 20 and earlier programs into the 3.
   const allExercises = historyData?.exercises ?? []
-  const trackedExercises = allExercises.filter((e) => e.history.length >= 1)
-  const hiddenCount = allExercises.length - trackedExercises.length
-  const visibleExercises = showAll ? allExercises : trackedExercises
+  const withData = allExercises.filter((e) => e.history.length >= 1)
+  const soFar = allExercises.filter((e) => e.scheduledSoFar ?? true)
+  const counts = historyData?.counts
+    ?? { inProgram: allExercises.length, soFar: soFar.length, withData: withData.length }
+  const active: ExerciseFilter = filter
+    ?? (withData.length > 0 ? 'data' : soFar.length > 0 ? 'soFar' : 'all')
+  const visibleExercises = active === 'data' ? withData : active === 'soFar' ? soFar : allExercises
 
   const isLoading = reviewLoading || exercisesLoading
   const isInsufficient =
@@ -127,33 +75,50 @@ export function ProgressionTab() {
   const recommendations = isInsufficient ? [] : (review?.recommendations ?? [])
   const adjustments = isInsufficient ? [] : (review?.adjustments ?? [])
 
+  const sectionErr = (x: unknown) => Boolean(x && typeof x === 'object' && 'error' in x)
+  const doc = analytics && analytics.status !== 'no_program' ? analytics : null
+
   return (
     <div className="space-y-6">
 
       {review && <ProgressSummary review={review} />}
 
-      {/* Exercise filter */}
-      {hiddenCount > 0 && (
-        <div className="flex items-center gap-1">
-          {(['tracked', 'all'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setShowAll(v === 'all')}
-              className={cn(
-                'px-3 py-1 text-xs rounded border transition-colors capitalize',
-                (v === 'all') === showAll
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'border-border text-muted-foreground hover:bg-muted',
-              )}
-            >
-              {v === 'tracked' ? `Tracked (${trackedExercises.length})` : `All (${allExercises.length})`}
-            </button>
-          ))}
+      {/* Each methodology in its own currency, then where the athlete stands. */}
+      {doc?.methodologies.map((m) => (
+        <MethodologySection key={m.philosophy} method={m} frame={doc.frame}
+                            entries={doc.progress.filter((p) => p.philosophy === m.philosophy)} />
+      ))}
+      {doc && !sectionErr(doc.benchmarks) && <BenchmarkLadder benchmarks={doc.benchmarks} />}
+
+      {/* Exercises */}
+      {allExercises.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-4">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Exercises</p>
+            <p className="text-[11px] text-muted-foreground tabular-nums">
+              {counts.inProgram} in this program · {counts.soFar} so far · {counts.withData} with data
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            {([['data', `With data (${counts.withData})`], ['soFar', `So far (${counts.soFar})`], ['all', `All (${counts.inProgram})`]] as const).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setFilter(v)}
+                className={cn(
+                  'px-3 py-1 text-xs rounded border transition-colors',
+                  v === active
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'border-border text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Main content */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -169,7 +134,7 @@ export function ProgressionTab() {
             Could not load progression data — make sure the backend is running.
           </p>
         </div>
-      ) : visibleExercises.length === 0 && allExercises.length === 0 ? (
+      ) : allExercises.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 text-center space-y-2">
           <p className="text-sm font-medium text-muted-foreground">No program exercises found</p>
           <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-xs mx-auto">
@@ -178,9 +143,11 @@ export function ProgressionTab() {
         </div>
       ) : visibleExercises.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 text-center space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">No exercises logged yet</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            {active === 'data' ? 'No exercise has data yet' : 'No exercise has come up yet'}
+          </p>
           <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-xs mx-auto">
-            Switch to <button type="button" onClick={() => setShowAll(true)} className="text-primary underline-offset-2 hover:underline">All</button> to see your full program, or log sets inside a session to track progression.
+            Log sets inside a session, or link a workout, and its exercises appear here.
           </p>
         </div>
       ) : (
@@ -195,94 +162,12 @@ export function ProgressionTab() {
         </div>
       )}
 
-
-      {/* Session log — completed sessions with filter */}
-      {allCompleted.length > 0 && (
-        <div className="space-y-2 border-t border-border/40 pt-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Session Log · {allCompleted.length} completed
-            </p>
-            <div className="flex items-center gap-1">
-              {(['all', 'linked'] as SessionFilter[]).map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => { setSessionFilter(f); setShowAllSessions(false) }}
-                  className={cn(
-                    'px-2.5 py-0.5 text-[11px] rounded border transition-colors capitalize',
-                    f === sessionFilter
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {f === 'linked' ? `Linked (${linkedCount})` : `All (${allCompleted.length})`}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {(() => {
-            const visible = sessionFilter === 'linked'
-              ? allCompleted.filter((s) => s.matchedWorkout)
-              : allCompleted
-            const shown = showAllSessions ? visible : visible.slice(0, 5)
-            return (
-              <>
-                {visible.length === 0 ? (
-                  <p className="text-[11px] text-muted-foreground py-2">
-                    No sessions with linked workouts yet.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {shown.map((s) => {
-                      const apiEntry = matchedSessionMap.get(s.sessionKey)
-                      if (apiEntry) {
-                        return <MatchedSessionCard key={s.sessionKey} item={apiEntry} />
-                      }
-                      // Completed session without API match summary
-                      return (
-                        <div
-                          key={s.sessionKey}
-                          className="rounded-xl border border-border/60 bg-card px-4 py-3 flex items-center justify-between gap-2"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="shrink-0 text-[10px] text-muted-foreground/70 tabular-nums">
-                              Wk {s.weekNumber} · {s.dayName.slice(0, 3)}
-                            </span>
-                            <p className="text-sm font-medium text-foreground truncate leading-tight">
-                              {s.archetypeName}
-                            </p>
-                            <CheckCircle2 className={cn('size-3.5 shrink-0', COMPLETION.text)} />
-                          </div>
-                          <Link
-                            to={`/log?linkTo=${s.sessionKey}`}
-                            className="shrink-0 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                          >
-                            <Upload className="size-3" />
-                            Import workout
-                          </Link>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-                {visible.length > 5 && (
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowAllSessions((v) => !v)}
-                      className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
-                    >
-                      {showAllSessions ? 'Show less' : `Show all ${visible.length} sessions`}
-                    </button>
-                  </div>
-                )}
-              </>
-            )
-          })()}
-        </div>
-      )}
+      <p className="text-[11px] text-muted-foreground">
+        Every completed session, linked or not, is in{' '}
+        <Link to="/log?tab=sessions" className="underline underline-offset-2 hover:text-foreground">Log ▸ Sessions</Link>
+        {' '}and{' '}
+        <Link to="/log?tab=linking" className="underline underline-offset-2 hover:text-foreground">Linking</Link>.
+      </p>
 
       {/* Suggested adjustments — applied to the stored program from this week on */}
       {adjustments.length > 0 && (

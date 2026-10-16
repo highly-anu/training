@@ -9,7 +9,6 @@ import Charts
 struct AnalyticsProgramTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
-    @State private var methodologySheet: PhilosophyCard?
 
     var body: some View {
         Group {
@@ -35,10 +34,6 @@ struct AnalyticsProgramTab: View {
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }
-        .task { await appState.loadPhilosophiesIfNeeded() }
-        .sheet(item: $methodologySheet) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
-        }
     }
 
     // MARK: - Layout
@@ -49,11 +44,8 @@ struct AnalyticsProgramTab: View {
                 if let frame = doc.frame { frameCard(frame) }
                 if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
                 if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
-                ForEach(doc.methodologies) { method in
-                    methodologySection(method, doc: doc)
-                }
                 if let movement = doc.movement, !movement.isEmpty { MovementCard(movement: movement) }
-                if let benchmarks = doc.benchmarks, !benchmarks.rows.isEmpty { ProgramStandardsCard(benchmarks: benchmarks) }
+                progressPointer(doc)
                 if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
                 if let load = doc.load { LoadCard(load: load) }
                 if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
@@ -157,53 +149,26 @@ struct AnalyticsProgramTab: View {
         return s
     }
 
-    // MARK: - Methodology
+    // MARK: - Pointer to Progress
 
-    private func methodologySection(_ method: ProgramAnalytics.Methodology, doc: ProgramAnalytics) -> some View {
-        let name = doc.frame?.philosophies.first { $0.id == method.philosophy }?.name ?? method.philosophy
-        let mine = doc.progress.filter { $0.philosophy == method.philosophy }
-        // An entry no session of this program is in scope for gets a line, not a card.
-        let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
-        let elsewhere = mine.filter { !$0.applies }
-        let card = appState.philosophies.first { $0.id == method.philosophy }
-        return VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(name).font(.subheadline).fontWeight(.semibold)
-                    Spacer()
-                    // The web links into Explore; the phone's methodology
-                    // reference is the sheet (design-system §6.18).
-                    if let card {
-                        Button { methodologySheet = card } label: {
-                            HStack(spacing: 2) {
-                                Text("About this methodology")
-                                Image(systemName: "chevron.right").imageScale(.small)
-                            }
-                        }
-                        .font(.caption2)
-                    }
-                }
-                HStack(spacing: 6) {
-                    Text("\(method.measurable) of \(method.applicable ?? method.total) metrics measurable")
-                    if method.weight < 1 { Text("· \(Int((method.weight * 100).rounded()))% of the blend") }
-                    Text(method.analytics == "declared" ? "declared" : "default spec")
-                        .padding(.horizontal, 6).padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.12))
-                        .clipShape(Capsule())
-                }
-                .font(.caption2).foregroundStyle(.secondary)
+    /// Each methodology's own measures and the standards moved to Progress on
+    /// 2026-10-16: this tab is adherence, Progress is whether it is working.
+    private func progressPointer(_ doc: ProgramAnalytics) -> some View {
+        let names = doc.frame?.philosophies.map(\.name).joined(separator: " + ") ?? ""
+        return Button { router.showAnalytics(.progress) } label: {
+            HStack {
+                Text("What \(names.isEmpty ? "this program" : names) measures progress by, and the standards, are on Progress")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
             }
-            ForEach(entries) { entry in
-                ProgressEntryCard(entry: entry)
-            }
-            if !elsewhere.isEmpty {
-                Text("Not in this program: " + elsewhere.map { e in
-                    let tracks = e.appliesIn.map(\.track)
-                    return tracks.isEmpty ? e.label : "\(e.label) (\(tracks.joined(separator: ", ")))"
-                }.joined(separator: " · "))
-                .font(.caption2).foregroundStyle(.secondary)
-            }
+            .padding(AppMetrics.cardPadding)
+            .background(.background.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
         }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens Analytics, Progress")
     }
 
     // MARK: - Section errors

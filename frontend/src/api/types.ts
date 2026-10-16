@@ -1099,6 +1099,9 @@ export interface ScoreBreakdown {
   scheduled: number
   measured: number
   waiting: number
+  /** Each measure behind the trends part: its points when counted, else how
+   *  far it is from a trend. Absent from an older server. */
+  measures?: Array<{ id: string; name: string; status: string; points: number | null; detail: string | null }>
 }
 
 /** The band the score falls in, why, and every band — one set of labels for both clients. */
@@ -1210,6 +1213,7 @@ export interface ExerciseHistoryPoint {
 
 export interface ExerciseExpectedPoint {
   week_number: number
+  week_index?: number
   expected_value: number | null
   unit: string
   metric_type: ProgressionMetricType
@@ -1220,10 +1224,19 @@ export interface ExerciseHistoryItem {
   name: string
   history: ExerciseHistoryPoint[]
   expected: ExerciseExpectedPoint[]
+  /** In a session whose day has come. Absent from an older server. */
+  scheduledSoFar?: boolean
+  /** From the stored prescription's slot: what the card measures, in what. */
+  metricType?: ProgressionMetricType
+  unit?: string
+  /** This week's prescription (else the first): what "Target" means. */
+  target?: { value: number | null; weekNumber: number } | null
 }
 
 export interface ExerciseHistoryResponse {
   exercises: ExerciseHistoryItem[]
+  /** The program's movements, those whose day has come, those with data. */
+  counts?: { inProgram: number; soFar: number; withData: number }
 }
 
 export interface MatchedSessionArchetype {

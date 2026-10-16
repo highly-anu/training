@@ -1,9 +1,73 @@
 import SwiftUI
 
-// Sections of Analytics ▸ Program the phone lacked until 2026-10-16:
-// Standards and Session shapes, the web's `BenchmarkLadder` and
+// Sections of the `/analytics/program` document shared by Analytics ▸
+// Program and Analytics ▸ Progress: a methodology's own measures, Standards
+// and Session shapes — the web's `MethodologySection`, `BenchmarkLadder` and
 // `ArchetypeTable`. They lay out the server's document; nothing is computed
 // here.
+
+// MARK: - Methodology
+
+/// One philosophy's section: measurable of applicable, a way to its
+/// description, a `ProgressEntryCard` per measure that applies, headline
+/// first, and one line for the measures this program does not schedule.
+/// Lives on Progress (it was on Program until 2026-10-16).
+struct MethodologySectionView: View {
+    @EnvironmentObject var appState: AppState
+    let method: ProgramAnalytics.Methodology
+    let doc: ProgramAnalytics
+    @State private var sheet: PhilosophyCard?
+
+    var body: some View {
+        let name = doc.frame?.philosophies.first { $0.id == method.philosophy }?.name ?? method.philosophy
+        let mine = doc.progress.filter { $0.philosophy == method.philosophy }
+        let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
+        let elsewhere = mine.filter { !$0.applies }
+        let card = appState.philosophies.first { $0.id == method.philosophy }
+        return VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(name).font(.subheadline).fontWeight(.semibold)
+                    Spacer()
+                    // The web links into Explore; the phone's methodology
+                    // reference is the sheet (design-system §6.18).
+                    if let card {
+                        Button { sheet = card } label: {
+                            HStack(spacing: 2) {
+                                Text("About this methodology")
+                                Image(systemName: "chevron.right").imageScale(.small)
+                            }
+                        }
+                        .font(.caption2)
+                    }
+                }
+                HStack(spacing: 6) {
+                    Text("\(method.measurable) of \(method.applicable ?? method.total) metrics measurable")
+                    if method.weight < 1 { Text("· \(Int((method.weight * 100).rounded()))% of the blend") }
+                    Text(method.analytics == "declared" ? "declared" : "default spec")
+                        .padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(Color.secondary.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .font(.caption2).foregroundStyle(.secondary)
+            }
+            ForEach(entries) { entry in
+                ProgressEntryCard(entry: entry)
+            }
+            if !elsewhere.isEmpty {
+                Text("Not in this program: " + elsewhere.map { e in
+                    let tracks = e.appliesIn.map(\.track)
+                    return tracks.isEmpty ? e.label : "\(e.label) (\(tracks.joined(separator: ", ")))"
+                }.joined(separator: " · "))
+                .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .task { await appState.loadPhilosophiesIfNeeded() }
+        .sheet(item: $sheet) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
+    }
+}
 
 // MARK: - Standards
 

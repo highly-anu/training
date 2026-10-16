@@ -4463,9 +4463,6 @@ def progression_exercises():
     session_logs = _health.get_session_logs(g.user_id)
     ex_filter    = request.args.get('exercise_id')
 
-    constraints = program.get('constraints', {})
-    level       = constraints.get('training_level', 'intermediate')
-    prog_model  = _pt._infer_progression_model(program)
     weeks       = program.get('weeks', [])
 
     # Build matched-workout list for endurance exercise auto-population
@@ -4501,23 +4498,33 @@ def progression_exercises():
                     if ex_id and ex_id not in ex_index:
                         ex_index[ex_id] = (ex, ea.get('slot') or {})
 
+    today = request.args.get('today') or str(_date.today())
+    start = program_data.get('programStartDate') or program.get('start_date')
+    so_far = _pt.exercises_scheduled_by(weeks, start, today)
+
     result = []
     for ex_id, (ex, slot) in ex_index.items():
         if ex_filter and ex_id != ex_filter:
             continue
-        trajectory = _pt.compute_expected_trajectory(
-            exercise=ex, slot=slot, progression_model=prog_model,
-            philosophy_weights=program.get('philosophy_weights') or {},
-            weeks=weeks, level=level,
-        )
+        presc = _pt.prescribed_trajectory(weeks, ex_id, start, today)
         result.append({
             'exerciseId': ex_id,
             'name':       ex.get('name', ex_id),
             'history':    history.get(ex_id, []),
-            'expected':   trajectory,
+            'expected':   presc['expected'],
+            'metricType': presc['metricType'],
+            'unit':       presc['unit'],
+            'target':     presc['target'],
+            'scheduledSoFar': ex_id in so_far,
         })
 
-    return jsonify({'exercises': result})
+    # Three counts, one window each: the program's movements, those whose
+    # day has come, and those with a logged or matched point (earlier
+    # programs' history included — the lift's record, not this block's).
+    counts = {'inProgram': len(result),
+              'soFar': sum(1 for r in result if r['scheduledSoFar']),
+              'withData': sum(1 for r in result if r['history'])}
+    return jsonify({'exercises': result, 'counts': counts})
 
 
 @app.get('/api/progression/history')

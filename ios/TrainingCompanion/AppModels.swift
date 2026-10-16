@@ -1006,6 +1006,17 @@ struct ScoreBreakdown: Codable, Equatable {
     let scheduled: Int
     let measured: Int
     let waiting: Int
+    /// Each measure behind the trends part: its points when counted, else how
+    /// far it is from a trend. Nil from an older server.
+    let measures: [ScoreMeasure]?
+}
+
+struct ScoreMeasure: Codable, Equatable, Identifiable {
+    let id: String
+    let name: String
+    let status: String?
+    let points: Int?
+    let detail: String?
 }
 
 struct ScorePart: Codable, Equatable, Identifiable {
