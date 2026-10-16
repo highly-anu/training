@@ -1027,9 +1027,8 @@ The sections, titles and order are the web's (`components/analytics/ProgramTab.t
 the phone lacked Standards and Session shapes, half of Movement and the
 intensity footer until 2026-10-16.
 
-- *Program*: methodology with the book (§6.18) — the only way to it from
-  Analytics; Progress's methodology header has none — how it progresses,
-  framework, phase and week, plan fidelity.
+- *Program*: the program header (§6.28) with plan fidelity as its footer —
+  each field actual / ideal with a mark.
 - *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
   row per modality with completion against the plan to date and the weekly
   dose against the framework's range.
@@ -1134,10 +1133,10 @@ blend (`philosophy_ids` + weights), not as its first source.
 **The program explains itself.** `Views/PhilosophyDetailSheet.swift` — a
 methodology's summary, emphasis (modalities), core principles and how it
 trains (intensity model, progression philosophy). Three presenters: the
-builder's philosophy cards (step 1), Program ▸ Overview's "About this
-methodology" row (`MethodologyRow`) and the book on Analytics ▸ Program's
-Program card; a blend turns either of the last two into a menu with one
-entry per source (`AppState.programMethodologies()`). It was private to
+builder's philosophy cards (step 1) and the book on the program header
+card (§6.28) on Program ▸ Overview and Analytics ▸ Program; a blend turns
+the book into a menu with one entry per source
+(`AppState.programMethodologies()`). It was private to
 the builder until 2026-10-01, which left the plan the athlete was on with no
 way to say what it was for — the web's equivalent is the Program overview's
 link into Explore.
@@ -1409,3 +1408,28 @@ these two kinds; the widgets compute nothing. A `Link` tints and centres its
 label, so a status cell sets its own foreground and alignment. To look at a
 widget, render its view with `ImageRenderer` in a throwaway test — nothing
 can add one to the simulator's home screen.
+
+
+### 6.28 Program Header Card
+
+**The program says what it is the same way wherever it is named.**
+`Views/ProgramHeaderCard.swift` — an `AnalyticsCard` headed "Program": the
+methodology (a blend joined with "+") and the book (§6.18), the current
+phase as a pill in its kind's colour with `calendar` week/total and a
+deload mark, one symbol row per fact (`ProgramHeader.Tag`: track, how it
+progresses, intensity model, framework), and a footer the screen supplies.
+`ProgramHeaderStat` is a footer cell: symbol, value, unit under it, an
+optional mark.
+
+- *Program ▸ Overview* (first card): the track when the methodology has more
+  than one, and the plan's settings — days a week, session minutes, weeks,
+  the date span and the event — with no verdict. Program information only;
+  the framework's name comes from the analytics document's frame when it is
+  loaded, since the phone has no framework catalog.
+- *Analytics ▸ Program* (first card): plan fidelity — each field actual /
+  ideal with a check or a warning mark.
+
+Rules: the card owns the book's sheet; a screen passes facts, never draws
+its own copy. It replaced Overview's "About this methodology" row
+(`MethodologyRow`) and Analytics' private frame card on 2026-10-16.
+
