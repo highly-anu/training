@@ -1306,3 +1306,22 @@ with no data, a number nobody could reconstruct.
   for data with what starts it; an empty review says "Nothing to change — keep
   going" instead of ending in blank space.
 
+
+### 6.26 Phase Changes
+
+**Each phase says what is different about it.** Program ▸ Overview reads the
+server's `phase_summary` (`PhaseSummaryModels.swift`, from
+`src/phase_summary.py`), the same document the web lays out; the phone counts
+nothing.
+
+- **A phase row expands** (`PhaseChangesView` in `Views/ProgramOverviewTab.swift`)
+  to its weekly shape (a dot per session, the average beside it), the server's
+  "What changes" lines, new sessions (`+`, modality colour) and gone ones (struck
+  through), and the loaded lifts' first → last weight. Rows only show the
+  chevron when a summary exists; an older server leaves the list as it was.
+- **"How the phases change"** (`PhaseMatrixSection`) is every session — or,
+  with the segmented control, every exercise — against every phase as times
+  per week, grouped by modality, scrolling sideways when a track has more
+  phases than the screen is wide.
+- **Summaries match segments by order**, and only when the counts agree, so a
+  mismatch shows nothing rather than another phase's changes.

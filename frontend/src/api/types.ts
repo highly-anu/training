@@ -429,6 +429,8 @@ export interface CoverageReport {
 export interface WeekVolumeSummary {
   week_number: number
   strength_sets: number
+  /** Time-domain strength (a KB pentathlon set), when a session has no sets. */
+  strength_minutes?: number
   cond_minutes: number
   dur_minutes: number
   mob_minutes: number
@@ -464,12 +466,58 @@ export interface ValidationResult {
   info: ValidationMessage[]
 }
 
+/** One archetype or exercise in a phase, against the phase before it. */
+export interface PhaseSummaryItem {
+  id: string
+  name: string
+  modality: string
+  /** Appearances in the phase (deload weeks included). */
+  sessions: number
+  /** null in the first phase. */
+  status: 'new' | 'continued' | null
+}
+
+export interface PhaseSummaryLift {
+  id: string
+  name: string
+  first_kg: number
+  last_kg: number
+}
+
+/** How a phase's sessions and exercises differ from the phase before it.
+ *  Computed by the server on every read (src/phase_summary.py), never stored. */
+export interface PhaseSummary {
+  phase_id: string
+  name: string
+  kind: PhaseKind
+  framework_id?: string
+  week_start: number
+  week_end: number
+  weeks: number
+  deload_weeks: number
+  /** Sessions per modality, averaged over the phase's working weeks. */
+  sessions_per_week: Record<string, number>
+  minutes_per_week: { first: number; last: number; mean: number }
+  /** Shares of planned minutes: zone1_2, zone3, zone4_5, max_effort. */
+  intensity: Record<string, number>
+  archetypes: PhaseSummaryItem[]
+  exercises: PhaseSummaryItem[]
+  lifts: PhaseSummaryLift[]
+  dropped: {
+    archetypes: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]
+    exercises: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]
+  }
+  /** Plain lines naming what differs from the previous phase. */
+  changes: string[]
+}
+
 export interface GeneratedProgram {
   goal: GoalProfile
   constraints: AthleteConstraints
   validation: ValidationResult
   weeks: WeekData[]
   volume_summary?: WeekVolumeSummary[]
+  phase_summary?: PhaseSummary[]
   program_start_date?: string
   compromises?: string[]
   coverage_report?: CoverageReport | null

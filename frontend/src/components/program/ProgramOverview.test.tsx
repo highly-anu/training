@@ -81,3 +81,50 @@ describe('ProgramOverview phase cards', () => {
     expect(container.textContent).not.toMatch(/Uphill|Gym Jones|Lydiard|CrossFit|Filly/)
   })
 })
+
+describe('ProgramOverview phase changes', () => {
+  const item = (id: string, name: string, modality: string, sessions: number, status: 'new' | 'continued' | null) =>
+    ({ id, name, modality, sessions, status })
+
+  function withSummary(): GeneratedProgram {
+    const p = program()
+    p.phase_summary = [
+      { phase_id: 'foundations', name: 'Foundations', kind: 'base', week_start: 1, week_end: 1, weeks: 1,
+        deload_weeks: 0, sessions_per_week: { power: 2 }, minutes_per_week: { first: 90, last: 90, mean: 90 },
+        intensity: {}, archetypes: [item('swing_day', 'Swing Day', 'power', 2, null)],
+        exercises: [item('kb_swing', 'Swing', 'power', 2, null)], lifts: [],
+        dropped: { archetypes: [], exercises: [] }, changes: [] },
+      { phase_id: 'ladder', name: 'The Ladder', kind: 'build', week_start: 2, week_end: 2, weeks: 1,
+        deload_weeks: 0, sessions_per_week: { power: 1, max_strength: 1 },
+        minutes_per_week: { first: 120, last: 120, mean: 120 }, intensity: {},
+        archetypes: [item('swing_day', 'Swing Day', 'power', 1, 'continued'),
+                     item('double_press', 'Double Press', 'max_strength', 1, 'new')],
+        exercises: [item('kb_press', 'Double KB Press', 'max_strength', 1, 'new')],
+        lifts: [{ id: 'kb_press', name: 'Double KB Press', first_kg: 24, last_kg: 28 }],
+        dropped: { archetypes: [], exercises: [{ id: 'kb_swing', name: 'Swing', modality: 'power' }] },
+        changes: ['Max strength enters, 1×/week'] },
+    ]
+    return p
+  }
+
+  it("lays out the server's changes, the new sessions and the lifts", () => {
+    mount(withSummary())
+    expect(screen.getByText('Max strength enters, 1×/week')).toBeInTheDocument()
+    expect(screen.getByText('+ Double Press')).toBeInTheDocument()
+    expect(screen.getByText(/24 kg/)).toBeInTheDocument()
+    expect(screen.getByText('How the phases change')).toBeInTheDocument()
+  })
+
+  it('reads the matrix by session or by exercise', () => {
+    mount(withSummary())
+    const table = screen.getByRole('table')
+    expect(table.textContent).toMatch(/Swing Day/)
+    fireEvent.click(screen.getByRole('tab', { name: 'Exercises' }))
+    expect(screen.getByRole('table').textContent).toMatch(/Double KB Press/)
+  })
+
+  it('shows nothing extra without a summary', () => {
+    mount(program())
+    expect(screen.queryByText('How the phases change')).toBeNull()
+  })
+})

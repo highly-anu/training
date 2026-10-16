@@ -11,6 +11,7 @@ import type { GeneratedProgram, ModalityId } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
 import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { PhaseChangeList, PhaseMatrix, findPhaseSummary } from './PhaseChanges'
 
 // ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
@@ -130,7 +131,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
 
   const { data: philosophies } = usePhilosophies()
 
-  const { goal, volume_summary } = program as GeneratedProgram & {
+  const { goal, volume_summary, phase_summary } = program as GeneratedProgram & {
     minimum_prerequisites?: Record<string, number>
   }
 
@@ -290,7 +291,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
         <div>
           <h2 className="text-sm font-semibold mb-3">Training Phases</h2>
           <div className="space-y-4">
-            {segments.map((seg) => {
+            {segments.map((seg, segIndex) => {
               const colors = PHASE_COLORS[seg.phase]
               const phaseLabel = seg.name ?? colors.label
               const phaseKey = `${seg.phaseId ?? seg.phase}-${seg.startWeek}`
@@ -312,6 +313,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
               const totalMinutes = volData.reduce((sum, { minutes }) => sum + minutes, 0)
 
               const archetypeRows = buildArchetypeRows(program, seg.startWeek, seg.endWeek)
+              const summary = findPhaseSummary(phase_summary, segIndex, segments.length)
               const weekVolRows = buildWeekVolRows(program, seg.startWeek, seg.endWeek)
 
               // Phase totals
@@ -475,6 +477,13 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                           </div>
                         )}
 
+                        {/* The server's phase summary: shape, changes, lifts */}
+                        {summary && (
+                          <div className="border-t pt-3">
+                            <PhaseChangeList summary={summary} />
+                          </div>
+                        )}
+
                         {/* Phase summary stats */}
                         <div className="flex gap-3 mt-auto pt-2 border-t">
                           <div className="text-center">
@@ -573,6 +582,9 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
           </div>
         </div>
       )}
+
+      {/* 2b. Sessions and exercises across the phases */}
+      {(phase_summary?.length ?? 0) > 1 && <PhaseMatrix summaries={phase_summary!} />}
 
       {/* 3. Volume progression chart */}
       {chartData.length > 0 && (

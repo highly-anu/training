@@ -218,6 +218,7 @@
  "starting_strength/linear_progression|4d|novice_lp|recovery_window|max_strength",
  "uphill_athlete/full_program|45min|specific|intensity_split|zone3_pct",
  "uphill_athlete/full_program|6d|base|volume_ramp|minutes",
+ "uphill_athlete/full_program|6d|taper|volume_vs_previous_phase|minutes",
  "uphill_athlete/full_program|ideal-5d|base|volume_ramp|minutes",
  "uphill_athlete/full_program|lumbar-disc|base|volume_ramp|minutes",
  "uphill_athlete/full_program|shoulder|base|volume_ramp|minutes",

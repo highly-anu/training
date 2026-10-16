@@ -173,6 +173,11 @@ def content_hash(envelope: dict) -> str:
         return hashlib.sha256(b'').hexdigest()
     trimmed = {k: v for k, v in normalize_program_keys(envelope).items()
                if k not in _VOLATILE_KEYS}
+    cp = trimmed.get('currentProgram')
+    if isinstance(cp, dict) and 'phase_summary' in cp:
+        # Derived on read (src/phase_summary.py); a client that echoes it back
+        # must not make the snapshot look stale.
+        trimmed['currentProgram'] = {k: v for k, v in cp.items() if k != 'phase_summary'}
     canonical = json.dumps(trimmed, sort_keys=True, separators=(',', ':'),
                            default=str)
     return hashlib.sha256(canonical.encode()).hexdigest()

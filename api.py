@@ -380,7 +380,9 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # Unfilled because the philosophy's packages own nothing for this slot,
         # as opposed to equipment or level ruling everything out.
         'coverage_gap': bool(ea.get('coverage_gap')),
+        'equipment_gap': bool(ea.get('equipment_gap')),
         'gap_reason':   ea.get('gap_reason'),
+        'substituted_for': ea.get('substituted_for'),
         'error':       ea.get('error'),
         'load_note':   load_note,
         'notes':       slot.get('notes'),
@@ -390,6 +392,20 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'parent_slot_role': slot.get('parent_slot_role'),
         'skip_exercise':    bool(slot.get('skip_exercise')),
     }
+
+
+def _phase_summary(weeks: list, goal: dict | None) -> list:
+    """How sessions and exercises change phase to phase (src/phase_summary.py).
+
+    Derived from the weeks, never stored (db.save_user_program strips it),
+    and never allowed to fail a response.
+    """
+    from src import phase_summary
+    try:
+        return phase_summary.build(weeks, goal)
+    except Exception as err:  # a malformed legacy program must still load
+        app.logger.warning('phase_summary failed: %s', err)
+        return []
 
 
 def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> dict:
@@ -446,6 +462,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         'weeks':          weeks,
         'volume_summary': volume_summary,
+        'phase_summary':  _phase_summary(weeks, goal),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
     }
@@ -2288,6 +2305,10 @@ def get_user_program_endpoint():
                 program['programVersionId'] = program_history.active_version_id(user_id)
             except Exception as hist_err:
                 app.logger.warning('program history bootstrap failed: %s', hist_err)
+            current = program.get('currentProgram')
+            if isinstance(current, dict) and current.get('weeks'):
+                program['currentProgram'] = {
+                    **current, 'phase_summary': _phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)

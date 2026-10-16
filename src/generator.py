@@ -370,6 +370,12 @@ def generate(
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
         deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
+        # In a kind that is itself the deload (a taper), the kind's volume
+        # multiplier already cuts time and distance; the framework's share is
+        # the total, not a second cut on top. Uphill's taper kept 0.6 x 0.5 =
+        # 30 % where its prose says volume drops 40-60 %.
+        if deload_keep is not None and phases.kind_flag(phase, 'counts_as_deload'):
+            deload_keep = min(1.0, deload_keep / (phases.volume_multiplier(phase) or 1.0))
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])

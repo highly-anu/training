@@ -248,7 +248,8 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
         fw_id = phase.get('framework_id') or pweeks[0].get('framework')
         fw = frameworks.get(fw_id) or {}
         kind = pweeks[0].get('phase')
-        work_weeks = [w for w in pweeks if not w.get('is_deload')]
+        # A taper flags every week a deload; its weeks are still the phase.
+        work_weeks = [w for w in pweeks if not w.get('is_deload')] or pweeks
 
         for w in pweeks:
             wn = w.get('week_number')
