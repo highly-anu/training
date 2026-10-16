@@ -7,26 +7,27 @@ import { useProgramAnalytics } from '@/api/analytics'
 import { queryKeys } from '@/api/queryKeys'
 import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
+import { statusLabel, statusLevel } from '@/components/analytics/status'
 
-const STATUS_LABEL = { green: 'On Track', yellow: 'Mixed', red: 'Off Track' } as const
-
-/** The phone's thresholds (TodayView): 70 % and 45 %. */
+/** Per-week bar colour: the phone's thresholds (TodayView), 70 % and 45 %. */
 function statusFor(pct: number): 'green' | 'yellow' | 'red' {
   return pct >= 70 ? 'green' : pct >= 45 ? 'yellow' : 'red'
 }
 
 /**
- * Today's development card: how much of the program so far was done — the
- * program scorecard's completion (`/analytics/program`), the same card and
- * numbers as the phone's Today. A session counts when it was logged complete
- * or has a matched workout; only sessions whose day has come are scheduled.
+ * Today's adherence card: am I doing the plan? The program scorecard
+ * (`/analytics/program`) — completion so far, this week, the last four weeks —
+ * and the scorecard's own verdict: under 70 % of the committed work is off
+ * plan whatever the total says. A session counts when it was logged complete
+ * or has a matched workout; only sessions whose day has come are due.
  *
- * Until 2026-10-13 this card scored how closely matched workouts followed
- * their prescription (lib/sessionAnalysis), under the same name as the
- * phone's completion card — two different numbers called "Development".
- * The prescription comparison lives on each session and workout.
+ * Called Development until 2026-10-16, beside a Progress card whose score was
+ * this same completion until a measure had a trend — two cards, one number.
+ * Progress now shows the methodology's own currency (ProgressWidget), and the
+ * badge here is the scorecard's verdict rather than a threshold on the total,
+ * which could read "On Track" while the Program tab said off plan.
  */
-export function DevelopmentWidget() {
+export function AdherenceWidget() {
   const { data, isLoading } = useProgramAnalytics()
   const sc = data?.scorecard
 
@@ -43,7 +44,7 @@ export function DevelopmentWidget() {
   if (isLoading) {
     return (
       <div className="h-full rounded-xl border bg-card p-4 ring-1 ring-border">
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Development</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
       </div>
     )
   }
@@ -52,7 +53,7 @@ export function DevelopmentWidget() {
     return (
       <div className="h-full rounded-xl border bg-card p-4 space-y-3 ring-1 ring-border">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Development
+          Adherence
         </h2>
         <p className="text-[11px] text-muted-foreground/70 italic">
           Complete or log a planned session and its share of the program shows here.
@@ -68,10 +69,11 @@ export function DevelopmentWidget() {
   }
 
   const overall = Math.round(sc.overallPct ?? 0)
-  const status = statusFor(overall)
-  const styles = STATUS_STYLES[status]
+  const level = statusLevel(sc.headline)
+  const styles = STATUS_STYLES[level === 'neutral' ? 'yellow' : level]
   const weeks = (sc.weeks ?? []).map((w) => ({ weekIndex: w.weekIndex, weekNumber: w.weekNumber, pct: Math.round(w.pct ?? 0) }))
   const trend = weeks.length >= 2 ? weeks[weeks.length - 1].pct - weeks[weeks.length - 2].pct : null
+  const cw = sc.currentWeek
 
   return (
     <div className={cn('h-full rounded-xl border bg-card p-4 space-y-3 ring-1', styles.ring)}>
@@ -86,7 +88,7 @@ export function DevelopmentWidget() {
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
           <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap', styles.badge)}>
-            {STATUS_LABEL[status]}
+            {statusLabel(sc.headline)}
           </span>
           <span className="tabular-nums whitespace-nowrap">{sc.completedSessions ?? 0} / {sc.plannedSessions} done</span>
           {trend != null && (
@@ -99,6 +101,13 @@ export function DevelopmentWidget() {
           )}
         </div>
       </div>
+
+      {cw && (
+        <p className="text-[11px] text-muted-foreground tabular-nums">
+          This week: <span className="font-semibold text-foreground">{cw.completed} of {cw.due}</span> due so far
+          {' · '}{cw.total} in the week{cw.isDeload ? ' · deload' : ''}
+        </p>
+      )}
 
       {/* The last four weeks, as on the phone. */}
       {weeks.length > 0 && (

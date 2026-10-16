@@ -1359,7 +1359,16 @@ export interface AnalyticsProgressEntry {
   benchmarks?: Array<Record<string, unknown>>
   practised?: Array<{ exerciseId: string; name: string; sessions: number }>
   available?: Array<{ exerciseId: string; name: string; requires: string[] }>
+  /** unlocks: movements left locked even with practice, those the athlete's
+   *  level opened from day one, and the movements the program draws on. */
+  lockedCount?: number
+  assumedCount?: number
+  programTotal?: number
   totals?: Record<string, number | null>
+  /** False when no session of this program is in the entry's scope — a
+   *  pentathlon cadence in General Practice. Absent on older documents. */
+  applies?: boolean
+  appliesIn?: Array<{ trackId: string; track: string; phases: string[] }>
   [extra: string]: unknown
 }
 
@@ -1370,6 +1379,9 @@ export interface AnalyticsMethodology {
   headlineId: string | null
   entryIds: string[]
   measurable: number
+  /** Entries that apply to this program; absent on older documents. */
+  applicable?: number
+  headlineSummary?: AnalyticsHeadlineSummary | null
   total: number
 }
 
@@ -1402,6 +1414,25 @@ export interface AnalyticsScorecard {
   completedSessions?: number
   /** Completion per program week, elapsed sessions only — the Today card. */
   weeks?: { weekIndex: number; weekNumber: number; planned: number; completed: number; pct: number | null }[]
+  /** This week: done of those due so far, and how many the week holds. */
+  currentWeek?: { weekIndex: number; weekNumber: number; due: number; completed: number; total: number; isDeload: boolean } | null
+}
+
+/** A methodology's headline in a sentence, worded on the server for Today. */
+export interface AnalyticsHeadlineSummary {
+  entryId: string
+  label: string
+  primitive: AnalyticsPrimitive
+  status: AnalyticsStatus
+  measurable: boolean
+  reason: string | null
+  inScope: number
+  value: number | null
+  unit: string
+  text: string | null
+  subject: string | null
+  trendDirection: string | null
+  trendText: string | null
 }
 
 export interface AnalyticsFrame {
@@ -1488,6 +1519,9 @@ export interface AnalyticsBenchmarkRow {
   metricType: string
   lowerIsBetter: boolean
   why: Array<'philosophy' | 'priority_modality' | 'declared'>
+  /** Declared, this methodology's own, or already has a number. The rest sit
+   *  behind "More standards". Absent on older documents. */
+  primary?: boolean
   standards: Record<string, number>
   latest: number | null
   latestDate: string | null

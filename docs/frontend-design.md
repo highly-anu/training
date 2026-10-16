@@ -1432,7 +1432,7 @@ Visualization is now the largest single surface in the app — **18 files** rend
 |---|---|---|
 | `dashboard/ModalityDonut` | donut (§12.2) | modality hex |
 | `dashboard/VolumeBar` | stacked bar (§12.3) | modality hex |
-| `dashboard/DevelopmentWidget` | bar | modality hex |
+| `dashboard/AdherenceWidget` | bar | status colour per week |
 | `program/ProgramOverview` | phase timeline (§12.5) | phase hex |
 | `program/PhaseChanges` (`PhaseMatrix`) | archetype × phase table, cells tinted by frequency | modality hex rows, phase hex headers |
 | `progression/ExerciseTrendChart` | line + trend | primary token |
@@ -2436,8 +2436,8 @@ and **no sub-tabs**. It had Week · Analytics · Progress until 2026-10-01; the
 Analytics tab described the program's *shape* and moved to Program ▸ Overview
 (priority mix beside the phases and volume), and the Progress tab was the whole
 progression review and moved to Analytics ▸ Progress. Home keeps compact cards
-whose entire surface opens those destinations (`ProgressionWidget`,
-`DevelopmentWidget`, `ReadinessWidget`), which is the §6.9-style rule the iOS
+whose entire surface opens those destinations (`ProgressWidget`,
+`ReadinessWidget`; `AdherenceWidget` carries two links, Scorecard and Every block), which is the §6.9-style rule the iOS
 design system states explicitly: a card that navigates says so.
 
 ```tsx

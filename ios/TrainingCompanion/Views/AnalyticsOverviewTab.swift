@@ -402,8 +402,12 @@ struct AnalyticsOverviewTab: View {
         }
     }
 
+    /// The weekly bars' own source. It used to read the PMC's flag, but the
+    /// bars come from `serverWeeklyLoad` independently — one request could
+    /// answer and the other not, and the note then named the wrong one.
     private var sourceNote: String {
-        loadSource == .server ? "server-computed, as on the web" : "computed on this phone"
+        let fromServer = !(appState.serverWeeklyLoad ?? []).isEmpty
+        return fromServer ? "server-computed, as on the web" : "computed on this phone"
     }
 
     // MARK: - PMC Chart

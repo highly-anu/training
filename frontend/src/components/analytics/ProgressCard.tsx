@@ -74,19 +74,31 @@ function ExercisePicker({ exercises, selected, onSelect }: {
 }
 
 function Unlocks({ entry }: { entry: AnalyticsProgressEntry }) {
+  const practised = entry.practised ?? []
+  const available = entry.available ?? []
+  const total = entry.programTotal
+  // Practice opens nothing the athlete's level had not already opened (all of
+  // Wildman's library, all of Starting Strength's): say so, not an empty list.
+  const levelOpensAll = !available.length && !entry.lockedCount && (entry.assumedCount ?? 0) > 0
   return (
     <div className="grid gap-3 sm:grid-cols-2 text-xs">
       <div>
-        <p className="font-semibold text-foreground">Practised ({entry.practised?.length ?? 0})</p>
+        <p className="font-semibold text-foreground">
+          Practised ({practised.length}{total ? ` of ${total} in this program` : ''})
+        </p>
         <ul className="mt-1 space-y-0.5 text-muted-foreground">
-          {(entry.practised ?? []).slice(0, 8).map((p) => <li key={p.exerciseId}>{p.name} <span className="text-[10px]">· {p.sessions}×</span></li>)}
+          {practised.slice(0, 8).map((p) => <li key={p.exerciseId}>{p.name} <span className="text-[10px]">· {p.sessions}×</span></li>)}
         </ul>
       </div>
       <div>
-        <p className="font-semibold text-foreground">Now available ({entry.available?.length ?? 0})</p>
-        <ul className="mt-1 space-y-0.5 text-muted-foreground">
-          {(entry.available ?? []).slice(0, 8).map((a) => <li key={a.exerciseId}>{a.name}</li>)}
-        </ul>
+        <p className="font-semibold text-foreground">Now available ({available.length})</p>
+        {levelOpensAll ? (
+          <p className="mt-1 text-muted-foreground">Your level already opens every movement in this library.</p>
+        ) : (
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+            {available.slice(0, 8).map((a) => <li key={a.exerciseId}>{a.name}</li>)}
+          </ul>
+        )}
       </div>
     </div>
   )

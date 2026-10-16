@@ -164,9 +164,19 @@ struct ProgramAnalytics: Decodable {
         let weeks: [Week]
         let plannedSessions: Int?
         let completedSessions: Int?
+        /// This week: done of those due so far, and how many the week holds.
+        struct CurrentWeek: Decodable {
+            let weekIndex: Int
+            let weekNumber: Int
+            let due: Int
+            let completed: Int
+            let total: Int
+            let isDeload: Bool?
+        }
+        let currentWeek: CurrentWeek?
 
         private enum CodingKeys: String, CodingKey {
-            case headline, overallPct, tiers, elapsedWeeks, modalities, weeks, plannedSessions, completedSessions
+            case headline, overallPct, tiers, elapsedWeeks, modalities, weeks, plannedSessions, completedSessions, currentWeek
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -178,6 +188,7 @@ struct ProgramAnalytics: Decodable {
             weeks = ((try? c.decodeIfPresent([Lossy<Week>].self, forKey: .weeks)) ?? [])?.compactMap(\.value) ?? []
             plannedSessions = try? c.decodeIfPresent(Int.self, forKey: .plannedSessions)
             completedSessions = try? c.decodeIfPresent(Int.self, forKey: .completedSessions)
+            currentWeek = try? c.decodeIfPresent(CurrentWeek.self, forKey: .currentWeek)
         }
     }
 
@@ -311,10 +322,26 @@ struct ProgramAnalytics: Decodable {
         let practised: [Practised]
         let available: [Practised]
         let benchmarks: [BenchmarkRow]
+        /// unlocks: movements still locked with practice, those the level opened
+        /// from day one, and how many the program draws on.
+        let lockedCount: Int
+        let assumedCount: Int
+        let programTotal: Int?
+        /// False when no session of this program is in scope — a pentathlon
+        /// cadence in General Practice. Absent on older documents: applies.
+        let applies: Bool
+        let appliesIn: [AppliesIn]
+
+        struct AppliesIn: Decodable {
+            let trackId: String?
+            let track: String
+            let phases: [String]?
+        }
 
         private enum CodingKeys: String, CodingKey {
             case id, label, primitive, philosophy, headline, source, metric, unit, status, trend, coverage,
-                 evidence, series, expected, exercises, leadExerciseId, practised, available, benchmarks
+                 evidence, series, expected, exercises, leadExerciseId, practised, available, benchmarks,
+                 lockedCount, assumedCount, programTotal, applies, appliesIn
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -337,7 +364,16 @@ struct ProgramAnalytics: Decodable {
             practised = ((try? c.decodeIfPresent([Lossy<Practised>].self, forKey: .practised)) ?? [])?.compactMap(\.value) ?? []
             available = ((try? c.decodeIfPresent([Lossy<Practised>].self, forKey: .available)) ?? [])?.compactMap(\.value) ?? []
             benchmarks = ((try? c.decodeIfPresent([Lossy<BenchmarkRow>].self, forKey: .benchmarks)) ?? [])?.compactMap(\.value) ?? []
+            lockedCount = (try? c.decodeIfPresent(Int.self, forKey: .lockedCount)) ?? 0
+            assumedCount = (try? c.decodeIfPresent(Int.self, forKey: .assumedCount)) ?? 0
+            programTotal = try? c.decodeIfPresent(Int.self, forKey: .programTotal)
+            applies = (try? c.decodeIfPresent(Bool.self, forKey: .applies)) ?? true
+            appliesIn = ((try? c.decodeIfPresent([Lossy<AppliesIn>].self, forKey: .appliesIn)) ?? [])?.compactMap(\.value) ?? []
         }
+
+        /// Practice opens nothing the athlete's level had not already opened
+        /// (all of Wildman's library): say so instead of an empty list.
+        var levelOpensAll: Bool { available.isEmpty && lockedCount == 0 && assumedCount > 0 }
 
         /// The exercise whose series the card opens on — the lead lift, else the first.
         var leadExercise: ExerciseResult? {
@@ -352,10 +388,14 @@ struct ProgramAnalytics: Decodable {
         let headlineId: String?
         let entryIds: [String]
         let measurable: Int
+        /// Entries that apply to this program; older documents send none.
+        let applicable: Int?
         let total: Int
+        /// The headline in a sentence, worded by the server for Today.
+        let headlineSummary: HeadlineSummary?
         var id: String { philosophy }
 
-        private enum CodingKeys: String, CodingKey { case philosophy, weight, analytics, headlineId, entryIds, measurable, total }
+        private enum CodingKeys: String, CodingKey { case philosophy, weight, analytics, headlineId, entryIds, measurable, applicable, total, headlineSummary }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             philosophy = try c.decode(String.self, forKey: .philosophy)
@@ -364,7 +404,37 @@ struct ProgramAnalytics: Decodable {
             headlineId = try? c.decodeIfPresent(String.self, forKey: .headlineId)
             entryIds = (try? c.decodeIfPresent([String].self, forKey: .entryIds)) ?? []
             measurable = (try? c.decodeIfPresent(Int.self, forKey: .measurable)) ?? 0
+            applicable = try? c.decodeIfPresent(Int.self, forKey: .applicable)
+            headlineSummary = try? c.decodeIfPresent(HeadlineSummary.self, forKey: .headlineSummary)
             total = (try? c.decodeIfPresent(Int.self, forKey: .total)) ?? 0
+        }
+    }
+
+    /// `document.headline_summary`: the methodology's own currency in one
+    /// sentence ("Back squat 102.5kg", "3 of 12 movements practised") and
+    /// which way it is moving. `text` is nil when nothing measured it yet;
+    /// `reason` then says why, in the coverage codes.
+    struct HeadlineSummary: Decodable {
+        let entryId: String
+        let label: String
+        let status: String
+        let inScope: Int
+        let reason: String?
+        let text: String?
+        let trendDirection: String?
+        let trendText: String?
+
+        private enum CodingKeys: String, CodingKey { case entryId, label, status, inScope, reason, text, trendDirection, trendText }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            entryId = try c.decode(String.self, forKey: .entryId)
+            label = (try? c.decodeIfPresent(String.self, forKey: .label)) ?? entryId
+            status = (try? c.decodeIfPresent(String.self, forKey: .status)) ?? "insufficient_data"
+            inScope = (try? c.decodeIfPresent(Int.self, forKey: .inScope)) ?? 0
+            reason = try? c.decodeIfPresent(String.self, forKey: .reason)
+            text = try? c.decodeIfPresent(String.self, forKey: .text)
+            trendDirection = try? c.decodeIfPresent(String.self, forKey: .trendDirection)
+            trendText = try? c.decodeIfPresent(String.self, forKey: .trendText)
         }
     }
 

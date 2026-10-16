@@ -476,6 +476,13 @@ writes.
   old "expected trajectory" was a recomputation against a bare slot with the
   wrong week. Read `ea.load`; for load, expect last achieved + the exercise's
   increment.
+- **An entry that no session of the program is in scope for does not apply**
+  (`applies: false`, `appliesIn` names the tracks that schedule it). It is left out
+  of "N of M measurable" (`methodologies[].applicable`) and of the headline, which
+  falls to the running framework's `progression_model` primitive, then the
+  philosophy's (`document._lead_entry`): Wildman leads with cadence in Pentathlon
+  Prep and movements earned in General Practice. "Now available" in `unlocks` is
+  what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
   `generator.py` reads the modality yaml's. Default primitives key on
   `(modality.progression_model, slot_type)`; the framework's model informs

@@ -1286,8 +1286,9 @@ one `line.3.horizontal.decrease.circle` button.
 
 **A score says what it is made of and which band it is in.**
 `ScoreExplanation` in `Views/ProgressionView.swift`, with the band from
-`ProgressionScore` (`ProgressionScore.swift`), which Today's Progression card
-uses too. Analytics ▸ Progress read 70 "On Track" in week 1 for an athlete who
+`ProgressionScore` (`ProgressionScore.swift`). Today's Progress card no longer
+shows the score (2026-10-16): it shows the methodology's headline measure, worded
+by the server (`headlineSummary`), and Adherence beside it carries completion. Analytics ▸ Progress read 70 "On Track" in week 1 for an athlete who
 had done every session: compliance × 0.4 plus a neutral 50 × 0.6 for a measure
 with no data, a number nobody could reconstruct.
 

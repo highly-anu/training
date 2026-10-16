@@ -307,7 +307,10 @@ def _known_benchmark_ids() -> set:
     root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         'data', 'benchmarks')
     ids: set = {'bodyweight_kg'}
-    for name in ('strength_standards.yaml', 'conditioning_standards.yaml'):
+    # The loader's own list: a hand-kept pair here missed the four files added
+    # since (kettlebell pentathlon, ruck & PT, benchmark WODs, movement skill).
+    from src.analytics.benchmarks_data import BENCHMARK_FILES
+    for name in BENCHMARK_FILES:
         path = os.path.join(root, name)
         if os.path.exists(path):
             with open(path, encoding='utf-8') as f:

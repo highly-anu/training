@@ -131,6 +131,57 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertNil(novice.leadExercise)
     }
 
+    func testApplicabilityAndUnlockCountsDecode() throws {
+        // Wildman in General Practice: the cadence does not apply, movements
+        // earned leads and the level opens the whole library.
+        let json = Data("""
+        {"methodologies": [{"philosophy": "wildman_kettlebell", "weight": 1, "analytics": "declared",
+                            "headlineId": "skills", "entryIds": ["jerk_rpm", "skills"],
+                            "measurable": 1, "applicable": 1, "total": 2}],
+         "progress": [
+           {"id": "jerk_rpm", "label": "Jerk cadence", "primitive": "rate", "philosophy": "wildman_kettlebell",
+            "headline": false, "applies": false,
+            "appliesIn": [{"trackId": "pentathlon", "track": "Pentathlon Prep", "phases": ["Timed Sets"]}]},
+           {"id": "skills", "label": "Movements earned", "primitive": "unlocks", "philosophy": "wildman_kettlebell",
+            "headline": true, "applies": true, "practised": [{"exerciseId": "kb_clean", "name": "KB clean", "sessions": 2}],
+            "available": [], "lockedCount": 0, "assumedCount": 31, "programTotal": 12}]}
+        """.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+        XCTAssertEqual(doc.methodologies.first?.applicable, 1)
+        let jerk = doc.progress[0], skills = doc.progress[1]
+        XCTAssertFalse(jerk.applies)
+        XCTAssertEqual(jerk.appliesIn.first?.track, "Pentathlon Prep")
+        XCTAssertTrue(skills.applies)
+        XCTAssertEqual(skills.programTotal, 12)
+        XCTAssertTrue(skills.levelOpensAll)
+        XCTAssertNil(doc.methodologies.first?.headlineSummary, "no summary sent, none decoded")
+
+        // An older document: no applicability keys — every entry applies.
+        let old = try JSONDecoder().decode(ProgramAnalytics.self, from: fixture)
+        XCTAssertTrue(old.progress.allSatisfy(\.applies))
+        XCTAssertNil(old.methodologies.first?.applicable)
+        XCTAssertFalse(old.progress[0].levelOpensAll)
+    }
+
+    func testTodayCardsDecodeTheWeekAndTheHeadline() throws {
+        let json = Data("""
+        {"scorecard": {"headline": "off_plan", "overallPct": 28.6, "plannedSessions": 7, "completedSessions": 2,
+                       "currentWeek": {"weekIndex": 1, "weekNumber": 4, "due": 3, "completed": 1, "total": 4, "isDeload": true}},
+         "methodologies": [{"philosophy": "starting_strength", "headlineSummary":
+            {"entryId": "bar_load", "label": "Load on the bar", "status": "on_track", "inScope": 3, "measurable": true,
+             "reason": null, "value": 102.5, "unit": "kg", "text": "Back squat 102.5kg", "subject": "Back squat",
+             "trendDirection": "improving", "trendText": "+1.2% per session"}}]}
+        """.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+        XCTAssertEqual(doc.scorecard?.headline, "off_plan")
+        XCTAssertEqual(doc.scorecard?.currentWeek?.due, 3)
+        XCTAssertEqual(doc.scorecard?.currentWeek?.total, 4)
+        let h = try XCTUnwrap(doc.methodologies.first?.headlineSummary)
+        XCTAssertEqual(h.text, "Back squat 102.5kg")
+        XCTAssertEqual(h.trendText, "+1.2% per session")
+        XCTAssertEqual(AnalyticsStatusStyle.label("off_plan"), "Off plan")
+    }
+
     func testAFailedSectionIsReportedNotFatal() throws {
         let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: fixture)
         XCTAssertNil(doc.movement)

@@ -13,9 +13,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { DumbbellLoader } from '@/components/shared/DumbbellLoader'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
-import { DevelopmentWidget } from '@/components/dashboard/DevelopmentWidget'
+import { AdherenceWidget } from '@/components/dashboard/AdherenceWidget'
 import { SuggestionsCard } from '@/components/dashboard/SuggestionsCard'
-import { ProgressionWidget } from '@/components/dashboard/ProgressionWidget'
+import { ProgressWidget } from '@/components/dashboard/ProgressWidget'
 import { useUiStore } from '@/store/uiStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useProgramStore } from '@/store/programStore'
@@ -135,7 +135,7 @@ function WeekTab({
       {/* Workouts waiting for a match decision — only when there are any */}
       <SuggestionsCard />
 
-      {/* Today + Readiness + Development + Progression */}
+      {/* Today + Readiness + Adherence + Progress */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:items-stretch">
         <div className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today</h2>
@@ -150,15 +150,15 @@ function WeekTab({
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Development</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
           <div className="flex-1 flex flex-col">
-            <DevelopmentWidget />
+            <AdherenceWidget />
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Progress</h2>
           <div className="flex-1 flex flex-col">
-            <ProgressionWidget />
+            <ProgressWidget />
           </div>
         </div>
       </div>

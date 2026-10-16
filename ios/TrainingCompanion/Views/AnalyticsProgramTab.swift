@@ -144,14 +144,15 @@ struct AnalyticsProgramTab: View {
 
     private func methodologySection(_ method: ProgramAnalytics.Methodology, doc: ProgramAnalytics) -> some View {
         let name = doc.frame?.philosophies.first { $0.id == method.philosophy }?.name ?? method.philosophy
-        let entries = doc.progress
-            .filter { $0.philosophy == method.philosophy }
-            .sorted { $0.headline && !$1.headline }
+        let mine = doc.progress.filter { $0.philosophy == method.philosophy }
+        // An entry no session of this program is in scope for gets a line, not a card.
+        let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
+        let elsewhere = mine.filter { !$0.applies }
         return VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(name).font(.subheadline).fontWeight(.semibold)
                 HStack(spacing: 6) {
-                    Text("\(method.measurable) of \(method.total) metrics measurable")
+                    Text("\(method.measurable) of \(method.applicable ?? method.total) metrics measurable")
                     if method.weight < 1 { Text("· \(Int((method.weight * 100).rounded()))% of the blend") }
                     Text(method.analytics == "declared" ? "declared" : "default spec")
                         .padding(.horizontal, 6).padding(.vertical, 1)
@@ -162,6 +163,13 @@ struct AnalyticsProgramTab: View {
             }
             ForEach(entries) { entry in
                 ProgressEntryCard(entry: entry)
+            }
+            if !elsewhere.isEmpty {
+                Text("Not in this program: " + elsewhere.map { e in
+                    let tracks = e.appliesIn.map(\.track)
+                    return tracks.isEmpty ? e.label : "\(e.label) (\(tracks.joined(separator: ", ")))"
+                }.joined(separator: " · "))
+                .font(.caption2).foregroundStyle(.secondary)
             }
         }
     }
@@ -458,7 +466,8 @@ struct ProgressEntryCard: View {
     private var unlocksBody: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Practised (\(entry.practised.count))").font(.caption).fontWeight(.semibold)
+                Text(entry.programTotal.map { "Practised (\(entry.practised.count) of \($0) in this program)" }
+                     ?? "Practised (\(entry.practised.count))").font(.caption).fontWeight(.semibold)
                 ForEach(entry.practised.prefix(6)) { p in
                     Text(p.sessions.map { "\(p.name) · \($0)×" } ?? p.name)
                         .font(.caption2).foregroundStyle(.secondary)
@@ -467,8 +476,13 @@ struct ProgressEntryCard: View {
             Spacer()
             VStack(alignment: .leading, spacing: 2) {
                 Text("Now available (\(entry.available.count))").font(.caption).fontWeight(.semibold)
-                ForEach(entry.available.prefix(6)) { a in
-                    Text(a.name).font(.caption2).foregroundStyle(.secondary)
+                if entry.levelOpensAll {
+                    Text("Your level already opens every movement in this library.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    ForEach(entry.available.prefix(6)) { a in
+                        Text(a.name).font(.caption2).foregroundStyle(.secondary)
+                    }
                 }
             }
         }

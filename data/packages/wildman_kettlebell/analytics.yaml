@@ -1,6 +1,9 @@
 # What progress means for Wildman kettlebell work. RPM-based when training for
 # the pentathlon; complexity-based in general practice, where a new movement
-# earned is the unit of progress.
+# earned is the unit of progress. No entry is marked headline: the engine leads
+# with the entry matching the running framework's progression_model among
+# those that apply (cadence in Pentathlon Prep, movements earned in General
+# Practice — src/analytics/document._lead_entry).
 id: wildman_kettlebell
 
 progress:
@@ -25,11 +28,27 @@ progress:
       exercises: [wk_kb_half_snatch]
     rpm_target: 18          # IKMF cap: 108 in 6 min
 
-  - id: ballistic_load
-    label: Ballistic load
-    primitive: set_load
+  # The ballistic session progresses by "timed-set duration or RPM, not load"
+  # (kb_ballistic_session's own notes): its main block is a time_domain slot,
+  # so the measure is the minutes logged on it. It used to be set_load on
+  # sets_reps slots, which no Wildman power session has — it measured nothing.
+  - id: ballistic_time
+    label: Ballistic timed sets
+    primitive: duration
     scope:
       modalities: [power]
+      slot_types: [time_domain]
+      exclude_slot_roles: ["*warm*", "*cool*"]
+    expected: prescribed
+
+  # Bell weight on the double-bell presses and squats and the get-up's
+  # hinge — raised "only when all reps are clean" (kb_double_strength), so the
+  # expectation is the prescription, never last achieved + an increment.
+  - id: bell_weight
+    label: Bell weight
+    primitive: set_load
+    scope:
+      modalities: [max_strength, relative_strength]
       slot_types: [sets_reps]
       exclude_slot_roles: ["*warm*", "*cool*"]
     expected: prescribed
@@ -40,4 +59,4 @@ progress:
     scope: {modalities: [movement_skill, power, strength_endurance]}
     min_sessions: 2
 
-benchmarks: [ssst_reps]
+benchmarks: [ssst_reps, turkish_get_up_bw_ratio]

@@ -112,7 +112,21 @@ def build(ctx: Context) -> dict:
                    'planned': week_planned[wi], 'completed': week_completed[wi],
                    'pct': _pct(week_completed[wi], week_planned[wi])}
                   for wi in sorted(week_planned)],
+        'currentWeek': _current_week(ctx, week_planned, week_completed),
     }
+
+
+def _current_week(ctx: Context, week_planned: dict, week_completed: dict) -> dict | None:
+    """This week on Today's adherence card: done of those whose day has come,
+    and how many the week holds in all — "2 of 3 so far · 4 this week"."""
+    wi = ctx.current_week_index
+    if wi is None:
+        return None
+    week = ctx.weeks[wi]
+    total = sum(len(sessions or []) for sessions in (week.get('schedule') or {}).values())
+    return {'weekIndex': wi, 'weekNumber': int(week.get('week_number', wi + 1)),
+            'due': week_planned.get(wi, 0), 'completed': week_completed.get(wi, 0), 'total': total,
+            'isDeload': ctx.is_deload_week(week)}
 
 
 def _prescribed_minutes(ctx: Context, hit: dict) -> float:
