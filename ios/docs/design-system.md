@@ -816,8 +816,8 @@ answer.
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Calendar · Overview · History |
-| **Log** | `LogView` | Workouts · Suggestions · Sessions |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
+| **Log** | `LogView` | Workouts · Suggestions · Sessions |
 | **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
 
 The section names and their order are the web's, item for item
@@ -1005,7 +1005,13 @@ extension Color {
 
 **One card, one status vocabulary.** `AppCard.swift` holds `AnalyticsCard`
 (uppercase caption header over content, secondary background, the app's card
-radius); Overview and Recovery each carried a private copy until the Program
+radius, full width; an optional `trailing:` view beside the header for a
+status badge, so a verdict never takes a row of its own). Every Analytics
+section is a column of them, 16 pt apart — Progress too since 2026-10-16,
+when its bordered score card, headers outside cards and cards inside cards
+were replaced: Score, a card per methodology and per measure, Standards,
+Exercises (rows divided, not nested cards), Recommendations, Suggested
+adjustments; Overview and Recovery each carried a private copy until the Program
 section became the third user. `AnalyticsStatus.swift` holds
 `AnalyticsStatusStyle` — the engine's statuses folded onto green / yellow /
 red / neutral and put into words, the same mapping as the web's
@@ -1021,14 +1027,19 @@ The sections, titles and order are the web's (`components/analytics/ProgramTab.t
 the phone lacked Standards and Session shapes, half of Movement and the
 intensity footer until 2026-10-16.
 
-- *Program*: methodology, how it progresses, framework, phase and week, plan
-  fidelity.
+- *Program*: methodology with the book (§6.18) — the only way to it from
+  Analytics; Progress's methodology header has none — how it progresses,
+  framework, phase and week, plan fidelity.
 - *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
   row per modality with completion against the plan to date and the weekly
   dose against the framework's range.
-- *Intensity split*: **minutes** per bucket per week (the week keys say `_pct`
-  but hold minutes), then each bucket's actual share against the framework's
-  (`byFramework`), and % of 1RM for max-effort frameworks.
+- *Intensity split*: a row per HR zone, Z1–Z5 each on its own (strength
+  sessions are load, not heart rate, and are not a zone): the minutes the **completed** sessions planned in it (each
+  slot's prescribed time in the zone its `intensity` names, from the server's
+  `intensity.zones`) as an outline, the minutes their heart rate recorded
+  filled over it, "recorded/planned min" beside it. A zone shows only when it
+  has either. An older server sends no `zones`; the card then draws minutes per
+  bucket per week. % of 1RM for max-effort frameworks.
 - *Movement*: sets and minutes done against planned by pattern (planned the
   grey track, done over it), balance ratios, unilateral share, assumed minutes.
 - *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
@@ -1039,8 +1050,7 @@ intensity footer until 2026-10-16.
 document for what it measures progress by, after the review's score (§6.25)
 and measures — the web's Progress tab:
 
-- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, "About this
-  methodology" (§6.18), then a `ProgressEntryCard` per metric that applies —
+- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, then a `ProgressEntryCard` per metric that applies —
   status badge, `CoverageNoticeView` ("not measurable yet, and why"), the
   exercise picker, the actual-against-expected chart (actual green, expected
   indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
@@ -1121,10 +1131,11 @@ blend (`philosophy_ids` + weights), not as its first source.
 
 **The program explains itself.** `Views/PhilosophyDetailSheet.swift` — a
 methodology's summary, emphasis (modalities), core principles and how it
-trains (intensity model, progression philosophy). Two presenters: the
-builder's philosophy cards (step 1) and Program ▸ Overview's "About this
-methodology" row (`MethodologyRow`), which a blend turns into a menu with
-one entry per source (`AppState.programMethodologies()`). It was private to
+trains (intensity model, progression philosophy). Three presenters: the
+builder's philosophy cards (step 1), Program ▸ Overview's "About this
+methodology" row (`MethodologyRow`) and the book on Analytics ▸ Program's
+Program card; a blend turns either of the last two into a menu with one
+entry per source (`AppState.programMethodologies()`). It was private to
 the builder until 2026-10-01, which left the plan the athlete was on with no
 way to say what it was for — the web's equivalent is the Program overview's
 link into Explore.

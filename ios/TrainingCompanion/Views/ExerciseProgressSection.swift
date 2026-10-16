@@ -35,9 +35,7 @@ struct ExerciseProgressSection: View {
 
     var body: some View {
         let counts = response.resolvedCounts
-        VStack(alignment: .leading, spacing: 10) {
-            Text("EXERCISES")
-                .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+        AnalyticsCard(header: "Exercises") {
             Picker("Exercises", selection: Binding(get: { active }, set: { filter = $0 })) {
                 Text("With data (\(counts.withData))").tag(Filter.data)
                 Text("So far (\(counts.soFar))").tag(Filter.soFar)
@@ -51,6 +49,7 @@ struct ExerciseProgressSection: View {
             } else {
                 ForEach(visible) { item in
                     ExerciseProgressCardView(item: item, finding: findings.first { $0.exerciseId == item.exerciseId })
+                    if item.id != visible.last?.id { Divider() }
                 }
             }
         }
@@ -125,10 +124,7 @@ struct ExerciseProgressCardView: View {
                 Text(change).font(.caption2).foregroundStyle(.secondary)
             }
         }
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .opacity(status == "insufficient_data" ? 0.75 : 1)
     }
 }

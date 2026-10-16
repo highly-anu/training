@@ -8,40 +8,25 @@ import SwiftUI
 
 // MARK: - Methodology
 
-/// One philosophy's section: measurable of applicable, a way to its
-/// description, a `ProgressEntryCard` per measure that applies, headline
-/// first, and one line for the measures this program does not schedule.
+/// One philosophy's section: measurable of applicable, a
+/// `ProgressEntryCard` per measure that applies, headline first, and the
+/// measures this program does not schedule, folded. Its description opens
+/// from the book on Analytics ▸ Program's Program card.
 /// Lives on Progress (it was on Program until 2026-10-16).
 struct MethodologySectionView: View {
-    @EnvironmentObject var appState: AppState
     let method: ProgramAnalytics.Methodology
     let doc: ProgramAnalytics
-    @State private var sheet: PhilosophyCard?
 
     var body: some View {
         let name = doc.frame?.philosophies.first { $0.id == method.philosophy }?.name ?? method.philosophy
         let mine = doc.progress.filter { $0.philosophy == method.philosophy }
         let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
         let elsewhere = mine.filter { !$0.applies }
-        let card = appState.philosophies.first { $0.id == method.philosophy }
-        return VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(name).font(.subheadline).fontWeight(.semibold)
-                    Spacer()
-                    // The web links into Explore; the phone's methodology
-                    // reference is the sheet (design-system §6.18).
-                    if let card {
-                        Button { sheet = card } label: {
-                            Image(systemName: "book")
-                                .frame(minWidth: 44, minHeight: 44)
-                                .contentShape(Rectangle())
-                                .accessibilityLabel("About this methodology")
-                        }
-                        .font(.subheadline)
-                        .padding(.vertical, -12)
-                    }
-                }
+        // A card for the methodology — what is measurable, what the program
+        // does not schedule — then a card per measure, as the other
+        // Analytics sections lay out theirs (§6.15).
+        return VStack(alignment: .leading, spacing: 16) {
+            AnalyticsCard(header: name) {
                 HStack(spacing: 10) {
                     Label("\(method.measurable)/\(method.applicable ?? method.total) measurable", systemImage: "ruler")
                     if method.weight < 1 {
@@ -49,32 +34,28 @@ struct MethodologySectionView: View {
                             .accessibilityLabel("\(Int((method.weight * 100).rounded())) percent of the blend")
                     }
                 }
-                .font(.caption2).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondary)
+                if !elsewhere.isEmpty {
+                    // Folded: the measures this program does not schedule,
+                    // each with the tracks that do.
+                    DisclosureGroup {
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(elsewhere) { e in
+                                let tracks = e.appliesIn.map(\.track)
+                                Text(tracks.isEmpty ? e.label : "\(e.label) · \(tracks.joined(separator: ", "))")
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
+                    } label: {
+                        Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
+                    }
+                    .font(.caption).foregroundStyle(.secondary)
+                }
             }
             ForEach(entries) { entry in
                 ProgressEntryCard(entry: entry)
             }
-            if !elsewhere.isEmpty {
-                // Folded: the measures this program does not schedule, each
-                // with the tracks that do.
-                DisclosureGroup {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(elsewhere) { e in
-                            let tracks = e.appliesIn.map(\.track)
-                            Text(tracks.isEmpty ? e.label : "\(e.label) · \(tracks.joined(separator: ", "))")
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
-                } label: {
-                    Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
-                }
-                .font(.caption2).foregroundStyle(.secondary)
-            }
-        }
-        .task { await appState.loadPhilosophiesIfNeeded() }
-        .sheet(item: $sheet) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
         }
     }
 }

@@ -27,9 +27,11 @@ struct ProgressionView: View {
 
     // MARK: - Review content
 
+    /// The other Analytics sections' layout: a column of `AnalyticsCard`s,
+    /// 16 pt apart, inset as theirs are (§6.15).
     private func reviewContent(review: ProgressionReview) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 overviewCard(review: review)
                 // Each methodology in its own currency, then where the athlete
                 // stands — the web's Progress tab, from the same document.
@@ -52,17 +54,16 @@ struct ProgressionView: View {
                 }
                 if review.scoreBreakdown.map({ $0.basis != "not_started" }) ?? (review.overallScore != nil),
                    review.recommendations.isEmpty, review.adjustments.isEmpty {
-                    Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.background.secondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    AnalyticsCard(header: "Recommendations") {
+                        Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                Spacer(minLength: 32)
+                Spacer(minLength: 24)
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 12)
         }
     }
 
@@ -73,71 +74,64 @@ struct ProgressionView: View {
         let band = ProgressionScore.band(review)
         let color = ProgressionScore.color(band?.id)
 
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
+        return AnalyticsCard(header: "Score") {
+            if score != nil, let band {
+                Text(band.label)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(color)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(color.opacity(0.12))
+                    .clipShape(Capsule())
+            }
+        } content: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
                     if let s = score {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text("\(s)")
-                                .font(.system(size: 48, weight: .bold, design: .rounded))
+                                .font(.system(size: 42, weight: .bold, design: .rounded))
                                 .foregroundStyle(color)
                             Text("/ 100")
-                                .font(.title3)
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                        }
-                        if let band {
-                            Text(band.label)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(color)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(color.opacity(0.12))
-                                .clipShape(Capsule())
                         }
                     } else {
                         Label("Not enough data", systemImage: "hourglass")
                             .font(.subheadline).fontWeight(.semibold)
                             .foregroundStyle(.secondary)
                     }
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 1) {
-                    Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .accessibilityLabel("\(review.compliancePct) percent of sessions done")
-                    if let scope = review.scopeLabel {
-                        Text(scope)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.trailing)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .accessibilityLabel("\(review.compliancePct) percent of sessions done")
+                        if let scope = review.scopeLabel {
+                            Text(scope)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
                 }
-            }
-            if let status = review.scoreStatus {
-                Text(status.reason)
-                    .font(.subheadline)
-            }
-            if review.scoreBreakdown != nil || review.scoreStatus != nil {
-                ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus,
-                                 pending: review.pendingMeasures ?? [])
+                if let status = review.scoreStatus {
+                    Text(status.reason)
+                        .font(.subheadline)
+                }
+                if review.scoreBreakdown != nil || review.scoreStatus != nil {
+                    ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus,
+                                     pending: review.pendingMeasures ?? [])
+                }
             }
         }
-        .padding(16)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(color.opacity(0.4), lineWidth: 1)
-        )
     }
 
     // MARK: - Recommendations section
 
     private func recommendationsSection(recommendations: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Recommendations")
-            VStack(alignment: .leading, spacing: 6) {
+        AnalyticsCard(header: "Recommendations") {
+            VStack(alignment: .leading, spacing: 8) {
                 // The text is the identity; a review never repeats a line.
                 ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
                     HStack(alignment: .top, spacing: 8) {
@@ -151,9 +145,6 @@ struct ProgressionView: View {
                     }
                 }
             }
-            .padding(12)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
@@ -163,11 +154,11 @@ struct ProgressionView: View {
     /// server can apply edit the stored program from the current week on, under
     /// the revision check, and this copy is replaced with what was saved.
     private func adjustmentsSection(adjustments: [ProgressionAdjustment]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Suggested Adjustments")
-            VStack(alignment: .leading, spacing: 8) {
+        AnalyticsCard(header: "Suggested adjustments") {
+            VStack(alignment: .leading, spacing: 10) {
                 ForEach(adjustments) { adj in
                     AdjustmentRow(adjustment: adj)
+                    if adj.id != adjustments.last?.id { Divider() }
                 }
             }
             if let conflict = appState.programSaveConflict {
@@ -198,26 +189,6 @@ struct ProgressionView: View {
     }
 
     // MARK: - Helpers
-
-    private func sectionHeader(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundStyle(.secondary)
-            .tracking(0.8)
-    }
-
-    private func statPill(label: String, value: String) -> some View {
-        VStack(alignment: .trailing, spacing: 1) {
-            Text(value)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
 
     /// "80kg", "45s", but "3 exercises" — the server's own rule for its
     /// change line (`progression_findings`), so the two lines agree.
@@ -373,9 +344,6 @@ private struct AdjustmentRow: View {
                     .foregroundStyle(applied ? Color.green : Color.orange)
             }
         }
-        .padding(12)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func apply() async {

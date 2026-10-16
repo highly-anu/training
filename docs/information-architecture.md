@@ -56,15 +56,17 @@ Rules the layout must satisfy:
 
 Since 2026-10-13 the web sidebar and the phone's tab bar name the same places
 and the same sections, in the same order, so moving between them needs no
-translation. The web groups its items (Train · Insight · Library · You); the
-phone shows the same items as tabs.
+translation. The web groups its items (Train · Library · You); the
+phone shows the same items as tabs. Analytics sits before Log on both since
+2026-10-16 — how the plan is going before the record of it — which folded the
+web's Insight group into Train.
 
 | Item | Web sections (`?tab=`) | iOS sections (`AppSubTabs`) |
 |---|---|---|
 | **Today** | — (web route `/`) | — |
 | **Program** | Calendar · Overview · History | Calendar · Overview · History |
-| **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
+| **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | **Profile** | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete · Equipment · Injuries · Schedule · Benchmarks |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
@@ -96,8 +98,8 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 |---|---|---|---|---|
 | Train | **Today** | `/` | — | Program settings sheet |
 | Train | **Program** | `/program` | Calendar · Overview · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
+| Train | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Train | **Log** | `/log` | Workouts · Suggestions (count badge) · Sessions | Import (sheet) |
-| Insight | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Benchmarks | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds) | — |
