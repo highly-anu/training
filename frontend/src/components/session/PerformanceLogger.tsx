@@ -12,6 +12,11 @@ interface PerformanceLoggerProps {
   sessionKey: string
   prescribedRpe?: number
   prescribedWeightKg?: number
+  /** A hold slot: the first column is seconds held, written as
+   *  `durationSeconds` (what the hold primitive reads), not reps. Until
+   *  2026-10-16 a static hold got the reps column and no way to say how long. */
+  hold?: boolean
+  prescribedSeconds?: number
 }
 
 export function PerformanceLogger({
@@ -20,6 +25,8 @@ export function PerformanceLogger({
   sessionKey,
   prescribedRpe,
   prescribedWeightKg,
+  hold = false,
+  prescribedSeconds,
 }: PerformanceLoggerProps) {
   const storeKey = `${sessionKey}-${exerciseId}`
   const storedBooleans = useProfileStore((s) => s.sessionLogs[storeKey])
@@ -54,6 +61,7 @@ export function PerformanceLogger({
         repsActual: detail.repsActual,
         weightKg: detail.weightKg,
         rpe: detail.rpe,
+        durationSeconds: detail.durationSeconds,
       })
       return next
     })
@@ -69,6 +77,7 @@ export function PerformanceLogger({
         repsActual: next[i]?.repsActual,
         weightKg: next[i]?.weightKg,
         rpe: next[i]?.rpe as RPE | undefined,
+        durationSeconds: next[i]?.durationSeconds,
       })
       return next
     })
@@ -125,7 +134,7 @@ export function PerformanceLogger({
               {/* Header row */}
               <div className="grid grid-cols-[24px_1fr_1fr_1fr] gap-2 px-1">
                 <span className="text-[10px] text-muted-foreground">#</span>
-                <span className="text-[10px] text-muted-foreground text-center">Reps</span>
+                <span className="text-[10px] text-muted-foreground text-center">{hold ? 'Sec' : 'Reps'}</span>
                 <span className="text-[10px] text-muted-foreground text-center">kg</span>
                 <span className="text-[10px] text-muted-foreground text-center">RPE</span>
               </div>
@@ -143,9 +152,10 @@ export function PerformanceLogger({
                     type="number"
                     min={0}
                     step={1}
-                    placeholder="—"
-                    value={details[i]?.repsActual ?? ''}
-                    onChange={(e) => updateDetail(i, 'repsActual', e.target.value)}
+                    placeholder={hold && prescribedSeconds != null ? String(prescribedSeconds) : '—'}
+                    value={(hold ? details[i]?.durationSeconds : details[i]?.repsActual) ?? ''}
+                    onChange={(e) => updateDetail(i, hold ? 'durationSeconds' : 'repsActual', e.target.value)}
+                    aria-label={`${hold ? 'Seconds' : 'Reps'} for set ${i + 1}`}
                     className="h-6 w-full rounded border border-border bg-background px-1.5 text-center text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <input

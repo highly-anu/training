@@ -7,7 +7,7 @@ import Foundation
 /// kilometres, reps — which is what the analytics primitives read. Until the
 /// phone could log, the only logger it had was the watch, and only for sets.
 enum OutcomeField: String, CaseIterable {
-    case rounds, minutes, km, reps
+    case rounds, minutes, km, reps, seconds
 
     var label: String {
         switch self {
@@ -15,6 +15,7 @@ enum OutcomeField: String, CaseIterable {
         case .minutes: return "Minutes"
         case .km: return "Kilometres"
         case .reps: return "Reps"
+        case .seconds: return "Hold (seconds)"
         }
     }
 }
@@ -32,9 +33,22 @@ enum SessionLogging {
         "amrap_movement":  [.reps],
     ]
 
-    /// The currency fields a slot type can log; empty for a sets slot.
-    static func outcomeFields(for slotType: String?) -> [OutcomeField] {
-        fieldsFor[slotType ?? ""] ?? []
+    /// The currency fields a slot can log; empty for a sets slot. Two rules on
+    /// the exercise, as `lib/outcomeFields.ts` has them — change both: a
+    /// kettlebell in a timed slot logs reps beside minutes (Wildman's cadence
+    /// is reps per minute), and an isometric in a skill-practice slot logs the
+    /// hold in seconds (Ido's handstand and L-sit holds).
+    static func outcomeFields(for slotType: String?, category: String? = nil,
+                              patterns: [String] = []) -> [OutcomeField] {
+        if slotType == "time_domain", category == "kettlebell" { return [.minutes, .reps] }
+        if slotType == "skill_practice", patterns.contains("isometric") { return [.minutes, .seconds] }
+        return fieldsFor[slotType ?? ""] ?? []
+    }
+
+    /// The exercise's `movement_patterns`, kept in its extras.
+    static func patterns(of exercise: ProgramExercise?) -> [String] {
+        guard case .array(let values)? = exercise?.extra["movement_patterns"] else { return [] }
+        return values.compactMap { if case .string(let s) = $0 { return s } else { return nil } }
     }
 
     /// Sets × reps and static holds log per set; the rest log an outcome.
@@ -70,9 +84,8 @@ enum SessionLogging {
         if let sec = perf.durationSec, sec > 0 { parts.append("\(Int((Double(sec) / 60).rounded())) min") }
         if let km = perf.distanceKm, km > 0 { parts.append("\(LoadFormat.kilograms(km)) km") }
         if let rounds = perf.rounds, rounds > 0 { parts.append("\(rounds) round\(rounds == 1 ? "" : "s")") }
-        if let reps = perf.sets.first?.repsActual, reps > 0, outcomeFields(for: slotType).contains(.reps) {
-            parts.append("\(reps) reps")
-        }
+        if let reps = perf.sets.first?.repsActual, reps > 0 { parts.append("\(reps) reps") }
+        if let hold = perf.sets.first?.durationSeconds, hold > 0 { parts.append("\(hold) s hold") }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }

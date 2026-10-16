@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useBioStore } from '@/store/bioStore'
 import type { ExerciseLoad } from '@/api/types'
-import { outcomeFieldsFor, type OutcomeField } from '@/lib/outcomeFields'
+import { outcomeFieldsFor, type OutcomeExercise, type OutcomeField } from '@/lib/outcomeFields'
 
 /**
  * Logging for slots that are not sets × reps.
@@ -18,6 +18,7 @@ import { outcomeFieldsFor, type OutcomeField } from '@/lib/outcomeFields'
 
 interface OutcomeLoggerProps {
   slotType: string
+  exercise?: OutcomeExercise | null
   exerciseId: string
   sessionKey: string
   load: ExerciseLoad
@@ -25,7 +26,7 @@ interface OutcomeLoggerProps {
 
 type Field = OutcomeField
 
-const LABEL: Record<Field, string> = { rounds: 'Rounds', minutes: 'Min', km: 'km', reps: 'Reps' }
+const LABEL: Record<Field, string> = { rounds: 'Rounds', minutes: 'Min', km: 'km', reps: 'Reps', seconds: 'Hold s' }
 
 function prescribed(load: ExerciseLoad, field: Field): string | undefined {
   switch (field) {
@@ -35,11 +36,12 @@ function prescribed(load: ExerciseLoad, field: Field): string | undefined {
     case 'km':      return load.distance_km != null ? String(load.distance_km)
                          : load.distance_m != null ? String(load.distance_m / 1000) : undefined
     case 'reps':    return load.reps_per_round != null ? String(load.reps_per_round) : undefined
+    case 'seconds': return load.hold_seconds != null ? String(load.hold_seconds) : undefined
   }
 }
 
-export function OutcomeLogger({ slotType, exerciseId, sessionKey, load }: OutcomeLoggerProps) {
-  const fields = outcomeFieldsFor(slotType)
+export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load }: OutcomeLoggerProps) {
+  const fields = outcomeFieldsFor(slotType, exercise)
   const stored = useBioStore((s) => s.sessionPerformanceLogs[sessionKey]?.exercises[exerciseId])
   const setExerciseOutcome = useBioStore((s) => s.setExerciseOutcome)
 
@@ -48,6 +50,7 @@ export function OutcomeLogger({ slotType, exerciseId, sessionKey, load }: Outcom
     minutes: stored?.durationSec != null ? String(Math.round(stored.durationSec / 60)) : '',
     km:      stored?.distanceKm != null ? String(stored.distanceKm) : '',
     reps:    stored?.sets?.[0]?.repsActual != null ? String(stored.sets[0].repsActual) : '',
+    seconds: stored?.sets?.[0]?.durationSeconds != null ? String(stored.sets[0].durationSeconds) : '',
   })
 
   if (fields.length === 0) return null
@@ -60,6 +63,7 @@ export function OutcomeLogger({ slotType, exerciseId, sessionKey, load }: Outcom
       durationSec: field === 'minutes' ? (value != null ? Math.round(value * 60) : undefined) : stored?.durationSec,
       distanceKm:  field === 'km'      ? value : stored?.distanceKm,
       reps:        field === 'reps'    ? value : undefined,
+      holdSec:     field === 'seconds' ? value : undefined,
     })
   }
 

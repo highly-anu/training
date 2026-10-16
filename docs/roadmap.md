@@ -708,13 +708,12 @@ phases A–E. Open:
   whose expected line is `compute_expected_trajectory` — the generator replay
   the analytics engine replaced. Build them from the `/analytics/program`
   document's per-exercise series (`progress[].exercises`), on both clients.
-- **Capture gaps.** Measures a package declares that nothing logs yet:
-  - seconds per hold in a skill-practice slot (Ido's handstand and L-sit holds,
-    `hold_seconds` scoped by exercise) — the loggers offer minutes only;
-  - reps on a time-domain slot (Wildman's cadence, `rate`) — minutes and km
-    only;
-  - `durationSeconds` from the Apple Watch set logger (`SetLoggerSheetView`
-    writes nil).
+- ~~Capture gaps~~ — closed 2026-10-16: a static hold logs seconds per set on
+  the web (it had the reps column), an isometric skill-practice exercise logs
+  its hold in seconds and a kettlebell in a timed slot its reps, on both
+  clients (`lib/outcomeFields.ts`, `SessionLogging.outcomeFields`), and the
+  Apple Watch writes each set's `durationSeconds`. Still open: an optional
+  "clean" tick so *movements earned* counts quality, not attendance.
 - **Marcus Filly prescribes kg, not RPE.** The framework is
   `rpe_autoregulation` but the modality's `linear_load` writes the load, so
   `load_at_rpe` could only say "no RPE target"; the spec measures working load

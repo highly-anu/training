@@ -22,6 +22,21 @@ final class SessionLoggingTests: XCTestCase {
         XCTAssertFalse(SessionLogging.logsSets("amrap"))
     }
 
+    func testExerciseRulesMirrorTheWeb() {
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "time_domain", category: "kettlebell"), [.minutes, .reps],
+                       "a kettlebell in a timed slot logs reps beside minutes — cadence")
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "time_domain", category: "aerobic"), [.minutes, .km])
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "skill_practice", patterns: ["vertical_push", "isometric"]),
+                       [.minutes, .seconds], "an isometric skill logs the hold")
+        let ex = ProgramExercise(id: "l_sit", name: "L-Sit", category: "bodyweight", notes: nil,
+                                 extra: ["movement_patterns": .array([.string("isometric"), .string("hip_flexion")])])
+        XCTAssertEqual(SessionLogging.patterns(of: ex), ["isometric", "hip_flexion"])
+        var perf = ExercisePerformanceLog()
+        perf.sets = [WatchSetLog(setIndex: 0, repsActual: nil, weightKg: nil, rpe: nil, completed: true,
+                                 durationSeconds: 35, startOffset: nil, endOffset: nil)]
+        XCTAssertEqual(SessionLogging.summary(perf, slotType: "skill_practice"), "35 s hold")
+    }
+
     func testPerformanceEncodesTheKeysTheEngineReads() throws {
         let perf = ExercisePerformanceLog(
             sets: [WatchSetLog(setIndex: 0, repsActual: 5, weightKg: 80, rpe: 8, completed: true,

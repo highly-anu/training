@@ -659,6 +659,13 @@ def test_rounds_rate_hold_distance() -> None:
     untimed = run_primitive(e, _ctx(prog, {'1-Friday-0': _log('2026-03-06T10:00:00+00:00',
                                                              {'kb_swing': {'sets': _sets((24, 120))}})}))
     check('reps without seconds → timed_sets_not_logged', untimed['coverage']['reason'] == 'timed_sets_not_logged')
+    # What the loggers write for a kettlebell in a timed slot: minutes as the
+    # exercise's durationSec, reps on the first set (lib/outcomeFields.ts,
+    # SessionLogging.outcomeFields).
+    logged = run_primitive(e, _ctx(prog, {'1-Friday-0': _log('2026-03-06T10:00:00+00:00', {'kb_swing': {
+        'durationSec': 360, 'sets': [{'setIndex': 0, 'completed': True, 'repsActual': 108}]}})}))
+    check("the outcome logger's minutes and reps make a cadence (108 in 6 min = 18 rpm)",
+          logged['series'] and logged['series'][0]['value'] == 18.0, str(logged['series']))
 
     hold = fixture_program(weeks=1)
     hold['weeks'][0]['schedule']['Monday'][0]['exercises'].append(
@@ -670,6 +677,17 @@ def test_rounds_rate_hold_distance() -> None:
                                                                    [{'setIndex': 2, 'completed': True, 'durationSeconds': 75}]}})}))
     check('longest completed hold vs hold_seconds', r['series'][0]['value'] == 75 and r['expected'][0]['value'] == 60)
     check('hold is called a proxy for range', any('proxy' in ev for ev in r['evidence']))
+    # A hold in a skill-practice slot, scoped by exercise as Ido's are: the
+    # outcome logger writes its seconds on the first set.
+    skill = fixture_program(weeks=1)
+    skill['weeks'][0]['schedule']['Monday'][0]['exercises'].append(
+        {'exercise': {'id': 'l_sit', 'name': 'L-Sit', 'movement_patterns': ['isometric']},
+         'slot_role': 'skill', 'slot_type': 'skill_practice', 'load': {'duration_minutes': 10}})
+    e = E('h', 'hold_seconds', 'ido_portal', scope={'exercises': ['l_sit']})
+    r = run_primitive(e, _ctx(skill, {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'l_sit': {
+        'durationSec': 600, 'sets': [{'setIndex': 0, 'completed': True, 'durationSeconds': 25}]}})}))
+    check("a skill-practice hold logged in seconds is measured", r['series'] and r['series'][0]['value'] == 25,
+          str(r['series']))
 
     dist = fixture_program(weeks=1)
     dist['weeks'][0]['schedule']['Saturday'][0]['exercises'][0]['load'] = {'distance_km': 8, 'duration_minutes': 50}

@@ -7,7 +7,8 @@
  * zero coverage by construction. This pins the dispatch.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { useBioStore } from '@/store/bioStore'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
 import type { ExerciseAssignment } from '@/api/types'
@@ -59,6 +60,45 @@ describe('ExerciseRow logger dispatch', () => {
       slot_type: 'sets_reps',
     })
     expect(screen.queryByLabelText('Log outcome')).toBeNull()
+  })
+
+  it('logs reps beside minutes for a kettlebell in a timed slot — cadence is reps per minute', () => {
+    renderRow({
+      exercise: { id: 'kb_jerk_single', name: 'KB Jerk', category: 'kettlebell', movement_patterns: ['vertical_push', 'ballistic'] },
+      load: { duration_minutes: 6 },
+      slot_type: 'time_domain',
+    })
+    expect(screen.getByLabelText('Min for kb_jerk_single')).toBeInTheDocument()
+    expect(screen.getByLabelText('Reps for kb_jerk_single')).toBeInTheDocument()
+    expect(screen.queryByLabelText('km for kb_jerk_single')).toBeNull()
+  })
+
+  it('logs a hold in seconds for an isometric in a skill-practice slot', () => {
+    renderRow({
+      exercise: { id: 'handstand_hold', name: 'Handstand Hold', category: 'bodyweight', movement_patterns: ['isometric'] },
+      load: { duration_minutes: 10 },
+      slot_type: 'skill_practice',
+    })
+    const input = screen.getByLabelText('Hold s for handstand_hold')
+    fireEvent.change(input, { target: { value: '35' } })
+    fireEvent.blur(input)
+    const set0 = useBioStore.getState().sessionPerformanceLogs['1-Monday-0']?.exercises.handstand_hold?.sets[0]
+    expect(set0?.durationSeconds).toBe(35)
+    expect(set0?.completed).toBe(true)
+  })
+
+  it('logs seconds, not reps, per set of a static hold', () => {
+    renderRow({
+      exercise: { id: 'copenhagen', name: 'Copenhagen Plank', category: 'rehab', movement_patterns: ['isometric'] },
+      load: { sets: 3, hold_seconds: 30 },
+      slot_type: 'static_hold',
+    })
+    fireEvent.click(screen.getByLabelText('Log set details'))
+    expect(screen.getByText('Sec')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Seconds for set 1'), { target: { value: '40' } })
+    const set0 = useBioStore.getState().sessionPerformanceLogs['1-Monday-0']?.exercises.copenhagen?.sets[0]
+    expect(set0?.durationSeconds).toBe(40)
+    expect(set0?.repsActual).toBeUndefined()
   })
 
   it('logs nothing for a slot with no currency', () => {
