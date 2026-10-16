@@ -76,8 +76,12 @@ def check_level_coverage(substituted: dict, constraints, archetypes, policy, res
         found = by_modality.get(modality)
         if not found:
             continue
-        levels = {lv for a in found for lv in (a.get('training_levels') or [])}
-        if not levels or level in levels:
+        # An archetype that names no levels is open to every level, as the
+        # selector reads it: then the level is not the cause (the phase is).
+        if any(not a.get('training_levels') for a in found):
+            continue
+        levels = {lv for a in found for lv in a['training_levels']}
+        if level in levels:
             continue
         name = modality.replace('_', ' ')
         order = ['novice', 'intermediate', 'advanced', 'elite']

@@ -311,8 +311,9 @@ def test_substitution_is_recorded() -> None:
     check('the coverage report lists them with a week number and a day name',
           len(report) == len(swapped) and all(isinstance(r['week'], int) and isinstance(r['day'], str)
                                               for r in report), str(report[:2]))
-    check('the compromises say it once per modality',
-          sum('scheduled as aerobic base' in c for c in novice['compromises']) == 2, str(novice['compromises']))
+    check('the compromises say it once per modality, naming the level as the cause',
+          sum('for a novice athlete' in c and 'scheduled as aerobic base' in c
+              for c in novice['compromises']) == 2, str(novice['compromises']))
     intermediate = program('wildman_kettlebell', 4, track_id='general_practice',
                            training_level='intermediate', **kb)
     check('an intermediate gets the modalities as asked, nothing substituted',
@@ -336,6 +337,18 @@ def test_substitution_is_recorded() -> None:
     check_level_coverage({'strength_endurance': {'aerobic_base'}}, {'training_level': 'intermediate'},
                          archetypes, policy, result)
     check('no warning when the level is covered (the swap had another cause)', not result.warnings)
+
+    # Gym Jones max strength: emom_strength names no levels (open to all) but
+    # is not for the base phase; the others start at intermediate. A novice's
+    # base-phase swap is the phase's doing, not the level's.
+    gj = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    gj_policy = provenance.resolve_source_policy(gj)
+    gj_arch = provenance.scope(loader.load_all_data(), gj_policy)['archetypes']
+    result = ValidationResult()
+    check_level_coverage({'max_strength': {'aerobic_base'}}, {'training_level': 'novice'},
+                         gj_arch, gj_policy, result)
+    check('an archetype open to every level means the level is not the cause', not result.warnings,
+          str(result.warnings))
 
 
 def main() -> int:

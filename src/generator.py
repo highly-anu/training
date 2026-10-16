@@ -526,8 +526,15 @@ def generate(
                 # compromises, and in the coverage report.
                 if substituted_for:
                     populated['substituted_for'] = substituted_for
-                    msg = (f"No {substituted_for.replace('_', ' ')} session in {policy.describe()} for the "
-                           f"{phase} phase at {constraints.get('training_level', 'intermediate')} level — "
+                    level = constraints.get('training_level', 'intermediate')
+                    # Name the cause: no archetype written for this level at
+                    # all, or none for this phase (an archetype naming no
+                    # levels is open to all of them).
+                    own = [a for a in archetypes if a.get('modality') == substituted_for]
+                    level_gap = bool(own) and all(a.get('training_levels') and level not in a['training_levels']
+                                                  for a in own)
+                    why = f"for a {level} athlete" if level_gap else f"for the {phase} phase"
+                    msg = (f"No {substituted_for.replace('_', ' ')} session in {policy.describe()} {why} — "
                            f"scheduled as {session['modality'].replace('_', ' ')} instead.")
                     if msg not in all_compromises:
                         all_compromises.append(msg)
