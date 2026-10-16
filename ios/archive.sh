@@ -4,6 +4,11 @@
 #   ./ios/archive.sh                 # Release archive into ios/build/TrainingCompanion.xcarchive
 #   ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_PATH=~/AuthKey_….p8 ./ios/archive.sh   # …and upload
 #
+# With no ASC_KEY_ID the key is read from the login Keychain when it is there
+# (ios/tools/store_asc_key.sh puts it there once, from 1Password), so an upload
+# needs neither 1Password nor anyone at the Mac — only a logged-in session.
+# The key is written to a private temp file for the upload and removed after.
+#
 # Every upload needs a build number App Store Connect has not seen, and the
 # watch app and both widgets must carry the same one as the phone app. The
 # project keeps CURRENT_PROJECT_VERSION at 1; this script overrides it for all
@@ -39,6 +44,20 @@ fi
 
 if [ -n "$(git -C "$PROJECT_DIR" status --porcelain -- .)" ]; then
     echo "warning: ios/ has uncommitted changes; build $BUILD_NUMBER will not match a commit" >&2
+fi
+
+KEYCHAIN_SERVICE="training-asc-api-key"
+if [ -z "${ASC_KEY_ID:-}" ] && [ "${ASC_NO_KEYCHAIN:-}" != 1 ] \
+        && key_b64="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w 2>/dev/null)"; then
+    ASC_KEY_ID="$(security find-generic-password -s "$KEYCHAIN_SERVICE" 2>/dev/null \
+        | sed -n 's/.*"acct"<blob>="\(.*\)"/\1/p')"
+    ASC_ISSUER_ID="${ASC_ISSUER_ID:-3196e516-4057-453d-88f5-9e670dd21141}"
+    key_dir="$(umask 077; mktemp -d)"
+    trap 'rm -rf "$key_dir"' EXIT
+    ASC_KEY_PATH="$key_dir/AuthKey_$ASC_KEY_ID.p8"
+    (umask 077; printf '%s' "$key_b64" | base64 -d > "$ASC_KEY_PATH")
+    unset key_b64
+    echo "App Store Connect key $ASC_KEY_ID from the Keychain"
 fi
 
 auth=()
