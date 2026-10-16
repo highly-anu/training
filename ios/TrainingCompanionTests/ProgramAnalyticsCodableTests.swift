@@ -287,5 +287,7 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(AnalyticsProgramTab.fidelityLabel("some_other_field"), "Some Other Field")
         XCTAssertEqual(AnalyticsProgramTab.number(75), "75")
         XCTAssertEqual(AnalyticsProgramTab.number(2.5), "2.5")
+        XCTAssertEqual(AnalyticsProgramTab.number(0.75), "0.75", "a ×BW threshold keeps its second decimal")
+        XCTAssertEqual(AnalyticsProgramTab.number(-4.2), "-4.2")
     }
 }

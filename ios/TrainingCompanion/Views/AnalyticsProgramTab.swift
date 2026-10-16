@@ -148,8 +148,13 @@ struct AnalyticsProgramTab: View {
         }
     }
 
+    /// Up to two decimals, trailing zeros dropped: ×BW standards sit at
+    /// 0.75 and 1.25, which one decimal showed as 0.8 and 1.2.
     static func number(_ v: Double) -> String {
-        v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v)
+        if v == v.rounded() { return String(Int(v)) }
+        var s = String(format: "%.2f", v)
+        while s.hasSuffix("0") { s.removeLast() }
+        return s
     }
 
     // MARK: - Methodology
