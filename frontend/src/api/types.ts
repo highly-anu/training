@@ -365,7 +365,12 @@ export interface ExerciseAssignment {
   injury_skip?: boolean
   /** Unfilled because the philosophy's packages own nothing for this slot. */
   coverage_gap?: boolean
+  /** Unfilled because no exercise fits the athlete's equipment. */
+  equipment_gap?: boolean
+  /** NO_EXERCISE_IN_ALLOWED_PACKAGES | EQUIPMENT_UNAVAILABLE | LEVEL_LOCKED */
   gap_reason?: string | null
+  /** The exercise an injury flag's `modified_exercises` replaced with this one. */
+  substituted_for?: string
   /** Links an `amrap_movement` component to the `amrap` slot it belongs to. */
   parent_slot_role?: string
   /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */

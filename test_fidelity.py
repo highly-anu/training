@@ -146,9 +146,8 @@ def test_levels_and_kinds() -> None:
     check('level mismatch', bool(rules(go([adv]), 'level_mismatch')))
     wrong = good_week(1, kind='taper')
     check('phase kind mismatch', bool(rules(go([wrong]), 'phase_kind_mismatch')))
-    phase = {'id': 'p1', 'framework_id': 'fw',
+    phase = {'id': 'p1', 'framework_id': 'fw', 'exclude_exercises': ['back_squat'],
              'checks': {'archetypes_forbidden': ['lp'], 'archetypes_required': ['z9'],
-                        'exercises_forbidden': ['back_squat'],
                         'modalities_required': ['anaerobic_intervals']}}
     found = {f.rule for f in go([good_week(1)], phase)}
     for rule in ('archetype_forbidden', 'archetype_required', 'exercise_forbidden', 'modality_required'):
@@ -160,10 +159,8 @@ def test_fixed_lifts() -> None:
     weeks = [good_week(1, squat='back_squat'), good_week(2, squat='front_squat')]
     check('a rotating main lift', bool(rules(go(weeks), 'main_lift_rotates')))
     check('rotation is fine when the phase says so',
-          not rules(go(weeks, {'id': 'p1', 'framework_id': 'fw', 'checks': {'fixed_exercises': False}}),
+          not rules(go(weeks, {'id': 'p1', 'framework_id': 'fw', 'rotate_main_lifts': True}),
                     'main_lift_rotates'))
-    check('constant variation rotates by default',
-          not rules(go(weeks, phil={'intensity_model': 'constant_variation'}), 'main_lift_rotates'))
 
 
 def test_deload() -> None:
@@ -199,7 +196,7 @@ def test_constraints() -> None:
     check('an excluded pattern', bool(rules(go([good_week(1)], constraints=knee), 'injury_violation')))
     skipped = good_week(1)
     skipped['schedule'][1][0]['exercises'] = [{'exercise': None, 'injury_skip': True, 'slot_role': 'main',
-                                               'slot': {'exercise_filter': {'category': 'barbell'}}}]
+                                               'slot': {'exercise_filter': {'movement_pattern': 'squat'}}}]
     check('an injury skip with a named substitute',
           bool(rules(go([skipped], constraints=knee), 'injury_substitute_unused')))
     silent = good_week(1)

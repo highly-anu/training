@@ -289,12 +289,18 @@ def allocate_sessions(priorities: dict, days_per_week: int, framework: dict,
         # when they are accessory work — but for Ido Portal and Kelly Starrett they
         # ARE the philosophy, and a 4-day week was being emptied out entirely.
         committed = set((framework.get('modality_priority') or {}).get('committed') or [])
+        # A framework's `core` modalities count as tier 2 (kept from three days
+        # up): Ido Portal's mobility and Kelly Starrett's rehab are core to the
+        # method, and the global tier dropped them from every 3-day week.
+        core = set((framework.get('modality_priority') or {}).get('core') or [])
         filtered_priorities = {}
         for mod, weight in priorities.items():
             if weight <= 0:
                 continue
 
             tier = modalities_dict.get(mod, {}).get('priority_tier', 3)
+            if mod in core:
+                tier = min(tier, 2)
 
             # Tier thresholds: 1 (always), 2 (needs 3+ days), 3 (needs 4+ days), 4 (needs 5+ days)
             if tier == 1 or mod in committed or days_per_week >= (tier + 1):
@@ -538,7 +544,9 @@ def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int
         return _DEFAULT_SPREAD.get(days, list(range(1, days + 1)))
     if phases.kind_flag(phase, 'spread_cadence'):
         return options[0]                          # most spread-out in recovery kinds
-    return options[week_in_phase % len(options)]   # rotate week-to-week otherwise
+    # Rotate week to week otherwise. week_in_phase counts from 1, so the first
+    # week takes the first pattern; `week_in_phase % n` started on the second.
+    return options[(week_in_phase - 1) % len(options)]
 
 
 def _build_day_pool(days_per_week: int,
@@ -801,8 +809,11 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
     allocation = allocation_result['allocated']
     compromises = allocation_result.get('compromises', [])
 
-    deload_freq = framework.get('deload_protocol', {}).get('frequency_weeks', 4)
-    is_deload = (week_number % deload_freq == 0)
+    # A framework that declares no deload_protocol does not deload on a
+    # schedule (CrossFit's constant variation, a novice linear progression's
+    # weekly reset by stall). Every framework used to deload every 4th week.
+    deload_freq = (framework.get('deload_protocol') or {}).get('frequency_weeks')
+    is_deload = bool(deload_freq) and week_number % deload_freq == 0
     if constraints.get('fatigue_state') == 'overreached':
         is_deload = True
 

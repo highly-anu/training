@@ -164,6 +164,10 @@ def phase_sequence_for(track: dict) -> list[dict]:
                 entry[key] = ph[key]
         if ph.get('priority_override'):
             entry['priority_override'] = dict(ph['priority_override'])
+        if ph.get('exclude_exercises'):
+            entry['exclude_exercises'] = list(ph['exclude_exercises'])
+        if ph.get('rotate_main_lifts'):
+            entry['rotate_main_lifts'] = True
         out.append(entry)
     return out
 
@@ -225,4 +229,8 @@ def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> d
         entry['phase_name'] = phase_entry['name']
     if phase_entry.get('framework_id'):
         entry['framework_id'] = phase_entry['framework_id']
+    if phase_entry.get('exclude_exercises'):
+        entry['exclude_exercises'] = list(phase_entry['exclude_exercises'])
+    if phase_entry.get('rotate_main_lifts'):
+        entry['rotate_main_lifts'] = True
     return entry

@@ -66,6 +66,5 @@ tracks:
         # The prose above, in a form tools/check_fidelity.py can test. HLM and
         # 5x5 are the intermediate programs that follow the novice period.
         checks:
-          archetypes_required: [3x5_linear]
+          archetypes_required: [3x5_linear, 3x5_linear_b]
           archetypes_forbidden: [hlm, 5x5]
-          fixed_exercises: true

@@ -44,6 +44,7 @@ deferred is under *Later*.
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
+| 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
 
 ---
 
@@ -659,6 +660,42 @@ server. Left open:
 4. **Profile's fifth segment truncates on the phone (S).** "Benchmarks" shows as
    "Benchm…" in the segmented control (it did in fourth place too). Either a
    shorter label on both clients or a scrolling selector in `AppSubTabPicker`.
+
+### 9. Theory fidelity: what the baseline still holds — P1 · M
+
+From the theory-programming alignment of 2026-10-16 (branch
+`theory-programming-alignment`). `tools/check_fidelity.py` generates every
+philosophy × track × profile and reads the result against what the package
+declares; `docs/fidelity-report.md` is the current state and
+`tools/fidelity_baseline.json` the known findings (583 errors before the
+branch, 0 after; the 330 left are warnings). What is left, cheapest first:
+
+1. **Injury substitutions point nowhere (S, content).** 78 of the 126
+   `instead_of` / `use` ids in `injury_flags.yaml` name exercises no package
+   declares (`barbell_squat`, `goblet_squat_light`, `stationary_bike`…). The
+   engine now applies a substitute when both ids resolve
+   (`selector._explain_unfilled`), so every repaired pair starts working.
+2. **Intensity splits that cannot be met (S, content).** The mobility and skill
+   frameworks (Ido Portal, Kelly Starrett, ATG) declare 20–30 % of zone 3–5
+   minutes their archetypes never prescribe; Wildman's and the pentathlon's
+   splits disagree with their own sessions. Either the split or the archetypes'
+   slot intensities is wrong in each — `intensity_split` in the report.
+3. **Uphill base never ramps (M, engine).** `_time_to_task` caps a slot at
+   `base × volume_multiplier(kind)`, and `base` is 1.0, so the "+10 % a week for
+   three weeks" in the base phase's prose is flat from week 1
+   (`volume_ramp`). Needs a ramp that restarts after each deload instead of a
+   kind ceiling.
+4. **BJJ class blocks ignore the deload (S).** Meta slots carry their YAML
+   duration through a deload (`deload_size`: 60 % kept against 40 %).
+5. **The single-session routes miss the phase.** `POST /sessions/generate` and
+   `/exercises/substitute` call `populate_session` without the week's
+   `exclude_exercises`, pinned lifts or the framework's `deload_keep`.
+6. **Real two-a-days and per-day session time (M).** `_add_split_sessions` only
+   ever adds mobility, and `weekly_schedule`'s per-day minutes never reach
+   `session_time_minutes`.
+7. **The framework's `progression_model` still drives no prescription.**
+   Filly, BJJ and ATG declare `rpe_autoregulation`; no modality uses it, so no
+   RPE target is ever written.
 
 ## Later
 

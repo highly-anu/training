@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from src import phases as phases_mod
 from src.analytics.families import is_strength
 from src.scheduler import consecutive_allowances
-from src.selector import _equipment_ok, _injury_exclusions, _matches_slot_filter
+from src.selector import _equipment_ok, _injury_exclusions, _matches_slot_filter, is_main_lift_slot
 
 BUCKETS = ('zone1_2_pct', 'zone3_pct', 'zone4_5_pct', 'max_effort_pct')
 
@@ -42,9 +42,6 @@ _INTENSITY_BUCKET = {
 }
 _BUCKET_RANK = {b: i for i, b in enumerate(BUCKETS)}
 
-# Slot intensities that mark a loaded main lift (as opposed to a warm-up,
-# an accessory or a carry), for the fixed-exercise rule.
-_MAIN_LIFT_INTENSITIES = {'heavy', 'max', 'max_effort'}
 
 SHAPE_TOLERANCE = 0.15
 INTENSITY_TOLERANCE = 0.15
@@ -243,7 +240,6 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
     injury_flags = library.get('injury_flags') or {}
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags)
     flagged = set(constraints.get('injury_flags') or [])
-    fixed_default = philosophy.get('intensity_model') != 'constant_variation'
 
     prev_phase_tail_minutes = None
     for phase_id, pweeks in _phase_groups(weeks):
@@ -260,14 +256,14 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
                 out.add('framework_mismatch', 'error', phase_id, w.get('framework'),
                         f"week ran {w.get('framework')}, the phase names {phase['framework_id']}", wn)
             _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, excl_ids,
-                        flagged, injury_flags, modalities, library, constraints, checks)
+                        flagged, injury_flags, modalities, library, constraints,
+                        {**checks, 'exclude_exercises': phase.get('exclude_exercises')})
 
         _check_shape(out, phase_id, fw, work_weeks, philosophy)
         _check_intensity(out, phase_id, fw, work_weeks, checks)
         _check_deload(out, phase_id, fw, pweeks, constraints)
         _check_required(out, phase_id, work_weeks, checks)
-        _check_fixed(out, phase_id, pweeks, modalities,
-                     checks.get('fixed_exercises', fixed_default))
+        _check_fixed(out, phase_id, pweeks, modalities, not phase.get('rotate_main_lifts'))
         _check_volume(out, phase_id, work_weeks, checks, prev_phase_tail_minutes)
         if work_weeks:
             prev_phase_tail_minutes = week_minutes(work_weeks[-1])
@@ -280,7 +276,7 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
     allowed = consecutive_allowances(fw, kind)
     max_zone = checks.get('max_zone')
     forbidden = set(checks.get('archetypes_forbidden') or [])
-    forbidden_ex = set(checks.get('exercises_forbidden') or [])
+    forbidden_ex = set(checks.get('exclude_exercises') or [])
     placed: dict[int, list[str]] = defaultdict(list)
     session_cap = constraints.get('session_time_minutes')
 
@@ -316,7 +312,11 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
         for ea in _work(s):
             ex = ea.get('exercise')
             if ex is None:
-                if not ea.get('injury_skip') and not ea.get('coverage_gap'):
+                if ea.get('equipment_gap') or ea.get('gap_reason') == 'LEVEL_LOCKED':
+                    out.add('equipment_gap' if ea.get('equipment_gap') else 'level_gap', 'info',
+                            phase_id, f"{aid}:{ea.get('slot_role')}",
+                            f"{aid} slot '{ea.get('slot_role')}' is empty: {ea.get('error')}", wn)
+                elif not ea.get('injury_skip') and not ea.get('coverage_gap'):
                     out.add('silent_empty_slot', 'error', phase_id, f"{aid}:{ea.get('slot_role')}",
                             f"{aid} slot '{ea.get('slot_role')}' is empty with no reason given", wn)
                 elif ea.get('injury_skip'):
@@ -338,8 +338,9 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
             if not _equipment_ok(ex, equipment):
                 out.add('equipment_violation', 'error', phase_id, eid,
                         f"{eid} needs {sorted(set(ex.get('equipment', [])) - equipment - {'open_space', 'none'})}", wn)
-            if eid in excl_ids or set(ex.get('movement_patterns') or []) & excl_patterns \
-                    or set(ex.get('contraindicated_with') or []) & flagged:
+            if not ea.get('substituted_for') and (
+                    eid in excl_ids or set(ex.get('movement_patterns') or []) & excl_patterns
+                    or set(ex.get('contraindicated_with') or []) & flagged):
                 out.add('injury_violation', 'error', phase_id, eid,
                         f"{eid} is excluded or contraindicated by {sorted(flagged)}", wn)
             if max_zone and not is_strength(mod):
@@ -374,17 +375,18 @@ def _check_recovery(out, phase_id, wn, placed: dict, modalities: dict, allowed: 
 
 
 def _available_substitute(ea, flagged, injury_flags, library, equipment, excl_patterns, excl_ids):
-    """The flag's own `modified_exercises` substitute that would fill this slot."""
+    """The flag's own `modified_exercises` substitute that would fill this slot:
+    an entry whose `instead_of` fits the slot and whose `use` is in the
+    library, unexcluded and within the athlete's equipment (the rule
+    `selector._explain_unfilled` applies)."""
     exercises = library.get('exercises') or {}
     ex_filter = (ea.get('slot') or {}).get('exercise_filter') or {}
     for fid in flagged:
         for mod in (injury_flags.get(fid) or {}).get('modified_exercises') or []:
-            use = exercises.get(mod.get('use'))
-            if not use or use['id'] in excl_ids or not _equipment_ok(use, equipment):
+            was, use = exercises.get(mod.get('instead_of')), exercises.get(mod.get('use'))
+            if not was or not use or use['id'] in excl_ids or not _equipment_ok(use, equipment):
                 continue
-            # The flag named it for this injury, so its own patterns do not rule it out.
-            relaxed = {k: v for k, v in ex_filter.items() if k != 'movement_pattern'}
-            if _matches_slot_filter(use, relaxed, set()):
+            if _matches_slot_filter(was, ex_filter, set()):
                 return use['id']
     return None
 
@@ -500,9 +502,9 @@ def _check_required(out, phase_id, work_weeks, checks):
 def _check_fixed(out, phase_id, pweeks, modalities, fixed: bool):
     """A loaded main lift keeps its exercise across the phase.
 
-    The slot is identified by (archetype, slot index). It counts as a main
-    lift when it is sets x reps in a linear-load modality and its intensity is
-    heavy or maximal, or it names a %1RM.
+    The slot is identified by (archetype, slot index); `selector.is_main_lift_slot`
+    says which slots are main lifts, in linear-load modalities only. A phase
+    that sets `rotate_main_lifts` (CrossFit) is exempt.
     """
     if not fixed:
         return
@@ -514,12 +516,8 @@ def _check_fixed(out, phase_id, pweeks, modalities, fixed: bool):
             aid = (s.get('archetype') or {}).get('id')
             for ea in _work(s):
                 slot = ea.get('slot') or {}
-                if not ea.get('exercise') or slot.get('slot_type', ea.get('slot_type')) != 'sets_reps':
-                    continue
-                if (slot.get('intensity') or '') not in _MAIN_LIFT_INTENSITIES \
-                        and not slot.get('intensity_pct_1rm'):
-                    continue
-                seen[(aid, ea.get('slot_index'), ea.get('slot_role'))].append(ea['exercise']['id'])
+                if ea.get('exercise') and is_main_lift_slot(slot):
+                    seen[(aid, ea.get('slot_index'), ea.get('slot_role'))].append(ea['exercise']['id'])
     for (aid, _, role), ids in seen.items():
         distinct = list(dict.fromkeys(ids))
         if len(distinct) > 1:

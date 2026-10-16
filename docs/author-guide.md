@@ -351,7 +351,7 @@ applicable_when:                    # required — when this framework is approp
 
 deload_protocol:                    # required
   frequency_weeks: 8                # deload every N weeks
-  volume_reduction_pct: 0.30        # e.g. 0.30 = reduce volume by 30%
+  volume_reduction_pct: 0.70        # share of volume the deload week KEEPS (0.70 = cut 30%)
   intensity_change: maintain        # maintain / reduce_slightly / reduce
 
 expectations:                       # required — time and volume requirements
@@ -693,7 +693,7 @@ applicable_when:
     mobility: 0.2
 deload_protocol:
   frequency_weeks: 8
-  volume_reduction_pct: 0.30
+  volume_reduction_pct: 0.70
   intensity_change: maintain
 expectations:
   min_weeks: 6

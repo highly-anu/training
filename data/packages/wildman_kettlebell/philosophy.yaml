@@ -66,10 +66,8 @@ tracks:
           - "Breathing matched to the movement"
           - "Get-up and windmill skill"
         intensity: "Anti-glycolic — nasal breathing throughout"
-        # The bottom of the ladder: no overhead ballistics or jerks yet.
-        checks:
-          exercises_forbidden: [wk_kb_snatch, wk_kb_half_snatch, kb_jerk_single, kb_jerk_double, wk_kb_long_cycle_press]
-          fixed_exercises: false
+        # The bottom of the ladder: the snatch and the jerk come in The Ladder.
+        exclude_exercises: [wk_kb_snatch, wk_kb_half_snatch, kb_jerk_single, kb_jerk_double, wk_kb_long_cycle_press]
       - id: ladder
         name: "The Ladder"
         kind: build
@@ -86,8 +84,6 @@ tracks:
           - "Sustained output at a target RPM"
           - "Strength through the overhead lifts"
         intensity: "Moderate; RPM targets before load"
-        checks:
-          fixed_exercises: false
       - id: practice
         name: "Practice"
         kind: maintenance
@@ -104,8 +100,6 @@ tracks:
           - "Retained skill across all lifts"
           - "Durability through the get-up and windmill"
         intensity: "Readiness-driven"
-        checks:
-          fixed_exercises: false
   - id: pentathlon
     name: "Pentathlon Prep"
     description: >
@@ -128,8 +122,6 @@ tracks:
           - "Efficiency in all five lifts"
           - "Hand-change and rack-position economy"
         intensity: "Below scoring pace"
-        checks:
-          fixed_exercises: false
       - id: timed_sets
         name: "Timed Sets"
         kind: build
@@ -146,7 +138,6 @@ tracks:
         intensity: "Event pace, rising toward the cap"
         checks:
           archetypes_required: [kb_pentathlon_training]
-          fixed_exercises: false
       - id: competition
         name: "Competition"
         kind: peak
@@ -163,4 +154,3 @@ tracks:
         checks:
           archetypes_required: [kb_pentathlon_training]
           volume_vs_previous_phase: [-0.6, -0.1]
-          fixed_exercises: false
