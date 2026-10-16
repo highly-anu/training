@@ -7,7 +7,6 @@ import SwiftUI
 /// shape (information-architecture.md §2).
 struct ProgramOverviewTab: View {
     @EnvironmentObject var appState: AppState
-    @State private var methodologySheet: PhilosophyCard? = nil
     @State private var expandedPhases: Set<Int> = []
     @State private var matrixByExercise = false
 
@@ -27,7 +26,7 @@ struct ProgramOverviewTab: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        MethodologyRow(cards: appState.programMethodologies()) { methodologySheet = $0 }
+                        headerCard
                         phasesSection
                         PhaseMatrixSection(summaries: summaries, byExercise: $matrixByExercise)
                         prioritySection
@@ -39,9 +38,108 @@ struct ProgramOverviewTab: View {
             }
         }
         .task { await appState.loadPhilosophiesIfNeeded() }
-        .sheet(item: $methodologySheet) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
+    }
+
+    // MARK: - Header
+
+    /// The shared program header (§6.28), as on Analytics ▸ Program, with
+    /// what the plan is rather than how it is going: the track, how the
+    /// methodology trains, and the settings it was built for.
+    private var headerCard: some View {
+        let cards = appState.programMethodologies()
+        let weeks = appState.allWeeks
+        // No phase row before the start or after the end, as on Analytics ▸
+        // Program (the server's current week is None there too); `?? 0` read
+        // a finished block as "Week 1/16". The tags take the current week's
+        // track, else the first week's.
+        let current = appState.currentWeekIndex.flatMap { weeks.indices.contains($0) ? $0 : nil }
+        let week = current.map { weeks[$0] } ?? weeks.first
+        return ProgramHeaderCard(
+            name: cards.isEmpty ? "Program" : cards.map(\.name).joined(separator: " + "),
+            methodologies: cards,
+            phase: current.map { i in .init(label: weeks[i].phaseLabel, kind: weeks[i].phase, week: i + 1,
+                                            totalWeeks: weeks.count, isDeload: weeks[i].isDeload) },
+            tags: headerTags(cards: cards, week: week)
+        ) {
+            planSettings(weekCount: weeks.count)
         }
+    }
+
+    private func headerTags(cards: [PhilosophyCard], week: ProgramWeek?) -> [ProgramHeader.Tag] {
+        var tags: [ProgramHeader.Tag] = []
+        // The methodology whose track this week runs; a blend's heaviest otherwise.
+        let lead = cards.first { card in card.tracks?.contains { $0.id == week?.trackId } ?? false } ?? cards.first
+        if let track = lead?.track(week?.trackId), (lead?.tracks?.count ?? 0) > 1 {
+            tags.append(.init(icon: "arrow.triangle.branch", text: track.name))
+        }
+        if let how = lead?.progressionPhilosophy {
+            tags.append(.init(icon: "chart.line.uptrend.xyaxis", text: ProgramHeader.words(how)))
+        }
+        if let model = lead?.intensityModel {
+            tags.append(.init(icon: "gauge.with.dots.needle.33percent", text: ProgramHeader.words(model)))
+        }
+        // The framework's name is the analytics document's; the phone has no
+        // framework catalog. Program information, not a tracked number.
+        if let framework = appState.programAnalytics?.frame?.framework?.name {
+            tags.append(.init(icon: "square.grid.2x2", text: framework))
+        }
+        return tags
+    }
+
+    /// What the program was built for — days, session length, length, dates —
+    /// with no verdict beside them; Analytics ▸ Program holds those.
+    private func planSettings(weekCount: Int) -> some View {
+        let constraints = appState.programConstraints
+        let days = ProgramConstraintsDiff.int(constraints["days_per_week"])
+        let minutes = ProgramConstraintsDiff.int(constraints["session_time_minutes"])
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 0) {
+                if let days {
+                    ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
+                                      accessibility: "\(days) days a week")
+                    Spacer(minLength: 8)
+                }
+                if let minutes {
+                    ProgramHeaderStat(icon: "clock", value: "\(minutes)", unit: "min",
+                                      accessibility: "\(minutes) minute sessions")
+                    Spacer(minLength: 8)
+                }
+                ProgramHeaderStat(icon: "calendar.badge.clock", value: "\(weekCount)", unit: "wk",
+                                  accessibility: "\(weekCount) weeks")
+            }
+            HStack(spacing: 12) {
+                if let span = dateSpan(weekCount: weekCount) {
+                    Label(span, systemImage: "calendar.day.timeline.left")
+                }
+                if let event = shortDate(appState.serverProgram?.eventDate) {
+                    Label(event, systemImage: "flag.checkered")
+                        .accessibilityLabel("Event \(event)")
+                }
+            }
+            .font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(.top, 2)
+    }
+
+    private static let isoDay: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private func shortDate(_ iso: String?) -> String? {
+        iso.flatMap(Self.isoDay.date(from:)).map { $0.formatted(.dateTime.day().month(.abbreviated)) }
+    }
+
+    /// "5 Oct – 24 Jan": the start date to the last day of the last week.
+    private func dateSpan(weekCount: Int) -> String? {
+        guard let start = appState.serverProgram?.programStartDate.flatMap(Self.isoDay.date(from:)),
+              weekCount > 0,
+              let end = Calendar.current.date(byAdding: .day, value: weekCount * 7 - 1, to: start) else { return nil }
+        let fmt = Date.FormatStyle.dateTime.day().month(.abbreviated)
+        return "\(start.formatted(fmt)) – \(end.formatted(fmt))"
     }
 
     // MARK: - Phases
@@ -204,59 +302,6 @@ struct ProgramOverviewTab: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title).font(.headline)
-    }
-}
-
-/// "About this methodology" — the program explains itself (§6.18). A blend
-/// offers one entry per source.
-struct MethodologyRow: View {
-    let cards: [PhilosophyCard]
-    let onSelect: (PhilosophyCard) -> Void
-
-    var body: some View {
-        if cards.count == 1, let card = cards.first {
-            Button {
-                AppHaptics.light()
-                onSelect(card)
-            } label: {
-                label(card.name)
-            }
-            .buttonStyle(.plain)
-        } else if cards.count > 1 {
-            Menu {
-                ForEach(cards) { card in
-                    Button(card.name) { onSelect(card) }
-                }
-            } label: {
-                label(cards.map(\.name).joined(separator: " + "))
-            }
-        }
-    }
-
-    private func label(_ name: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "book")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("About this methodology")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .contentShape(Rectangle())
     }
 }
 

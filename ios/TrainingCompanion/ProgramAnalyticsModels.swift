@@ -648,12 +648,15 @@ struct ProgramAnalytics: Decodable {
             let next: String?
             let gapToNext: Double?
             let derivedReason: String?
+            /// The modality the standard measures (`max_strength`,
+            /// `strength_endurance`…), which colours its ladder.
+            let domain: String?
             var id: String { benchmarkId }
 
             private struct Derived: Decodable { let reason: String? }
             private enum CodingKeys: String, CodingKey {
                 case benchmarkId, name, unit, lowerIsBetter, why, primary, standards, value, valueSource,
-                     level, next, gapToNext, derived
+                     level, next, gapToNext, derived, domain
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -670,6 +673,7 @@ struct ProgramAnalytics: Decodable {
                 next = try? c.decodeIfPresent(String.self, forKey: .next)
                 gapToNext = try? c.decodeIfPresent(Double.self, forKey: .gapToNext)
                 derivedReason = (try? c.decodeIfPresent(Derived.self, forKey: .derived))?.reason
+                domain = try? c.decodeIfPresent(String.self, forKey: .domain)
             }
 
             /// The ladder's rungs in order, entry → elite, those the standard has.

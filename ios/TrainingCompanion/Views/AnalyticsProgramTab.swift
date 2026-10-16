@@ -9,7 +9,6 @@ import Charts
 struct AnalyticsProgramTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
-    @State private var methodologySheet: PhilosophyCard?
 
     var body: some View {
         Group {
@@ -33,9 +32,6 @@ struct AnalyticsProgramTab: View {
         // caches the document, so a visit with nothing new is one cheap read.
         .task(id: appState.serverProgram?.revision) { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
         .task { await appState.loadPhilosophiesIfNeeded() }
-        .sheet(item: $methodologySheet) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
-        }
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }
@@ -80,98 +76,42 @@ struct AnalyticsProgramTab: View {
 
     // MARK: - Frame
 
-    /// The methodology, then symbols: how it progresses, the framework, the
-    /// phase and week, and each plan-fidelity field as actual / ideal with a
-    /// mark for whether it meets the ideal. The phase's focus is on Program ▸
-    /// Overview.
+    /// The shared program header (§6.28) with plan fidelity as its footer:
+    /// each field actual / ideal with a mark for whether it meets the ideal.
+    /// The phase's focus is on Program ▸ Overview.
     private func frameCard(_ frame: ProgramAnalytics.Frame) -> some View {
-        AnalyticsCard(header: "Program") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(frame.philosophies.map(\.name).joined(separator: " + "))
-                        .font(.subheadline).fontWeight(.semibold)
-                    Spacer()
-                    methodologyButton
-                }
-                if let phase = frame.phase {
-                    HStack(spacing: 6) {
-                        Text(phase.displayName)
-                            .font(.caption).fontWeight(.semibold)
-                            .foregroundStyle(PhaseStyle.color(for: phase.name))
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(PhaseStyle.color(for: phase.name).opacity(0.15))
-                            .clipShape(Capsule())
-                        Label("\(phase.weekInProgram)/\(phase.totalWeeks)", systemImage: "calendar")
-                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                            .accessibilityLabel("Week \(phase.weekInProgram) of \(phase.totalWeeks)")
-                        if phase.isDeload {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .font(.caption).foregroundStyle(.blue)
-                                .accessibilityLabel("Deload")
-                        }
+        ProgramHeaderCard(
+            name: frame.philosophies.map(\.name).joined(separator: " + "),
+            methodologies: appState.programMethodologies(),
+            phase: frame.phase.map { .init(label: $0.displayName, kind: $0.name, week: $0.weekInProgram,
+                                           totalWeeks: $0.totalWeeks, isDeload: $0.isDeload) },
+            tags: Self.frameTags(frame)
+        ) {
+            if !frame.planFidelity.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(frame.planFidelity) { row in
+                        fidelityCell(row)
+                        if row.id != frame.planFidelity.last?.id { Spacer(minLength: 8) }
                     }
                 }
-                let tags = Self.frameTags(frame)
-                if !tags.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(tags, id: \.icon) { tag in
-                            Label(tag.text, systemImage: tag.icon)
-                                .font(.caption).foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                if !frame.planFidelity.isEmpty {
-                    HStack(spacing: 0) {
-                        ForEach(frame.planFidelity) { row in
-                            fidelityCell(row)
-                            if row.id != frame.planFidelity.last?.id { Spacer(minLength: 8) }
-                        }
-                    }
-                    .padding(.top, 2)
-                }
+                .padding(.top, 2)
             }
-        }
-    }
-
-    /// The book: the methodology's description (§6.18). A blend offers one
-    /// entry per source, as Program ▸ Overview's row does.
-    @ViewBuilder
-    private var methodologyButton: some View {
-        let cards = appState.programMethodologies()
-        let book = Image(systemName: "book")
-            .font(.subheadline)
-            .frame(minWidth: 44, minHeight: 44)
-            .contentShape(Rectangle())
-            .accessibilityLabel("About this methodology")
-        if cards.count == 1, let card = cards.first {
-            Button { AppHaptics.light(); methodologySheet = card } label: { book }
-                .padding(.vertical, -12)
-        } else if cards.count > 1 {
-            Menu {
-                ForEach(cards) { card in Button(card.name) { methodologySheet = card } }
-            } label: { book }
-                .padding(.vertical, -12)
         }
     }
 
     /// One fidelity field: its symbol, actual / ideal, and a mark.
     private func fidelityCell(_ row: ProgramAnalytics.Frame.Fidelity) -> some View {
-        let color: Color = row.status == "meets_ideal" ? .green
-            : row.status == "below_minimum" ? .red : .yellow
-        return VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 4) {
-                Image(systemName: Self.fidelityIcon(row.field)).foregroundStyle(.secondary)
-                Text("\(Self.number(row.actual))/\(Self.number(row.ideal))")
-                    .fontWeight(.semibold).monospacedDigit()
-                Image(systemName: row.status == "meets_ideal" ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                    .foregroundStyle(color)
-            }
-            .font(.caption)
-            Text(row.unit).font(.caption2).foregroundStyle(.tertiary)
+        let meets = row.status == "meets_ideal"
+        let color: Color = meets ? .green : row.status == "below_minimum" ? .red : .yellow
+        return ProgramHeaderStat(
+            icon: Self.fidelityIcon(row.field),
+            value: "\(Self.number(row.actual))/\(Self.number(row.ideal))",
+            unit: row.unit,
+            accessibility: "\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal))"
+        ) {
+            Image(systemName: meets ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                .foregroundStyle(color)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal))")
     }
 
     static func fidelityIcon(_ field: String) -> String {
@@ -184,18 +124,17 @@ struct AnalyticsProgramTab: View {
     }
 
     /// How the lead methodology progresses, its intensity model, the framework.
-    static func frameTags(_ frame: ProgramAnalytics.Frame) -> [(icon: String, text: String)] {
-        var tags: [(icon: String, text: String)] = []
+    static func frameTags(_ frame: ProgramAnalytics.Frame) -> [ProgramHeader.Tag] {
+        var tags: [ProgramHeader.Tag] = []
         let lead = frame.philosophies.first
-        if let how = lead?.progressionPhilosophy { tags.append(("chart.line.uptrend.xyaxis", words(how))) }
-        if let model = lead?.intensityModel { tags.append(("gauge.with.dots.needle.33percent", words(model))) }
-        if let framework = frame.framework { tags.append(("square.grid.2x2", framework.name)) }
+        if let how = lead?.progressionPhilosophy {
+            tags.append(.init(icon: "chart.line.uptrend.xyaxis", text: ProgramHeader.words(how)))
+        }
+        if let model = lead?.intensityModel {
+            tags.append(.init(icon: "gauge.with.dots.needle.33percent", text: ProgramHeader.words(model)))
+        }
+        if let framework = frame.framework { tags.append(.init(icon: "square.grid.2x2", text: framework.name)) }
         return tags
-    }
-
-    static func words(_ id: String) -> String {
-        let s = id.replacingOccurrences(of: "_", with: " ")
-        return s.prefix(1).uppercased() + s.dropFirst()
     }
 
     static func fidelityLabel(_ field: String) -> String {

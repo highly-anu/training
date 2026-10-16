@@ -115,7 +115,15 @@ private struct StandardRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                if let domain = row.domain {
+                    // The modality's symbol beside its colour: colour is
+                    // never the only signal (§1.6).
+                    Image(systemName: ModalityStyle.icon(for: domain))
+                        .font(.caption2)
+                        .foregroundStyle(tint)
+                        .accessibilityLabel(ModalityStyle.label(for: domain))
+                }
                 Text(row.name).font(.caption).fontWeight(.medium)
                 Spacer()
                 Text(valueText).font(.caption).foregroundStyle(.secondary)
@@ -124,8 +132,14 @@ private struct StandardRowView: View {
         }
     }
 
-    /// One segment per rung, filled up to the level reached, each rung's
-    /// threshold under it — the web's `LevelBar`, without the marker.
+    /// The standard's modality colour; the accent for a standard with none.
+    private var tint: Color {
+        row.domain.map { ModalityStyle.color(for: $0) } ?? Color.accentColor
+    }
+
+    /// One segment per rung, filled up to the level reached in the
+    /// standard's modality colour, each rung's threshold under it — the
+    /// web's `LevelBar`, without the marker.
     private var ladder: some View {
         let rungs = row.rungs
         let reached = rungs.firstIndex { $0.level == row.level }
@@ -133,7 +147,7 @@ private struct StandardRowView: View {
             ForEach(Array(rungs.enumerated()), id: \.offset) { i, rung in
                 VStack(spacing: 2) {
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(reached.map { i <= $0 } == true ? Color.accentColor : Color(.systemFill))
+                        .fill(reached.map { i <= $0 } == true ? tint : Color(.systemFill))
                         .frame(height: 5)
                     Text(AnalyticsProgramTab.number(rung.value))
                         .font(.system(size: 9)).foregroundStyle(.tertiary)
