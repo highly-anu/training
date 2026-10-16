@@ -33,7 +33,7 @@ from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.progression import calculate_load
 from src.selector import populate_session
-from src.validator import validate
+from src.validator import check_level_coverage, validate
 from src.auth import require_auth
 from flask import g
 
@@ -424,6 +424,12 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     'archetype': session.get('archetype'),
                     'is_deload': session.get('is_deload', wk.get('is_deload', False)),
                     'provenance': session.get('provenance'),
+                    # The modality this session was scheduled in place of,
+                    # when the package had no archetype for it in this phase
+                    # at this level (generator._resolve_session); absent
+                    # otherwise.
+                    **({'substituted_for': session['substituted_for']}
+                       if session.get('substituted_for') else {}),
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])
@@ -1201,6 +1207,14 @@ def _generate_program_inner(body):
             policy=policy,
             start_week_number=start_week_number,
         )
+
+    # A modality the generator had to schedule as another one because nothing
+    # in the package is written for this athlete's level.
+    substituted: dict = {}
+    for s in (raw.get('coverage_report') or {}).get('substituted_sessions') or []:
+        if s.get('substituted_for'):
+            substituted.setdefault(s['substituted_for'], set()).add(s.get('modality'))
+    check_level_coverage(substituted, constraints, archetypes_filtered, policy, validation)
 
     result = _transform_program(raw, goal, constraints, validation)
     if include_trace and 'generation_trace' in raw:

@@ -295,12 +295,69 @@ def test_a_framework_prescribes_its_own_way() -> None:
           any(l.get('weight_kg') for l in loads) and not any('target_rpe' in l for l in loads))
 
 
+def test_substitution_is_recorded() -> None:
+    print('a session scheduled as another modality says so')
+    # Wildman's General Practice asks for strength endurance and max strength;
+    # both archetypes start at intermediate, so a novice gets aerobic base in
+    # their place. The swap used to leave no trace.
+    kb = {'equipment': ['kettlebell'], 'days_per_week': 4, 'session_time_minutes': 40}
+    novice = program('wildman_kettlebell', 4, track_id='general_practice', training_level='novice', **kb)
+    swapped = [s for _, s in sessions(novice) if s.get('substituted_for')]
+    check('the substituted sessions carry what they replaced',
+          {s['substituted_for'] for s in swapped} == {'strength_endurance', 'max_strength'}
+          and all(s['modality'] == 'aerobic_base' for s in swapped),
+          str([(s['modality'], s.get('substituted_for')) for s in swapped]))
+    report = novice['coverage_report']['substituted_sessions']
+    check('the coverage report lists them with a week number and a day name',
+          len(report) == len(swapped) and all(isinstance(r['week'], int) and isinstance(r['day'], str)
+                                              for r in report), str(report[:2]))
+    check('the compromises say it once per modality, naming the level as the cause',
+          sum('for a novice athlete' in c and 'scheduled as aerobic base' in c
+              for c in novice['compromises']) == 2, str(novice['compromises']))
+    intermediate = program('wildman_kettlebell', 4, track_id='general_practice',
+                           training_level='intermediate', **kb)
+    check('an intermediate gets the modalities as asked, nothing substituted',
+          not intermediate['coverage_report']['substituted_sessions']
+          and {'strength_endurance', 'max_strength'} <= {s['modality'] for _, s in sessions(intermediate)})
+
+    from src import provenance
+    from src.validator import ValidationResult, check_level_coverage
+    goal = goals.philosophy_to_goal('wildman_kettlebell', FRAMEWORKS, track_id='general_practice')
+    policy = provenance.resolve_source_policy(goal)
+    archetypes = provenance.scope(loader.load_all_data(), policy)['archetypes']
+    result = ValidationResult()
+    check_level_coverage({'strength_endurance': {'aerobic_base'}}, {'training_level': 'novice'},
+                         archetypes, policy, result)
+    check('LEVEL_COVERAGE_GAP names the level, the levels written for and the substitute',
+          [w['code'] for w in result.warnings] == ['LEVEL_COVERAGE_GAP']
+          and 'novice' in result.warnings[0]['message']
+          and 'only intermediate' in result.warnings[0]['message']
+          and 'aerobic base' in result.warnings[0]['message'], str(result.warnings))
+    result = ValidationResult()
+    check_level_coverage({'strength_endurance': {'aerobic_base'}}, {'training_level': 'intermediate'},
+                         archetypes, policy, result)
+    check('no warning when the level is covered (the swap had another cause)', not result.warnings)
+
+    # Gym Jones max strength: emom_strength names no levels (open to all) but
+    # is not for the base phase; the others start at intermediate. A novice's
+    # base-phase swap is the phase's doing, not the level's.
+    gj = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    gj_policy = provenance.resolve_source_policy(gj)
+    gj_arch = provenance.scope(loader.load_all_data(), gj_policy)['archetypes']
+    result = ValidationResult()
+    check_level_coverage({'max_strength': {'aerobic_base'}}, {'training_level': 'novice'},
+                         gj_arch, gj_policy, result)
+    check('an archetype open to every level means the level is not the cause', not result.warnings,
+          str(result.warnings))
+
+
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
               test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
               test_pins_never_repeat_a_lift, test_unfilled_cache,
               test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
-              test_single_session_routes, test_a_framework_prescribes_its_own_way):
+              test_single_session_routes, test_a_framework_prescribes_its_own_way,
+              test_substitution_is_recorded):
         t()
     print()
     if FAILURES:

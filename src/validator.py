@@ -51,6 +51,53 @@ def validate(
     return result
 
 
+def check_level_coverage(substituted: dict, constraints, archetypes, policy, result):
+    """Warn for each modality the generator scheduled as another one
+    (`coverage_report.substituted_sessions`, as {replaced: {scheduled as}})
+    because no archetype for it is written for the athlete's training level.
+
+    Run after generation, on what was actually substituted: before it, a
+    priority the day count drops anyway would be warned about for nothing.
+    Wildman's General Practice asks a novice for strength endurance and max
+    strength, and both of its archetypes start at intermediate. A warning: the
+    substitute is a session of the same method, and whether a novice should do
+    the work at all is the methodology's call. A substitution for another
+    reason (the phase) is in the compromises; `_check_coverage` reports a
+    modality with no archetype at any level.
+    """
+    level = constraints.get('training_level')
+    if not level or not substituted:
+        return
+    by_modality: dict = {}
+    for a in archetypes:
+        by_modality.setdefault(a.get('modality'), []).append(a)
+    where = policy.describe() if policy is not None else 'the allowed packages'
+    for modality in sorted(substituted):
+        found = by_modality.get(modality)
+        if not found:
+            continue
+        # An archetype that names no levels is open to every level, as the
+        # selector reads it: then the level is not the cause (the phase is).
+        if any(not a.get('training_levels') for a in found):
+            continue
+        levels = {lv for a in found for lv in a['training_levels']}
+        if level in levels:
+            continue
+        name = modality.replace('_', ' ')
+        order = ['novice', 'intermediate', 'advanced', 'elite']
+        written_for = ', '.join(sorted(levels, key=lambda lv: order.index(lv) if lv in order else 9))
+        result.add_warning(
+            'LEVEL_COVERAGE_GAP',
+            f"No {name} session in {where} is written for a {level} athlete "
+            f"(only {written_for}). Those sessions are scheduled as "
+            f"{' or '.join(sorted(m.replace('_', ' ') for m in substituted[modality]))} instead.",
+            suggested_fix=(
+                f"Author a {level} {name} archetype, or keep {name} out of the "
+                f"framework's sessions at this level."
+            ),
+        )
+
+
 def _check_coverage(goal, archetypes, policy, result):
     """Modalities the goal schedules that its packages own no archetype for.
 
