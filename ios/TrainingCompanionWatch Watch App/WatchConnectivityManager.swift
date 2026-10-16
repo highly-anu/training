@@ -13,6 +13,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     @Published var programState: ProgramState = .loading
     @Published var weeklyOverview: [WeeklyOverviewDay] = []
     @Published var readiness: ReadinessInfo? = nil
+    /// This program week from the server's `progress`: done, and sessions in all.
+    @Published var weekDone: (done: Int, sessions: Int)? = nil
     /// Set by deep link (watch widget tap) to navigate directly to a specific session.
     @Published var pendingDeepLinkSessionId: String? = nil
 
@@ -20,6 +22,9 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     private let sessionsDayKey     = "watchTodaySessionsDay"  // "yyyy-MM-dd" of cached sessions
     private let maxHRKey           = "watchMaxHR"
     private let completedKey       = "watchCompletedSessions"
+    /// The server's `progress` block (week done/due, program %, headline) as
+    /// JSON, for the week ring and the complication.
+    private let progressKey        = "watchProgress"
     private let weeklyOverviewKey  = "watchWeeklyOverview"
     private let readinessKey       = "watchReadiness"
     private var completedDate: String = ""
@@ -85,6 +90,14 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
 
+    /// `progress.week` → (done, sessions); nil when the week holds none.
+    nonisolated static func weekDone(from progress: [String: Any]) -> (done: Int, sessions: Int)? {
+        guard let week = progress["week"] as? [String: Any],
+              let done = week["done"] as? Int, let sessions = week["sessions"] as? Int, sessions > 0
+        else { return nil }
+        return (done, sessions)
+    }
+
     func markSessionComplete(_ sessionId: String) {
         completedSessionIds.insert(sessionId)
         let ids = Array(completedSessionIds)
@@ -124,13 +137,19 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
            let overview = try? JSONDecoder().decode([WeeklyOverviewDay].self, from: overviewData) {
             weeklyOverview = overview
         }
+        if let data = UserDefaults.standard.data(forKey: progressKey),
+           let progress = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            weekDone = Self.weekDone(from: progress)
+        }
         // Load cached readiness
         if let readData = UserDefaults.standard.data(forKey: readinessKey),
            let info = try? JSONDecoder().decode(ReadinessInfo.self, from: readData) {
             readiness = info
         }
-        // Load completed sessions — reset if it's a new day
-        let todayStr = DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .none)
+        // Load completed sessions — reset if it's a new day. The stamp is the
+        // yyyy-MM-dd the phone sends with the day; comparing it to a localized
+        // short date never matched, so every relaunch forgot what was done.
+        let todayStr = todayDateString
         let savedDate = UserDefaults.standard.string(forKey: completedKey + "_date") ?? ""
         if savedDate == todayStr, let ids = UserDefaults.standard.array(forKey: completedKey) as? [String] {
             completedSessionIds = Set(ids)
@@ -172,6 +191,17 @@ extension WatchConnectivityManager: WCSessionDelegate {
                     completedSessionIds = []
                     UserDefaults.standard.removeObject(forKey: completedKey)
                     UserDefaults.standard.set(incomingDate, forKey: completedKey + "_date")
+                }
+                // Sessions the server says are done (logged or matched on any
+                // device), joined to what this watch recorded.
+                if let ids = userInfo["completedIds"] as? [String], !ids.isEmpty {
+                    completedSessionIds.formUnion(ids)
+                    UserDefaults.standard.set(Array(completedSessionIds), forKey: completedKey)
+                }
+                if let progress = userInfo["progress"] as? [String: Any],
+                   let data = try? JSONSerialization.data(withJSONObject: progress) {
+                    UserDefaults.standard.set(data, forKey: progressKey)
+                    weekDone = Self.weekDone(from: progress)
                 }
                 if let profile = userInfo["profile"] as? [String: Any],
                    let mhr = profile["maxHR"] as? Int {

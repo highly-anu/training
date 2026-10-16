@@ -19,6 +19,11 @@ using Toybox.Lang;
 //                                    TODAY  DONE          3 sessions  1:42  17 sets
 //   all done, evening the same ring  TOMORROW             Ruck  90 min
 //
+// On a rest day, in the evening and once the day is done, the label adds the
+// program week's sessions done of its total — "REST DAY  3/5 THIS WK" — from
+// the server's `progress.week` (GlanceCache keeps the two numbers). Before
+// then the day itself is the message, and the label stays its own.
+//
 // Before any training the ring is readiness, which is what matters then; once a
 // session is done it is the day's progress. A session is done when this watch
 // saved it (DayLog) or the server says so (a log or a matched workout from
@@ -92,17 +97,17 @@ class GlanceView extends Ui.GlanceView {
                 } else if (System.getClockTime().hour >= Config.GLANCE_EVENING_HOUR
                            && tomorrow != null) {
                     ring = :done;
-                    label = "TOMORROW";
+                    label = "TOMORROW" + weekTag(today);
                     value = describeDay(tomorrow);
                 } else {
                     ring = :done;
-                    label = "TODAY  DONE";
+                    label = "TODAY  DONE" + weekTag(today);
                     value = n + ((n == 1) ? " session  " : " sessions  ") + hm(mins)
                           + ((sets > 0) ? ("  " + sets + " sets") : "");
                 }
             } else if (status.equals("ok")) {
                 ring = :readiness;
-                label = "REST DAY";
+                label = "REST DAY" + weekTag(today);
                 value = (tomorrow != null) ? ("Tomorrow: " + describeDay(tomorrow)) : "Recover well";
             }
         }
@@ -149,6 +154,16 @@ class GlanceView extends Ui.GlanceView {
         dc.drawText(tx, ty, fl, clip(dc, label, fl, avail), Gfx.TEXT_JUSTIFY_LEFT);
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
         dc.drawText(tx, ty + hl, fv, clip(dc, value, fv, avail), Gfx.TEXT_JUSTIFY_LEFT);
+    }
+
+    // "  3/5 THIS WK", or nothing when the cache predates `progress` or the
+    // week holds no sessions.
+    hidden function weekTag(today) {
+        var wk = today.hasKey("week") ? today["week"] : null;
+        if (!(wk instanceof Lang.Array) || wk.size() < 2 || wk[0] == null || wk[1] == null || wk[1] == 0) {
+            return "";
+        }
+        return "  " + wk[0] + "/" + wk[1] + " THIS WK";
     }
 
     // The cache is another day's (stamped with the local date the watch asked for).

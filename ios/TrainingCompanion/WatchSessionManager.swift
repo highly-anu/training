@@ -101,6 +101,14 @@ final class WatchSessionManager: NSObject, ObservableObject {
                 "weeklyOverview": encodedJSON(weeklyOverview),
             ]
             if let readiness { payload["readiness"] = encodedJSON(readiness) }
+            // The server's word on what is done today — a session logged on the
+            // web or matched to another device's workout — and the week's
+            // progress. The watch tracked completion only for what it recorded
+            // itself, so a session done elsewhere still read as to do.
+            if let day = try? await api.fetchWatchDay(date: todayStr) {
+                payload["completedIds"] = day.completedIds
+                if let progress = day.progress { payload["progress"] = progress }
+            }
 
             WCSession.default.transferUserInfo(payload)
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")

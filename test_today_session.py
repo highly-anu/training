@@ -60,6 +60,28 @@ def run():
     check(t and t['sessionCount'] == 1 and t['archetypeName'] == 'Ruck'
           and t['estimatedMinutes'] == 90, f"tomorrow {t}")
 
+    # progress: this week's sessions done of those due (Friday's two; Saturday's
+    # is ahead) and of all three, the program so far, and no headline until the
+    # analytics document has been cached.
+    api._health.get_progression_snapshot = lambda uid, key, kind: None
+    p = client.get('/api/user/today-session?date=2026-10-09').get_json()['progress']
+    check(p['week'] == {'number': 1, 'of': 1, 'done': 1, 'due': 2, 'sessions': 3}, f"week {p['week']}")
+    check(p['program'] == {'done': 1, 'due': 2, 'pct': 50}, f"program {p['program']}")
+    check('headline' not in p, 'no headline without a cached document')
+    seen = {}
+
+    def snapshot(uid, key, kind):
+        seen['key'] = (key, kind)
+        return {'data': {'methodologies': [{'headlineSummary': {
+            'label': 'Load on the bar', 'text': 'Back squat 102.5kg', 'trendText': '+1.2% per session',
+            'status': 'on_track', 'value': 102.5}}]}}
+    api._health.get_progression_snapshot = snapshot
+    p = client.get('/api/user/today-session?date=2026-10-09').get_json()['progress']
+    check(p.get('headline') == {'label': 'Load on the bar', 'text': 'Back squat 102.5kg',
+                                'trendText': '+1.2% per session', 'status': 'on_track'},
+          f"headline {p.get('headline')}")
+    check(seen.get('key') == ('2026-10-05:-', 'program'), f"snapshot key {seen.get('key')}")
+
     # A match that is not rejected completes the session too.
     api._health.get_matches = lambda uid: [
         {'sessionKey': '1-Friday-1', 'matchConfidence': 'high'},

@@ -598,6 +598,14 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   None ships yet.
 - **The glance reads `GlanceCache`'s slim copy** (`todayGlance`), never the
   payload: it runs in 64 KB.
+- **today-session carries `progress`** (`api._watch_progress`): this program
+  week's sessions done / due / in all, the program's done of due, and the
+  methodology's headline sentence read from the cached `/analytics/program`
+  snapshot — never computed on the watch's sync. The Garmin glance adds
+  "3/5 THIS WK" to its label on a rest day, in the evening and once the day is
+  done (GlanceCache keeps the two numbers); the phone forwards the server's
+  completed session ids and `progress` to the Apple Watch, which joins them to
+  what it recorded itself and shows the week's count under This Week.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the
