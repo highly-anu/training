@@ -250,6 +250,63 @@
                     "minimum": 0,
                     "maximum": 1
                   }
+                },
+                "checks": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "description": "What the phase's prose says, in a form tools/check_fidelity.py can test a generated program against. Only what no framework field already carries; the generator never reads it.",
+                  "properties": {
+                    "archetypes_required": {
+                      "type": "array",
+                      "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                      "description": "Each archetype id must appear in every non-deload week of the phase."
+                    },
+                    "archetypes_forbidden": {
+                      "type": "array",
+                      "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                      "description": "Archetype ids that must never appear in the phase."
+                    },
+                    "exercises_forbidden": {
+                      "type": "array",
+                      "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                      "description": "Exercise ids that must never appear in the phase (a lift the method has not reached yet)."
+                    },
+                    "modalities_required": {
+                      "type": "array",
+                      "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                      "description": "Modalities that must appear in every non-deload week of the phase."
+                    },
+                    "fixed_exercises": {
+                      "type": "boolean",
+                      "description": "Loaded main lifts keep their exercise across the phase (true), or rotate by design (false). Default: true unless the philosophy's intensity_model is constant_variation."
+                    },
+                    "max_zone": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "description": "Highest heart-rate zone any aerobic or interval slot may prescribe in this phase."
+                    },
+                    "volume_change_per_week": {
+                      "type": "array",
+                      "items": {"type": "number"},
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "[min, max] fractional change in planned minutes from one non-deload week to the next within the phase."
+                    },
+                    "volume_vs_previous_phase": {
+                      "type": "array",
+                      "items": {"type": "number"},
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "[min, max] fractional change of this phase's mean weekly minutes against the previous phase's last non-deload week."
+                    },
+                    "intensity_split_tolerance": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Largest share-point deviation from the framework's intensity_distribution in any bucket (default 0.15)."
+                    }
+                  }
                 }
               }
             },

@@ -110,6 +110,8 @@ tracks:
           - "Movement quality and tissue tolerance"
           - "Aerobic re-entry below AeT"
         intensity: "Zones 1–2 only; no anaerobic work"
+        checks:
+          max_zone: 2
       - id: base
         name: "Base"
         kind: base
@@ -128,6 +130,10 @@ tracks:
           - "A rising aerobic threshold (closing the AeT–AnT gap)"
           - "Muscular endurance introduced once AeT is solid"
         intensity: "Polarized — about 90% Zones 1–2"
+        checks:
+          max_zone: 3
+          volume_change_per_week: [0.0, 0.15]
+          intensity_split_tolerance: 0.10
       - id: specific
         name: "Specific"
         kind: specific
@@ -147,6 +153,9 @@ tracks:
           - "Threshold (AnT) durability"
           - "Back-to-back long-day tolerance"
         intensity: "About 80/15/5 — AnT intervals enter"
+        checks:
+          modalities_required: [anaerobic_intervals, strength_endurance]
+          intensity_split_tolerance: 0.10
       - id: taper
         name: "Taper"
         kind: taper
@@ -163,3 +172,5 @@ tracks:
           - "Fatigue dissipates while fitness is kept"
           - "Neuromuscular sharpness preserved"
         intensity: "Low volume; short intensity kept"
+        checks:
+          volume_vs_previous_phase: [-0.6, -0.4]

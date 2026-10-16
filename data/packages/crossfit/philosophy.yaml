@@ -73,3 +73,6 @@ tracks:
           - "Mixed-modal work capacity"
           - "Output across time domains"
         intensity: "High intensity, low volume"
+        checks:
+          modalities_required: [mixed_modal_conditioning]
+          fixed_exercises: false
