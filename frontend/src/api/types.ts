@@ -1099,6 +1099,9 @@ export interface ScoreBreakdown {
   scheduled: number
   measured: number
   waiting: number
+  /** Each measure behind the trends part: its points when counted, else how
+   *  far it is from a trend. Absent from an older server. */
+  measures?: Array<{ id: string; name: string; status: string; points: number | null; detail: string | null }>
 }
 
 /** The band the score falls in, why, and every band — one set of labels for both clients. */

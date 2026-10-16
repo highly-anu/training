@@ -102,9 +102,19 @@ def _breakdown(basis, compliance, completed, scheduled, measured, findings, tren
     else:
         summary = 'No session was due yet, so there is nothing to score.'
         parts = []
+    # What the trends part is made of, one line per measure: inside "How is
+    # this scored?" on both clients. It used to be a "Measures" list of its own
+    # beside the methodology cards, which show the same measures in full.
+    counted = {id(f) for f in measured}
+    measures = [{'id': f.get('exercise_id'), 'name': f.get('name') or f.get('exercise_id'),
+                 'status': f.get('status'),
+                 'points': STATUS_POINTS.get(f.get('status')) if id(f) in counted else None,
+                 'detail': (f.get('change_summary') if id(f) in counted else f.get('waiting_for'))
+                           or f.get('change_summary')}
+                for f in findings]
     return {'basis': basis, 'summary': summary, 'parts': parts,
             'completed': completed, 'scheduled': scheduled,
-            'measured': len(measured), 'waiting': waiting}
+            'measured': len(measured), 'waiting': waiting, 'measures': measures}
 
 
 def _status(score, compliance, completed, scheduled, measured) -> dict:

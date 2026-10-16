@@ -152,6 +152,19 @@ def test_pending_measures_say_how_to_start():
 
 
 
+def test_breakdown_names_each_measure():
+    review = {'compliance_pct': 100, 'exercise_findings': [
+        {'exercise_id': 'back_squat', 'name': 'Back squat', 'status': 'on_track', 'change_summary': '+5kg over 2 wk'},
+        {'exercise_id': 'skills', 'name': 'Movements earned', 'status': 'insufficient_data',
+         'change_summary': '+0 exercises over 1 wk'}]}
+    doc = {'scorecard': {'completedSessions': 4, 'plannedSessions': 4, 'elapsedWeeks': 2}, 'progress': []}
+    got = rv.explain(review, doc)['score_breakdown']['measures']
+    assert [m['name'] for m in got] == ['Back squat', 'Movements earned']
+    assert got[0]['points'] == 80 and got[0]['detail'] == '+5kg over 2 wk'
+    assert got[1]['points'] is None, 'a measure still collecting adds no points'
+    assert got[1]['detail'], 'and says how far it is from a trend'
+
+
 def test_exercises_scheduled_by_today():
     # The Progress tab's "so far": only sessions whose day has come, by the
     # week's array index (week 2 is numbered 9 here, as after a regenerate).
