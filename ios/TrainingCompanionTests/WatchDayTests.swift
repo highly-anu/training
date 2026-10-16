@@ -19,3 +19,35 @@ final class WatchDayTests: XCTestCase {
                       "what goes to the watch is a valid property list")
     }
 }
+
+/// The complication's data: what the watch app writes to the App Group, and
+/// what an older write (no week, no completion) still decodes to.
+final class WidgetTodayDataTests: XCTestCase {
+    private func session(_ id: String) -> WidgetSession {
+        WidgetSession(id: id, modalityId: "max_strength", archetypeName: "Strength", estimatedMinutes: 50,
+                      isDeload: false, exerciseNames: [])
+    }
+
+    func testOlderDataDecodesWithoutTheWeek() throws {
+        let old = WidgetTodayData(date: "2026-10-16", sessions: [session("2-Friday-0")], updatedAt: Date())
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
+        for key in ["completedIds", "weekDone", "weekSessions", "readinessScore", "readinessSignal"] {
+            json.removeValue(forKey: key)
+        }
+        let decoded = try JSONDecoder().decode(WidgetTodayData.self,
+                                               from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertNil(decoded.weekDone)
+        XCTAssertFalse(decoded.allDone)
+    }
+
+    func testAllDoneOnlyWhenEverySessionIs() {
+        var data = WidgetTodayData(date: "2026-10-16", sessions: [session("2-Friday-0"), session("2-Friday-1")],
+                                   updatedAt: Date())
+        data.completedIds = ["2-Friday-0"]
+        XCTAssertFalse(data.allDone)
+        data.completedIds = ["2-Friday-0", "2-Friday-1"]
+        XCTAssertTrue(data.allDone)
+        XCTAssertFalse(WidgetTodayData(date: "2026-10-16", sessions: [], updatedAt: Date()).allDone,
+                       "a rest day is not done")
+    }
+}

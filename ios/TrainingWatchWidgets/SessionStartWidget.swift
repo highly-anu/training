@@ -52,7 +52,24 @@ struct SessionStartWidgetView: View {
     @Environment(\.widgetFamily) var family
 
     private var sessions: [WidgetSession] { entry.todayData?.sessions ?? [] }
-    private var first: WidgetSession? { sessions.first }
+    /// The first session not yet done, else the first.
+    private var first: WidgetSession? {
+        let done = Set(entry.todayData?.completedIds ?? [])
+        return sessions.first { !done.contains($0.id) } ?? sessions.first
+    }
+    private var allDone: Bool { entry.todayData?.allDone ?? false }
+    /// This program week, from the watch app's copy of the server's progress.
+    private var week: (done: Int, sessions: Int)? {
+        guard let d = entry.todayData?.weekDone, let n = entry.todayData?.weekSessions, n > 0 else { return nil }
+        return (d, n)
+    }
+    /// "Week 3/5 · Ready 58" — the rectangular's third line; nil without data.
+    private var weekLine: String? {
+        var parts: [String] = []
+        if let w = week { parts.append("Week \(w.done)/\(w.sessions)") }
+        if let r = entry.todayData?.readinessScore { parts.append("Ready \(r)") }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
 
     /// Single session → deep link directly to that session; multiple → open session list
     private var deepLinkURL: URL {
@@ -74,9 +91,27 @@ struct SessionStartWidgetView: View {
         }
     }
 
-    // MARK: Circular — modality icon + session count badge
+    // MARK: Circular — the week as a ring around today's session
 
+    @ViewBuilder
     private var circularView: some View {
+        if let w = week {
+            // The ring fills with the week's sessions done; inside it, today's
+            // next session — or a tick once the day is done.
+            Gauge(value: Double(min(w.done, w.sessions)), in: 0...Double(w.sessions)) {
+                EmptyView()
+            } currentValueLabel: {
+                Image(systemName: allDone ? "checkmark" : first.map { watchIcon($0.modalityId) } ?? "battery.100.bolt")
+                    .foregroundStyle(allDone ? .green : first.map { modalityColor($0.modalityId) } ?? .green)
+            }
+            .gaugeStyle(.accessoryCircularCapacity)
+            .tint(allDone ? .green : first.map { modalityColor($0.modalityId) } ?? .green)
+        } else {
+            sessionIconView
+        }
+    }
+
+    private var sessionIconView: some View {
         ZStack {
             if let s = first {
                 Circle()
@@ -106,7 +141,16 @@ struct SessionStartWidgetView: View {
 
     private var rectangularView: some View {
         VStack(alignment: .leading, spacing: 2) {
-            if let s = first {
+            if allDone {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                    Text("Done today").font(.headline)
+                }
+                Text("\(sessions.count) session\(sessions.count == 1 ? "" : "s")")
+                    .font(.caption2).foregroundStyle(.secondary)
+            } else if let s = first {
                 HStack(spacing: 4) {
                     Image(systemName: watchIcon(s.modalityId))
                         .font(.caption2)
@@ -135,6 +179,12 @@ struct SessionStartWidgetView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+            if let line = weekLine {
+                Text(line)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
         }
     }
 
@@ -153,9 +203,12 @@ struct SessionStartWidgetView: View {
 
     @ViewBuilder
     private var inlineView: some View {
-        if let s = first {
+        if allDone {
+            Label("Done today" + (week.map { " · \($0.done)/\($0.sessions) wk" } ?? ""), systemImage: "checkmark")
+        } else if let s = first {
             Label(
-                sessions.count > 1 ? "\(sessions.count) sessions today" : s.archetypeName,
+                (sessions.count > 1 ? "\(sessions.count) sessions today" : s.archetypeName)
+                    + (week.map { " · \($0.done)/\($0.sessions) wk" } ?? ""),
                 systemImage: watchIcon(s.modalityId)
             )
         } else {

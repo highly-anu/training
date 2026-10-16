@@ -99,9 +99,14 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
 
     func markSessionComplete(_ sessionId: String) {
+        let isNew = !completedSessionIds.contains(sessionId)
         completedSessionIds.insert(sessionId)
         let ids = Array(completedSessionIds)
         UserDefaults.standard.set(ids, forKey: completedKey)
+        // The complication shows the week and today's done state: count this
+        // session in the week now rather than at the next sync, and redraw.
+        if isNew, let week = weekDone { weekDone = (min(week.done + 1, week.sessions), week.sessions) }
+        writeWidgetData(sessions: todaySessions, date: todayDateString)
         // Notify iPhone so it can sync the completion to the API
         sendSessionMarkedComplete(sessionId)
     }
@@ -174,7 +179,13 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
                 exerciseNames: Array(s.exercises.prefix(4).map { $0.name })
             )
         }
-        WidgetDataStore.write(WidgetTodayData(date: date, sessions: widgetSessions, updatedAt: Date()))
+        var data = WidgetTodayData(date: date, sessions: widgetSessions, updatedAt: Date())
+        data.completedIds = Array(completedSessionIds)
+        data.weekDone = weekDone?.done
+        data.weekSessions = weekDone?.sessions
+        data.readinessScore = readiness.map { Int(($0.score * 100).rounded()) }
+        data.readinessSignal = readiness?.signal
+        WidgetDataStore.write(data)
     }
 }
 

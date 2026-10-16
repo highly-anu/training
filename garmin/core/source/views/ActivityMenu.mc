@@ -12,6 +12,8 @@ using Toybox.Lang;
 //   Week       today and the six days after it, each day's sessions, each
 //              session's steps (the demo's programme, or the synced week)
 //   Programme  the demo's programme: SOF, Kettlebell or Uphill (demo only)
+//   Progress   this program week's sessions done, the programme's share done,
+//              and the methodology's own measure (real programme only)
 //   Readiness  today's score
 //   Sync       re-fetch today (real programme only)
 function openActivityMenu(view) {
@@ -34,6 +36,11 @@ function openActivityMenu(view) {
         m.addItem(new Ui.IconMenuItem("Programme", DemoProgram.programName(), :programme,
                                       Native.icon(Rez.Drawables.GmList), {}));
     }
+    var p = view.progress();
+    if (p != null) {
+        m.addItem(new Ui.IconMenuItem("Progress", progressLine(p), :progress,
+                                      Native.icon(Rez.Drawables.GmCheck), {}));
+    }
     var r = view.readiness();
     if (r != null && r.hasKey("score") && r["score"] != null) {
         m.addItem(new Ui.IconMenuItem("Readiness", r["score"].toString() + "  " + readinessWord(r["status"]),
@@ -43,6 +50,63 @@ function openActivityMenu(view) {
         m.addItem(new Ui.IconMenuItem("Sync", "today's session", :sync, Native.icon(Rez.Drawables.GmRefresh), {}));
     }
     Ui.pushView(m, new ActivityMenuDelegate(view), Ui.SLIDE_LEFT);
+}
+
+// "3/5 this week · 29%" — the Progress row's sublabel.
+function progressLine(p) {
+    var parts = [];
+    var wk = p["week"];
+    if (wk instanceof Lang.Dictionary && wk["sessions"] != null && wk["sessions"] > 0) {
+        parts.add(wk["done"].toString() + "/" + wk["sessions"].toString() + " this week");
+    }
+    var pr = p["program"];
+    if (pr instanceof Lang.Dictionary && pr["pct"] != null) {
+        parts.add(pr["pct"].toString() + "%");
+    }
+    var out = "";
+    for (var i = 0; i < parts.size(); i += 1) { out += ((i > 0) ? " · " : "") + parts[i]; }
+    return out;
+}
+
+// The Progress page: the system list again, each row a label over its value.
+//
+//   This week   3 of 5 done · 4 due
+//   Programme   2 of 7 done · 29%
+//   <measure>   the methodology's headline sentence, and its trend
+//
+// The words are the server's (today-session's `progress`, the headline from
+// the cached analytics document) — the phone's and the web's Today say the
+// same sentence.
+function openProgress(p) {
+    var m = new Ui.Menu2({ :title => "Progress" });
+    var wk = p["week"];
+    if (wk instanceof Lang.Dictionary && wk["sessions"] != null) {
+        m.addItem(new Ui.MenuItem("This week",
+            wk["done"].toString() + " of " + wk["sessions"].toString() + " done · "
+            + wk["due"].toString() + " due", :week, {}));
+    }
+    var pr = p["program"];
+    if (pr instanceof Lang.Dictionary && pr["due"] != null && pr["due"] > 0) {
+        m.addItem(new Ui.MenuItem("Programme",
+            pr["done"].toString() + " of " + pr["due"].toString() + " done"
+            + ((pr["pct"] != null) ? (" · " + pr["pct"].toString() + "%") : ""), :program, {}));
+    }
+    var h = p["headline"];
+    if (h instanceof Lang.Dictionary && h["label"] != null) {
+        var text = (h["text"] != null) ? h["text"] : "Not measured yet";
+        m.addItem(new Ui.MenuItem(h["label"], text, :headline, {}));
+        if (h["trendText"] != null) {
+            m.addItem(new Ui.MenuItem("Trend", h["trendText"], :trend, {}));
+        }
+    }
+    Ui.pushView(m, new InfoMenuDelegate(), Ui.SLIDE_LEFT);
+}
+
+// A list that only shows: selecting a row does nothing, BACK closes it.
+class InfoMenuDelegate extends Ui.Menu2InputDelegate {
+    function initialize() { Menu2InputDelegate.initialize(); }
+    function onSelect(item) {}
+    function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
 }
 
 function readinessWord(status) {
@@ -199,6 +263,9 @@ class ActivityMenuDelegate extends Ui.Menu2InputDelegate {
                 }
             }
             Ui.pushView(m2, new ProgrammeMenuDelegate(_view), Ui.SLIDE_LEFT);
+        } else if (id == :progress) {
+            var p = _view.progress();
+            if (p != null) { $.openProgress(p); }
         } else if (id == :readiness) {
             var rv = new ReadinessView(_view.readiness());
             Ui.pushView(rv, new PopDelegate(), Ui.SLIDE_LEFT);
