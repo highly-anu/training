@@ -48,13 +48,17 @@ struct ProgramOverviewTab: View {
     private var headerCard: some View {
         let cards = appState.programMethodologies()
         let weeks = appState.allWeeks
-        let index = min(max(appState.currentWeekIndex ?? 0, 0), max(weeks.count - 1, 0))
-        let week = weeks.indices.contains(index) ? weeks[index] : nil
+        // No phase row before the start or after the end, as on Analytics ▸
+        // Program (the server's current week is None there too); `?? 0` read
+        // a finished block as "Week 1/16". The tags take the current week's
+        // track, else the first week's.
+        let current = appState.currentWeekIndex.flatMap { weeks.indices.contains($0) ? $0 : nil }
+        let week = current.map { weeks[$0] } ?? weeks.first
         return ProgramHeaderCard(
             name: cards.isEmpty ? "Program" : cards.map(\.name).joined(separator: " + "),
             methodologies: cards,
-            phase: week.map { .init(label: $0.phaseLabel, kind: $0.phase, week: index + 1,
-                                    totalWeeks: weeks.count, isDeload: $0.isDeload) },
+            phase: current.map { i in .init(label: weeks[i].phaseLabel, kind: weeks[i].phase, week: i + 1,
+                                            totalWeeks: weeks.count, isDeload: weeks[i].isDeload) },
             tags: headerTags(cards: cards, week: week)
         ) {
             planSettings(weekCount: weeks.count)
@@ -91,7 +95,7 @@ struct ProgramOverviewTab: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 0) {
                 if let days {
-                    ProgramHeaderStat(icon: "calendar", value: "\(days)", unit: "days/wk",
+                    ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
                                       accessibility: "\(days) days a week")
                     Spacer(minLength: 8)
                 }
