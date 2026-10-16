@@ -522,6 +522,8 @@ final class AppState: ObservableObject {
         guard let api else { return }
         do {
             try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId, performance: performance)
+            // A logged set moves the exercise into "With data" on Progress.
+            if exerciseHistory != nil { await loadExerciseHistory() }
         } catch {
             AppLogger.logFromBackground("session log: save failed — \(error.localizedDescription)")
         }

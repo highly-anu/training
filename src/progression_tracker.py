@@ -506,11 +506,20 @@ _PRESCRIBED = {
     'static_hold':     ('time', 's', 'hold_seconds'),
     'time_domain':     ('time', 'min', 'duration_minutes'),
     'skill_practice':  ('time', 'min', 'duration_minutes'),
+    'for_time':        ('time', 'min', 'time_minutes'),
     'distance':        ('distance', 'km', 'distance_km'),
     'amrap':           ('rounds', 'rounds', 'target_rounds'),
     'emom':            ('rounds', 'rounds', 'target_rounds'),
     'rounds_for_time': ('rounds', 'rounds', 'target_rounds'),
+    'amrap_movement':  ('reps', 'reps', 'reps_per_round'),
 }
+# A sets slot with no kg anywhere (chin-ups, dips, a plank in sets) counts reps.
+_BODYWEIGHT_SETS = ('reps', 'reps', 'reps')
+
+
+def _slot_type_of(ea: dict) -> str:
+    return ea.get('slot_type') or ('static_hold' if (ea.get('load') or {}).get('hold_seconds') is not None
+                                   else 'sets_reps')
 
 
 def prescribed_trajectory(weeks: list, exercise_id: str, start_date: str | None = None,
@@ -524,45 +533,58 @@ def prescribed_trajectory(weeks: list, exercise_id: str, start_date: str | None 
     weight calculation. The analytics engine stopped replaying on the same
     grounds; this reads `ea.load`, as it does.
 
+    One slot type per exercise — the one it is prescribed under most often —
+    and only that slot type's field: a press that is a sets slot one day and
+    skill practice another must not plot kg and minutes as one line.
+
     Returns {metricType, unit, expected: [{week_number, week_index,
     expected_value, unit, metric_type}], target: {value, weekNumber} | None}.
     The target is the prescription of the latest week the exercise has come
     up in by `today`, else its first week — not week one's, which is what the
     card used to call the target all program long.
     """
+    from collections import Counter
     from src.workout_matcher import session_calendar_date
-    metric, unit, field = 'weight', 'kg', 'weight_kg'
-    expected: list = []
-    target = None
-    first = None
+
+    rows = []      # (week_index, day, slot_type, load)
     for wi, week in enumerate(weeks or []):
-        best = None
-        due = False
         for day, sessions in (week.get('schedule') or {}).items():
             for session in sessions or []:
                 for ea in session.get('exercises') or []:
-                    if (ea.get('exercise') or {}).get('id') != exercise_id or ea.get('meta'):
-                        continue
-                    st = ea.get('slot_type') or ('static_hold' if (ea.get('load') or {}).get('hold_seconds') is not None
-                                                 else 'sets_reps')
-                    metric, unit, field = _PRESCRIBED.get(st, (metric, unit, field))
-                    v = (ea.get('load') or {}).get(field)
-                    if isinstance(v, (int, float)) and (best is None or v > best):
-                        best = float(v)
-                    if start_date and today:
-                        d = session_calendar_date(start_date, wi, day)
-                        due = due or bool(d and d <= today)
-        if best is None and not any(
-                (ea.get('exercise') or {}).get('id') == exercise_id
-                for ss in (week.get('schedule') or {}).values() for s in ss or [] for ea in s.get('exercises') or []):
+                    if (ea.get('exercise') or {}).get('id') == exercise_id and not ea.get('meta'):
+                        rows.append((wi, day, _slot_type_of(ea), ea.get('load') or {}))
+    if not rows:
+        return {'metricType': 'weight', 'unit': 'kg', 'expected': [], 'target': None}
+
+    counts = Counter(r[2] for r in rows)
+    slot_type = max(counts, key=lambda st: (counts[st], -next(i for i, r in enumerate(rows) if r[2] == st)))
+    metric, unit, field = _PRESCRIBED.get(slot_type, ('weight', 'kg', 'weight_kg'))
+    if slot_type == 'sets_reps' and not any(
+            isinstance(r[3].get('weight_kg'), (int, float)) for r in rows if r[2] == slot_type):
+        metric, unit, field = _BODYWEIGHT_SETS
+
+    by_week: dict[int, dict] = {}
+    for wi, day, st, load in rows:
+        w = by_week.setdefault(wi, {'best': None, 'due': False})
+        if start_date and today:
+            d = session_calendar_date(start_date, wi, day)
+            w['due'] = w['due'] or bool(d and d <= today)
+        if st != slot_type:
             continue
-        point = {'week_number': week.get('week_number', wi + 1), 'week_index': wi,
-                 'expected_value': best, 'unit': unit, 'metric_type': metric}
+        v = load.get(field)
+        if isinstance(v, (int, float)) and (w['best'] is None or v > w['best']):
+            w['best'] = float(v)
+
+    expected, target, first = [], None, None
+    for wi in sorted(by_week):
+        w = by_week[wi]
+        point = {'week_number': (weeks[wi] or {}).get('week_number', wi + 1), 'week_index': wi,
+                 'expected_value': w['best'], 'unit': unit, 'metric_type': metric}
         expected.append(point)
-        if first is None and best is not None:
-            first = point
-        if due and best is not None:
-            target = point
+        if w['best'] is not None:
+            first = first or point
+            if w['due']:
+                target = point
     target = target or first
     return {'metricType': metric, 'unit': unit, 'expected': expected,
             'target': {'value': target['expected_value'], 'weekNumber': target['week_number']} if target else None}

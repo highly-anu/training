@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { fetchProgressionReview, fetchExerciseHistory } from '@/api/progression'
 import { useProgramAnalytics } from '@/api/analytics'
 import { useApplyAdjustment } from '@/api/programs'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
 import { ProgressSummary } from './ProgressSummary'
 import { MethodologySection } from '@/components/analytics/MethodologySection'
@@ -43,7 +43,8 @@ export function ProgressionTab() {
     data: historyData,
     isLoading: exercisesLoading,
   } = useQuery({
-    queryKey: ['progression', 'exercises'],
+    // The athlete's date decides "so far": a new day is a new answer.
+    queryKey: ['progression', 'exercises', format(new Date(), 'yyyy-MM-dd')],
     queryFn:  () => fetchExerciseHistory(),
     staleTime: 5 * 60 * 1000,
   })

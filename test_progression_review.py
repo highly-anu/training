@@ -202,6 +202,28 @@ def test_prescribed_trajectory_reads_the_stored_load():
     assert ahead['target'] == {'value': 102.5, 'weekNumber': 1}, 'before the start: the first week'
 
 
+def test_prescribed_trajectory_keeps_one_unit():
+    # Wildman's double press is a sets slot three times and skill practice
+    # once: its line is kg, and the 15 minutes of practice is not a point on it.
+    def press(kg):
+        return {'exercise': {'id': 'press'}, 'slot_type': 'sets_reps', 'load': {'sets': 5, 'reps': 5, 'weight_kg': kg}}
+    practice = {'exercise': {'id': 'press'}, 'slot_type': 'skill_practice', 'load': {'duration_minutes': 15}}
+    weeks = [{'week_number': 1, 'schedule': {'Monday': [{'exercises': [press(22)]}]}},
+             {'week_number': 2, 'schedule': {'Monday': [{'exercises': [practice]}]}},
+             {'week_number': 3, 'schedule': {'Monday': [{'exercises': [press(24)]}], 'Friday': [{'exercises': [press(20)]}]}}]
+    t = pt.prescribed_trajectory(weeks, 'press')
+    assert t['unit'] == 'kg'
+    assert [p['expected_value'] for p in t['expected']] == [22.0, None, 24.0]
+    # A for-time slot is minutes, a chin-up with no kg counts reps.
+    ft = pt.prescribed_trajectory([{'schedule': {'Monday': [{'exercises': [
+        {'exercise': {'id': 'row'}, 'slot_type': 'for_time', 'load': {'time_minutes': 8}}]}]}}], 'row')
+    assert (ft['metricType'], ft['unit'], ft['expected'][0]['expected_value']) == ('time', 'min', 8.0)
+    bw = pt.prescribed_trajectory([{'schedule': {'Monday': [{'exercises': [
+        {'exercise': {'id': 'chin_up'}, 'slot_type': 'sets_reps', 'load': {'sets': 4, 'reps': 6}}]}]}}], 'chin_up')
+    assert (bw['metricType'], bw['unit'], bw['target']['value']) == ('reps', 'reps', 6.0)
+    assert pt.prescribed_trajectory([], 'nothing')['target'] is None
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):
