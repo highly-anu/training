@@ -1339,6 +1339,8 @@ export interface AnalyticsTrend { direction: 'improving' | 'stable' | 'declining
 export interface AnalyticsExerciseResult {
   exerciseId: string
   name: string
+  /** set_load: kg, or reps for a lift with no kg prescribed or logged. */
+  unit?: string
   series: AnalyticsSeriesPoint[]
   expected: AnalyticsExpectedPoint[]
   trend: AnalyticsTrend

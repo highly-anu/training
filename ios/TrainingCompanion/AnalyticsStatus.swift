@@ -50,6 +50,7 @@ enum AnalyticsStatusStyle {
     static func coverageReason(_ code: String?) -> String {
         switch code {
         case "no_sets_logged": return "No sets logged yet. Log reps and kg on a completed session."
+        case "no_kg_logged": return "Reps are logged but not the kg. Add the weight to each set."
         case "rounds_not_logged": return "Rounds are not being logged. Enter rounds on an AMRAP or EMOM session."
         case "duration_not_logged": return "Minutes are not being captured. Match a workout or log the session duration."
         case "distance_not_logged": return "Distance is not being captured. Match a workout or log kilometres."

@@ -240,6 +240,13 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(doc.frame?.philosophies.first?.progressionPhilosophy, "rpm_based")
     }
 
+    func testABodyweightLiftCarriesItsOwnUnit() throws {
+        let json = Data(#"{"progress": [{"id": "pulling_strength", "label": "Pulling strength", "primitive": "set_load", "philosophy": "bjj", "unit": "reps", "metric": "best_set_reps", "exercises": [{"exerciseId": "pull_up", "name": "Pull-up", "unit": "reps", "series": [], "expected": [], "status": "insufficient_data", "stalled": false}]}]}"#.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+        XCTAssertEqual(doc.progress.first?.exercises.first?.unit, "reps")
+        XCTAssertTrue(AnalyticsStatusStyle.coverageReason("no_kg_logged").contains("not the kg"))
+    }
+
     func testAFailedShapesOrStandardsSectionIsReported() throws {
         let json = Data(#"{"archetypes": {"error": "KeyError: 'x'"}, "benchmarks": {"error": "boom"}}"#.utf8)
         let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)

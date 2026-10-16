@@ -415,9 +415,12 @@ struct ProgressEntryCard: View {
         )
     }
 
+    /// A bodyweight lift beside a loaded one: each exercise says its own unit.
+    private var unit: String { exercise?.unit ?? entry.unit }
+
     private var subtitle: String {
         var parts = [entry.metric.replacingOccurrences(of: "_", with: " ")]
-        if !entry.unit.isEmpty { parts.append(entry.unit) }
+        if !unit.isEmpty { parts.append(unit) }
         if let t = trend, t.direction != "insufficient_data" {
             parts.append("\(t.direction) (\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt)")
         }
@@ -474,7 +477,7 @@ struct ProgressEntryCard: View {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
-                        Text("\(AnalyticsProgramTab.number(v))\(entry.unit.isEmpty ? "" : " \(entry.unit)")")
+                        Text("\(AnalyticsProgramTab.number(v))\(unit.isEmpty ? "" : " \(unit)")")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }

@@ -4262,7 +4262,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         str(inputs.profile.get('sex')),
         # The document's shape: bump when a section gains keys, so stored
         # copies are rebuilt (2: scorecard.weeks, for the Today card).
-        'doc-3',
+        'doc-4',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 

@@ -36,6 +36,7 @@ export function statusLabel(status: string): string {
 /** Why a primitive could not measure — the reason codes the engine emits, in words. */
 export const COVERAGE_REASONS: Record<string, string> = {
   no_sets_logged: 'No sets logged yet. Log reps and kg on a completed session.',
+  no_kg_logged: 'Reps are logged but not the kg. Add the weight to each set.',
   rounds_not_logged: 'Rounds are not being logged. Enter rounds on an AMRAP or EMOM session.',
   duration_not_logged: 'Minutes are not being captured. Match a workout or log the session duration.',
   distance_not_logged: 'Distance is not being captured. Match a workout or log kilometres.',

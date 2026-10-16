@@ -254,10 +254,12 @@ struct ProgramAnalytics: Decodable {
         let stalled: Bool
         let prescribedNow: Double?
         let bestEst1rm: Double?
+        /// set_load: "kg", or "reps" for a lift with no kg prescribed or logged.
+        let unit: String?
         var id: String { exerciseId }
 
         private enum CodingKeys: String, CodingKey {
-            case exerciseId, name, series, expected, trend, status, stalled, prescribedNow, bestEst1rm
+            case exerciseId, name, series, expected, trend, status, stalled, prescribedNow, bestEst1rm, unit
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -270,6 +272,7 @@ struct ProgramAnalytics: Decodable {
             stalled = (try? c.decodeIfPresent(Bool.self, forKey: .stalled)) ?? false
             prescribedNow = try? c.decodeIfPresent(Double.self, forKey: .prescribedNow)
             bestEst1rm = try? c.decodeIfPresent(Double.self, forKey: .bestEst1rm)
+            unit = try? c.decodeIfPresent(String.self, forKey: .unit)
         }
     }
 

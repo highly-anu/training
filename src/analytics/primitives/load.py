@@ -11,6 +11,13 @@ Expected comes from the stored prescription (`ea.load.weight_kg`) or, for
 `achieved_plus_increment`, from what the athlete last achieved plus the
 exercise's own increment — which survives phase boundaries and unknown
 starting loads, where re-running the generator does not.
+
+A lift with no kg — none prescribed and none logged (air squats, pull-ups,
+a dead hang in sets) — is measured in **reps**: the best completed set
+against the prescribed reps. Gym Jones' strength and BJJ's pulling strength
+sit on such lifts, and logging their reps read "no sets logged". Each
+exercise says its own unit; one never mixes kg and reps. Reps logged on a
+lift prescribed in kg, without the kg, say so (`no_kg_logged`).
 """
 from __future__ import annotations
 
@@ -47,6 +54,27 @@ def best_completed_set(ex_log: dict | None) -> dict | None:
     return best
 
 
+def best_reps(ex_log: dict | None) -> int | None:
+    """The most reps in one completed set, or None."""
+    reps = [int(s['repsActual']) for s in (ex_log or {}).get('sets') or []
+            if s.get('completed') and isinstance(s.get('repsActual'), (int, float)) and s['repsActual'] > 0]
+    return max(reps) if reps else None
+
+
+def prescribed_reps(load: dict) -> float | None:
+    """The prescription's reps: a number, or the low end of "8-10"."""
+    r = (load or {}).get('reps')
+    if isinstance(r, (int, float)):
+        return float(r)
+    if isinstance(r, str):
+        head = r.replace('–', '-').split('-')[0].strip()
+        try:
+            return float(head)
+        except ValueError:
+            return None
+    return None
+
+
 def increment_for(ctx, exercise_id: str) -> float:
     """The exercise's own `weekly_increment_kg`, else the generator's default —
     the same two places progression.py reads."""
@@ -77,10 +105,18 @@ def set_load(entry, ctx) -> dict:
                 'exerciseId': ex_id, 'name': ea['exercise'].get('name', ex_id),
                 'points': [], 'expected': [], 'last': None, 'prescribedNow': None,
                 'increment': increment_for(ctx, ex_id),
+                'kg': False, 'repPoints': [], 'repExpected': [], 'repsWithoutKg': False,
             })
             prescribed = (ea.get('load') or {}).get('weight_kg')
             prescribed = float(prescribed) if isinstance(prescribed, (int, float)) else None
             rec['prescribedNow'] = prescribed
+            if prescribed is not None:
+                rec['kg'] = True
+            # The reps reading of the same session, used if the lift turns out
+            # to carry no kg at all.
+            p_reps = prescribed_reps(ea.get('load') or {})
+            rec['repExpected'].append({'week': h['week_number'], 'x': h['ordinal'], 'value': p_reps})
+            top_reps = best_reps(logged.get(ex_id))
             if entry.expected == 'achieved_plus_increment':
                 exp = rec['last'] + rec['increment'] if rec['last'] is not None else prescribed
             elif entry.expected == 'prescribed':
@@ -90,16 +126,30 @@ def set_load(entry, ctx) -> dict:
             rec['expected'].append({'week': h['week_number'], 'x': h['ordinal'], 'value': exp})
             best = best_completed_set(logged.get(ex_id))
             if best:
+                rec['kg'] = True
                 rec['points'].append(series_point(
                     h, best['weight'], reps=best['reps'], est1rm=best['est1rm'],
                     volume=best['volume'], prescribed=prescribed, expected=exp))
                 rec['last'] = best['weight']
                 got_any = True
+            elif top_reps is not None:
+                rec['repPoints'].append(series_point(h, float(top_reps), reps=top_reps, prescribed=p_reps,
+                                                     expected=p_reps))
+                if prescribed is not None:
+                    rec['repsWithoutKg'] = True
+                else:
+                    got_any = True
         if got_any:
             measured += 1
 
     exercises = []
     for rec in per_ex.values():
+        unit = 'kg' if rec['kg'] else 'reps'
+        if unit == 'reps':
+            # No kg prescribed or logged for this lift: its currency is reps,
+            # against the prescribed reps, and it rises a rep at a time.
+            rec['points'], rec['expected'] = rec['repPoints'], rec['repExpected']
+            rec['increment'] = 1.0
         pts = [trend_mod.Point(p['x'], p['value'], p['isDeload']) for p in rec['points']]
         t = trend_mod.fit(pts)
         exp_vals = [e['value'] for e in rec['expected'] if e['value'] is not None]
@@ -113,7 +163,7 @@ def set_load(entry, ctx) -> dict:
         stalled = trend_mod.stalled(pts, stall_sessions, tolerance)
         status = 'stalled' if stalled else trend_mod.status(t, expected_slope, base)
         exercises.append({
-            'exerciseId': rec['exerciseId'], 'name': rec['name'],
+            'exerciseId': rec['exerciseId'], 'name': rec['name'], 'unit': unit,
             'series': rec['points'], 'expected': rec['expected'],
             'trend': trend_dict(t), 'status': status, 'stalled': stalled,
             'increment': rec['increment'], 'prescribedNow': rec['prescribedNow'],
@@ -123,9 +173,12 @@ def set_load(entry, ctx) -> dict:
     exercises.sort(key=lambda e: -len(e['series']))
 
     lead = exercises[0] if exercises else None
-    reason = None if measured else ('no_sets_logged' if in_scope else None)
+    reason = None
+    if not measured and in_scope:
+        reason = ('no_kg_logged' if any(r['repsWithoutKg'] for r in per_ex.values()) else 'no_sets_logged')
+    unit = lead['unit'] if lead else 'kg'
     return result(
-        entry, metric='best_set_kg', unit='kg',
+        entry, metric='best_set_kg' if unit == 'kg' else 'best_set_reps', unit=unit,
         series=lead['series'] if lead else [], expected=lead['expected'] if lead else [],
         status=lead['status'] if lead else 'insufficient_data',
         trend=lead['trend'] if lead else None,

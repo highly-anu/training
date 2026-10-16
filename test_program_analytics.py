@@ -594,6 +594,29 @@ def test_set_load() -> None:
     check('three flat sessions after the first → stalled', r2['exercises'][0]['stalled']
           and r2['status'] == 'stalled', str(r2['exercises'][0]['status']))
 
+    # A lift with no kg prescribed or logged is measured in reps (Gym Jones'
+    # air squats, BJJ's pull-ups): logging its reps read "no sets logged".
+    bw = fixture_program(weeks=2, deload_week=99)
+    for w in bw['weeks']:
+        w['schedule']['Monday'][0]['exercises'] = [
+            {'exercise': {'id': 'pull_up', 'name': 'Pull-up', 'movement_patterns': ['vertical_pull']},
+             'slot_role': 'primary_pull', 'slot_type': 'sets_reps', 'load': {'sets': 4, 'reps': '6-8'}}]
+    bw_logs = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'pull_up': {'sets': _sets((None, 6), (None, 7))}}),
+               '2-Monday-0': _log('2026-03-09T10:00:00+00:00', {'pull_up': {'sets': _sets((None, 8), (None, 7))}})}
+    eb = E('pull', 'set_load', 'bjj', scope={'slot_roles': ['primary_*']}, expected='prescribed')
+    rb = run_primitive(eb, _ctx(bw, bw_logs, today=START + timedelta(days=10)))
+    pu = rb['exercises'][0]
+    check('a kg-less lift is measured in reps: best set per session',
+          pu['unit'] == 'reps' and [p['value'] for p in pu['series']] == [7.0, 8.0], str(pu['series']))
+    check('against the prescribed reps (the low end of 6-8)', pu['expected'][0]['value'] == 6.0)
+    check('the entry says reps, and is measured', rb['unit'] == 'reps' and rb['metric'] == 'best_set_reps'
+          and rb['coverage']['measured'] == 2, str(rb['coverage']))
+    # Reps logged on a lift prescribed in kg, without the kg: say that.
+    nokg = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00', {'back_squat': {'sets': _sets((None, 5), (None, 5))}})}
+    rk = run_primitive(e, _ctx(prog, nokg, today=START + timedelta(days=3)))
+    check('reps without the prescribed kg → no_kg_logged, not no_sets_logged',
+          rk['coverage']['reason'] == 'no_kg_logged' and rk['unit'] == 'kg', str(rk['coverage']))
+
     # Completed but unlogged: counts for coverage denominator, not measured.
     partial = {'1-Monday-0': _log('2026-03-02T10:00:00+00:00'), '1-Wednesday-0': logs['1-Wednesday-0']}
     r3 = run_primitive(e, _ctx(prog, partial, today=START + timedelta(days=5)))
