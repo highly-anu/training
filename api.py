@@ -3291,9 +3291,10 @@ def get_today_session():
     if spec_level >= 1:
         try:
             from src import last_time as _last_time
+            tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
             last = _last_time.last_by_exercise(
                 list(session_logs.values()) + list(_health.get_session_logs_by_uid(g.user_id).values()),
-                str(today))
+                str(today), tz=tz)
         except Exception as e:
             app.logger.warning('today-session: last time failed: %s', e)
 

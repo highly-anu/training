@@ -712,8 +712,8 @@ phases A–E. Open:
   the web (it had the reps column), an isometric skill-practice exercise logs
   its hold in seconds and a kettlebell in a timed slot its reps, on both
   clients (`lib/outcomeFields.ts`, `SessionLogging.outcomeFields`), and the
-  Apple Watch writes each set's `durationSeconds`. Still open: an optional
-  "clean" tick so *movements earned* counts quality, not attendance.
+  Apple Watch writes each set's `durationSeconds`. The "clean" tick followed
+  the same day (`require_clean`, Ido and Wildman).
 - ~~Marcus Filly prescribes kg, not RPE~~ — closed 2026-10-16: a framework's
   `progression_overrides` (modality → model) writes the load; Filly's strength
   work is RPE 8 (6 in a deload) with a suggested starting weight, and his spec

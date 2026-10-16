@@ -28,7 +28,7 @@ struct SetsRepsView: View {
                         showLogger = true
                     } else {
                         sessionState.markExerciseComplete(id: exercise.exerciseId)
-                        sessionState.phase = .active(exerciseIndex: exerciseIndex + 1, setIndex: 0)
+                        sessionState.advance(to: exerciseIndex + 1)
                     }
                 }
                 .buttonStyle(.borderedProminent)

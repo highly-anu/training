@@ -6,6 +6,8 @@ today-session sends it with each exercise (`last`, ?spec=1 builds only).
 """
 from __future__ import annotations
 
+from datetime import datetime
+
 
 def _num(v) -> str:
     v = round(float(v), 1)
@@ -43,9 +45,25 @@ def describe(perf: dict) -> str | None:
     return None
 
 
-def last_by_exercise(session_logs, before: str) -> dict[str, str]:
+def _local_day(completed_at, tz: str | None) -> str:
+    """The athlete's calendar day of a UTC completion time — not its UTC
+    date, which runs a day ahead every evening west of Greenwich (a session
+    finished yesterday evening read as today's and was skipped)."""
+    raw = str(completed_at or '')
+    if not tz:
+        return raw[:10]
+    try:
+        from src.fit_import import local_date
+        return local_date(datetime.fromisoformat(raw.replace('Z', '+00:00')), tz=tz)
+    except (ValueError, TypeError):
+        return raw[:10]
+
+
+def last_by_exercise(session_logs, before: str, tz: str | None = None) -> dict[str, str]:
     """{exercise id: short line} from the most recent completed log before
-    `before` (an ISO date) that says something about the exercise.
+    `before` (an ISO date, the athlete's) that says something about the
+    exercise; `tz` is the profile's IANA zone, so the completion is dated the
+    athlete's day.
 
     `session_logs` is a dict of logs or an iterable of them. The logs are
     client JSON nobody validates, and this runs on the watch's sync: a row
@@ -55,7 +73,7 @@ def last_by_exercise(session_logs, before: str) -> dict[str, str]:
     for log in logs:
         if not isinstance(log, dict):
             continue
-        at = str(log.get('completedAt') or '')[:10]
+        at = _local_day(log.get('completedAt'), tz) if log.get('completedAt') else ''
         if at and at < before:
             dated.append((str(log.get('completedAt')), log))
     out: dict[str, str] = {}
