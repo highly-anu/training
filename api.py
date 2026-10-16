@@ -26,6 +26,7 @@ from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
 from src import goals, loader, provenance
+from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
@@ -380,7 +381,9 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # Unfilled because the philosophy's packages own nothing for this slot,
         # as opposed to equipment or level ruling everything out.
         'coverage_gap': bool(ea.get('coverage_gap')),
+        'equipment_gap': bool(ea.get('equipment_gap')),
         'gap_reason':   ea.get('gap_reason'),
+        'substituted_for': ea.get('substituted_for'),
         'error':       ea.get('error'),
         'load_note':   load_note,
         'notes':       slot.get('notes'),
@@ -390,6 +393,20 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'parent_slot_role': slot.get('parent_slot_role'),
         'skip_exercise':    bool(slot.get('skip_exercise')),
     }
+
+
+def _phase_summary(weeks: list, goal: dict | None) -> list:
+    """How sessions and exercises change phase to phase (src/phase_summary.py).
+
+    Derived from the weeks, never stored (db.save_user_program strips it),
+    and never allowed to fail a response.
+    """
+    from src import phase_summary
+    try:
+        return phase_summary.build(weeks, goal)
+    except Exception as err:  # a malformed legacy program must still load
+        app.logger.warning('phase_summary failed: %s', err)
+        return []
 
 
 def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> dict:
@@ -446,6 +463,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         'weeks':          weeks,
         'volume_summary': volume_summary,
+        'phase_summary':  _phase_summary(weeks, goal),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
     }
@@ -1213,6 +1231,23 @@ def generate_session():
         raise
 
 
+def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None]:
+    """(exclude_exercises, deload share) for the week a single-session route edits.
+
+    The client sends the week's `phase_id` and `framework_id`; without them
+    (an older client) nothing is excluded and the model defaults apply, as
+    before. The phone sends no philosophy ids for a session regenerate, so the
+    phase is looked up across every package, narrowed by the framework.
+    """
+    phase_id, framework_id = body.get('phase_id'), body.get('framework_id')
+    phils = loader.load_philosophies()
+    wanted = [p for p in phils if p.get('id') in set(philosophy_ids or [])] or phils
+    rules = phases.phase_rules(wanted, phase_id, framework_id)
+    fw = loader.load_all_frameworks().get(framework_id) if framework_id else None
+    keep = ((fw or {}).get('deload_protocol') or {}).get('volume_reduction_pct')
+    return frozenset(rules['exclude_exercises']), keep
+
+
 def _generate_session_inner(body):
     primary_sources = body.get('primary_sources', [])  # Philosophy IDs
     modality = body.get('modality')
@@ -1271,6 +1306,7 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
+    phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
     populated = populate_session(
         session_stub, goal, constraints,
@@ -1280,6 +1316,8 @@ def _generate_session_inner(body):
         exercises_by_package=lib.get('exercises_by_package'),
         policy=policy,
         level_seeds=lib.get('level_seeds'),
+        exclude_exercise_ids=phase_excluded,
+        deload_keep=deload_keep,
     )
 
     if populated.get('archetype') is None:
@@ -1299,6 +1337,7 @@ def _generate_session_inner(body):
             constraints.get('training_level', 'intermediate'),
             is_deload,
             session_time_minutes=constraints.get('session_time_minutes', 75),
+            deload_keep=deload_keep,
         )
 
     arch = populated.get('archetype', {})
@@ -1362,7 +1401,9 @@ def substitute_exercise():
     limit = max(1, min(int(body.get('limit') or 8), 10))
 
     excl_patterns, excl_ids = _selector._injury_exclusions(constraints, data['injury_flags'])
-    unlocked = _selector._get_unlocked(level, lib['exercises'], lib.get('level_seeds')) - excl_ids
+    phase_excluded, deload_keep = _week_phase_rules(body, goal['primary_sources'])
+    unlocked = (_selector._get_unlocked(level, lib['exercises'], lib.get('level_seeds'))
+                - excl_ids - phase_excluded)
     _selected, trace = _selector.select_exercise(
         slot, constraints, lib['exercises'], unlocked, excl_patterns, excl_ids,
         recent_ex_ids=None, phase=phase, session_used_ids=list(exclude),
@@ -1379,7 +1420,8 @@ def substitute_exercise():
         if ex is None:
             continue
         load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
-                              session_time_minutes=constraints.get('session_time_minutes', 75))
+                              session_time_minutes=constraints.get('session_time_minutes', 75),
+                              deload_keep=deload_keep)
         ea = {'slot_index': slot_index, 'slot_role': slot_role,
               'slot_type': slot.get('slot_type', 'sets_reps'),
               'exercise': ex, 'slot': slot, 'load': load}
@@ -2288,6 +2330,10 @@ def get_user_program_endpoint():
                 program['programVersionId'] = program_history.active_version_id(user_id)
             except Exception as hist_err:
                 app.logger.warning('program history bootstrap failed: %s', hist_err)
+            current = program.get('currentProgram')
+            if isinstance(current, dict) and current.get('weeks'):
+                program['currentProgram'] = {
+                    **current, 'phase_summary': _phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
@@ -2402,11 +2448,15 @@ def save_user_program_endpoint():
         # After the save and after the 409 check: history must never claim a
         # plan the stale-revision guard rejected.
         history = _record_program_history(user_id, body, 'put', revision)
+        saved = body.get('currentProgram') or {}
         return jsonify({
             'saved':            True,
             'revision':         revision,
             'historyRecorded':  bool(history.get('recorded')),
             'programVersionId': history.get('versionId'),
+            # The saved weeks' summary: a client that moved, swapped or
+            # spliced weeks shows phase changes for what it just saved.
+            'phaseSummary':     _phase_summary(saved.get('weeks') or [], saved.get('goal')),
         })
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
@@ -2647,7 +2697,8 @@ def adjust_program():
     save_user_program(user_id, envelope)
     revision = get_program_revision(user_id)
     history = _record_program_history(user_id, envelope, 'adjust', revision)
-    program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId')}
+    program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId'),
+               'currentProgram': {**current, 'phase_summary': _phase_summary(weeks, current.get('goal'))}}
     return jsonify({'saved': True, 'revision': revision,
                     'programVersionId': history.get('versionId'),
                     'applied': applied, 'program': program})

@@ -40,7 +40,7 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 # ---------------------------------------------------------------------------
 
 def _linear_load(exercise: dict, slot: dict, week: int,
-                 level: str, is_deload: bool) -> dict:
+                 level: str, is_deload: bool, deload_keep: float | None = None) -> dict:
     ex_id = exercise.get('id', '')
     start = (exercise.get('starting_load_kg') or {}).get(level)
     increment = exercise.get('weekly_increment_kg') or _DEFAULT_INCREMENT_KG
@@ -63,7 +63,7 @@ def _linear_load(exercise: dict, slot: dict, week: int,
     if is_deload:
         deload_sc = slot.get('scaling', {}) if isinstance(slot.get('scaling'), dict) else {}
         intensity_pct = deload_sc.get('intensity_pct', 0.9)
-        vol_mult = deload_sc.get('volume_multiplier', 0.6)
+        vol_mult = deload_sc.get('volume_multiplier', deload_keep if deload_keep is not None else 0.6)
         weight = _round_kg(weight * intensity_pct)
         sets = max(1, round(sets * vol_mult))
         load_note = 'Deload — reduced intensity'
@@ -139,8 +139,24 @@ def zone_band(intensity) -> tuple[Optional[int], Optional[int], Optional[str]]:
     return entry[0], entry[1], entry[2]
 
 
+def _kind_adjusted_keep(phase: str, deload_keep: float | None, default: float) -> float:
+    """The deload share for time and distance, which the phase kind already caps.
+
+    In a kind that is itself the deload (a taper), `volume_multiplier` has
+    already cut a slot's time and distance, and the framework's share is the
+    total, not a second cut on top: Uphill's taper kept 0.6 x 0.5 = 30 % where
+    its prose says volume drops 40-60 %. Sets, rounds and session length are
+    not capped by the kind, so they take the framework's share as it is.
+    """
+    if deload_keep is None:
+        return default
+    if phases.kind_flag(phase, 'counts_as_deload'):
+        return min(1.0, deload_keep / (phases.volume_multiplier(phase) or 1.0))
+    return deload_keep
+
+
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
-                  max_minutes: int | None = None) -> dict:
+                  max_minutes: int | None = None, deload_keep: float | None = None) -> dict:
     # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
     if 'duration_minutes' in slot:
         base_sec = slot['duration_minutes'] * 60
@@ -153,7 +169,7 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     # 10% weekly ramp up to target
     current_sec = min(base_sec * (1 + (week - 1) * 0.10), target_sec)
     if is_deload:
-        current_sec *= 0.60
+        current_sec *= _kind_adjusted_keep(phase, deload_keep, 0.60)
 
     minutes = max(1, round(current_sec / 60))
     # Never exceed the athlete's session time limit
@@ -170,7 +186,8 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     return out
 
 
-def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: bool) -> dict:
+def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: bool,
+                   deload_keep: float | None = None) -> dict:
     base_m = slot.get('distance_m', 8000)
     intensity = slot.get('intensity', 'zone2')
 
@@ -195,7 +212,7 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
                   * (1 + (week - 1) * 0.08))
 
     if is_deload:
-        distance_m *= 0.60
+        distance_m *= _kind_adjusted_keep(phase, deload_keep, 0.60)
 
     out = {'distance_km': round(distance_m / 1000, 1), 'intensity': intensity}
     if pack is not None:
@@ -207,7 +224,8 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
     return out
 
 
-def _density_slot(slot: dict, week: int, is_deload: bool) -> dict:
+def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | None = None) -> dict:
+    keep = deload_keep if deload_keep is not None else 0.70
     duration_sec = slot.get('duration_sec', slot.get('time_cap_sec', 1200))
     slot_type = slot.get('slot_type', 'amrap')
 
@@ -223,7 +241,7 @@ def _density_slot(slot: dict, week: int, is_deload: bool) -> dict:
     if work_sec:
         rounds = slot.get('sets') or max(1, round(duration_sec / max(1, work_sec)))
         if is_deload:
-            rounds = max(1, round(rounds * 0.70))
+            rounds = max(1, round(rounds * keep))
         cycle = work_sec + (rest_sec or 0)
         return {
             'time_minutes': max(1, round((rounds * cycle) / 60)),
@@ -237,8 +255,8 @@ def _density_slot(slot: dict, week: int, is_deload: bool) -> dict:
     rounds = base_rounds + max(0, week - 1)
 
     if is_deload:
-        rounds = max(1, round(rounds * 0.70))
-        duration_sec = round(duration_sec * 0.75)
+        rounds = max(1, round(rounds * keep))
+        duration_sec = round(duration_sec * (deload_keep if deload_keep is not None else 0.75))
 
     return {
         'time_minutes': max(5, round(duration_sec / 60)),
@@ -279,10 +297,17 @@ def calculate_load(
     training_level: str,
     is_deload: bool,
     session_time_minutes: int | None = None,
+    deload_keep: float | None = None,
 ) -> dict:
-    """Calculate the load prescription for one exercise in one slot."""
+    """Calculate the load prescription for one exercise in one slot.
+
+    `deload_keep` is the framework's `deload_protocol.volume_reduction_pct`,
+    the share of volume a deload week keeps; None keeps the model defaults
+    (0.6 of time, distance and sets, 0.7 of rounds). An archetype's own
+    `scaling.deload.volume_multiplier` still wins for its sets.
+    """
     load = _calculate_load(exercise, slot, progression_model, week_number, phase,
-                           training_level, is_deload, session_time_minutes)
+                           training_level, is_deload, session_time_minutes, deload_keep)
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm
@@ -308,12 +333,13 @@ def _calculate_load(
     training_level: str,
     is_deload: bool,
     session_time_minutes: int | None = None,
+    deload_keep: float | None = None,
 ) -> dict:
     slot_type = slot.get('slot_type', 'sets_reps')
 
     if slot_type == 'sets_reps':
         if progression_model in ('linear_load', 'volume_block', 'density'):
-            return _linear_load(exercise, slot, week_number, training_level, is_deload)
+            return _linear_load(exercise, slot, week_number, training_level, is_deload, deload_keep)
         elif progression_model == 'rpe_autoregulation':
             return _rpe_autoregulation(exercise, slot, training_level, is_deload)
         else:
@@ -322,13 +348,13 @@ def _calculate_load(
             return {'sets': sets, 'reps': reps}
 
     elif slot_type == 'time_domain':
-        return _time_to_task(slot, week_number, phase, is_deload, session_time_minutes)
+        return _time_to_task(slot, week_number, phase, is_deload, session_time_minutes, deload_keep)
 
     elif slot_type == 'distance':
-        return _distance_slot(slot, week_number, training_level, phase, is_deload)
+        return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep)
 
     elif slot_type in ('amrap', 'emom'):
-        return _density_slot(slot, week_number, is_deload)
+        return _density_slot(slot, week_number, is_deload, deload_keep)
 
     elif slot_type == 'amrap_movement':
         # Component movement within an AMRAP — show reps per round only
@@ -336,8 +362,8 @@ def _calculate_load(
 
     elif slot_type == 'for_time':
         if 'distance_m' in slot:
-            return _distance_slot(slot, week_number, training_level, phase, is_deload)
-        return _density_slot(slot, week_number, is_deload)
+            return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep)
+        return _density_slot(slot, week_number, is_deload, deload_keep)
 
     elif slot_type == 'skill_practice':
         return _skill_slot(slot)

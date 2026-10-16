@@ -234,7 +234,16 @@ def get_user_program(user_id: str) -> dict[str, Any] | None:
 
 
 def save_user_program(user_id: str, program_data: dict[str, Any]) -> None:
-    """Save user's current program to database or local file."""
+    """Save user's current program to database or local file.
+
+    `currentProgram.phase_summary` is derived from the weeks on every read
+    (src/phase_summary.py) and is never stored, so a stale copy cannot outlive
+    a swap or an adjustment.
+    """
+    cp = program_data.get('currentProgram') if isinstance(program_data, dict) else None
+    if isinstance(cp, dict) and 'phase_summary' in cp:
+        program_data = {**program_data,
+                        'currentProgram': {k: v for k, v in cp.items() if k != 'phase_summary'}}
     conn = _get_pg_conn()
     if conn:
         try:

@@ -106,6 +106,8 @@ export function ReplaceSessionSheet({
     phase: weekData.phase,
     weekInPhase: weekData.week_in_phase,
     isDeload: weekData.is_deload,
+    phaseId: weekData.phase_id,
+    frameworkId: weekData.framework,
     constraints: effectiveConstraints,
   }
 

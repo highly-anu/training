@@ -36,7 +36,7 @@ applicable_when:
 
 deload_protocol:
   frequency_weeks: 8
-  volume_reduction_pct: 0.30
+  volume_reduction_pct: 0.70   # share kept: a 30% cut
   intensity_change: maintain
 
 # Mobility sessions tolerate clustering — daily practice is encouraged

@@ -2,6 +2,10 @@ id: hlm
 name: Heavy/Light/Medium (HLM)
 modality: max_strength
 category: strength
+# Intermediate programs: what follows the novice linear progression.
+training_levels:
+- intermediate
+- advanced
 duration_estimate_minutes: 70
 required_equipment:
 - barbell

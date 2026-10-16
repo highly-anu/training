@@ -73,3 +73,7 @@ tracks:
           - "Mixed-modal work capacity"
           - "Output across time domains"
         intensity: "High intensity, low volume"
+        # Variation is the method: the main lift changes from session to session.
+        rotate_main_lifts: true
+        checks:
+          modalities_required: [mixed_modal_conditioning]

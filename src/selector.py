@@ -189,6 +189,25 @@ def _blocked_categories_for_equipment(available_equip: set) -> set:
     return blocked
 
 
+# Slot intensities that mark a loaded main lift, as opposed to a warm-up, an
+# accessory or a carry. A slot that names a %1RM is one too.
+MAIN_LIFT_INTENSITIES = frozenset({'heavy', 'max', 'max_effort'})
+
+
+def is_main_lift_slot(slot: dict) -> bool:
+    """A sets x reps slot carrying the week's heavy lift.
+
+    The generator keeps such a slot on one exercise for a whole phase (unless
+    the phase says `rotate_main_lifts`), because its load progresses from
+    session to session; rotating front squat, box squat and back squat
+    through it reset the progression every time.
+    """
+    if slot.get('slot_type', 'sets_reps') != 'sets_reps':
+        return False
+    return (slot.get('intensity') or '') in MAIN_LIFT_INTENSITIES \
+        or bool(slot.get('intensity_pct_1rm'))
+
+
 def _slot_injury_blocked(slot: dict, excl_patterns: set) -> bool:
     """Return True if a slot's required movement pattern is fully excluded by injury flags."""
     if not excl_patterns:
@@ -234,8 +253,15 @@ def select_archetype(
     available_equip = set(constraints.get('equipment', []))
     session_time = constraints.get('session_time_minutes', 75)
     training_level = constraints.get('training_level', 'intermediate')
-    recent = set(recent_ids or [])
-    primary_sources = set(goal.get('primary_sources', []))
+    recent_list = list(recent_ids or [])
+    recent = set(recent_list)
+    # Where each archetype sits in its package (load order) and when it was
+    # last used: ties go to the one used longest ago, then to the first one
+    # authored. The tiebreak used to be the id, reversed, so the
+    # alphabetically last archetype won every tie: a Starting Strength novice
+    # ran HLM from week 2.
+    order = {a.get('id'): i for i, a in enumerate(archetypes)}
+    last_used = {aid: i for i, aid in enumerate(recent_list)}
 
     n_modality = 0
     n_phase = 0
@@ -243,6 +269,7 @@ def select_archetype(
     n_equip = 0
 
     candidates = []
+    too_long = []  # passed every filter but the session-time one
     for arch in archetypes:
         if arch.get('modality') != modality:
             continue
@@ -277,12 +304,23 @@ def select_archetype(
         if day_session_types and 'short' in day_session_types and 'long' not in day_session_types:
             if duration > 50:  # 40m budget + 25% tolerance
                 if not arch.get('scaling', {}).get('time_limited'):
+                    too_long.append((duration, arch))
                     continue
         elif duration > session_time:
             if not arch.get('scaling', {}).get('time_limited'):
+                too_long.append((duration, arch))
                 continue  # no time-limited scaling — skip
 
         candidates.append(arch)
+
+    # Nothing fits the session time: keep the modality with its shortest
+    # archetype (populate_session caps the session at the athlete's time)
+    # rather than return nothing. Returning nothing made the generator swap
+    # the modality for aerobic base, so a 45-minute athlete lost Horsemen's
+    # max strength and Uphill's muscular endurance outright.
+    if not candidates and too_long:
+        shortest = min(d for d, _ in too_long)
+        candidates = [a for d, a in too_long if d == shortest]
 
     _excl = excl_patterns or set()
 
@@ -297,13 +335,6 @@ def select_archetype(
         required = set(arch.get('required_equipment', [])) - {'open_space'}
         if required.issubset(available_equip):
             score += 6
-        for src in arch.get('sources', []):
-            src_lower = src.lower()
-            for ps in primary_sources:
-                key = ps.replace('_gpp', '').replace('_', ' ').lower()
-                if key in src_lower:
-                    score += 2
-                    break
         if arch['id'] in recent:
             score -= 3
         # Duration fit: reward archetypes that match the day's slot type
@@ -334,7 +365,7 @@ def select_archetype(
                 if s.get('exercise_filter', {}).get('category') in blocked_cats
             )
             score -= equip_blocked * 10
-        return (score, arch['id'])  # id as stable tiebreaker
+        return (score, -last_used.get(arch['id'], -1), -order.get(arch['id'], 0))
 
     if not candidates:
         if not return_trace:
@@ -357,19 +388,12 @@ def select_archetype(
 
     def _breakdown(arch: dict) -> dict:
         equip_bonus = 0
-        source_bonus = 0
+        source_bonus = 0  # the free-text sources bonus is gone; kept for the trace's shape
         recency_penalty = 0
         injury_penalty = 0
         required = set(arch.get('required_equipment', [])) - {'open_space'}
         if required.issubset(available_equip):
             equip_bonus = 6
-        for src in arch.get('sources', []):
-            src_lower = src.lower()
-            for ps in primary_sources:
-                key = ps.replace('_gpp', '').replace('_', ' ').lower()
-                if key in src_lower:
-                    source_bonus += 2
-                    break
         if arch['id'] in recent:
             recency_penalty = -3
         if _excl:
@@ -521,6 +545,10 @@ def select_exercise(
         candidates = _build_candidates(restrict_to_primary=False)
         borrowed_fallback = bool(candidates)
 
+    # Ties go to the exercise authored first in its package, not to the
+    # alphabetically last id (which put front squat ahead of back squat).
+    order = {eid: i for i, eid in enumerate(exercises)}
+
     def _score_ex(ex: dict) -> tuple:
         recency_penalty = sum(2 for eid in recent if eid == ex['id'])
         # A slot that names its exercises (a pentathlon's five events) rotates
@@ -533,8 +561,8 @@ def select_exercise(
             # …and among equals the one used longest ago goes first (recent is
             # oldest → newest), so every event comes round.
             last = max((i for i, eid in enumerate(recent) if eid == ex['id']), default=-1)
-            return (-recency_penalty + pattern_bonus, -last, ex['id'])
-        return (-recency_penalty + forward_bonus + pattern_bonus, ex['id'])
+            return (-recency_penalty + pattern_bonus, -last, -order.get(ex['id'], 0))
+        return (-recency_penalty + forward_bonus + pattern_bonus, -order.get(ex['id'], 0))
 
     if not candidates:
         if not return_trace:
@@ -607,6 +635,69 @@ def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: st
     return True
 
 
+def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
+                      phase, primary_sources, policy, modality,
+                      phase_excluded=frozenset()) -> tuple[str | None, dict | None, str | None]:
+    """Why a slot found no exercise, and the injury flag's substitute if one fits.
+
+    Returns (reason, substitute, instead_of), cheapest test first:
+
+    - 'coverage': no exercise in the allowed packages matches the slot at all;
+    - 'injury': it fills once the athlete's flags are lifted;
+    - 'equipment': it fills with every piece of equipment;
+    - 'level': it fills with every exercise unlocked;
+    - 'phase': it fills only with the phase's `exclude_exercises` back in
+      (the method has not reached the lift; not the athlete's level);
+    - None: nothing explains it.
+
+    The substitute comes from a flag's `modified_exercises`: an entry whose
+    `instead_of` fits the slot and whose `use` the athlete could be given
+    anyway: unlocked at their level and not left out by the phase, within
+    their equipment and the program's packages, not excluded or
+    contraindicated by any flag, and clear of every other flag's excluded
+    patterns (the flag that names it vouches only for its own).
+    """
+    common = dict(primary_sources=primary_sources, policy=policy, modality=modality)
+    if policy is not None and policy.strict and _slot_unfillable_in_policy(slot, exercises, policy, modality):
+        return 'coverage', None, None
+    flags = list(constraints.get('injury_flags') or [])
+    if flags:
+        no_flags = {**constraints, 'injury_flags': []}
+        everything = unlocked | (set(excl_ids) & set(exercises))
+        if select_exercise(slot, no_flags, exercises, everything, set(), set(), [], phase, **common):
+            available = set(constraints.get('equipment', []))
+            ex_filter = slot.get('exercise_filter') or {}
+            for flag_id in flags:
+                others = {pat for fid in flags if fid != flag_id
+                          for pat in (injury_flags_data.get(fid) or {}).get('excluded_movement_patterns') or []}
+                for mod in (injury_flags_data.get(flag_id) or {}).get('modified_exercises') or []:
+                    was, use = exercises.get(mod.get('instead_of')), exercises.get(mod.get('use'))
+                    if not was or not use or use['id'] in excl_ids or use['id'] not in unlocked:
+                        continue
+                    if not _matches_slot_filter(was, ex_filter, set()):
+                        continue
+                    if not _equipment_ok(use, available) or set(use.get('movement_patterns') or []) & others:
+                        continue
+                    if set(use.get('contraindicated_with') or []) & set(flags):
+                        continue
+                    if policy is not None and not provenance.allows_exercise(use, policy, modality):
+                        continue
+                    return 'injury', use, was['id']
+            return 'injury', None, None
+    all_equipment = {e for ex in exercises.values() for e in ex.get('equipment', [])}
+    if select_exercise(slot, {**constraints, 'equipment': sorted(all_equipment)}, exercises,
+                       unlocked, set(), excl_ids, [], phase, **common):
+        return 'equipment', None, None
+    every_level = set(exercises) - set(excl_ids)
+    if select_exercise(slot, constraints, exercises, every_level - set(phase_excluded),
+                       set(), excl_ids, [], phase, **common):
+        return 'level', None, None
+    if phase_excluded and select_exercise(slot, constraints, exercises, every_level,
+                                          set(), excl_ids, [], phase, **common):
+        return 'phase', None, None
+    return None, None, None
+
+
 def populate_session(
     session: dict,
     goal: dict,
@@ -626,8 +717,30 @@ def populate_session(
     relax_equipment: bool = False,
     policy=None,
     level_seeds: dict | None = None,
+    exclude_exercise_ids: set | frozenset | None = None,
+    pinned_lifts: dict | None = None,
+    deload_keep: float | None = None,
+    unfilled_cache: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
+
+    `exclude_exercise_ids` are the week's phase `exclude_exercises`: lifts the
+    method has not reached yet in this phase (Wildman's foundations stop
+    before the snatch and the jerk).
+
+    `pinned_lifts` is the phase's memory of its main lifts, keyed
+    (archetype id, slot index) and owned by the caller: a main-lift slot
+    (`is_main_lift_slot`) reuses the exercise it got first in the phase while
+    that exercise still passes every filter, and records it otherwise. None
+    turns pinning off (a phase that rotates its lifts, a single-session
+    regenerate). A pinned lift already in the session is not reused, and a
+    fresh pick steers clear of the other slots' pins, so a session never
+    prescribes one lift twice.
+
+    `unfilled_cache` (also caller-owned, per phase) remembers why a slot came
+    up empty, keyed (archetype id, slot index, phase kind): the athlete's
+    constraints do not change within a program, so a gap that repeats every
+    week is explained once.
 
     When collect_trace=True the result dict includes a 'session_trace' key with
     archetype selection and per-slot exercise selection trace data.
@@ -644,6 +757,8 @@ def populate_session(
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags_data)
     training_level = constraints.get('training_level', 'intermediate')
     unlocked = _get_unlocked(training_level, exercises, level_seeds) - excl_ids
+    if exclude_exercise_ids:
+        unlocked -= set(exclude_exercise_ids)
     primary_sources = set(goal.get('primary_sources', []))
     if policy is None:
         policy = provenance.resolve_source_policy(goal)
@@ -747,36 +862,82 @@ def populate_session(
                 })
             continue
 
-        if collect_trace:
+        pin_key = (arch.get('id'), i)
+        pinned_id = None
+        reserved: list[str] = []
+        if pinned_lifts is not None and is_main_lift_slot(slot):
+            pinned_id = pinned_lifts.get(pin_key)
+            if pinned_id in session_used_ids:
+                pinned_id = None
+        if pinned_lifts is not None:
+            reserved = [eid for (aid, idx), eid in pinned_lifts.items()
+                        if aid == arch.get('id') and idx != i]
+        fresh_used = session_used_ids + reserved
+        ex = None
+        ex_trace: dict = {}
+        if pinned_id:
+            # Same filters, narrowed to the pinned lift; None falls through to
+            # a fresh pick (an injury or the taper ruled it out).
+            pinned_slot = {**slot, 'exercise_filter': {**(slot.get('exercise_filter') or {}),
+                                                       'exercise_ids': [pinned_id]}}
+            ex = select_exercise(
+                pinned_slot, constraints, exercises, unlocked,
+                excl_patterns, excl_ids, [], phase,
+                primary_sources=primary_sources, policy=policy, modality=modality,
+            )
+            if ex is not None and collect_trace:
+                ex_trace = {'selected_id': ex['id'], 'injury_blocked': False, 'pinned': True,
+                            'filter_counts': {}, 'candidates': []}
+        if ex is None and collect_trace:
             ex_result = select_exercise(
                 slot, constraints, exercises, unlocked,
                 excl_patterns, excl_ids, used_ex_ids, phase,
-                session_used_ids=session_used_ids,
+                session_used_ids=fresh_used,
                 return_trace=True,
                 primary_sources=primary_sources,
                 policy=policy,
                 modality=modality,
             )
             ex, ex_trace = ex_result if isinstance(ex_result, tuple) else (ex_result, {})
-        else:
+        elif ex is None:
             ex = select_exercise(
                 slot, constraints, exercises, unlocked,
                 excl_patterns, excl_ids, used_ex_ids, phase,
-                session_used_ids=session_used_ids,
+                session_used_ids=fresh_used,
                 primary_sources=primary_sources,
                 policy=policy,
                 modality=modality,
             )
 
+        substituted_for = None
+        reason = None
         if ex is None:
-            injury_blocked = _slot_injury_blocked(slot, excl_patterns)
+            cache_key = (arch.get('id'), i, phase)
+            if unfilled_cache is not None and cache_key in unfilled_cache:
+                reason, sub_id, instead_of = unfilled_cache[cache_key]
+                sub = exercises.get(sub_id) if sub_id else None
+            else:
+                reason, sub, instead_of = _explain_unfilled(
+                    slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
+                    phase, primary_sources, policy, modality,
+                    phase_excluded=frozenset(exclude_exercise_ids or ()))
+                if unfilled_cache is not None:
+                    unfilled_cache[cache_key] = (reason, sub['id'] if sub else None, instead_of)
+            if sub is not None and sub['id'] not in session_used_ids:
+                ex, substituted_for = sub, instead_of
+
+        if ex is None:
+            injury_blocked = _slot_injury_blocked(slot, excl_patterns) or reason == 'injury'
             # Distinguish "the philosophy owns nothing for this slot" from
             # "equipment/level ruled everything out" — the first is a package
             # coverage gap to author, the second is an athlete constraint.
-            coverage_gap = bool(
-                not injury_blocked and policy is not None and policy.strict
-                and _slot_unfillable_in_policy(slot, exercises, policy, modality)
-            )
+            # Every empty slot says which; one used to be left empty with no
+            # reason whenever equipment or an excluded exercise emptied it.
+            coverage_gap = reason == 'coverage' and not injury_blocked
+            gap_reason = ('NO_EXERCISE_IN_ALLOWED_PACKAGES' if coverage_gap
+                          else 'EQUIPMENT_UNAVAILABLE' if reason == 'equipment'
+                          else 'LEVEL_LOCKED' if reason == 'level'
+                          else 'PHASE_EXCLUDED' if reason == 'phase' else None)
             exercise_assignments.append({
                 'slot_index': i,
                 'slot_role': slot_role,
@@ -785,10 +946,13 @@ def populate_session(
                 'slot': slot,
                 'injury_skip': injury_blocked,
                 'coverage_gap': coverage_gap,
-                'gap_reason': 'NO_EXERCISE_IN_ALLOWED_PACKAGES' if coverage_gap else None,
+                'equipment_gap': reason == 'equipment' and not injury_blocked,
+                'gap_reason': gap_reason,
                 'error': (
-                    f"skipped — {slot.get('exercise_filter', {}).get('movement_pattern')} excluded by injury flag"
-                    if injury_blocked
+                    "skipped — excluded by injury flag" if injury_blocked
+                    else "No exercise fits the available equipment" if reason == 'equipment'
+                    else "No exercise unlocked at this training level" if reason == 'level'
+                    else "Not part of this phase yet" if reason == 'phase'
                     else f"No exercise for slot '{slot.get('role')}'"
                 ),
             })
@@ -803,15 +967,20 @@ def populate_session(
                     }),
                 })
         else:
+            if pinned_lifts is not None and is_main_lift_slot(slot):
+                pinned_lifts.setdefault(pin_key, ex['id'])
             used_ex_ids.append(ex['id'])
             session_used_ids.append(ex['id'])
-            exercise_assignments.append({
+            assignment = {
                 'slot_index': i,
                 'slot_role': slot_role,
                 'slot_type': slot_type,
                 'exercise': ex,
                 'slot': slot,
-            })
+            }
+            if substituted_for:
+                assignment['substituted_for'] = substituted_for
+            exercise_assignments.append(assignment)
             if collect_trace:
                 slot_traces.append({
                     'slot_index': i, 'slot_role': slot_role, 'slot_type': slot_type,
@@ -828,7 +997,8 @@ def populate_session(
     effective_duration = arch.get('duration_estimate_minutes', 60)
     if is_deload:
         deload_sc = arch.get('scaling', {}).get('deload', {})
-        effective_duration = deload_sc.get('duration_estimate_minutes', int(effective_duration * 0.7))
+        keep = deload_keep if deload_keep is not None else 0.7
+        effective_duration = deload_sc.get('duration_estimate_minutes', int(effective_duration * keep))
     session_time = constraints.get('session_time_minutes', 9999)
     if effective_duration > session_time:
         effective_duration = session_time

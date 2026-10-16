@@ -567,14 +567,17 @@ final class APIClient {
     /// Thrown when the server rejects a program write as based on a stale read.
     struct StaleProgramRevision: Error {}
 
-    func saveProgram(_ payload: UserProgramSavePayload) async throws {
+    /// Returns the server's `phaseSummary` of the weeks just saved (nil from an
+    /// older server), so the Overview shows what this edit changed.
+    @discardableResult
+    func saveProgram(_ payload: UserProgramSavePayload) async throws -> JSONValue? {
         let url = URL(string: APIClient.baseURL + "/user/program")!
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuth(to: &request)
         request.httpBody = try JSONEncoder().encode(payload)
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
         // 409 means the stored program moved on since this copy was read — the
         // web generated something newer. Surface it so the caller re-pulls
         // instead of overwriting work it has never seen.
@@ -583,6 +586,8 @@ final class APIClient {
             throw StaleProgramRevision()
         }
         try validateStatus(response)
+        struct Saved: Decodable { let phaseSummary: JSONValue? }
+        return (try? JSONDecoder().decode(Saved.self, from: data))?.phaseSummary
     }
 
     // MARK: - Watch device pairing (Garmin / future companions)

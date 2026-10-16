@@ -825,7 +825,9 @@ final class AppState: ObservableObject {
             phase: week.phase,
             weekInPhase: week.weekInPhase ?? (weekIndex + 1),
             isDeload: week.isDeload,
-            exclude: session.exercises.compactMap { $0.exercise?.id })
+            exclude: session.exercises.compactMap { $0.exercise?.id },
+            phaseId: week.phaseId,
+            frameworkId: week.frameworkId)
         return try await api.substituteExercise(request)
     }
 
@@ -943,8 +945,20 @@ final class AppState: ObservableObject {
             extra: sp.extra
         )
         do {
-            try await api.saveProgram(payload)
+            let summary = try await api.saveProgram(payload)
             programSaveConflict = nil
+            // The summary of the weeks just saved (a move, a swap, a replaced
+            // session), so Overview's phase changes follow the edit.
+            if let summary, let now = serverProgram, let current = now.currentProgram {
+                var extra = current.extra
+                extra["phase_summary"] = summary
+                serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: current.weeks, extra: extra),
+                                              programStartDate: now.programStartDate,
+                                              eventDate: now.eventDate, sourceGoalIds: now.sourceGoalIds,
+                                              sourceGoalWeights: now.sourceGoalWeights,
+                                              revision: now.revision, programVersionId: now.programVersionId,
+                                              extra: now.extra)
+            }
         } catch is APIClient.StaleProgramRevision {
             // Someone (the web) has newer work. Take theirs — and say so: the
             // move or replace the user just made is not in the copy we reload.

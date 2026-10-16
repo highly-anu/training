@@ -37,6 +37,10 @@ struct SubstituteRequest: Encodable {
     let isDeload: Bool
     /// Exercise ids already in the session; the server never offers these.
     let exclude: [String]
+    /// The week's phase and framework, so the server applies the phase's
+    /// `exclude_exercises` and the framework's deload share. Omitted when nil.
+    var phaseId: String? = nil
+    var frameworkId: String? = nil
     var limit: Int = 8
 
     enum CodingKeys: String, CodingKey {
@@ -49,6 +53,8 @@ struct SubstituteRequest: Encodable {
         case weekInPhase   = "week_in_phase"
         case isDeload      = "is_deload"
         case exclude, limit
+        case phaseId       = "phase_id"
+        case frameworkId   = "framework_id"
     }
 }
 

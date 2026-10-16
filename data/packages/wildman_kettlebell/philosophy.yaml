@@ -66,6 +66,8 @@ tracks:
           - "Breathing matched to the movement"
           - "Get-up and windmill skill"
         intensity: "Anti-glycolic — nasal breathing throughout"
+        # The bottom of the ladder: the snatch and the jerk come in The Ladder.
+        exclude_exercises: [wk_kb_snatch, wk_kb_half_snatch, kb_jerk_single, kb_jerk_double, wk_kb_long_cycle_press]
       - id: ladder
         name: "The Ladder"
         kind: build
@@ -134,6 +136,8 @@ tracks:
           - "Six-minute strength endurance per event"
           - "Pacing against the RPM cap"
         intensity: "Event pace, rising toward the cap"
+        checks:
+          archetypes_required: [kb_pentathlon_training]
       - id: competition
         name: "Competition"
         kind: peak
@@ -147,3 +151,6 @@ tracks:
           - "Five events back to back"
           - "Arriving fresh for the test"
         intensity: "Target pace; reduced volume"
+        checks:
+          archetypes_required: [kb_pentathlon_training]
+          volume_vs_previous_phase: [-0.6, -0.1]

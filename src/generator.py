@@ -63,40 +63,15 @@ def _select_complementary(
 
 def _has_archetype(modality: str, archetypes: list, constraints: dict, phase: str,
                    relax_equipment: bool = False) -> bool:
-    """Return True if at least one archetype exists for this modality/phase/equipment.
+    """True if `select_archetype` would find an archetype for this modality.
 
-    Mirrors the filter logic in select_archetype so that _resolve_session's pass
-    decisions stay consistent with what select_archetype will actually find.
-    When relax_equipment=True, skips the equipment hard filter — used for the
-    fallback pass so bodyweight/equipment-limited archetypes are still found.
+    It asks the selector itself. A copy of its filters used to live here, with
+    a different default session time (90 against 75), its own time-limited
+    discount and no short-day cap, so this pass could say yes where selection
+    then found nothing, or say no and relax the equipment for no reason.
     """
-    available = set(constraints.get('equipment', []))
-    session_time = constraints.get('session_time_minutes', 90)
-    training_level = constraints.get('training_level', 'intermediate')
-    for arch in archetypes:
-        if arch.get('modality') != modality:
-            continue
-        applicable = arch.get('applicable_phases', [])
-        if applicable and phase not in applicable:
-            continue
-        # Training level — must match if the archetype restricts levels
-        levels = arch.get('training_levels', [])
-        if levels and training_level not in levels:
-            continue
-        # Duration — skip archetypes that can't fit the session budget.
-        # time_limited scaling is assumed to save ~25% (dropping one warm-up/accessory slot);
-        # this prevents a 75-min archetype's 60-min variant from matching a 30-min budget.
-        duration = arch.get('duration_estimate_minutes', 60)
-        tl = arch.get('scaling', {}).get('time_limited')
-        effective_duration = int(duration * 0.75) if tl else duration
-        if effective_duration > session_time:
-            continue
-        if relax_equipment:
-            return True  # Phase/level/duration match is sufficient when equipment filter is relaxed
-        required = set(arch.get('required_equipment', [])) - {'open_space'}
-        if required.issubset(available) or arch.get('scaling', {}).get('equipment_limited'):
-            return True
-    return False
+    return select_archetype(modality, constraints, phase, False, {}, archetypes,
+                            relax_equipment=relax_equipment) is not None
 
 
 def _build_phase_entries(
@@ -358,6 +333,11 @@ def generate(
     program = {'weeks': []}
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
+    # Each phase's main lifts, (archetype id, slot index) -> exercise id; reset
+    # when the phase changes, because a new phase may move to a new lift.
+    pinned_lifts: dict = {}
+    unfilled_cache: dict = {}  # why a slot came up empty, explained once per phase
+    pinned_phase = None
     all_compromises: list[str] = []  # Collect compromises from all weeks
 
     # Progression model for each modality (static, load from modalities data)
@@ -377,6 +357,11 @@ def generate(
         week_in_phase  = entry['week_in_phase']
         week_in_program = entry.get('week_in_program', week_in_phase)
         phase_framework_id = entry.get('framework_id')  # Phase-specific framework override
+        phase_excluded = frozenset(entry.get('exclude_exercises') or ())
+        phase_key = entry.get('phase_id') or phase
+        if phase_key != pinned_phase:
+            pinned_lifts, unfilled_cache, pinned_phase = {}, {}, phase_key
+        week_pins = None if entry.get('rotate_main_lifts') else pinned_lifts
 
         # 1. Build the modality→day schedule
         sched_result = schedule_week(goal, constraints, data, phase, week_in_phase,
@@ -385,6 +370,7 @@ def generate(
         week_schedule = sched_result['schedule']
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
+        deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
@@ -446,6 +432,10 @@ def generate(
                     relax_equipment=is_commons_fallback,
                     policy=policy,
                     level_seeds=lib.get('level_seeds'),
+                    exclude_exercise_ids=phase_excluded,
+                    pinned_lifts=week_pins,
+                    deload_keep=deload_keep,
+                    unfilled_cache=unfilled_cache,
                 )
 
                 session_trace: dict | None = None
@@ -486,6 +476,7 @@ def generate(
                         constraints.get('training_level', 'intermediate'),
                         is_deload,
                         session_time_minutes=constraints.get('session_time_minutes', 75),
+                        deload_keep=deload_keep,
                     )
                     ea['load'] = load
 

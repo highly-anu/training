@@ -1434,6 +1434,7 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `dashboard/VolumeBar` | stacked bar (§12.3) | modality hex |
 | `dashboard/DevelopmentWidget` | bar | modality hex |
 | `program/ProgramOverview` | phase timeline (§12.5) | phase hex |
+| `program/PhaseChanges` (`PhaseMatrix`) | archetype × phase table, cells tinted by frequency | modality hex rows, phase hex headers |
 | `progression/ExerciseTrendChart` | line + trend | primary token |
 | `bio/PMCChart` | dual-axis line + bar (§12.7) | fixed 3-series |
 | `bio/SleepStageChart` | stacked bar (§12.6) | sleep-stage set |
@@ -1447,6 +1448,17 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `workout/Swiss3DMap` | CesiumJS terrain (§12.9) | — |
 | `devlab/PhilosophyExplorerPanel` | bar | modality hex |
 | `pages/WorkoutAnalytics` | multiple, inline | mixed |
+
+**Program ▸ Overview's phase changes** (`program/PhaseChanges.tsx`) lay out the
+server's `phase_summary` (`src/phase_summary.py`), never a count made in the
+browser: each phase's "Your Program" card gains its weekly shape
+(`SessionsPerWeekRows`), the server's "What changes" lines, new sessions (`+`,
+modality-coloured) and gone ones (struck through), and the loaded lifts' first
+→ last weight; below the phases, "How the phases change" reads every session
+(or, toggled, every exercise) against every phase as times per week. A summary
+is matched to its segment by position, because the calendar numbers weeks from
+1 while `week_number` may start later. iOS shows the same items
+(design-system §6.26).
 
 **Rule this inventory implies:** a chart's colors come from a *named system* (§8), not from the author's judgement at the call site. `WorkoutAnalytics` defines series colors inline and is the one place that breaks this — noted in the fix plan (FIX-6) as low priority, since the values it picks are correct today.
 

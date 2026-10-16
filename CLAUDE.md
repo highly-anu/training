@@ -203,7 +203,31 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
 - **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back within the allowed packages (equipment filter relaxed first, then `aerobic_base` → `durability` → `mobility`).
 - **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
-- **Deload**: auto-triggered every N weeks (per framework) or when `fatigue_state: overreached`.
+- **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
+  deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
+  share of volume the week **keeps**. In a kind that is itself the deload (taper) it is the
+  total, not a second cut on top of the kind's multiplier.
+- **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
+  is read against its package — `sessions_per_week`, `intensity_distribution`,
+  `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
+  and a phase's optional `checks:` block in `philosophy.yaml` (the prose's numbers made
+  testable; the generator never reads it). Two phase keys the generator does read:
+  `exclude_exercises` (a lift the method has not reached) and `rotate_main_lifts`. Main-lift
+  slots (`selector.is_main_lift_slot`) keep one exercise per phase unless a phase rotates;
+  ties go to the least recently used, then first authored, archetype or exercise. An empty
+  slot always says why (`injury_skip`, `equipment_gap`, `gap_reason`), and an injury flag's
+  `modified_exercises` substitute fills it when both ids resolve.
+- **Phase summary** (`src/phase_summary.py`): `currentProgram.phase_summary` — each phase's
+  weekly shape, minutes, intensity, archetypes/exercises marked new or continued, dropped
+  ones, lifts and plain `changes` lines — is built on generate and on every
+  `GET /user/program`, and `db.save_user_program` strips it. `PUT /user/program` answers with
+  `phaseSummary` of the weeks it saved and `POST /programs/adjust` returns its envelope with
+  one, so an edit never leaves a stale summary; both clients apply it. Program ▸ Overview on
+  both clients lays it out (web `program/PhaseChanges.tsx`, iOS `PhaseSummaryModels.swift`).
+- **Single-session routes take the week's phase.** `POST /sessions/generate` and
+  `/exercises/substitute` accept `phase_id` + `framework_id` (both clients send them) and
+  apply that phase's `exclude_exercises` and the framework's deload share
+  (`api._week_phase_rules`, `phases.phase_rules`); without them they behave as before.
 - **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
   (keyed by days per week, several patterns rotating week to week) is the only source of
   day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of
@@ -780,7 +804,15 @@ SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ow
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1
+.venv/bin/python tools/check_fidelity.py                 # every philosophy x track x profile against its theory; gates on tools/fidelity_baseline.json
+.venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
+SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence
+SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
 ```
+
+A fix that clears fidelity findings ends with `tools/check_fidelity.py --update-baseline
+--report docs/fidelity-report.md`; the baseline only shrinks. A new finding fails the
+check — fix it, or, if the theory says otherwise, change the package's `checks:`.
 
 Run these after touching the watch app, a package's `watch.yaml` or the
 watch vocabulary (the Monkey C tests need the Connect IQ simulator open):

@@ -1,5 +1,5 @@
 id: 3x5_linear
-name: 3×5 Linear Strength
+name: 3×5 Linear Strength — Session A
 modality: max_strength
 category: strength
 duration_estimate_minutes: 60
@@ -36,6 +36,7 @@ slots:
     movement_pattern: squat
     category: barbell
     bilateral: true
+    exercise_ids: [back_squat]
   notes: Add 2.5–5 kg each session. If squat has stalled, reduce load 10% and reset.
 - role: upper_press
   slot_type: sets_reps
@@ -47,7 +48,8 @@ slots:
   exercise_filter:
     movement_pattern: press
     category: barbell
-  notes: Alternate overhead press and bench press across sessions.
+    exercise_ids: [strict_press]
+  notes: Session A presses overhead; session B (3x5_linear_b) benches.
 - role: primary_pull
   slot_type: sets_reps
   sets: 1
@@ -59,8 +61,8 @@ slots:
     movement_pattern: hinge
     category: barbell
     bilateral: true
-  notes: Single top set. Deadlift increases 5 kg per session early on; power clean
-    2.5 kg.
+    exercise_ids: [deadlift]
+  notes: Single top set. The deadlift increases 5 kg per session early on.
 scaling:
   deload:
     volume_multiplier: 0.6

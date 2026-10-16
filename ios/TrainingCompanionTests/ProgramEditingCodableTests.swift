@@ -37,6 +37,31 @@ final class ProgramEditingCodableTests: XCTestCase {
         XCTAssertNil(json["archetypeId"], "camelCase would be ignored by the server")
     }
 
+    func testRequestsCarryTheWeeksPhaseAndFramework() throws {
+        var request = SubstituteRequest(
+            archetypeId: "kb_double_strength", slotRole: "main", exerciseId: "kb_press_double",
+            modality: "max_strength",
+            constraints: SubstituteRequest.Constraints(trainingLevel: "intermediate", equipment: ["kettlebell"],
+                                                       injuryFlags: [], sessionTimeMinutes: 45),
+            philosophyIds: ["wildman_kettlebell"], phase: "base", weekInPhase: 1,
+            isDeload: false, exclude: [])
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+        XCTAssertNil(json["phase_id"], "omitted when the week has none")
+        request.phaseId = "foundations"
+        request.frameworkId = "kb_general_practice"
+        json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+        XCTAssertEqual(json["phase_id"] as? String, "foundations")
+        XCTAssertEqual(json["framework_id"] as? String, "kb_general_practice")
+
+        let session = GenerateSessionRequest(
+            primarySources: [], modality: "power", phase: "base", weekInPhase: 1, isDeload: false,
+            constraints: GenerateSessionConstraints(sessionTimeMinutes: 45, fatigueState: "normal"),
+            archetypeId: nil, phaseId: "foundations", frameworkId: "kb_general_practice")
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(session)) as? [String: Any])
+        XCTAssertEqual(body["phase_id"] as? String, "foundations")
+        XCTAssertEqual(body["framework_id"] as? String, "kb_general_practice")
+    }
+
     func testAlternativesDecodeAsCompleteAssignments() throws {
         let body = """
         {"alternatives": [{

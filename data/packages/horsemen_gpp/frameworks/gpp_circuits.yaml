@@ -87,6 +87,13 @@ notes: >
   barbell), Tue conditioning (AMRAP/circuit), Thu loaded carries + bodyweight, Sat
   long ruck or GPP circuit.
 
+# The package's own concurrent block unloads every fourth week; the circuits
+# accumulate the same mixed-modal fatigue.
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.6   # share of volume kept
+  intensity_change: reduce_slightly
+
 expectations:
   min_weeks: 8
   ideal_weeks: 12

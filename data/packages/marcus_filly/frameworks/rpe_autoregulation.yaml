@@ -75,6 +75,13 @@ notes: >
   eccentrics (3-5 sec negatives) and isometric holds are first-class tools in this
   framework, not accessories.
 
+# The scheduled unload the notes' readiness trigger ("rather than waiting for
+# the scheduled week") assumes: four building weeks, then one.
+deload_protocol:
+  frequency_weeks: 5
+  volume_reduction_pct: 0.6   # share of volume kept
+  intensity_change: reduce_slightly
+
 expectations:
   min_weeks: 10
   ideal_weeks: 14

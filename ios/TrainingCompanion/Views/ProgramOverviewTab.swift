@@ -8,6 +8,13 @@ import SwiftUI
 struct ProgramOverviewTab: View {
     @EnvironmentObject var appState: AppState
     @State private var methodologySheet: PhilosophyCard? = nil
+    @State private var expandedPhases: Set<Int> = []
+    @State private var matrixByExercise = false
+
+    /// The server's per-phase summary (`phase_summary`); empty for an older server.
+    private var summaries: [PhaseSummary] {
+        PhaseSummary.list(from: appState.serverProgram?.currentProgram?.extra)
+    }
 
     var body: some View {
         Group {
@@ -22,6 +29,7 @@ struct ProgramOverviewTab: View {
                     VStack(alignment: .leading, spacing: 20) {
                         MethodologyRow(cards: appState.programMethodologies()) { methodologySheet = $0 }
                         phasesSection
+                        PhaseMatrixSection(summaries: summaries, byExercise: $matrixByExercise)
                         prioritySection
                         Spacer(minLength: 40)
                     }
@@ -42,11 +50,15 @@ struct ProgramOverviewTab: View {
         let weeks = appState.allWeeks
         let segments = PhaseSegment.segments(of: weeks)
         let current = appState.currentWeekIndex ?? -1
+        let summaries = self.summaries
         return VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Training phases", subtitle: "The blocks this program runs, in order.")
+            sectionHeader("Training phases", subtitle: summaries.isEmpty
+                          ? "The blocks this program runs, in order."
+                          : "The blocks this program runs, in order. Tap one to see what changes.")
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(segments) { seg in
-                    phaseRow(seg, weeks: weeks, isCurrent: seg.weekIndices.contains(current))
+                ForEach(Array(segments.enumerated()), id: \.element.id) { index, seg in
+                    let summary = PhaseSummary.forSegment(index, of: summaries, segmentCount: segments.count)
+                    phaseRow(seg, weeks: weeks, isCurrent: seg.weekIndices.contains(current), summary: summary)
                     if seg.id != segments.last?.id { Divider().padding(.leading, 24) }
                 }
             }
@@ -55,7 +67,31 @@ struct ProgramOverviewTab: View {
         }
     }
 
-    private func phaseRow(_ seg: PhaseSegment, weeks: [ProgramWeek], isCurrent: Bool) -> some View {
+    private func phaseRow(_ seg: PhaseSegment, weeks: [ProgramWeek], isCurrent: Bool,
+                          summary: PhaseSummary?) -> some View {
+        let expanded = expandedPhases.contains(seg.id)
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                guard summary != nil else { return }
+                AppHaptics.light()
+                withAnimation(AppAnimation.springSnappy) {
+                    if expanded { expandedPhases.remove(seg.id) } else { expandedPhases.insert(seg.id) }
+                }
+            } label: {
+                phaseHeader(seg, weeks: weeks, isCurrent: isCurrent, expandable: summary != nil, expanded: expanded)
+            }
+            .buttonStyle(.plain)
+            if expanded, let summary {
+                PhaseChangesView(summary: summary)
+                    .padding(.leading, 30)
+                    .padding([.trailing, .bottom], 12)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    private func phaseHeader(_ seg: PhaseSegment, weeks: [ProgramWeek], isCurrent: Bool,
+                             expandable: Bool, expanded: Bool) -> some View {
         let first = seg.weekIndices.first.map { weeks[$0].weekNumber } ?? 0
         let last = seg.weekIndices.last.map { weeks[$0].weekNumber } ?? first
         let range = first == last ? "Week \(first)" : "Weeks \(first)–\(last)"
@@ -86,9 +122,18 @@ struct ProgramOverviewTab: View {
                 }
             }
             Spacer(minLength: 0)
+            if expandable {
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .rotationEffect(.degrees(expanded ? 180 : 0))
+                    .padding(.top, 5)
+            }
         }
         .padding(12)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .accessibilityHint(expandable ? (expanded ? "Hides what changes" : "Shows what changes") : "")
     }
 
     /// The phase's focus line in its methodology's own words — the program's
@@ -217,5 +262,182 @@ struct MethodologyRow: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .contentShape(Rectangle())
+    }
+}
+
+/// One phase's changes from the server's summary: its weekly shape, what is
+/// different from the phase before, new and gone sessions, and the loaded
+/// lifts' first and last weight. The web shows the same lines in each phase's
+/// "Your program" card.
+struct PhaseChangesView: View {
+    let summary: PhaseSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            block("Weekly shape") {
+                ForEach(summary.shape, id: \.modality) { row in
+                    HStack(spacing: 6) {
+                        Text(ModalityStyle.label(for: row.modality))
+                            .font(.caption).foregroundStyle(.secondary)
+                            .frame(width: 130, alignment: .leading)
+                            .lineLimit(1)
+                        HStack(spacing: 2) {
+                            ForEach(0..<max(Int(row.perWeek.rounded()), 1), id: \.self) { _ in
+                                Circle().fill(ModalityStyle.color(for: row.modality).opacity(0.75))
+                                    .frame(width: 7, height: 7)
+                            }
+                        }
+                        Text(Self.times(row.perWeek))
+                            .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            if !summary.changes.isEmpty {
+                block("What changes") {
+                    ForEach(summary.changes, id: \.self) { line in
+                        Label {
+                            Text(line).font(.caption).fixedSize(horizontal: false, vertical: true)
+                        } icon: {
+                            Image(systemName: "chevron.right").font(.system(size: 8)).foregroundStyle(.tertiary)
+                        }
+                        .labelStyle(.titleAndIcon)
+                    }
+                }
+            }
+            if !summary.newArchetypes.isEmpty || !summary.dropped.archetypes.isEmpty {
+                block("Sessions") {
+                    ForEach(summary.newArchetypes) { item in
+                        Text("+ \(item.name)")
+                            .font(.caption)
+                            .foregroundStyle(ModalityStyle.color(for: item.modality))
+                    }
+                    ForEach(summary.dropped.archetypes) { item in
+                        Text(item.name)
+                            .font(.caption)
+                            .strikethrough()
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("\(item.name), gone")
+                    }
+                }
+            }
+            if !summary.lifts.isEmpty {
+                block("Lifts") {
+                    ForEach(summary.lifts.prefix(5)) { lift in
+                        HStack {
+                            Text(lift.name).font(.caption).lineLimit(1)
+                            Spacer()
+                            Text(lift.firstKg == lift.lastKg
+                                 ? Self.kg(lift.lastKg)
+                                 : "\(Self.kg(lift.firstKg)) → \(Self.kg(lift.lastKg))")
+                                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func block<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(.caption2).fontWeight(.semibold)
+                .foregroundStyle(.tertiary)
+            content()
+        }
+    }
+
+    static func times(_ n: Double) -> String {
+        n == n.rounded() ? "\(Int(n))×/wk" : String(format: "%.1f×/wk", n)
+    }
+
+    static func kg(_ n: Double) -> String {
+        n == n.rounded() ? "\(Int(n)) kg" : String(format: "%.1f kg", n)
+    }
+}
+
+/// Every session (or exercise) against every phase: how often it appears per
+/// week. The web's "How the phases change" table; it scrolls sideways when a
+/// track has more phases than the screen is wide.
+struct PhaseMatrixSection: View {
+    let summaries: [PhaseSummary]
+    @Binding var byExercise: Bool
+
+    private struct Row: Identifiable {
+        let id: String
+        let name: String
+        let modality: String
+    }
+
+    private var rows: [Row] {
+        var seen: [String: Row] = [:]
+        var order: [String] = []
+        for summary in summaries {
+            for item in byExercise ? summary.exercises : summary.archetypes where seen[item.id] == nil {
+                seen[item.id] = Row(id: item.id, name: item.name, modality: item.modality)
+                order.append(item.id)
+            }
+        }
+        let modalities = order.compactMap { seen[$0]?.modality }.reduce(into: [String]()) {
+            if !$0.contains($1) { $0.append($1) }
+        }
+        return order.compactMap { seen[$0] }.sorted {
+            (modalities.firstIndex(of: $0.modality) ?? 0) < (modalities.firstIndex(of: $1.modality) ?? 0)
+        }
+    }
+
+    var body: some View {
+        if summaries.count > 1 {
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("How the phases change").font(.headline)
+                    Text("Times per week each \(byExercise ? "exercise" : "session") appears in each phase.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Picker("Show", selection: $byExercise) {
+                    Text("Sessions").tag(false)
+                    Text("Exercises").tag(true)
+                }
+                .pickerStyle(.segmented)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 8) {
+                        GridRow {
+                            Text("")
+                            ForEach(summaries) { s in
+                                Text(s.name)
+                                    .font(.caption2).fontWeight(.semibold)
+                                    .foregroundStyle(PhaseStyle.color(for: s.kind))
+                                    .lineLimit(1)
+                                    .gridColumnAlignment(.center)
+                            }
+                        }
+                        ForEach(rows) { row in
+                            GridRow {
+                                HStack(spacing: 5) {
+                                    Circle().fill(ModalityStyle.color(for: row.modality)).frame(width: 6, height: 6)
+                                    Text(row.name).font(.caption).lineLimit(1)
+                                }
+                                .frame(maxWidth: 190, alignment: .leading)
+                                ForEach(summaries) { s in
+                                    if let n = s.perWeek(row.id, exercises: byExercise) {
+                                        Text(n == n.rounded() ? "\(Int(n))" : String(format: "%.1f", n))
+                                            .font(.caption2).monospacedDigit().fontWeight(.medium)
+                                            .padding(.horizontal, 6).padding(.vertical, 2)
+                                            .background(ModalityStyle.color(for: row.modality).opacity(0.25))
+                                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    } else {
+                                        Text("·").font(.caption2).foregroundStyle(.quaternary)
+                                    }
+                                }
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                    .padding(12)
+                }
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+        }
     }
 }

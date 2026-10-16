@@ -63,3 +63,8 @@ tracks:
           - "Maximal strength in the main barbell lifts"
           - "Technique under progressively heavier loads"
         intensity: "Heavy sets of five, every session"
+        # The prose above, in a form tools/check_fidelity.py can test. HLM and
+        # 5x5 are the intermediate programs that follow the novice period.
+        checks:
+          archetypes_required: [3x5_linear, 3x5_linear_b]
+          archetypes_forbidden: [hlm, 5x5]
