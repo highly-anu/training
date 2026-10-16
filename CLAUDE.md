@@ -535,7 +535,10 @@ writes.
   primitive at zero coverage. The phone logs from the session detail
   (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
   (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
-  carries `exercises` so it can read back. Bodyweight
+  carries `exercises` so it can read back. A skill-practice row on both
+  clients has a **Clean** toggle (`exercises[id].clean`: every rep owned); an
+  `unlocks` entry with `require_clean: true` (Ido, Wildman) earns a movement
+  only by clean sessions and says `clean_not_logged` until one is ticked. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
   iOS app had been posting notes into a phantom key — and fatigue is folded to
