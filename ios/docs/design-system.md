@@ -57,6 +57,17 @@ Show only what the user needs at each level. The Today tab shows session cards. 
 
 Never show all information at once. Always have a summary state and a detail state.
 
+**Numbers and symbols, not sentences** (2026-10-16). A screen says what a value
+is with an SF Symbol and the number — `clock 21/18 min/wk`, `heart.fill 104/135`,
+`checkmark.circle 1/1` — and a status with a coloured mark or badge, not a
+sentence. No subtitle explains a section ("The blocks this program runs, in
+order"), no footnote names where a number came from unless it is the
+exception (`iphone` "On device" when the server could not answer), and no
+row points to another tab in words. The full sentence goes in the
+`accessibilityLabel`. Words stay where a symbol cannot carry them: an
+empty state's one line, a coverage reason that tells the athlete what to log,
+the server's recommendations.
+
 ### 1.5 Motion with Purpose
 
 Animation serves three functions: orientation (where am I?), feedback (did that register?), continuity (what appeared?). No decorative motion.
@@ -1020,9 +1031,6 @@ intensity footer until 2026-10-16.
   (`byFramework`), and % of 1RM for max-effort frameworks.
 - *Movement*: sets and minutes done against planned by pattern (planned the
   grey track, done over it), balance ratios, unilateral share, assumed minutes.
-- A row pointing to Progress, where the methodologies' measures and the
-  standards went on 2026-10-16: Program is adherence, Progress is whether it
-  is working.
 - *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
   the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
 - *Load* (TSB read in the phase's terms).
@@ -1226,7 +1234,9 @@ from anywhere else (§6.9).
 
 `ReadinessSourceNote(result:)` (`ReadinessPresentation.swift`) is the one line
 under the readiness score that says where resting HR, HRV and sleep came from
-— on Today's readiness card and in Analytics ▸ Recovery. `.caption2`,
+— in Analytics ▸ Recovery only, under `ReadinessFlagChips` (the server's
+flags as icon chips: "RHR up 3d", "Recovery capped"). Today's card shows the
+score and the readings and nothing else (2026-10-16, §1.4). `.caption2`,
 `.secondary`, wrapping; it renders nothing when the server did not report
 `sources` (an older server), so neither screen needs a guard.
 

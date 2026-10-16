@@ -29,7 +29,7 @@ struct AnalyticsDevelopmentTab: View {
                 }
             } else {
                 emptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
-                           message: "Programs are recorded from the moment they are generated or saved. Development across them appears once there is a second block.",
+                           message: "Blocks appear here as programs are saved.",
                            actionLabel: "Go to Program") { router.show(.program) }
             }
         }
@@ -47,7 +47,6 @@ struct AnalyticsDevelopmentTab: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
                 BlocksCard(doc: doc)
-                if doc.blocks.count < 2 { singleBlockNote }
                 SeriesCard(doc: doc, selected: $selectedSeries)
                 if !doc.weeklyLoad.isEmpty { LoadByBlockCard(doc: doc) }
                 if !doc.benchmarks.isEmpty { StandardsCard(doc: doc) }
@@ -56,16 +55,6 @@ struct AnalyticsDevelopmentTab: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
-    }
-
-    private var singleBlockNote: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("One block so far. Development across programs fills in when the next one starts.")
-            Button("This program's own progress →") { router.showAnalytics(.progress) }
-                .buttonStyle(.plain).foregroundStyle(Color.accentColor)
-        }
-        .font(.caption).foregroundStyle(.secondary)
-        .padding(.horizontal, 4)
     }
 
     private func emptyState(icon: String, title: String, message: String,
@@ -129,8 +118,16 @@ private struct BlocksCard: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text(spanText(block)).font(.caption).foregroundStyle(.secondary)
-                Text(sessionsText(block)).font(.caption).foregroundStyle(.secondary)
+                Label(spanText(block), systemImage: "calendar")
+                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    Label(sessionsText(block), systemImage: "checkmark.circle")
+                    if block.plannedTotal > block.planned {
+                        Label("\(block.plannedTotal - block.planned)", systemImage: "forward.end")
+                            .accessibilityLabel("\(block.plannedTotal - block.planned) sessions never reached")
+                    }
+                }
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
             }
         }
     }
@@ -138,13 +135,12 @@ private struct BlocksCard: View {
     private func spanText(_ block: DevelopmentAnalytics.Block) -> String {
         let from = DevelopmentAnalytics.day(block.from).map { $0.formatted(.dateTime.day().month(.abbreviated)) } ?? block.from
         let to = block.to.flatMap(DevelopmentAnalytics.day).map { $0.formatted(.dateTime.day().month(.abbreviated)) } ?? "now"
-        return "\(from) → \(to) · \(block.weeks) wk"
+        return "\(from)–\(to) · \(block.weeks) wk"
     }
 
     private func sessionsText(_ block: DevelopmentAnalytics.Block) -> String {
-        var text = "\(block.completed) / \(block.planned) sessions"
+        var text = "\(block.completed)/\(block.planned)"
         if let pct = block.completionPct { text += " · \(pct)%" }
-        if block.plannedTotal > block.planned { text += " · \(block.plannedTotal - block.planned) never reached" }
         return text
     }
 }
@@ -195,12 +191,6 @@ private struct SeriesCard: View {
             case .currency(let c): return c.trend
             }
         }
-        var caption: String {
-            switch self {
-            case .lift: return "Estimated 1RM of the heaviest completed set per session; the band is the block."
-            case .currency: return "The logged value per session; the band is the block."
-            }
-        }
     }
 
     private var options: [Option] {
@@ -216,13 +206,12 @@ private struct SeriesCard: View {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
                     chips
-                    Text(option.caption).font(.caption2).foregroundStyle(.tertiary)
                     chart(option)
                     TrendText(trend: option.trend)
                     perBlockRows(option)
                 }
             } else {
-                Text("Nothing logged yet. Sets logged on a session appear here across every block that trained the lift.")
+                Text("Nothing logged yet")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -302,8 +291,14 @@ private struct SeriesCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(doc.block(row.blockId)?.name ?? "Block \(row.blockId)")
                             .font(.caption).fontWeight(.semibold).lineLimit(1)
-                        Text("\(row.sessions) session\(row.sessions == 1 ? "" : "s") · \(number(row.first)) → \(number(row.last)) \(option.unit) · best \(number(row.best))")
-                            .font(.caption2).foregroundStyle(.secondary)
+                        HStack(spacing: 10) {
+                            Text("\(number(row.first)) → \(number(row.last)) \(option.unit)")
+                            Label(number(row.best), systemImage: "trophy")
+                            Label("\(row.sessions)", systemImage: "list.bullet")
+                        }
+                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(number(row.first)) to \(number(row.last)) \(option.unit), best \(number(row.best)), \(row.sessions) sessions")
                     }
                     Spacer(minLength: 4)
                     Text(DevelopmentAnalytics.formatDelta(row.delta))
@@ -332,11 +327,14 @@ private struct TrendText: View {
 
     var body: some View {
         if trend.direction == "insufficient_data" {
-            Text("Not enough points for a trend").font(.caption2).foregroundStyle(.secondary)
+            Label("No trend yet", systemImage: "hourglass").font(.caption2).foregroundStyle(.secondary)
         } else {
-            Text("\(trend.direction.capitalized) · \(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/session over \(trend.pointsUsed)")
+            Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/session",
+                  systemImage: trend.direction == "improving" ? "arrow.up.right"
+                    : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
                 .font(.caption2)
                 .foregroundStyle(AnalyticsStatusStyle.color(status))
+                .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per session over \(trend.pointsUsed) points")
         }
     }
 }
@@ -360,7 +358,7 @@ private struct LoadByBlockCard: View {
     }
 
     var body: some View {
-        AnalyticsCard(header: "Load across blocks") {
+        AnalyticsCard(header: "TRIMP per week by block") {
             Chart(bars) { bar in
                 BarMark(x: .value("Week", bar.weekStart, unit: .weekOfYear),
                         y: .value("TRIMP", bar.trimp))
@@ -387,8 +385,6 @@ private struct LoadByBlockCard: View {
                 }
             }
             .frame(height: 130)
-            Text("TRIMP per week, coloured by block")
-                .font(.caption2).foregroundStyle(.tertiary)
         }
     }
 }

@@ -493,29 +493,6 @@ struct TodayView: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                // Flags from API (exclude insufficient_data from actionable list)
-                let actionableFlags = result.flags.filter { $0 != "insufficient_data" }
-                if !actionableFlags.isEmpty {
-                    Divider()
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(actionableFlags, id: \.self) { flag in
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption2)
-                                    .foregroundStyle(.orange)
-                                Text(readinessFlagLabel(flag))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                } else if result.flags.contains("insufficient_data") {
-                    Text("Add daily resting HR + HRV check-ins for accurate readiness scores.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .italic()
-                }
-                ReadinessSourceNote(result: result)
             }
             .padding(14)
             .background(.background.secondary)
@@ -528,7 +505,7 @@ struct TodayView: View {
             HStack {
                 Image(systemName: "waveform.path.ecg")
                     .foregroundStyle(.secondary)
-                Text("No bio data · sync from Apple Watch or add an entry in Recovery")
+                Text("No readiness data")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -558,19 +535,6 @@ struct TodayView: View {
         HStack(spacing: 4) {
             Text(label).font(.caption2).foregroundStyle(.secondary)
             Text(value).font(.caption).fontWeight(.medium)
-        }
-    }
-
-    private func readinessFlagLabel(_ key: String) -> String {
-        switch key {
-        case "elevated_rhr_3d":          return "Elevated resting HR (3+ days)"
-        case "suppressed_hrv_3d":        return "Suppressed HRV (3+ days)"
-        case "high_accumulated_fatigue": return "High accumulated fatigue"
-        case "insufficient_sleep":       return "Less than 5h sleep last night"
-        case "poor_sleep_3d":            return "Poor sleep 3+ nights in a row"
-        case "overreached":              return "Training stress balance deeply negative — overreached"
-        case "recovery_pending":         return "Recovery still running on your watch — score capped"
-        default:                         return key
         }
     }
 
@@ -604,29 +568,22 @@ struct TodayView: View {
             .buttonStyle(.plain)
             .accessibilityHint("Opens Analytics, Program")
         } else if complianceStats != nil {
-            todayNote(icon: "calendar", title: "No sessions due yet",
-                      detail: "Completion counts from the first session whose day has come.")
+            todayNote(icon: "calendar", title: "No sessions due yet")
         } else if appState.isLoadingProgramAnalytics {
-            todayNote(icon: nil, title: "Measuring the program…", detail: nil)
+            todayNote(icon: nil, title: "Measuring the program…")
         } else {
-            todayNote(icon: "chart.bar.xaxis", title: "Not measured yet",
-                      detail: "The program's scorecard is not available — pull to refresh.")
+            todayNote(icon: "chart.bar.xaxis", title: "Not measured yet")
         }
     }
 
-    private func todayNote(icon: String?, title: String, detail: String?) -> some View {
+    private func todayNote(icon: String?, title: String) -> some View {
         HStack(spacing: 12) {
             if let icon {
                 Image(systemName: icon).foregroundStyle(.secondary)
             } else {
                 ProgressView()
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline).fontWeight(.medium)
-                if let detail {
-                    Text(detail).font(.caption).foregroundStyle(.secondary)
-                }
-            }
+            Text(title).font(.subheadline).fontWeight(.medium)
             Spacer()
         }
         .padding(14)
@@ -678,10 +635,15 @@ struct TodayView: View {
             }
 
             if let cw = stats.currentWeek {
-                Text("This week: \(cw.completed) of \(cw.due) due so far · \(cw.total) in the week"
-                     + ((cw.isDeload ?? false) ? " · deload" : ""))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Label("\(cw.completed)/\(cw.due) this week", systemImage: "checkmark.circle")
+                    Label("\(cw.total) planned", systemImage: "calendar")
+                    if cw.isDeload ?? false {
+                        Label("Deload", systemImage: "arrow.down.circle").foregroundStyle(.orange)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             if !stats.weekRows.isEmpty {
@@ -770,18 +732,16 @@ struct TodayView: View {
             sectionLabel("Progress")
             if let method = appState.programAnalytics?.methodologies.first,
                let summary = method.headlineSummary {
-                progressCard(summary, methodology: appState.programAnalytics?.frame?.philosophies
-                                .first { $0.id == method.philosophy }?.name)
+                progressCard(summary)
             } else if appState.isLoadingProgramAnalytics {
-                todayNote(icon: nil, title: "Measuring the program…", detail: nil)
+                todayNote(icon: nil, title: "Measuring the program…")
             } else {
-                todayNote(icon: "chart.line.uptrend.xyaxis", title: "Nothing measured yet",
-                          detail: "Complete a few sessions and this program's own measure appears here.")
+                todayNote(icon: "chart.line.uptrend.xyaxis", title: "Nothing measured yet")
             }
         }
     }
 
-    private func progressCard(_ h: ProgramAnalytics.HeadlineSummary, methodology: String?) -> some View {
+    private func progressCard(_ h: ProgramAnalytics.HeadlineSummary) -> some View {
         let color = AnalyticsStatusStyle.color(h.status)
         let trendIcon = h.trendDirection == "improving" ? "arrow.up.right"
             : h.trendDirection == "declining" ? "arrow.down.right" : "arrow.right"
@@ -806,9 +766,6 @@ struct TodayView: View {
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
-                if let methodology {
-                    Text(methodology).font(.caption2).foregroundStyle(.secondary)
-                }
                 if let text = h.text {
                     Text(text)
                         .font(.system(.title3, design: .rounded)).fontWeight(.bold)
@@ -819,9 +776,7 @@ struct TodayView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    Text(h.inScope == 0
-                         ? "None of the sessions it measures has been done yet."
-                         : AnalyticsStatusStyle.coverageReason(h.reason))
+                    Text(h.inScope == 0 ? "No sessions yet" : AnalyticsStatusStyle.coverageReason(h.reason))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

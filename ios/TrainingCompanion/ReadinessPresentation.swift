@@ -108,8 +108,47 @@ extension ReadinessResult {
     }
 }
 
-/// The readiness source footnote, under the score on Today and in Analytics ▸
-/// Recovery (design-system §6.21). Renders nothing when the server did not say.
+/// The server's actionable flags (not `insufficient_data`) as short chips —
+/// an icon and a few words each. Analytics ▸ Recovery only: Today's card
+/// carries the score and the readings, not the reasons (design-system §6.21).
+struct ReadinessFlagChips: View {
+    let flags: [String]
+
+    static func chip(_ key: String) -> (icon: String, label: String) {
+        switch key {
+        case "elevated_rhr_3d":          return ("heart.fill", "RHR up 3d")
+        case "suppressed_hrv_3d":        return ("waveform.path.ecg", "HRV down 3d")
+        case "high_accumulated_fatigue": return ("battery.25", "High fatigue")
+        case "insufficient_sleep":       return ("moon.zzz", "< 5h sleep")
+        case "poor_sleep_3d":            return ("moon.zzz", "Poor sleep 3n")
+        case "overreached":              return ("chart.line.downtrend.xyaxis", "Overreached")
+        case "recovery_pending":         return ("hourglass", "Recovery capped")
+        default:                         return ("exclamationmark.triangle", key.replacingOccurrences(of: "_", with: " "))
+        }
+    }
+
+    var body: some View {
+        let shown = flags.filter { $0 != "insufficient_data" }
+        if !shown.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(shown, id: \.self) { key in
+                        let chip = Self.chip(key)
+                        Label(chip.label, systemImage: chip.icon)
+                            .font(.caption2).fontWeight(.medium)
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.orange.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The readiness source footnote in Analytics ▸ Recovery (design-system
+/// §6.21). Renders nothing when the server did not say. Today shows none.
 struct ReadinessSourceNote: View {
     let result: ReadinessResult
 

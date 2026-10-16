@@ -36,12 +36,8 @@ struct ExerciseProgressSection: View {
     var body: some View {
         let counts = response.resolvedCounts
         VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("EXERCISES")
-                    .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
-                Text("\(counts.inProgram) in this program · \(counts.soFar) so far · \(counts.withData) with data")
-                    .font(.caption2).foregroundStyle(.secondary).monospacedDigit()
-            }
+            Text("EXERCISES")
+                .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
             Picker("Exercises", selection: Binding(get: { active }, set: { filter = $0 })) {
                 Text("With data (\(counts.withData))").tag(Filter.data)
                 Text("So far (\(counts.soFar))").tag(Filter.soFar)
@@ -49,8 +45,7 @@ struct ExerciseProgressSection: View {
             }
             .pickerStyle(.segmented)
             if visible.isEmpty {
-                Text(active == .data ? "No exercise has data yet. Log sets inside a session, or link a workout."
-                                     : "No exercise has come up yet.")
+                Text(active == .data ? "No data yet" : "None yet")
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             } else {
@@ -96,14 +91,16 @@ struct ExerciseProgressCardView: View {
                         Text(ProgressionView.withUnit(AnalyticsProgramTab.number(latest), unit))
                             .font(.title3).fontWeight(.bold).monospacedDigit()
                         if let target {
-                            Text("Target: \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
+                            Label(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit), systemImage: "target")
                                 .font(.caption2).foregroundStyle(.secondary)
+                                .accessibilityLabel("Target \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
                         }
                     } else {
                         Text("Log \(unit) to track").font(.caption).italic().foregroundStyle(.secondary)
                         if let target {
-                            Text("Prescribed: \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
+                            Label(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit), systemImage: "target")
                                 .font(.caption2).foregroundStyle(.secondary)
+                                .accessibilityLabel("Prescribed \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
                         }
                     }
                 }
@@ -120,8 +117,8 @@ struct ExerciseProgressCardView: View {
                 }
             }
             if let last = item.history.last, last.hrAvg != nil || last.hrMax != nil {
-                Text("♥ " + [last.hrAvg.map { "\($0) avg" }, last.hrMax.map { "\($0) max" }]
-                        .compactMap { $0 }.joined(separator: " · ") + " bpm")
+                Label([last.hrAvg.map(String.init), last.hrMax.map(String.init)]
+                        .compactMap { $0 }.joined(separator: "/") + " bpm", systemImage: "heart.fill")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             if let change = finding?.changeSummary, status != "insufficient_data" {

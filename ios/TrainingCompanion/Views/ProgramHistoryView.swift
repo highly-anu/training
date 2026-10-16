@@ -137,7 +137,7 @@ private struct ProgramVersionDetailView: View {
         return List {
             if never > 0 {
                 Section {
-                    Text("\(never) sessions were planned for weeks this program never reached — it was replaced first.")
+                    Label("\(never) sessions never reached", systemImage: "forward.end")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

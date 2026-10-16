@@ -73,6 +73,7 @@ struct AnalyticsRecoveryTab: View {
                 }
             }
             if let result = appState.readinessResult {
+                ReadinessFlagChips(flags: result.flags)
                 ReadinessSourceNote(result: result)
             }
           }
@@ -116,8 +117,13 @@ struct AnalyticsRecoveryTab: View {
                     .tint(debtHours < 2 ? .green : debtHours < 5 ? .orange : .red)
                     .frame(width: 52, height: 52)
                 }
-                Text("Target 8h/night · \(sleepNights.count) nights tracked")
-                    .font(.caption2).foregroundStyle(.tertiary)
+                HStack(spacing: 12) {
+                    Label("8h", systemImage: "target")
+                    Label("\(sleepNights.count) nights", systemImage: "moon")
+                }
+                .font(.caption2).foregroundStyle(.tertiary)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Target 8 hours a night, \(sleepNights.count) nights tracked")
             }
         })
     }
@@ -235,9 +241,6 @@ struct AnalyticsRecoveryTab: View {
                             .font(.system(size: 32)).foregroundStyle(.secondary)
                         Text("No bio data yet")
                             .font(.subheadline).foregroundStyle(.secondary)
-                        Text("Sync from Apple Watch or add a manual entry.")
-                            .font(.caption).foregroundStyle(.tertiary)
-                            .multilineTextAlignment(.center)
                     }
                     .padding(.vertical, 16)
                 } else {

@@ -30,11 +30,6 @@ struct ProgressionView: View {
     private func reviewContent(review: ProgressionReview) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                if let purpose = review.purpose {
-                    Text(purpose)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
                 overviewCard(review: review)
                 // Each methodology in its own currency, then where the athlete
                 // stands — the web's Progress tab, from the same document.
@@ -100,25 +95,17 @@ struct ProgressionView: View {
                                 .clipShape(Capsule())
                         }
                     } else {
-                        Text("Not enough data yet")
-                            .font(.headline)
+                        Label("Not enough data", systemImage: "hourglass")
+                            .font(.subheadline).fontWeight(.semibold)
                             .foregroundStyle(.secondary)
-                        if let b = review.scoreBreakdown, b.basis == "collecting" {
-                            Text(b.summary)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
                     }
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text("\(review.compliancePct)%")
+                    Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
                         .font(.caption)
                         .fontWeight(.semibold)
-                    Text("Sessions done")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(review.compliancePct) percent of sessions done")
                     if let scope = review.scopeLabel {
                         Text(scope)
                             .font(.caption2)
@@ -188,9 +175,6 @@ struct ProgressionView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
-            Text("Applied to the stored program from this week on; the web sees the same change.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
         }
     }
 
@@ -203,7 +187,7 @@ struct ProgressionView: View {
                 .foregroundStyle(.secondary)
             Text("No progression data yet")
                 .font(.headline)
-            Text("Log sessions with set data to start tracking your progression against each exercise target.")
+            Text("Log sets to start tracking.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

@@ -52,9 +52,7 @@ struct ProgramOverviewTab: View {
         let current = appState.currentWeekIndex ?? -1
         let summaries = self.summaries
         return VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Training phases", subtitle: summaries.isEmpty
-                          ? "The blocks this program runs, in order."
-                          : "The blocks this program runs, in order. Tap one to see what changes.")
+            sectionHeader("Training phases")
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(segments.enumerated()), id: \.element.id) { index, seg in
                     let summary = PhaseSummary.forSegment(index, of: summaries, segmentCount: segments.count)
@@ -175,7 +173,7 @@ struct ProgramOverviewTab: View {
         if !rows.isEmpty {
             let total = max(rows.reduce(0) { $0 + $1.weight }, 0.0001)
             VStack(alignment: .leading, spacing: 10) {
-                sectionHeader("Priority mix", subtitle: "The modality weights the schedule was allocated from.")
+                sectionHeader("Priority mix")
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(rows, id: \.id) { row in
                         let share = row.weight / total
@@ -204,11 +202,8 @@ struct ProgramOverviewTab: View {
         }
     }
 
-    private func sectionHeader(_ title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.headline)
-            Text(subtitle).font(.caption).foregroundStyle(.secondary)
-        }
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title).font(.headline)
     }
 }
 
@@ -389,11 +384,7 @@ struct PhaseMatrixSection: View {
     var body: some View {
         if summaries.count > 1 {
             VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("How the phases change").font(.headline)
-                    Text("Times per week each \(byExercise ? "exercise" : "session") appears in each phase.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                Text("How the phases change").font(.headline)
                 Picker("Show", selection: $byExercise) {
                     Text("Sessions").tag(false)
                     Text("Exercises").tag(true)
@@ -402,7 +393,8 @@ struct PhaseMatrixSection: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 8) {
                         GridRow {
-                            Text("")
+                            // The cells are times per week.
+                            Text("×/wk").font(.caption2).foregroundStyle(.tertiary)
                             ForEach(summaries) { s in
                                 Text(s.name)
                                     .font(.caption2).fontWeight(.semibold)
