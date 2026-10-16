@@ -111,4 +111,6 @@ struct WidgetStatusData: Codable {
     let readiness: Readiness?
     let adherence: Adherence?
     let progress: Progress?
+    /// When the readiness was fetched: a day-old score is not shown as today's.
+    var readinessAt: Date? = nil
 }

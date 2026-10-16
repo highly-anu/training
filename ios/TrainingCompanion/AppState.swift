@@ -418,7 +418,8 @@ final class AppState: ObservableObject {
 
         let todays = todaySessions
         let first = todays.first?.session
-        let today = WidgetStatusData.Today(
+        // Inside the program only: after its last week there is no "today".
+        let today: WidgetStatusData.Today? = currentWeekIndex == nil ? nil : WidgetStatusData.Today(
             date: dateStr, sessionCount: todays.count,
             doneCount: todays.filter { isSessionComplete($0.sessionKey) }.count,
             firstName: first.map { $0.archetype?.name ?? $0.modality }, firstModality: first?.modality,
@@ -433,10 +434,20 @@ final class AppState: ObservableObject {
         let progress = programAnalytics?.methodologies.first?.headlineSummary.map {
             WidgetStatusData.Progress(label: $0.label, text: $0.text, status: $0.status)
         }
+        // A part not loaded yet keeps what is stored: the loads run in
+        // parallel at launch, and the first to finish must not blank the
+        // others (nor a failed program fetch blank the week).
+        let previous = WidgetDataStore.readStatus()
+        let loaded = serverProgram != nil
         WidgetDataStore.writeHome(
-            week: weekData,
-            status: WidgetStatusData(updatedAt: Date(), today: serverProgram == nil ? nil : today,
-                                     readiness: readiness, adherence: adherence, progress: progress))
+            week: loaded ? weekData : WidgetDataStore.readWeek(),
+            status: WidgetStatusData(
+                updatedAt: Date(),
+                today: loaded ? today : previous?.today,
+                readiness: readiness ?? previous?.readiness,
+                adherence: programAnalytics != nil ? adherence : previous?.adherence,
+                progress: programAnalytics != nil ? progress : previous?.progress,
+                readinessAt: readinessResult != nil ? Date() : previous?.readinessAt))
     }
 
     // MARK: - Session reminders

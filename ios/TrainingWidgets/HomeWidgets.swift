@@ -6,6 +6,23 @@ import SwiftUI
 // Progress — the web's Today cards in one strip. The phone writes both
 // (AppState.writeHomeWidgets); nothing here is computed.
 
+/// The athlete's yyyy-MM-dd, Gregorian and POSIX like the app's own
+/// formatter — a phone on the Buddhist or Japanese calendar would otherwise
+/// never match the app's dates.
+func homeDayString(_ date: Date) -> String {
+    let f = DateFormatter()
+    f.calendar = Calendar(identifier: .gregorian)
+    f.locale = Locale(identifier: "en_US_POSIX")
+    f.dateFormat = "yyyy-MM-dd"
+    return f.string(from: date)
+}
+
+/// The next local midnight, daylight-saving safe.
+func nextMidnight() -> Date {
+    let cal = Calendar.current
+    return cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date())) ?? Date().addingTimeInterval(86_400)
+}
+
 // MARK: - Week overview
 
 struct WeekEntry: TimelineEntry {
@@ -22,8 +39,8 @@ struct WeekProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeekEntry>) -> Void) {
         // The app reloads it on every change; past midnight "today" moves on.
-        let next = Calendar.current.startOfDay(for: Date().addingTimeInterval(86_700))
-        completion(Timeline(entries: [WeekEntry(date: .now, week: WidgetDataStore.readWeek())], policy: .after(next)))
+        completion(Timeline(entries: [WeekEntry(date: .now, week: WidgetDataStore.readWeek())],
+                            policy: .after(nextMidnight())))
     }
 }
 
@@ -45,12 +62,20 @@ struct WeekOverviewWidget: Widget {
 struct WeekOverviewView: View {
     let entry: WeekEntry
 
-    private var todayString: String {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: entry.date)
-    }
+    private var todayString: String { homeDayString(entry.date) }
 
     var body: some View {
-        if let week = entry.week {
+        if let week = entry.week, let last = week.days.last?.date, todayString > last {
+            // The stored week is over and the app has not been opened since:
+            // say so, rather than mark every unticked session missed.
+            let all = week.days.flatMap(\.sessions)
+            VStack(spacing: 4) {
+                Text("WEEK \(week.weekNumber) ENDED").font(.caption).fontWeight(.bold)
+                Text("\(all.filter(\.done).count) of \(all.count) done").font(.caption2).foregroundStyle(.secondary)
+                Text("Open Training Companion to load this week.").font(.caption2).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let week = entry.week {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 4) {
                     Text("WEEK \(week.weekNumber)")
@@ -152,9 +177,8 @@ struct StatusProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<StatusEntry>) -> Void) {
-        let next = Calendar.current.startOfDay(for: Date().addingTimeInterval(86_700))
         completion(Timeline(entries: [StatusEntry(date: .now, status: WidgetDataStore.readStatus())],
-                            policy: .after(next)))
+                            policy: .after(nextMidnight())))
     }
 }
 
@@ -190,8 +214,14 @@ struct StatusRowView: View {
 
     // A stale "today" (yesterday's write, no app open since) shows nothing.
     private func isToday(_ t: WidgetStatusData.Today) -> Bool {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        return t.date == f.string(from: entry.date)
+        t.date == homeDayString(entry.date)
+    }
+
+    /// Readiness is a morning number: one fetched more than ~20 hours ago is
+    /// yesterday's, and shows as unknown rather than as today's.
+    private func readinessIsFresh(_ s: WidgetStatusData) -> Bool {
+        guard let at = s.readinessAt else { return false }
+        return entry.date.timeIntervalSince(at) < 20 * 3600
     }
 
     private func todayCell(_ s: WidgetStatusData) -> some View {
@@ -220,8 +250,8 @@ struct StatusRowView: View {
 
     private func readinessCell(_ s: WidgetStatusData) -> some View {
         Link(destination: URL(string: "trainingcompanion://analytics?section=recovery")!) {
-            StatusCell(title: "READINESS", tint: Self.readinessColor(s.readiness?.status)) {
-                if let r = s.readiness {
+            StatusCell(title: "READINESS", tint: readinessIsFresh(s) ? Self.readinessColor(s.readiness?.status) : .secondary) {
+                if let r = s.readiness, readinessIsFresh(s) {
                     Text("\(r.score)")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(Self.readinessColor(r.status))
@@ -330,13 +360,12 @@ extension WidgetWeekData {
     static let placeholder = WidgetWeekData(
         updatedAt: .now, weekNumber: 2, totalWeeks: 12, phase: "base", isDeload: false,
         days: {
-            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
             let names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             let mods: [[String]] = [[], ["movement_skill"], ["aerobic_base"], [], ["max_strength"], [], ["movement_skill"]]
             let monday = Calendar(identifier: .iso8601).dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
             return names.enumerated().map { i, name in
                 let date = Calendar.current.date(byAdding: .day, value: i, to: monday) ?? .now
-                return Day(dayName: name, date: f.string(from: date),
+                return Day(dayName: name, date: homeDayString(date),
                            sessions: mods[i].map { Session(modalityId: $0, name: $0, minutes: 40, done: i < 3) })
             }
         }())
@@ -345,10 +374,11 @@ extension WidgetWeekData {
 extension WidgetStatusData {
     static let placeholder = WidgetStatusData(
         updatedAt: .now,
-        today: Today(date: { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now) }(),
+        today: Today(date: homeDayString(.now),
                      sessionCount: 1, doneCount: 0, firstName: "Double KB Strength", firstModality: "max_strength",
                      minutes: 40),
         readiness: Readiness(score: 72, status: "green"),
         adherence: Adherence(pct: 86, verdict: "on_plan", weekDone: 2, weekDue: 2),
-        progress: Progress(label: "Movements earned", text: "3 of 15 movements practised", status: "on_track"))
+        progress: Progress(label: "Movements earned", text: "3 of 15 movements practised", status: "on_track"),
+        readinessAt: .now)
 }
