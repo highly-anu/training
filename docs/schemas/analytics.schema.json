@@ -41,8 +41,18 @@
     },
     "benchmarks": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-      "description": "Benchmark ids to show for this methodology, in addition to any whose `sources` name this package."
+      "items": {
+        "oneOf": [
+          { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          { "type": "object", "required": ["id", "frameworks"], "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+              "frameworks": { "type": "array", "minItems": 1, "items": { "type": "string" },
+                              "description": "Declared only for a program that runs one of these frameworks — a track's own standards (Wildman's pentathlon events in Pentathlon Prep)." }
+            } }
+        ]
+      },
+      "description": "Benchmark ids to show for this methodology, in addition to any whose `sources` name this package. An object scopes one to frameworks."
     },
     "notes": { "type": "string" }
   },

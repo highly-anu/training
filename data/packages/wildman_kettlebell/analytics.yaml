@@ -59,4 +59,12 @@ progress:
     scope: {modalities: [movement_skill, power, strength_endurance]}
     min_sessions: 2
 
-benchmarks: [ssst_reps, turkish_get_up_bw_ratio]
+benchmarks:
+  - ssst_reps
+  - turkish_get_up_bw_ratio
+  # The pentathlon's five events (IKMF standards), for Pentathlon Prep only.
+  - {id: kb_pentathlon_clean_reps, frameworks: [kb_pentathlon]}
+  - {id: kb_pentathlon_long_cycle_press_reps, frameworks: [kb_pentathlon]}
+  - {id: kb_pentathlon_jerk_reps, frameworks: [kb_pentathlon]}
+  - {id: kb_pentathlon_half_snatch_reps, frameworks: [kb_pentathlon]}
+  - {id: kb_pentathlon_push_press_reps, frameworks: [kb_pentathlon]}

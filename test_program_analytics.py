@@ -1001,6 +1001,14 @@ def test_headline_follows_the_track() -> None:
               sum(p['headline'] for p in doc['progress']) == 1)
         check(f'{track}: applicable counts only entries the program schedules',
               m['applicable'] == sum(p['applies'] for p in doc['progress']) and m['applicable'] <= m['total'])
+        jerk = next((b for b in doc['benchmarks']['benchmarks'] if b['benchmarkId'] == 'kb_pentathlon_jerk_reps'), None)
+        if track == 'pentathlon':
+            check('Pentathlon Prep: the jerk standard is declared, and primary',
+                  jerk and 'declared' in jerk['why'] and jerk['primary'], str(jerk and jerk['why']))
+        else:
+            check('GP: the pentathlon standards are not declared (at most a same-domain extra)',
+                  jerk is None or ('declared' not in jerk['why'] and not jerk['primary']),
+                  str(jerk and jerk['why']))
         if track == 'general_practice':
             check('GP: cadence does not apply and says it applies in Pentathlon Prep',
                   not by_id['jerk_rpm']['applies']
