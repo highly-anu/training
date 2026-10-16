@@ -704,8 +704,11 @@ minor for a batch of features, patch for fixes only; started at 1.1.0 on
 2026-10-15 after every build had shipped as 1.0); the build number is the
 commit count. `./ios/archive.sh` passes both to all five targets and refuses
 to archive when the project's `MARKETING_VERSION` differs from `ios/VERSION`,
-so bump both in one change. Upload from Xcode's Organizer (the command-line
-upload fails "Failed to Use Accounts"), then tag it `ios-v<VERSION>`.
+so bump both in one change. With the App Store Connect key in the login
+Keychain (`ios/tools/store_asc_key.sh`, once, from 1Password) `./ios/archive.sh`
+uploads by itself — no 1Password, nobody at the Mac; without it, upload from
+Xcode's Organizer (the account-based command-line upload fails "Failed to Use
+Accounts"). Then tag it `ios-v<VERSION>`.
 
 The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
 the `TrainingCompanionTests` target, so a new test file needs no project edit:
