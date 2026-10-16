@@ -43,6 +43,24 @@ def test_review_compliance_is_done_over_due():
     assert review['compliance_pct'] == round(len(done_so_far[:-1]) / len(done_so_far) * 100)
 
 
+
+def test_scorecard_completion_wins():
+    """Moving Friday to Saturday minted a new version; Tuesday's and
+    Wednesday's logs stayed with the old one, so this version's logs were
+    empty and Progress read 0 % beside Today's 2 of 2. The route passes the
+    scorecard's count, which matches logs by date."""
+    program = {'program_start_date': '2026-10-12', 'weeks': [week(1, ['Tuesday', 'Wednesday', 'Saturday'])]}
+    review = pt.compute_progression_review(user_id='u', program=program, bio_logs=[], session_logs={},
+                                           completion=(2, 2))
+    assert review['compliance_pct'] == 100, review['compliance_pct']
+    assert 'low_compliance' not in review['flags']
+    assert not any('completion rate is low' in r for r in review['recommendations'])
+    assert not any(a.get('type') == 'rebuild_habit' for a in review.get('adjustments', []))
+    review = pt.compute_progression_review(user_id='u', program=program, bio_logs=[], session_logs={},
+                                           completion=(1, 2))
+    assert review['compliance_pct'] == 50
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

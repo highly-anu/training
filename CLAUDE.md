@@ -505,7 +505,10 @@ writes.
   iOS app had been posting notes into a phantom key — and fatigue is folded to
   1–5 at the boundary (iOS sends 1–10).
 - `GET /api/progression/review` keeps its shape for iOS but takes its
-  `exercise_findings` from the engine.
+  `exercise_findings` from the engine, and its `compliance_pct` from the
+  scorecard (`completion=`), so Progress, Today and the Program tab show one
+  number. Its own count read this version's logs only, and moving a single
+  session mints a version: on 2026-10-16 Progress read 0 % beside 2 of 2.
 - **iOS load charts are server-side.** Analytics ▸ Overview reads
   `/health/load/pmc` and `/health/load/weekly`; `AnalyticsEngine` is the
   fallback when the request fails, and the footnote says which was used, so
