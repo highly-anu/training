@@ -5,5 +5,7 @@ import SwiftUI
 struct TrainingWidgetsBundle: WidgetBundle {
     var body: some Widget {
         TodaySessionWidget()
+        WeekOverviewWidget()
+        StatusRowWidget()
     }
 }

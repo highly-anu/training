@@ -78,13 +78,13 @@ export function AdherenceWidget() {
   return (
     <div className={cn('h-full rounded-xl border bg-card p-4 space-y-3 ring-1', styles.ring)}>
       <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        Development
+        Adherence
       </h2>
 
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-1 whitespace-nowrap">
           <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>{overall}</span>
-          <span className="text-xs text-muted-foreground">% compliance</span>
+          <span className="text-xs text-muted-foreground">% done</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
           <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap', styles.badge)}>

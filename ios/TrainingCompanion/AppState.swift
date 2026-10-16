@@ -383,6 +383,60 @@ final class AppState: ObservableObject {
         }
         WidgetDataStore.write(WidgetTodayData(date: dateStr, sessions: sessions, updatedAt: Date()))
         rescheduleNotifications()
+        writeHomeWidgets()
+    }
+
+    /// The full-width home-screen widgets: the program week (Monday to
+    /// Sunday, sessions and ticks) and the status row (Today · Readiness ·
+    /// Adherence · Progress). Copies what the app already holds — the stored
+    /// program, the session logs, the server's readiness and the
+    /// `/analytics/program` document — so a widget never says other than the
+    /// app. Called whenever any of those changes.
+    func writeHomeWidgets() {
+        let dateStr = dayFormatter.string(from: Date())
+        var weekData: WidgetWeekData? = nil
+        if let idx = currentWeekIndex, let program = serverProgram?.currentProgram,
+           let startStr = serverProgram?.programStartDate, let start = dayFormatter.date(from: startStr) {
+            let week = program.weeks[idx]
+            let names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+            let calendar = Calendar.current
+            let days: [WidgetWeekData.Day] = (0..<7).compactMap { offset in
+                guard let date = calendar.date(byAdding: .day, value: idx * 7 + offset, to: calendar.startOfDay(for: start))
+                else { return nil }
+                let dayName = names[calendar.component(.weekday, from: date) - 1]
+                let sessions = (week.schedule[dayName] ?? []).enumerated().map { i, s in
+                    WidgetWeekData.Session(
+                        modalityId: s.modality, name: s.archetype?.name ?? s.modality,
+                        minutes: s.archetype?.durationEstimateMinutes ?? 45,
+                        done: isSessionComplete(makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i)))
+                }
+                return WidgetWeekData.Day(dayName: dayName, date: dayFormatter.string(from: date), sessions: sessions)
+            }
+            weekData = WidgetWeekData(updatedAt: Date(), weekNumber: idx + 1, totalWeeks: program.weeks.count,
+                                      phase: week.phase, isDeload: week.isDeload, days: days)
+        }
+
+        let todays = todaySessions
+        let first = todays.first?.session
+        let today = WidgetStatusData.Today(
+            date: dateStr, sessionCount: todays.count,
+            doneCount: todays.filter { isSessionComplete($0.sessionKey) }.count,
+            firstName: first.map { $0.archetype?.name ?? $0.modality }, firstModality: first?.modality,
+            minutes: first.map { $0.archetype?.durationEstimateMinutes ?? 45 })
+        let readiness = readinessResult.map { WidgetStatusData.Readiness(score: $0.score, status: $0.status) }
+        var adherence: WidgetStatusData.Adherence? = nil
+        if let sc = programAnalytics?.scorecard, (sc.plannedSessions ?? 0) > 0 {
+            adherence = WidgetStatusData.Adherence(
+                pct: Int((sc.overallPct ?? 0).rounded()), verdict: sc.headline,
+                weekDone: sc.currentWeek?.completed, weekDue: sc.currentWeek?.due)
+        }
+        let progress = programAnalytics?.methodologies.first?.headlineSummary.map {
+            WidgetStatusData.Progress(label: $0.label, text: $0.text, status: $0.status)
+        }
+        WidgetDataStore.writeHome(
+            week: weekData,
+            status: WidgetStatusData(updatedAt: Date(), today: serverProgram == nil ? nil : today,
+                                     readiness: readiness, adherence: adherence, progress: progress))
     }
 
     // MARK: - Session reminders
@@ -486,6 +540,7 @@ final class AppState: ObservableObject {
             sessionLogs = split.current
             earlierSessionLogs = split.earlier
             rescheduleNotifications()   // a session completed elsewhere cancels its reminder
+            writeHomeWidgets()          // and ticks it on the week widget
         } catch {}
     }
 
@@ -505,6 +560,7 @@ final class AppState: ObservableObject {
         )
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
         rescheduleNotifications()
+        writeHomeWidgets()
         // Today's completion is the program scorecard's.
         await loadProgramAnalytics()
     }
@@ -582,6 +638,7 @@ final class AppState: ObservableObject {
             let result = try await api.fetchReadiness()
             readinessResult = result
             ReadinessInfo.storeForWatch(result)
+            writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
@@ -598,6 +655,7 @@ final class AppState: ObservableObject {
         do {
             programAnalytics = try await api.fetchProgramAnalytics(fresh: fresh)
             programAnalyticsError = nil
+            writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             programAnalyticsError = error.localizedDescription

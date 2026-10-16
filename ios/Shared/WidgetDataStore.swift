@@ -24,6 +24,32 @@ enum WidgetDataStore {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    static let weekKey = "widget_week_data"
+    static let statusKey = "widget_status_data"
+
+    /// The week strip and the status row; redraws only those two widgets.
+    static func writeHome(week: WidgetWeekData?, status: WidgetStatusData) {
+        guard let defaults = sharedDefaults else { return }
+        if let week, let encoded = try? JSONEncoder().encode(week) {
+            defaults.set(encoded, forKey: weekKey)
+        } else {
+            defaults.removeObject(forKey: weekKey)
+        }
+        if let encoded = try? JSONEncoder().encode(status) { defaults.set(encoded, forKey: statusKey) }
+        WidgetCenter.shared.reloadTimelines(ofKind: "WeekOverviewWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "StatusRowWidget")
+    }
+
+    static func readWeek() -> WidgetWeekData? {
+        guard let data = sharedDefaults?.data(forKey: weekKey) else { return nil }
+        return try? JSONDecoder().decode(WidgetWeekData.self, from: data)
+    }
+
+    static func readStatus() -> WidgetStatusData? {
+        guard let data = sharedDefaults?.data(forKey: statusKey) else { return nil }
+        return try? JSONDecoder().decode(WidgetStatusData.self, from: data)
+    }
+
     /// Read the last saved WidgetTodayData from the App Group container.
     static func read() -> WidgetTodayData? {
         guard let defaults = sharedDefaults,
