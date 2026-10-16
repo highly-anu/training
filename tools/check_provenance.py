@@ -331,6 +331,44 @@ def _known_benchmark_ids() -> set:
     return ids
 
 
+LEVELS = ('novice', 'intermediate', 'advanced')
+
+
+def report_level_phase_gaps(frameworks: list, data: dict) -> list[str]:
+    """Static: (package, framework, phase kind, modality) the framework
+    prescribes and the package has archetypes for, but none applicable to a
+    training level in that phase kind — where `_resolve_session` swaps the
+    session for another modality. The package-level check above only asks
+    whether an archetype exists at all, so Wildman's novice General Practice,
+    whose strength endurance and max strength archetypes start at
+    intermediate, passed it. Ignores equipment and session length; the
+    generated programs report those."""
+    fw_by_id = {f['id']: f for f in frameworks}
+    out: list[str] = []
+    for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
+        phil_id = phil['id']
+        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
+        uses: dict = {}                     # framework id -> phase kinds it runs in
+        for track in phases.tracks_of(phil):
+            for ph in track['phases']:
+                if ph.get('framework_id'):
+                    uses.setdefault(ph['framework_id'], set()).add(ph.get('kind'))
+        for fw_id, kinds in sorted(uses.items()):
+            fw = fw_by_id.get(fw_id) or {}
+            for modality in sorted((fw.get('sessions_per_week') or {}).keys()):
+                own = [a for a in archetypes if a.get('modality') == modality]
+                if not own:
+                    continue                # the package-level gap above
+                for level in LEVELS:
+                    missing = sorted(k for k in kinds if not any(
+                        level in (a.get('training_levels') or LEVELS)
+                        and k in (a.get('applicable_phases') or [k]) for a in own))
+                    if missing:
+                        out.append(f"{phil_id} / {fw_id}: {modality} at {level} in "
+                                   f"{', '.join(missing)}")
+    return out
+
+
 def report_coverage() -> int:
     """Static: modalities a package declares or prescribes but owns no archetype for."""
     frameworks = list(loader.load_all_frameworks().values())
@@ -355,6 +393,18 @@ def report_coverage() -> int:
         print(f"{phil_id:22} {', '.join(blocking) or '-':46} {', '.join(other) or '-'}")
 
     print(f"\n{total_blocking} blocking coverage gap(s) across all packages.")
+
+    gaps = report_level_phase_gaps(frameworks, data)
+    print()
+    if gaps:
+        print(f"{len(gaps)} level/phase gap(s) — a framework prescribes the modality, the package "
+              f"has archetypes for it, but none for this level in this phase. The generator "
+              f"schedules another modality there (coverage_report.substituted_sessions, "
+              f"LEVEL_COVERAGE_GAP); reported, not failed:")
+        for g in gaps:
+            print(f"  - {g}")
+    else:
+        print('No level/phase gaps.')
 
     problems = report_authoring()
     print()

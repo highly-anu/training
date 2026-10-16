@@ -143,7 +143,10 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
               NOTE: data/commons/ holds no archetypes, so this is NOT a commons pool:
               it is the policy-allowed packages when strict, else the whole library.
       Pass 3: cross-modality substitution from primary-sources archetypes only.
-              Fallback order: aerobic_base → durability → mobility.
+              Fallback order: aerobic_base → durability → mobility. Marks
+              '_substituted_for' with the modality it replaced, so the session,
+              the compromises and the coverage report can say so — it used to
+              change the modality and leave no trace.
     If no pass resolves, the session is passed through (produces null archetype output).
     """
     _FALLBACKS = ('aerobic_base', 'durability', 'mobility')
@@ -167,7 +170,7 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
             if fallback == modality:
                 continue
             if _has_archetype(fallback, archetypes, constraints, phase):
-                resolved.append({**session, 'modality': fallback, '_cross_modality': True})
+                resolved.append({**session, 'modality': fallback, '_substituted_for': modality})
                 substituted = True
                 break
         if not substituted:
@@ -189,13 +192,27 @@ def _build_coverage_report(program: dict, policy) -> dict:
     unfilled_sessions: list[dict] = []
     unfilled_slots: list[dict] = []
     borrowed_sessions: list[dict] = []
+    substituted_sessions: list[dict] = []
     seen_slots: set = set()
 
     for week in program.get('weeks', []):
-        week_no = week.get('week')
-        for day_name, sessions in (week.get('schedule') or {}).items():
+        # The engine's weeks carry `week_number` and integer day keys; the
+        # report used to read `week` (always None) and pass the integer on,
+        # where the clients' types expect a number and a day name.
+        week_no = week.get('week_number', week.get('week'))
+        for day_key, sessions in (week.get('schedule') or {}).items():
+            day_name = (_GEN_DAY_NAMES[day_key - 1] if isinstance(day_key, int) and 1 <= day_key <= 7
+                        else day_key)
             for session in sessions:
                 arch = session.get('archetype')
+                if session.get('substituted_for'):
+                    substituted_sessions.append({
+                        'week': week_no, 'day': day_name,
+                        'modality': session.get('modality'),
+                        'substituted_for': session['substituted_for'],
+                        'archetype': (arch or {}).get('id'),
+                        'reason': 'NO_ARCHETYPE_FOR_PHASE_OR_LEVEL',
+                    })
                 if not arch:
                     unfilled_sessions.append({
                         'week': week_no, 'day': day_name,
@@ -233,6 +250,7 @@ def _build_coverage_report(program: dict, policy) -> dict:
         'unfilled_sessions': unfilled_sessions,
         'unfilled_slots': unfilled_slots,
         'borrowed_sessions': borrowed_sessions,
+        'substituted_sessions': substituted_sessions,
     }
 
 
@@ -410,7 +428,7 @@ def generate(
 
                 # Commons fallback: use full archetype pool with relaxed equipment
                 is_commons_fallback = session.pop('_commons_fallback', False)
-                is_cross_modality = session.pop('_cross_modality', False)
+                substituted_for = session.pop('_substituted_for', None)
                 session_archetypes = fallback_archetypes if is_commons_fallback else archetypes
 
                 # Record compromise message for commons fallback (once per unique substitution)
@@ -501,6 +519,18 @@ def generate(
                     recent_ex_ids.append(ea['exercise']['id'])
                     if len(recent_ex_ids) > 40:
                         recent_ex_ids.pop(0)
+
+                # A session scheduled as another modality because the package
+                # has no archetype for this one in this phase at this level
+                # (_resolve_session pass 3). Say so on the session, once in the
+                # compromises, and in the coverage report.
+                if substituted_for:
+                    populated['substituted_for'] = substituted_for
+                    msg = (f"No {substituted_for.replace('_', ' ')} session in {policy.describe()} for the "
+                           f"{phase} phase at {constraints.get('training_level', 'intermediate')} level — "
+                           f"scheduled as {session['modality'].replace('_', ' ')} instead.")
+                    if msg not in all_compromises:
+                        all_compromises.append(msg)
 
                 if populated.get('archetype'):
                     recent_arch_ids.append(populated['archetype']['id'])
