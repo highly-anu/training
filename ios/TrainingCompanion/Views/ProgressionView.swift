@@ -55,7 +55,8 @@ struct ProgressionView: View {
                 if !review.adjustments.isEmpty {
                     adjustmentsSection(adjustments: review.adjustments)
                 }
-                if review.overallScore != nil, review.recommendations.isEmpty, review.adjustments.isEmpty {
+                if review.scoreBreakdown.map({ $0.basis != "not_started" }) ?? (review.overallScore != nil),
+                   review.recommendations.isEmpty, review.adjustments.isEmpty {
                     Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -102,6 +103,12 @@ struct ProgressionView: View {
                         Text("Not enough data yet")
                             .font(.headline)
                             .foregroundStyle(.secondary)
+                        if let b = review.scoreBreakdown, b.basis == "collecting" {
+                            Text(b.summary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
                 Spacer()

@@ -70,8 +70,10 @@ export function ProgressionTab() {
   const visibleExercises = active === 'data' ? withData : active === 'soFar' ? soFar : allExercises
 
   const isLoading = reviewLoading || exercisesLoading
-  const isInsufficient =
-    !review || review.overall_score === null || review.flags.includes('insufficient_data')
+  // Advice holds from the first session due — consistency above all — not
+  // only once a measure has a trend (the score is the trends alone).
+  const isInsufficient = !review || review.score_breakdown?.basis === 'not_started'
+    || (review.score_breakdown == null && review.overall_score === null)
   const recommendations = isInsufficient ? [] : (review?.recommendations ?? [])
   const adjustments = isInsufficient ? [] : (review?.adjustments ?? [])
 
@@ -174,7 +176,7 @@ export function ProgressionTab() {
         <AdjustmentList adjustments={adjustments} />
       )}
 
-      {review?.overall_score != null && recommendations.length === 0 && adjustments.length === 0 && (
+      {!isInsufficient && recommendations.length === 0 && adjustments.length === 0 && (
         <p className="border-t border-border/40 pt-4 text-[11px] text-muted-foreground">
           Nothing to change — keep going.
         </p>

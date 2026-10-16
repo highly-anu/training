@@ -42,7 +42,12 @@ export function ProgressSummary({ review }: { review: ProgressionReview }) {
                 )}
               </div>
             ) : (
-              <p className="text-sm font-medium text-muted-foreground">Not enough data yet</p>
+              <>
+                <p className="text-sm font-medium text-muted-foreground">Not enough data yet</p>
+                {breakdown?.basis === 'collecting' && (
+                  <p className="text-xs text-muted-foreground">{breakdown.summary}</p>
+                )}
+              </>
             )}
             {status && <p className="text-sm">{status.reason}</p>}
           </div>

@@ -4452,7 +4452,7 @@ def progression_review():
         base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
     else:
         base = _pt.compute_session_hash(session_logs)
-    session_hash = f'{base}:{period}:review-6'
+    session_hash = f'{base}:{period}:review-7'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])

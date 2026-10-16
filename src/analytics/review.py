@@ -1,11 +1,16 @@
 """What GET /api/progression/review says about its own number.
 
-The score was compliance × 0.4 + the mean finding status × 0.6, with a
-finding that had no data yet counted as a neutral 50. In week 1 that put an
-athlete who had done every session at exactly 70 — the "On Track" line — for
-no reason they could see, and one more data point could swing it either way.
-Now a finding joins the score only once it measures something; until one
-does, the score is compliance alone and says so.
+The score answers one question — is the training working? — so it is the
+trend of the methodology's own measures and nothing else: the mean of each
+measured finding's status points. Until one measure has a trend there is no
+score, and the breakdown says what is still collecting.
+
+It was compliance × 0.4 + trends × 0.6 (and before that, a finding with no
+data counted as a neutral 50 — week 1's exactly-70 "On Track"). Completion
+inside the score repeated Today's Adherence card and the Program tab, and
+until a measure had a trend the score *was* completion: two cards, one
+number. Since 2026-10-16 completion is context beside the score
+(`compliance_pct`, `scope_label`), never part of it.
 
 Everything a client shows about the score is built here — the sum, the
 status band and why, what the compliance covers, the measures still waiting
@@ -19,8 +24,6 @@ from datetime import date
 
 from src.analytics import vocabulary
 
-COMPLIANCE_WEIGHT = 0.4
-TRENDS_WEIGHT = 0.6
 STATUS_POINTS = {'ahead': 100, 'on_track': 80, 'behind': 40, 'stalled': 20}
 
 BANDS = [
@@ -29,8 +32,8 @@ BANDS = [
     {'id': 'off_track', 'label': 'Off Track', 'min': 0},
 ]
 
-PURPOSE = ('Is the training working? Your lifts and skills over time, scored with '
-           'how many sessions you have done. The Program tab shows how closely you follow the plan.')
+PURPOSE = ("Is the training working? Your methodology's own measures over time — lifts, skills, "
+           'minutes — scored by their trends. How much of the plan you have done is the Program tab.')
 
 
 def band(score: int) -> dict:
@@ -55,28 +58,30 @@ def explain(review: dict, doc: dict | None, *, today: date | None = None) -> dic
     if scheduled == 0 and not doc:
         # No scorecard to say what was due: keep the tracker's own verdict.
         return review
+    trends = None
     if scheduled == 0:
         score = None
         basis = 'not_started'
     elif measured:
         trends = round(sum(STATUS_POINTS[f['status']] for f in measured) / len(measured))
-        score = round(compliance * COMPLIANCE_WEIGHT + trends * TRENDS_WEIGHT)
-        basis = 'compliance_and_trends'
+        score = trends
+        basis = 'trends'
     else:
-        trends = None
-        score = compliance
-        basis = 'compliance_only'
+        score = None
+        basis = 'collecting'
 
     review['overall_score'] = score
     review['score_breakdown'] = _breakdown(basis, compliance, completed, scheduled,
-                                           measured, findings, trends if basis != 'not_started' else None)
+                                           measured, findings, trends)
     review['score_status'] = _status(score, compliance, completed, scheduled, measured) if score is not None else None
     review['scope_label'] = (f'{completed} of {scheduled} session{"" if scheduled == 1 else "s"} so far'
                              f' · week {max(weeks, 1)}') if scheduled else 'No session due yet'
     review['pending_measures'] = _pending(doc, today)
     review['purpose'] = PURPOSE
-    # The tracker's "insufficient_data" flag meant "no score"; there is one now.
-    if score is not None:
+    # The tracker's "insufficient_data" flag meant "no score"; the review now
+    # says itself why there is none (`score_breakdown.basis`), and its advice
+    # — consistency above all — holds from the first session due.
+    if scheduled:
         review['flags'] = [f for f in review.get('flags') or [] if f != 'insufficient_data']
         review['recommendations'] = [r for r in review.get('recommendations') or []
                                      if not r.startswith('Log at least 2 sessions with set data')]
@@ -85,20 +90,15 @@ def explain(review: dict, doc: dict | None, *, today: date | None = None) -> dic
 
 def _breakdown(basis, compliance, completed, scheduled, measured, findings, trends) -> dict:
     waiting = len(findings) - len(measured)
-    if basis == 'compliance_and_trends':
-        c_pts = round(compliance * COMPLIANCE_WEIGHT)
-        t_pts = round(trends * TRENDS_WEIGHT)
-        summary = (f'Sessions {compliance}% × 0.4 = {c_pts} + trends {trends} × 0.6 = {t_pts}'
-                   f' (from {len(measured)} measure{"" if len(measured) == 1 else "s"}'
-                   + (f'; {waiting} still collecting data' if waiting else '') + ').')
-        parts = [
-            {'id': 'compliance', 'label': 'Sessions done', 'value': compliance, 'weight': COMPLIANCE_WEIGHT, 'points': c_pts},
-            {'id': 'trends', 'label': 'Lift and skill trends', 'value': trends, 'weight': TRENDS_WEIGHT, 'points': t_pts},
-        ]
-    elif basis == 'compliance_only':
-        summary = (f'Sessions only for now: {completed} of {scheduled} done. Trends count once a measure '
-                   'has data from 2 sessions.')
-        parts = [{'id': 'compliance', 'label': 'Sessions done', 'value': compliance, 'weight': 1.0, 'points': compliance}]
+    if basis == 'trends':
+        summary = (f'The mean of {len(measured)} measure{"" if len(measured) == 1 else "s"} with a trend: '
+                   f'{trends}' + (f'; {waiting} still collecting data' if waiting else '') + '. '
+                   'Ahead 100, on track 80, behind 40, stalled 20.')
+        parts = [{'id': 'trends', 'label': 'Measure trends', 'value': trends, 'weight': 1.0, 'points': trends}]
+    elif basis == 'collecting':
+        summary = ('No measure has a trend yet, so there is no score. A measure counts once it has data '
+                   f'from 2 sessions ({completed} of {scheduled} sessions due so far are done).')
+        parts = []
     else:
         summary = 'No session was due yet, so there is nothing to score.'
         parts = []
@@ -118,13 +118,14 @@ def _breakdown(basis, compliance, completed, scheduled, measured, findings, tren
 
 
 def _status(score, compliance, completed, scheduled, measured) -> dict:
+    """The band and why — the trends first, the sessions as context."""
     b = band(score)
     if completed >= scheduled:
         sessions = 'every session due so far is done'
     else:
         sessions = f'{completed} of {scheduled} sessions due so far are done'
     if not measured:
-        trends = 'no lift or skill trend yet'
+        trends = 'no measure has a trend yet'
     else:
         counts: dict[str, list[str]] = {}
         for f in measured:
@@ -138,7 +139,7 @@ def _status(score, compliance, completed, scheduled, measured) -> dict:
             named = f' ({", ".join(names[:2])})' if st in ('stalled', 'behind') else ''
             bits.append(f'{len(names)} {words[st]}{named}')
         trends = ', '.join(bits)
-    reason = f'{sessions}; {trends}.'
+    reason = f'{trends}; {sessions}.'
     return {'id': b['id'], 'label': b['label'], 'reason': reason[0].upper() + reason[1:], 'bands': BANDS}
 
 

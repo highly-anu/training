@@ -1092,7 +1092,9 @@ export interface ExerciseFinding {
 
 /** How the review's score was made (src/analytics/review.py). */
 export interface ScoreBreakdown {
-  basis: 'compliance_only' | 'compliance_and_trends' | 'not_started'
+  /** trends: the score is the measures' trends; collecting: none has one yet, no score.
+   *  (compliance_only / compliance_and_trends from servers before 2026-10-16.) */
+  basis: 'trends' | 'collecting' | 'not_started' | 'compliance_only' | 'compliance_and_trends'
   summary: string
   parts: { id: string; label: string; value: number; weight: number; points: number }[]
   completed: number

@@ -95,39 +95,42 @@ def _pr(pid, primitive='set_load', series=(), planned=4, in_scope=0, next_date=N
             'programScope': {'planned': planned, 'nextDate': next_date}}
 
 
-def test_week_one_scores_sessions_only():
-    """Two of two done and one measure with one point: the old formula said
-    70 (a neutral 50 for the measure), exactly the On Track line."""
+def test_no_trend_no_score():
+    """Two of two done and one measure with one point: no measure has a
+    trend, so there is no score — completion is context, never the score
+    (it was the whole score until a trend existed, which put Today's two
+    cards on one number)."""
     doc = _doc(2, 2, progress=[_pr('skills', 'unlocks', series=[{'week': 1, 'value': 0}], planned=17, in_scope=1)])
     out = rv.explain({'compliance_pct': 100, 'exercise_findings': [_finding('skills', 'insufficient_data')],
                       'flags': ['insufficient_data'],
                       'recommendations': ['Log at least 2 sessions with set data to see progression analysis.']}, doc)
-    assert out['overall_score'] == 100
-    assert out['score_breakdown']['basis'] == 'compliance_only'
+    assert out['overall_score'] is None and out['score_status'] is None
+    assert out['score_breakdown']['basis'] == 'collecting'
     assert out['score_breakdown']['waiting'] == 1
-    assert out['score_status']['label'] == 'On Track'
-    assert out['score_status']['reason'] == 'Every session due so far is done; no lift or skill trend yet.'
-    assert out['scope_label'] == '2 of 2 sessions so far · week 1'
+    assert 'no score' in out['score_breakdown']['summary'] and '2 of 2' in out['score_breakdown']['summary']
+    assert out['compliance_pct'] == 100 and out['scope_label'] == '2 of 2 sessions so far · week 1', \
+        'completion stays beside the score'
     assert out['flags'] == [] and out['recommendations'] == []
     f = out['exercise_findings'][0]
     assert f['description'].startswith('Movements practised') and f['waiting_for'].startswith('1 of 2')
     assert out['pending_measures'] == [], 'a measure with a point is a finding, not waiting'
 
 
-def test_measured_trends_join_the_score():
-    out = rv.explain({'compliance_pct': 100, 'exercise_findings': [
-        _finding('a', 'on_track'), _finding('b', 'insufficient_data')]}, _doc(4, 4, weeks=2))
-    assert out['overall_score'] == round(100 * 0.4 + 80 * 0.6)
-    assert [p['points'] for p in out['score_breakdown']['parts']] == [40, 48]
+def test_the_score_is_the_trends():
+    out = rv.explain({'compliance_pct': 25, 'exercise_findings': [
+        _finding('a', 'on_track'), _finding('b', 'insufficient_data')]}, _doc(1, 4, weeks=2))
+    assert out['overall_score'] == 80, 'sessions done do not move it'
+    assert out['score_breakdown']['basis'] == 'trends'
+    assert [p['points'] for p in out['score_breakdown']['parts']] == [80]
     assert '1 still collecting data' in out['score_breakdown']['summary']
 
 
 def test_status_names_what_is_stalled():
     out = rv.explain({'compliance_pct': 50, 'exercise_findings': [
         _finding('swing', 'stalled', 'Two-hand swing'), _finding('press', 'on_track', 'Press')]}, _doc(2, 4, weeks=2))
-    assert out['overall_score'] == round(50 * 0.4 + 50 * 0.6)          # stalled 20, on track 80
+    assert out['overall_score'] == 50                                   # stalled 20, on track 80
     assert out['score_status']['id'] == 'mixed'
-    assert out['score_status']['reason'] == '2 of 4 sessions due so far are done; 1 stalled (Two-hand swing), 1 on track.'
+    assert out['score_status']['reason'] == '1 stalled (Two-hand swing), 1 on track; 2 of 4 sessions due so far are done.'
     assert [b['min'] for b in out['score_status']['bands']] == [70, 45, 0]
 
 

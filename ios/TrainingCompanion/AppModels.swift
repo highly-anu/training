@@ -998,7 +998,9 @@ struct ExerciseFinding: Codable, Identifiable {
 /// How the review's score was made: sessions done, plus lift and skill
 /// trends once any measure has one.
 struct ScoreBreakdown: Codable, Equatable {
-    /// "compliance_only" | "compliance_and_trends" | "not_started"
+    /// "trends" (the score is the measures' trends) | "collecting" (none has a
+    /// trend yet: no score) | "not_started"; older servers sent
+    /// "compliance_only" | "compliance_and_trends"
     let basis: String
     let summary: String
     let parts: [ScorePart]
