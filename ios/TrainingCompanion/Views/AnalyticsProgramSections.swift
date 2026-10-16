@@ -34,9 +34,12 @@ struct MethodologySectionView: View {
                     if let card {
                         Button { sheet = card } label: {
                             Image(systemName: "book")
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                                 .accessibilityLabel("About this methodology")
                         }
-                        .font(.caption)
+                        .font(.subheadline)
+                        .padding(.vertical, -12)
                     }
                 }
                 HStack(spacing: 10) {

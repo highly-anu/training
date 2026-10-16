@@ -105,7 +105,7 @@ struct AnalyticsProgramTab: View {
                 let tags = Self.frameTags(frame)
                 if !tags.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(tags, id: \.text) { tag in
+                        ForEach(tags, id: \.icon) { tag in
                             Label(tag.text, systemImage: tag.icon)
                                 .font(.caption).foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -698,7 +698,7 @@ private struct LoadCard: View {
                     if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
                 }
                 if let readiness = load.readiness {
-                    Label("Readiness \(readiness.score)", systemImage: "heart.circle")
+                    Label("Readiness \(readiness.score) · \(readiness.status)", systemImage: "heart.circle")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }

@@ -117,8 +117,8 @@ struct ExerciseProgressCardView: View {
                 }
             }
             if let last = item.history.last, last.hrAvg != nil || last.hrMax != nil {
-                Label([last.hrAvg.map(String.init), last.hrMax.map(String.init)]
-                        .compactMap { $0 }.joined(separator: "/") + " bpm", systemImage: "heart.fill")
+                Label([last.hrAvg.map { "\($0) avg" }, last.hrMax.map { "\($0) max" }]
+                        .compactMap { $0 }.joined(separator: " · ") + " bpm", systemImage: "heart.fill")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             if let change = finding?.changeSummary, status != "insufficient_data" {

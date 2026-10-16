@@ -732,7 +732,11 @@ struct TodayView: View {
             sectionLabel("Progress")
             if let method = appState.programAnalytics?.methodologies.first,
                let summary = method.headlineSummary {
-                progressCard(summary)
+                // A blend says whose measure the headline is; a single
+                // methodology is already named in the header.
+                let blend = (appState.programAnalytics?.methodologies.count ?? 0) > 1
+                progressCard(summary, methodology: blend ? appState.programAnalytics?.frame?.philosophies
+                                .first { $0.id == method.philosophy }?.name : nil)
             } else if appState.isLoadingProgramAnalytics {
                 todayNote(icon: nil, title: "Measuring the program…")
             } else {
@@ -741,7 +745,7 @@ struct TodayView: View {
         }
     }
 
-    private func progressCard(_ h: ProgramAnalytics.HeadlineSummary) -> some View {
+    private func progressCard(_ h: ProgramAnalytics.HeadlineSummary, methodology: String?) -> some View {
         let color = AnalyticsStatusStyle.color(h.status)
         let trendIcon = h.trendDirection == "improving" ? "arrow.up.right"
             : h.trendDirection == "declining" ? "arrow.down.right" : "arrow.right"
@@ -765,6 +769,9 @@ struct TodayView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                }
+                if let methodology {
+                    Text(methodology).font(.caption2).foregroundStyle(.secondary)
                 }
                 if let text = h.text {
                     Text(text)

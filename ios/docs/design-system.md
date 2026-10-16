@@ -1045,13 +1045,12 @@ and measures — the web's Progress tab:
   exercise picker, the actual-against-expected chart (actual green, expected
   indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
   and benchmark-level entries render their own bodies; entries the program
-  does not schedule are one "Not in this program" line.
+  does not schedule fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; a rung ladder per standard filled to the
   level reached.
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
-  "N in this program · N so far · N with data", a segmented filter on the
-  three (the first that shows something until the athlete picks), and a card
+  a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
   sparkline, HR from a linked workout, the finding's change line. "No trend
   yet" when logged but unmeasured, "Not tracked" when nothing is logged.
@@ -1211,8 +1210,8 @@ Four cards, each an `AnalyticsCard` (§6.15):
 - *Lifts across blocks*: a chip row of every lift (and currency — rounds,
   minutes, km) with points in the window; the chart plots the heaviest
   completed set's est-1RM per session over real dates with the blocks as
-  `RectangleMark` bands; a deload point is hollow. Under it, the trend in
-  words and one row per block: sessions, first → last, best, Δ.
+  `RectangleMark` bands; a deload point is hollow. Under it, the trend as
+  an arrow and %/session, and one row per block: sessions, first → last, best, Δ.
 - *Load across blocks*: weekly TRIMP as bars coloured by block; hidden
   when no workout carried load.
 - *Standards over time*: each standard's PR history as "value (level, date)
@@ -1338,7 +1337,8 @@ the measures' trends alone; before any has one there is no score, and the card
 says why under "Not enough data yet".
 
 - **The words are the server's** (`score_breakdown`, `score_status`,
-  `scope_label`, `pending_measures`, `purpose` from `src/analytics/review.py`),
+  `scope_label`, `pending_measures` from `src/analytics/review.py`; the phone
+  leaves out `purpose`, the intro sentence, since 2026-10-16),
   so the web says the same; the phone only lays them out. Older servers send
   none of them and the card falls back to the thresholds alone.
 - **The reason is always shown; the sum is folded.** One line under the band

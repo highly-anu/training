@@ -278,6 +278,10 @@ struct SessionDetailView: View {
                         Label("Swap", systemImage: "arrow.left")
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(canEditProgram && rows.contains(where: { canSwap($0.assignment) })
+                    ? "Tap an exercise for cues. Swipe right to log it, left to swap it."
+                    : "Tap an exercise for cues. Swipe right to log it.")
             }
         }
     }
