@@ -95,13 +95,13 @@ struct MainTabView: View {
                 .tabItem { Label("Program", systemImage: "calendar") }
                 .tag(AppRouter.Tab.program)
 
-            LogView()
-                .tabItem { Label("Log", systemImage: "list.clipboard") }
-                .tag(AppRouter.Tab.log)
-
             AnalyticsView()
                 .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }
                 .tag(AppRouter.Tab.analytics)
+
+            LogView()
+                .tabItem { Label("Log", systemImage: "list.clipboard") }
+                .tag(AppRouter.Tab.log)
 
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person") }

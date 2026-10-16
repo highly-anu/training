@@ -906,6 +906,33 @@ def test_sections() -> None:
     check('%1RM against the slot target', it['pct1rm']['rows'][0]['targetPct'] == 80.0
           and abs(it['pct1rm']['rows'][0]['pctOf1rm'] - round(100 / (100 * (1 + 0.0333 * 5)) * 100, 1)) < 0.2, str(it['pct1rm']['rows'][0]))
 
+    # Per zone, over completed sessions only: the matched Saturday run plans a
+    # Zone 2 hour and records 66 minutes from its heart rate; the Saturday
+    # completed without a workout recorded no HR and plans nothing.
+    prog['weeks'][0]['schedule']['Saturday'][0]['archetype']['slots'] = [
+        {'role': 'long', 'intensity': 'zone2', 'duration_minutes': 60}]
+    prog['weeks'][1]['schedule']['Saturday'][0]['archetype']['slots'] = [
+        {'role': 'long', 'intensity': 'zone2', 'duration_minutes': 60}]
+    zs = {z['zone']: z for z in intensity_mod.build(ctx)['zones']}
+    check('zones: the Zone 2 slot plans its hour in Z2, not spread over Z1-2',
+          zs.get('z2', {}).get('plannedMinutes') == 60
+          and ('z1' not in zs or zs['z1']['plannedMinutes'] == 0), str(zs))
+    check('zones: recorded minutes are the run\'s 66, and the unmatched Saturday plans nothing',
+          sum(z['actualMinutes'] for z in zs.values()) == 66
+          and sum(z['plannedMinutes'] for z in zs.values()) == 60, str(zs))
+    check('zones: HR zones only — the completed strength sessions are not a zone', set(zs) <= {'z1', 'z2', 'z3', 'z4', 'z5'}, str(zs))
+    check('zones: a zone with nothing on either side is left out',
+          all(z['plannedMinutes'] or z['actualMinutes'] for z in zs.values()), str(zs))
+    check('slot zones: zoneN is that zone, zoneA_B the range, words the band, loads none',
+          (intensity_mod._slot_zones('zone2'), intensity_mod._slot_zones('zone4_5'),
+           intensity_mod._slot_zones('light'), intensity_mod._slot_zones('heavy')) == ([2], [4, 5], [1, 2], []))
+    check('slot minutes: the assignments\' prescribed time, else the slot\'s, else sets × (work + rest)',
+          (intensity_mod._slot_minutes({'duration_minutes': 30}, [{'load': {'duration_minutes': 42}}]),
+           intensity_mod._slot_minutes({'duration_minutes': 30}, [{'load': {}}]),
+           intensity_mod._slot_minutes({'sets': 8, 'work_sec': 30, 'rest_sec': 30}, [])) == (42.0, 30.0, 8.0))
+    check('slot minutes: an authored range or a non-dict load is 0, not an error',
+          intensity_mod._slot_minutes({'duration_minutes': '20-30'}, [{'load': 'x'}]) == 0.0)
+
     mv = movement_mod.build(ctx, specs)
     # The fixture's press carries the squat pattern too, so the pattern counts
     # every set of both: (3+3)+3 per week × 3 elapsed weeks = 27 planned; logged

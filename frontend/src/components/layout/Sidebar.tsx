@@ -26,8 +26,9 @@ interface NavGroup {
 }
 
 // Grouped by the journey (docs/information-architecture.md): Train is where
-// the athlete lives day to day, Insight interprets it, Library is reference,
-// You is configuration. The builder is a flow launched from Program, Home's
+// the athlete lives day to day — the plan, how it is going, the record — in
+// the phone's tab order (Analytics before Log since 2026-10-16, which folded
+// the Insight group into Train). Library is reference, You is configuration. The builder is a flow launched from Program, Home's
 // empty state and Explore — not a place of its own.
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -35,12 +36,9 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/', label: 'Today', icon: House, end: true },
       { to: '/program', label: 'Program', icon: Calendar },
+      { to: '/analytics', label: 'Analytics', icon: BarChart3 },
       { to: '/log', label: 'Log', icon: ClipboardList },
     ],
-  },
-  {
-    label: 'Insight',
-    items: [{ to: '/analytics', label: 'Analytics', icon: BarChart3 }],
   },
   {
     label: 'Library',

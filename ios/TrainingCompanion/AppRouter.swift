@@ -15,10 +15,11 @@ import SwiftUI
 /// site (§1.7 of `ios/docs/design-system.md`).
 @MainActor
 final class AppRouter: ObservableObject {
-    /// The four root tabs, in `MainTabView` order. `.dashboard` is the Today
+    /// The five root tabs, in `MainTabView` order — Analytics before Log
+    /// since 2026-10-16, as in the web's sidebar. `.dashboard` is the Today
     /// tab (the case name predates the rename; the widgets deep-link to it).
     enum Tab: Int, Hashable {
-        case dashboard, program, log, analytics, profile
+        case dashboard, program, analytics, log, profile
     }
 
     @Published var tab: Tab = .dashboard

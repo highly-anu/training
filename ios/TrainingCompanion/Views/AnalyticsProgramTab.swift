@@ -9,6 +9,7 @@ import Charts
 struct AnalyticsProgramTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
+    @State private var methodologySheet: PhilosophyCard?
 
     var body: some View {
         Group {
@@ -31,6 +32,10 @@ struct AnalyticsProgramTab: View {
         // Reload whenever the stored program changes revision; the server
         // caches the document, so a visit with nothing new is one cheap read.
         .task(id: appState.serverProgram?.revision) { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
+        .task { await appState.loadPhilosophiesIfNeeded() }
+        .sheet(item: $methodologySheet) { philosophy in
+            PhilosophyDetailSheet(philosophy: philosophy)
+        }
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }
@@ -82,8 +87,12 @@ struct AnalyticsProgramTab: View {
     private func frameCard(_ frame: ProgramAnalytics.Frame) -> some View {
         AnalyticsCard(header: "Program") {
             VStack(alignment: .leading, spacing: 10) {
-                Text(frame.philosophies.map(\.name).joined(separator: " + "))
-                    .font(.subheadline).fontWeight(.semibold)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(frame.philosophies.map(\.name).joined(separator: " + "))
+                        .font(.subheadline).fontWeight(.semibold)
+                    Spacer()
+                    methodologyButton
+                }
                 if let phase = frame.phase {
                     HStack(spacing: 6) {
                         Text(phase.displayName)
@@ -122,6 +131,27 @@ struct AnalyticsProgramTab: View {
                     .padding(.top, 2)
                 }
             }
+        }
+    }
+
+    /// The book: the methodology's description (§6.18). A blend offers one
+    /// entry per source, as Program ▸ Overview's row does.
+    @ViewBuilder
+    private var methodologyButton: some View {
+        let cards = appState.programMethodologies()
+        let book = Image(systemName: "book")
+            .font(.subheadline)
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+            .accessibilityLabel("About this methodology")
+        if cards.count == 1, let card = cards.first {
+            Button { AppHaptics.light(); methodologySheet = card } label: { book }
+                .padding(.vertical, -12)
+        } else if cards.count > 1 {
+            Menu {
+                ForEach(cards) { card in Button(card.name) { methodologySheet = card } }
+            } label: { book }
+                .padding(.vertical, -12)
         }
     }
 
@@ -325,12 +355,6 @@ private struct IntensityCard: View {
         var id: String { "\(week)-\(zone)" }
     }
 
-    /// The server's bucket keys, labels and the chart's colours.
-    private static let buckets: [(key: String, label: String, color: Color)] = [
-        ("zone1_2_pct", "Z1–2", .green), ("zone3_pct", "Z3", .yellow),
-        ("zone4_5_pct", "Z4–5", .orange), ("max_effort_pct", "Max effort", .red),
-    ]
-
     /// Minutes per bucket per week. The week fields carry `_pct` in their
     /// keys but hold minutes; this chart called them "Share" and drew them
     /// against a % axis until 2026-10-16.
@@ -343,47 +367,27 @@ private struct IntensityCard: View {
         }
     }
 
+    /// A zone's colour, easy to hard.
+    private static func zoneColor(_ zone: String) -> Color {
+        switch zone {
+        case "z1": return .blue
+        case "z2": return .green
+        case "z3": return .yellow
+        case "z4": return .orange
+        default: return .red
+        }
+    }
+
     var body: some View {
         AnalyticsCard(header: "Intensity split") {
+            AnalyticsStatusBadge(status: intensity.status)
+        } content: {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Spacer()
-                    AnalyticsStatusBadge(status: intensity.status)
-                }
                 if let coverage = intensity.coverage { CoverageNoticeView(coverage: coverage) }
-                if !intensity.weeks.isEmpty {
-                    Chart(slices) { slice in
-                        BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
-                            .foregroundStyle(by: .value("Zone", slice.zone))
-                    }
-                    .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
-                                                "Z4–5": Color.orange, "Max effort": Color.red])
-                    .chartYAxis {
-                        AxisMarks(position: .leading) { value in
-                            AxisValueLabel {
-                                if let v = value.as(Double.self) {
-                                    Text("\(Int(v)) min").font(.caption2).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    .chartLegend(position: .bottom, spacing: 6)
-                    .frame(height: 160)
-                }
-                if let current = intensity.byFramework.last, let planned = current.plannedPct,
-                   let dev = current.deviationPts {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(Self.buckets, id: \.key) { b in
-                            let d = dev[b.key] ?? 0
-                            HStack(spacing: 4) {
-                                RoundedRectangle(cornerRadius: 2).fill(b.color).frame(width: 8, height: 8)
-                                Text("\(b.label) \(AnalyticsProgramTab.number((current.actualPct[b.key] ?? nil) ?? 0))% vs \(AnalyticsProgramTab.number(planned[b.key] ?? 0))%")
-                                Text("(\(d > 0 ? "+" : "")\(AnalyticsProgramTab.number(d)))")
-                                    .foregroundStyle(abs(d) > 10 ? Color.yellow : Color.secondary)
-                            }
-                        }
-                    }
-                    .font(.caption2).foregroundStyle(.secondary)
+                if !intensity.zones.isEmpty {
+                    zoneComparison(intensity.zones)
+                } else if !intensity.weeks.isEmpty {
+                    weeklyChart
                 }
                 if let pct = intensity.pct1rm, let mean = pct.meanPct {
                     Label("\(AnalyticsProgramTab.number(mean))% 1RM · \(pct.sessions) lifts", systemImage: "scalemass")
@@ -392,6 +396,80 @@ private struct IntensityCard: View {
                 }
             }
         }
+    }
+
+    /// One row per zone in minutes: what the completed sessions planned as an
+    /// outline, what their heart rate recorded filled over it, both against
+    /// the largest value so the longest bar spans the track.
+    private func zoneComparison(_ rows: [ProgramAnalytics.Intensity.Zone]) -> some View {
+        let top = max(rows.map { max($0.actualMinutes, $0.plannedMinutes) }.max() ?? 1, 1)
+        return VStack(alignment: .leading, spacing: 10) {
+            ForEach(rows) { row in
+                let color = Self.zoneColor(row.zone)
+                HStack(spacing: 8) {
+                    Text(row.label)
+                        .font(.caption).fontWeight(.medium)
+                        .frame(width: 64, alignment: .leading)
+                        .lineLimit(1)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            if row.plannedMinutes > 0 {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .strokeBorder(color, lineWidth: 1.5)
+                                    .frame(width: max(geo.size.width * row.plannedMinutes / top, 6))
+                            }
+                            if row.actualMinutes > 0 {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(color.opacity(0.85))
+                                    .frame(width: max(geo.size.width * row.actualMinutes / top, 4))
+                                    .padding(.vertical, 3)
+                            }
+                        }
+                    }
+                    .frame(height: 18)
+                    Text("\(AnalyticsProgramTab.number(row.actualMinutes))/\(AnalyticsProgramTab.number(row.plannedMinutes)) min")
+                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                        .frame(width: 72, alignment: .trailing)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(row.label): \(AnalyticsProgramTab.number(row.actualMinutes)) minutes recorded, \(AnalyticsProgramTab.number(row.plannedMinutes)) planned")
+            }
+            HStack(spacing: 14) {
+                HStack(spacing: 4) {
+                    RoundedRectangle(cornerRadius: 2).fill(Color.secondary).frame(width: 14, height: 8)
+                    Text("Recorded")
+                }
+                HStack(spacing: 4) {
+                    RoundedRectangle(cornerRadius: 2).strokeBorder(Color.secondary, lineWidth: 1.5)
+                        .frame(width: 14, height: 10)
+                    Text("Planned")
+                }
+            }
+            .font(.caption2).foregroundStyle(.secondary)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// Minutes per bucket per week — only from an older server, which sends
+    /// no per-zone planned and recorded minutes.
+    private var weeklyChart: some View {
+        Chart(slices) { slice in
+            BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
+                .foregroundStyle(by: .value("Zone", slice.zone))
+        }
+        .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
+                                    "Z4–5": Color.orange, "Max effort": Color.red])
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisValueLabel {
+                    if let v = value.as(Double.self) {
+                        Text("\(Int(v)) min").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .chartLegend(position: .bottom, spacing: 6)
+        .frame(height: 160)
     }
 }
 
@@ -412,27 +490,27 @@ struct ProgressEntryCard: View {
     private var series: [ProgramAnalytics.SeriesPoint] { exercise?.series ?? entry.series }
     private var expected: [ProgramAnalytics.ExpectedPoint] { exercise?.expected ?? entry.expected }
 
+    /// An `AnalyticsCard` like every other section's: the measure's name as
+    /// the header with its status beside it; a star marks the headline.
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 5) {
-                        if entry.headline {
-                            Image(systemName: "star.fill").font(.caption2).foregroundStyle(Color.accentColor)
-                                .accessibilityLabel("Headline")
-                        }
-                        Text(entry.label).font(.subheadline).fontWeight(.semibold)
+        AnalyticsCard(header: entry.label) {
+            AnalyticsStatusBadge(status: status)
+        } content: {
+            if entry.headline || (trend.map { $0.direction != "insufficient_data" } ?? false) {
+                HStack(spacing: 10) {
+                    if entry.headline {
+                        Label("Headline", systemImage: "star.fill")
+                            .foregroundStyle(Color.accentColor)
                     }
                     if let t = trend, t.direction != "insufficient_data" {
                         Label("\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt",
                               systemImage: t.direction == "improving" ? "arrow.up.right"
                                 : t.direction == "declining" ? "arrow.down.right" : "arrow.right")
-                            .font(.caption2).foregroundStyle(.secondary)
+                            .foregroundStyle(.secondary)
                             .accessibilityLabel("\(t.direction), \(AnalyticsProgramTab.number(t.slopePct)) percent per point")
                     }
                 }
-                Spacer()
-                AnalyticsStatusBadge(status: status)
+                .font(.caption2)
             }
             if let coverage = entry.coverage { CoverageNoticeView(coverage: coverage) }
 
@@ -456,13 +534,6 @@ struct ProgressEntryCard: View {
                 }
             }
         }
-        .padding(AppMetrics.cardPadding)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius)
-                .strokeBorder(entry.headline ? Color.accentColor.opacity(0.4) : Color.clear, lineWidth: 1)
-        )
     }
 
     /// A bodyweight lift beside a loaded one: each exercise says its own unit.

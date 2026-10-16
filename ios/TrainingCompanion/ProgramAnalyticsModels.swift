@@ -494,6 +494,16 @@ struct ProgramAnalytics: Decodable {
             let plannedPct: [String: Double]?
             let deviationPts: [String: Double]?
         }
+        /// One HR zone, over the completed sessions:
+        /// the minutes their slots planned in it and the minutes their heart
+        /// rate recorded. Only zones with either.
+        struct Zone: Decodable, Identifiable {
+            let zone: String               // z1 … z5
+            let label: String
+            let plannedMinutes: Double
+            let actualMinutes: Double
+            var id: String { zone }
+        }
         /// Working sets as a share of estimated 1RM — max-effort frameworks only.
         struct Pct1RM: Decodable {
             let sessions: Int
@@ -507,9 +517,11 @@ struct ProgramAnalytics: Decodable {
         let weeks: [Week]
         let maxDeviationPts: Double?
         let byFramework: [ByFramework]
+        /// Empty from an older server, which sent only the buckets.
+        let zones: [Zone]
         let pct1rm: Pct1RM?
 
-        private enum CodingKeys: String, CodingKey { case status, coverage, maxHr, weeks, maxDeviationPts, byFramework, pct1rm }
+        private enum CodingKeys: String, CodingKey { case status, coverage, maxHr, weeks, maxDeviationPts, byFramework, zones, pct1rm }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             status = (try? c.decodeIfPresent(String.self, forKey: .status)) ?? "insufficient_data"
@@ -517,6 +529,7 @@ struct ProgramAnalytics: Decodable {
             maxHr = try? c.decodeIfPresent(Int.self, forKey: .maxHr)
             weeks = ((try? c.decodeIfPresent([Lossy<Week>].self, forKey: .weeks)) ?? [])?.compactMap(\.value) ?? []
             byFramework = ((try? c.decodeIfPresent([Lossy<ByFramework>].self, forKey: .byFramework)) ?? [])?.compactMap(\.value) ?? []
+            zones = ((try? c.decodeIfPresent([Lossy<Zone>].self, forKey: .zones)) ?? [])?.compactMap(\.value) ?? []
             pct1rm = try? c.decodeIfPresent(Pct1RM.self, forKey: .pct1rm)
             maxDeviationPts = try? c.decodeIfPresent(Double.self, forKey: .maxDeviationPts)
         }

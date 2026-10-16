@@ -140,7 +140,9 @@ React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanSt
 in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — rename or move
 a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
-History via `?tab=`; the builder is the flow `/program/new`), Log `/log` (Workouts ·
+History via `?tab=`; the builder is the flow `/program/new`), Analytics `/analytics`
+(Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks;
+before Log since 2026-10-16, which folded the old Insight group into Train), Log `/log` (Workouts ·
 Linking · Sessions, Import as a sheet; Linking is one card per day, workouts beside
 sessions, suggestions scored within the day only, drag a workout onto any session to
 link across days — `lib/linking.ts`, `components/log/LinkingTab.tsx`; `?tab=suggestions`
@@ -149,8 +151,7 @@ oldest workout, and a date an earlier program has rows on is that program's day,
 the server matcher's index. Every link sends `sessionUid` (the server keeps a given uid
 only if it is planned for the athlete, else resolves the key on the workout's date, which
 finds nothing across days), and one into an earlier program skips the completion
-side effects, whose key would tick this program's session of that name; `/log/:workoutId` is WorkoutDetail). Insight — Analytics
-`/analytics` (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks). Library — Explore
+side effects, whose key would tick this program's session of that name; `/log/:workoutId` is WorkoutDetail). Library — Explore
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
 heart-rate zones · Equipment · Injuries · Schedule · Benchmarks; `heartrate` aliases Athlete)
@@ -293,7 +294,7 @@ is the source of the patterns, not the neighbouring screen:
   — the drawing rules, `ios/tools/make_*_symbol.py` + `preview_symbol.swift`, and
   `Image(symbol:)`, without which a custom name draws nothing.
 - **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
-- **iOS tabs**: Today · Program · Log · Analytics · Profile (`AppRouter.Tab`); Settings
+- **iOS tabs**: Today · Program · Analytics · Log · Profile (`AppRouter.Tab`); Settings
   (connections, devices & sync, notifications, appearance, account) is pushed from
   Profile's gear, never a tab — design-system §6.13. The exercise reference on the phone
   is `ExerciseDetailSheet` (§6.14), presented from any session row and from the swap

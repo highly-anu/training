@@ -1774,8 +1774,7 @@ phone keeps the same split with Settings pushed from Profile's gear.
 
 | Group | Items | Why it is a group |
 |---|---|---|
-| Train | Home `/` · Program `/program` · Log `/log` | Where the athlete lives day to day: today, the plan, the record |
-| Insight | Analytics `/analytics` | Interprets what Train recorded |
+| Train | Home `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
 | Library | Explore `/explore` | Reference and inspiration; its CTAs start the builder |
 | You | Profile `/profile` | Configuration — visited to change something |
 | Dev | Dev Lab `/dev` | Developer tooling; dev builds only (`src/lib/featureFlags.ts`) |

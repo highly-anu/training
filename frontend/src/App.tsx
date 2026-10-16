@@ -72,10 +72,9 @@ export default function App() {
                     <Route path="program/history" element={<LegacyRedirect to="/program" params={{ tab: 'history' }} />} />
                     <Route path="program/history/:versionId" element={<ProgramHistoryDetail />} />
                     <Route path="program/:week/:day" element={<SessionDetail />} />
+                    <Route path="analytics" element={<WorkoutAnalytics />} />
                     <Route path="log" element={<Log />} />
                     <Route path="log/:workoutId" element={<WorkoutDetail />} />
-                    {/* Insight */}
-                    <Route path="analytics" element={<WorkoutAnalytics />} />
                     {/* Library */}
                     <Route path="explore" element={<Explore />} />
                     {/* You */}
