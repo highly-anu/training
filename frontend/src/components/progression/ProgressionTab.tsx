@@ -9,6 +9,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { fetchHealthSnapshot } from '@/api/health'
 import { ExerciseProgressCard } from './ExerciseProgressCard'
 import { MatchedSessionCard } from './MatchedSessionCard'
+import { ProgressSummary } from './ProgressSummary'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
@@ -17,7 +18,6 @@ import { parseSessionKey } from '@/lib/sessionKeys'
 import type { ExerciseFinding, ProgressionAdjustment } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
 
-type Period = 'weekly' | 'biweekly'
 type SessionFilter = 'all' | 'linked'
 
 const DAY_ORDER: Record<string, number> = {
@@ -26,7 +26,9 @@ const DAY_ORDER: Record<string, number> = {
 }
 
 export function ProgressionTab() {
-  const [period, setPeriod] = useState<Period>('weekly')
+  // The review's period changes nothing it computes — compliance covers the
+  // program so far (its scope_label says so) — so there is no toggle.
+  const period = 'weekly'
   const [showAll, setShowAll] = useState(false)
   const [showAllSessions, setShowAllSessions] = useState(false)
   const [sessionFilter, setSessionFilter] = useState<SessionFilter>('all')
@@ -128,54 +130,28 @@ export function ProgressionTab() {
   return (
     <div className="space-y-6">
 
-      {/* Controls row: period toggle · exercise filter · compliance */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {(['weekly', 'biweekly'] as Period[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  'px-3 py-1 text-xs rounded border transition-colors capitalize',
-                  p === period
-                    ? 'bg-primary/15 border-primary/40 text-primary'
-                    : 'border-border text-muted-foreground hover:bg-muted',
-                )}
-              >
-                {p === 'biweekly' ? 'Bi-weekly' : 'Weekly'}
-              </button>
-            ))}
-          </div>
+      {review && <ProgressSummary review={review} />}
 
-          {hiddenCount > 0 && (
-            <div className="flex items-center gap-1">
-              {(['tracked', 'all'] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setShowAll(v === 'all')}
-                  className={cn(
-                    'px-3 py-1 text-xs rounded border transition-colors capitalize',
-                    (v === 'all') === showAll
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {v === 'tracked' ? `Tracked (${trackedExercises.length})` : `All (${allExercises.length})`}
-                </button>
-              ))}
-            </div>
-          )}
+      {/* Exercise filter */}
+      {hiddenCount > 0 && (
+        <div className="flex items-center gap-1">
+          {(['tracked', 'all'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setShowAll(v === 'all')}
+              className={cn(
+                'px-3 py-1 text-xs rounded border transition-colors capitalize',
+                (v === 'all') === showAll
+                  ? 'bg-primary/15 border-primary/40 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted',
+              )}
+            >
+              {v === 'tracked' ? `Tracked (${trackedExercises.length})` : `All (${allExercises.length})`}
+            </button>
+          ))}
         </div>
-
-        {review && (
-          <span className="text-xs text-muted-foreground">
-            {review.compliance_pct}% completed · {review.period_key}
-          </span>
-        )}
-      </div>
+      )}
 
       {/* Main content */}
       {isLoading ? (
@@ -311,6 +287,12 @@ export function ProgressionTab() {
       {/* Suggested adjustments — applied to the stored program from this week on */}
       {adjustments.length > 0 && (
         <AdjustmentList adjustments={adjustments} />
+      )}
+
+      {review?.overall_score != null && recommendations.length === 0 && adjustments.length === 0 && (
+        <p className="border-t border-border/40 pt-4 text-[11px] text-muted-foreground">
+          Nothing to change — keep going.
+        </p>
       )}
 
       {/* Recommendations (only when sufficient data) */}

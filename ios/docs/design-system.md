@@ -1281,3 +1281,28 @@ one `line.3.horizontal.decrease.circle` button.
   menu is visible and one tap clears it (§6.11).
 - The section picker (§6.8) stays the only band under the title. Analytics
   keeps `AnalyticsPeriodPicker`: there the period is the only filter.
+
+### 6.25 Score Explanation
+
+**A score says what it is made of and which band it is in.**
+`ScoreExplanation` in `Views/ProgressionView.swift`, with the band from
+`ProgressionScore` (`ProgressionScore.swift`), which Today's Progression card
+uses too. Analytics ▸ Progress read 70 "On Track" in week 1 for an athlete who
+had done every session: compliance × 0.4 plus a neutral 50 × 0.6 for a measure
+with no data, a number nobody could reconstruct.
+
+- **The words are the server's** (`score_breakdown`, `score_status`,
+  `scope_label`, `pending_measures`, `purpose` from `src/analytics/review.py`),
+  so the web says the same; the phone only lays them out. Older servers send
+  none of them and the card falls back to the thresholds alone.
+- **The reason is always shown; the sum is folded.** One line under the band
+  ("Every session due so far is done; no lift or skill trend yet") answers the
+  common question; "How is this scored?" opens the parts and the three bands,
+  the current one bold. A single part (sessions only) is the summary already
+  and gets no sum row.
+- **What the percentage covers sits beside it** ("2 of 2 sessions so far ·
+  week 1") — it used to say "Weekly", which it never was.
+- **Nothing waiting is said.** A measure with no data is listed under Waiting
+  for data with what starts it; an empty review says "Nothing to change — keep
+  going" instead of ending in blank space.
+

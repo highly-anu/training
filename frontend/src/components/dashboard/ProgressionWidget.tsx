@@ -4,8 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fetchProgressionReview } from '@/api/progression'
 import { STATUS_STYLES } from '@/lib/statusColors'
-
-const STATUS_LABEL = { green: 'On Track', yellow: 'Mixed', red: 'Behind' } as const
+import { scoreBand } from '@/lib/progressionScore'
 
 /**
  * The headline of the weekly progression review, as a card whose whole
@@ -19,7 +18,8 @@ export function ProgressionWidget() {
   })
 
   const score = review?.overall_score ?? null
-  const status = score == null ? null : score >= 70 ? 'green' : score >= 45 ? 'yellow' : 'red'
+  const band = scoreBand(review)
+  const status = band?.level ?? null
   const styles = STATUS_STYLES[status ?? 'red']
   const recommendation = review?.recommendations?.[0] ?? null
 
@@ -53,13 +53,16 @@ export function ProgressionWidget() {
             <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>{Math.round(score)}</span>
             <div className="mb-0.5 space-y-0.5">
               <span className={cn('inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold', styles.badge)}>
-                {STATUS_LABEL[status]}
+                {band?.label}
               </span>
               <p className="text-[10px] text-muted-foreground">
-                {Math.round(review?.compliance_pct ?? 0)}% compliance
+                {review?.scope_label ?? `${Math.round(review?.compliance_pct ?? 0)}% compliance`}
               </p>
             </div>
           </div>
+          {review?.score_status?.reason && (
+            <p className="text-[11px] text-muted-foreground leading-snug">{review.score_status.reason}</p>
+          )}
           {recommendation && (
             <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">{recommendation}</p>
           )}

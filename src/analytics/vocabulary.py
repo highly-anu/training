@@ -16,7 +16,7 @@ from __future__ import annotations
 # field id -> (label, where it is captured)
 NEEDS: dict[str, dict] = {
     'sets':       {'label': 'Reps and kg per set',
-                   'where': 'Session logger on the web, or the watch'},
+                   'where': 'The session logger on the web or the phone, or the watch'},
     'rpe':        {'label': 'RPE on each set',
                    'where': 'Session logger (RPE field)'},
     'rpe_target': {'label': 'A prescribed RPE on the slot',
