@@ -15,7 +15,6 @@ struct LogLinkingTab: View {
     @State private var showAll = false
     /// The workout being linked by hand, while the athlete picks its session.
     @State private var picking: LinkWorkout?
-    @State private var busy = false
 
     var body: some View {
         let all = appState.linking?.days ?? []
@@ -42,7 +41,6 @@ struct LogLinkingTab: View {
                         Section { rows(for: day) } header: { header(for: day) }
                     }
                 }
-                .disabled(busy)
             }
         }
         .task { if appState.linking == nil { await appState.loadLinking() } }
@@ -234,13 +232,11 @@ struct LogLinkingTab: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// The change shows at once (AppState applies it before the request);
+    /// the list stays live while the server's reload catches up.
     private func act(_ work: @escaping () async -> Void) {
         AppHaptics.light()
-        busy = true
-        Task {
-            await work()
-            busy = false
-        }
+        Task { await work() }
     }
 
     // MARK: - Text

@@ -256,6 +256,7 @@ final class AppState: ObservableObject {
     /// linked — its key would tick this program's session of that name.
     func link(workoutId: String, to session: LinkSession) async {
         guard let api else { return }
+        if let doc = linking { linking = Linking.applyingLink(doc, workoutId: workoutId, session: session) }
         if !session.historical, let workout = importedWorkouts.first(where: { $0.id == workoutId }) {
             try? await matchAndComplete(workout: workout, sessionKey: session.legacyKey ?? session.key,
                                         session: session)
@@ -271,6 +272,7 @@ final class AppState: ObservableObject {
 
     func unlink(workoutId: String) async {
         guard let api else { return }
+        if let doc = linking { linking = Linking.applyingUnlink(doc, workoutId: workoutId) }
         try? await api.saveWorkoutMatch(Linking.unlinkPayload(workoutId: workoutId))
         workoutMatches[workoutId] = WorkoutMatch(workoutId: workoutId, sessionKey: "", confidence: "rejected")
         await loadLinking()
@@ -279,6 +281,7 @@ final class AppState: ObservableObject {
     func dismissLink(workoutId: String, sessionKey: String) async {
         dismissedLinks.insert(Linking.dismissKey(workoutId: workoutId, sessionKey: sessionKey))
         UserDefaults.standard.set(Array(dismissedLinks), forKey: "linking.dismissed")
+        if let doc = linking { linking = Linking.applyingDismiss(doc, workoutId: workoutId, sessionKey: sessionKey) }
         await loadLinking()
     }
 
