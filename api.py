@@ -3095,7 +3095,7 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
 
 
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
-                         spec_level: int = 0) -> dict:
+                         spec_level: int = 0, last: dict | None = None) -> dict:
     """One stored session in the watch's shape.
 
     With spec_level >= 1 the session also says which package owns it and
@@ -3129,6 +3129,9 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
         )
         for e, key in zip(exercises, keys):
             e['screen'] = key
+            # What was done last time ("24kg × 10"), src/last_time.py.
+            if last and e.get('exerciseId') in last:
+                e['last'] = last[e['exerciseId']]
         out['packageId'] = package_id
         out['watch'] = _watch_spec.session_identity(package_id)
         out['screens'] = table
@@ -3281,6 +3284,9 @@ def get_today_session():
         matched = (uid in matched_uids) if uid else False
         return bool(log.get('completedAt')) or matched or session_key in matched_keys
 
+    from src import last_time as _last_time
+    last = _last_time.last_by_exercise(session_logs, str(today)) if spec_level >= 1 else None
+
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]
         out = []
@@ -3288,6 +3294,7 @@ def get_today_session():
             session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
             out.append(encode_watch_session(
                 s, session_key, completed=is_done(w_index, d_name, i), spec_level=level,
+                last=last if level >= 1 else None,
             ))
         return out
 

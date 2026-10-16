@@ -683,6 +683,10 @@ struct WatchExercise: Codable, Hashable {
     // Parsed zone bounds (1-indexed, matching frontend Z1-Z5 labels)
     let prescribedZoneLower: Int?
     let prescribedZoneUpper: Int?
+
+    /// What was done last time ("24kg × 10"), from today-session's `last`
+    /// (src/last_time.py); nil on a first time.
+    var lastTime: String? = nil
 }
 
 // MARK: - Post-workout summary (Watch → iPhone → API)

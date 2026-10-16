@@ -51,3 +51,19 @@ final class WidgetTodayDataTests: XCTestCase {
                        "a rest day is not done")
     }
 }
+
+/// The exercise the phone hands the watch carries its last time when the
+/// server knows one, and a payload without it (an older phone) still decodes.
+final class WatchExerciseLastTimeTests: XCTestCase {
+    func testLastTimeIsOptionalOnTheWire() throws {
+        let json = Data("""
+        {"exerciseId": "squat", "name": "Back Squat", "slotType": "sets_reps", "slotRole": "main", "isMeta": false,
+         "loadDescription": "5×5 @ 105 kg", "sets": 5, "reps": "5", "weightKg": 105}
+        """.utf8)
+        var ex = try JSONDecoder().decode(WatchExercise.self, from: json)
+        XCTAssertNil(ex.lastTime)
+        ex.lastTime = "102.5kg × 5"
+        let round = try JSONDecoder().decode(WatchExercise.self, from: JSONEncoder().encode(ex))
+        XCTAssertEqual(round.lastTime, "102.5kg × 5")
+    }
+}

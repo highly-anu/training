@@ -143,7 +143,9 @@ function openSteps(s, editable) {
     for (var i = 0; i < list.size(); i += 1) {
         var ex = list[i];
         if (ex.slotType().equals("amrap_movement") && ex.parentSlotRole() != null) { continue; }
-        m.addItem(new Ui.MenuItem(ex.name(), Steps.overview(ex), i, {}));
+        var last = ex.last();
+        m.addItem(new Ui.MenuItem(ex.name(),
+            Steps.overview(ex) + ((last != null) ? ("  · last " + last) : ""), i, {}));
     }
     Ui.pushView(m, new StepsMenuDelegate(list, editable), Ui.SLIDE_LEFT);
 }
