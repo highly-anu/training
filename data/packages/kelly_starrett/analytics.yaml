@@ -1,0 +1,23 @@
+# What progress means for Kelly Starrett's mobility practice. Range-based,
+# and the practice is the point: ten minutes a day, every day. The phone and
+# the web log skill-practice slots in minutes, so minutes of mobility lead;
+# restore sessions for the joints that need them are counted done or not.
+id: kelly_starrett
+
+progress:
+  - id: daily_mobility
+    label: Mobility minutes
+    primitive: duration
+    headline: true
+    scope: {modalities: [mobility]}
+    expected: {load_field: duration_minutes}
+
+  - id: restore
+    label: Restore sessions done
+    primitive: session_completion
+    scope: {modalities: [rehab]}
+
+  - id: attendance
+    label: Practice attendance
+    primitive: session_completion
+    scope: {modalities: [mobility, rehab]}

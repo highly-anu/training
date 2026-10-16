@@ -1,0 +1,36 @@
+# What progress means for Horsemen GPP. Volume-based concurrent training for
+# operators: a strength base and an aerobic base built side by side, with
+# rucking as the job-specific load. No entry is marked headline: the four
+# month macro leads with aerobic volume (its framework is RPE-autoregulated,
+# the philosophy volume-based) and the GPP circuits track, which schedules no
+# aerobic base, with the ruck — the first of its entries that applies
+# (src/analytics/document._lead_entry).
+id: horsemen_gpp
+
+progress:
+  - id: aerobic_volume
+    label: Aerobic volume
+    primitive: duration
+    scope: {modalities: [aerobic_base]}
+    expected: {load_field: duration_minutes}
+
+  - id: ruck
+    label: Ruck distance
+    primitive: distance
+    scope: {archetypes: [ruck_session], slot_types: [distance]}
+
+  - id: strength
+    label: Strength
+    primitive: set_load
+    scope:
+      modalities: [max_strength]
+      slot_roles: [main_lift, secondary_compound]
+    expected: prescribed
+
+  - id: intensity_split
+    label: Intensity split vs plan
+    primitive: zone_minutes
+    scope: {frameworks: [concurrent_training]}
+    expected: {framework_field: intensity_distribution}
+
+benchmarks: [ruck_12mi_40lb_minutes, run_3mile_minutes, pt_push_ups_3min_reps]

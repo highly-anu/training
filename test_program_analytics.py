@@ -185,8 +185,11 @@ def test_spec_defaults() -> None:
     def default_for(pid):   # the fallback path, regardless of whether a file now exists
         return spec._synthesise(pid, fws, mods, loader.load_philosophy(pid), 1.0)
 
-    filly = spec.spec_for('marcus_filly')
-    check('a package with no analytics.yaml gets a synthesised default', filly.source == 'default')
+    # Every shipped package declares its spec since 2026-10-16; the fallback
+    # is proved on a package made for the test.
+    with throwaway_package('_zz_nofile', None):
+        bare = spec.spec_for('_zz_nofile')
+    check('a package with no analytics.yaml gets a synthesised default', bare.source == 'default')
     ss = default_for('starting_strength')
     check('SS default measures load on the bar', [e.primitive for e in ss.entries] == ['set_load'])
     check('scoped to max_strength working sets, excluding preparatory roles rather than guessing names',
@@ -1062,9 +1065,14 @@ def test_describe() -> None:
           and jerk['scope']['exercises'][0]['id'] == 'kb_jerk_single')
     check('Wildman needs timed reps and hold-free', 'timed_reps' in {n['field'] for n in wk['needs']})
 
-    mf = doc['philosophies']['marcus_filly']
+    with throwaway_package('_zz_nofile', None):
+        mf = describe.describe_all()['philosophies']['_zz_nofile']
     check('a package with no file is default, file None', mf['source'] == 'default' and mf['file'] is None)
-    check('default entries carry synthesised labels', all(e['source'] == 'default' for e in mf['progress']))
+    check('default entries carry synthesised labels',
+          mf['progress'] and all(e['source'] == 'default' for e in mf['progress']))
+    check('every shipped package declares its spec',
+          all(p['source'] == 'declared' for pid, p in doc['philosophies'].items() if not pid.startswith('_')),
+          str([pid for pid, p in doc['philosophies'].items() if p['source'] != 'declared']))
 
     declared = {'id': '_zz_test', 'progress': [
         {'id': 'my_metric', 'label': 'My metric', 'primitive': 'rounds',

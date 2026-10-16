@@ -452,7 +452,9 @@ writes.
   philosophy detail renders it beside the phase spine and weekly shape
   (`components/explore/`), and the framework, modality and archetype details
   list the signals that name them. Static, no user, no program.
-- **Packages own their analytics.** A methodology declares what progress means
+- **Packages own their analytics.** Every shipped package declares one (since
+  2026-10-16; the synthesised default is the fallback for a new package). A
+  methodology declares what progress means
   for it in `data/packages/<id>/analytics.yaml` (schema
   `docs/schemas/analytics.schema.json`; validated by `validate_entities.py`,
   provenance-checked by `check_provenance.py`, loaded by
@@ -812,6 +814,7 @@ SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ow
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1
 .venv/bin/python tools/check_fidelity.py                 # every philosophy x track x profile against its theory; gates on tools/fidelity_baseline.json
+.venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
