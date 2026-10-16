@@ -1,0 +1,35 @@
+# What progress means for ATG (Knees Over Toes). Range-based: earn a joint's
+# full range, then load it — the athlete progresses by adding weight to the
+# end range (split squat, Nordic, tibialis raise), backed by isometric holds
+# in rehab and backward sled work for the knees.
+id: atg
+
+progress:
+  - id: loaded_range
+    label: Load through range
+    primitive: set_load
+    scope:
+      modalities: [mobility, rehab, durability]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*prep*", "*warm*"]
+    expected: prescribed
+
+  - id: rehab_holds
+    label: Isometric holds
+    primitive: hold_seconds
+    # Leads: ATG's loaded work is mostly prescribed by reps alone (split squat,
+    # tibialis raise), so "load through range" has a kg only where one is
+    # logged; the holds are what every rehab session measures.
+    headline: true
+    scope: {archetypes: [rehab_protocol], slot_types: [static_hold]}
+    expected: {load_field: hold_seconds}
+
+  - id: sled
+    label: Backward sled
+    primitive: distance
+    scope: {archetypes: [atg_knee_durability], slot_types: [distance]}
+
+  - id: attendance
+    label: Joint work done
+    primitive: session_completion
+    scope: {modalities: [rehab, mobility]}

@@ -1,0 +1,32 @@
+# What progress means for Gym Jones. Volume-based block periodisation:
+# accumulate work, transmute it into strength and power, realise it. The
+# committed modality is max strength, so the bar leads; conditioning shows as
+# the distance covered in the accumulation sessions' locomotion and carries.
+id: gym_jones
+
+progress:
+  - id: strength
+    label: Strength
+    primitive: set_load
+    headline: true
+    scope:
+      modalities: [max_strength]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*warm*", "*accessory*", "*prep*", "*core*"]
+    expected: prescribed
+
+  - id: power
+    label: Power
+    primitive: set_load
+    scope:
+      modalities: [power]
+      slot_types: [sets_reps]
+      exclude_slot_roles: ["*prep*", "*accessory*"]
+    expected: prescribed
+
+  - id: accumulation_distance
+    label: Accumulation distance
+    primitive: distance
+    scope: {archetypes: [gym_jones_accumulation], slot_types: [distance]}
+
+benchmarks: [back_squat_bw_ratio, deadlift_bw_ratio, row_2km_minutes]

@@ -1,0 +1,20 @@
+# What progress means for CrossFit. Density-based: more work in the same
+# time — rounds in an AMRAP — and the benchmark
+# workouts ("the Girls", the Heroes) as the test that the variation is
+# building general capacity.
+id: crossfit
+
+progress:
+  - id: amrap_rounds
+    label: AMRAP rounds
+    primitive: rounds
+    headline: true
+    scope: {archetypes: [mixed_modal_amrap], slot_types: [amrap]}
+
+  - id: benchmark_wods
+    label: Benchmark workouts
+    primitive: benchmark_level
+    benchmarks: [wod_fran_minutes, wod_grace_minutes, wod_helen_minutes, wod_cindy_rounds, wod_murph_minutes]
+    target_level: intermediate
+
+benchmarks: [wod_fran_minutes, wod_helen_minutes, wod_cindy_rounds]

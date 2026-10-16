@@ -19,7 +19,12 @@ progress:
   - id: holds
     label: Holds
     primitive: hold_seconds
-    scope: {slot_types: [static_hold]}
+    # Ido's holds are skill-practice slots, not static_hold ones (no Ido
+    # session has one): scope by the hold exercises themselves.
+    scope:
+      exercises: [handstand_hold, handstand_freestanding, l_sit, tuck_sit, bridge_low,
+                  bridge_high, balance_frog_stance]
+      slot_types: [skill_practice]     # not the warm-up and cool-down passes
     expected: {load_field: hold_seconds}
 
   - id: attendance

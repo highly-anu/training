@@ -1,0 +1,32 @@
+# What progress means for BJJ mat support. Time-based: the mat is the sport,
+# so the first number is time on it; around it, the rounds a conditioning
+# block holds, how long the grip and trunk hold under tension, and the
+# pulling strength a grappler's grip is built on.
+id: bjj
+
+progress:
+  - id: mat_time
+    label: Mat time
+    primitive: duration
+    headline: true
+    scope: {archetypes: [bjj_class]}
+    expected: {load_field: duration_minutes}
+
+  - id: round_conditioning
+    label: Conditioning rounds
+    primitive: rounds
+    scope: {archetypes: [bjj_round_conditioning], slot_types: [emom]}
+
+  - id: grip_holds
+    label: Grip and trunk holds
+    primitive: hold_seconds
+    scope: {archetypes: [bjj_grip_isometric, grappling_sc], slot_types: [static_hold]}
+    expected: {load_field: hold_seconds}
+
+  - id: pulling_strength
+    label: Pulling strength
+    primitive: set_load
+    scope:
+      archetypes: [grappling_sc, bjj_grip_isometric]
+      slot_roles: ["grip_pulling*"]
+    expected: prescribed

@@ -27,13 +27,17 @@ struct ExerciseLogSheet: View {
     @State private var km: Double? = nil
     @State private var rounds: Int? = nil
     @State private var reps: Int? = nil
+    @State private var holdSeconds: Int? = nil
     @State private var isSaving = false
     @State private var loaded = false
 
     private var slotType: String { LoadFormat.resolvedSlotType(assignment) }
     private var logsSets: Bool { SessionLogging.logsSets(slotType) }
     private var isHold: Bool { slotType == "static_hold" }
-    private var fields: [OutcomeField] { SessionLogging.outcomeFields(for: slotType) }
+    private var fields: [OutcomeField] {
+        SessionLogging.outcomeFields(for: slotType, category: assignment.exercise?.category,
+                                     patterns: SessionLogging.patterns(of: assignment.exercise))
+    }
     private var exerciseId: String? { assignment.exercise?.id }
 
     var body: some View {
@@ -132,6 +136,9 @@ struct ExerciseLogSheet: View {
                     case .reps:
                         TextField("0", value: $reps, format: .number).multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad).frame(width: 90)
+                    case .seconds:
+                        TextField("0", value: $holdSeconds, format: .number).multilineTextAlignment(.trailing)
+                            .keyboardType(.numberPad).frame(width: 90)
                     }
                 }
                 .monospacedDigit()
@@ -167,6 +174,7 @@ struct ExerciseLogSheet: View {
             km = existing?.distanceKm ?? load.distanceKm
             rounds = existing?.rounds ?? load.targetRounds
             reps = existing?.sets.first?.repsActual
+            holdSeconds = existing?.sets.first?.durationSeconds ?? load.holdSeconds
         }
     }
 
@@ -185,9 +193,13 @@ struct ExerciseLogSheet: View {
             if fields.contains(.minutes), let m = minutes, m > 0 { perf.durationSec = Int((m * 60).rounded()) }
             if fields.contains(.km), let k = km, k > 0 { perf.distanceKm = k }
             if fields.contains(.rounds), let r = rounds, r > 0 { perf.rounds = r }
-            if fields.contains(.reps), let r = reps, r > 0 {
+            // Reps in a window and a hold's seconds sit on the first set, where
+            // the rate and hold primitives read them.
+            let r = fields.contains(.reps) ? reps.flatMap { $0 > 0 ? $0 : nil } : nil
+            let s = fields.contains(.seconds) ? holdSeconds.flatMap { $0 > 0 ? $0 : nil } : nil
+            if r != nil || s != nil {
                 perf.sets = [WatchSetLog(setIndex: 0, repsActual: r, weightKg: nil, rpe: nil, completed: true,
-                                         durationSeconds: nil, startOffset: nil, endOffset: nil)]
+                                         durationSeconds: s, startOffset: nil, endOffset: nil)]
             }
         }
         await appState.logExercise(sessionKey: sessionKey, exerciseId: exerciseId, performance: perf)

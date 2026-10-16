@@ -45,6 +45,7 @@ deferred is under *Later*.
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
 | 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
+| 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 
 ---
 
@@ -696,6 +697,43 @@ branch, 0 after; the 330 left are warnings). What is left, cheapest first:
 6. **The framework's `progression_model` still drives no prescription.**
    Filly, BJJ and ATG declare `rpe_autoregulation`; no modality uses it, so no
    RPE target is ever written.
+
+### 10. Progress tracking: what phases A–E left open — P2 · M
+
+The plan of 2026-10-16 (Today's Adherence and Progress cards, the Program /
+Progress split, a declared `analytics.yaml` for every package) shipped in
+phases A–E. Open:
+
+- **Exercise cards on the phone.** The web's come from `/progression/exercises`,
+  whose expected line is `compute_expected_trajectory` — the generator replay
+  the analytics engine replaced. Build them from the `/analytics/program`
+  document's per-exercise series (`progress[].exercises`), on both clients.
+- ~~Capture gaps~~ — closed 2026-10-16: a static hold logs seconds per set on
+  the web (it had the reps column), an isometric skill-practice exercise logs
+  its hold in seconds and a kettlebell in a timed slot its reps, on both
+  clients (`lib/outcomeFields.ts`, `SessionLogging.outcomeFields`), and the
+  Apple Watch writes each set's `durationSeconds`. Still open: an optional
+  "clean" tick so *movements earned* counts quality, not attendance.
+- **Marcus Filly prescribes kg, not RPE.** The framework is
+  `rpe_autoregulation` but the modality's `linear_load` writes the load, so
+  `load_at_rpe` could only say "no RPE target"; the spec measures working load
+  until the generator prescribes RPE.
+- **A standard per track.** Benchmarks are spec-level, so Wildman's pentathlon
+  standards (IKMF-sourced) cannot be declared for Pentathlon Prep alone.
+- **Decision: does the review's score keep completion?** It is
+  `0.4 × completion + 0.6 × trends`; Today no longer shows it (Adherence
+  carries completion), so nothing depends on the answer but the Progress tab.
+- **Watches (phase F).** Garmin glance: a week line from the `days` the watch
+  already has (`week=1`), no server change. Apple Watch: the server's
+  `completed` flags (it tracks completion locally and resets daily), then a
+  complication with the week ring and readiness. One slim server `progress`
+  object (week done/due, program %, the headline sentence) for both, read from
+  the cached analytics snapshot — never computed on the morning sync. "Last
+  time" per exercise in the session screens.
+
+`tools/check_analytics.py` fails on a declared measure that applies in no
+track; it caught Wildman's Ballistic load, Ido's Holds, and three measures
+scoped to session types their frameworks never schedule.
 
 ## Later
 

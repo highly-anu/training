@@ -1063,7 +1063,10 @@ sheet dispatches on the slot type through `SessionLogging` (the phone's copy
 of the web's `lib/outcomeFields.ts`): a sets × reps or hold slot gets one row
 per set — reps or seconds, kg, RPE, done — prefilled from the prescription or
 from what was logged before; every other slot gets its currency fields
-(rounds, minutes, kilometres, reps). Saving goes through
+(rounds, minutes, kilometres, reps). Two rules on the exercise, the web's
+too: a kettlebell in a timed slot logs reps beside minutes (cadence), and an
+isometric in a skill-practice slot logs the hold in seconds; both land on
+the first set, where the rate and hold primitives read them. Saving goes through
 `AppState.logExercise`, which writes `{exercises: {<id>: …}}` to
 `PUT /health/sessions/<key>`; the server merges per exercise and keeps the
 completion, notes and fatigue it already has, so logging before or after
@@ -1075,7 +1078,8 @@ completion, notes and fatigue it already has, so logging before or after
 `rounds`, `durationSec`, `distanceKm`) — the keys `progression_tracker.py`
 and the analytics primitives read. `GET /health/sessions/recent` carries
 `exercises` so the phone reads back what any client logged. The watch keeps
-its own set logger (digital crown) and writes the same shape.
+its own set logger (digital crown) and writes the same shape, with each
+set's `durationSeconds` from its start to the moment the logger opens.
 
 Rules: never log into a different session than the one on screen; the sheet
 is the one place sets are entered on the phone; a logged row never changes

@@ -14,6 +14,9 @@ struct SetLoggerSheetView: View {
     @State private var weightKg: Double
     @State private var rpeDouble: Double = 7
     @State private var page = 0
+    /// When the set ended: the logger opens as the athlete finishes the set,
+    /// so the time spent on the pickers is not part of it.
+    @State private var setEnd: Int? = nil
 
     private var repsActual: Int { Int(repsDouble) }
     private var rpe: Int { Int(rpeDouble) }
@@ -36,6 +39,15 @@ struct SetLoggerSheetView: View {
             rpePage.tag(1)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
+        .onAppear { if setEnd == nil { setEnd = sessionState.elapsedSeconds } }
+    }
+
+    /// The set's length — what reps per minute divides by (Wildman's cadence,
+    /// the `rate` primitive). It was always nil: the set's span reached the
+    /// server only as offsets, which no primitive reads.
+    private var setSeconds: Int? {
+        guard let end = setEnd, end > startOffset else { return nil }
+        return end - startOffset
     }
 
     private var repsPage: some View {
@@ -88,7 +100,7 @@ struct SetLoggerSheetView: View {
                     weightKg: weightKg > 0 ? weightKg : nil,
                     rpe: rpe,
                     completed: true,
-                    durationSeconds: nil,
+                    durationSeconds: setSeconds,
                     startOffset: startOffset,
                     endOffset: sessionState.elapsedSeconds
                 )

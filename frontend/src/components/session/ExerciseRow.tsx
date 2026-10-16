@@ -6,7 +6,7 @@ import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
-import { outcomeFieldsFor } from '@/lib/outcomeFields'
+import { isHoldSlot, outcomeFieldsFor } from '@/lib/outcomeFields'
 import { useBioStore } from '@/store/bioStore'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
@@ -99,11 +99,11 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
   // slot_type via lib/outcomeFields. A slot with neither logs nothing. Until
   // this dispatch existed the row showed a logger only when load.sets > 0, so
   // every rounds/duration/distance analytics primitive had zero coverage.
-  const hasOutcome = !hasSets && outcomeFieldsFor(assignment.slot_type).length > 0
+  const hasOutcome = !hasSets && outcomeFieldsFor(assignment.slot_type, assignment.exercise).length > 0
   const watchKey = sessionIdx != null ? `${sessionKey}-${sessionIdx}` : `${sessionKey}-0`
   const perfLog = getPerformanceLog(watchKey) ?? getPerformanceLog(sessionKey)
   const logged = perfLog?.exercises[assignment.exercise.id]
-  const outcomeLine = logged ? formatOutcomeLine(logged) : null
+  const outcomeLine = logged ? formatOutcomeLine(logged, hasOutcome) : null
 
   return (
     <motion.div
@@ -155,11 +155,14 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
               sessionKey={sessionKey}
               prescribedRpe={assignment.load.target_rpe}
               prescribedWeightKg={assignment.load.weight_kg}
+              hold={isHoldSlot(assignment.slot_type, assignment.load, assignment.exercise)}
+              prescribedSeconds={assignment.load.hold_seconds}
             />
           )}
           {hasOutcome && (
             <OutcomeLogger
               slotType={assignment.slot_type!}
+              exercise={assignment.exercise}
               exerciseId={assignment.exercise.id}
               sessionKey={sessionKey}
               load={assignment.load}
@@ -195,11 +198,16 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 }
 
 /** "12 rounds · 20 min · 5.2 km" from the outcome fields; null when none is logged. */
-function formatOutcomeLine(p: ExercisePerformance): string | null {
+function formatOutcomeLine(p: ExercisePerformance, outcomeRow: boolean): string | null {
   const parts: string[] = []
   if (p.rounds != null) parts.push(`${p.rounds} rounds`)
   if (p.durationSec != null) parts.push(`${Math.round(p.durationSec / 60)} min`)
   if (p.distanceKm != null) parts.push(`${p.distanceKm} km`)
+  // Reps and a hold on the first set are an outcome row's; a lift's sets say
+  // theirs on the per-set lines (and the watch writes every set's seconds).
+  const first = outcomeRow ? p.sets?.[0] : undefined
+  if (first?.repsActual != null) parts.push(`${first.repsActual} reps`)
+  if (first?.durationSeconds != null) parts.push(`${first.durationSeconds}s hold`)
   return parts.length > 0 ? parts.join(' · ') : null
 }
 

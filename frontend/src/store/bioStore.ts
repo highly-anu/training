@@ -63,7 +63,7 @@ interface BioStore {
   setSetPerformance: (sessionKey: string, exerciseId: string, setPerf: SetPerformance) => void
   /** Outcome of a non-set slot — rounds, minutes, kilometres — the fields the analytics engine reads. */
   setExerciseOutcome: (sessionKey: string, exerciseId: string,
-    outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number }) => void
+    outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number; holdSec?: number }) => void
   setSessionNotes: (sessionKey: string, notes: string, fatigueRating?: FatigueRating) => void
 
   // Daily bio
@@ -317,8 +317,15 @@ export const useBioStore = create<BioStore>()((set, get) => ({
     set((s) => {
       const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
       const existingEx = existing.exercises[exerciseId] ?? { sets: [] }
-      const sets = outcome.reps != null
-        ? [{ setIndex: 0, completed: true, repsActual: outcome.reps }, ...existingEx.sets.slice(1)]
+      // Reps in a window and a hold's seconds live on the first set, where the
+      // rate and hold primitives read them; one does not wipe the other.
+      const sets = outcome.reps != null || outcome.holdSec != null
+        ? [{
+            ...(existingEx.sets[0] ?? {}),
+            setIndex: 0, completed: true,
+            ...(outcome.reps != null ? { repsActual: outcome.reps } : {}),
+            ...(outcome.holdSec != null ? { durationSeconds: outcome.holdSec } : {}),
+          }, ...existingEx.sets.slice(1)]
         : existingEx.sets
       const updated: SessionPerformanceLog = {
         ...existing,
