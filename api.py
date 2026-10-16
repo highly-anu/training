@@ -4281,8 +4281,9 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         # rebuilds the stored documents by itself.
         _analytics_specs_digest(),
         # The document's shape: bump when a section gains keys, so stored
-        # copies are rebuilt (2: scorecard.weeks, for the Today card).
-        'doc-4',
+        # copies are rebuilt (2: scorecard.weeks, for the Today card;
+        # 5: intensity.zones, per-zone planned against recorded minutes).
+        'doc-5',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 

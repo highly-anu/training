@@ -930,6 +930,8 @@ def test_sections() -> None:
           (intensity_mod._slot_minutes({'duration_minutes': 30}, [{'load': {'duration_minutes': 42}}]),
            intensity_mod._slot_minutes({'duration_minutes': 30}, [{'load': {}}]),
            intensity_mod._slot_minutes({'sets': 8, 'work_sec': 30, 'rest_sec': 30}, [])) == (42.0, 30.0, 8.0))
+    check('slot minutes: an authored range or a non-dict load is 0, not an error',
+          intensity_mod._slot_minutes({'duration_minutes': '20-30'}, [{'load': 'x'}]) == 0.0)
 
     mv = movement_mod.build(ctx, specs)
     # The fixture's press carries the squat pattern too, so the pattern counts

@@ -91,7 +91,7 @@ struct AnalyticsProgramTab: View {
                     Text(frame.philosophies.map(\.name).joined(separator: " + "))
                         .font(.subheadline).fontWeight(.semibold)
                     Spacer()
-                    methodologyButton(frame)
+                    methodologyButton
                 }
                 if let phase = frame.phase {
                     HStack(spacing: 6) {
@@ -137,8 +137,8 @@ struct AnalyticsProgramTab: View {
     /// The book: the methodology's description (§6.18). A blend offers one
     /// entry per source, as Program ▸ Overview's row does.
     @ViewBuilder
-    private func methodologyButton(_ frame: ProgramAnalytics.Frame) -> some View {
-        let cards = frame.philosophies.compactMap { p in appState.philosophies.first { $0.id == p.id } }
+    private var methodologyButton: some View {
+        let cards = appState.programMethodologies()
         let book = Image(systemName: "book")
             .font(.subheadline)
             .frame(minWidth: 44, minHeight: 44)
@@ -437,7 +437,7 @@ private struct IntensityCard: View {
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
                     RoundedRectangle(cornerRadius: 2).fill(Color.secondary).frame(width: 14, height: 8)
-                    Text("Done")
+                    Text("Recorded")
                 }
                 HStack(spacing: 4) {
                     RoundedRectangle(cornerRadius: 2).strokeBorder(Color.secondary, lineWidth: 1.5)

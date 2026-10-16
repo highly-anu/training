@@ -88,21 +88,30 @@ def _slot_zones(intensity) -> list[int]:
     return list(range(lo, hi + 1))
 
 
+def _num(value) -> float:
+    """A number from authored or stored data, 0 for anything that is not one
+    ("20-30", None) — one odd value must not error the whole section."""
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _slot_minutes(slot: dict, assignments: list[dict]) -> float:
     """A slot's planned minutes: its assignments' prescribed time (the
     longest, so a circuit of three exercises in one block counts once),
     else the slot's own authored duration."""
-    prescribed = [float((ea.get('load') or {}).get('duration_minutes')
-                        or (ea.get('load') or {}).get('time_minutes') or 0)
-                  for ea in assignments if not ea.get('injury_skip')]
+    loads = [ea.get('load') if isinstance(ea.get('load'), dict) else {}
+             for ea in assignments if not ea.get('injury_skip')]
+    prescribed = [_num(load.get('duration_minutes')) or _num(load.get('time_minutes')) for load in loads]
     if any(prescribed):
         return max(prescribed)
-    if slot.get('duration_minutes'):
-        return float(slot['duration_minutes'])
-    work = slot.get('work_sec') or slot.get('duration_sec')
-    if work and slot.get('sets'):
-        return float(slot['sets']) * (float(work) + float(slot.get('rest_sec') or 0)) / 60.0
-    return float(slot.get('duration_sec') or 0) / 60.0
+    if _num(slot.get('duration_minutes')):
+        return _num(slot['duration_minutes'])
+    work = _num(slot.get('work_sec')) or _num(slot.get('duration_sec'))
+    if work and _num(slot.get('sets')):
+        return _num(slot['sets']) * (work + _num(slot.get('rest_sec'))) / 60.0
+    return _num(slot.get('duration_sec')) / 60.0
 
 
 def _zone_detail(ctx: Context) -> list[dict]:
@@ -119,6 +128,9 @@ def _zone_detail(ctx: Context) -> list[dict]:
     max_hr = max_hr_for(ctx)
     planned = [0.0] * 5
     actual = [0.0] * 5
+    # A day-level match can hand one workout to both sessions of a day; its
+    # heart rate is recorded once, against the first.
+    seen_workouts: set = set()
     for hit in ctx.sessions(elapsed_only=True):
         log = ctx.log_for(hit) or {}
         workout = ctx.workout_for(hit)
@@ -127,9 +139,13 @@ def _zone_detail(ctx: Context) -> list[dict]:
         session = hit['session']
         if is_strength(session.get('modality')):
             continue
+        wid = (workout or {}).get('id')
+        if wid is not None and wid in seen_workouts:
+            continue
         split = zones.zone_minutes(workout, max_hr) if workout else {'method': 'none'}
         if split['method'] == 'none':
             continue
+        seen_workouts.add(wid)
         for i, v in enumerate(split['minutes']):
             actual[i] += v
         exercises = session.get('exercises') or []
