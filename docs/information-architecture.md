@@ -144,8 +144,11 @@ logs of earlier programs (`GET /api/health/sessions/recent` resolves each
 sessions — earlier programs' included — not recorded workouts, so it is not a
 fourth workout list.
 
-**Analytics** is the interpretation: Program (methodology scorecard, server-side),
-Progress (the current ProgressionTab), Development (every block, not just this one —
+**Analytics** is the interpretation: Program (am I doing the plan — scorecard,
+intensity, movement, session shapes, load), Progress (is it working — the review's
+score, each methodology's own measures and the standards, moved from Program on
+2026-10-16, then the exercises in three counts: in the program, so far, with data;
+its Session Log went the same day, Log ▸ Sessions being the one list), Development (every block, not just this one —
 the history tables read as one document, `GET /api/analytics/development`: the
 activation timeline, each lift across the span with the blocks as bands and per-block
 deltas, weekly load by block, the standards ladder over time), Load (weekly TRIMP, PMC,

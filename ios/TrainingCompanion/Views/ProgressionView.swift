@@ -14,8 +14,12 @@ struct ProgressionView: View {
                 emptyState
             }
         }
+        .task { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
         .refreshable {
-            await AppRefresh.perform { await appState.loadProgressionReview() }
+            await AppRefresh.perform {
+                await appState.loadProgressionReview()
+                await appState.loadProgramAnalytics()
+            }
         }
     }
 
@@ -35,6 +39,16 @@ struct ProgressionView: View {
                 }
                 if let pending = review.pendingMeasures, !pending.isEmpty {
                     pendingSection(pending)
+                }
+                // Each methodology in its own currency, then where the athlete
+                // stands — the web's Progress tab, from the same document.
+                if let doc = appState.programAnalytics, doc.hasProgram {
+                    ForEach(doc.methodologies) { method in
+                        MethodologySectionView(method: method, doc: doc)
+                    }
+                    if let benchmarks = doc.benchmarks, !benchmarks.rows.isEmpty {
+                        ProgramStandardsCard(benchmarks: benchmarks)
+                    }
                 }
                 if !review.recommendations.isEmpty {
                     recommendationsSection(recommendations: review.recommendations)
@@ -152,7 +166,7 @@ struct ProgressionView: View {
 
     private func findingsSection(findings: [ExerciseFinding]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Exercise Findings")
+            sectionHeader("Measures")
             VStack(spacing: 8) {
                 ForEach(findings) { finding in
                     findingRow(finding: finding)

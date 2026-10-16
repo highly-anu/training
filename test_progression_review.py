@@ -151,6 +151,20 @@ def test_pending_measures_say_how_to_start():
     assert got['ballistic_load']['needs'][0]['label'] == 'Reps and kg per set'
 
 
+
+def test_exercises_scheduled_by_today():
+    # The Progress tab's "so far": only sessions whose day has come, by the
+    # week's array index (week 2 is numbered 9 here, as after a regenerate).
+    def ex(i):
+        return {'exercise': {'id': i}}
+    weeks = [{'week_number': 8, 'schedule': {'Monday': [{'exercises': [ex('swing'), {'meta': True}]}],
+                                            'Friday': [{'exercises': [ex('press')]}]}},
+             {'week_number': 9, 'schedule': {'Monday': [{'exercises': [ex('snatch')]}]}}]
+    assert pt.exercises_scheduled_by(weeks, '2026-10-12', '2026-10-15') == {'swing'}
+    assert pt.exercises_scheduled_by(weeks, '2026-10-12', '2026-10-19') == {'swing', 'press', 'snatch'}
+    assert pt.exercises_scheduled_by(weeks, None, '2026-10-19') == set(), 'no start date: nothing is due'
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

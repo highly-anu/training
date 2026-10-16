@@ -1220,10 +1220,14 @@ export interface ExerciseHistoryItem {
   name: string
   history: ExerciseHistoryPoint[]
   expected: ExerciseExpectedPoint[]
+  /** In a session whose day has come. Absent from an older server. */
+  scheduledSoFar?: boolean
 }
 
 export interface ExerciseHistoryResponse {
   exercises: ExerciseHistoryItem[]
+  /** The program's movements, those whose day has come, those with data. */
+  counts?: { inProgram: number; soFar: number; withData: number }
 }
 
 export interface MatchedSessionArchetype {

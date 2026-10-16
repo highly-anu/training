@@ -323,6 +323,34 @@ def _workout_to_history_point(workout: dict, week_num: int, session_key: str) ->
     }
 
 
+def exercises_scheduled_by(weeks: list, start_date: str | None, today: str) -> set:
+    """Exercise ids in sessions whose calendar day has come (<= today).
+
+    The Progress tab's middle count: "20 in this program · 12 so far · 3 with
+    data". Before it, the tab offered Tracked (3) / All (20) — the 20 counting
+    every week to come and the 3 counting earlier programs' history — which
+    read as three of twenty measured with no way to tell what was owed yet.
+    Dates are `workout_matcher.session_calendar_date`, keyed on the week's
+    array index, as every other reader of the plan's calendar."""
+    from src.workout_matcher import session_calendar_date
+    if not start_date:
+        return set()
+    out: set = set()
+    for wi, week in enumerate(weeks or []):
+        for day, sessions in (week.get('schedule') or {}).items():
+            d = session_calendar_date(start_date, wi, day)    # '' when it cannot say
+            if not d or d > today:
+                continue
+            for session in sessions or []:
+                for ea in session.get('exercises') or []:
+                    if ea.get('meta') or ea.get('injury_skip'):
+                        continue
+                    ex_id = (ea.get('exercise') or {}).get('id')
+                    if ex_id:
+                        out.add(ex_id)
+    return out
+
+
 def compute_exercise_history(
     session_logs: dict,
     program: dict,

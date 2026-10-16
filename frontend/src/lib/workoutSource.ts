@@ -12,7 +12,7 @@
  *   short  — filter pills and chips              ("FIT")
  *   badge  — the 9px inline badge on dense rows  ("FIT")
  * Keeping `badge` separate is what lets tight rows stay tight; don't collapse
- * it into `short` without checking MatchedSessionCard at a narrow width.
+ * it into `short` without checking the dense workout rows at a narrow width.
  */
 
 export interface SourceMeta {

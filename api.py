@@ -4501,6 +4501,10 @@ def progression_exercises():
                     if ex_id and ex_id not in ex_index:
                         ex_index[ex_id] = (ex, ea.get('slot') or {})
 
+    today = request.args.get('today') or str(_date.today())
+    start = program_data.get('programStartDate') or program.get('start_date')
+    so_far = _pt.exercises_scheduled_by(weeks, start, today)
+
     result = []
     for ex_id, (ex, slot) in ex_index.items():
         if ex_filter and ex_id != ex_filter:
@@ -4515,9 +4519,16 @@ def progression_exercises():
             'name':       ex.get('name', ex_id),
             'history':    history.get(ex_id, []),
             'expected':   trajectory,
+            'scheduledSoFar': ex_id in so_far,
         })
 
-    return jsonify({'exercises': result})
+    # Three counts, one window each: the program's movements, those whose
+    # day has come, and those with a logged or matched point (earlier
+    # programs' history included — the lift's record, not this block's).
+    counts = {'inProgram': len(result),
+              'soFar': sum(1 for r in result if r['scheduledSoFar']),
+              'withData': sum(1 for r in result if r['history'])}
+    return jsonify({'exercises': result, 'counts': counts})
 
 
 @app.get('/api/progression/history')
