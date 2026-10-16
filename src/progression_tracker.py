@@ -779,9 +779,14 @@ def compute_progression_review(
     history_sessions: list[dict] | None = None,
     logs_by_uid: dict | None = None,
     active_version_id: str | None = None,
+    completion: tuple[int, int] | None = None,
 ) -> dict:
     """
     Builds a full ProgressionReview dict.
+
+    `completion` is (completed, scheduled) from the program analytics
+    scorecard — what the Program tab and Today show. The route passes it so
+    the three can never disagree; the count below is the fallback.
     Returns a minimal result with insufficient_data flag when data is sparse.
 
     The history arguments are passed straight through to
@@ -802,13 +807,21 @@ def compute_progression_review(
     # Counting every week of a 16-week program in week 2 reported ~12% by
     # construction; counting the whole current week read 2 of 2 sessions done
     # by Wednesday as 50%, beside the Program tab's 100%.
-    due = _due_sessions(program, weeks)
-    total_scheduled = len(due)
-    total_completed = sum(
-        1 for week_number, day_name, s_idx in due
-        if (f"{week_number}-{day_name}" in session_logs
-            or f"{week_number}-{day_name}-{s_idx}" in session_logs)
-    )
+    #
+    # The fallback reads this version's logs only: moving one session mints a
+    # new version, and the logs of the days before it stay with the old one
+    # (production on 2026-10-16: Friday moved to Saturday, Progress read 0 of
+    # 2 beside Today's 2 of 2). The scorecard matches logs by date and finds them.
+    if completion is not None:
+        total_completed, total_scheduled = completion
+    else:
+        due = _due_sessions(program, weeks)
+        total_scheduled = len(due)
+        total_completed = sum(
+            1 for week_number, day_name, s_idx in due
+            if (f"{week_number}-{day_name}" in session_logs
+                or f"{week_number}-{day_name}-{s_idx}" in session_logs)
+        )
     compliance_pct = round(total_completed / total_scheduled * 100) if total_scheduled else 0
 
     # Readiness trend

@@ -4331,7 +4331,7 @@ def progression_review():
         base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
     else:
         base = _pt.compute_session_hash(session_logs)
-    session_hash = f'{base}:{period}:review-3'
+    session_hash = f'{base}:{period}:review-4'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])
@@ -4340,6 +4340,21 @@ def progression_review():
     # program_data may be the full GeneratedProgram or wrapped {currentProgram: ...}
     program = program_data.get('currentProgram') or program_data
     ctx = _progression_history(g.user_id, _health.get_matches(g.user_id))
+
+    # The program analytics document, computed first: its scorecard is the
+    # completion Today and the Program tab show, and the review takes it.
+    doc = None
+    completion = None
+    try:
+        from src.analytics.document import compute_program_analytics
+        if analytics_in is not None:
+            doc = compute_program_analytics(analytics_in[0])
+            sc = doc.get('scorecard') or {}
+            if sc.get('plannedSessions'):
+                completion = (int(sc.get('completedSessions') or 0), int(sc['plannedSessions']))
+    except Exception as engine_err:
+        app.logger.warning('progression review: program analytics unavailable: %s', engine_err)
+
     review = _pt.compute_progression_review(
         user_id=g.user_id,
         program=program,
@@ -4349,6 +4364,7 @@ def progression_review():
         history_sessions=ctx['history_sessions'],
         logs_by_uid=ctx['logs_by_uid'],
         active_version_id=ctx['active_version_id'],
+        completion=completion,
     )
 
     # The per-exercise findings come from the program analytics engine, which
@@ -4357,10 +4373,8 @@ def progression_review():
     # model. The rest of the review (compliance, readiness, flags) is unchanged
     # so iOS ProgressionView and the Dashboard keep their shape.
     try:
-        from src.analytics.document import compute_program_analytics, progression_findings
-        got = analytics_in
-        if got is not None:
-            doc = compute_program_analytics(got[0])
+        from src.analytics.document import progression_findings
+        if doc is not None:
             findings = progression_findings(doc)
             if findings:
                 review['exercise_findings'] = findings
