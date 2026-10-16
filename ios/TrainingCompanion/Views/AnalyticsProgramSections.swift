@@ -33,21 +33,21 @@ struct MethodologySectionView: View {
                     // reference is the sheet (design-system §6.18).
                     if let card {
                         Button { sheet = card } label: {
-                            HStack(spacing: 2) {
-                                Text("About this methodology")
-                                Image(systemName: "chevron.right").imageScale(.small)
-                            }
+                            Image(systemName: "book")
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                                .accessibilityLabel("About this methodology")
                         }
-                        .font(.caption2)
+                        .font(.subheadline)
+                        .padding(.vertical, -12)
                     }
                 }
-                HStack(spacing: 6) {
-                    Text("\(method.measurable) of \(method.applicable ?? method.total) metrics measurable")
-                    if method.weight < 1 { Text("· \(Int((method.weight * 100).rounded()))% of the blend") }
-                    Text(method.analytics == "declared" ? "declared" : "default spec")
-                        .padding(.horizontal, 6).padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.12))
-                        .clipShape(Capsule())
+                HStack(spacing: 10) {
+                    Label("\(method.measurable)/\(method.applicable ?? method.total) measurable", systemImage: "ruler")
+                    if method.weight < 1 {
+                        Label("\(Int((method.weight * 100).rounded()))%", systemImage: "chart.pie")
+                            .accessibilityLabel("\(Int((method.weight * 100).rounded())) percent of the blend")
+                    }
                 }
                 .font(.caption2).foregroundStyle(.secondary)
             }
@@ -55,10 +55,20 @@ struct MethodologySectionView: View {
                 ProgressEntryCard(entry: entry)
             }
             if !elsewhere.isEmpty {
-                Text("Not in this program: " + elsewhere.map { e in
-                    let tracks = e.appliesIn.map(\.track)
-                    return tracks.isEmpty ? e.label : "\(e.label) (\(tracks.joined(separator: ", ")))"
-                }.joined(separator: " · "))
+                // Folded: the measures this program does not schedule, each
+                // with the tracks that do.
+                DisclosureGroup {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(elsewhere) { e in
+                            let tracks = e.appliesIn.map(\.track)
+                            Text(tracks.isEmpty ? e.label : "\(e.label) · \(tracks.joined(separator: ", "))")
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+                } label: {
+                    Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
+                }
                 .font(.caption2).foregroundStyle(.secondary)
             }
         }
@@ -87,16 +97,15 @@ struct ProgramStandardsCard: View {
     var body: some View {
         AnalyticsCard(header: "Standards") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("This program's own standards, and any you have a number for."
-                     + (benchmarks.bodyweightKg.map { " Bodyweight \(AnalyticsProgramTab.number($0)) kg lets ×BW standards derive from your logged sets." }
-                        ?? " Log your bodyweight to derive ×BW standards from logged sets."))
-                    .font(.caption).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                // ×BW standards derive from logged sets with a bodyweight.
+                Label(benchmarks.bodyweightKg.map { "BW \(AnalyticsProgramTab.number($0)) kg" } ?? "No bodyweight",
+                      systemImage: "figure.stand")
+                    .font(.caption2).foregroundStyle(.secondary)
                 ForEach(shown) { row in
                     StandardRowView(row: row)
                 }
                 if !own.isEmpty && !more.isEmpty {
-                    Button(showMore ? "Fewer standards" : "More standards (\(more.count)) — same domains, other sources") {
+                    Button(showMore ? "Fewer standards" : "More standards (\(more.count))") {
                         withAnimation(AppAnimation.layoutChange) { showMore.toggle() }
                     }
                     .font(.caption)
@@ -108,9 +117,6 @@ struct ProgramStandardsCard: View {
 
 private struct StandardRowView: View {
     let row: ProgramAnalytics.Benchmarks.Row
-
-    private static let whyLabel = ["philosophy": "this methodology", "priority_modality": "priority modality",
-                                   "declared": "declared"]
 
     private var valueText: String {
         var parts: [String] = []
@@ -134,9 +140,6 @@ private struct StandardRowView: View {
                 Text(valueText).font(.caption).foregroundStyle(.secondary)
             }
             ladder
-            Text(row.why.compactMap { Self.whyLabel[$0] }.joined(separator: " · ")
-                 + (row.derivedReason == "no_bodyweight_logged" ? " · est. 1RM known, bodyweight not" : ""))
-                .font(.caption2).foregroundStyle(.tertiary)
         }
     }
 
@@ -179,8 +182,9 @@ struct SessionShapesCard: View {
                             }
                             Text(row.name).font(.caption).fontWeight(.medium).lineLimit(2)
                             Spacer()
-                            Text("\(row.completed)/\(row.scheduled) done")
+                            Label("\(row.completed)/\(row.scheduled)", systemImage: "checkmark.circle")
                                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                                .accessibilityLabel("\(row.completed) of \(row.scheduled) done")
                         }
                         detail(row)
                     }
@@ -190,15 +194,24 @@ struct SessionShapesCard: View {
         }
     }
 
+    /// Duration against the archetype's estimate (amber past ±25 %), average
+    /// and peak HR, and the lead lift's est. 1RM — as symbols.
     private func detail(_ row: ProgramAnalytics.ArchetypeRow) -> some View {
         let delta = row.meanDurationDeltaPct
-        return HStack(spacing: 4) {
-            Text("Duration \(delta.map { "\($0 > 0 ? "+" : "")\(AnalyticsProgramTab.number($0))%" } ?? "—")")
-                .foregroundStyle(delta.map { abs($0) > 25 } == true ? Color.yellow : Color.secondary)
-            Text("· HR \(row.hr.flatMap { hr in hr.avg.map { "\($0) / \(hr.max.map(String.init) ?? "—")" } } ?? "—")")
+        return HStack(spacing: 12) {
+            if let delta {
+                Label("\(delta > 0 ? "+" : "")\(Int(delta.rounded()))%", systemImage: "clock")
+                    .foregroundStyle(abs(delta) > 25 ? Color.yellow : Color.secondary)
+                    .accessibilityLabel("Duration \(Int(delta.rounded())) percent against the estimate")
+            }
+            if let avg = row.hr?.avg {
+                Label("\(avg)\(row.hr?.max.map { "/\($0)" } ?? "")", systemImage: "heart.fill")
+                    .accessibilityLabel("Heart rate \(avg) average\(row.hr?.max.map { ", \($0) max" } ?? "")")
+            }
             if let lift = row.leadLift, let first = lift.firstEst1rm, let latest = lift.latestEst1rm {
-                Text("· \(lift.exerciseId.replacingOccurrences(of: "_", with: " ")) \(AnalyticsProgramTab.number(first)) → \(AnalyticsProgramTab.number(latest)) est 1RM")
+                Label("\(AnalyticsProgramTab.number(first))→\(AnalyticsProgramTab.number(latest))", systemImage: "dumbbell")
                     .lineLimit(1)
+                    .accessibilityLabel("\(lift.exerciseId.replacingOccurrences(of: "_", with: " ")) est 1RM \(AnalyticsProgramTab.number(first)) to \(AnalyticsProgramTab.number(latest))")
             }
         }
         .font(.caption2).monospacedDigit().foregroundStyle(.secondary)

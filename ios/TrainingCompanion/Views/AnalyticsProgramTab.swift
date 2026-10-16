@@ -24,7 +24,7 @@ struct AnalyticsProgramTab: View {
                 }
             } else {
                 emptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
-                           message: "Generate a program and this section measures your training against what it is for.",
+                           message: "Generate a program to measure it here.",
                            actionLabel: "Go to Program") { router.show(.program) }
             }
         }
@@ -45,7 +45,6 @@ struct AnalyticsProgramTab: View {
                 if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
                 if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
                 if let movement = doc.movement, !movement.isEmpty { MovementCard(movement: movement) }
-                progressPointer(doc)
                 if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
                 if let load = doc.load { LoadCard(load: load) }
                 if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
@@ -76,59 +75,97 @@ struct AnalyticsProgramTab: View {
 
     // MARK: - Frame
 
+    /// The methodology, then symbols: how it progresses, the framework, the
+    /// phase and week, and each plan-fidelity field as actual / ideal with a
+    /// mark for whether it meets the ideal. The phase's focus is on Program ▸
+    /// Overview.
     private func frameCard(_ frame: ProgramAnalytics.Frame) -> some View {
         AnalyticsCard(header: "Program") {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(frame.philosophies.map(\.name).joined(separator: " + "))
                     .font(.subheadline).fontWeight(.semibold)
-                if let lead = frame.philosophies.first, let how = lead.progressionPhilosophy {
-                    Text("Progresses by \(how.replacingOccurrences(of: "_", with: " "))"
-                         + (lead.intensityModel.map { " · \($0.replacingOccurrences(of: "_", with: " "))" } ?? ""))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                if let framework = frame.framework {
-                    Text(framework.name)
-                        .font(.caption).foregroundStyle(.secondary)
-                }
                 if let phase = frame.phase {
                     HStack(spacing: 6) {
                         Text(phase.displayName)
                             .font(.caption).fontWeight(.semibold)
                             .foregroundStyle(PhaseStyle.color(for: phase.name))
-                        Text("· week \(phase.weekInProgram) of \(phase.totalWeeks)")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(PhaseStyle.color(for: phase.name).opacity(0.15))
+                            .clipShape(Capsule())
+                        Label("\(phase.weekInProgram)/\(phase.totalWeeks)", systemImage: "calendar")
+                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                            .accessibilityLabel("Week \(phase.weekInProgram) of \(phase.totalWeeks)")
                         if phase.isDeload {
-                            Text("deload")
-                                .font(.caption2).fontWeight(.semibold)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.15))
-                                .foregroundStyle(.blue)
-                                .clipShape(Capsule())
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.caption).foregroundStyle(.blue)
+                                .accessibilityLabel("Deload")
                         }
                     }
-                    if let focus = phase.focus, !focus.isEmpty {
-                        Text(focus)
-                            .font(.caption).foregroundStyle(.secondary)
+                }
+                let tags = Self.frameTags(frame)
+                if !tags.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(tags, id: \.icon) { tag in
+                            Label(tag.text, systemImage: tag.icon)
+                                .font(.caption).foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
                 if !frame.planFidelity.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 0) {
                         ForEach(frame.planFidelity) { row in
-                            HStack {
-                                Text(Self.fidelityLabel(row.field))
-                                    .font(.caption).foregroundStyle(.secondary)
-                                Spacer()
-                                Text("\(Self.number(row.actual)) \(row.unit) · ideal \(Self.number(row.ideal))")
-                                    .font(.caption)
-                                    .foregroundStyle(row.status == "meets_ideal" ? Color.primary
-                                                     : row.status == "below_minimum" ? Color.red : Color.yellow)
-                            }
+                            fidelityCell(row)
+                            if row.id != frame.planFidelity.last?.id { Spacer(minLength: 8) }
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, 2)
                 }
             }
         }
+    }
+
+    /// One fidelity field: its symbol, actual / ideal, and a mark.
+    private func fidelityCell(_ row: ProgramAnalytics.Frame.Fidelity) -> some View {
+        let color: Color = row.status == "meets_ideal" ? .green
+            : row.status == "below_minimum" ? .red : .yellow
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Image(systemName: Self.fidelityIcon(row.field)).foregroundStyle(.secondary)
+                Text("\(Self.number(row.actual))/\(Self.number(row.ideal))")
+                    .fontWeight(.semibold).monospacedDigit()
+                Image(systemName: row.status == "meets_ideal" ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .foregroundStyle(color)
+            }
+            .font(.caption)
+            Text(row.unit).font(.caption2).foregroundStyle(.tertiary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal))")
+    }
+
+    static func fidelityIcon(_ field: String) -> String {
+        switch field {
+        case "days_per_week": return "calendar"
+        case "session_time_minutes": return "clock"
+        case "num_weeks", "weeks": return "calendar.badge.clock"
+        default: return "slider.horizontal.3"
+        }
+    }
+
+    /// How the lead methodology progresses, its intensity model, the framework.
+    static func frameTags(_ frame: ProgramAnalytics.Frame) -> [(icon: String, text: String)] {
+        var tags: [(icon: String, text: String)] = []
+        let lead = frame.philosophies.first
+        if let how = lead?.progressionPhilosophy { tags.append(("chart.line.uptrend.xyaxis", words(how))) }
+        if let model = lead?.intensityModel { tags.append(("gauge.with.dots.needle.33percent", words(model))) }
+        if let framework = frame.framework { tags.append(("square.grid.2x2", framework.name)) }
+        return tags
+    }
+
+    static func words(_ id: String) -> String {
+        let s = id.replacingOccurrences(of: "_", with: " ")
+        return s.prefix(1).uppercased() + s.dropFirst()
     }
 
     static func fidelityLabel(_ field: String) -> String {
@@ -147,28 +184,6 @@ struct AnalyticsProgramTab: View {
         var s = String(format: "%.2f", v)
         while s.hasSuffix("0") { s.removeLast() }
         return s
-    }
-
-    // MARK: - Pointer to Progress
-
-    /// Each methodology's own measures and the standards moved to Progress on
-    /// 2026-10-16: this tab is adherence, Progress is whether it is working.
-    private func progressPointer(_ doc: ProgramAnalytics) -> some View {
-        let names = doc.frame?.philosophies.map(\.name).joined(separator: " + ") ?? ""
-        return Button { router.showAnalytics(.progress) } label: {
-            HStack {
-                Text("What \(names.isEmpty ? "this program" : names) measures progress by, and the standards, are on Progress")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-            }
-            .padding(AppMetrics.cardPadding)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
-        }
-        .buttonStyle(.plain)
-        .accessibilityHint("Opens Analytics, Progress")
     }
 
     // MARK: - Section errors
@@ -195,34 +210,32 @@ private struct ScorecardCard: View {
     var body: some View {
         AnalyticsCard(header: "Scorecard") {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    Text(summary).font(.caption).foregroundStyle(.secondary)
+                HStack(alignment: .center, spacing: 12) {
+                    Label("\(scorecard.elapsedWeeks) wk", systemImage: "calendar")
+                        .accessibilityLabel("\(scorecard.elapsedWeeks) weeks elapsed")
+                    if let committed = scorecard.tiers["committed"] {
+                        Label("\(committed.completed)/\(committed.planned)", systemImage: "pin.fill")
+                            .accessibilityLabel("Committed work \(committed.completed) of \(committed.planned)")
+                    }
+                    if let overall = scorecard.overallPct {
+                        Label("\(Int(overall.rounded()))%", systemImage: "checkmark.circle")
+                            .accessibilityLabel("\(Int(overall.rounded())) percent overall")
+                    }
                     Spacer()
                     AnalyticsStatusBadge(status: scorecard.headline)
                 }
-                if scorecard.headline == "off_plan" {
-                    Text("Under 70 % of the committed work has been done. Everything else is secondary to that.")
-                        .font(.caption).foregroundStyle(.yellow)
-                }
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 ForEach(scorecard.modalities) { row in
                     ScorecardRowView(row: row)
                 }
             }
         }
     }
-
-    private var summary: String {
-        var parts = ["\(scorecard.elapsedWeeks) week\(scorecard.elapsedWeeks == 1 ? "" : "s") elapsed"]
-        if let committed = scorecard.tiers["committed"] {
-            parts.append("committed work \(committed.completed)/\(committed.planned)")
-        }
-        if let overall = scorecard.overallPct {
-            parts.append("\(Int(overall.rounded()))% overall")
-        }
-        return parts.joined(separator: " · ")
-    }
 }
 
+/// A modality's completion and weekly dose, in symbols: its tier, sessions
+/// done of planned, minutes per week against planned, and an arrow or a
+/// check for the dose against the framework's range.
 private struct ScorecardRowView: View {
     let row: ProgramAnalytics.Scorecard.Row
 
@@ -230,17 +243,23 @@ private struct ScorecardRowView: View {
         let colour = ModalityStyle.color(for: row.modality)
         let pct = min(100, max(0, row.completionPct ?? 0))
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
+            HStack(spacing: 5) {
+                Image(systemName: ModalityStyle.icon(for: row.modality))
+                    .font(.caption2).foregroundStyle(colour)
                 Text(ModalityStyle.label(for: row.modality))
                     .font(.caption).fontWeight(.semibold)
                     .foregroundStyle(colour)
-                Text(row.tier == "unscheduled" ? "—" : row.tier)
-                    .font(.caption2).foregroundStyle(.secondary)
+                    .lineLimit(1)
+                if let icon = Self.tierIcon(row.tier) {
+                    Image(systemName: icon).font(.caption2).foregroundStyle(.secondary)
+                }
                 Spacer()
-                Text("\(row.completedSessions) / \(row.plannedSessions) sessions")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text("\(row.completedSessions)/\(row.plannedSessions)")
+                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 if let p = row.completionPct {
-                    Text("· \(Int(p.rounded()))%").font(.caption).foregroundStyle(.secondary)
+                    Text("\(Int(p.rounded()))%")
+                        .font(.caption).fontWeight(.semibold).monospacedDigit()
+                        .frame(minWidth: 36, alignment: .trailing)
                 }
             }
             GeometryReader { geo in
@@ -250,25 +269,45 @@ private struct ScorecardRowView: View {
                 }
             }
             .frame(height: 6)
-            HStack(spacing: 8) {
-                Text("\(Int((row.weeklyActualMinutes ?? 0).rounded())) min/wk actual · \(Int((row.weeklyPlannedMinutes ?? 0).rounded())) planned")
-                if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes {
-                    Text("\(doseLabel) (\(Int(minMin))–\(Int(maxMin)) min/wk)")
-                        .foregroundStyle(row.doseStatus == "under" ? Color.yellow
-                                         : row.doseStatus == "over" ? Color.red : Color.secondary)
+            HStack(spacing: 6) {
+                Label("\(Int((row.weeklyActualMinutes ?? 0).rounded()))/\(Int((row.weeklyPlannedMinutes ?? 0).rounded())) min/wk",
+                      systemImage: "clock")
+                Spacer()
+                if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes, let dose = doseIcon {
+                    Image(systemName: dose.icon).foregroundStyle(dose.color)
+                    Text("\(Int(minMin))–\(Int(maxMin))")
                 }
             }
-            .font(.caption2).foregroundStyle(.secondary)
+            .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(row.modality) \(row.completedSessions) of \(row.plannedSessions) planned sessions completed")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(ModalityStyle.label(for: row.modality)), \(row.tier): \(row.completedSessions) of \(row.plannedSessions) sessions, \(Int((row.weeklyActualMinutes ?? 0).rounded())) of \(Int((row.weeklyPlannedMinutes ?? 0).rounded())) minutes a week\(doseWords)")
     }
 
-    private var doseLabel: String {
+    /// committed · core · supplementary; nothing for unscheduled.
+    static func tierIcon(_ tier: String) -> String? {
+        switch tier {
+        case "committed": return "pin.fill"
+        case "core": return "circle.inset.filled"
+        case "supplementary": return "plus.circle"
+        default: return nil
+        }
+    }
+
+    private var doseIcon: (icon: String, color: Color)? {
         switch row.doseStatus {
-        case "under": return "under dose"
-        case "on": return "in range"
-        case "over": return "over dose"
+        case "under": return ("arrow.down.circle.fill", .yellow)
+        case "on": return ("checkmark.circle.fill", .green)
+        case "over": return ("arrow.up.circle.fill", .red)
+        default: return nil
+        }
+    }
+
+    private var doseWords: String {
+        switch row.doseStatus {
+        case "under": return ", under dose"
+        case "on": return ", in range"
+        case "over": return ", over dose"
         default: return ""
         }
     }
@@ -307,9 +346,7 @@ private struct IntensityCard: View {
     var body: some View {
         AnalyticsCard(header: "Intensity split") {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
-                    Text("Minutes per bucket, against what the framework prescribes.")
-                        .font(.caption).foregroundStyle(.secondary)
+                HStack {
                     Spacer()
                     AnalyticsStatusBadge(status: intensity.status)
                 }
@@ -349,8 +386,9 @@ private struct IntensityCard: View {
                     .font(.caption2).foregroundStyle(.secondary)
                 }
                 if let pct = intensity.pct1rm, let mean = pct.meanPct {
-                    Text("Working sets averaged \(AnalyticsProgramTab.number(mean))% of estimated 1RM across \(pct.sessions) logged lifts.")
+                    Label("\(AnalyticsProgramTab.number(mean))% 1RM · \(pct.sessions) lifts", systemImage: "scalemass")
                         .font(.caption2).foregroundStyle(.secondary)
+                        .accessibilityLabel("Working sets averaged \(AnalyticsProgramTab.number(mean)) percent of estimated 1RM across \(pct.sessions) logged lifts")
                 }
             }
         }
@@ -378,8 +416,20 @@ struct ProgressEntryCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.label).font(.subheadline).fontWeight(.semibold)
-                    Text(subtitle).font(.caption2).foregroundStyle(.secondary)
+                    HStack(spacing: 5) {
+                        if entry.headline {
+                            Image(systemName: "star.fill").font(.caption2).foregroundStyle(Color.accentColor)
+                                .accessibilityLabel("Headline")
+                        }
+                        Text(entry.label).font(.subheadline).fontWeight(.semibold)
+                    }
+                    if let t = trend, t.direction != "insufficient_data" {
+                        Label("\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt",
+                              systemImage: t.direction == "improving" ? "arrow.up.right"
+                                : t.direction == "declining" ? "arrow.down.right" : "arrow.right")
+                            .font(.caption2).foregroundStyle(.secondary)
+                            .accessibilityLabel("\(t.direction), \(AnalyticsProgramTab.number(t.slopePct)) percent per point")
+                    }
                 }
                 Spacer()
                 AnalyticsStatusBadge(status: status)
@@ -393,7 +443,7 @@ struct ProgressEntryCard: View {
                 if entry.exercises.count > 1 { exercisePicker }
                 if series.contains(where: { $0.value != nil }) { chart }
                 if let ex = exercise, ex.stalled {
-                    Text("Stalled: \(ex.name) has not moved for the last sessions this methodology allows.")
+                    Label("Stalled · \(ex.name)", systemImage: "pause.circle.fill")
                         .font(.caption).foregroundStyle(.red)
                 }
             }
@@ -417,16 +467,6 @@ struct ProgressEntryCard: View {
 
     /// A bodyweight lift beside a loaded one: each exercise says its own unit.
     private var unit: String { exercise?.unit ?? entry.unit }
-
-    private var subtitle: String {
-        var parts = [entry.metric.replacingOccurrences(of: "_", with: " ")]
-        if !unit.isEmpty { parts.append(unit) }
-        if let t = trend, t.direction != "insufficient_data" {
-            parts.append("\(t.direction) (\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt)")
-        }
-        if entry.headline { parts.append("headline") }
-        return parts.joined(separator: " · ")
-    }
 
     private var exercisePicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -503,7 +543,7 @@ struct ProgressEntryCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Now available (\(entry.available.count))").font(.caption).fontWeight(.semibold)
                 if entry.levelOpensAll {
-                    Text("Your level already opens every movement in this library.")
+                    Label("All open at your level", systemImage: "lock.open")
                         .font(.caption2).foregroundStyle(.secondary)
                 } else {
                     ForEach(entry.available.prefix(6)) { a in
@@ -544,7 +584,7 @@ struct CoverageNoticeView: View {
 
     var body: some View {
         if coverage.inScope == 0 {
-            Text("No completed sessions in scope yet.")
+            Label("No sessions yet", systemImage: "hourglass")
                 .font(.caption).foregroundStyle(.secondary)
         } else if coverage.measured == 0 {
             HStack(alignment: .top, spacing: 8) {
@@ -563,7 +603,7 @@ struct CoverageNoticeView: View {
                     .foregroundStyle(Color.secondary.opacity(0.4))
             )
         } else if coverage.pct < 100 {
-            Text("Measured on \(coverage.measured) of \(coverage.inScope) completed sessions (\(Int(coverage.pct.rounded()))%).")
+            Label("\(coverage.measured)/\(coverage.inScope) sessions measured", systemImage: "ruler")
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }
@@ -577,8 +617,6 @@ private struct MovementCard: View {
     var body: some View {
         AnalyticsCard(header: "Movement") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Done against planned, by pattern. Sets and minutes are kept apart.")
-                    .font(.caption).foregroundStyle(.secondary)
                 if let sets = movement.sets, !sets.rollups.isEmpty { bars("Sets", sets) }
                 if let minutes = movement.minutes, !minutes.rollups.isEmpty { bars("Minutes", minutes) }
                 ForEach(movement.balance) { pair in
@@ -586,22 +624,24 @@ private struct MovementCard: View {
                         Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
                             .font(.caption)
                         if pair.declared {
-                            Text("declared").font(.caption2).foregroundStyle(.secondary)
+                            Image(systemName: "checkmark.seal").font(.caption2).foregroundStyle(.secondary)
+                                .accessibilityLabel("declared")
                         }
                         Spacer()
                         Text(pair.ratio.map { "\(AnalyticsProgramTab.number($0)) (\(AnalyticsProgramTab.number(pair.min))–\(AnalyticsProgramTab.number(pair.max)))" }
-                             ?? "not measured")
+                             ?? "—")
                             .font(.caption)
                             .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
                     }
                 }
                 if let unilateral = movement.unilateralShare?.done {
-                    Text("Unilateral \(AnalyticsProgramTab.number(unilateral))%")
+                    Label("Unilateral \(AnalyticsProgramTab.number(unilateral))%", systemImage: "figure.step.training")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let assumed = movement.minutes?.assumed, assumed > 0 {
-                    Text("\(AnalyticsProgramTab.number(assumed)) min assumed from completed-but-unmatched sessions.")
+                    Label("\(AnalyticsProgramTab.number(assumed)) min assumed", systemImage: "questionmark.circle")
                         .font(.caption2).foregroundStyle(.secondary)
+                        .accessibilityLabel("\(AnalyticsProgramTab.number(assumed)) minutes assumed from completed sessions without a recorded workout")
                 }
             }
         }
@@ -657,11 +697,8 @@ private struct LoadCard: View {
                     Spacer()
                     if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
                 }
-                if let note = load.note {
-                    Text(note).font(.caption).foregroundStyle(.secondary)
-                }
                 if let readiness = load.readiness {
-                    Text("Readiness \(readiness.score) · \(readiness.status)")
+                    Label("Readiness \(readiness.score) · \(readiness.status)", systemImage: "heart.circle")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }

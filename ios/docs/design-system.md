@@ -57,6 +57,17 @@ Show only what the user needs at each level. The Today tab shows session cards. 
 
 Never show all information at once. Always have a summary state and a detail state.
 
+**Numbers and symbols, not sentences** (2026-10-16). A screen says what a value
+is with an SF Symbol and the number — `clock 21/18 min/wk`, `heart.fill 104/135`,
+`checkmark.circle 1/1` — and a status with a coloured mark or badge, not a
+sentence. No subtitle explains a section ("The blocks this program runs, in
+order"), no footnote names where a number came from unless it is the
+exception (`iphone` "On device" when the server could not answer), and no
+row points to another tab in words. The full sentence goes in the
+`accessibilityLabel`. Words stay where a symbol cannot carry them: an
+empty state's one line, a coverage reason that tells the athlete what to log,
+the server's recommendations.
+
 ### 1.5 Motion with Purpose
 
 Animation serves three functions: orientation (where am I?), feedback (did that register?), continuity (what appeared?). No decorative motion.
@@ -1020,9 +1031,6 @@ intensity footer until 2026-10-16.
   (`byFramework`), and % of 1RM for max-effort frameworks.
 - *Movement*: sets and minutes done against planned by pattern (planned the
   grey track, done over it), balance ratios, unilateral share, assumed minutes.
-- A row pointing to Progress, where the methodologies' measures and the
-  standards went on 2026-10-16: Program is adherence, Progress is whether it
-  is working.
 - *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
   the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
 - *Load* (TSB read in the phase's terms).
@@ -1037,13 +1045,12 @@ and measures — the web's Progress tab:
   exercise picker, the actual-against-expected chart (actual green, expected
   indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
   and benchmark-level entries render their own bodies; entries the program
-  does not schedule are one "Not in this program" line.
+  does not schedule fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; a rung ladder per standard filled to the
   level reached.
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
-  "N in this program · N so far · N with data", a segmented filter on the
-  three (the first that shows something until the athlete picks), and a card
+  a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
   sparkline, HR from a linked workout, the finding's change line. "No trend
   yet" when logged but unmeasured, "Not tracked" when nothing is logged.
@@ -1203,8 +1210,8 @@ Four cards, each an `AnalyticsCard` (§6.15):
 - *Lifts across blocks*: a chip row of every lift (and currency — rounds,
   minutes, km) with points in the window; the chart plots the heaviest
   completed set's est-1RM per session over real dates with the blocks as
-  `RectangleMark` bands; a deload point is hollow. Under it, the trend in
-  words and one row per block: sessions, first → last, best, Δ.
+  `RectangleMark` bands; a deload point is hollow. Under it, the trend as
+  an arrow and %/session, and one row per block: sessions, first → last, best, Δ.
 - *Load across blocks*: weekly TRIMP as bars coloured by block; hidden
   when no workout carried load.
 - *Standards over time*: each standard's PR history as "value (level, date)
@@ -1226,7 +1233,9 @@ from anywhere else (§6.9).
 
 `ReadinessSourceNote(result:)` (`ReadinessPresentation.swift`) is the one line
 under the readiness score that says where resting HR, HRV and sleep came from
-— on Today's readiness card and in Analytics ▸ Recovery. `.caption2`,
+— in Analytics ▸ Recovery only, under `ReadinessFlagChips` (the server's
+flags as icon chips: "RHR up 3d", "Recovery capped"). Today's card shows the
+score and the readings and nothing else (2026-10-16, §1.4). `.caption2`,
 `.secondary`, wrapping; it renders nothing when the server did not report
 `sources` (an older server), so neither screen needs a guard.
 
@@ -1328,7 +1337,8 @@ the measures' trends alone; before any has one there is no score, and the card
 says why under "Not enough data yet".
 
 - **The words are the server's** (`score_breakdown`, `score_status`,
-  `scope_label`, `pending_measures`, `purpose` from `src/analytics/review.py`),
+  `scope_label`, `pending_measures` from `src/analytics/review.py`; the phone
+  leaves out `purpose`, the intro sentence, since 2026-10-16),
   so the web says the same; the phone only lays them out. Older servers send
   none of them and the card falls back to the thresholds alone.
 - **The reason is always shown; the sum is folded.** One line under the band

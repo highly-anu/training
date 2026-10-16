@@ -80,9 +80,7 @@ struct AnalyticsOverviewTab: View {
                 AnalyticsPeriodPicker(period: $period)
                 kpiGrid
                 if summary == nil && appState.loadSummaryFailed.contains(period) {
-                    Text("Totals computed on this phone — the server's summary was unavailable.")
-                        .font(.caption2).foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    onDeviceMark.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if loadFocus.total > 0 { loadFocusCard }
                 if !modalities.isEmpty { modalityDonutCard }
@@ -203,7 +201,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Training Load Focus (Garmin-style)
 
     private var loadFocusCard: some View {
-        AnalyticsCard(header: "Training Load Focus") {
+        AnalyticsCard(header: "Load Focus · 28 days") {
             VStack(spacing: 10) {
                 let total = loadFocus.total
                 let rows: [(label: String, minutes: Double, color: Color)] = [
@@ -227,10 +225,6 @@ struct AnalyticsOverviewTab: View {
                             .font(.caption2).foregroundStyle(.secondary).frame(width: 32, alignment: .trailing)
                     }
                 }
-                Text("Last 28 days · Based on HR zone distribution")
-                    .font(.caption2).foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 2)
             }
         }
     }
@@ -368,7 +362,7 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Weekly Load (TRIMP)
 
     private var weeklyLoadCard: some View {
-        AnalyticsCard(header: "Weekly Load") {
+        AnalyticsCard(header: "Weekly TRIMP · 12 weeks") {
             Chart(weeklyLoadBars) { bar in
                 BarMark(
                     x: .value("Week", bar.weekStart, unit: .weekOfYear),
@@ -397,17 +391,19 @@ struct AnalyticsOverviewTab: View {
                 }
             }
             .frame(height: 130)
-            Text("TRIMP per week · last 12 weeks · \(sourceNote)")
-                .font(.caption2).foregroundStyle(.tertiary)
+            // The bars' own source: they come from `serverWeeklyLoad`
+            // independently of the PMC, so one request can answer and the
+            // other not.
+            if (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
         }
     }
 
-    /// The weekly bars' own source. It used to read the PMC's flag, but the
-    /// bars come from `serverWeeklyLoad` independently — one request could
-    /// answer and the other not, and the note then named the wrong one.
-    private var sourceNote: String {
-        let fromServer = !(appState.serverWeeklyLoad ?? []).isEmpty
-        return fromServer ? "server-computed, as on the web" : "computed on this phone"
+    /// Shown only when a number was computed on this phone because the
+    /// server could not answer; the server's numbers carry no mark.
+    private var onDeviceMark: some View {
+        Label("On device", systemImage: "iphone")
+            .font(.caption2).foregroundStyle(.tertiary)
+            .accessibilityLabel("Computed on this phone; the server could not be reached")
     }
 
     // MARK: - PMC Chart
@@ -461,10 +457,7 @@ struct AnalyticsOverviewTab: View {
                         legendLine(color: .green,  label: "TSB (form)")
                     }
                     .font(.caption2)
-                    Text(loadSource == .server
-                         ? "Server-computed — the same numbers as the web."
-                         : "Computed on this phone — the server could not be reached.")
-                        .font(.caption2).foregroundStyle(.tertiary)
+                    if loadSource == .device { onDeviceMark }
                 }
             }
         }

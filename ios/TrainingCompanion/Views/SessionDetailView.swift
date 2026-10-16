@@ -268,10 +268,20 @@ struct SessionDetailView: View {
         } header: {
             Text("Exercises")
         } footer: {
-            if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
-                Text("Tap an exercise for cues and a demo. Swipe right to log what you did, left to swap it for an alternative that fits the same slot.")
-            } else if !rows.isEmpty {
-                Text("Tap an exercise for cues and a demo. Swipe right to log what you did.")
+            if !rows.isEmpty {
+                // Gesture hints as symbols: tap for cues, swipe right to log,
+                // left to swap.
+                HStack(spacing: 14) {
+                    Label("Cues", systemImage: "hand.tap")
+                    Label("Log", systemImage: "arrow.right")
+                    if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
+                        Label("Swap", systemImage: "arrow.left")
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(canEditProgram && rows.contains(where: { canSwap($0.assignment) })
+                    ? "Tap an exercise for cues. Swipe right to log it, left to swap it."
+                    : "Tap an exercise for cues. Swipe right to log it.")
             }
         }
     }
