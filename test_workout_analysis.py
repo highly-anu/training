@@ -117,38 +117,64 @@ def test_route_attaches_analysis():
 
 
 def test_route_attaches_the_plan():
-    """The matched session's prescription rides beside the recorded zones:
-    planned minutes when its programming prescribes zones, why not when it
-    prescribes load; nothing when the workout is linked to no session."""
+    """The matched session's programming read against the recording: whole
+    when every prescription is a zone, only the watch-timed zoned exercises
+    when it mixes zones with load, why not when it prescribes load; nothing
+    when the workout is linked to no session."""
     import api
     import src.db as db
     from src import program_history
-    stored = dict(FIXTURE['run'], id='w1', date='2026-10-17')
+    stored = dict(FIXTURE['run'], id='w1', date='2026-10-01', startTime='2026-10-01T07:00:00Z')
     ballistic = {'modality': 'power', 'exercises': [], 'archetype': {'id': 'kb', 'slots': [
         {'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
         {'role': 'main', 'intensity': 'high', 'duration_minutes': 20}]}}
     heavy = {'modality': 'max_strength', 'exercises': [], 'archetype': {'id': 'ss', 'slots': [
         {'role': 'primary_squat', 'intensity': 'heavy'}]}}
-    current = {'session': ballistic}
-    orig = (api._health.get_workout, db.get_user_profile, api._health.get_matches, program_history.session_lookup)
+    mixed = {'modality': 'mixed_modal_conditioning', 'archetype': {'id': 'fran', 'slots': [
+        {'role': 'warm_up', 'intensity': 'zone2', 'duration_sec': 900},
+        {'role': 'fran', 'intensity': 'max_effort'}]}, 'exercises': [
+        {'exercise': {'id': 'row', 'name': 'Row'}, 'slot_role': 'warm_up', 'load': {'duration_minutes': 15}},
+        {'exercise': {'id': 'thruster', 'name': 'Thruster'}, 'slot_role': 'fran'}]}
+    current = {'session': ballistic, 'log': None}
+    orig = (api._health.get_workout, db.get_user_profile, api._health.get_matches,
+            api._health.get_session_log, program_history.session_lookup)
     api._health.get_workout = lambda uid, wid: dict(stored) if wid == 'w1' else None
     db.get_user_profile = lambda uid: _profile()
     api._health.get_matches = lambda uid: [{'importedWorkoutId': 'w1', 'sessionUid': 'v:w0-Saturday-0',
                                             'sessionKey': '1-Saturday-0', 'matchConfidence': 'manual'}]
+    api._health.get_session_log = lambda uid, suid, key=None, near=None: current['log']
     program_history.session_lookup = lambda uid, uids: [{'session': current['session'],
-                                                         'archetype_name': 'KB Ballistic Power', 'date': '2026-10-17'}]
+                                                         'archetype_name': 'KB Ballistic Power', 'date': '2026-10-01'}]
     try:
         client = api.app.test_client()
-        plan = client.get('/api/health/workouts/w1').get_json()['analysis']['planned']
-        assert plan['track'] and plan['plannedMinutes'] == [5.0, 5.0, 10.0, 10.0, 0.0], plan
-        assert plan['sessionName'] == 'KB Ballistic Power' and plan['sessionUid'] == 'v:w0-Saturday-0', plan
+
+        def planned():
+            body = client.get('/api/health/workouts/w1').get_json()
+            return body['analysis']['planned'], body['analysis']['zones']['minutes']
+        plan, recorded = planned()
+        check = plan['timing'] == 'whole' and plan['plannedMinutes'] == [5.0, 5.0, 10.0, 10.0, 0.0]
+        assert check and plan['sessionName'] == 'KB Ballistic Power' and plan['sessionUid'] == 'v:w0-Saturday-0', plan
+        assert all(abs(a - b) < 0.02 for a, b in zip(plan['zoneMinutes'], recorded)), (plan['zoneMinutes'], recorded)
         current['session'] = heavy
-        plan = client.get('/api/health/workouts/w1').get_json()['analysis']['planned']
-        assert not plan['track'] and plan['notZoned'] == ['primary_squat: heavy'], plan
+        plan, _ = planned()
+        assert plan['timing'] == 'none' and plan['notZoned'] == ['primary_squat: heavy'], plan
+        current['session'] = mixed
+        plan, _ = planned()
+        assert plan['timing'] == 'untimed' and plan['countedMinutes'] == 0, plan
+        current['log'] = {'completedAt': '2026-10-01T08:00:00Z', 'exercises': {}, 'exerciseTimeline': [
+            {'exerciseId': 'row', 'startOffset': 0, 'endOffset': 900},
+            {'exerciseId': 'thruster', 'startOffset': 960, 'endOffset': 1300}]}
+        plan, _ = planned()
+        warm = next(sl for sl in plan['slots'] if sl['role'] == 'warm_up')
+        fran = next(sl for sl in plan['slots'] if sl['role'] == 'fran')
+        assert plan['timing'] == 'timeline' and abs(plan['countedMinutes'] - 15) < 0.05, plan
+        assert plan['plannedMinutes'] == [0.0, 15.0, 0.0, 0.0, 0.0] and warm['counted'] and not fran['counted'], plan
+        assert warm['exercises'] == ['Row'] and fran['recordedMinutes'] is not None, plan
         api._health.get_matches = lambda uid: []
         assert client.get('/api/health/workouts/w1').get_json()['analysis']['planned'] is None
     finally:
-        api._health.get_workout, db.get_user_profile, api._health.get_matches, program_history.session_lookup = orig
+        (api._health.get_workout, db.get_user_profile, api._health.get_matches,
+         api._health.get_session_log, program_history.session_lookup) = orig
 
 
 if __name__ == '__main__':

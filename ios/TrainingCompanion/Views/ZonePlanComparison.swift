@@ -80,41 +80,110 @@ struct ZonePlanComparison: View {
     }
 }
 
-/// One workout against what its session planned (`analysis.planned`,
-/// src/analytics/hr_plan.py). When the session's programming prescribes
-/// heart-rate zones: planned against recorded per zone. When it prescribes
-/// load or effort instead (a heavy lifting day): one line saying its heart
-/// rate is shown for reference and not counted in the intensity split.
-/// Nothing when the workout is linked to no session.
+/// One workout against what its session's programming makes of it
+/// (`analysis.planned`, src/analytics/hr_plan.py): the zone minutes that
+/// count against the minutes planned for the same exercises, why when
+/// nothing counts, and each exercise — its prescription and what it recorded
+/// where the watch timed it. Nothing when the workout is linked to no
+/// session. The web's is `PlannedZones` (lib/zonePlan.ts holds the words).
 struct PlannedZonesView: View {
     let analysis: WorkoutAnalysis
 
     var body: some View {
         if let plan = analysis.planned {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text("Planned for \(plan.sessionName ?? "the session")")
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
-                if plan.track, let recorded = analysis.zones?.minutes {
+                if plan.counts {
                     ZonePlanComparison(rows: ZonePlanComparison.rows(planned: plan.plannedMinutes,
-                                                                     recorded: recorded))
-                } else if plan.track {
-                    Text("No heart rate was recorded to compare.")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    Text(Self.untrackedText(plan))
-                        .font(.caption).foregroundStyle(.secondary)
+                                                                     recorded: plan.zoneMinutes))
+                }
+                if let note = ZonePlan.note(plan) {
+                    Text(note).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if !plan.slots.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(plan.slots) { slot in
+                            let row = ZonePlan.row(slot, timing: plan.timing)
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text(row.title).font(.caption).fontWeight(.medium).lineLimit(1)
+                                Spacer(minLength: 4)
+                                Text(row.prescription).font(.caption).foregroundStyle(.secondary)
+                                Text(row.detail).font(.caption).monospacedDigit()
+                                    .foregroundStyle(row.counted ? .primary : .secondary)
+                                    .frame(minWidth: 96, alignment: .trailing)
+                            }
+                            .padding(.vertical, 5)
+                            .accessibilityElement(children: .combine)
+                            if slot.id != plan.slots.last?.id { Divider() }
+                        }
+                    }
                 }
             }
         }
     }
+}
 
-    /// "Its programming prescribes load (main: heavy), not heart-rate zones —
-    /// the heart rate is for reference and not counted in the intensity split."
+/// The words of a workout against its plan — the phone's copy of the web's
+/// lib/zonePlan.ts, the same cases in ZonePlanTests.
+enum ZonePlan {
+    struct Row: Equatable {
+        let title: String
+        let prescription: String
+        let detail: String
+        let counted: Bool
+    }
+
+    private static func words(_ s: String) -> String { s.replacingOccurrences(of: "_", with: " ") }
+
+    /// "Zone 2", "Zones 1–2", or the load word ("heavy", "max effort").
+    static func prescription(_ slot: WorkoutAnalysis.Planned.Slot) -> String {
+        if slot.zones.count == 1 { return "Zone \(slot.zones[0])" }
+        if let first = slot.zones.first, let last = slot.zones.last { return "Zones \(first)–\(last)" }
+        return words(slot.intensity ?? "load")
+    }
+
+    static func row(_ slot: WorkoutAnalysis.Planned.Slot, timing: String) -> Row {
+        let role = words(slot.role)
+        let title = slot.exercises.isEmpty ? role.prefix(1).uppercased() + role.dropFirst()
+                                           : slot.exercises.joined(separator: ", ")
+        let recorded = slot.recordedMinutes.map { Int($0.reduce(0, +).rounded()) }
+        let planned = Int(slot.plannedMinutes.rounded())
+        let detail: String
+        if slot.prescribes == "load" {
+            detail = recorded.map { "\($0) min · not counted" } ?? "not counted"
+        } else if let recorded, slot.counted {
+            detail = planned > 0 ? "\(recorded) of \(planned) min" : "\(recorded) min"
+        } else if timing == "whole" {
+            detail = planned > 0 ? "\(planned) min planned" : "counted"
+        } else if timing == "untimed" {
+            detail = "not timed"
+        } else {
+            detail = planned > 0 ? "\(planned) min planned" : ""
+        }
+        return Row(title: title, prescription: prescription(slot), detail: detail, counted: slot.counted)
+    }
+
+    /// The sentence under the comparison: what counted and why, or why nothing did.
+    static func note(_ plan: WorkoutAnalysis.Planned) -> String? {
+        switch plan.timing {
+        case "whole": return nil
+        case "timeline":
+            return "Only the exercises that prescribe heart-rate zones count, inside the times the watch logged for them; the rest of the session is max effort."
+        case "untimed":
+            return "Some exercises prescribe heart-rate zones, but the watch didn't time them, so none of this workout counts in zones. Record the session on the watch to split it by exercise."
+        case "unrecorded": return "No heart rate was recorded to compare."
+        default: return untrackedText(plan)
+        }
+    }
+
+    /// "Its programming prescribes load or effort (main: heavy), not heart-rate zones — …"
     static func untrackedText(_ plan: WorkoutAnalysis.Planned) -> String {
-        let what = (plan.notZoned ?? []).isEmpty ? "" : " (\((plan.notZoned ?? []).joined(separator: ", ")))"
         if plan.source == "declared" {
             return "This session's programming doesn't track heart rate — the zones are for reference and not counted in the intensity split."
         }
+        let what = plan.notZoned.isEmpty ? "" : " (\(plan.notZoned.joined(separator: ", ")))"
         return "Its programming prescribes load or effort\(what), not heart-rate zones — the zones are for reference and not counted in the intensity split."
     }
 }

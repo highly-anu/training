@@ -640,23 +640,26 @@ writes.
 - **The scorecard headline is a gate, not a weighted sum**: Σ priority ×
   completion is arithmetically plain compliance (priorities *are* the session
   shares). Committed-tier completion < 70% is `off_plan` regardless.
-- **The programming decides whether a session's heart rate counts**
-  (`src/analytics/hr_plan.py`, since 2026-10-17), never its modality family
-  alone. A session tracks HR when at least one slot's `intensity` names a zone
-  (`zone2`, `low`, `high` — `progression._INTENSITY_ZONES`) and none
-  prescribes load or effort (`heavy`, `max_effort`, `bodyweight`); an
-  archetype may say `heart_rate: track | ignore` outright; a session that
-  prescribes neither falls back to the family. A tracked session's minutes
-  go to the zone buckets and its zoned slots' minutes are what the intensity
-  split plans; an untracked one contributes to `max_effort` whether or not it
-  wore a strap — never to both. Under the family rule a Wildman ballistic
-  session (`power`, zones prescribed, a strap worn) vanished from the
-  per-zone minutes. Sessions with neither HR nor a strength modality are
-  `unclassified`, counted not dropped. `GET /health/workouts/<id>` adds
-  `analysis.planned` — the matched session's `hr_plan.plan` — and both
-  clients draw it against the recorded zones (web
-  `bio/ZonePlanComparison.tsx`, iOS `ZonePlanComparison.swift`). Fidelity's
-  planning-side split still uses the family rule (roadmap).
+- **Heart rate counts only where an exercise prescribes zones**
+  (`src/analytics/hr_plan.py`, since 2026-10-17), never by modality family.
+  An exercise's prescription is its slot's `intensity` (`zone2`, `low`, `high`
+  — `progression._INTENSITY_ZONES` — prescribe zones; `heavy`, `max_effort`,
+  `bodyweight`, `progressing` load or effort), else the band its load carries
+  (`zone_lower`/`zone_upper`). `hr_plan.attribute` is the one reading, for the
+  intensity split, the `zone_minutes` buckets and one workout's screen: every
+  prescription a zone → the whole recording counts (`whole`); zones mixed with
+  load (Fran's Zone 2 warm-up) → only the minutes the watch timed on the zoned
+  exercises (`timeline`, from the session log's `exerciseTimeline` — each
+  step's window, sent by the Garmin app and the Apple Watch — or the sets'
+  offsets) and the rest of the session is `max_effort`; untimed, nothing counts
+  in zones (`untimed`); no zone → `max_effort`, strap or not. Planned minutes
+  are counted for the same exercises only. An archetype may say `heart_rate:
+  track | ignore`; a session stored without slots falls back to the family.
+  `GET /health/workouts/<id>` adds `analysis.planned` — the attribution with
+  each slot's prescription, planned and timed minutes — on the athlete's own
+  edges; both clients lay it out (web `bio/ZonePlanComparison.tsx` +
+  `lib/zonePlan.ts`, iOS `ZonePlanComparison.swift`, design-system §6.35).
+  Fidelity's planning-side split still uses the family rule (roadmap 13).
 - **Trend** is a least-squares slope over non-deload points (`trend.py`),
   ±1 %/point; stall for load is per *session*, over the package's declared
   window. A deload week — flagged, or a taper — is never a stall.
@@ -779,7 +782,10 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   `completed`, plus a round step's `rounds`, a for-time step's `durationSec` and a
   distance step's `distanceKm`. The Apple Watch kept the for-time clock, the AMRAP
   rounds and the distance in its views and dropped them; `WorkoutSessionState.outcomes`
-  keeps them and `WatchUpload.sessionLog` sends them (`WatchUploadTests`).
+  keeps them and `WatchUpload.sessionLog` sends them (`WatchUploadTests`). Both send
+  each step's window as `exerciseTimeline` (`Wire.timeline`, `WorkoutSessionState.stepWindows`)
+  — from when the step became current to when the athlete moved on — which is what
+  lets the server count a warm-up's heart rate in zones and the main piece's not.
 - **A test step shows its standard and asks for its result.** With `?spec=1` a test's
   scored slot carries `standard` — `{id, name, result, best, target}`
   (`standards.watch_standard`) — and its screen's lines become `standard_target`

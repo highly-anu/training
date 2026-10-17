@@ -2,10 +2,14 @@
 
 `zone_minutes` is the intensity split — minutes in each framework bucket
 against the framework's declared `intensity_distribution`. A session
-contributes to the HR buckets when its programming prescribes zones
-(src/analytics/hr_plan.py), **or**, when it prescribes load or effort (a
-heavy lifting day), to `max_effort`; never both. A session that tracks heart
-rate but recorded none is `unclassified` and counted, not dropped.
+contributes to the HR buckets only through the exercises whose programming
+prescribes zones (src/analytics/hr_plan.py): the whole recording when every
+prescription is a zone, the minutes the watch timed on the zoned exercises
+when the session mixes zones with load or effort (the rest of it is
+`max_effort`), and nothing when it prescribes no zone or the watch timed
+none of a mixed session (all `max_effort`). Never both for one minute. A
+session that should count but recorded no heart rate is `unclassified` and
+counted, not dropped.
 
 `aerobic_efficiency` is the server twin of lib/hrZones.ts::computeAerobicDecoupling
 plus a metres-per-beat index, from GPS + HR of matched workouts, and only for
@@ -52,24 +56,26 @@ def zone_minutes(entry, ctx) -> dict:
         wk['sessions'] += 1
         minutes, _ = ctx.duration_minutes(h)
         w = h['workout']
-        # A session that prescribes load or effort rather than zones is
-        # max effort, even when it wore a strap; otherwise a lifting session
-        # with HR would land in zone1_2 AND its minutes would be strength
-        # minutes. One that prescribes zones counts its heart rate, whatever
-        # its modality family (a kettlebell ballistic session).
-        if not hr_plan.tracks(h['session']):
-            wk['max_effort_pct'] += minutes
-            measured += 1
-            methods['strength_minutes'] = methods.get('strength_minutes', 0) + 1
-            continue
-        split = zones.zone_minutes(w, max_hr) if w else {'method': 'none', 'minutes': [0] * 5}
-        if split['method'] != 'none':
-            for b, v in zones.to_framework_buckets(split['minutes']).items():
+        # Heart rate counts only where an exercise prescribes zones; what
+        # prescribes load or effort is max effort even when it wore a strap,
+        # or a lifting session with HR would land in zone1_2 AND its minutes
+        # would be strength minutes.
+        counted = hr_plan.attribute(h['session'], h['log'], w, max_hr)
+        timing = counted['timing']
+        if timing in ('whole', 'timeline'):
+            for b, v in zones.to_framework_buckets(counted['zoneMinutes']).items():
                 wk[b] += v
-            measured += 1
-            methods[split['method']] = methods.get(split['method'], 0) + 1
-        else:
+            if timing == 'timeline':
+                wk['max_effort_pct'] += max(0.0, minutes - counted['countedMinutes'])
+            method = counted['method'] if timing == 'whole' else 'timeline'
+        elif timing == 'unrecorded':
             wk['unclassified'] += minutes
+            continue
+        else:
+            wk['max_effort_pct'] += minutes
+            method = 'strength_minutes' if timing == 'none' else 'untimed'
+        measured += 1
+        methods[method] = methods.get(method, 0) + 1
 
     series, expected = [], []
     deviation_sum = {b: 0.0 for b in BUCKETS}

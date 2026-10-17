@@ -569,21 +569,48 @@ struct WorkoutAnalysis: Codable, Equatable {
     let recoveryHours: Int?
     let decoupling: Decoupling?
     let bestEfforts: [Effort]
-    /// What the matched session planned (src/analytics/hr_plan.py): whether
-    /// its programming tracks heart rate, and the minutes it plans per zone.
-    /// Nil when the workout is linked to no session, or from an older server.
+    /// What the matched session's programming makes of this recording
+    /// (src/analytics/hr_plan.py): heart rate counts only where an exercise
+    /// prescribes zones. Nil when the workout is linked to no session, or
+    /// from an older server.
     var planned: Planned? = nil
 
-    struct Planned: Codable, Equatable {
-        let track: Bool
+    struct Planned: Equatable {
+        var track: Bool
+        /// whole | exercises | none — what counts.
+        var mode: String
         /// declared | slots | modality — what decided.
-        let source: String?
-        /// Z1…Z5, minutes.
-        let plannedMinutes: [Double]
+        var source: String?
+        /// whole | timeline | untimed | unrecorded | none — how it was counted.
+        var timing: String
+        /// Z1…Z5: the planned minutes of the exercises that count.
+        var plannedMinutes: [Double]
+        /// Z1…Z5: the recorded minutes that count.
+        var zoneMinutes: [Double]
+        var countedMinutes: Double
         /// The slots that prescribe load or effort instead ("main: heavy").
-        let notZoned: [String]?
-        let sessionName: String?
-        let modality: String?
+        var notZoned: [String]
+        var slots: [Slot]
+        var sessionName: String?
+        var modality: String?
+
+        /// One slot: what it prescribes and, where the watch timed its
+        /// exercises, what it recorded.
+        struct Slot: Codable, Equatable, Identifiable {
+            var role: String
+            var intensity: String?
+            var zones: [Int]
+            /// zones | load
+            var prescribes: String
+            var exercises: [String]
+            var plannedMinutes: Double
+            /// Z1…Z5 inside the watch's times for its exercises; nil when untimed.
+            var recordedMinutes: [Double]?
+            var counted: Bool
+            var id: String { role }
+        }
+
+        var counts: Bool { timing == "whole" || timing == "timeline" }
     }
 
     /// The zone split as the charts take it.
@@ -1288,4 +1315,28 @@ struct SessionWithKey: Identifiable {
     let key: String
     var dateLabel: String = ""
     var sessionIndex: Int = 0
+}
+
+extension WorkoutAnalysis.Planned: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case track, mode, source, timing, plannedMinutes, zoneMinutes, countedMinutes,
+             notZoned, slots, sessionName, modality
+    }
+
+    /// Each key on its own, so one the server adds or changes never loses
+    /// the workout's whole analysis.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        track = (try? c.decodeIfPresent(Bool.self, forKey: .track)) ?? false
+        mode = (try? c.decodeIfPresent(String.self, forKey: .mode)) ?? (track ? "whole" : "none")
+        source = try? c.decodeIfPresent(String.self, forKey: .source)
+        timing = (try? c.decodeIfPresent(String.self, forKey: .timing)) ?? (track ? "whole" : "none")
+        plannedMinutes = (try? c.decodeIfPresent([Double].self, forKey: .plannedMinutes)) ?? []
+        zoneMinutes = (try? c.decodeIfPresent([Double].self, forKey: .zoneMinutes)) ?? []
+        countedMinutes = (try? c.decodeIfPresent(Double.self, forKey: .countedMinutes)) ?? 0
+        notZoned = (try? c.decodeIfPresent([String].self, forKey: .notZoned)) ?? []
+        slots = (try? c.decodeIfPresent([Slot].self, forKey: .slots)) ?? []
+        sessionName = try? c.decodeIfPresent(String.self, forKey: .sessionName)
+        modality = try? c.decodeIfPresent(String.self, forKey: .modality)
+    }
 }

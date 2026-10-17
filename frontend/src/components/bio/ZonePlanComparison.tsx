@@ -1,6 +1,6 @@
 import type { WorkoutAnalysis } from '@/api/types'
 import { ZONE_COLORS } from '@/lib/hrZones'
-import { untrackedText, zonePlanRows, type ZonePlanRow } from '@/lib/zonePlan'
+import { exerciseRow, planNote, zonePlanRows, type ZonePlanRow } from '@/lib/zonePlan'
 
 /**
  * Planned against recorded minutes per heart-rate zone: what the programming
@@ -43,18 +43,39 @@ export function ZonePlanComparison({ rows }: { rows: ZonePlanRow[] }) {
   )
 }
 
-/** One workout against what its session planned; nothing when it is linked to no session. */
+/**
+ * One workout against what its session's programming makes of it
+ * (`analysis.planned`, src/analytics/hr_plan.py): the zone minutes that count
+ * against the minutes planned for the same exercises, why when nothing
+ * counts, and each exercise — its prescription and what it recorded where the
+ * watch timed it. Nothing when the workout is linked to no session.
+ */
 export function PlannedZones({ analysis }: { analysis: WorkoutAnalysis }) {
   const plan = analysis.planned
   if (!plan) return null
+  const counts = plan.timing === 'whole' || plan.timing === 'timeline'
+  const note = planNote(plan)
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <p className="text-xs font-semibold text-muted-foreground">Planned for {plan.sessionName ?? 'the session'}</p>
-      {plan.track && analysis.zones
-        ? <ZonePlanComparison rows={zonePlanRows(plan.plannedMinutes, analysis.zones.minutes)} />
-        : <p className="text-xs text-muted-foreground">
-            {plan.track ? 'No heart rate was recorded to compare.' : untrackedText(plan)}
-          </p>}
+      {counts && <ZonePlanComparison rows={zonePlanRows(plan.plannedMinutes, plan.zoneMinutes)} />}
+      {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      {plan.slots.length > 0 && (
+        <ul className="divide-y divide-border text-xs">
+          {plan.slots.map((slot) => {
+            const row = exerciseRow(slot, plan.timing)
+            return (
+              <li key={slot.role} className="flex items-baseline gap-2 py-1.5">
+                <span className="min-w-0 flex-1 truncate font-medium">{row.title}</span>
+                <span className="shrink-0 text-muted-foreground">{row.prescription}</span>
+                <span className={`w-36 shrink-0 text-right tabular-nums ${row.counted ? '' : 'text-muted-foreground'}`}>
+                  {row.detail}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }

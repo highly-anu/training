@@ -1040,18 +1040,43 @@ export interface WorkoutAnalysis {
   planned?: WorkoutPlanned | null
 }
 
-/** A session's heart-rate prescription, read from its programming. */
+/** What a session's programming makes of one recording (src/analytics/hr_plan.py):
+ *  heart rate counts only where an exercise prescribes zones. */
 export interface WorkoutPlanned {
-  /** Its programming prescribes heart-rate zones, so its heart rate counts. */
+  /** Something in it prescribes zones. */
   track: boolean
+  /** What counts: the whole recording, only the zoned exercises, or nothing. */
+  mode: 'whole' | 'exercises' | 'none'
   /** What decided: the archetype's `heart_rate`, its slots, or its modality. */
   source: 'declared' | 'slots' | 'modality'
-  /** Z1–Z5, minutes. */
+  /** How it was counted: whole, by the watch's exercise times, not timed
+   *  (a mixed session without them), no heart rate recorded, or not at all. */
+  timing: 'whole' | 'timeline' | 'untimed' | 'unrecorded' | 'none'
+  /** Z1–Z5: the planned minutes of the exercises that count. */
   plannedMinutes: number[]
+  /** Z1–Z5: the recorded minutes that count. */
+  zoneMinutes: number[]
+  countedMinutes: number
   /** The slots that prescribe load or effort instead ("main: heavy"). */
   notZoned: string[]
+  slots: WorkoutPlannedSlot[]
+  sessionUid?: string
   sessionName: string | null
   modality: string | null
+}
+
+/** One slot of the session: what it prescribes and, where the watch timed
+ *  its exercises, what it recorded. */
+export interface WorkoutPlannedSlot {
+  role: string
+  intensity: string | null
+  zones: number[]
+  prescribes: 'zones' | 'load'
+  exercises: string[]
+  plannedMinutes: number
+  /** Z1–Z5 inside the watch's times for its exercises; null when untimed. */
+  recordedMinutes: number[] | null
+  counted: boolean
 }
 
 export interface SetPerformance {

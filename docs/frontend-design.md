@@ -1483,10 +1483,13 @@ is matched to its segment by position, because the calendar numbers weeks from
 **Planned against recorded zones** (`bio/ZonePlanComparison.tsx`, no Recharts):
 the planned minutes are a zone-coloured outline, the recorded minutes a fill over
 it, "22/8 min" at the end of each row. The Analytics ▸ Program intensity split draws
-it from `intensity.zones` over the block; `PlannedZones` draws it on a workout's
-"Against the plan" section from `analysis.planned` (`src/analytics/hr_plan.py` — the
-session's programming decides whether its heart rate counts), or says in one line why
-the zones are for reference only. iOS draws the same (design-system §6.35).
+it from `intensity.zones` over the block. `PlannedZones` draws a workout's
+"Against the plan" from `analysis.planned` (`src/analytics/hr_plan.py`): the zone
+minutes that count — only where an exercise prescribes zones, inside the times the
+watch logged for it — against the same exercises' planned minutes, a caption for how
+they were counted, and a row per exercise (prescription, "12 of 15 min", "not timed",
+"not counted"; words in `lib/zonePlan.ts`). iOS draws the same
+(design-system §6.35).
 
 **Rule this inventory implies:** a chart's colors come from a *named system* (§8), not from the author's judgement at the call site. `WorkoutAnalytics` defines series colors inline and is the one place that breaks this — noted in the fix plan (FIX-6) as low priority, since the values it picks are correct today.
 

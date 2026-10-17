@@ -48,7 +48,7 @@ deferred is under *Later*.
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
-| 13 | Heart rate from the programming: mixed sessions, fidelity, per-exercise attribution | P2 | M | engine, API, content |
+| 13 | Heart rate from the programming: ship the watches' exercise times, fidelity, pauses | P2 | M | watch, engine |
 
 ---
 
@@ -820,25 +820,27 @@ suggest results the athlete confirms. Left:
 
 ### 13. Heart rate from the programming: what is left — P2 · M
 
-Since 2026-10-17 a session's heart rate counts in the zone minutes when its programming
-prescribes zones (`src/analytics/hr_plan.py`): at least one slot names a zone and none
-prescribes load or effort, or the archetype says `heart_rate: track | ignore`. A workout's
-`analysis.planned` carries the matched session's plan to both clients. Open:
+Since 2026-10-17 heart rate counts only where an exercise prescribes zones
+(`src/analytics/hr_plan.py`): the whole recording when every prescription is a zone,
+only the watch-timed minutes of the zoned exercises when a session mixes zones with load
+(Fran's warm-up, a Starting Strength day's warm-up), nothing otherwise. Open:
 
-- **Mixed sessions.** 24 archetypes put a zoned warm-up or finisher beside heavy or
-  max-effort work (CrossFit's Fran, Helen, Cindy and mixed AMRAP; Gym Jones' circuit,
-  accumulation and 2 km row test; Horsemen's carries, PT test and named workouts; the
-  Starting Strength 5×5 and HLM days; Uphill's ME gym days). They count as max effort
-  whole. Either declare `heart_rate:` per archetype where the theory says otherwise, or
-  split them per slot (next point).
-- **Per-exercise attribution.** The session log's `exercise_timeline` dates each exercise;
-  with it the recorded series can be cut per slot, so a warm-up's minutes land in zones
-  and the main piece's in max effort, and the workout screen can compare each block with
-  its own prescription.
+- **Ship the watches.** The Garmin app's `exerciseTimeline` (`Wire.timeline`) needs a
+  store release, the Apple Watch's step windows a TestFlight build; until then a mixed
+  session recorded on the fenix counts nothing in zones (`untimed`). The Garmin unit
+  test (`stepWindowsGoUpAsTheTimeline`) compiled but was not run — the Connect IQ
+  simulator was in use.
+- **Mixed sessions logged without a watch** (phone or web) stay `untimed`. Placing the
+  zoned exercises by the plan's order and durations would be an estimate; decide whether
+  it is worth showing as one.
 - **Fidelity still uses the family rule** for the planned split (`src/fidelity.py`).
   Reading `hr_plan` there instead fires 126 new findings in seven packages — mostly
   strength-family sessions with zoned slots that the frameworks' `intensity_distribution`
   never planned for. Align the packages' distributions first, then the rule.
+- **Pauses.** The Garmin app's offsets count its session clock, which stops while
+  paused, as its own heart-rate samples do; a Garmin Connect file that becomes the
+  canonical row is stamped by the wall clock, so after a pause a window lands late. Sending absolute `startAt`/`endAt`
+  (the server already prefers them) would close it.
 - **`progressing`** (Starting Strength's three lifts) is a load word that
   `progression._INTENSITY_ZONES` maps to a Zone 2–4 band; `hr_plan` treats it as load.
   Drop it from the map or give the progression its own token.

@@ -2042,10 +2042,12 @@ def health_get_workout(workout_id: str):
 
 
 def _planned_for_workout(user_id: str, workout: dict) -> dict | None:
-    """The matched session's heart-rate prescription (src/analytics/hr_plan.py):
-    whether its programming tracks heart rate, the minutes it plans per zone,
-    and its name — the post-workout view shows it beside the zones the
-    workout recorded. None when the workout is linked to no session."""
+    """What the matched session's programming makes of this recording
+    (src/analytics/hr_plan.attribute): exercise by exercise, what each
+    prescribes, the minutes it planned and — where the watch timed it — what
+    it recorded, and the zone minutes that count, on the same max HR and
+    edges as the workout's own zones. None when the workout is linked to no
+    session."""
     from src import program_history
     from src.analytics import hr_plan
     match = next((m for m in _health.get_matches(user_id)
@@ -2062,7 +2064,10 @@ def _planned_for_workout(user_id: str, workout: dict) -> dict | None:
     if not found:
         return None
     session = found[0]['session']
-    out = hr_plan.plan(session)
+    analysis = workout.get('analysis') or {}
+    log = _health.get_session_log(user_id, uid, match.get('sessionKey'), workout.get('date'))
+    out = hr_plan.attribute(session, log, workout, analysis.get('maxHr') or 190,
+                            analysis.get('zoneBoundaries'))
     out.update({'sessionUid': uid, 'sessionName': found[0].get('archetype_name'),
                 'modality': session.get('modality'), 'date': found[0].get('date')})
     return out
@@ -4612,7 +4617,9 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                             for s in ((d or {}).get('sets') or []) if isinstance(s, dict)],
                        (d or {}).get('rounds'), (d or {}).get('durationSec'), (d or {}).get('distanceKm'),
                        (d or {}).get('clean'))
-                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)))
+                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)),
+                      # The watch's exercise times: they decide which minutes count in zones.
+                      v.get('exerciseTimeline'))
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
@@ -4639,8 +4646,9 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         # The document's shape: bump when a section gains keys, so stored
         # copies are rebuilt (2: scorecard.weeks, for the Today card;
         # 5: intensity.zones, per-zone planned against recorded minutes;
-        # 6: a session's programming decides whether its heart rate counts).
-        'doc-6',
+        # 6: a session's programming decides whether its heart rate counts;
+        # 7: only its zoned exercises' timed minutes count).
+        'doc-7',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 

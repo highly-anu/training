@@ -75,15 +75,18 @@ _slot_minutes = hr_plan.slot_minutes
 
 def _zone_detail(ctx: Context) -> list[dict]:
     """Planned against recorded minutes per HR zone (Z1-Z5), over the
-    completed sessions that track heart rate (src/analytics/hr_plan.py).
+    completed sessions, counting only the exercises whose programming
+    prescribes zones (src/analytics/hr_plan.py).
 
-    The session's programming decides, not its modality family: a session
-    whose slots prescribe zones plans minutes in them (a slot spanning zones
-    splits its minutes evenly) and its matched workout's heart rate records
-    them; one that prescribes load or effort (a heavy lifting day) is left
-    out, and the bucket split counts it as max effort. Planned minutes count
-    only for a session whose heart rate was recorded, so both sides cover the
-    same sessions. A zone with nothing on either side is left out."""
+    A session whose every prescription is a zone counts its whole recording
+    against all its slots' planned minutes; one that mixes zones with load
+    or effort counts only the minutes the watch timed on its zoned exercises,
+    against those exercises' planned minutes (nothing when the watch timed
+    none); one that prescribes no zone is left out, and the bucket split
+    counts it as max effort. A slot spanning zones splits its planned minutes
+    evenly. Planned minutes count only where heart rate was recorded, so both
+    sides cover the same exercises. A zone with nothing on either side is
+    left out."""
     max_hr = max_hr_for(ctx)
     planned = [0.0] * 5
     actual = [0.0] * 5
@@ -93,22 +96,18 @@ def _zone_detail(ctx: Context) -> list[dict]:
     for hit in ctx.sessions(elapsed_only=True):
         log = ctx.log_for(hit) or {}
         workout = ctx.workout_for(hit)
-        if not (log.get('completedAt') or workout is not None):
+        if workout is None:
             continue
-        session = hit['session']
-        prescription = hr_plan.plan(session)
-        if not prescription['track']:
-            continue
-        wid = (workout or {}).get('id')
+        wid = workout.get('id')
         if wid is not None and wid in seen_workouts:
             continue
-        split = zones.zone_minutes(workout, max_hr) if workout else {'method': 'none'}
-        if split['method'] == 'none':
+        counted = hr_plan.attribute(hit['session'], log, workout, max_hr)
+        if counted['timing'] not in ('whole', 'timeline'):
             continue
         seen_workouts.add(wid)
-        for i, v in enumerate(split['minutes']):
+        for i, v in enumerate(counted['zoneMinutes']):
             actual[i] += v
-        for i, v in enumerate(prescription['plannedMinutes']):
+        for i, v in enumerate(counted['plannedMinutes']):
             planned[i] += v
     return [{'zone': f'z{i + 1}', 'label': f'Z{i + 1}',
              'plannedMinutes': round(planned[i]), 'actualMinutes': round(actual[i])}

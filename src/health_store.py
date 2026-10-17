@@ -801,30 +801,7 @@ def get_session_logs(user_id: str) -> dict:
         result = {}
         ranks: dict[str, int] = {}
         for row in rows:
-            exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
-                json.loads(row['exercises'] or '{}')
-            )
-            tl_raw = row.get('exercise_timeline')
-            timeline = tl_raw if isinstance(tl_raw, list) else (
-                json.loads(tl_raw) if tl_raw else None
-            )
-            entry = {
-                'sessionKey':    row['session_key'],
-                'exercises':     exercises,
-                'notes':         row['notes'] or '',
-                'fatigueRating': row['fatigue_rating'],
-                'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
-                'source':        row.get('source') or 'web',
-            }
-            if row.get('avg_hr') is not None:
-                entry['avgHR'] = row['avg_hr']
-            if row.get('peak_hr') is not None:
-                entry['peakHR'] = row['peak_hr']
-            if timeline is not None:
-                entry['exerciseTimeline'] = timeline
-            if row.get('session_uid'):
-                entry['sessionUid'] = row['session_uid']
-
+            entry = _log_entry(row)
             key = row['session_key']
             row_rank = rank(row)
             if row_rank == 0:
@@ -836,6 +813,68 @@ def get_session_logs(user_id: str) -> dict:
         return result
     except Exception:
         return {}
+
+
+def _log_entry(row: dict) -> dict:
+    """One session_logs row in the shape every reader returns."""
+    exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
+        json.loads(row['exercises'] or '{}')
+    )
+    tl_raw = row.get('exercise_timeline')
+    timeline = tl_raw if isinstance(tl_raw, list) else (
+        json.loads(tl_raw) if tl_raw else None
+    )
+    entry = {
+        'sessionKey':    row['session_key'],
+        'exercises':     exercises,
+        'notes':         row['notes'] or '',
+        'fatigueRating': row['fatigue_rating'],
+        'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
+        'source':        row.get('source') or 'web',
+    }
+    if row.get('avg_hr') is not None:
+        entry['avgHR'] = row['avg_hr']
+    if row.get('peak_hr') is not None:
+        entry['peakHR'] = row['peak_hr']
+    if timeline is not None:
+        entry['exerciseTimeline'] = timeline
+    if row.get('session_uid'):
+        entry['sessionUid'] = row['session_uid']
+    return entry
+
+
+def get_session_log(user_id: str, session_uid: str | None, session_key: str | None = None,
+                    near_date: str | None = None) -> dict | None:
+    """The log of one planned session: the row scoped to its uid, else a row
+    with only its key completed within a day of `near_date` — the key alone
+    ('3-Monday-0') names a session in every program. One workout's screen
+    reads it for the watch's exercise times (src/analytics/hr_plan.py)."""
+    from datetime import date as _date
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute('SELECT * FROM session_logs WHERE user_id = %s AND '
+                            '(session_uid = %s OR (session_uid IS NULL AND session_key = %s))',
+                            (user_id, session_uid, session_key))
+                rows = cur.fetchall()
+    except Exception:
+        return None
+    scoped = [r for r in rows if session_uid and r.get('session_uid') == session_uid]
+    if scoped:
+        return _log_entry(scoped[0])
+    try:
+        near = _date.fromisoformat(str(near_date)[:10])
+    except (TypeError, ValueError):
+        return None
+    for row in rows:
+        try:
+            done = _date.fromisoformat(str(row.get('completed_at'))[:10])
+        except (TypeError, ValueError):
+            continue
+        if abs((done - near).days) <= 1:
+            return _log_entry(row)
+    return None
 
 
 def get_session_logs_by_uid(user_id: str) -> dict:
