@@ -28,7 +28,10 @@ the body unchanged over WatchConnectivity (`WatchDayMessage`), and the watch dec
   `standard`, `progress.headline`, `tomorrow`. Neither watch formats what the server can.
 - Uploads go through the same two routes from both watches: `POST /health/workouts`
   and `PUT /health/sessions/<key>`, keyed by exercise id (`garmin/core/source/engine/Wire.mc`,
-  `ios/TrainingCompanion/WatchUpload.swift`).
+  `ios/TrainingCompanion/WatchUpload.swift`). The Apple Watch hands its session to the phone
+  live while the phone is reachable; the phone stores it and answers `stored`, and only
+  without that answer is the copy queued (`WatchUploadMessage`). Queued alone, a workout
+  reached the server whenever the system delivered it — between simulators, never.
 
 ## One vocabulary
 

@@ -877,6 +877,44 @@ nonisolated struct WatchWorkoutSummary: Codable {
     var standardResults: [String: String]? = nil
 }
 
+/// What the watch sends the phone after a session, in one shape whichever
+/// way it travels: live (`sendMessage`) while the phone is reachable — the
+/// phone stores it on the server and answers `stored` — and queued
+/// (`transferUserInfo`) otherwise or when no such answer comes. Queued alone,
+/// a workout reached the server whenever the system delivered it, and
+/// between simulators never: the phone's daemon took the transfer and did
+/// not hand it on. A delivery that arrives both ways is stored once: the
+/// workout's id is deterministic, the log merges exercise by exercise and
+/// the match is an upsert.
+nonisolated enum WatchUploadMessage {
+    static let workout = "workout_complete"
+    static let sessionDone = "session_marked_complete"
+    /// A summary past this goes as a file: a message, live or queued, is
+    /// capped near 65 KB.
+    static let maxMessageBytes = 50_000
+
+    static func message(_ summary: WatchWorkoutSummary) -> [String: Any]? {
+        guard let data = try? JSONEncoder().encode(summary),
+              var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        dict["type"] = workout
+        return dict
+    }
+
+    static func summary(from message: [String: Any]) -> WatchWorkoutSummary? {
+        guard message["type"] as? String == workout,
+              let data = try? JSONSerialization.data(withJSONObject: message) else { return nil }
+        return try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data)
+    }
+
+    static func sessionDone(_ sessionId: String, at date: Date = Date()) -> [String: Any] {
+        ["type": sessionDone, "sessionId": sessionId, "markedAt": ISO8601DateFormatter().string(from: date)]
+    }
+
+    /// The phone's answer: the server has it.
+    static func reply(stored: Bool) -> [String: Any] { ["stored": stored] }
+    static func stored(_ reply: [String: Any]) -> Bool { reply["stored"] as? Bool == true }
+}
+
 nonisolated struct WatchSetLog: Codable, Equatable {
     let setIndex: Int
     let repsActual: Int?

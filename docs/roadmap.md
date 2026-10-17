@@ -875,7 +875,12 @@ branch:
    own max HR and week list and its stored readiness copy are gone. The server adds
    `maxHR` with `?spec=1`; meta blocks (a BJJ round) now reach the watch, logged by name
    as on the Garmin; `not_started` says "Starts Mon 20 Oct". `data/watch_day_fixture.json`
-   is written by the route and decoded by `WatchDayTests`.
+   is written by the route and decoded by `WatchDayTests`. Uploads go live to a reachable
+   phone, which answers once the server has them (`WatchUploadMessage`); the queued
+   transfer is the fallback — between simulators it was never delivered, so an end-to-end
+   run (watch → phone → workout, log, match → `completed` on the next sync) now passes
+   there. The watch's done mark keeps the log's `apple_watch_live` source, and
+   `standard_results` files that source as the watch's.
 3. **Spec rendering (M).** `gen_vocab.py` also writes `ios/Shared/WatchVocab.swift`; a
    Swift renderer switches exhaustively on it (a new id breaks the build until both watches
    draw it); the eight templates map onto today's views plus a round timer; behaviours

@@ -88,33 +88,53 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
 
+    /// The session to the phone, which stores it on the server. Live while
+    /// the phone is reachable, and the phone's answer says whether the
+    /// server has it; only when it does not (or no answer comes) is the
+    /// copy queued — the way every summary went before, delivered whenever
+    /// the system got to it.
     func sendWorkoutSummary(_ summary: WatchWorkoutSummary) {
-        guard let data = try? JSONEncoder().encode(summary),
-              var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        dict["type"] = "workout_complete"
-
-        // Cancel any previously queued transfers for the same session so re-runs
-        // during testing don't result in stale data being delivered after the new one.
-        for pending in WCSession.default.outstandingUserInfoTransfers
-        where pending.userInfo["type"] as? String == "workout_complete"
-           && pending.userInfo["sessionId"] as? String == summary.sessionId {
-            pending.cancel()
+        guard let message = WatchUploadMessage.message(summary) else { return }
+        let size = (try? JSONSerialization.data(withJSONObject: message))?.count ?? .max
+        guard size <= WatchUploadMessage.maxMessageBytes else {
+            queueLargeSummary(summary)
+            return
         }
-
-        // transferUserInfo has a ~65 KB limit. Re-serialise to check size.
-        let payloadData = (try? JSONSerialization.data(withJSONObject: dict)) ?? data
-        if payloadData.count <= 50_000 {
-            WCSession.default.transferUserInfo(dict)
-        } else {
-            // Large payload (long workout with many GPS/HR points) — use file transfer
-            let tmpURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("workout_\(summary.sessionId).json")
-            try? payloadData.write(to: tmpURL)
-            WCSession.default.transferFile(
-                tmpURL,
-                metadata: ["type": "workout_complete_file", "sessionId": summary.sessionId]
-            )
+        deliver(message) {
+            // Cancel any previously queued transfers for the same session so re-runs
+            // during testing don't result in stale data being delivered after the new one.
+            for pending in WCSession.default.outstandingUserInfoTransfers
+            where pending.userInfo["type"] as? String == WatchUploadMessage.workout
+               && pending.userInfo["sessionId"] as? String == summary.sessionId {
+                pending.cancel()
+            }
+            WCSession.default.transferUserInfo(message)
         }
+    }
+
+    /// A long workout with many GPS/HR points goes as a file.
+    private func queueLargeSummary(_ summary: WatchWorkoutSummary) {
+        guard let data = try? JSONEncoder().encode(summary) else { return }
+        let tmpURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("workout_\(summary.sessionId).json")
+        try? data.write(to: tmpURL)
+        WCSession.default.transferFile(
+            tmpURL,
+            metadata: ["type": "workout_complete_file", "sessionId": summary.sessionId]
+        )
+    }
+
+    /// Live when the phone is reachable; `queue` runs when it is not, when
+    /// the send fails, or when the phone answers that the server does not
+    /// have it yet.
+    private func deliver(_ message: [String: Any], queue: @escaping @MainActor () -> Void) {
+        guard WCSession.default.isReachable else { queue(); return }
+        WCSession.default.sendMessage(message, replyHandler: { reply in
+            let stored = WatchUploadMessage.stored(reply)
+            Task { @MainActor in if !stored { queue() } }
+        }, errorHandler: { _ in
+            Task { @MainActor in queue() }
+        })
     }
 
     /// Two yyyy-MM-dd dates in the same Monday-based week.
@@ -159,14 +179,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
 
     private func sendSessionMarkedComplete(_ sessionId: String) {
-        let iso = ISO8601DateFormatter()
-        let payload: [String: Any] = [
-            "type":      "session_marked_complete",
-            "sessionId": sessionId,
-            "markedAt":  iso.string(from: Date()),
-        ]
-        // Use transferUserInfo (queued, reliable delivery)
-        WCSession.default.transferUserInfo(payload)
+        let message = WatchUploadMessage.sessionDone(sessionId)
+        deliver(message) { WCSession.default.transferUserInfo(message) }
     }
 
     /// Today's day if the cache holds it; otherwise only what may stand in:

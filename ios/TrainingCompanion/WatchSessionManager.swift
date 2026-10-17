@@ -121,21 +121,19 @@ extension WatchSessionManager: WCSessionDelegate {
         let type = userInfo["type"] as? String ?? "(no type)"
         AppLogger.logFromBackground("WCSession: received userInfo type=\(type)")
 
-        if type == "session_marked_complete" {
+        if type == WatchUploadMessage.sessionDone {
             guard let sessionId = userInfo["sessionId"] as? String,
                   let markedAt = userInfo["markedAt"] as? String else { return }
             Task { await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt) }
             return
         }
 
-        guard type == "workout_complete" else { return }
-        guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
-              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+        guard type == WatchUploadMessage.workout else { return }
+        guard let summary = WatchUploadMessage.summary(from: userInfo) else {
             AppLogger.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
             return
         }
-        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
-        Task { await handleWorkoutComplete(summary) }
+        Task { await receive(summary) }
     }
 
     /// Large workout payloads arrive via transferFile when > 50 KB.
@@ -146,11 +144,23 @@ extension WatchSessionManager: WCSessionDelegate {
             AppLogger.logFromBackground("WCSession: failed to decode large workout file")
             return
         }
-        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
-        Task { await handleWorkoutComplete(summary) }
+        Task { await receive(summary) }
     }
 
-    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
+    /// Keep the summary on the phone until the server has it, then store it;
+    /// true when the server has the workout and its log.
+    @discardableResult
+    private func receive(_ summary: WatchWorkoutSummary) async -> Bool {
+        if let data = try? JSONEncoder().encode(summary) {
+            WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
+        }
+        return await handleWorkoutComplete(summary)
+    }
+
+    /// Stores a session from the watch: its log, the workout, the match.
+    /// True when the server has the log and the workout — what the watch's
+    /// live send waits for before it lets the queued copy go.
+    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async -> Bool {
         // Track upload for SyncStatusView
         let now = Date()
         UserDefaults.standard.set(now, forKey: "lastWatchUploadDate")
@@ -168,8 +178,10 @@ extension WatchSessionManager: WCSessionDelegate {
         if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
 
         AppLogger.logFromBackground("API: saving workout log for \(sessionKey)…")
+        var logSaved = false
         do {
             try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            logSaved = true
             AppLogger.logFromBackground("API: saved workout log for \(sessionKey) ✓")
         } catch {
             AppLogger.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
@@ -182,7 +194,7 @@ extension WatchSessionManager: WCSessionDelegate {
         //    to do could offer (see WatchUpload).
         guard let startDate = WatchUpload.parseStart(summary.startedAt) else {
             AppLogger.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
-            return
+            return false
         }
         let workoutId = WatchUpload.workoutId(sessionKey: sessionKey, startedAt: summary.startedAt)
         let workout = WatchUpload.workoutPayload(summary: summary, workoutId: workoutId, startDate: startDate,
@@ -194,7 +206,7 @@ extension WatchSessionManager: WCSessionDelegate {
             WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
         } catch {
             AppLogger.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
-            return
+            return false
         }
 
         // 3. Link the workout to the session. The server resolves the
@@ -219,15 +231,21 @@ extension WatchSessionManager: WCSessionDelegate {
             await enrichWorkoutWithHKRoute(workout: workout, startDate: startDate,
                                            existingGPSCount: existingGPSCount)
         }
+        // A match that failed is not worth a second delivery: the workout and
+        // its log are stored, and the matcher can still link them.
+        return logSaved
     }
 
-    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async {
+    @discardableResult
+    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async -> Bool {
         AppLogger.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
         do {
-            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt)
+            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt, source: "apple_watch_live")
             AppLogger.logFromBackground("API: marked session complete \(sessionId) ✓")
+            return true
         } catch {
             AppLogger.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -273,6 +291,21 @@ extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession,
                              didReceiveMessage message: [String: Any],
                              replyHandler: @escaping ([String: Any]) -> Void) {
+        // A session sent live: stored on the server before the reply, which
+        // tells the watch whether it still needs to queue its copy.
+        if let summary = WatchUploadMessage.summary(from: message) {
+            AppLogger.logFromBackground("WCSession: received workout live — \(summary.sessionId)")
+            Task { replyHandler(WatchUploadMessage.reply(stored: await receive(summary))) }
+            return
+        }
+        if message["type"] as? String == WatchUploadMessage.sessionDone,
+           let sessionId = message["sessionId"] as? String, let markedAt = message["markedAt"] as? String {
+            Task {
+                let stored = await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt)
+                replyHandler(WatchUploadMessage.reply(stored: stored))
+            }
+            return
+        }
         guard let type = message["type"] as? String, type == "request_sync" else {
             replyHandler([:])
             return

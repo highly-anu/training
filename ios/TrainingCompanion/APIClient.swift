@@ -293,14 +293,17 @@ final class APIClient {
         return (try? JSONDecoder().decode([SessionLogEntry].self, from: data)) ?? []
     }
 
-    func saveSessionComplete(sessionKey: String, completedAt: String) async throws {
+    /// `source` is the log's: a session ticked on the phone is `manual`; the
+    /// Apple Watch's done mark keeps its log `apple_watch_live` (it used to
+    /// overwrite it with `manual`, after the workout's log had just said it).
+    func saveSessionComplete(sessionKey: String, completedAt: String, source: String = "manual") async throws {
         struct Body: Encodable {
             let completedAt: String
             let source: String
         }
         _ = try await put(
             "/health/sessions/\(sessionKey)",
-            body: Body(completedAt: completedAt, source: "manual")
+            body: Body(completedAt: completedAt, source: source)
         )
     }
 

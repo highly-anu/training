@@ -33,7 +33,10 @@ STATUSES = ('pending', 'confirmed', 'dismissed')
 
 # A session log's `source` → the result's. The watch measured it, so a result
 # confirmed from a watch-logged session says so; every other log is a session.
-_RESULT_SOURCE = {'garmin': 'garmin', 'apple_watch': 'apple_watch', 'watch': 'apple_watch'}
+# `apple_watch_live` is what the Apple Watch's sessions carry (WatchUpload); it
+# was missing, so a test recorded on the Apple Watch was filed as `session`.
+_RESULT_SOURCE = {'garmin': 'garmin', 'apple_watch': 'apple_watch', 'apple_watch_live': 'apple_watch',
+                  'watch': 'apple_watch'}
 
 
 def result_source(log_source: str | None) -> str:
