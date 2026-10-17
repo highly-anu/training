@@ -555,7 +555,7 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -699,7 +699,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TrainingCompanion/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "training companion";
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Readiness score and workout performance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -711,7 +711,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -737,7 +737,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TrainingCompanion/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "training companion";
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Readiness score and workout performance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -749,7 +749,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -776,7 +776,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrainingCompanionWatch-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingCompanionWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used for readiness score and workout data tracking in the app.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used for readiness score and workout data tracking in the app.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -785,7 +785,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -814,7 +814,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrainingCompanionWatch-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingCompanionWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Used for readiness score and workout data tracking in the app.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Used for readiness score and workout data tracking in the app.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -823,7 +823,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -851,14 +851,14 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrainingWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingWidgets;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.TrainingWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -882,14 +882,14 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrainingWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingWidgets;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.TrainingWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -914,7 +914,7 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrainingWatchWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingWatchWidgets;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -922,7 +922,7 @@
 					"@executable_path/../../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp.TrainingWatchWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -948,7 +948,7 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrainingWatchWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TrainingWatchWidgets;
+				INFOPLIST_KEY_CFBundleDisplayName = "Training Companion";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -956,7 +956,7 @@
 					"@executable_path/../../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanion.watchkitapp.TrainingWatchWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -981,7 +981,7 @@
 				DEVELOPMENT_TEAM = HC8NZU8U3U;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.18.0;
+				MARKETING_VERSION = 1.18.1;
 				PRODUCT_BUNDLE_IDENTIFIER = haerdsoft.TrainingCompanionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

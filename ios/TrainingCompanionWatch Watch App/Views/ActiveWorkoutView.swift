@@ -28,32 +28,7 @@ struct ActiveWorkoutView: View {
                 SessionCompleteView(
                     session: session,
                     startedAt: workoutStartDate,
-                    onSave: {
-                        // buildSummary captures GPS, HR samples, and exercise timeline
-                        let summary = workoutManager.buildSummary(startedAt: workoutStartDate)
-                            ?? WatchWorkoutSummary(
-                                sessionId: session.sessionId,
-                                date: {
-                                    let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                                    return f.string(from: Date())
-                                }(),
-                                startedAt: ISO8601DateFormatter().string(from: workoutStartDate),
-                                endedAt: ISO8601DateFormatter().string(from: Date()),
-                                durationMinutes: max(1, Int(Date().timeIntervalSince(workoutStartDate) / 60)),
-                                avgHR: sessionState.avgHR > 0 ? sessionState.avgHR : nil,
-                                peakHR: sessionState.peakHR > 0 ? sessionState.peakHR : nil,
-                                setLogs: sessionState.setLogs,
-                                exercisesCompleted: sessionState.completedExerciseIds.count,
-                                source: "apple_watch_live",
-                                hrSamples: nil, gpsTrack: nil, distanceMeters: nil,
-                                elevationGainMeters: nil, cadenceAvg: nil,
-                                paceSecsPerKm: nil, exerciseTimeline: nil
-                            )
-                        connectivity.sendWorkoutSummary(summary)
-                        connectivity.markSessionComplete(session.sessionId)
-                        sessionState.reset()
-                        dismiss()
-                    },
+                    onSave: saveAndClose,
                     onDiscard: {
                         sessionState.reset()
                         dismiss()
@@ -273,32 +248,7 @@ struct ActiveWorkoutView: View {
         .padding()
         .navigationTitle("Commands")
         .confirmationDialog("End session?", isPresented: $showStopConfirm) {
-            Button("Save & End") {
-                // Build summary before resetting state — reset clears HR samples and set logs
-                let summary = workoutManager.buildSummary(startedAt: workoutStartDate)
-                    ?? WatchWorkoutSummary(
-                        sessionId: session.sessionId,
-                        date: {
-                            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                            return f.string(from: workoutStartDate)
-                        }(),
-                        startedAt: ISO8601DateFormatter().string(from: workoutStartDate),
-                        endedAt:   ISO8601DateFormatter().string(from: Date()),
-                        durationMinutes: max(1, Int(Date().timeIntervalSince(workoutStartDate) / 60)),
-                        avgHR:              sessionState.avgHR > 0 ? sessionState.avgHR : nil,
-                        peakHR:             sessionState.peakHR > 0 ? sessionState.peakHR : nil,
-                        setLogs:            sessionState.setLogs,
-                        exercisesCompleted: sessionState.completedExerciseIds.count,
-                        source: "apple_watch_live",
-                        hrSamples: nil, gpsTrack: nil, distanceMeters: nil,
-                        elevationGainMeters: nil, cadenceAvg: nil,
-                        paceSecsPerKm: nil, exerciseTimeline: nil
-                    )
-                connectivity.sendWorkoutSummary(summary)
-                sessionState.reset()
-                Task { await workoutManager.endWorkout() }
-                dismiss()
-            }
+            Button("Save & End") { saveAndClose() }
             Button("Discard", role: .destructive) {
                 sessionState.reset()
                 Task { await workoutManager.endWorkout() }
@@ -306,6 +256,22 @@ struct ActiveWorkoutView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    // MARK: - Save
+
+    /// The one way a recorded session leaves the watch: its summary, sent
+    /// once, and the session marked done — from the completion screen and
+    /// from Save & End alike. The completion screen used to send the summary
+    /// and then its Done sent it again, and Save & End never marked the
+    /// session done. The summary is built before the reset, which clears the
+    /// sets and HR it reads; ending an already ended workout is a no-op.
+    private func saveAndClose() {
+        connectivity.sendWorkoutSummary(workoutManager.buildSummary(for: session, startedAt: workoutStartDate))
+        connectivity.markSessionComplete(session.sessionId)
+        sessionState.reset()
+        Task { await workoutManager.endWorkout() }
+        dismiss()
     }
 
     // MARK: - Exercise page

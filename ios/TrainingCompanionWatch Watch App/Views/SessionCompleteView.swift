@@ -6,11 +6,8 @@ struct SessionCompleteView: View {
     let onSave: () -> Void
     let onDiscard: () -> Void
 
-    @EnvironmentObject var connectivity: WatchConnectivityManager
-    @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var sessionState: WorkoutSessionState
 
-    @State private var saved = false
     @State private var entering: EntryTarget? = nil
 
     private struct EntryTarget: Identifiable {
@@ -38,13 +35,9 @@ struct SessionCompleteView: View {
 
                 statsGrid
 
-                if !testSteps.isEmpty && !saved { resultsSection }
+                if !testSteps.isEmpty { resultsSection }
 
-                if saved {
-                    Button("Done") { onSave() }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
-                } else if testSteps.isEmpty {
+                if testSteps.isEmpty {
                     Button("Save Workout") { save(decision: nil) }
                         .buttonStyle(.borderedProminent)
                         .tint(.blue)
@@ -57,12 +50,10 @@ struct SessionCompleteView: View {
                     Button("Not a test") { save(decision: "dismiss") }
                         .buttonStyle(.bordered)
                 }
-                if !saved {
-                    Button("Discard", role: .destructive) { onDiscard() }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
+                Button("Discard", role: .destructive) { onDiscard() }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
             }
             .padding()
         }
@@ -74,12 +65,10 @@ struct SessionCompleteView: View {
         }
     }
 
+    /// The answer goes into the summary `onSave` builds and sends, once.
     private func save(decision: String?) {
-        saved = true
         sessionState.resultDecision = decision
-        if let summary = workoutManager.buildSummary(startedAt: startedAt) {
-            connectivity.sendWorkoutSummary(summary)
-        }
+        onSave()
     }
 
     /// Each standard the session tested, with what the watch captured; tap one

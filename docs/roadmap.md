@@ -49,6 +49,7 @@ deferred is under *Later*.
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
 | 13 | Heart rate from the programming: ship the watches' exercise times, fidelity, pauses | P2 | M | watch, engine |
+| 14 | Watch parity: the Apple Watch on the server's contract and vocabulary | P2 | M | watch, iOS, API |
 
 ---
 
@@ -597,7 +598,7 @@ products and `test_watch_spec.py` passes. Still to do:
    facade. Not needed for packages to own their screens, so it was left for
    after the hardware check.
 5. **iOS Apple Watch (M).** It still picks views by `slotType`/`archetypeId`; it
-   could read the same `?spec=1` table.
+   could read the same `?spec=1` table. Moved to item 14.
 
 ---
 
@@ -844,6 +845,47 @@ only the watch-timed minutes of the zoned exercises when a session mixes zones w
 - **`progressing`** (Starting Strength's three lifts) is a load word that
   `progression._INTENSITY_ZONES` maps to a Zone 2–4 band; `hr_plan` treats it as load.
   Drop it from the map or give the progression its own token.
+
+### 14. Watch parity: the Apple Watch on the server's contract — P2 · M
+
+Added 2026-10-17 (`docs/watch.md` is the process and the parity table). The Garmin app
+reads `today-session?spec=1&week=1` and renders the package's screens; the Apple Watch
+gets sessions the phone builds from `/user/program` and picks views by slot type, so every
+Garmin screen feature had to be rebuilt by hand or never reached it. Slices, each its own
+branch:
+
+1. **The missing app and the defects (S) — done on `apple-watch`.** The watch listed the
+   app as "TrainingCompanionWatch"; it and both widget extensions now say Training
+   Companion, and Settings ▸ Apple Watch says *App not installed* (`isWatchAppInstalled`)
+   with where to install it. Fixed: a summary sent twice on finish; Save & End never
+   marking the session done; a static hold that restarted its sets after each rest and
+   never moved on; AMRAP-movement reps dropped; EMOM and AMRAP clocks that stopped off
+   their page (now in `WorkoutManager`'s ticker); a second `WatchSessionManager` per
+   `SyncManager.configure`; the phone crashing on a program that starts a week or more
+   ahead; the watch saying *iPhone unreachable* while the phone's queued answer was on
+   its way (the phone now replies to the request with the day; the watch says
+   unreachable only when it is, *Couldn't sync* when the phone could not reach the
+   server, and keeps a known state while asking); Settings' watch row not redrawing.
+   Seen on a paired simulator (No Program, no program in the dev database); the
+   workout fixes not yet seen on a watch.
+2. **The phone relays the server's day (M).** `syncProgram` forwards
+   `today-session?date=&spec=1&week=1` as it is; the watch decodes it (a model in
+   `ios/Shared/`); the phone's own week/day maths, `inferSlotType` and load formatting go.
+   `not_started` / `program_expired` come from the server.
+3. **Spec rendering (M).** `gen_vocab.py` also writes `ios/Shared/WatchVocab.swift`; a
+   Swift renderer switches exhaustively on it (a new id breaks the build until both watches
+   draw it); the eight templates map onto today's views plus a round timer; behaviours
+   (`side_tracked`, `cumulative_target`, `ladder`, `load_wave`, `metronome_rpm`).
+   `data/watch_fixtures.json` is run by `SpecTests.mc` and a Swift `WatchSpecTests`.
+4. **What the Garmin has (M).** Week view from `days`, tomorrow on a rest day, the
+   Progress page (programme %, headline, trend), sync failure in words, Set Next / Edit
+   Set, metronome, the package's summary pages.
+5. **Server fields both use (M; 6.3).** `switchAtSec`, `restUntilHr` and `bells` onto
+   archetype slots and `_encode_watch_exercise`; the Apple Watch's "still recovering"
+   becomes `restUntilHr`.
+
+Also: `garmin/VERSION` read by `build.sh --release`, with a `ciq-v<VERSION>` tag, so both
+watches' releases can be compared.
 
 ## Later
 

@@ -123,8 +123,11 @@ final class WorkoutManager: NSObject, ObservableObject {
 
     // MARK: - Summary
 
-    func buildSummary(startedAt: Date) -> WatchWorkoutSummary? {
-        guard let session = activeSession else { return nil }
+    /// Everything the session recorded. Takes the session rather than reading
+    /// `activeSession`, so it never comes back empty: the callers used to
+    /// fall back to a summary built by hand that had no outcomes and no
+    /// Results answer.
+    func buildSummary(for session: WatchSession, startedAt: Date) -> WatchWorkoutSummary {
         let iso = ISO8601DateFormatter()
         let now = Date()
         let df  = DateFormatter()
@@ -178,13 +181,13 @@ final class WorkoutManager: NSObject, ObservableObject {
             paceSecsPerKm:      paceSecsPerKm,
             exerciseTimeline:   exerciseTimeline,
             outcomes:           sessionState.outcomes.isEmpty ? nil : sessionState.outcomes,
-            standardResults:    standardDecisions()
+            standardResults:    standardDecisions(session)
         )
     }
 
     /// The Results answer, for each test step that produced a value.
-    private func standardDecisions() -> [String: String]? {
-        guard let decision = sessionState.resultDecision, let session = activeSession else { return nil }
+    private func standardDecisions(_ session: WatchSession) -> [String: String]? {
+        guard let decision = sessionState.resultDecision else { return nil }
         var out: [String: String] = [:]
         for ex in session.exercises {
             guard let st = ex.standard,
@@ -293,6 +296,19 @@ final class WorkoutManager: NSObject, ObservableObject {
                     self.sessionState.showOvertimePrompt = true
                 }
             }
+
+        // The EMOM and AMRAP clocks used to tick in their views' `.task`,
+        // so they stopped whenever their page was not on screen.
+        case let .emomInterval(ei, _, _, _):
+            guard let session = activeSession, ei < session.exercises.count else { return }
+            let ex = session.exercises[ei]
+            let plan = ex.emomPlan
+            sessionState.tickEMOM(workSec: plan.workSec, restSec: plan.restSec, totalRounds: plan.rounds,
+                                  exerciseIndex: ei, exerciseId: ex.exerciseId)
+
+        case let .amrapRunning(ei, _):
+            guard let session = activeSession, ei < session.exercises.count else { return }
+            sessionState.tickAMRAP(exerciseIndex: ei, exerciseId: session.exercises[ei].exerciseId)
 
         default:
             break

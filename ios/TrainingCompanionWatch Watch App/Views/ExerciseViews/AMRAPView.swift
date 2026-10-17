@@ -6,9 +6,11 @@ struct AMRAPView: View {
 
     @EnvironmentObject var sessionState: WorkoutSessionState
 
-    @State private var roundsCompleted = 0
-
     private let totalMinutes: Int
+
+    /// Read from the session's outcome rather than kept in the view, which
+    /// lost the count whenever the page was rebuilt.
+    private var roundsCompleted: Int { sessionState.outcomes[exercise.exerciseId]?.rounds ?? 0 }
 
     init(exercise: WatchExercise, exerciseIndex: Int) {
         self.exercise = exercise
@@ -16,6 +18,7 @@ struct AMRAPView: View {
         self.totalMinutes = exercise.timeMinutes ?? 10
     }
 
+    // The clock ticks in WorkoutManager's master ticker, not here.
     var body: some View {
         VStack(spacing: 8) {
             if case let .amrapRunning(ei, remaining) = sessionState.phase, ei == exerciseIndex {
@@ -27,15 +30,6 @@ struct AMRAPView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.cyan)
-            }
-        }
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                if case .amrapRunning(let ei, _) = sessionState.phase, ei == exerciseIndex {
-                    sessionState.tickAMRAP(exerciseIndex: exerciseIndex,
-                                           exerciseId: exercise.exerciseId)
-                }
             }
         }
     }
@@ -58,8 +52,7 @@ struct AMRAPView: View {
                     .foregroundStyle(.secondary)
             }
             Button("+") {
-                roundsCompleted += 1
-                sessionState.recordOutcome(exercise.exerciseId, rounds: roundsCompleted)
+                sessionState.recordOutcome(exercise.exerciseId, rounds: roundsCompleted + 1)
             }
             .font(.title3.bold())
             .buttonStyle(.plain)

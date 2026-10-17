@@ -1,5 +1,14 @@
 import SwiftUI
 
+extension WatchExercise {
+    /// Rounds, work and rest of an EMOM, read once for the view and the
+    /// workout's ticker alike.
+    var emomPlan: (rounds: Int, workSec: Int, restSec: Int) {
+        let parsed = HRZoneCalculator.parseEMOMFormat(emomFormat)
+        return (targetRounds ?? parsed.rounds, parsed.workSec, parsed.restSec)
+    }
+}
+
 struct EMOMView: View {
     let exercise: WatchExercise
     let exerciseIndex: Int
@@ -13,12 +22,10 @@ struct EMOMView: View {
     init(exercise: WatchExercise, exerciseIndex: Int) {
         self.exercise = exercise
         self.exerciseIndex = exerciseIndex
-        let parsed = HRZoneCalculator.parseEMOMFormat(exercise.emomFormat)
-        parsedRounds  = exercise.targetRounds ?? parsed.rounds
-        parsedWorkSec = parsed.workSec
-        parsedRestSec = parsed.restSec
+        (parsedRounds, parsedWorkSec, parsedRestSec) = exercise.emomPlan
     }
 
+    // The clock ticks in WorkoutManager's master ticker, not here.
     var body: some View {
         VStack(spacing: 6) {
             if case let .emomInterval(ei, round, isWork, remaining) = sessionState.phase,
@@ -26,17 +33,6 @@ struct EMOMView: View {
                 activeView(round: round, isWork: isWork, remaining: remaining)
             } else {
                 startView
-            }
-        }
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                if case .emomInterval(let ei, _, _, _) = sessionState.phase, ei == exerciseIndex {
-                    sessionState.tickEMOM(workSec: parsedWorkSec, restSec: parsedRestSec,
-                                          totalRounds: parsedRounds,
-                                          exerciseIndex: exerciseIndex,
-                                          exerciseId: exercise.exerciseId)
-                }
             }
         }
     }
