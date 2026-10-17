@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import json
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -34,42 +35,73 @@ if DATABASE_URL:
         _local.conn = None
 
 
-def _get_pg_conn():
-    """This thread's live PostgreSQL connection, reconnecting if the link is broken."""
+# A link that was used this recently is handed out without a `SELECT 1`.
+# The database is in eu-west-3 and the app in sjc, so every round trip is
+# ~150 ms; pinging on each hand-out cost as much as the queries did. A link
+# psycopg2 saw fail is marked `closed` and still reconnects at once.
+_IDLE_PING_SECONDS = 30
+
+
+def _thread_conn(attr: str):
+    """This thread's live connection under `attr`, reconnecting if the link is broken."""
     if not _pg_dsn:
         return None
     import psycopg2
-    conn = getattr(_local, 'conn', None)
-    if conn is not None:
+    conn = getattr(_local, attr, None)
+    now = time.monotonic()
+    if conn is not None and not conn.closed:
+        if now - getattr(_local, attr + '_used', 0.0) < _IDLE_PING_SECONDS:
+            setattr(_local, attr + '_used', now)
+            return conn
         try:
             conn.cursor().execute('SELECT 1')
+            setattr(_local, attr + '_used', now)
             return conn
         except Exception:
-            try:
-                conn.close()
-            except Exception:
-                pass
-            _local.conn = None
-    try:
-        conn = psycopg2.connect(_pg_dsn)
-        conn.autocommit = True
-        _local.conn = conn
-        return conn
-    except Exception as e:
-        print(f"Warning: Could not reconnect to PostgreSQL: {e}")
-        _local.conn = None
-        return None
-
-
-def close_conn():
-    """Close this thread's connection, if it has one."""
-    conn = getattr(_local, 'conn', None)
-    _local.conn = None
+            pass
     if conn is not None:
         try:
             conn.close()
         except Exception:
             pass
+        setattr(_local, attr, None)
+    try:
+        conn = psycopg2.connect(_pg_dsn)
+        conn.autocommit = True
+        setattr(_local, attr, conn)
+        setattr(_local, attr + '_used', now)
+        return conn
+    except Exception as e:
+        print(f"Warning: Could not reconnect to PostgreSQL: {e}")
+        setattr(_local, attr, None)
+        return None
+
+
+def _get_pg_conn():
+    """This thread's live PostgreSQL connection, reconnecting if the link is broken."""
+    return _thread_conn('conn')
+
+
+def read_conn():
+    """A second per-thread autocommit connection, for reads that may run
+    inside a caller's `with get_conn()` block (a nested `with` on the shared
+    connection returns nothing and swallows why). Reused across calls, unlike
+    `new_conn()`: opening one costs a TLS and auth handshake across the
+    Atlantic, ~0.7 s, and Log ▸ Linking opened ten per request. Never close
+    it, and never turn autocommit off on it; None without a database."""
+    return _thread_conn('read_conn')
+
+
+def close_conn():
+    """Close this thread's connections, if it has any."""
+    for attr in ('conn', 'read_conn'):
+        conn = getattr(_local, attr, None)
+        setattr(_local, attr, None)
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 # Local dev fallback: JSON file storage
 _local_storage_dir = Path(__file__).parent.parent / 'data' / 'user_profiles'

@@ -57,6 +57,8 @@ final class AppState: ObservableObject {
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
     /// Log ▸ Linking's day cards; nil until loaded.
     @Published var linking: LinkingDocument?
+    /// Why the last Log ▸ Linking load failed, while there is no document to show.
+    @Published var linkingError: String? = nil
     /// Weak server-side matches still waiting for a decision (Today card).
     @Published var matchSuggestions: [MatchSuggestion] = []
 
@@ -248,8 +250,13 @@ final class AppState: ObservableObject {
     func loadLinking() async {
         guard let api else { return }
         let today = dayFormatter.string(from: Date())
-        if let doc = try? await api.fetchLinking(today: today, dismissed: dismissedLinks) {
-            linking = doc
+        do {
+            linking = try await api.fetchLinking(today: today, dismissed: dismissedLinks)
+            linkingError = nil
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            linkingError = error.localizedDescription
+            AppLogger.logFromBackground("linking: fetch failed — \(error.localizedDescription)")
         }
     }
 
