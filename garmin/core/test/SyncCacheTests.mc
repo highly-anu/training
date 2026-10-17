@@ -64,3 +64,30 @@ function aWeekFetchedEarlierStartsAtToday(logger as Test.Logger) as Lang.Boolean
     Storage.setValue(Config.KEY_TODAY_DATE, keepDate);
     return true;
 }
+
+// The couldn't-sync page and the Sync row name a failure in words, with its code.
+(:test)
+function syncReasonNamesTheCode(logger as Test.Logger) as Lang.Boolean {
+    Test.assertEqual(SyncCache.reason(-104), "No phone (-104)");
+    Test.assertEqual(SyncCache.reason(-300), "Timed out (-300)");
+    Test.assertEqual(SyncCache.reason(-402), "Too large (-402)");
+    Test.assertEqual(SyncCache.reason(401), "Not paired (401)");
+    Test.assertEqual(SyncCache.reason(502), "Server error (502)");
+    Test.assertEqual(SyncCache.reason(-7), "Watch error (-7)");
+    Test.assertEqual(SyncCache.reason(null), "No reply");
+    return true;
+}
+
+(:test)
+function syncLineSaysHowTheLastSyncWent(logger as Test.Logger) as Lang.Boolean {
+    var keep = Storage.getValue(Config.KEY_LAST_SYNC);
+    Storage.deleteValue(Config.KEY_LAST_SYNC);
+    Test.assertEqual(SyncCache.syncLine(), "today's session");
+    SyncCache.recordSync(200);
+    Test.assert(SyncCache.syncLine().find("ok ") == 0);
+    SyncCache.recordSync(-104);
+    var line = SyncCache.syncLine();
+    Test.assert(line.find("failed ") == 0 && line.find("No phone (-104)") != null);
+    if (keep != null) { Storage.setValue(Config.KEY_LAST_SYNC, keep); } else { Storage.deleteValue(Config.KEY_LAST_SYNC); }
+    return true;
+}

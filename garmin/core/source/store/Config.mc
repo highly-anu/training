@@ -23,6 +23,7 @@ module Config {
     const KEY_WEEK           = "weekAhead";       // today and the six days after it ({offset, title, sessions})
     const KEY_UPLOAD_BUFFER  = "uploadBuffer";    // array of pending upload dicts
     const KEY_READINESS      = "readiness";       // cached /health/readiness dict
+    const KEY_LAST_SYNC      = "lastSync";        // { "code", "at" } of the last today-session request
     // The hour after which a finished day's glance previews tomorrow.
     const GLANCE_EVENING_HOUR = 18;
     const KEY_WELLNESS_PENDING = "wellnessPending"; // one wellness reading the server never got

@@ -221,9 +221,11 @@ class SessionListView extends Ui.View {
         } else if (_status.equals("ok")) {
             drawRest(dc, g);
         } else if (_status.equals("offline")) {
-            var code = _sync.lastTodayCode;
-            drawMessage(dc, g, Rez.Drawables.IcUiSync, "Couldn't sync",
-                        "Hold UP > Sync" + ((code != null) ? ("  (" + code.toString() + ")") : ""));
+            // The reason on a line of its own, in words: the code used to trail
+            // the instruction in the dimmest font and went unread.
+            drawMessage(dc, g, Rez.Drawables.IcUiSync, "Couldn't sync", "Hold UP > Sync");
+            Native.text(dc, g.cx, (g.h * 69) / 100, Text.small(),
+                        SyncCache.reason(_sync.lastTodayCode), Gfx.COLOR_WHITE);
         } else {
             drawMessage(dc, g, Rez.Drawables.IcUiSync, Ui.loadResource(Rez.Strings.NoProgram),
                         "Generate a plan in the app");
