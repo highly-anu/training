@@ -955,6 +955,9 @@ still alias Load and Blocks), `log?section=workouts|linking|sessions` (`suggesti
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.
+A simulator that has never answered the Health sheet shows it on every launch, over
+whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
+debug builds (`HealthKitManager.skipsAuthorizationRequest`).
 Settings ▸ API target shows the current target and, in debug builds, the switch.
 Never generate, adjust or swap from a simulator pointed at production.
 

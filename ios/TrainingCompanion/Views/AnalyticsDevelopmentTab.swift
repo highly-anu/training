@@ -59,20 +59,13 @@ struct AnalyticsDevelopmentTab: View {
 
     private func emptyState(icon: String, title: String, message: String,
                             actionLabel: String, action: @escaping () -> Void) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(title).font(.headline)
+        ContentUnavailableView {
+            Label(title, systemImage: icon)
+        } description: {
             Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button(actionLabel, action: action)
-                .buttonStyle(.bordered)
+        } actions: {
+            Button(actionLabel, action: action).buttonStyle(.bordered)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -110,18 +103,16 @@ private struct BlocksCard: View {
                 HStack(spacing: 6) {
                     Text(block.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
                     if block.isActive {
-                        Text("current")
-                            .font(.caption2).fontWeight(.semibold)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Color.accentColor.opacity(0.15))
-                            .foregroundStyle(Color.accentColor)
-                            .clipShape(Capsule())
+                        TintCapsule(text: "current", color: .accentColor)
                     }
                 }
                 Label(spanText(block), systemImage: "calendar")
                     .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 HStack(spacing: 10) {
-                    Label(sessionsText(block), systemImage: "checkmark.circle")
+                    // Done of planned; the percentage is the same fact, said to VoiceOver.
+                    Label("\(block.completed)/\(block.planned)", systemImage: "checkmark.circle")
+                        .accessibilityLabel("\(block.completed) of \(block.planned) sessions done"
+                                            + (block.completionPct.map { ", \($0) percent" } ?? ""))
                     if block.plannedTotal > block.planned {
                         Label("\(block.plannedTotal - block.planned)", systemImage: "forward.end")
                             .accessibilityLabel("\(block.plannedTotal - block.planned) sessions never reached")
@@ -138,11 +129,6 @@ private struct BlocksCard: View {
         return "\(from)–\(to) · \(block.weeks) wk"
     }
 
-    private func sessionsText(_ block: DevelopmentAnalytics.Block) -> String {
-        var text = "\(block.completed)/\(block.planned)"
-        if let pct = block.completionPct { text += " · \(pct)%" }
-        return text
-    }
 }
 
 // MARK: - Lifts and currencies across blocks
@@ -212,7 +198,7 @@ private struct SeriesCard: View {
                 }
             } else {
                 Text("Nothing logged yet")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
     }
@@ -226,13 +212,16 @@ private struct SeriesCard: View {
                         withAnimation(AppAnimation.springStandard) { selected = option.id }
                     } label: {
                         Text(option.label)
-                            .font(.caption).fontWeight(isOn ? .semibold : .regular)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .font(.footnote).fontWeight(isOn ? .semibold : .regular)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
                             .background(isOn ? Color.accentColor.opacity(0.15) : Color(.systemGray5))
                             .foregroundStyle(isOn ? Color.accentColor : Color.primary)
                             .clipShape(Capsule())
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
                 }
             }
         }
@@ -290,19 +279,19 @@ private struct SeriesCard: View {
                     Circle().fill(doc.color(of: row.blockId)).frame(width: 8, height: 8)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(doc.block(row.blockId)?.name ?? "Block \(row.blockId)")
-                            .font(.caption).fontWeight(.semibold).lineLimit(1)
+                            .font(.subheadline).fontWeight(.semibold).lineLimit(1)
                         HStack(spacing: 10) {
                             Text("\(number(row.first)) → \(number(row.last)) \(option.unit)")
                             Label(number(row.best), systemImage: "trophy")
                             Label("\(row.sessions)", systemImage: "list.bullet")
                         }
-                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(number(row.first)) to \(number(row.last)) \(option.unit), best \(number(row.best)), \(row.sessions) sessions")
                     }
                     Spacer(minLength: 4)
                     Text(DevelopmentAnalytics.formatDelta(row.delta))
-                        .font(.caption).fontWeight(.semibold).monospacedDigit()
+                        .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                         .foregroundStyle(row.delta > 0 ? Color.green : row.delta < 0 ? Color.yellow : Color.secondary)
                 }
             }
@@ -327,12 +316,12 @@ private struct TrendText: View {
 
     var body: some View {
         if trend.direction == "insufficient_data" {
-            Label("No trend yet", systemImage: "hourglass").font(.caption2).foregroundStyle(.secondary)
+            Label("No trend yet", systemImage: "hourglass").font(.footnote).foregroundStyle(.secondary)
         } else {
             Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/session",
                   systemImage: trend.direction == "improving" ? "arrow.up.right"
                     : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
-                .font(.caption2)
+                .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                 .foregroundStyle(AnalyticsStatusStyle.color(status))
                 .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per session over \(trend.pointsUsed) points")
         }
@@ -409,8 +398,11 @@ private struct StandardsCard: View {
                 group(title: !own.isEmpty ? "Other standards" : nil, rows: other)
                 Button { router.showProfile(.standards) } label: {
                     Label("Log a result", systemImage: "plus.circle")
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
-                .font(.caption)
+                .font(.footnote)
+                .accessibilityHint("Opens Profile, Standards")
             }
         }
     }
@@ -420,11 +412,12 @@ private struct StandardsCard: View {
         if !rows.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 if let title {
-                    Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary)
+                    Text(title.uppercased()).font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
                 }
                 ForEach(rows) { benchmark in
                     Button { router.openStandard(benchmark.benchmarkId) } label: { row(benchmark) }
                         .buttonStyle(.plain)
+                        .accessibilityHint("Opens Profile, Standards")
                 }
             }
         }
@@ -433,12 +426,20 @@ private struct StandardsCard: View {
     private func row(_ b: DevelopmentAnalytics.Benchmark) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(b.name).font(.caption).fontWeight(.semibold).lineLimit(1)
+                Text(b.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
                 Spacer(minLength: 4)
-                if let gained = gainedText(b) {
-                    Text(gained).font(.caption2).foregroundStyle(.secondary)
+                // The latest result is the row's number; the chart is its history.
+                if let last = b.history.last {
+                    Text(last.valueText ?? AnalyticsProgramTab.number(last.value))
+                        .font(.subheadline).monospacedDigit()
                 }
                 StandardLevelBadge(level: b.latestLevel, domain: b.domain)
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+            if let gained = gainedText(b) {
+                Text(gained).font(.caption).foregroundStyle(.secondary)
             }
             StandardHistoryChart(
                 points: b.history.compactMap { StandardChartPoint(id: $0.id, day: $0.date, value: $0.value,

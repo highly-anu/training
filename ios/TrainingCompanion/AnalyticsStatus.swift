@@ -63,7 +63,7 @@ enum AnalyticsStatusStyle {
         case "no_gps_hr": return "Needs a matched run or ride with GPS and heart-rate samples."
         case "no_exercises_in_scope": return "No exercises in this scope have been completed yet."
         case "clean_not_logged": return "A movement is earned by clean sessions. Tick \"Clean\" on a skill when every rep was owned."
-        case "no_pr_logged": return "No result logged for these standards yet. Log one under Profile ▸ Standards."
+        case "no_pr_logged": return "No result logged for these standards yet."
         default: return "Nothing logged for this metric yet."
         }
     }

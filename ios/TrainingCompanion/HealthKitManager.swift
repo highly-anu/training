@@ -35,7 +35,20 @@ final class HealthKitManager {
         HKObjectType.workoutType(),
     ]
 
+    /// A new simulator shows the Health sheet on every launch until someone
+    /// answers it, and nothing scripted can tap it; `TC_SKIP_HEALTH=1` in the
+    /// launch environment (`SIMCTL_CHILD_TC_SKIP_HEALTH=1 ./ios/run_sim.sh`)
+    /// skips the request so a screen can be screenshotted. Debug builds only.
+    static var skipsAuthorizationRequest: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["TC_SKIP_HEALTH"] == "1"
+        #else
+        false
+        #endif
+    }
+
     func requestPermissions() async throws {
+        guard !Self.skipsAuthorizationRequest else { return }
         try await store.requestAuthorization(toShare: [], read: readTypes)
     }
 

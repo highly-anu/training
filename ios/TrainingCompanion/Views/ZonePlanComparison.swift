@@ -16,6 +16,9 @@ struct ZonePlanComparison: View {
     }
 
     let rows: [Row]
+    /// The zone and minutes columns, at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var labelWidth: CGFloat = 44
+    @ScaledMetric(relativeTo: .caption) private var valueWidth: CGFloat = 76
 
     /// Rows from the five-zone arrays the server sends, only the zones with
     /// either side.
@@ -37,8 +40,8 @@ struct ZonePlanComparison: View {
                 let color = HRZoneStyle.color(row.zone)
                 HStack(spacing: 8) {
                     Text(row.label)
-                        .font(.caption).fontWeight(.medium)
-                        .frame(width: 64, alignment: .leading)
+                        .font(.subheadline).fontWeight(.medium)
+                        .frame(width: labelWidth, alignment: .leading)
                         .lineLimit(1)
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -57,8 +60,8 @@ struct ZonePlanComparison: View {
                     }
                     .frame(height: 18)
                     Text("\(Self.minutes(row.recorded))/\(Self.minutes(row.planned)) min")
-                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
-                        .frame(width: 72, alignment: .trailing)
+                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                        .frame(width: valueWidth, alignment: .trailing)
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(row.label): \(Self.minutes(row.recorded)) minutes recorded, \(Self.minutes(row.planned)) planned")

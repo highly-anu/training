@@ -455,37 +455,24 @@ struct ModalityBadge: View {
 
 Used when there's no program, no exercises match a filter, etc. Always provides a clear path forward.
 
-```swift
-struct EmptyStateView: View {
-    let icon: String
-    let title: String
-    let message: String
-    let actionLabel: String?
-    let action: (() -> Void)?
+**Use the system's `ContentUnavailableView`** — its title, symbol, description and
+actions scale with Dynamic Type and read correctly to VoiceOver. This section used to
+prescribe a hand-built `VStack` with `.font(.system(size: 48))`, against §8; Analytics ▸
+Program, Progress and Blocks each carried a copy until 2026-10-17.
 
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(Color("SecondaryText"))
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(Color("PrimaryText"))
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(Color("SecondaryText"))
-                .multilineTextAlignment(.center)
-            if let label = actionLabel, let action {
-                Button(label, action: action)
-                    .buttonStyle(.bordered)
-                    .tint(Color("Accent"))
-            }
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-    }
+```swift
+ContentUnavailableView {
+    Label("No active program", systemImage: "chart.bar.doc.horizontal")
+} description: {
+    Text("Generate a program to measure it here.")
+} actions: {
+    Button("Go to Program") { router.showProgram(.calendar) }
+        .buttonStyle(.bordered)
 }
 ```
+
+Inside a card, where the full view is too large, an empty chart is a `.title2` symbol
+over one `.footnote` line — never a fixed point size.
 
 ### 6.4 Section Header
 
@@ -750,7 +737,8 @@ period" and offered no way to do it.
 - **Render it on every tab that filters by it.** Shared state with a control on
   one screen only is a filter the user cannot see or reach.
 - **The haptic and the animation are inside the component** (`AppHaptics.selection()`,
-  `AppAnimation.springSnappy`); call sites pass a binding and nothing else.
+  `AppAnimation.springSnappy`); call sites pass a binding and nothing else. So is
+  the 44 pt target around each capsule and the selected trait VoiceOver reads.
 - Give it its own line — do not fold it into a horizontal scroller of sort and
   filter pills, where it reads as one more chip rather than the scope of
   everything below.
@@ -1032,7 +1020,11 @@ extension Color {
 
 ### 6.15 Analytics Card, Status and the Program Section
 
-**One card, one status vocabulary.** `AppCard.swift` holds `AnalyticsCard`
+**One card, one status vocabulary.** A card's status or source mark (a
+verdict badge, "On device", a trend) goes in its `trailing:` slot, never in a
+content row; nothing inside a card draws a box of its own (the coverage notice
+lost its dashed border, Last Night its stage tiles, HRV and resting HR their
+second title, 2026-10-17); every capsule is `TintCapsule`. `AppCard.swift` holds `AnalyticsCard`
 (uppercase caption header over content, secondary background, the app's card
 radius, full width; an optional `trailing:` view beside the header for a
 status badge, so a verdict never takes a row of its own). Every Analytics
@@ -1245,23 +1237,27 @@ Four cards, each an `AnalyticsCard` (§6.15):
 
 - *Blocks*: a strip across the top — each activation's share of the span in
   its colour — then a row per block: methodology names, span, weeks, sessions
-  completed of those the block reached, "never reached" for the rest, and a
-  `current` capsule on the active one.
-- *Lifts across blocks*: a chip row of every lift (and currency — rounds,
-  minutes, km) with points in the window; the chart plots the heaviest
-  completed set's est-1RM per session over real dates with the blocks as
-  `RectangleMark` bands; a deload point is hollow. Under it, the trend as
-  an arrow and %/session, and one row per block: sessions, first → last, best, Δ.
-- *Load across blocks*: weekly TRIMP as bars coloured by block; hidden
-  when no workout carried load.
-- *Standards over time*: each standard's PR history as "value (level, date)
-  → …" with the latest level and levels gained; hidden when no PR is logged.
+  done of those the block reached (`checkmark.circle 3/10`; the percentage is
+  VoiceOver's), "never reached" for the rest (`forward.end`), and a `current`
+  `TintCapsule` on the active one.
+- *Lifts across blocks*: a chip row (44 pt targets) of every lift and currency
+  — rounds, minutes, km — with points in the window; the chart plots the
+  heaviest completed set's est-1RM per session over real dates with the
+  blocks as `RectangleMark` bands. Under it the trend as an arrow and
+  %/session (`.subheadline`), and one row per block: first → last, best,
+  sessions, Δ.
+- *TRIMP per week by block*: weekly TRIMP as bars coloured by block over the
+  whole history (Load's card is the last 12 weeks); hidden when no workout
+  carried load.
+- *Standards over time*: per standard the name, the latest result, the level
+  badge and a chevron, levels gained under it, then its history chart
+  (`StandardHistoryChart`); a row opens the standard (Profile ▸ Standards,
+  through the router), as does "Log a result". Hidden when nothing is logged.
 
 **Block colour is positional**: `DevelopmentAnalytics.palette` (indigo,
 emerald, amber, pink, sky — the web's `BLOCK_PALETTE`) indexed by the
 block's position in the timeline, so the strip, the bands, the bars and the
-per-block rows agree. One block shows the cards and a note pointing at
-Progress; no history shows an empty state pointing at Program.
+per-block rows agree. No history shows an empty state pointing at Program.
 
 **The label is "Blocks", not "Development"**: five segments share the width
 and the segmented control truncates "Development" to "Develop…" (§6.8). The
@@ -1275,9 +1271,17 @@ from anywhere else (§6.9).
 under the readiness score that says where resting HR, HRV and sleep came from
 — in Analytics ▸ Recovery only, under `ReadinessFlagChips` (the server's
 flags as icon chips: "RHR up 3d", "Recovery capped"). Today's card shows the
-score and the readings and nothing else (2026-10-16, §1.4). `.caption2`,
+score and the readings and nothing else (2026-10-16, §1.4). `.caption`,
 `.secondary`, wrapping; it renders nothing when the server did not report
-`sources` (an older server), so neither screen needs a guard.
+`sources` (an older server), so neither screen needs a guard. It is the one
+sentence §1.4 tolerates on the card, and only until the readiness card opens a
+detail screen, where it moves under *Sources*.
+
+The readiness card itself (2026-10-17): the score in large rounded type in its
+status colour, the status once as a `TintCapsule` beside the header, and the
+readings as symbols and numbers (`waveform.path.ecg 52 ms`, `heart.fill 48 bpm`,
+`moon.fill 7h 20m`). A coloured circle with an icon, the coloured score and a
+status word under it had said the status three times.
 
 The words come from `ReadinessResult.sourceNote`, the phone's copy of the
 web's `lib/readiness.readinessSourceNote`: components grouped by source,
@@ -1386,8 +1390,10 @@ says why under "Not enough data yet".
   common question; "How is this scored?" opens the parts and the three bands,
   the current one bold. A single part (sessions only) is the summary already
   and gets no sum row.
-- **What the percentage covers sits beside it** ("2 of 2 sessions so far ·
-  week 1") — it used to say "Weekly", which it never was.
+- **What the percentage covers is said to VoiceOver** ("2 of 2 sessions so
+  far · week 1", the server's `scope_label`) — it used to say "Weekly", which
+  it never was, and then sat beside the percentage in words, the same fact
+  twice (2026-10-17).
 - **Nothing waiting is said.** A measure with no data is listed under Waiting
   for data with what starts it; an empty review says "Nothing to change — keep
   going" instead of ending in blank space.
@@ -1604,6 +1610,9 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
 - Results are logged by text (`AppState.logResult`): the field takes what the
   athlete would write ("4:58") and the server parses it; a value it cannot
   read comes back in its words under the field.
+
+The level words and thresholds under the rungs are `.caption2`, truncating —
+they were a fixed 9 pt in `.tertiary`, under Apple's 11 pt minimum (§4.1).
 
 ### 6.32 Standard Detail
 
