@@ -401,6 +401,29 @@ def sql_checks(dsn: str) -> None:
           any('wod_fran_minutes' in p for p in st['problems']) and 'wod_fran_minutes' not in store.list_results(USER),
           str(st['problems']))
 
+    print('\nrebuilding ahead carries a test\'s result and suggestion')
+    from src.db import new_conn
+    res_before = [e for e in store.list_results(USER).get('row_2km_minutes', []) if e['sessionUid'] == test_uid]
+    conn = new_conn()
+    try:
+        with conn, conn.cursor() as cur:
+            ph._carry_over(cur, USER, vid, 'vnext', [{'session_uid': test_uid}])
+    finally:
+        conn.close()
+    new_uid = 'vnext' + test_uid[len(vid):]
+    with c.cursor() as cur:
+        cur.execute('SELECT count(*) FROM standard_result_suggestions WHERE session_uid = %s', (new_uid,))
+        sugg = cur.fetchone()[0]
+    res_after = [e for e in store.list_results(USER).get('row_2km_minutes', []) if e['sessionUid'] == new_uid]
+    check('the suggestion and the result move to the successor\'s uid', sugg == 1
+          and len(res_after) == len(res_before) == 1, f'{sugg} {res_before} {res_after}')
+    conn = new_conn()
+    try:
+        with conn, conn.cursor() as cur:
+            ph._carry_over(cur, USER, 'vnext', vid, [{'session_uid': new_uid}])   # put them back
+    finally:
+        conn.close()
+
     print('\nan imported run')
     from src import standard_results as sr2
     real_cps = sr2.current_program_standards

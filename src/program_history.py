@@ -525,8 +525,10 @@ def _is_referenced(cur, user_id: str, vid: str) -> bool:
 
 def _carry_over(cur, user_id: str, old_vid: str, new_vid: str,
                 kept_rows: list[dict]) -> int:
-    """Re-point matches, suggestions and logs from the predecessor's kept
-    sessions to the same sessions of its successor; returns rows moved.
+    """Re-point matches, suggestions, logs and test results (a standard's
+    result and its suggestion carry the test session's uid) from the
+    predecessor's kept sessions to the same sessions of its successor;
+    returns rows moved.
 
     A kept session sits at the same date, so at the same week index, day and
     slot — the uid differs only in its version prefix. A log whose new uid is
@@ -545,8 +547,16 @@ def _carry_over(cur, user_id: str, old_vid: str, new_vid: str,
     guards = {
         'session_logs': ' AND NOT EXISTS (SELECT 1 FROM session_logs s2 WHERE '
                         's2.user_id = t.user_id AND s2.session_uid = m.new_uid)',
+        # A test's result and its suggestion are unique per standard and session.
+        'standard_result_suggestions': ' AND NOT EXISTS (SELECT 1 FROM standard_result_suggestions s2 WHERE '
+                                       's2.user_id = t.user_id AND s2.benchmark_id = t.benchmark_id '
+                                       'AND s2.session_uid = m.new_uid)',
+        'performance_logs': ' AND NOT EXISTS (SELECT 1 FROM performance_logs s2 WHERE '
+                            's2.user_id = t.user_id AND s2.benchmark_id = t.benchmark_id '
+                            'AND s2.session_uid = m.new_uid)',
     }
-    for table in ('workout_matches', 'workout_match_suggestions', 'session_logs'):
+    for table in ('workout_matches', 'workout_match_suggestions', 'session_logs',
+                  'standard_result_suggestions', 'performance_logs'):
         cur.execute('SAVEPOINT carry_over')
         try:
             cur.execute(f'''
