@@ -2805,14 +2805,17 @@ def programs_history_version(version_id: str):
     return jsonify(version)
 
 
-def _planned_sessions_json(user_id: str, from_date: str, to_date: str) -> list[dict]:
+def _planned_sessions_json(user_id: str, from_date: str, to_date: str,
+                           all_matches: list[dict] | None = None) -> list[dict]:
     """What was planned on each day in a range, across every program, each row
     with the match and the log attached (`GET /programs/planned-sessions`,
-    `GET /health/linking`)."""
+    `GET /health/linking`, which passes the matches it already read)."""
     from src import program_history
     rows = program_history.planned_sessions_between(user_id, from_date, to_date)
 
-    matches = {m['sessionUid']: m for m in _health.get_matches(user_id)
+    if all_matches is None:
+        all_matches = _health.get_matches(user_id)
+    matches = {m['sessionUid']: m for m in all_matches
                if m.get('sessionUid') and m['matchConfidence'] != 'rejected'}
     logs = _health.get_session_logs_by_uid(user_id)
 
@@ -3441,12 +3444,13 @@ def health_linking():
     dismissed = frozenset(d for d in request.args.getlist('dismissed') if '|' in d)
 
     workouts = _health.get_workouts(g.user_id, summary_only=True)
+    all_matches = _health.get_matches(g.user_id)
     envelope = get_user_program(g.user_id)
     envelope = _normalize_program_keys(envelope) if isinstance(envelope, dict) else {}
     try:
         version_id = program_history.active_version_id(g.user_id)
         oldest = min((w['date'] for w in workouts if w.get('date')), default=today)
-        history = _planned_sessions_json(g.user_id, min(oldest, today), today)
+        history = _planned_sessions_json(g.user_id, min(oldest, today), today, all_matches)
         labels = {a['versionId']: a.get('goalName') or a['label']
                   for a in program_history.list_activations(g.user_id)}
     except Exception as hist_err:            # no history tables: current program only
@@ -3455,7 +3459,7 @@ def health_linking():
 
     days = linking.build_linking_days(
         workouts=workouts,
-        matches=_health.get_matches(g.user_id),
+        matches=all_matches,
         pending=_health.get_match_suggestions(g.user_id),
         program=envelope.get('currentProgram'),
         program_start_date=envelope.get('programStartDate'),

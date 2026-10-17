@@ -20,7 +20,13 @@ struct LogLinkingTab: View {
         let all = appState.linking?.days ?? []
         let days = Linking.visible(all, showAll: showAll)
         Group {
-            if appState.linking == nil {
+            if appState.linking == nil, let error = appState.linkingError {
+                empty(icon: "exclamationmark.triangle", title: "Could not load",
+                      message: error, actionLabel: "Try again") {
+                    appState.linkingError = nil
+                    Task { await appState.loadLinking() }
+                }
+            } else if appState.linking == nil {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if all.isEmpty {
                 empty(icon: "link", title: "Nothing to link yet",
@@ -220,13 +226,17 @@ struct LogLinkingTab: View {
         }
     }
 
-    private func empty(icon: String, title: String, message: String) -> some View {
+    private func empty(icon: String, title: String, message: String,
+                       actionLabel: String? = nil, action: (() -> Void)? = nil) -> some View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: icon).font(.system(size: 48)).foregroundStyle(.secondary)
             Text(title).font(.headline)
             Text(message).font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal, 24)
+            if let actionLabel, let action {
+                Button(actionLabel, action: action).buttonStyle(.bordered)
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity)

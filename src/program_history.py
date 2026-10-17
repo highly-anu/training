@@ -466,21 +466,9 @@ def is_archived(user_id: str, source_revision: str | None) -> bool:
     """
     if not source_revision:
         return False
-    from src.db import new_conn
-    conn = new_conn(autocommit=True)
-    if conn is None:
-        return False
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT 1 FROM program_activations '
-                'WHERE user_id = %s AND source_revision = %s LIMIT 1',
-                (user_id, str(source_revision)))
-            return cur.fetchone() is not None
-    except Exception:
-        return False
-    finally:
-        conn.close()
+    return bool(_query('SELECT 1 FROM program_activations '
+                       'WHERE user_id = %s AND source_revision = %s LIMIT 1',
+                       (user_id, str(source_revision))))
 
 
 def record_version(user_id: str, envelope: dict, source: str = 'put',
@@ -698,20 +686,25 @@ _ROW_COLUMNS = ('ps.session_uid, ps.program_version_id, ps.date, ps.week_index, 
 
 
 def _query(sql: str, params: tuple) -> list[dict]:
-    """Run a read and return plain dicts, or [] if anything at all goes wrong."""
-    from src.db import new_conn
-    conn = new_conn(autocommit=True)
-    if conn is None:
-        return []
-    try:
-        with _dict_cursor(conn) as cur:
-            cur.execute(sql, params)
-            return [dict(r) for r in cur.fetchall()]
-    except Exception as e:
-        _log.warning('program history read failed: %s', e)
-        return []
-    finally:
-        conn.close()
+    """Run a read and return plain dicts, or [] if anything at all goes wrong.
+
+    On the thread's reused read connection (`db.read_conn`), retried once on a
+    fresh one if the link turns out to have dropped."""
+    from src.db import read_conn
+    for _attempt in range(2):
+        conn = read_conn()
+        if conn is None:
+            return []
+        try:
+            with _dict_cursor(conn) as cur:
+                cur.execute(sql, params)
+                return [dict(r) for r in cur.fetchall()]
+        except Exception as e:
+            if conn.closed:
+                continue
+            _log.warning('program history read failed: %s', e)
+            return []
+    return []
 
 
 def planned_sessions_on_dates(user_id: str, dates: list[str]) -> list[dict]:

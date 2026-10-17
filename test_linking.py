@@ -189,7 +189,7 @@ def test_route():
         (db, 'get_user_program'): lambda uid: {'currentProgram': PROGRAM, 'programStartDate': '2026-10-05'},
         (program_history, 'active_version_id'): lambda uid: 'cur',
         (program_history, 'list_activations'): lambda uid: [{'versionId': 'old', 'label': 'Old', 'goalName': None}],
-        (api, '_planned_sessions_json'): lambda uid, f, t: (seen.update(span=(f, t)), HISTORY)[1],
+        (api, '_planned_sessions_json'): lambda uid, f, t, matches=None: (seen.update(span=(f, t)), HISTORY)[1],
     }
     orig = {k: getattr(*k) for k in stubs}
     for (mod, name), fn in stubs.items():
