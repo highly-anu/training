@@ -1,4 +1,5 @@
 import type { GeneratedProgram } from '@/api/types'
+import { DAY_NAMES, sessionCalendarDate } from '@/lib/workoutMatcher'
 
 /**
  * Which philosophies a regenerate asks for: the stored envelope's
@@ -51,4 +52,39 @@ export function tailResume(
   }
   delete constraints.start_phase
   return { constraints: { ...constraints, training_phase: week.phase } }
+}
+
+/**
+ * The weeks after a partial regenerate: the kept head, then the generated
+ * tail — except that no session dated before `keepBefore` is replaced.
+ *
+ * A regenerate starts at a week, and the week it starts at is usually the one
+ * the athlete is in. Splicing whole weeks rewrote that week's elapsed days too
+ * ("from tomorrow" on a Saturday replaced Monday to Saturday), so the sessions
+ * the athlete had done and matched were gone from the plan, and with them the
+ * week's adherence. Those days keep the sessions they had; the server then
+ * sees an unchanged past and carries the block on
+ * (src/program_history.py, carry_over_until).
+ */
+export function spliceRegenerated(
+  currentWeeks: GeneratedProgram['weeks'],
+  generatedWeeks: GeneratedProgram['weeks'],
+  keepCount: number,
+  programStartDate?: string | null,
+  keepBefore?: string | null,
+): GeneratedProgram['weeks'] {
+  const weeks = [...currentWeeks.slice(0, keepCount), ...generatedWeeks]
+  if (!programStartDate || !keepBefore) return weeks
+  return weeks.map((week, i) => {
+    const old = currentWeeks[i]
+    if (i < keepCount || !old) return week
+    const kept = DAY_NAMES.filter((day) => sessionCalendarDate(programStartDate, i, day) < keepBefore)
+    if (kept.length === 0) return week
+    const schedule = { ...week.schedule }
+    for (const day of kept) {
+      if (old.schedule?.[day]?.length) schedule[day] = old.schedule[day]
+      else delete schedule[day]
+    }
+    return { ...week, schedule }
+  })
 }

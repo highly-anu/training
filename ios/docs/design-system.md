@@ -1127,8 +1127,8 @@ which the envelope carries since saves round-trip it. The card names each
 difference ("Equipment: 5 items → 1 added, 1 removed"), and one tap runs
 `AppState.regenerateFromCurrentWeek`: a non-persisting generate for the
 remaining weeks with the merged constraints (continuing the phase and
-week-in-phase), spliced onto the weeks already behind the athlete
-(`Regeneration.splice`) and saved through the revision-checked PUT, so the
+week-in-phase), spliced onto the weeks and days already behind the athlete
+(`Regeneration.splice`, which never replaces a day before today) and saved through the revision-checked PUT, so the
 old plan stays in Program ▸ History. The Program settings sheet offers the same
 action above its destructive full regenerate.
 

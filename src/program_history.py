@@ -337,6 +337,68 @@ def clamp_effective_to(own_from: date, successor_from: date) -> date:
     return max(own_from, successor_from)
 
 
+# ── Continuity ───────────────────────────────────────────────────────────────
+#
+# Rebuilding the weeks ahead — "from tomorrow", or after an injury, a new
+# schedule or new equipment — is the same program carrying on, not a switch.
+# Before this, every such save opened a new activation from today and every
+# match and log stayed pinned to the old version's uids, which session_scope
+# (and both clients' belongsToVersion) reject for the version in force: the
+# athlete's elapsed sessions in the current block stopped counting.
+
+def divergence_date(old_rows: list[dict], new_rows: list[dict],
+                    from_day: date) -> date | None:
+    """The first date on or after `from_day` whose planned sessions differ
+    between two versions, or None when they never do.
+
+    A day is the same when it holds the same sessions in the same slots — by
+    modality and archetype, not by prescription, since a swapped exercise or
+    an adjusted load does not make it a different session. Rows are
+    `planned_sessions` rows (or flatten_program's), dates as DATE or ISO text.
+    """
+    old, new = _by_day(old_rows, from_day), _by_day(new_rows, from_day)
+    differing = [d for d in old.keys() | new.keys() if old.get(d) != new.get(d)]
+    return min(differing) if differing else None
+
+
+def same_sessions(old_rows: list[dict], new_rows: list[dict]) -> list[dict]:
+    """`old_rows` on the days both versions plan alike (see divergence_date) —
+    the sessions a successor carries over, whatever interval they fell in."""
+    old, new = _by_day(old_rows), _by_day(new_rows)
+    alike = {d for d, v in old.items() if new.get(d) == v}
+    return [r for r in old_rows if _as_day(r['date']) in alike]
+
+
+def _as_day(value) -> date:
+    return value if isinstance(value, date) else date.fromisoformat(str(value)[:10])
+
+
+def _by_day(rows: list[dict], from_day: date = date.min) -> dict[date, list]:
+    days: dict[date, list] = {}
+    for r in rows:
+        d = _as_day(r['date'])
+        if d < from_day:
+            continue
+        days.setdefault(d, []).append((r['day_name'], r['session_index'],
+                                       r.get('modality') or '', r.get('archetype_id') or ''))
+    return {d: sorted(v) for d, v in days.items()}
+
+
+def carry_over_until(today: date, divergence: date | None) -> date | None:
+    """Whether a successor in the same block continues the plan in force, and
+    up to which date (exclusive) the predecessor's sessions carry over to it.
+
+    It continues when no elapsed day changed: everything before today is as it
+    was. Today itself is the athlete's to change — an injury regenerate may
+    rewrite today's session — and carries over only when it did not. A
+    successor that rewrites an elapsed day is a different plan for those days,
+    and the timeline switches on today as it always did (None).
+    """
+    if divergence is None:
+        return date.max
+    return divergence if divergence >= today else None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Storage
 # ─────────────────────────────────────────────────────────────────────────────
@@ -455,6 +517,45 @@ def _is_referenced(cur, user_id: str, vid: str) -> bool:
             # "referenced" so a squash can never discard real history.
             return True
     return False
+
+
+def _carry_over(cur, user_id: str, old_vid: str, new_vid: str,
+                kept_rows: list[dict]) -> int:
+    """Re-point matches, suggestions and logs from the predecessor's kept
+    sessions to the same sessions of its successor; returns rows moved.
+
+    A kept session sits at the same date, so at the same week index, day and
+    slot — the uid differs only in its version prefix. A log whose new uid is
+    already taken stays where it is rather than collide on the primary key.
+    Each table runs under a savepoint: one missing a column (a database ahead
+    of its migrations) must not cost the timeline the rest.
+    """
+    if not kept_rows:
+        return 0
+    pairs = [(r['session_uid'], new_vid + r['session_uid'][len(old_vid):]) for r in kept_rows
+             if r['session_uid'].startswith(old_vid + ':')]
+    if not pairs:
+        return 0
+    values = ','.join(cur.mogrify('(%s, %s)', p).decode() for p in pairs).replace('%', '%%')
+    moved = 0
+    guards = {
+        'session_logs': ' AND NOT EXISTS (SELECT 1 FROM session_logs s2 WHERE '
+                        's2.user_id = t.user_id AND s2.session_uid = m.new_uid)',
+    }
+    for table in ('workout_matches', 'workout_match_suggestions', 'session_logs'):
+        cur.execute('SAVEPOINT carry_over')
+        try:
+            cur.execute(f'''
+                UPDATE {table} AS t SET session_uid = m.new_uid
+                  FROM (VALUES {values}) AS m(old_uid, new_uid)
+                 WHERE t.user_id = %s AND t.session_uid = m.old_uid{guards.get(table, '')}
+            ''', (user_id,))
+            moved += cur.rowcount
+            cur.execute('RELEASE SAVEPOINT carry_over')
+        except Exception as e:
+            cur.execute('ROLLBACK TO SAVEPOINT carry_over')
+            _log.warning('carry_over skipped %s for %s: %s', table, user_id, e)
+    return moved
 
 
 def is_archived(user_id: str, source_revision: str | None) -> bool:
@@ -610,9 +711,48 @@ def record_version(user_id: str, envelope: dict, source: str = 'put',
             else:
                 lineage = _uuid.uuid4().hex
 
+            # The same block rebuilt ahead of the athlete carries on: the
+            # successor takes over every interval of the block whose elapsed
+            # days it plans exactly as they were (newest first, stopping at
+            # the first that differs), and what was matched, suggested or
+            # logged against those sessions moves with them. Those intervals
+            # close empty — still on the timeline, as the record that the plan
+            # changed. Walking back past the open interval is what lets a
+            # program whose past an earlier regenerate rewrote be repaired by
+            # restoring those days and saving.
+            carries: list[tuple[dict, date]] = []
+            if open_act and open_act['start_date'] == start_day:
+                cur.execute('''SELECT id, program_version_id, effective_from, effective_to
+                                 FROM program_activations
+                                WHERE user_id = %s AND lineage_id = %s
+                                  AND (effective_to IS NULL OR effective_to > effective_from)
+                             ORDER BY effective_from DESC, id DESC''',
+                            (user_id, open_act['lineage_id']))
+                block = cur.fetchall()
+                cur.execute('''SELECT program_version_id, session_uid, date, day_name,
+                                      session_index, modality, archetype_id
+                                 FROM planned_sessions
+                                WHERE user_id = %s AND program_version_id = ANY(%s)''',
+                            (user_id, sorted({a['program_version_id'] for a in block} | {vid})))
+                rows_of: dict[str, list[dict]] = {}
+                for r in cur.fetchall():
+                    rows_of.setdefault(r['program_version_id'], []).append(r)
+                for act in block:
+                    lo, hi = act['effective_from'], act['effective_to'] or date.max
+                    old_rows = [r for r in rows_of.get(act['program_version_id'], [])
+                                if lo <= r['date'] < hi]
+                    new_rows = [r for r in rows_of.get(vid, []) if lo <= r['date'] < hi]
+                    until = carry_over_until(today, divergence_date(old_rows, new_rows, lo))
+                    if until is None:
+                        break
+                    carries.append((act, until))
+                if carries:
+                    eff_from = carries[-1][0]['effective_from']
+
             squashed = False
             if open_act:
                 if (open_act['effective_from'] == today
+                        and not (carries and eff_from < open_act['effective_from'])
                         and not _is_referenced(cur, user_id, open_act['program_version_id'])):
                     # Same-day edit that nothing points at yet: retarget the open
                     # activation instead of chaining. Updating in place rather
@@ -641,9 +781,32 @@ def record_version(user_id: str, envelope: dict, source: str = 'put',
                 ''', (user_id, vid, lineage, eff_from, source, source_revision,
                       _json.dumps(goal_ids), goal_name))
 
+            carried = 0
+            if carries and not squashed:
+                for act, _until in carries:
+                    if act['id'] != open_act['id']:
+                        cur.execute('UPDATE program_activations SET effective_to = effective_from '
+                                    'WHERE id = %s', (act['id'],))
+                # Every session a taken-over version planned as the successor
+                # does, in or out of its own interval: a log written after a
+                # later save still names that save's version. Oldest first, so
+                # when two logs name one session the one written while it was
+                # in force keeps it (_carry_over never overwrites).
+                done: set[str] = set()
+                for act, _until in reversed(carries):
+                    old_vid = act['program_version_id']
+                    if old_vid == vid or old_vid in done:
+                        continue
+                    done.add(old_vid)
+                    carried += _carry_over(cur, user_id, old_vid, vid,
+                                           same_sessions(rows_of.get(old_vid, []),
+                                                         rows_of.get(vid, [])))
+
         conn.commit()
         out['recorded'] = True
-        out['reason'] = 'squashed' if squashed else 'activated'
+        out['reason'] = ('squashed' if squashed
+                         else 'continued' if carries else 'activated')
+        out['carried'] = carried
     except Exception as e:
         try:
             conn.rollback()

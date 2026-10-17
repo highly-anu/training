@@ -209,6 +209,112 @@ def test_regenerate_splits_the_timeline() -> None:
           new['lineageId'] == old['lineageId'])
 
 
+def test_rebuilding_ahead_continues_the_block() -> None:
+    print('\nrebuilding the weeks ahead keeps the block going')
+    reset()
+    ph.record_version(U, PROG_A, source='heal', source_revision='rev-1')
+    vid_a = ph.version_id(U, PROG_A)
+    # Weeks whose Monday is behind the athlete (or is today).
+    elapsed = (TODAY - START_A).days // 7 + 1
+    # A match, a suggestion and a log on elapsed sessions; one log ahead.
+    with conn.cursor() as c:
+        c.execute("INSERT INTO workout_matches (imported_workout_id, user_id, session_key, "
+                  "match_confidence, matched_at, session_uid) "
+                  "VALUES ('w-1', %s, '1-Monday-0', 'auto', NOW(), %s)",
+                  (U, ph.session_uid(vid_a, 0, 'Monday', 0)))
+        c.execute("INSERT INTO workout_match_suggestions (imported_workout_id, user_id, "
+                  "session_key, score, session_uid) VALUES ('w-2', %s, '2-Monday-0', 60, %s)",
+                  (U, ph.session_uid(vid_a, 1, 'Monday', 0)))
+        c.execute("INSERT INTO session_logs (session_key, user_id, session_uid, completed_at) "
+                  "VALUES ('2-Monday-0', %s, %s, NOW())",
+                  (U, ph.session_uid(vid_a, 1, 'Monday', 0)))
+        c.execute("INSERT INTO session_logs (session_key, user_id, session_uid) "
+                  "VALUES ('8-Monday-0', %s, %s)",
+                  (U, ph.session_uid(vid_a, 7, 'Monday', 0)))
+    insert_workout('w-1', START_A, 'aerobic_base', 60)
+
+    # Weeks behind the athlete kept, the rest rebuilt as strength.
+    rebuilt = program('aerobic_base', 'z2_run', 60)
+    for w in rebuilt['currentProgram']['weeks'][elapsed:]:
+        w['schedule'] = {'Monday': [session('max_strength', 'squat_day', 60)]}
+    out = ph.record_version(U, rebuilt, source='put', source_revision='rev-2')
+    vid_b = ph.version_id(U, rebuilt)
+    check('the rebuild continues the block', out['reason'] == 'continued', out['reason'])
+    check('three rows carried over', out.get('carried') == 3, str(out.get('carried')))
+
+    acts = ph.list_activations(U)
+    check('two activations: the change is on the record', len(acts) == 2, str(len(acts)))
+    new, old = acts[0], acts[-1]
+    check('the rebuild owns the block from its start',
+          new['effectiveFrom'] == START_A.isoformat(), new['effectiveFrom'])
+    check('the old version closes empty',
+          old['effectiveFrom'] == old['effectiveTo'] == START_A.isoformat(),
+          f"{old['effectiveFrom']}..{old['effectiveTo']}")
+    check('one lineage', new['lineageId'] == old['lineageId'])
+    check('the rebuild carries the match and the log',
+          new['matchedCount'] == 1 and new['loggedCount'] == 1,
+          f"{new['matchedCount']} / {new['loggedCount']}")
+
+    with conn.cursor() as c:
+        c.execute('SELECT session_uid FROM workout_match_suggestions WHERE user_id = %s', (U,))
+        check('the suggestion moved', c.fetchone()[0] == ph.session_uid(vid_b, 1, 'Monday', 0))
+        c.execute("SELECT session_uid FROM session_logs WHERE user_id = %s "
+                  "AND session_key = '8-Monday-0'", (U,))
+        check('a log on a rebuilt session stays with the old version',
+              c.fetchone()[0] == ph.session_uid(vid_a, 7, 'Monday', 0))
+
+    matches = health_store.get_matches(U)
+    check('the match is in the current program',
+          matches and matches[0]['inCurrentProgram'] is True, str(matches))
+    check("...under the rebuild's uid",
+          matches and matches[0]['sessionUid'] == ph.session_uid(vid_b, 0, 'Monday', 0))
+    check('elapsed dates resolve to the rebuild',
+          {c['sessionUid'].split(':')[0]
+           for cs in ph.sessions_on_dates(U, [START_A.isoformat()]).values() for c in cs}
+          == {vid_b})
+
+
+def test_restoring_a_rewritten_past_repairs_the_block() -> None:
+    print('\nrestoring the days a regenerate rewrote puts the block back together')
+    reset()
+    ph.record_version(U, PROG_A, source='heal')
+    vid_a = ph.version_id(U, PROG_A)
+    with conn.cursor() as c:
+        c.execute("INSERT INTO workout_matches (imported_workout_id, user_id, session_key, "
+                  "match_confidence, matched_at, session_uid) "
+                  "VALUES ('w-1', %s, '1-Monday-0', 'auto', NOW(), %s)",
+                  (U, ph.session_uid(vid_a, 0, 'Monday', 0)))
+    insert_workout('w-1', START_A, 'aerobic_base', 60)
+
+    # The old client's "from tomorrow": every week rewritten, the past too.
+    bad = program('max_strength', 'squat_day', 60)
+    out = ph.record_version(U, bad, source='put')
+    check('rewriting the past is a switch', out['reason'] == 'activated', out['reason'])
+    check('...which takes the match off the current program',
+          health_store.get_matches(U)[0]['inCurrentProgram'] is False)
+
+    # The repair: the elapsed days as they were, the rebuilt days kept.
+    elapsed = (TODAY - START_A).days // 7 + (0 if TODAY.weekday() == 0 else 1)
+    repaired = program('max_strength', 'squat_day', 60)
+    for w in repaired['currentProgram']['weeks'][:elapsed]:
+        w['schedule'] = {'Monday': [session('aerobic_base', 'z2_run', 60)]}
+    out = ph.record_version(U, repaired, source='put')
+    vid_r = ph.version_id(U, repaired)
+    check('the repair continues the block', out['reason'] == 'continued', out['reason'])
+    acts = ph.list_activations(U)
+    active = [a for a in acts if a['isActive']]
+    rest = [a for a in acts if not a['isActive']]
+    check('it runs from the block start',
+          len(active) == 1 and active[0]['versionId'] == vid_r
+          and active[0]['effectiveFrom'] == START_A.isoformat(), str(active))
+    check('both earlier versions close empty',
+          len(rest) == 2 and all(a['effectiveFrom'] == a['effectiveTo'] for a in rest),
+          str([(a['effectiveFrom'], a['effectiveTo']) for a in rest]))
+    m = health_store.get_matches(U)[0]
+    check('the match is back on the current program',
+          m['inCurrentProgram'] is True and m['sessionUid'].startswith(vid_r + ':'), str(m))
+
+
 def test_intervals_are_disjoint() -> None:
     print('\nno date resolves to two plans')
     days = [(START_A + timedelta(days=i)).isoformat() for i in range(0, 60)]
@@ -259,8 +365,9 @@ def test_same_day_squash() -> None:
                   (U, ph.session_uid(ph.version_id(U, edited), 0, 'Monday', 0)))
     again = program('durability', 'mobility_day', 30)
     c3 = ph.record_version(U, again, source='put')
+    # Only days ahead changed, so it carries on the block — chained, not squashed.
     check('a referenced same-day version is not squashed away',
-          c3['reason'] == 'activated', c3['reason'])
+          c3['reason'] == 'continued', c3['reason'])
     check('now three activations', len(ph.list_activations(U)) == 3)
 
 
@@ -807,6 +914,8 @@ if __name__ == '__main__':
     test_idempotent_under_a_heal_storm()
     test_regenerate_splits_the_timeline()
     test_intervals_are_disjoint()
+    test_rebuilding_ahead_continues_the_block()
+    test_restoring_a_rewritten_past_repairs_the_block()
     test_a_new_start_date_starts_a_new_lineage()
     test_same_day_squash()
     test_no_start_date_is_a_clean_skip()

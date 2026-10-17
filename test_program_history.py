@@ -409,6 +409,42 @@ def test_given_session_uid_is_checked() -> None:
         ph.resolve_session, hs.get_workout = real_resolve, real_get
 
 
+def test_continuity() -> None:
+    print('\nrebuilding ahead continues the plan')
+    d = date.fromisoformat
+
+    def row(day, iso, modality, arch, idx=0):
+        return {'date': iso, 'day_name': day, 'session_index': idx,
+                'modality': modality, 'archetype_id': arch}
+
+    old = [row('Monday', '2026-10-12', 'aerobic_base', 'z2'),
+           row('Wednesday', '2026-10-14', 'max_strength', 'squat'),
+           row('Saturday', '2026-10-17', 'aerobic_base', 'long'),
+           row('Monday', '2026-10-19', 'aerobic_base', 'z2')]
+    same_head = old[:3] + [row('Monday', '2026-10-19', 'durability', 'mob')]
+    check('the first differing day is found',
+          ph.divergence_date(old, same_head, d('2026-10-12')) == d('2026-10-19'))
+    check('identical plans never diverge',
+          ph.divergence_date(old, list(old), d('2026-10-12')) is None)
+    check('a day before from_day is not compared',
+          ph.divergence_date(old, old[1:], d('2026-10-13')) is None)
+    check('a dropped session is a difference',
+          ph.divergence_date(old, old[1:], d('2026-10-12')) == d('2026-10-12'))
+    check('a changed archetype is a difference',
+          ph.divergence_date(old, [row('Monday', '2026-10-12', 'aerobic_base', 'tempo')]
+                             + old[1:], d('2026-10-12')) == d('2026-10-12'))
+
+    today = d('2026-10-17')
+    check('kept through today: carries through today',
+          ph.carry_over_until(today, d('2026-10-19')) == d('2026-10-19'))
+    check('today rewritten: still continues, carrying the days before it',
+          ph.carry_over_until(today, today) == today)
+    check('an elapsed day rewritten: a switch, not a continuation',
+          ph.carry_over_until(today, d('2026-10-14')) is None)
+    check('nothing changed at all: everything carries',
+          ph.carry_over_until(today, None) == date.max)
+
+
 if __name__ == '__main__':
     test_hash_invariance()
     test_hash_sensitivity()
@@ -419,6 +455,7 @@ if __name__ == '__main__':
     test_spliced_program_uids_stay_unique()
     test_flatten_edge_cases()
     test_intervals()
+    test_continuity()
     test_annotate_logs()
     test_given_session_uid_is_checked()
 

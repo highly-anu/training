@@ -1018,7 +1018,13 @@ final class AppState: ObservableObject {
             constraints: constraints, numWeeks: remaining, weekInProgram: start + 1,
             startDate: nil, eventDate: sp.eventDate, persist: false)
         let generated = try await api.generateProgramPreview(request)
-        let spliced = Regeneration.splice(current: program, from: start, generated: generated)
+        let today = DateFormatter()
+        today.locale = Locale(identifier: "en_US_POSIX")
+        today.dateFormat = "yyyy-MM-dd"
+        // The days already behind the athlete this week stay as they are.
+        let spliced = Regeneration.splice(current: program, from: start, generated: generated,
+                                          programStartDate: sp.programStartDate,
+                                          keepBefore: today.string(from: Date()))
         commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
         return remaining
     }

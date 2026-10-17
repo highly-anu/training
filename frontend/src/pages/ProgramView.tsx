@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { CalendarDays, Wand2, ShieldAlert, Plus } from 'lucide-react'
 import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
@@ -120,6 +120,8 @@ export function ProgramView() {
         numWeeks: program.weeks.length - weekIndex,
         weekInProgram: weekIndex + 1,
         customInjuryFlags: localCustom,
+        // Never the days already behind the athlete.
+        keepBefore: format(new Date(), 'yyyy-MM-dd'),
       },
       { onSuccess: () => setInjurySheetOpen(false) }
     )
