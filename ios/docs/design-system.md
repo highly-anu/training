@@ -1773,8 +1773,17 @@ sheet, §6.32); Analytics ▸ Recovery's readiness (`ReadinessDetailView`, §6.2
 sleep (`SleepDetailView` — Sleep Debt, Last Night and Sleep Stages were three
 cards), HRV and resting heart rate (`RecoveryTrendDetailView`, one view for
 both, like `RecoveryTrendChartView`) and "All check-ins" (`CheckInHistoryView`;
-the card keeps the last seven `CheckInRow`s); and Program ▸ Overview's phases
-(§6.26, before this section was written).
+the card keeps the last seven `CheckInRow`s); Analytics ▸ Load's Performance
+Management (`PMCDetailView`: today's CTL, ATL and TSB — whole numbers, one
+decimal under ten — over a compact `PMCChart` on the card, the full chart with
+a drag-to-read rule on the screen); and Program ▸ Overview's phases (§6.26,
+before this section was written).
+
+Where two cards were the same data two ways they became one card with a
+segmented display picker (§6.8's "mode inside content"): Load's **Mix**
+(modality share of minutes · activity hours, the period's) and **Weekly**
+(sessions · TRIMP, twelve weeks; "On device" beside the header only for TRIMP,
+whose request is its own).
 
 Terms that are not a measure — TRIMP, CTL, ATL, TSB, readiness, HRV, resting
 HR, sleep debt — take their About from `vocabulary.TERMS`, served by the

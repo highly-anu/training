@@ -3,7 +3,10 @@ import Charts
 
 struct AnalyticsOverviewTab: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var router: AppRouter
     @Binding var period: AnalyticsPeriod
+    /// Fitness, fatigue and form pushed from outside (a deep link).
+    @State private var showPMC = false
 
     @State private var pmcEntries: [PMCEntry] = []
     @State private var isLoadingPMC = false
@@ -11,6 +14,10 @@ struct AnalyticsOverviewTab: View {
     /// the web reads the same endpoints — and the on-device engine is the
     /// fallback when it cannot be reached, so the chart says which it was.
     @State private var loadSource: LoadSource = .server
+    /// The Mix card's breakdown and the Weekly card's measure: display
+    /// choices inside a card (§6.8), not sections of the screen.
+    @State private var mixByActivity = false
+    @State private var weeklyTRIMP = false
     /// Load Focus's label and share columns, at the reader's text size.
     @ScaledMetric(relativeTo: .subheadline) private var focusLabelWidth: CGFloat = 84
     @ScaledMetric(relativeTo: .subheadline) private var focusShareWidth: CGFloat = 48
@@ -83,18 +90,21 @@ struct AnalyticsOverviewTab: View {
                 AnalyticsPeriodPicker(period: $period)
                 kpiGrid
                 if loadFocus.total > 0 { loadFocusCard }
-                if !modalities.isEmpty { modalityDonutCard }
-                if !activities.isEmpty { activityBarCard }
-                consistencyCard
-                if weeklyLoadBars.contains(where: { $0.trimp > 0 }) { weeklyLoadCard }
-                if !pmcEntries.isEmpty { pmcCard }
+                if !modalities.isEmpty || !activities.isEmpty { mixCard }
+                weeklyCard
+                if !pmcEntries.isEmpty || isLoadingPMC { pmcCard }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
         .task(id: appState.importedWorkouts.count) {
             await recomputePMC()
+            applyPendingDetail()
         }
+        .navigationDestination(isPresented: $showPMC) {
+            PMCDetailView(entries: pmcEntries, onDevice: loadSource == .device)
+        }
+        .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
         .task(id: period) {
             await appState.loadIfStale("loadSummary-\(period.rawValue)") { await appState.loadLoadSummary(period) }
         }
@@ -240,83 +250,134 @@ struct AnalyticsOverviewTab: View {
         }
     }
 
-    // MARK: - Modality Donut
+    // MARK: - Mix
 
-    private var modalityDonutCard: some View {
-        AnalyticsCard(header: "By Modality") {
-            ZStack {
-                Chart(modalities) { share in
-                    SectorMark(
-                        angle: .value("Pct", share.pct),
-                        innerRadius: .ratio(0.55),
-                        angularInset: 1.5
-                    )
-                    .foregroundStyle(share.color)
-                    .cornerRadius(3)
+    /// The period's training split two ways — by modality (share of
+    /// minutes) or by activity (hours) — in one card. By Modality and By
+    /// Activity were two cards over the same minutes until 2026-10-17.
+    private var mixCard: some View {
+        AnalyticsCard(header: "Mix") {
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Mix", selection: $mixByActivity) {
+                    Text("Modality").tag(false)
+                    Text("Activity").tag(true)
                 }
-                if let top = modalities.first {
-                    VStack(spacing: 2) {
-                        Text("\(top.pct)%").font(.title3).fontWeight(.bold).monospacedDigit()
-                        Text(top.label).font(.caption).foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center).lineLimit(2)
+                .pickerStyle(.segmented)
+                if mixByActivity {
+                    if activities.isEmpty {
+                        Text("No activities in this period").font(.footnote).foregroundStyle(.secondary)
+                    } else {
+                        activityChart
                     }
-                    // Inside the hole of the ring, however large the text.
-                    .frame(maxWidth: 96)
-                }
-            }
-            .frame(height: 180)
-            .padding(.vertical, 4)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    // Every segment named: the ring draws them all, so the
-                    // legend does too (colour is never the only label).
-                    ForEach(modalities) { share in
-                        HStack(spacing: 4) {
-                            Circle().fill(share.color).frame(width: 8, height: 8)
-                            Text("\(share.label) \(share.pct)%")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
+                } else if modalities.isEmpty {
+                    Text("No modalities in this period").font(.footnote).foregroundStyle(.secondary)
+                } else {
+                    modalityDonut
                 }
             }
         }
     }
 
-    // MARK: - Activity Bar
-
-    private var activityBarCard: some View {
-        AnalyticsCard(header: "By Activity") {
-            Chart(activities) { entry in
-                BarMark(
-                    x: .value("Hours", entry.hours),
-                    y: .value("Activity", entry.name)
+    @ViewBuilder
+    private var modalityDonut: some View {
+        ZStack {
+            Chart(modalities) { share in
+                SectorMark(
+                    angle: .value("Pct", share.pct),
+                    innerRadius: .ratio(0.55),
+                    angularInset: 1.5
                 )
-                .foregroundStyle(entry.color)
-                .cornerRadius(4)
-                .annotation(position: .trailing, alignment: .leading) {
-                    Text(String(format: "%.1fh", entry.hours))
-                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                        .fixedSize()
-                }
+                .foregroundStyle(share.color)
+                .cornerRadius(3)
             }
-            .chartXAxis(.hidden)
-            .chartYAxis {
-                AxisMarks(preset: .aligned) { value in
-                    AxisValueLabel {
-                        if let s = value.as(String.self) {
-                            Text(s).font(.caption2).foregroundStyle(.secondary)
-                        }
+            if let top = modalities.first {
+                VStack(spacing: 2) {
+                    Text("\(top.pct)%").font(.title3).fontWeight(.bold).monospacedDigit()
+                    Text(top.label).font(.caption).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center).lineLimit(2)
+                }
+                // Inside the hole of the ring, however large the text.
+                .frame(maxWidth: 96)
+            }
+        }
+        .frame(height: 180)
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("By modality: " + modalities.map { "\($0.label) \($0.pct) percent" }.joined(separator: ", "))
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                // Every segment named: the ring draws them all, so the
+                // legend does too (colour is never the only label).
+                ForEach(modalities) { share in
+                    HStack(spacing: 4) {
+                        Circle().fill(share.color).frame(width: 8, height: 8)
+                        Text("\(share.label) \(share.pct)%")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
-            .frame(height: CGFloat(activities.count) * 32 + 16)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var activityChart: some View {
+        Chart(activities) { entry in
+            BarMark(
+                x: .value("Hours", entry.hours),
+                y: .value("Activity", entry.name)
+            )
+            .foregroundStyle(entry.color)
+            .cornerRadius(4)
+            .annotation(position: .trailing, alignment: .leading) {
+                Text(String(format: "%.1fh", entry.hours))
+                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+        }
+        .chartXAxis(.hidden)
+        .chartYAxis {
+            AxisMarks(preset: .aligned) { value in
+                AxisValueLabel {
+                    if let s = value.as(String.self) {
+                        Text(s).font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .frame(height: CGFloat(activities.count) * 32 + 16)
+    }
+
+    // MARK: - Weekly
+
+    /// Twelve weeks as sessions a week or TRIMP a week, in one card —
+    /// Weekly Volume and Weekly TRIMP were two time series back to back.
+    /// "On device" applies to the TRIMP bars only, which come from their own
+    /// request (`serverWeeklyLoad`).
+    private var weeklyCard: some View {
+        AnalyticsCard(header: "Weekly · 12 weeks") {
+            if weeklyTRIMP && (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
+        } content: {
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Weekly", selection: $weeklyTRIMP) {
+                    Text("Sessions").tag(false)
+                    Text("TRIMP").tag(true)
+                }
+                .pickerStyle(.segmented)
+                if weeklyTRIMP {
+                    if weeklyLoadBars.contains(where: { $0.trimp > 0 }) {
+                        trimpChart
+                    } else {
+                        Text("No heart-rate load in these weeks").font(.footnote).foregroundStyle(.secondary)
+                    }
+                } else {
+                    sessionsChart
+                }
+            }
         }
     }
 
-    // MARK: - Weekly Consistency
-
-    private var consistencyCard: some View {
-        AnalyticsCard(header: "Weekly Volume") {
+    private var sessionsChart: some View {
+        VStack(alignment: .leading, spacing: 8) {
             Chart(consistency) { entry in
                 BarMark(
                     x: .value("Week", entry.weekStart, unit: .weekOfYear),
@@ -353,6 +414,7 @@ struct AnalyticsOverviewTab: View {
                 legendDot(color: .red,        label: "7+")
             }
             .font(.caption2)
+            .accessibilityHidden(true)
         }
     }
 
@@ -373,44 +435,35 @@ struct AnalyticsOverviewTab: View {
         }
     }
 
-    // MARK: - Weekly Load (TRIMP)
-
-    private var weeklyLoadCard: some View {
-        // The bars' own source: they come from `serverWeeklyLoad`
-        // independently of the PMC, so one request can answer and the
-        // other not.
-        AnalyticsCard(header: "Weekly TRIMP · 12 weeks") {
-            if (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
-        } content: {
-            Chart(weeklyLoadBars) { bar in
-                BarMark(
-                    x: .value("Week", bar.weekStart, unit: .weekOfYear),
-                    y: .value("TRIMP", bar.trimp)
-                )
-                .foregroundStyle(Color.orange)
-                .cornerRadius(4)
-            }
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .month, count: 1)) { value in
-                    AxisValueLabel {
-                        if let d = value.as(Date.self) {
-                            Text(d, format: .dateTime.month(.abbreviated))
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisValueLabel {
-                        if let v = value.as(Double.self) {
-                            Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .frame(height: 130)
+    private var trimpChart: some View {
+        Chart(weeklyLoadBars) { bar in
+            BarMark(
+                x: .value("Week", bar.weekStart, unit: .weekOfYear),
+                y: .value("TRIMP", bar.trimp)
+            )
+            .foregroundStyle(Color.orange)
+            .cornerRadius(4)
         }
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .month, count: 1)) { value in
+                AxisValueLabel {
+                    if let d = value.as(Date.self) {
+                        Text(d, format: .dateTime.month(.abbreviated))
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisValueLabel {
+                    if let v = value.as(Double.self) {
+                        Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .frame(height: 130)
     }
 
     /// Shown only when a number was computed on this phone because the
@@ -421,85 +474,38 @@ struct AnalyticsOverviewTab: View {
             .accessibilityLabel("Computed on this phone; the server could not be reached")
     }
 
-    // MARK: - PMC Chart
+    // MARK: - PMC
 
+    /// Today's fitness, fatigue and form as numbers over a small chart of
+    /// the two lines; the full chart, the value on any day and what the
+    /// terms mean are `PMCDetailView`'s. The card had only the chart and a
+    /// legend of glosses — no number to read (§1.4).
+    @ViewBuilder
     private var pmcCard: some View {
-        AnalyticsCard(header: "Performance Management") {
-            if loadSource == .device && !isLoadingPMC { onDeviceMark }
-        } content: {
-            if isLoadingPMC {
-                ProgressView().frame(maxWidth: .infinity, minHeight: 160)
-            } else {
-                VStack(alignment: .leading, spacing: 4) {
-                    Chart {
-                        ForEach(pmcEntries) { e in
-                            BarMark(x: .value("Date", e.date, unit: .day),
-                                    y: .value("TSB", e.tsb))
-                                .foregroundStyle(e.tsb >= 0 ? Color.green.opacity(0.5) : Color.red.opacity(0.5))
-                        }
-                        ForEach(pmcEntries) { e in
-                            LineMark(x: .value("Date", e.date, unit: .day),
-                                     y: .value("ATL", e.atl))
-                                .foregroundStyle(.orange)
-                                .lineStyle(StrokeStyle(lineWidth: 1.5))
-                                .interpolationMethod(.catmullRom)
-                        }
-                        ForEach(pmcEntries) { e in
-                            LineMark(x: .value("Date", e.date, unit: .day),
-                                     y: .value("CTL", e.ctl))
-                                .foregroundStyle(.blue)
-                                .lineStyle(StrokeStyle(lineWidth: 2))
-                                .interpolationMethod(.catmullRom)
-                        }
-                    }
-                    .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: 14)) { _ in
-                            AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                                .font(.caption2)
-                        }
-                    }
-                    .chartYAxis {
-                        AxisMarks(position: .leading) { value in
-                            AxisValueLabel {
-                                if let v = value.as(Double.self) {
-                                    Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    .frame(height: 160)
-                    // The terms, not their glosses: what each means is said to
-                    // VoiceOver (and, in time, the chart's own detail screen).
-                    HStack(spacing: 12) {
-                        legendLine(color: .blue,   label: "CTL")
-                            .accessibilityLabel("CTL, fitness: blue line")
-                        legendLine(color: .orange, label: "ATL")
-                            .accessibilityLabel("ATL, fatigue: orange line")
-                        HStack(spacing: 4) {
-                            // Form is green above zero and red below, so the key shows both.
-                            HStack(spacing: 1) {
-                                Rectangle().fill(Color.green.opacity(0.5)).frame(width: 7, height: 8)
-                                Rectangle().fill(Color.red.opacity(0.5)).frame(width: 7, height: 8)
-                            }
-                            Text("TSB").foregroundStyle(.secondary)
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("TSB, form: bars, green above zero and red below")
-                    }
-                    .font(.caption2)
+        if isLoadingPMC {
+            AnalyticsCard(header: "Performance Management") {
+                ProgressView().frame(maxWidth: .infinity, minHeight: 80)
+            }
+        } else {
+            AnalyticsDetailCard(header: "Performance Management", hint: "Opens fitness, fatigue and form") {
+                if loadSource == .device { onDeviceMark }
+            } destination: {
+                PMCDetailView(entries: pmcEntries, onDevice: loadSource == .device)
+            } content: {
+                VStack(alignment: .leading, spacing: 10) {
+                    if let today = pmcEntries.last { PMCNumbers(entry: today) }
+                    PMCChart(entries: pmcEntries, compact: true)
                 }
             }
         }
     }
 
-    private func legendLine(color: Color, label: String) -> some View {
-        HStack(spacing: 4) {
-            Rectangle().fill(color).frame(width: 16, height: 2)
-            Text(label).foregroundStyle(.secondary)
-        }
+    /// Push what a deep link asked for once the chart has its days.
+    private func applyPendingDetail() {
+        guard router.pendingAnalyticsDetail == .pmc, !pmcEntries.isEmpty else { return }
+        showPMC = true
+        router.clearPendingAnalyticsDetail()
     }
-
-    // MARK: - Card Container
 
     // MARK: - PMC Computation
 
