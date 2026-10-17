@@ -402,7 +402,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
 
         {suggestions.length > 0 && (
           <div className="space-y-3">
-            {heading('To confirm', 'Results your logged sessions suggest. They count once you save them.')}
+            {heading('To confirm', 'Results your sessions and imported runs suggest. They count once you save them.')}
             <div className="grid gap-2">{suggestions.map((sg) => <SuggestionRow key={sg.id} suggestion={sg} />)}</div>
           </div>
         )}

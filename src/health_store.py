@@ -300,6 +300,29 @@ def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
         return written
 
 
+def canonical_ids(user_id: str, ids: list[str]) -> dict[str, str]:
+    """{id: the row it is the same activity as} — itself unless dedup folded
+    it into another source's copy (`canonical_id`). Ids not stored map to
+    themselves; a table without the column reads as no folds."""
+    from src.db import read_conn
+    wanted = sorted({i for i in ids if i})
+    out = {i: i for i in wanted}
+    if not wanted:
+        return out
+    conn = read_conn()
+    if conn is None:
+        return out
+    try:
+        with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+            cur.execute('SELECT id, canonical_id FROM workouts WHERE user_id = %s AND id = ANY(%s::text[])',
+                        (user_id, wanted))
+            for row in cur.fetchall():
+                out[row['id']] = row.get('canonical_id') or row['id']
+    except Exception:
+        pass
+    return out
+
+
 def recalculate_workouts_elevation(user_id: str, calc_elevation_fn) -> dict:
     """Recompute elevation_gain/loss from stored GPS tracks for all user workouts."""
     import json as _json

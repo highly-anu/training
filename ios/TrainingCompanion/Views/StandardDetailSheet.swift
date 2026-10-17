@@ -64,6 +64,10 @@ struct StandardDetailSheet: View {
                         if let notes = b.notes {
                             Text(notes).font(.caption).foregroundStyle(.secondary)
                         }
+                        if let effort = b.bestEffort {
+                            Text("Imported runs with recorded speed (a FIT file, Garmin Connect) suggest a result here when their fastest \(effort.label) beats your best, or whenever the run is linked to a test of it. Apple Health and live watch runs carry no speed, so they do not.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 } else {
                     Section {

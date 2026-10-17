@@ -276,7 +276,7 @@ private struct StandardsTab: View {
                 } header: {
                     Text("To confirm")
                 } footer: {
-                    Text("Results your logged sessions suggest. They count once you save them.")
+                    Text("Results your sessions and imported runs suggest. They count once you save them.")
                 }
             }
             if !programRows.isEmpty {

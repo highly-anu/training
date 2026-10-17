@@ -91,6 +91,18 @@
         "exercises": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9_]+$" } },
         "per": { "type": "string", "enum": ["bodyweight_kg"], "default": "bodyweight_kg" }
       }
+    },
+    "best_effort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["km", "label", "sports"],
+      "description": "A distance whose fastest window in an imported workout with recorded speed (FIT: an upload, Garmin Connect) reads as a result on this standard: suggested when the workout is linked to a test of it, or when it beats the best (src/standard_results.py).",
+      "properties": {
+        "km": { "type": "number", "exclusiveMinimum": 0 },
+        "label": { "type": "string" },
+        "sports": { "type": "array", "minItems": 1, "items": { "type": "string" },
+                    "description": "Matched against the workout's FIT sport, else its activity type, case-insensitively." }
+      }
     }
   },
   "definitions": {

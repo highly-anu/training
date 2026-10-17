@@ -214,6 +214,20 @@ final class StandardsCodableTests: XCTestCase {
         XCTAssertNil(st.error)
     }
 
+    /// A run standard says which distance an imported run's fastest window
+    /// reads as; the detail sheet says so (and no other standard does).
+    func testARunStandardCarriesItsBestEffort() throws {
+        let json = """
+        [{"id": "run_1mile_minutes", "name": "1-Mile Run (time in minutes)", "category": "conditioning",
+          "lower_is_better": true, "standardsText": {"entry": "8:00"}, "bestEffort": {"km": 1.609344, "label": "1 mile"}},
+         {"id": "row_2km_minutes", "name": "2km Row", "category": "conditioning", "lower_is_better": true}]
+        """.data(using: .utf8)!
+        let rows = try JSONDecoder().decode([AppBenchmark].self, from: json)
+        XCTAssertEqual(rows[0].bestEffort?.label, "1 mile")
+        XCTAssertEqual(rows[0].bestEffort?.km ?? 0, 1.609344, accuracy: 1e-9)
+        XCTAssertNil(rows[1].bestEffort)
+    }
+
     func testDeepLinkRenamedSection() {
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=benchmarks")!),
                        .profile(.standards), "an old link lands on Standards")

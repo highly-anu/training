@@ -1,5 +1,7 @@
 import { apiClient } from './client'
+import { queryKeys } from './queryKeys'
 import type { ImportedWorkout } from './types'
+import { queryClient } from '@/lib/queryClient'
 
 /**
  * Server-side parsing of workout exports. The import page used to build its
@@ -19,7 +21,11 @@ function formFor(file: File): FormData {
 
 /** `.fit`, and exports small enough to parse in one request. */
 export async function parseWorkoutFile(file: File): Promise<ImportedWorkout[]> {
-  return apiClient.post('/workouts/parse', formFor(file), UPLOAD) as unknown as Promise<ImportedWorkout[]>
+  const parsed = await (apiClient.post('/workouts/parse', formFor(file), UPLOAD) as unknown as Promise<ImportedWorkout[]>)
+  // A run's fastest mile can come back as a suggested result on a run
+  // standard (src/standard_results.after_workouts_import).
+  void queryClient.invalidateQueries({ queryKey: queryKeys.standards.suggestions })
+  return parsed
 }
 
 /** Large Apple Health exports: queue the parse and poll it. */

@@ -179,6 +179,56 @@ def test_decisions_and_words() -> None:
     check('a slower row is not a best', not worse['isBest'])
 
 
+def run(wid: str = 'fit_file-run1', mps: float = 4.0, km: float = 5.2, sport: str = 'running',
+        speed: bool = True, day: str = '2026-10-15') -> dict:
+    """A FIT-shaped run: a point every 5 s at a steady speed."""
+    from datetime import datetime as _dt, timedelta as _td
+    t0 = _dt.fromisoformat(f'{day}T07:00:00+00:00')
+    n = int(km * 1000 / (mps * 5)) + 1
+    track = [{'timestamp': (t0 + _td(seconds=5 * i)).isoformat(), 'lat': 47.0, 'lng': 8.0,
+              **({'speed': mps} if speed else {})} for i in range(n)]
+    return {'id': wid, 'date': day, 'source': 'fit_file', 'activityType': sport.title(),
+            'rawData': {'sport': sport}, 'distance': {'value': km, 'unit': 'km'}, 'gpsTrack': track}
+
+
+def test_best_efforts() -> None:
+    print('\nbest efforts from an imported run')
+    from src import standard_results as sr
+    from src.analytics import benchmarks_data as bd
+    by = bd.by_id()
+    check('the run standards declare their distance', by['run_1mile_minutes']['best_effort']['km'] == 1.609344
+          and by['run_3mile_minutes']['best_effort']['label'] == '3 miles')
+    # 4 m/s: a mile in 402 s (6:42), three in 1207 s.
+    got = sr.effort_candidates([run()], by, {}, tracked={'run_1mile_minutes', 'run_3mile_minutes'})
+    by_id = {c['benchmarkId']: c for c in got}
+    check('a tracked standard gets its first result from a run that covers it',
+          set(by_id) == {'run_1mile_minutes', 'run_3mile_minutes'}, str(sorted(by_id)))
+    one = by_id.get('run_1mile_minutes') or {}
+    check('…the fastest mile, the whole of it, in minutes', abs(one.get('value', 0) - 402.3 / 60) < 0.01,
+          str(one.get('value')))
+    check('…from the workout, on its day', one.get('workoutId') == 'fit_file-run1' and one.get('origin') == 'best_effort'
+          and one.get('source') == 'workout' and one.get('loggedOn') == '2026-10-15', str(one))
+    check('…said as what it is', sr.input_text(one.get('input')) == 'fastest 1 mile of 5.2 km',
+          str(sr.input_text(one.get('input'))))
+    check('a run too short for 5 miles suggests none', 'run_5mile_minutes' not in by_id)
+    check('an untracked standard with no result suggests nothing',
+          sr.effort_candidates([run()], by, {}, tracked=set()) == [])
+    logs = {'run_1mile_minutes': [{'id': 1, 'value': 6.5, 'loggedOn': '2026-09-01'}]}
+    got = sr.effort_candidates([run()], by, logs)
+    check('a mile slower than the best suggests nothing', [c['benchmarkId'] for c in got] == [], str(got))
+    got = sr.effort_candidates([run(mps=4.3)], by, logs)
+    check('a mile faster than the best does', [c['benchmarkId'] for c in got] == ['run_1mile_minutes'], str(got))
+    check('a ride is not a run', sr.effort_candidates([run(sport='cycling', mps=9)], by, logs) == [])
+    check('positions without recorded speed are not read',
+          sr.effort_candidates([run(mps=4.3, speed=False)], by, logs) == [])
+    linked = {'fit_file-run1': {'sessionUid': 'v:w0-Monday-0', 'standards': {'run_3mile_minutes'}}}
+    got = sr.effort_candidates([run(mps=3.0)], by, {'run_3mile_minutes': [{'id': 2, 'value': 20.0, 'loggedOn': '2026-09-01'}]},
+                               linked=linked)
+    three = [c for c in got if c['benchmarkId'] == 'run_3mile_minutes']
+    check('a run matched to a test of the standard is that test, slower or not',
+          len(three) == 1 and three[0]['sessionUid'] == 'v:w0-Monday-0' and three[0]['onlyNew'], str(got))
+
+
 # ── SQL ──────────────────────────────────────────────────────────────────────
 
 PRODUCTION_SHAPE = '''
@@ -351,6 +401,34 @@ def sql_checks(dsn: str) -> None:
           any('wod_fran_minutes' in p for p in st['problems']) and 'wod_fran_minutes' not in store.list_results(USER),
           str(st['problems']))
 
+    print('\nan imported run')
+    from src import standard_results as sr2
+    real_cps = sr2.current_program_standards
+    sr2.current_program_standards = lambda uid: {'run_1mile_minutes': ['declared']}
+    try:
+        out = sr2.after_workouts_import(USER, [run('fit_file-run9', mps=4.0, km=2.0, day=MONDAY.isoformat())])
+        pend = (out or {}).get('pending') or []
+        check('a FIT run suggests the program\'s run standard',
+              [(p['benchmarkId'], p['valueText'], p['origin']) for p in pend] == [('run_1mile_minutes', '6:42', 'best_effort')],
+              str(out))
+        check('…named by the activity, and said as the fastest mile',
+              pend and pend[0]['sessionName'] == 'Running' and pend[0]['inputText'] == 'fastest 1 mile of 2 km', str(pend))
+        again = sr2.after_workouts_import(USER, [run('fit_file-run9', mps=4.0, km=2.0, day=MONDAY.isoformat())])
+        with c.cursor() as cur:
+            cur.execute("SELECT count(*) FROM standard_result_suggestions WHERE origin = 'best_effort'")
+            n = cur.fetchone()[0]
+        check('the same run again is the same suggestion', n == 1, str(n))
+        check('a workout with no speed costs nothing', sr2.after_workouts_import(USER, [run(speed=False)]) is None)
+        run_sid = pend[0]['id'] if pend else 0
+        code, res = post('standards_confirm_suggestion', run_sid)
+        stored = store.list_results(USER).get('run_1mile_minutes') or []
+        check('confirmed, it is a result from the workout', code == 200 and len(stored) == 1
+              and stored[0]['source'] == 'workout' and stored[0]['workoutId'] == 'fit_file-run9', str(stored))
+        out = sr2.after_workouts_import(USER, [run('fit_file-run10', mps=3.9, km=2.0, day=MONDAY.isoformat())])
+        check('a slower mile the next day suggests nothing', out is None, str(out))
+    finally:
+        sr2.current_program_standards = real_cps
+
     print('\nfailures are said')
     store.delete_result(USER, rid)
     with c.cursor() as cur:
@@ -375,6 +453,7 @@ def main() -> None:
     test_finding()
     test_candidates()
     test_decisions_and_words()
+    test_best_efforts()
 
     admin = os.environ.get('TEST_ADMIN_DSN', 'postgresql://localhost:5432/postgres?sslmode=disable')
     if 'supabase' in admin or 'pooler' in admin:

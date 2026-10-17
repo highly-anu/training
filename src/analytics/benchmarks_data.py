@@ -135,6 +135,8 @@ def load_benchmarks() -> tuple:
                 'description': (item.get('description') or '').strip() or None,
                 # Training that estimates it (est. 1RM ÷ bodyweight that day).
                 'derived_from': item.get('derived_from'),
+                # A distance an imported run's fastest window reads as.
+                'best_effort': item.get('best_effort'),
             })
     out.extend(_cell_benchmarks())
     return tuple(out)
@@ -300,6 +302,9 @@ def to_client(b: dict, sex: str = 'male') -> dict:
         out['testProtocol'] = b['test_protocol']
     if b.get('description'):
         out['description'] = b['description']
+    if b.get('best_effort'):
+        # The Standard detail says imported runs can suggest a result here.
+        out['bestEffort'] = {'km': b['best_effort']['km'], 'label': b['best_effort']['label']}
     return out
 
 

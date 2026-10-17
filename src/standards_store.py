@@ -300,9 +300,11 @@ def upsert_suggestions(user_id: str, rows: list[dict], *, prune_keys: dict[str, 
     origin, source, value, input, loggedOn. A pending row takes the new
     value; a confirmed one whose value changed goes back to pending (its
     result is corrected on the next confirm); a dismissed one stays dismissed.
-    The day stays the first one seen. `prune_keys` {log_key: {benchmark ids
-    still suggested}} deletes the pending rows of those logs that the log no
-    longer supports (a value cleared, a set deleted)."""
+    The day stays the first one seen. A row with `onlyNew` is written only
+    where none exists (a GPS best effort never overwrites what the athlete
+    logged for that test). `prune_keys` {log_key: {benchmark ids still
+    suggested}} deletes the pending rows of those logs that the log no longer
+    supports (a value cleared, a set deleted)."""
     if not _ensure_suggestions():
         raise RuntimeError('no database')
     from src.db import new_conn
@@ -310,12 +312,12 @@ def upsert_suggestions(user_id: str, rows: list[dict], *, prune_keys: dict[str, 
     try:
         with conn, conn.cursor() as cur:
             for r in rows:
-                cur.execute('''
+                cur.execute(f'''
                     INSERT INTO standard_result_suggestions
                         (user_id, benchmark_id, session_uid, session_key, workout_id, exercise_id,
                          slot_role, origin, source, value, input, logged_on)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (user_id, benchmark_id, log_key) DO UPDATE SET
+                    ON CONFLICT (user_id, benchmark_id, log_key) DO {'NOTHING' if r.get('onlyNew') else """UPDATE SET
                         value       = EXCLUDED.value,
                         input       = EXCLUDED.input,
                         exercise_id = EXCLUDED.exercise_id,
@@ -331,7 +333,7 @@ def upsert_suggestions(user_id: str, rows: list[dict], *, prune_keys: dict[str, 
                         END,
                         updated_at  = NOW()
                     WHERE standard_result_suggestions.value IS DISTINCT FROM EXCLUDED.value
-                       OR standard_result_suggestions.input IS DISTINCT FROM EXCLUDED.input
+                       OR standard_result_suggestions.input IS DISTINCT FROM EXCLUDED.input"""}
                 ''', (user_id, r['benchmarkId'], r.get('sessionUid'), r.get('sessionKey'), r.get('workoutId'),
                       r.get('exerciseId'), r.get('slotRole'), r['origin'], r.get('source') or 'session',
                       r['value'], json.dumps(r['input']) if r.get('input') is not None else None,

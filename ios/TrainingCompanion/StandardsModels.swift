@@ -138,6 +138,8 @@ struct StandardSuggestion: Decodable, Identifiable {
     let id: Int
     let benchmarkId: String
     let name: String
+    /// The name without its parenthesis: "1-Mile Run".
+    let shortName: String?
     let domain: String?
     let value: Double
     let valueText: String
@@ -163,7 +165,7 @@ struct StandardSuggestion: Decodable, Identifiable {
     let sessionName: String?
 
     private enum CodingKeys: String, CodingKey {
-        case id, benchmarkId, name, domain, value, valueText, level, levelIndex, next, nextText, inputText
+        case id, benchmarkId, name, shortName, domain, value, valueText, level, levelIndex, next, nextText, inputText
         case current, bestText, isBest, replacesText, origin, status, loggedOn, sessionUid, sessionKey, sessionName
     }
     init(from decoder: Decoder) throws {
@@ -171,6 +173,7 @@ struct StandardSuggestion: Decodable, Identifiable {
         id = try c.decode(Int.self, forKey: .id)
         benchmarkId = try c.decode(String.self, forKey: .benchmarkId)
         name = ((try? c.decodeIfPresent(String.self, forKey: .name)) ?? nil) ?? benchmarkId
+        shortName = try? c.decodeIfPresent(String.self, forKey: .shortName)
         domain = try? c.decodeIfPresent(String.self, forKey: .domain)
         value = try c.decode(Double.self, forKey: .value)
         valueText = try c.decode(String.self, forKey: .valueText)

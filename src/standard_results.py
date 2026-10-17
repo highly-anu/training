@@ -267,6 +267,72 @@ def _bw_ratio(b: dict, kg: float, logs: dict, day: str, tz: str | None,
         return None
 
 
+# ── imported workouts: best efforts ──────────────────────────────────────────
+
+def _sport(w: dict) -> str:
+    raw = w.get('rawData') or {}
+    return str(raw.get('sport') or w.get('activityType') or '').lower()
+
+
+def has_speed(w: dict) -> bool:
+    """A track whose points carry recorded speed (FIT). Positions alone are
+    not read: GPS jitter adds distance and would invent personal records."""
+    return any(p.get('speed') for p in (w.get('gpsTrack') or [])[:50])
+
+
+def effort_candidates(workouts: list[dict], benchmarks: dict[str, dict], logs: dict, *,
+                      tz: str | None = None, tracked: set | None = None,
+                      linked: dict[str, dict] | None = None) -> list[dict]:
+    """Suggestions from imported workouts' fastest windows at a standard's
+    distance (its YAML `best_effort`).
+
+    `workouts` are canonical (one per activity), each with `id`, `date` and a
+    speed track. `linked` {workout id: {sessionUid, standards}} says which
+    workouts are matched to a session that tests a standard: such an effort is
+    suggested whatever its value, on the session. Otherwise only one that
+    beats the best on a standard the athlete tracks — it has a result, or is
+    one of `tracked` (this program's) — so a weekly run does not suggest a
+    result every time.
+    """
+    from src.analytics.workout_analysis import fastest_seconds
+    with_effort = [b for b in benchmarks.values() if b.get('best_effort')]
+    out: list[dict] = []
+    for w in workouts:
+        if not w.get('id') or not has_speed(w):
+            continue
+        sport = _sport(w)
+        link = (linked or {}).get(w['id']) or {}
+        for b in with_effort:
+            eff = b['best_effort']
+            if not any(str(s).lower() in sport for s in eff.get('sports') or []):
+                continue
+            sec = fastest_seconds(w.get('gpsTrack') or [], float(eff['km']))
+            if sec is None:
+                continue
+            value = _time_value(b, sec)
+            on_test = b['id'] in (link.get('standards') or ())
+            if not on_test:
+                es = _standards.entries(logs.get(b['id']), tz)
+                if not es and b['id'] not in (tracked or set()):
+                    continue
+                if es:
+                    best = (min if b['lower_is_better'] else max)(e['value'] for e in es)
+                    if (value >= best) if b['lower_is_better'] else (value <= best):
+                        continue             # does not beat the best
+            dist = (w.get('distance') or {}).get('value')
+            out.append({
+                'benchmarkId': b['id'], 'value': value, 'origin': 'best_effort', 'source': 'workout',
+                'workoutId': w['id'], 'sessionUid': link.get('sessionUid') if on_test else None,
+                'sessionKey': None, 'exerciseId': None, 'slotRole': None,
+                'loggedOn': str(w.get('date') or '')[:10] or None,
+                'input': {'seconds': sec, 'effort': eff['label'],
+                          'workoutKm': round(float(dist), 2) if dist else None,
+                          'activity': w.get('activityType')},
+                'onlyNew': on_test,
+            })
+    return out
+
+
 # ── decisions sent with a log ────────────────────────────────────────────────
 
 def normalise_decisions(raw) -> tuple[dict[str, dict], list[str]]:
@@ -312,7 +378,8 @@ def describe(rows: list[dict], benchmarks: dict[str, dict], logs: dict, sex: str
         current = es[-1] if es else None
         is_best = best is None or (r['value'] < best['value'] if b['lower_is_better'] else r['value'] > best['value'])
         out.append({
-            'id': r['id'], 'benchmarkId': b['id'], 'name': b.get('name'), 'domain': b.get('domain'),
+            'id': r['id'], 'benchmarkId': b['id'], 'name': b.get('name'),
+            'shortName': _standards.short_name(b), 'domain': b.get('domain'),
             'value': r['value'], 'valueText': p['valueText'], 'level': p['level'],
             'levelIndex': p['levelIndex'], 'next': p['next'], 'nextText': p['nextText'],
             'inputText': input_text(r.get('input')),
@@ -324,16 +391,23 @@ def describe(rows: list[dict], benchmarks: dict[str, dict], logs: dict, sex: str
             'loggedOn': r.get('loggedOn'), 'sessionUid': r.get('sessionUid'),
             'sessionKey': r.get('sessionKey'), 'exerciseId': r.get('exerciseId'),
             'slotRole': r.get('slotRole'), 'resultId': r.get('performanceLogId'),
-            'sessionName': (session_names or {}).get(r.get('sessionUid') or r.get('sessionKey') or ''),
+            'sessionName': ((session_names or {}).get(r.get('sessionUid') or r.get('sessionKey') or '')
+                            or ((r.get('input') or {}).get('activity') if r.get('origin') == 'best_effort'
+                                else None)),
+            'workoutId': r.get('workoutId'),
         })
     return out
 
 
 def input_text(inp: dict | None) -> str | None:
     """What was logged, when it says more than the value: "20 + 7" for a
-    partial round, the load for a single."""
+    partial round, the load for a single, "fastest 1 mile of 8.1 km" for a
+    best effort."""
     if not isinstance(inp, dict):
         return None
+    if inp.get('effort'):
+        km = inp.get('workoutKm')
+        return f"fastest {inp['effort']}" + (f' of {bd.number_text(float(km), 1)} km' if km else '')
     if inp.get('rounds') is not None:
         return f"{inp['rounds']} + {inp['reps']}" if inp.get('reps') else None
     return _standards.input_text(inp)
@@ -497,3 +571,89 @@ def _after(user_id: str, log: dict, row: dict, session_uid: str | None,
     return {'pending': [s for s in described if s['status'] == 'pending'],
             'confirmed': [s for s in described if s['status'] == 'confirmed'],
             'skipped': skipped, 'problems': problems, 'error': None}
+
+
+# ── after workouts are imported ──────────────────────────────────────────────
+
+def current_program_standards(user_id: str) -> dict:
+    """{standard id: [why…]} for the athlete's current program
+    (analytics.benchmarks.program_standards); {} without one. What Profile's
+    "This program" lists and what a best effort may make a first result on."""
+    from src import db
+    from src.analytics import benchmarks as _bm, spec as _spec
+    from src.program_keys import normalize_program_keys
+    stored = db.get_user_program(user_id)
+    if not isinstance(stored, dict):
+        return {}
+    stored = normalize_program_keys(stored)
+    program = stored.get('currentProgram') or {'weeks': stored.get('weeks') or []}
+    goal = program.get('goal') or {}
+    specs = _spec.compose(goal, stored.get('sourceGoalWeights') or {})
+    return _bm.program_standards(goal, program.get('weeks') or [], specs)
+
+
+def after_workouts_import(user_id: str, workouts: list[dict]) -> dict | None:
+    """Best efforts at a standard's distance in just-stored workouts, as
+    suggestions (`origin: best_effort`, the workout's id, source `workout`).
+
+    Called after `health_store.upsert_workouts` (and the matcher) on the
+    import paths that carry recorded speed: a FIT upload and the Garmin
+    webhook. None when no workout can bear on a standard — the common case
+    costs no query. Never fails the import; what went wrong is in the answer.
+    """
+    benchmarks = bd.by_id()
+    sports = {str(s).lower() for b in benchmarks.values() if b.get('best_effort')
+              for s in b['best_effort'].get('sports') or []}
+    ws = [w for w in workouts or [] if w.get('id') and has_speed(w)
+          and any(s in _sport(w) for s in sports)]
+    if not ws:
+        return None
+    try:
+        return _after_import(user_id, ws, benchmarks)
+    except Exception as exc:  # noqa: BLE001 — the workouts are stored; say what is not
+        _log.warning('standards: best efforts for %s failed: %s', [w['id'] for w in ws], exc)
+        return {'pending': [], 'error': 'could not read these workouts for standards'}
+
+
+def _after_import(user_id: str, ws: list[dict], benchmarks: dict) -> dict | None:
+    from src import health_store, program_history, standards_store
+    from src.db import get_user_profile
+
+    # One suggestion per activity: a copy dedup folded into another source's
+    # row is read as that row.
+    canon = health_store.canonical_ids(user_id, [w['id'] for w in ws])
+    by_canon: dict[str, dict] = {}
+    for w in ws:
+        cid = canon.get(w['id'], w['id'])
+        by_canon.setdefault(cid, {**w, 'id': cid})
+
+    # A workout matched to a session that tests a standard is that test.
+    matches = [m for m in health_store.get_matches(user_id)
+               if m.get('importedWorkoutId') in by_canon and m.get('sessionUid')
+               and m.get('matchConfidence') != 'rejected']
+    linked: dict[str, dict] = {}
+    if matches:
+        sessions = {r['session_uid']: r['session'] for r in program_history.session_lookup(
+            user_id, [m['sessionUid'] for m in matches])}
+        for m in matches:
+            ids = {(a.get('standard') or {}).get('id') if isinstance(a.get('standard'), dict) else a.get('standard')
+                   for a in ((sessions.get(m['sessionUid']) or {}).get('exercises') or [])
+                   if isinstance(a, dict) and a.get('standard')}
+            if ids:
+                linked[m['importedWorkoutId']] = {'sessionUid': m['sessionUid'], 'standards': ids}
+
+    profile = get_user_profile(user_id) or {}
+    sex = (profile.get('sex') or 'male').lower()
+    tz = profile.get('timezone') or None
+    logs = standards_store.list_results(user_id)
+    try:
+        tracked = set(current_program_standards(user_id))
+    except Exception:  # noqa: BLE001 — without the program, only results count as tracked
+        tracked = set()
+    found = effort_candidates(list(by_canon.values()), benchmarks, logs, tz=tz, tracked=tracked, linked=linked)
+    if not found:
+        return None
+    standards_store.upsert_suggestions(user_id, found)
+    keys = [standards_store.log_key(c['sessionUid'], None, c['workoutId']) for c in found]
+    rows = standards_store.list_suggestions(user_id, statuses=('pending',), log_keys=keys)
+    return {'pending': describe(rows, benchmarks, logs, sex, tz), 'error': None}

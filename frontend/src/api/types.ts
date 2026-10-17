@@ -673,6 +673,8 @@ export interface BenchmarkStandard {
   metricType?: string
   notes?: string
   testProtocol?: string
+  /** A run standard: the distance an imported run's fastest window reads as. */
+  bestEffort?: { km: number; label: string }
   description?: string
 }
 
@@ -752,6 +754,8 @@ export interface StandardSuggestion {
   id: number
   benchmarkId: string
   name: string
+  /** The name without its parenthesis: "1-Mile Run". */
+  shortName?: string
   domain: string | null
   value: number
   valueText: string

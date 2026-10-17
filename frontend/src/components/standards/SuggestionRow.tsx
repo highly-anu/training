@@ -25,7 +25,8 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
   const [text, setText] = useState(s.valueText)
 
   const from = [
-    s.sessionName ?? (s.origin === 'derived_single' ? 'A single in training' : 'A logged session'),
+    s.sessionName ?? (s.origin === 'derived_single' ? 'A single in training'
+      : s.origin === 'best_effort' ? 'An imported run' : 'A logged session'),
     s.loggedOn ? format(parseISO(s.loggedOn), 'EEE d MMM') : null,
   ].filter(Boolean).join(' · ')
   const was = s.current ? `was ${s.current.valueText}` : 'first result'
@@ -39,7 +40,7 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
     <div className={cn('rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs', compact && 'mt-1.5 px-2 py-1.5')}
          aria-label={`Suggested result: ${s.name}`}>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-        {showName && <span className="font-medium text-foreground">{s.name}</span>}
+        {showName && <span className="font-medium text-foreground">{s.shortName ?? s.name}</span>}
         {editing ? (
           <input
             autoFocus
@@ -52,13 +53,16 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
         ) : (
           <span className="font-semibold tabular-nums text-foreground">{s.valueText}</span>
         )}
-        {s.inputText && !editing && <span className="text-muted-foreground">({s.inputText})</span>}
         <StandardLevelBadge level={s.level} domain={s.domain} />
         <span className="text-muted-foreground">
           · {s.replacesText ? `corrects ${s.replacesText}` : s.isBest && s.current ? 'new best' : was}
         </span>
       </div>
-      {!compact && <p className="mt-0.5 text-[11px] text-muted-foreground">{from}</p>}
+      {(!compact || s.inputText) && (
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          {[s.inputText, compact ? null : from].filter(Boolean).join(' · ')}
+        </p>
+      )}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
         <button type="button" onClick={save} disabled={decide.isPending}
                 className="inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">

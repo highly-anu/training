@@ -343,7 +343,11 @@
     },
     "notes": "Horsemen performance benchmark is sub-20:00 (male). PT test standard is sub-22:30. PT Test II includes a 5-mile run standard (sub-35:00). Female thresholds adjusted proportionally by typical sex-based aerobic capacity differences (~15%).",
     "testProtocol": "Flat, measured 3-mile course (road, track, or treadmill at 0% grade). Maximum effort run — no prescribed warm-up, but standard pre-run mobility acceptable. Record time to nearest second; convert to decimal minutes. Athlete should be rested (not within 24h of hard training).",
-    "description": "Timed 3-mile run on flat ground at maximum sustainable pace. The primary aerobic conditioning test in Horsemen GPP and military/tactical fitness standards. Horsemen performance target is sub-20:00. PT test standard is sub-22:30."
+    "description": "Timed 3-mile run on flat ground at maximum sustainable pace. The primary aerobic conditioning test in Horsemen GPP and military/tactical fitness standards. Horsemen performance target is sub-20:00. PT test standard is sub-22:30.",
+    "bestEffort": {
+      "km": 4.828032,
+      "label": "3 miles"
+    }
   },
   {
     "id": "ssst_reps",
@@ -474,7 +478,11 @@
     },
     "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences.",
     "testProtocol": "Flat, measured 1-mile course (track preferred: 4 laps standard track). Maximum effort. Brief warm-up (5–10 min light jog + 2–3 strides) acceptable. Record time to nearest second; convert to decimal minutes. Athlete should be rested.",
-    "description": "Timed 1-mile run at maximum sustainable effort. Tests aerobic power and anaerobic threshold capacity — sits at the overlap of aerobic and anaerobic energy systems. Used as a conditioning benchmark and prerequisite test for several goal profiles."
+    "description": "Timed 1-mile run at maximum sustainable effort. Tests aerobic power and anaerobic threshold capacity — sits at the overlap of aerobic and anaerobic energy systems. Used as a conditioning benchmark and prerequisite test for several goal profiles.",
+    "bestEffort": {
+      "km": 1.609344,
+      "label": "1 mile"
+    }
   },
   {
     "id": "kb_pentathlon_clean_reps",
@@ -907,7 +915,11 @@
       "elite": 36.0
     },
     "testProtocol": "Flat, measured course. Maximum sustainable effort. Record time to the second and convert to decimal minutes.",
-    "description": "Timed five-mile run on flat ground. Horsemen PT Test II: under 35:00."
+    "description": "Timed five-mile run on flat ground. Horsemen PT Test II: under 35:00.",
+    "bestEffort": {
+      "km": 8.04672,
+      "label": "5 miles"
+    }
   },
   {
     "id": "bench_press_bodyweight_reps",

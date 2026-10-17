@@ -1325,6 +1325,9 @@ final class AppState: ObservableObject {
         let listed = canonicalWorkout(for: uploaded) ?? uploaded
         markSeen([listed.id])
         return listed
+        // A run's fastest mile can come back as a suggested result.
+        await loadStandardSuggestions()
+        return canonicalWorkout(for: uploaded) ?? uploaded
     }
 
     /// The listed row an upload became: the same id, or — when the server

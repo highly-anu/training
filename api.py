@@ -1836,6 +1836,10 @@ def parse_workout_file():
 
         if results:
             _health.upsert_workouts(g.user_id, results)
+            # A run's fastest mile can be a result on a run standard: the FIT
+            # track has the speed to read it from (src/standard_results.py).
+            from src import standard_results
+            standard_results.after_workouts_import(g.user_id, results)
         return jsonify(results)
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
@@ -3525,6 +3529,11 @@ def health_upsert_workouts():
     if auto_match:
         from src import workout_matcher
         result['matched'] = workout_matcher.match_and_store(g.user_id, workouts)
+    # After matching, so a run matched to a test session reads as that test.
+    from src import standard_results
+    standards = standard_results.after_workouts_import(g.user_id, workouts)
+    if standards is not None:
+        result['standards'] = standards
     return jsonify(result)
 
 
@@ -3804,18 +3813,10 @@ def standards_results():
 
 def _current_program_standards(user_id: str) -> dict:
     """{standard id: [why…]} for the athlete's current program
-    (analytics.benchmarks.program_standards), {} without one."""
-    from src.analytics import benchmarks as _bm, spec as _spec
-    from src.program_keys import normalize_program_keys
+    (standard_results.current_program_standards), {} without one."""
+    from src import standard_results
     try:
-        stored = _db.get_user_program(user_id)
-        if not isinstance(stored, dict):
-            return {}
-        stored = normalize_program_keys(stored)
-        program = stored.get('currentProgram') or {'weeks': stored.get('weeks') or []}
-        goal = program.get('goal') or {}
-        specs = _spec.compose(goal, stored.get('sourceGoalWeights') or {})
-        return _bm.program_standards(goal, program.get('weeks') or [], specs)
+        return standard_results.current_program_standards(user_id)
     except Exception as exc:  # noqa: BLE001 — sections without a program rather than none
         app.logger.warning('standards: program standards failed: %s', exc)
         return {}

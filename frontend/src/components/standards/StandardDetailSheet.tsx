@@ -210,6 +210,13 @@ export function StandardDetailSheet({ open, onOpenChange, standard }: SheetProps
               {standard.notes && <p>{standard.notes}</p>}
             </div>
           )}
+          {standard?.bestEffort && (
+            <p className="text-xs text-muted-foreground">
+              Imported runs with recorded speed (a FIT file, Garmin Connect) suggest a result here when their
+              fastest {standard.bestEffort.label} beats your best, or whenever the run is linked to a test of it.
+              Apple Health and live watch runs carry no speed, so they do not.
+            </p>
+          )}
 
           {standard && (
             <div className="space-y-2">

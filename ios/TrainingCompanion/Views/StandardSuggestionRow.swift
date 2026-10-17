@@ -27,7 +27,8 @@ struct StandardSuggestionRow: View {
     }
 
     private var from: String {
-        let what = s.sessionName ?? (s.origin == "derived_single" ? "A single in training" : "A logged session")
+        let what = s.sessionName ?? (s.origin == "derived_single" ? "A single in training"
+            : s.origin == "best_effort" ? "An imported run" : "A logged session")
         let day = StandardLevel.date(s.loggedOn).map { $0.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
         return [what, day].compactMap { $0 }.joined(separator: " · ")
     }
@@ -35,7 +36,7 @@ struct StandardSuggestionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                if showName { Text(s.name).font(.subheadline).fontWeight(.medium).lineLimit(1) }
+                if showName { Text(s.shortName ?? s.name).font(.subheadline).fontWeight(.medium).lineLimit(1) }
                 if correcting {
                     TextField("Result", text: $text)
                         .textFieldStyle(.roundedBorder)
@@ -45,12 +46,9 @@ struct StandardSuggestionRow: View {
                 } else {
                     Text(s.valueText).font(.subheadline).fontWeight(.semibold).monospacedDigit()
                 }
-                if let input = s.inputText, !correcting {
-                    Text("(\(input))").font(.caption).foregroundStyle(.secondary)
-                }
                 StandardLevelBadge(level: s.level, domain: s.domain)
             }
-            Text(compact ? standing : "\(standing) · \(from)")
+            Text(([standing, s.inputText] + (compact ? [] : [from])).compactMap { $0 }.joined(separator: " · "))
                 .font(.caption).foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 Button { Task { await decide("confirm") } } label: {

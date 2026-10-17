@@ -1626,7 +1626,9 @@ standard name, the value as the server prints it, `StandardLevelBadge` (§6.29),
 and where it came from (session, day) — with three answers: **Save result**
 (`.borderedProminent`), **Correct** (an inline field, saved with the typed value),
 **Not a test** (`.bordered`). `AppHaptics.success` / `.error`; the server's words on
-a failure. `SessionSuggestion` is the same row, compact and without the name, for
+a failure. The first line is the short name ("1-Mile Run"), the value and the badge;
+everything else — standing, what was logged ("fastest 1 mile of 5.2 km"), where it came
+from — is the second, so nothing truncates the name. `SessionSuggestion` is the same row, compact and without the name, for
 one standard of one session (`StandardSuggestion.isFromTest(sessionKey:)` compares
 the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
 

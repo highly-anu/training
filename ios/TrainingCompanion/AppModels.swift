@@ -129,11 +129,18 @@ struct AppBenchmark: Codable, Identifiable {
     let inputHint: String?
     let notes: String?
     let testProtocol: String?
+    /// A run standard: the distance an imported run's fastest window reads as.
+    let bestEffort: BestEffort?
+
+    struct BestEffort: Codable {
+        let km: Double
+        let label: String
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, name, category, categoryName, categoryOrder, unit, standards, standardsText
         case lowerIsBetter = "lower_is_better"
-        case domain, metricType, inputHint, notes, testProtocol
+        case domain, metricType, inputHint, notes, testProtocol, bestEffort
     }
 
     init(from decoder: Decoder) throws {
@@ -152,6 +159,7 @@ struct AppBenchmark: Codable, Identifiable {
         inputHint = try? c.decodeIfPresent(String.self, forKey: .inputHint)
         notes = try? c.decodeIfPresent(String.self, forKey: .notes)
         testProtocol = try? c.decodeIfPresent(String.self, forKey: .testProtocol)
+        bestEffort = try? c.decodeIfPresent(BestEffort.self, forKey: .bestEffort)
     }
 
     /// The thresholds as text, entry → elite; a number with the unit for a

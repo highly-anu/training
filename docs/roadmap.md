@@ -802,8 +802,8 @@ confirms; programs schedule **package-declared tests**. Phase 1 shipped the same
 6. ~~**Watches.**~~ — shipped 2026-10-17 (see *Done*). The Garmin unit tests compile but
    were not run (the Connect IQ simulator was in use by another session):
    `garmin/TrainingCompanionCIQ/build.sh --test`.
-7. **Imported best efforts.** 1 mi, 3 mi, 5 mi, 400/800 m windows at import where the series
-   has speed; a suggestion when the workout is linked to that test or beats the best.
+7. ~~**Imported best efforts.**~~ — shipped 2026-10-17 (see *Done*). 400/800 m were dropped:
+   no standard measures them.
 
 ## Later
 
@@ -851,6 +851,13 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 7 (2026-10-17)**: imported runs suggest run results. A standard's YAML
+`best_effort` names its distance (1, 3, 5 miles); a FIT run — uploaded, or from Garmin Connect
+— is read over exactly that distance from its recorded speed and suggested when it is matched
+to a test of the standard or beats the best on one the athlete tracks. Apple Health and live
+watch runs carry no speed and are not read; the Standard detail says so. The suggestion row
+reads "1-Mile Run 6:23 · Advanced — new best · fastest 1 mile of 5.2 km · Running".
 
 **Standards, phase 6 (2026-10-17)**: the watches. Capture first: the Garmin app's set logs
 went up keyed by exercise name with `reps` and no `completed`, so the analytics read none of

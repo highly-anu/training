@@ -310,6 +310,18 @@ group's name.
   `SessionLogging.outcomeFields(…, standardResult:)`). Both watches show a test step's
   best and next-level number and ask Save results / Not a test at the end (see *Watch
   Screens*).
+- **Imported runs suggest run results** (`standard_results.after_workouts_import`, after
+  `upsert_workouts` on the FIT upload, `POST /health/workouts` and the Garmin worker). A
+  standard's YAML `best_effort` (`km`, `label`, `sports`) names its distance — the 1, 3
+  and 5-mile runs today. A workout whose track carries **recorded speed** (FIT: an upload
+  or Garmin Connect; never positions alone — GPS jitter would invent records) is read by
+  `workout_analysis.fastest_seconds`, which, unlike the workout screen's `best_efforts`
+  (windows may fall 5 % short), covers the whole distance. Suggested (`origin:
+  best_effort`, `source: workout`, keyed on the canonical workout) when the run is
+  matched to a session testing that standard — never overwriting what was logged for it
+  (`onlyNew`) — or when it beats the best on a standard the athlete tracks (has a result,
+  or is this program's: `current_program_standards`). Apple Health and live watch runs
+  carry no speed; the Standard detail says so on both clients.
 - `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
   database), `test_standard_tests.py`, `test_standard_suggestions.py` (pure, then the routes
   on a scratch database); plan and later phases: `docs/roadmap.md` item 11.
