@@ -15,7 +15,7 @@ using Toybox.Lang;
 //   Progress   this program week's sessions done, the programme's share done,
 //              and the methodology's own measure (real programme only)
 //   Readiness  today's score
-//   Sync       re-fetch today (real programme only)
+//   Sync       re-fetch today, under the last result (real programme only)
 function openActivityMenu(view) {
     var s = view.current();
     var m = new Ui.Menu2({ :title => new ActivityHeader(s) });
@@ -47,7 +47,7 @@ function openActivityMenu(view) {
                                       :readiness, Native.icon(Rez.Drawables.GmReadiness), {}));
     }
     if (!DemoSession.enabled()) {
-        m.addItem(new Ui.IconMenuItem("Sync", "today's session", :sync, Native.icon(Rez.Drawables.GmRefresh), {}));
+        m.addItem(new Ui.IconMenuItem("Sync", SyncCache.syncLine(), :sync, Native.icon(Rez.Drawables.GmRefresh), {}));
     }
     Ui.pushView(m, new ActivityMenuDelegate(view), Ui.SLIDE_LEFT);
 }

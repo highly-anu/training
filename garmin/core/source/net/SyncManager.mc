@@ -134,7 +134,9 @@ class SyncManager {
     }
 
     function onToday(code as Lang.Number, data as WebData) as Void {
-        lastTodayCode = code;
+        // A 200 that is not a dictionary failed too: say so, not "200".
+        lastTodayCode = (code == 200 && !(data instanceof Lang.Dictionary)) ? -400 : code;
+        SyncCache.recordSync(lastTodayCode);
         if (code == 200 && data instanceof Lang.Dictionary) {
             // The week is stored on its own: with it, a heavy week would push the
             // day past what one Storage value holds.
@@ -354,6 +356,45 @@ class SyncManager {
 // local date. A module, not statics on SyncManager: a static that calls another
 // unqualified fails at run time ("Failed invoking <symbol>").
 module SyncCache {
+
+    // The last today-session result, kept across app opens so the activity
+    // menu's Sync row can say how the last one went.
+    function recordSync(code) {
+        Storage.setValue(Config.KEY_LAST_SYNC, { "code" => code, "at" => Time.now().value() });
+    }
+
+    // { "code", "at" } or null.
+    function lastSync() {
+        return Storage.getValue(Config.KEY_LAST_SYNC) as Lang.Dictionary?;
+    }
+
+    // What a failed request's code means, in a word or two, with the code:
+    // "No phone (-104)". Negative codes are Connect IQ's, the rest HTTP.
+    function reason(code) {
+        if (code == null) { return "No reply"; }
+        var w;
+        if (code == -104) { w = "No phone"; }
+        else if (code == -2 || code == -3 || code == -300) { w = "Timed out"; }
+        else if (code == -101) { w = "Busy"; }
+        else if (code == -402 || code == -403) { w = "Too large"; }
+        else if (code == -400 || code == -401) { w = "Bad reply"; }
+        else if (code == -1002 || code == -5) { w = "Dropped"; }
+        else if (code == 401) { w = "Not paired"; }
+        else if (code == 403) { w = "Not allowed"; }
+        else if (code >= 500) { w = "Server error"; }
+        else if (code < 0) { w = "Watch error"; }
+        else { w = "HTTP"; }
+        return w + " (" + code.toString() + ")";
+    }
+
+    // The Sync row's sublabel: "ok 07:41" or "failed 07:41 · No phone (-104)".
+    function syncLine() {
+        var last = lastSync();
+        if (last == null || last["at"] == null) { return "today's session"; }
+        var t = Gregorian.info(new Time.Moment(last["at"] as Lang.Number), Time.FORMAT_SHORT);
+        var hm = t.hour.format("%02d") + ":" + t.min.format("%02d");
+        return (last["code"] == 200) ? ("ok " + hm) : ("failed " + hm + " · " + reason(last["code"]));
+    }
 
     // The cached today-session, or null when it is another day's.
     function cachedToday() {
