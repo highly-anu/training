@@ -83,7 +83,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
             let day = try? await api.fetchWatchDay(date: todayStr)
             let watchSessions = sessions.enumerated().map { (i, s) in
                 encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality,
-                              last: day?.last ?? [:])
+                              last: day?.last ?? [:], standards: day?.standards ?? [:])
             }
 
             // Cache session metadata so handleWorkoutComplete can label uploads correctly.
@@ -132,13 +132,17 @@ final class WatchSessionManager: NSObject, ObservableObject {
         dayName: String,
         index: Int,
         modality: String,
-        last: [String: String] = [:]
+        last: [String: String] = [:],
+        standards: [String: WatchStandard] = [:]
     ) -> WatchSession {
         let exercises = s.exercises
             .filter { !$0.injurySkip && $0.exercise != nil }
             .map { ea -> WatchExercise in
                 var e = encodeExercise(ea, modality: modality)
                 e.lastTime = last[e.exerciseId]
+                // Only on the test's scored slot: the same exercise as a
+                // warm-up elsewhere in the day carries no standard.
+                if ea.standardId != nil { e.standard = standards[e.exerciseId] }
                 return e
             }
 
@@ -389,16 +393,9 @@ extension WatchSessionManager: WCSessionDelegate {
         let setLogSummary = summary.setLogs.map { "\($0.key):\($0.value.count)sets" }.joined(separator: ", ")
         AppLogger.logFromBackground("WCSession: decoded summary — session=\(sessionKey) duration=\(summary.durationMinutes)min exercises=\(summary.exercisesCompleted) setLogs=[\(setLogSummary)] avgHR=\(summary.avgHR.map{"\($0)"} ?? "nil")")
 
-        // 1. Save session log (exercises, set data, HR aggregates)
-        var log: [String: Any] = [
-            "sessionKey":    sessionKey,
-            "completedAt":   summary.endedAt,
-            "source":        summary.source,
-            "exercises":     encodedJSON(summary.setLogs.mapValues { ["sets": $0] }),
-            "notes":         "",
-        ]
-        if let avgHR = summary.avgHR { log["avgHR"] = avgHR }
-        if let peakHR = summary.peakHR { log["peakHR"] = peakHR }
+        // 1. Save session log (exercises, set data, outcomes, HR aggregates,
+        //    and the Results answer given on the watch)
+        var log = WatchUpload.sessionLog(summary: summary)
         if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
 
         AppLogger.logFromBackground("API: saving workout log for \(sessionKey)…")

@@ -196,6 +196,14 @@ class SpecRenderer extends Renderer {
         if (id.equals("ladder_total")) {
             return [Ladder.total(ctl.amrapRounds(), peak(ex)).toString() + " reps total", next];
         }
+        if (id.equals("standard_target")) {
+            // A test step: the best to beat and the number for the next level.
+            var st = ex.standard();
+            if (st == null) { return Renderer.lines(ctl, ex); }
+            var best = st["best"];
+            var target = st["target"];
+            return [(best != null) ? ("Best " + best) : "First result", (target != null) ? target : next];
+        }
         if (id.equals("hold_prompt")) {
             if (ctl.holdRunning()) { return ["Holding", "LAP ends early"]; }
             return ["Press LAP", "to start the hold"];
@@ -241,8 +249,11 @@ class SpecRenderer extends Renderer {
             if (cap > 0 && ctl.exerciseRemainingSec() <= 0) { ctl.skip(); return; }
             ctl.logRound();
         } else if (ex.isTemplate("for_time")) {
-            ctl.logRound();
             var t = ex.targetRounds();
+            // A test against the clock with no rounds to count (2 km, 3 miles):
+            // LAP stops the clock, which is the result.
+            if (t == null && ex.standard() != null) { ctl.skip(); return; }
+            ctl.logRound();
             if (t != null && ctl.amrapRounds() >= t) { ctl.skip(); }
         } else if (ex.isTemplate("distance")) {
             if (!Steps.isShortDistance(ex)) { ctl.skip(); return; }

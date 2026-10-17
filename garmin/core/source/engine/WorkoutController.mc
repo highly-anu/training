@@ -124,6 +124,9 @@ class WorkoutController {
 
     // setLogs: { exerciseId => [ {reps, weightKg, rpe} ] }
     hidden var _setLogs;
+    hidden var _outcomes;   // name -> { durationSec, distanceKm }: what a step produced that is not a set
+    hidden var _exStartDistM;   // _distanceM when the current exercise became active
+    hidden var _resultDecision; // "save" | "dismiss" | null: the Results menu's answer
     hidden var _uploadOk;   // null until the upload resolves
     hidden var _lastError;  // first failure swallowed to keep the workout alive
     hidden var _paused;     // stop menu open: clock and recording held
@@ -162,6 +165,9 @@ class WorkoutController {
         _speed = 0.0; _gateRest = false; _gateBelow = 0; _metroMs = 0;
         _metronome = true; _alert = null;
         _setLogs = {};
+        _outcomes = {};
+        _exStartDistM = 0;
+        _resultDecision = null;
         _uploadOk = null;
         _lastError = null;
         _paused = false;
@@ -420,6 +426,7 @@ class WorkoutController {
     // AMRAP reads its time cap.
     hidden function beginExerciseTiming() {
         _exStartSec = _elapsed;
+        _exStartDistM = _distanceM;
         _emomInterval = 0; _emomTotal = 0; _emomRound = 1;
         _amrapRounds = 0; _capSec = 0; _capBuzzed = false;
         _workSec = 0; _intRestSec = 0; _intPhase = PHASE_WORK; _intPhaseLeft = 0;
@@ -963,7 +970,97 @@ class WorkoutController {
         return (rem > 0) ? rem : 0;
     }
 
-    // ── progression ────────────────────────────────────────────────────────────────
+    // What a step produced that is not a set: a for-time step's clock, the
+    // distance a distance step covered. Read when the step is left (its last
+    // round, Skip, or Save mid-step) and kept by exercise for the upload.
+    hidden function noteStepEnd(ex) {
+        if (ex == null) { return; }
+        var out = _outcomes.hasKey(ex.name()) ? _outcomes[ex.name()] : {};
+        if (ex.isTemplate("for_time")) { out["durationSec"] = exerciseElapsedSec(); }
+        var d = _distanceM - _exStartDistM;
+        if ((ex.isTemplate("distance") || isLocomotion(ex)) && d > 0) { out["distanceKm"] = d / 1000.0; }
+        if (out.size() > 0) { _outcomes[ex.name()] = out; }
+    }
+
+    // ── test results (the standards a session tests) ─────────────────────────────
+
+    // The session's scored test steps, in order; empty on any other day.
+    function testSteps() {
+        var out = [];
+        var list = _session.exercises();
+        for (var i = 0; i < list.size(); i += 1) {
+            if (list[i].standard() != null) { out.add(list[i]); }
+        }
+        return out;
+    }
+
+    // What one test step produced, as a number in the step's own terms —
+    // seconds for a clock or a hold, a count of reps or rounds, km — or null.
+    function resultValue(ex) {
+        var st = ex.standard();
+        var kind = (st != null) ? st["result"] : null;
+        if (kind == null) { return null; }
+        var name = ex.name();
+        var o = _outcomes.hasKey(name) ? _outcomes[name] : {};
+        if (kind.equals("duration")) { return o.hasKey("durationSec") ? o["durationSec"] : null; }
+        if (kind.equals("distance")) { return o.hasKey("distanceKm") ? o["distanceKm"] : null; }
+        if (!_setLogs.hasKey(name) || _setLogs[name].size() == 0) { return null; }
+        var arr = _setLogs[name];
+        if (kind.equals("rounds")) { return arr[0]["reps"]; }
+        // reps: summed over a timed step (reps in six minutes), the best set
+        // otherwise; a hold: the longest. The server reads them the same way.
+        var sum = 0;
+        var best = 0;
+        for (var i = 0; i < arr.size(); i += 1) {
+            var r = arr[i]["reps"];
+            if (r instanceof Lang.Number) { sum += r; if (r > best) { best = r; } }
+        }
+        var v = (kind.equals("reps") && ex.isTemplate("timed")) ? sum : best;
+        return (v > 0) ? v : null;
+    }
+
+    // "7:32", "102 reps", "20 rounds", "45 s", "2.00 km" — or null.
+    function resultText(ex) {
+        var v = resultValue(ex);
+        if (v == null) { return null; }
+        var kind = ex.standard()["result"];
+        if (kind.equals("duration")) { return Text.mmss(v); }
+        if (kind.equals("distance")) { return v.format("%.2f") + " km"; }
+        if (kind.equals("hold")) { return v.toString() + " s"; }
+        if (kind.equals("rounds")) { return v.toString() + ((v == 1) ? " round" : " rounds"); }
+        return v.toString() + ((v == 1) ? " rep" : " reps");
+    }
+
+    // Results > a step: what the athlete counted or corrected, kept where the
+    // upload reads it — a timed step's reps as its one set, a clock as the
+    // step's durationSec.
+    function setResult(ex, v) {
+        var kind = ex.standard()["result"];
+        var name = ex.name();
+        if (kind.equals("duration") || kind.equals("distance")) {
+            var o = _outcomes.hasKey(name) ? _outcomes[name] : {};
+            o[kind.equals("duration") ? "durationSec" : "distanceKm"] = v;
+            _outcomes[name] = o;
+            return;
+        }
+        var arr = _setLogs.hasKey(name) ? _setLogs[name] : [];
+        if (kind.equals("rounds") || arr.size() == 0 || ex.isTemplate("timed")) {
+            _setLogs[name] = [ { "reps" => v, "weightKg" => (kind.equals("rounds") ? null : ex.weightKg()), "rpe" => null } ];
+            return;
+        }
+        // A max set among several: the best one is the result.
+        var at = 0;
+        for (var i = 1; i < arr.size(); i += 1) {
+            var r = arr[i]["reps"];
+            var b = arr[at]["reps"];
+            if (r instanceof Lang.Number && (!(b instanceof Lang.Number) || r > b)) { at = i; }
+        }
+        arr[at]["reps"] = v;
+    }
+
+    function setResultDecision(d) { _resultDecision = d; }
+
+    // ── progression ────────────────────────────────────────────────────────────────    // ── progression ────────────────────────────────────────────────────────────────
 
     function state()           { return _state; }
     function currentExercise() {
@@ -1081,6 +1178,7 @@ class WorkoutController {
 
     // Advance to the next exercise (or finish).
     function nextExercise() {
+        noteStepEnd(currentExercise());
         _exIndex += 1;
         // Skip component movements already folded into the AMRAP screen above —
         // they are part of that round, not separate exercises to work through.
@@ -1148,6 +1246,9 @@ class WorkoutController {
         if (_state == COMPLETE) { return; }
         // Never started: nothing was recorded, so nothing is saved or uploaded.
         if (_state == IDLE) { cancel(); _state = COMPLETE; _discarded = true; return; }
+        // Saved mid-step (Fran finished, Save pressed before the last LAP):
+        // the step's clock still counts.
+        if (_state != DONE) { try { noteStepEnd(currentExercise()); } catch (e) {} }
         _state = COMPLETE;
         _paused = false;
         if (_timer != null) { try { _timer.stop(); } catch (e) {} }
@@ -1229,21 +1330,27 @@ class WorkoutController {
             if (track.size() > 0) { workout["gpsTrack"] = track; }
         }
 
-        var exercisesLog = {};
-        var keys = _setLogs.keys();
-        for (var i = 0; i < keys.size(); i++) {
-            exercisesLog[keys[i]] = { "sets" => _setLogs[keys[i]] };
-        }
-
         var sessionLog = {
             "sessionKey" => key,
             "completedAt" => endIso,
             "source" => "garmin",
-            "exercises" => exercisesLog,
+            "exercises" => Wire.exercises(_setLogs, _outcomes, _session.exercises()),
             "notes" => "",
             "avgHR" => avgHR,
             "peakHR" => peakHR
         };
+        // Save results / Not a test, for each test step that produced a value;
+        // the server makes each a result only then (src/standard_results.py).
+        if (_resultDecision != null) {
+            var decisions = {};
+            var steps = testSteps();
+            for (var i = 0; i < steps.size(); i += 1) {
+                if (resultValue(steps[i]) != null) {
+                    decisions[steps[i].standard()["id"]] = { "decision" => _resultDecision };
+                }
+            }
+            if (decisions.size() > 0) { sessionLog["standardResults"] = decisions; }
+        }
 
         return {
             "sessionKey" => key,

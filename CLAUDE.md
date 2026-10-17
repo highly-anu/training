@@ -307,7 +307,9 @@ group's name.
   test — on Profile ▸ Standards' *To confirm*, Today and under the test standard. A
   for-time slot logs a clock (`time`, m:ss) on both clients, never prefilled from its cap,
   and a test slot asks first for its standard's number (`outcomeFieldsFor(…, standard)`,
-  `SessionLogging.outcomeFields(…, standardResult:)`).
+  `SessionLogging.outcomeFields(…, standardResult:)`). Both watches show a test step's
+  best and next-level number and ask Save results / Not a test at the end (see *Watch
+  Screens*).
 - `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
   database), `test_standard_tests.py`, `test_standard_suggestions.py` (pure, then the routes
   on a scratch database); plan and later phases: `docs/roadmap.md` item 11.
@@ -744,6 +746,22 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   a sets workout until its first set is done (the vocabulary's
   `last_then_next` line, the sets template's default), and under the Apple
   Watch's current exercise.
+- **Uploads speak the server's shape** (since 2026-10-17). The Garmin app keyed its
+  set logs by exercise *name* with `reps` and no `completed`, so the analytics read
+  none of them; `garmin/core/source/engine/Wire.mc` now sends them keyed by exercise
+  id with `setIndex`, `repsActual` (a hold's seconds as `durationSeconds`),
+  `completed`, plus a round step's `rounds`, a for-time step's `durationSec` and a
+  distance step's `distanceKm`. The Apple Watch kept the for-time clock, the AMRAP
+  rounds and the distance in its views and dropped them; `WorkoutSessionState.outcomes`
+  keeps them and `WatchUpload.sessionLog` sends them (`WatchUploadTests`).
+- **A test step shows its standard and asks for its result.** With `?spec=1` a test's
+  scored slot carries `standard` — `{id, name, result, best, target}`
+  (`standards.watch_standard`) — and its screen's lines become `standard_target`
+  (`watch_spec.with_lines`), whatever the package's spec says. The Garmin's Save
+  opens a Results menu (enter or correct each value, then Save results / Not a test);
+  the Apple Watch's completion screen has the same choice. The answer rides in the
+  session log as `standardResults` (src/standard_results.py), so it travels with a
+  buffered upload.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the

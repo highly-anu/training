@@ -142,6 +142,18 @@ def test_candidates() -> None:
                            benchmarks=by, logs=logs, day='2026-10-05', derived=derived)
     check('sets of five stay a read-time estimate', got == [], str(got))
 
+    # The Garmin app since standards phase 6 (garmin/core/source/engine/Wire.mc):
+    # keyed by exercise id, repsActual on a completed set — the reps the
+    # athlete entered on the Results menu for a timed pentathlon set.
+    pentathlon = {'exercises': [
+        {'exercise': {'id': 'wk_kb_clean_single', 'name': 'KB Clean'}, 'slot_role': 'clean',
+         'slot_type': 'time_domain', 'standard': {'id': 'kb_pentathlon_clean_reps', 'result': 'reps'}}]}
+    got, _ = sr.candidates([pentathlon], {'wk_kb_clean_single': {'sets': [
+        {'setIndex': 0, 'repsActual': 102, 'weightKg': 24, 'rpe': None, 'completed': True}]}},
+        benchmarks=by, logs={}, day='2026-10-05', log_source='garmin')
+    check("a Garmin set as the watch now sends it is read", [(c['benchmarkId'], c['value']) for c in got]
+          == [('kb_pentathlon_clean_reps', 102.0)], str(got))
+
 
 def test_decisions_and_words() -> None:
     print('\ndecisions and words')

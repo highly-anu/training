@@ -231,3 +231,34 @@ def digest_key(logs: dict) -> list:
     the number of entries (an edit keeps the count and changes the answer)."""
     return sorted((k, e.get('id'), e.get('value'), str(e.get('loggedOn') or e.get('date')))
                   for k, v in logs.items() for e in v or [])
+
+
+# ── the watches ──────────────────────────────────────────────────────────────
+
+def short_name(b: dict) -> str:
+    """A standard's name without its parenthesis, for a watch line:
+    "2km Row (time in minutes)" → "2km Row"."""
+    name = str(b.get('name') or b.get('id') or '')
+    cut = name.find(' (')
+    return name[:cut].strip() if cut > 0 else name
+
+
+def watch_standard(b: dict, result: dict | None, sex: str = 'male', kind: str | None = None) -> dict:
+    """A test step's standard, compact for the watches (today-session
+    `?spec=1`): its short name, the result kind the step is read as, the best
+    result and the number for the next level — in the server's words, so the
+    Garmin and the Apple Watch print one thing. `result` is summarise()'s
+    entry for the standard, None before a first result."""
+    out = {'id': b['id'], 'name': short_name(b)}
+    if kind:
+        out['result'] = kind
+    if result:
+        out['best'] = result['best']['valueText']
+        cur = result['current']
+        if cur.get('next') and cur.get('nextText'):
+            out['target'] = f"{cur['nextText']} for {cur['next']}"
+    else:
+        entry = bd.format_value(b, bd.thresholds(b, sex).get('entry'))
+        if entry:
+            out['target'] = f'{entry} for entry'
+    return out

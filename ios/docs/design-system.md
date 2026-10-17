@@ -984,7 +984,18 @@ Watch uses the same semantic scale but effectively one size smaller:
 
 Same modality colors, but use them more sparingly — the watch face is small. The 2pt color stripe on cards translates to a 3pt stripe (slightly more prominent). HR zone colors are the primary semantic layer during active workout.
 
-### 9.4 Motion on Watch
+### 9.4 Results on Watch
+
+A test step says what it is for under its prescription: "Best 7:32 · 7:00 for
+advanced" (`WatchExercise.standard`, the server's words) in `.caption2`, yellow —
+the one test accent on the watch, never a level colour. At the end of a test
+session `SessionCompleteView` lists each standard with what the watch captured
+(tap one to enter it with the crown: `ResultEntryView`), then **Save Results** /
+**Not a test** in place of *Save Workout* — still two buttons, as §9.2 asks. The
+answer travels in the summary (`standardResults`); the phone's §6.32 row is where an
+unanswered one is decided.
+
+### 9.5 Motion on Watch
 
 No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
 

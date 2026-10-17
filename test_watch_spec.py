@@ -194,6 +194,37 @@ def test_borrowed_session_shows_its_owner():
     check('an unknown archetype falls back to the provenance tag', out['packageId'] == 'bjj')
 
 
+def test_a_test_step_says_its_standard():
+    print('\na test step carries its standard, and its screen shows it')
+    import api
+    session = {'modality': 'conditioning',
+               'archetype': {'id': 'gym_jones_row_2k_test', 'name': '2 km Row — Test'},
+               'exercises': [
+                   {'slot_role': 'warm_up', 'slot_type': 'time_domain',
+                    'exercise': {'id': 'row_easy', 'name': 'Easy Row'}, 'load': {'duration_minutes': 10}},
+                   {'slot_role': 'row_2k', 'slot_type': 'for_time',
+                    'exercise': {'id': 'row_2km_test', 'name': '2000m Row Time Trial'},
+                    'load': {'distance_km': 2.0, 'test': True},
+                    'standard': {'id': 'row_2km_minutes', 'result': 'duration'}}]}
+    out = api.encode_watch_session(session, '1-Friday-0', spec_level=1)
+    warm, row = out['exercises']
+    check('the scored slot names its standard, its kind and the entry number before a first result',
+          row.get('standard') == {'id': 'row_2km_minutes', 'name': '2km Row', 'result': 'duration',
+                                  'target': '10:00 for entry'}, str(row.get('standard')))
+    check('its screen shows the standard', out['screens'][row['screen']]['lines'] == 'standard_target')
+    check('the warm-up neither', 'standard' not in warm and out['screens'][warm['screen']]['lines'] != 'standard_target')
+    results = {'row_2km_minutes': {
+        'current': {'valueText': '7:45', 'next': 'advanced', 'nextText': '7:00'},
+        'best': {'valueText': '7:32'}}}
+    out = api.encode_watch_session(session, '1-Friday-0', spec_level=1, results=results)
+    std = out['exercises'][1]['standard']
+    check('with results: the best, and the number for the next level',
+          std.get('best') == '7:32' and std.get('target') == '7:00 for advanced', str(std))
+    legacy = api.encode_watch_session(session, '1-Friday-0')
+    check('without spec there is no standard (builds before 1.4 parse the payload key for key)',
+          all('standard' not in e and '_standard' not in e for e in legacy['exercises']))
+
+
 def test_watch_side_is_current():
     print('\nthe watch reads the same tables')
     import subprocess
@@ -260,6 +291,7 @@ def main() -> int:
     test_throwaway_package_reaches_the_payload()
     test_borrowed_session_shows_its_owner()
     test_pentathlon_pace()
+    test_a_test_step_says_its_standard()
     test_watch_side_is_current()
     print()
     print('ok' if not failures else f'{len(failures)} failure(s)')

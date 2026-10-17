@@ -25,6 +25,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
+from src import standards as _standards_mod
+from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
 from src import phases
 from src.phases import PhaseResolutionError
@@ -3091,11 +3093,15 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         'restSeconds': rest,
         'prescribedZoneLower': zlo,
         'prescribedZoneUpper': zhi,
+        # A test's scored slot ({id, result}); encode_watch_session turns it
+        # into the compact `standard` with `?spec=1` and drops it otherwise.
+        '_standard': ea.get('standard'),
     }
 
 
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
-                         spec_level: int = 0, last: dict | None = None) -> dict:
+                         spec_level: int = 0, last: dict | None = None,
+                         results: dict | None = None, sex: str = 'male') -> dict:
     """One stored session in the watch's shape.
 
     With spec_level >= 1 the session also says which package owns it and
@@ -3103,11 +3109,19 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     the package-level settings, `screens` the deduplicated specs, and each
     exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
     the demo programmes through this too, so demo and real sessions agree.
+
+    A test's scored slot also carries `standard` — its short name, result
+    kind, best and the number for the next level (`standards.watch_standard`,
+    from `results`, summarise()'s standards; the entry level without one) —
+    and its screen shows it (`standard_target`), whatever the package's spec
+    says. Only with `?spec=1`, and only on test slots: the Garmin payload is
+    small.
     """
     modality = s.get('modality') or ''
     archetype = s.get('archetype') or {}
     exercises = [e for e in (_encode_watch_exercise(ea, modality)
                              for ea in (s.get('exercises') or [])) if e is not None]
+    refs = [e.pop('_standard', None) for e in exercises]
     out = {
         'sessionId': session_key,
         'completed': completed,
@@ -3127,11 +3141,18 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
             package_id, archetype.get('id'),
             [(e['slotRole'] or None, e['slotType']) for e in exercises],
         )
-        for e, key in zip(exercises, keys):
+        by_id = _bd.by_id() if any(refs) else {}
+        for e, key, ref in zip(exercises, keys, refs):
             e['screen'] = key
             # What was done last time ("24kg × 10"), src/last_time.py.
             if last and e.get('exerciseId') in last:
                 e['last'] = last[e['exerciseId']]
+            sid = (ref.get('id') if isinstance(ref, dict) else ref) if ref else None
+            if sid in by_id:
+                e['standard'] = _standards_mod.watch_standard(
+                    by_id[sid], (results or {}).get(sid), sex,
+                    ref.get('result') if isinstance(ref, dict) else None)
+                e['screen'] = _watch_spec.with_lines(table, key, 'standard_target')
         out['packageId'] = package_id
         out['watch'] = _watch_spec.session_identity(package_id)
         out['screens'] = table
@@ -3298,6 +3319,17 @@ def get_today_session():
         except Exception as e:
             app.logger.warning('today-session: last time failed: %s', e)
 
+    # A test today: each scored slot says its standard's best and the number
+    # for the next level. Read only when today has a test.
+    std_results, std_sex = None, 'male'
+    if spec_level >= 1 and any(ea.get('standard') for s in sessions for ea in (s.get('exercises') or [])):
+        try:
+            std_sex, std_tz = _standards_context(g.user_id)
+            std_results = _standards_mod.summarise(
+                _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), std_sex, std_tz)['standards']
+        except Exception as e:
+            app.logger.warning('today-session: standards failed: %s', e)
+
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]
         out = []
@@ -3305,7 +3337,7 @@ def get_today_session():
             session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
             out.append(encode_watch_session(
                 s, session_key, completed=is_done(w_index, d_name, i), spec_level=level,
-                last=last if level >= 1 else None,
+                last=last if level >= 1 else None, results=std_results, sex=std_sex,
             ))
         return out
 

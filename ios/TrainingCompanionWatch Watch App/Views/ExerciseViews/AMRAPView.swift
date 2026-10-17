@@ -59,6 +59,7 @@ struct AMRAPView: View {
             }
             Button("+") {
                 roundsCompleted += 1
+                sessionState.recordOutcome(exercise.exerciseId, rounds: roundsCompleted)
             }
             .font(.title3.bold())
             .buttonStyle(.plain)

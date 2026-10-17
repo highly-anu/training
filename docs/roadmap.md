@@ -799,10 +799,9 @@ confirms; programs schedule **package-declared tests**. Phase 1 shipped the same
 5. ~~**Sessions suggest results.**~~ — shipped 2026-10-17 (see *Done*). Run
    `migrations/012_standard_suggestions.sql` after `scripts/backup_prod.sh`, before the
    code (the store creates the table lazily, without the RLS policy).
-6. **Watches.** Capture first: Garmin keys set logs by exercise *name* without `completed`
-   (`WorkoutController.mc:1008`), so analytics reads none of them; neither watch keeps a
-   for-time step's time, the Apple Watch drops AMRAP rounds and distance. Then the standard
-   to beat on a test step and a Save / Not a test summary page.
+6. ~~**Watches.**~~ — shipped 2026-10-17 (see *Done*). The Garmin unit tests compile but
+   were not run (the Connect IQ simulator was in use by another session):
+   `garmin/TrainingCompanionCIQ/build.sh --test`.
 7. **Imported best efforts.** 1 mi, 3 mi, 5 mi, 400/800 m windows at import where the series
    has speed; a suggestion when the workout is linked to that test or beats the best.
 
@@ -852,6 +851,15 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 6 (2026-10-17)**: the watches. Capture first: the Garmin app's set logs
+went up keyed by exercise name with `reps` and no `completed`, so the analytics read none of
+them — they now go up in the server's shape (`Wire.mc`), with a round step's rounds, a
+for-time clock and a step's distance; the Apple Watch keeps the for-time clock, AMRAP rounds
+and distance its views used to drop. A test step shows the standard's best and the number for
+the next level on both watches (`standard_target`), and the end of a test session asks for
+the results — enter or correct each, then Save results / Not a test — which ride in the
+session log (`standardResults`).
 
 **Standards, phase 5 (2026-10-17)**: sessions suggest results. A logged test slot — a
 2 km row's clock, Cindy's rounds with the partial round, reps in six minutes, a hold — and a

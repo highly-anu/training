@@ -23,6 +23,8 @@ struct ForTimeView: View {
             if isRunning {
                 Button("Finish") {
                     isRunning = false
+                    // The clock is the result (a 2 km row, Fran): kept for the upload.
+                    sessionState.recordOutcome(exercise.exerciseId, durationSec: elapsedSeconds)
                     sessionState.markExerciseComplete(id: exercise.exerciseId)
                     sessionState.advance(to: exerciseIndex + 1)
                 }

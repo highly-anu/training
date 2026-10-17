@@ -110,6 +110,54 @@ final class WatchUploadTests: XCTestCase {
         XCTAssertEqual((enriched["distance"] as? [String: Any])?["value"] as? Double, 8.4)
     }
 
+    /// The session log keeps what a step produced beside its sets — a 2 km
+    /// row's clock, an AMRAP's rounds — and the Results answer, in the keys
+    /// the server reads (src/standard_results.read_result).
+    func testSessionLogCarriesOutcomesAndTheResultsAnswer() throws {
+        var s = summary(gps: false)
+        s.outcomes = ["row_2km_test": WatchOutcome(durationSec: 452), "pull_up": WatchOutcome(rounds: 19)]
+        s.standardResults = ["row_2km_minutes": "save"]
+        let log = WatchUpload.sessionLog(summary: s)
+        let ex = try XCTUnwrap(log["exercises"] as? [String: [String: Any]])
+        XCTAssertEqual(ex["row_2km_test"]?["durationSec"] as? Int, 452)
+        XCTAssertEqual((ex["row_2km_test"]?["sets"] as? [Any])?.count, 0, "an outcome alone has no sets")
+        XCTAssertEqual(ex["pull_up"]?["rounds"] as? Int, 19)
+        let set = try XCTUnwrap((ex["back_squat"]?["sets"] as? [[String: Any]])?.first)
+        XCTAssertEqual(set["repsActual"] as? Int, 5)
+        XCTAssertEqual(set["completed"] as? Bool, true)
+        XCTAssertEqual((log["standardResults"] as? [String: [String: String]])?["row_2km_minutes"]?["decision"], "save")
+        XCTAssertEqual(log["sessionKey"] as? String, "3-Tuesday-0")
+        XCTAssertNil(WatchUpload.sessionLog(summary: summary())["standardResults"], "no answer, no key")
+    }
+
+    /// A test step's value is read as the server reads it; a count entered
+    /// on the watch is its one set.
+    func testResultsReadLikeTheServer() {
+        func ex(_ slot: String, _ kind: String) -> WatchExercise {
+            WatchExercise(exerciseId: "x", name: "X", slotType: slot, slotRole: "r", isMeta: false,
+                          loadDescription: "", loadNote: nil, coachingCue: nil, sets: nil, reps: nil, weightKg: 24,
+                          targetRpe: nil, durationMinutes: 6, zoneTarget: nil, timeMinutes: nil, targetRounds: nil,
+                          emomFormat: nil, holdSeconds: nil, distanceKm: nil, restSeconds: nil,
+                          prescribedZoneLower: nil, prescribedZoneUpper: nil,
+                          standard: WatchStandard(id: "s", name: "S", result: kind))
+        }
+        func set(_ reps: Int?, hold: Int? = nil) -> WatchSetLog {
+            WatchSetLog(setIndex: 0, repsActual: reps, weightKg: nil, rpe: nil, completed: true,
+                        durationSeconds: hold, startOffset: nil, endOffset: nil)
+        }
+        let row = ex("for_time", "duration")
+        XCTAssertEqual(WatchResults.value(row, sets: [], outcome: WatchOutcome(durationSec: 452)), 452)
+        XCTAssertEqual(WatchResults.text(row, value: 452), "7:32")
+        XCTAssertNil(WatchResults.value(row, sets: [], outcome: nil))
+        let clean = ex("time_domain", "reps")
+        XCTAssertEqual(WatchResults.value(clean, sets: [set(70), set(32)], outcome: nil), 102, "reps in a window add up")
+        XCTAssertEqual(WatchResults.text(clean, value: 102), "102 reps")
+        XCTAssertEqual(WatchResults.value(ex("sets_reps", "reps"), sets: [set(12), set(9)], outcome: nil), 12)
+        XCTAssertEqual(WatchResults.value(ex("static_hold", "hold"), sets: [set(nil, hold: 35), set(nil, hold: 42)],
+                                          outcome: nil), 42)
+        XCTAssertEqual(WatchResults.text(ex("amrap", "rounds"), value: 1), "1 round")
+    }
+
     func testMatchPayloadIsAManualMatch() {
         let m = WatchUpload.matchPayload(workoutId: "wid", sessionKey: "3-Tuesday-0",
                                          matchedAt: Date(timeIntervalSince1970: 1_790_000_000))

@@ -77,6 +77,17 @@ are (`data/packages/<id>/analytics.yaml`):
 4. **The watch** draws each exercise through `ScreenSpec` + `SpecRenderer`; a
    payload without specs, or an id this build lacks, falls back to the slot
    type's default, field by field.
+   A test's scored slot (`standard` on the exercise) is the one exception the
+   server makes to a package's spec: its screen's lines are `standard_target`
+   ("Best 7:32" / "7:00 for advanced", the server's words), and Save opens a
+   **Results** menu first (`views/ResultsMenu.mc`): each standard with what the
+   watch captured, select one to enter or correct it (a timed step's reps are the
+   athlete's count), then *Save results* or *Not a test* — sent as
+   `standardResults` in the session log. The session log goes up in the server's
+   shape (`engine/Wire.mc`: keyed by exercise id, `repsActual` on completed sets,
+   a hold's seconds as `durationSeconds`, a round step's `rounds`, a for-time
+   clock as `durationSec`); in memory sets stay keyed by name, where Edit Set and
+   the summary read them.
 5. **A compiled module** is the escape hatch for what the vocabulary cannot say:
    `garmin/packages/<id>/`, then `gen_registry.py`; the package's `watch.yaml`
    names `module: <id>` and a slot's `module_screen`. The slot's spec stays

@@ -85,6 +85,27 @@ function editPace(ctl) {
     Ui.pushView(v, new EditSetDelegate(v), Ui.SLIDE_LEFT);
 }
 
+// Results > a test step: what it produced, entered or corrected — the reps a
+// timed step's athlete counted, a clock as minutes and seconds.
+function editResult(ctl, ex, item) {
+    var kind = ex.standard()["result"];
+    var v = ctl.resultValue(ex);
+    var fs;
+    if (kind != null && kind.equals("duration")) {
+        var sec = (v != null) ? v : 0;
+        fs = [["min", "MIN", sec / 60, 1, 0, 300], ["sec", "SEC", sec % 60, 1, 0, 59]];
+    } else if (kind != null && kind.equals("distance")) {
+        fs = [["km", "KM", (v != null) ? v.toFloat() : 0.0, 0.01, 0.0, 100.0]];
+    } else if (kind != null && kind.equals("hold")) {
+        fs = [$.holdField((v != null) ? v : 0)];
+    } else {
+        var label = (kind != null && kind.equals("rounds")) ? "ROUNDS" : "REPS";
+        fs = [["reps", label, (v != null) ? v : 0, 1, 0, 999]];
+    }
+    var view = new EditSetView("Result", ex.standard()["name"], fs, new ResultTarget(ctl, ex, item), "Result kept");
+    Ui.pushView(view, new EditSetDelegate(view), Ui.SLIDE_LEFT);
+}
+
 function editLastSet(ctl) {
     var set = ctl.lastSet();
     if (set == null) { return; }
@@ -120,6 +141,22 @@ class WorkingTarget {
         if (vals.hasKey("sets")) { _ex.setPlan({ "sets" => vals["sets"] }); }
         if (vals.hasKey("rpm"))  { _ex.setPlan({ "rpm" => vals["rpm"] }); }
         _ctl.setWorking(vals);
+    }
+}
+
+class ResultTarget {
+    hidden var _ctl;
+    hidden var _ex;
+    hidden var _item;
+    function initialize(ctl, ex, item) { _ctl = ctl; _ex = ex; _item = item; }
+    function applyEdit(vals) {
+        var v;
+        if (vals.hasKey("min"))       { v = vals["min"] * 60 + vals["sec"]; }
+        else if (vals.hasKey("km"))   { v = vals["km"]; }
+        else if (vals.hasKey("hold")) { v = vals["hold"]; }
+        else                          { v = vals["reps"]; }
+        _ctl.setResult(_ex, v);
+        if (_item != null) { _item.setSubLabel($.resultLabel(_ctl, _ex)); }
     }
 }
 
@@ -186,7 +223,8 @@ class EditSetView extends Ui.View {
     }
 
     hidden function isCount(f) {
-        return f[0].equals("sets") || f[0].equals("reps") || f[0].equals("hold") || f[0].equals("rpm");
+        return f[0].equals("sets") || f[0].equals("reps") || f[0].equals("hold") || f[0].equals("rpm")
+            || f[0].equals("min") || f[0].equals("sec");
     }
 
     // BACK: previous field, or leave without saving.

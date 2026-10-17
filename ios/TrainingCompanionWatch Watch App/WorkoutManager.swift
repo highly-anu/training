@@ -176,8 +176,23 @@ final class WorkoutManager: NSObject, ObservableObject {
             elevationGainMeters: sessionState.floorsAscended > 0 ? sessionState.floorsAscended * 3.0 : nil,
             cadenceAvg:         sessionState.currentCadence > 0 ? sessionState.currentCadence : nil,
             paceSecsPerKm:      paceSecsPerKm,
-            exerciseTimeline:   exerciseTimeline
+            exerciseTimeline:   exerciseTimeline,
+            outcomes:           sessionState.outcomes.isEmpty ? nil : sessionState.outcomes,
+            standardResults:    standardDecisions()
         )
+    }
+
+    /// The Results answer, for each test step that produced a value.
+    private func standardDecisions() -> [String: String]? {
+        guard let decision = sessionState.resultDecision, let session = activeSession else { return nil }
+        var out: [String: String] = [:]
+        for ex in session.exercises {
+            guard let st = ex.standard,
+                  WatchResults.value(ex, sets: sessionState.setLogs[ex.exerciseId] ?? [],
+                                     outcome: sessionState.outcomes[ex.exerciseId]) != nil else { continue }
+            out[st.id] = decision
+        }
+        return out.isEmpty ? nil : out
     }
 
     private func buildExerciseTimeline() -> [ExerciseTimelineEntry]? {
