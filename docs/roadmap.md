@@ -47,7 +47,8 @@ deferred is under *Later*.
 | 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
-| 12 | Standards: deploy (migrations 011, 012), the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
+| 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
+| 13 | Heart rate from the programming: mixed sessions, fidelity, per-exercise attribution | P2 | M | engine, API, content |
 
 ---
 
@@ -790,10 +791,9 @@ modality's colour; a history the athlete can manage; only a program's own standa
 programs schedule package-declared tests; logged sessions, both watches and imported runs
 suggest results the athlete confirms. Left:
 
-1. **Production, in order:** `scripts/backup_prod.sh`; `migrations/011_standard_results.sql`
-   and `scripts/backfill_performance_logged_on.py` (dry run first); `migrations/012_standard_suggestions.sql`
-   (the store creates the table lazily, but without the RLS policy); then deploy the code.
-   Existing Cell results drop a level (Cell's own II–V words now map to entry…elite).
+1. ~~**Production, in order**~~ — done 2026-10-17: backup, `011`, the `logged_on` backfill,
+   `012`, then the deploy (#149). Existing Cell results dropped a level (Cell's own II–V
+   words now map to entry…elite).
 2. **The Garmin unit tests** compile but were not run — the Connect IQ simulator was in use
    by another session: `garmin/TrainingCompanionCIQ/build.sh --test` (`WireTests.mc`).
 3. **On the watches:** a test day on the fenix (the `standard_target` line, the Results menu
@@ -817,6 +817,31 @@ suggest results the athlete confirms. Left:
 7. **Not in scope, noted:** 400/800 m best efforts (no standard measures them); best efforts
    from Apple Health or live watch runs (no recorded speed — positions alone would invent
    records).
+
+### 13. Heart rate from the programming: what is left — P2 · M
+
+Since 2026-10-17 a session's heart rate counts in the zone minutes when its programming
+prescribes zones (`src/analytics/hr_plan.py`): at least one slot names a zone and none
+prescribes load or effort, or the archetype says `heart_rate: track | ignore`. A workout's
+`analysis.planned` carries the matched session's plan to both clients. Open:
+
+- **Mixed sessions.** 24 archetypes put a zoned warm-up or finisher beside heavy or
+  max-effort work (CrossFit's Fran, Helen, Cindy and mixed AMRAP; Gym Jones' circuit,
+  accumulation and 2 km row test; Horsemen's carries, PT test and named workouts; the
+  Starting Strength 5×5 and HLM days; Uphill's ME gym days). They count as max effort
+  whole. Either declare `heart_rate:` per archetype where the theory says otherwise, or
+  split them per slot (next point).
+- **Per-exercise attribution.** The session log's `exercise_timeline` dates each exercise;
+  with it the recorded series can be cut per slot, so a warm-up's minutes land in zones
+  and the main piece's in max effort, and the workout screen can compare each block with
+  its own prescription.
+- **Fidelity still uses the family rule** for the planned split (`src/fidelity.py`).
+  Reading `hr_plan` there instead fires 126 new findings in seven packages — mostly
+  strength-family sessions with zoned slots that the frameworks' `intensity_distribution`
+  never planned for. Align the packages' distributions first, then the rule.
+- **`progressing`** (Starting Strength's three lifts) is a load word that
+  `progression._INTENSITY_ZONES` maps to a Zone 2–4 band; `hr_plan` treats it as load.
+  Drop it from the map or give the progression its own token.
 
 ## Later
 
