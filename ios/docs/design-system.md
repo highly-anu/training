@@ -992,7 +992,7 @@ the one test accent on the watch, never a level colour. At the end of a test
 session `SessionCompleteView` lists each standard with what the watch captured
 (tap one to enter it with the crown: `ResultEntryView`), then **Save Results** /
 **Not a test** in place of *Save Workout* — still two buttons, as §9.2 asks. The
-answer travels in the summary (`standardResults`); the phone's §6.32 row is where an
+answer travels in the summary (`standardResults`); the phone's §6.33 row is where an
 unanswered one is decided.
 
 ### 9.5 Motion on Watch
@@ -1079,7 +1079,7 @@ and measures — the web's Progress tab:
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; per standard the modality's symbol and the
   name, the value as the server prints it, the level badge and the gap on a
-  second line, and the `StandardLadder` (§6.29).
+  second line, and the `StandardLadder` (§6.30).
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
   a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
@@ -1548,6 +1548,7 @@ build only records what is listed. A suggestion for another program's
 session is not confirmed here (its key would tick this program's session of
 that name); it falls through to the day's open sessions.
 ### 6.29 Standard Ladder
+### 6.30 Standard Ladder
 
 **One ladder for every standard, on every screen.** `Views/StandardLadder.swift`
 (the web's `components/standards/StandardLadder.tsx`) draws four rungs, entry →
@@ -1579,7 +1580,7 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
   athlete would write ("4:58") and the server parses it; a value it cannot
   read comes back in its words under the field.
 
-### 6.30 Standard Detail
+### 6.31 Standard Detail
 
 **One standard, every result.** `Views/StandardDetailSheet.swift` (the web's
 `StandardDetailSheet.tsx`) is presented from a Profile ▸ Standards row, from Athlete's
@@ -1587,7 +1588,7 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
 `profile?section=standards&standard=<id>` (`AppRouter.openStandard`):
 
 - the current result with its level badge, best and the gap to the next level, the
-  `StandardLadder` (§6.29), the test protocol;
+  `StandardLadder` (§6.30), the test protocol;
 - *History*: `StandardHistoryChart` — the results as one line in the modality's
   colour, each level a dashed `RuleMark` labelled with its word and the server's
   threshold text (no value axis: nothing on the phone formats a value), the
@@ -1600,14 +1601,14 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
   block and note; tap or swipe to edit, swipe to delete behind a confirmation
   that says the rest of the history stays.
 
-### 6.31 Test Badge and Standard Target
+### 6.32 Test Badge and Standard Target
 
 **A test says what it measures.** `Views/StandardTestViews.swift`: `TestBadge` (a
 capsule, `trophy.fill`, "Test") marks a session that tests the phase's standards
 (`ProgramSession.testInfo`, read from the round-tripped `test` key) on Today's
 session card, Program's rows and the session header. `StandardTargetRow` names one
 standard with the athlete's best, its level badge and "90 reps for intermediate"
-under it — the server's words — and opens its sheet (§6.30) through the router.
+under it — the server's words — and opens its sheet (§6.31) through the router.
 
 - Session detail: under the header, "A test, in place of …" and a
   `StandardTargetRow` per standard; each scored exercise (`standardId`) names its
@@ -1617,11 +1618,11 @@ under it — the server's words — and opens its sheet (§6.30) through the rou
 - The catalog and results load when a session with scored slots opens, since
   only Profile loaded them before.
 
-### 6.32 Standard Suggestion
+### 6.33 Standard Suggestion
 
 **A result a session suggests is saved by the athlete, never by the app.**
 `Views/StandardSuggestionRow.swift`: `StandardSuggestionRow` shows one suggestion —
-standard name, the value as the server prints it, `StandardLevelBadge` (§6.29), then
+standard name, the value as the server prints it, `StandardLevelBadge` (§6.30), then
 "New best", "Was 7:45", "First result" or, for a re-logged value, "Corrects 7:32",
 and where it came from (session, day) — with three answers: **Save result**
 (`.borderedProminent`), **Correct** (an inline field, saved with the typed value),
@@ -1634,7 +1635,7 @@ the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
 
 - Profile ▸ Standards: *To confirm*, above *This program*, when any are waiting.
 - Today: "N results to confirm", the first three, then "All N in Profile".
-- Session detail: under each test standard's `StandardTargetRow` (§6.31) — not in
+- Session detail: under each test standard's `StandardTargetRow` (§6.32) — not in
   the exercise row, whose tap and swipe actions would take the buttons' touches.
 - `ExerciseLogSheet` (§6.16): a for-time slot's **Time** field takes m:ss
   (`SessionLogging.parseClock`), starts empty (the cap is only its placeholder —

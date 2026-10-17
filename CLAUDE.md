@@ -237,7 +237,7 @@ group's name.
 - **One ladder, coloured by modality.** Every standard's `domain` is a modality id, and
   web `components/standards/StandardLadder.tsx` / iOS `Views/StandardLadder.swift` fill
   the rungs in that modality's colour; a level has no colour of its own (frontend-design
-  §8.1, design-system §6.29). Traffic-light colours only for a declared target.
+  §8.1, design-system §6.30). Traffic-light colours only for a declared target.
 - **Current is the latest, best the best.** `src/standards.summarise`; every result is kept,
   and each can be corrected or deleted on its own (Standard detail on both clients: web
   `components/standards/StandardDetailSheet.tsx` at `/profile?tab=standards&standard=<id>`,
@@ -303,7 +303,7 @@ group's name.
   problems, error}`, and takes `standardResults: {id: {decision: save|dismiss, text?}}`
   — honoured only for a standard that session tests, so the device-token route reaches no
   further. UI: one row on both clients (web `components/standards/SuggestionRow.tsx`, iOS
-  `Views/StandardSuggestionRow.swift`, design-system §6.32) — Save result · Correct · Not a
+  `Views/StandardSuggestionRow.swift`, design-system §6.33) — Save result · Correct · Not a
   test — on Profile ▸ Standards' *To confirm*, Today and under the test standard. A
   for-time slot logs a clock (`time`, m:ss) on both clients, never prefilled from its cap,
   and a test slot asks first for its standard's number (`outcomeFieldsFor(…, standard)`,
@@ -324,7 +324,7 @@ group's name.
   carry no speed; the Standard detail says so on both clients.
 - `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
   database), `test_standard_tests.py`, `test_standard_suggestions.py` (pure, then the routes
-  on a scratch database); plan and later phases: `docs/roadmap.md` item 11.
+  on a scratch database); plan and later phases: `docs/roadmap.md` item 12.
 
 ## Key Engine Behaviors
 

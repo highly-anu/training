@@ -47,7 +47,7 @@ deferred is under *Later*.
 | 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
-| 11 | Standards: history, relevance, scheduled tests, results from sessions and watches (phases 2–7) | P2 | L | API, engine, content, web, iOS, watch |
+| 12 | Standards: deploy (migrations 011, 012), the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
 
 ---
 
@@ -783,27 +783,26 @@ a Sign in with Apple key (.p8).
    (it cannot create one); they need the `webcredentials:` associated domain, an
    `apple-app-site-association` file on the site, supabase-swift's
    `@_spi(Experimental)` passkey calls and supabase-js ≥ 2.118 (Node 22).
-### 11. Standards: history, relevance, tests and the watches — P2 · L
+### 12. Standards: deploy and verify on the devices — P2 · S
 
-The review of 2026-10-17 found one concept under two names (Benchmarks on the entry
-screens, Standards on the read screens), six colourings of a level, a history nobody
-could manage, and nothing tying a standard to training. Decided with the athlete:
-**Standards** everywhere a person reads it; a ladder **in its modality's colour**
-(level = position + word); a logged session **suggests** a result, the athlete
-confirms; programs schedule **package-declared tests**. Phase 1 shipped the same day
-(see *Done*). Open, one PR each:
+Built on 2026-10-17 in seven phases (each in *Done*): one name and one ladder in the
+modality's colour; a history the athlete can manage; only a program's own standards lead;
+programs schedule package-declared tests; logged sessions, both watches and imported runs
+suggest results the athlete confirms. Left:
 
-2. ~~**History you can manage.**~~ — shipped 2026-10-17 (see *Done*).
-3. ~~**Relevance.**~~ — shipped 2026-10-17 (see *Done*).
-4. ~~**Package-declared tests.**~~ — shipped 2026-10-17 (see *Done*).
-5. ~~**Sessions suggest results.**~~ — shipped 2026-10-17 (see *Done*). Run
-   `migrations/012_standard_suggestions.sql` after `scripts/backup_prod.sh`, before the
-   code (the store creates the table lazily, without the RLS policy).
-6. ~~**Watches.**~~ — shipped 2026-10-17 (see *Done*). The Garmin unit tests compile but
-   were not run (the Connect IQ simulator was in use by another session):
-   `garmin/TrainingCompanionCIQ/build.sh --test`.
-7. ~~**Imported best efforts.**~~ — shipped 2026-10-17 (see *Done*). 400/800 m were dropped:
-   no standard measures them.
+1. **Production, in order:** `scripts/backup_prod.sh`; `migrations/011_standard_results.sql`
+   and `scripts/backfill_performance_logged_on.py` (dry run first); `migrations/012_standard_suggestions.sql`
+   (the store creates the table lazily, but without the RLS policy); then deploy the code.
+   Existing Cell results drop a level (Cell's own II–V words now map to entry…elite).
+2. **The Garmin unit tests** compile but were not run — the Connect IQ simulator was in use
+   by another session: `garmin/TrainingCompanionCIQ/build.sh --test` (`WireTests.mc`).
+3. **On the watches:** a test day on the fenix (the `standard_target` line, the Results menu
+   at Save, the session log arriving with `repsActual` and `standardResults`) and on the
+   Apple Watch (the line under the exercise, Save Results / Not a test). Neither screen has
+   been seen on a device or a simulator. Then a store release and a TestFlight build.
+4. **Not in scope, noted:** 400/800 m best efforts (no standard measures them); best efforts
+   from Apple Health or live watch runs (no recorded speed — positions alone would invent
+   records).
 
 ## Later
 

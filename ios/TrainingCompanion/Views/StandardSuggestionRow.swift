@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A result a logged session suggests, with the athlete's three answers:
-/// Save, correct it and save, or "Not a test" (design-system §6.32; the web's
+/// Save, correct it and save, or "Not a test" (design-system §6.33; the web's
 /// `SuggestionRow`). The same row on Profile ▸ Standards' "To confirm", on
 /// Today and under the test slot that produced it. Every word and number is
 /// the server's — the value, its level, what it would follow — and a

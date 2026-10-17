@@ -11,7 +11,7 @@ import { StandardLevelBadge } from './StandardLadder'
  * A result a logged session suggests, with the athlete's three answers: Save,
  * correct it and save, or "Not a test". The same row on Profile ▸ Standards'
  * "To confirm", on Today and under the test slot that produced it; the
- * phone's is `StandardSuggestionRow` (design-system §6.32). Every word and
+ * phone's is `StandardSuggestionRow` (design-system §6.33). Every word and
  * number is the server's — the value, its level, what it would follow.
  */
 export function SuggestionRow({ suggestion: s, compact = false, showName = true }: {
