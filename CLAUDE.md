@@ -694,6 +694,21 @@ another's row.
   `record_version`; the GET path is guarded by `source_revision` so the common
   case is one indexed lookup, not hashing a ~1 MB envelope. Archiving on *read*
   is what captures the pre-strip copy.
+- **Rebuilding ahead is the same block carrying on** (since 2026-10-17). A regenerate
+  never rewrites a day already behind the athlete: both clients splice the start week
+  day by day (web `lib/programSource.spliceRegenerated`, iOS `Regeneration.splice`,
+  `keepBefore` = tomorrow for "from tomorrow", today for the injury/schedule/equipment
+  regenerates). `record_version` then walks the block's intervals newest first: each
+  whose elapsed days the new version plans exactly as they were (modality + archetype per
+  slot, `divergence_date` / `carry_over_until`) is closed empty, and the new activation
+  runs from the earliest one taken over — reason `continued`. Every match, suggestion and
+  log on a session those versions plan as the new one does moves to the new uid
+  (`same_sessions`, `_carry_over`), in or out of the version's own interval, oldest
+  version first so the log written while a session was in force keeps it. A version that
+  rewrites an elapsed day still switches on today. Before this every rebuild left the
+  block's matches on the old uids, which `session_scope` and both clients'
+  `belongsToVersion` reject, so a week's adherence vanished; a program caught by it is
+  repaired with `scripts/restore_elapsed_days.py --user <id>` (dry run; `--apply`).
 - **The matcher's index is a union** (`workout_matcher.history_aware_index`):
   the current program first, history overwriting any date it covers. Strictly
   additive — history is empty on a fresh deploy and in local dev with no

@@ -76,6 +76,8 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       constraints: resume.constraints,
       numWeeks: weeksRemainingFromTomorrow,
       weekInProgram: tomorrowWeekIdx + 1,
+      // Today and the days before it in tomorrow's week stay as they are.
+      keepBefore: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
     })
     setRebuildDialogOpen(false)
     setOpen(false)

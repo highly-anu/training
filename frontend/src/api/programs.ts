@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
+import { spliceRegenerated } from '@/lib/programSource'
 import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
 
 function getMondayOf(date: Date): string {
@@ -39,6 +40,12 @@ interface GenerateParams {
   /** Legacy: a framework pick, mapped server-side to its track and phase. */
   frameworkId?: string | null
   priorityOverrides?: Partial<Record<ModalityId, number>> | null
+  /**
+   * A regenerate only: sessions dated before this (YYYY-MM-DD, the athlete's
+   * day) keep what they had, so the days already behind them in the week the
+   * tail starts at are not rewritten (`spliceRegenerated`).
+   */
+  keepBefore?: string
 }
 
 export function buildPostBody(params: GenerateParams) {
@@ -131,7 +138,8 @@ export function useRegenerateFromWeek() {
       const spliced: GeneratedProgram = {
         ...newPartial,
         phase_summary: undefined,  // the tail's alone; the save answers with the whole
-        weeks: [...current.weeks.slice(0, keepCount), ...newPartial.weeks],
+        weeks: spliceRegenerated(current.weeks, newPartial.weeks, keepCount,
+                                 useProgramStore.getState().programStartDate, params.keepBefore),
         volume_summary: [
           ...(current.volume_summary ?? []).slice(0, keepCount),
           ...(newPartial.volume_summary ?? []),

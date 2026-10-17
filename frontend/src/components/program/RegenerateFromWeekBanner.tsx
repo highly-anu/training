@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProgramStore } from '@/store/programStore'
@@ -54,6 +54,8 @@ export function RegenerateFromWeekBanner() {
         numWeeks: remaining,
         weekInProgram: startIdx + 1,
         customInjuryFlags,
+        // The days already behind the athlete this week stay as they are.
+        keepBefore: format(new Date(), 'yyyy-MM-dd'),
       },
       { onSuccess: () => setDone(true) }
     )

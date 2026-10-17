@@ -117,4 +117,22 @@ final class ProgramConstraintsDiffTests: XCTestCase {
         XCTAssertEqual(Regeneration.splice(current: current, from: 9, generated: generated).weeks.count, 6,
                        "a start past the end keeps everything and appends")
     }
+
+    func testSpliceKeepsTheElapsedDaysOfTheStartWeek() throws {
+        func week(_ n: Int, _ days: [String: String]) -> ProgramWeek {
+            ProgramWeek(weekNumber: n, weekInPhase: n, isDeload: false, phase: "base",
+                        schedule: days.mapValues {
+                            [ProgramSession(modality: $0, archetype: nil, isDeload: false, exercises: [])]
+                        })
+        }
+        let current = GeneratedProgram(weeks: [week(1, ["Monday": "run", "Wednesday": "lift", "Saturday": "long"])], extra: [:])
+        let generated = GeneratedProgram(weeks: [week(1, ["Tuesday": "bike", "Saturday": "ruck", "Sunday": "mobility"])], extra: [:])
+        // Started Monday 2026-10-12; today is Saturday the 17th, rewritten.
+        let spliced = Regeneration.splice(current: current, from: 0, generated: generated,
+                                          programStartDate: "2026-10-12", keepBefore: "2026-10-17")
+        let days = spliced.weeks[0].schedule.mapValues { $0.map(\.modality) }
+        XCTAssertEqual(days, ["Monday": ["run"], "Wednesday": ["lift"], "Saturday": ["ruck"], "Sunday": ["mobility"]])
+        XCTAssertEqual(Regeneration.splice(current: current, from: 0, generated: generated).weeks[0].schedule.keys.sorted(),
+                       ["Saturday", "Sunday", "Tuesday"], "without a cutoff the week is the generated one")
+    }
 }

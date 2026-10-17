@@ -119,13 +119,54 @@ enum Regeneration {
     /// generated program's goal, constraints, validation and coverage report,
     /// and drops `volume_summary` so the server recomputes it for the whole
     /// program on save.
-    static func splice(current: GeneratedProgram, from start: Int, generated: GeneratedProgram) -> GeneratedProgram {
+    ///
+    /// With `programStartDate` and `keepBefore` (both YYYY-MM-DD, the
+    /// athlete's day), no session dated before `keepBefore` is replaced: the
+    /// week the tail starts at keeps the days already behind the athlete.
+    /// Splicing whole weeks rewrote them, so the sessions done and matched
+    /// this week left the plan, and the week's adherence with them; with the
+    /// past unchanged the server carries the block on instead of switching
+    /// program (`program_history.carry_over_until`). The web's
+    /// `spliceRegenerated` is the same rule.
+    static func splice(current: GeneratedProgram, from start: Int, generated: GeneratedProgram,
+                       programStartDate: String? = nil, keepBefore: String? = nil) -> GeneratedProgram {
         let keep = max(0, min(start, current.weeks.count))
         var extra = current.extra
         for key in ["goal", "constraints", "validation", "coverage_report"] {
             if let value = generated.extra[key] { extra[key] = value }
         }
         extra.removeValue(forKey: "volume_summary")
-        return GeneratedProgram(weeks: Array(current.weeks.prefix(keep)) + generated.weeks, extra: extra)
+        var weeks = Array(current.weeks.prefix(keep)) + generated.weeks
+        if let programStartDate, let keepBefore {
+            for i in keep..<min(weeks.count, current.weeks.count) {
+                let kept = dayOrder.enumerated().filter { offset, _ in
+                    (dayDate(programStartDate, days: i * 7 + offset) ?? keepBefore) < keepBefore
+                }.map(\.element)
+                guard !kept.isEmpty else { continue }
+                let new = weeks[i], old = current.weeks[i]
+                var schedule = new.schedule
+                for day in kept { schedule[day] = old.schedule[day]?.isEmpty == false ? old.schedule[day] : nil }
+                weeks[i] = ProgramWeek(weekNumber: new.weekNumber, weekInPhase: new.weekInPhase,
+                                       isDeload: new.isDeload, phase: new.phase, schedule: schedule,
+                                       extra: new.extra)
+            }
+        }
+        return GeneratedProgram(weeks: weeks, extra: extra)
+    }
+
+    static let dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    /// `start` + `days` as YYYY-MM-DD — `workout_matcher.session_calendar_date`'s
+    /// arithmetic, in UTC so a daylight-saving change cannot move a day.
+    static func dayDate(_ start: String, days: Int) -> String? {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.dateFormat = "yyyy-MM-dd"
+        guard let d = f.date(from: String(start.prefix(10))) else { return nil }
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = f.timeZone
+        return cal.date(byAdding: .day, value: days, to: d).map(f.string(from:))
     }
 }

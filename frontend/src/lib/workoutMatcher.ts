@@ -20,7 +20,7 @@ import type {
   ModalityId,
 } from '@/api/types'
 
-const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 /** modality id → family name, inverted once from the shared rules file. */
 const FAMILY_OF: Record<string, string> = Object.fromEntries(
