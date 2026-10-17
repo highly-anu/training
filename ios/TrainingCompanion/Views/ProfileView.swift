@@ -559,9 +559,13 @@ private struct HRZoneBar: View {
         GeometryReader { geo in
             let spacing: CGFloat = 2
             let usable = geo.size.width - spacing * 4
+            // A floor so a 3 %-wide zone still fits its name, then scaled back
+            // so the five always fill the row exactly.
+            let raw = (1...5).map { max(28, usable * (e[$0] - e[$0 - 1]) / span) }
+            let fit = usable / raw.reduce(0, +)
             HStack(alignment: .top, spacing: spacing) {
                 ForEach(1...5, id: \.self) { zone in
-                    let width = max(28, usable * (e[zone] - e[zone - 1]) / span)
+                    let width = raw[zone - 1] * fit
                     VStack(spacing: 3) {
                         Text("Z\(zone)")
                             .font(.caption2).fontWeight(.bold)
