@@ -40,6 +40,9 @@ interface AuthStore {
   savedAccounts: SavedAccount[]
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
+  /** Leave for Apple's sign-in page; Supabase brings the athlete back to
+   *  `returnPath` signed in (the session arrives in the URL, read on init). */
+  signInWithApple: (returnPath: string) => Promise<void>
   /** Sign out the current account. If other saved accounts exist, switches to the first one. */
   signOutCurrent: () => Promise<void>
   /** Switch to a previously saved account by email. Throws if the session has expired. */
@@ -64,6 +67,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   signUp: async (email, password) => {
     if (!supabase) throw new Error('Supabase is not configured')
     const { error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+  },
+
+  signInWithApple: async (returnPath) => {
+    if (!supabase) throw new Error('Supabase is not configured')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: window.location.origin + returnPath },
+    })
     if (error) throw error
   },
 

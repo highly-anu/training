@@ -46,6 +46,7 @@ deferred is under *Later*.
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
 | 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
+| 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 
 ---
 
@@ -735,6 +736,46 @@ phases A–E. Open:
 `tools/check_analytics.py` fails on a declared measure that applies in no
 track; it caught Wildman's Ballistic load, Ido's Holds, and three measures
 scoped to session types their frameworks never schedule.
+
+### 11. Apple accounts: switch on and verify — P2 · S
+
+Built on 2026-10-17 (branch `mobile-sign-up`): the iOS app signs up and in with
+Sign in with Apple (supabase-swift `Auth`, `AuthManager.swift`, `Views/Auth/`) —
+a native ID token checked against Apple's keys, so no secret, no email and no
+domain — keeps password sign-in for web-made accounts, and deletes the account
+from Settings ▸ Account (`DELETE /api/account`, `src/account.py`). The web
+signs in to the same account with "Continue with Apple" (Supabase's OAuth
+redirect). Done in the consoles: Supabase ▸ Apple on with the bundle id; the App
+ID has Sign in with Apple; the Services ID `haerdsoft.TrainingCompanion.web`
+(domain `<ref>.supabase.co`, return URL `<ref>.supabase.co/auth/v1/callback`);
+a Sign in with Apple key (.p8).
+
+1. **Switches left:** Supabase ▸ Apple ▸ Client IDs gains the Services ID beside
+   the bundle id (comma-separated), Secret Key gets the output of
+   `scripts/apple_client_secret.py`; Authentication ▸ URL Configuration lists
+   the web host as redirect URLs (`https://training-e58.pages.dev/**` and
+   `https://*.training-e58.pages.dev/**` for the per-deploy hosts);
+   `fly secrets set SUPABASE_SERVICE_ROLE_KEY=…` and the 1Password field
+   `.env.template` names.
+2. **Renew the web secret every six months** (the script prints the date). A
+   lapsed one stops only the web's Apple sign-in. A scheduled job could do it
+   (the .p8 plus a Supabase access token as CI secrets, the Management API's
+   auth config) if the calendar reminder proves unreliable.
+3. **On a phone** (TestFlight; the simulator has no Apple sign-in): sign up with
+   Apple → empty Today; the same account on the web; sign out and back in;
+   delete that account; an existing build updating stays signed in (the
+   UserDefaults session is handed to the SDK once).
+4. **Email code** (built and removed on 2026-10-17): `signInWithOTP` +
+   `verifyOTP`, the "Magic Link" and "Confirm signup" templates carrying
+   `{{ .Token }}`, Email OTP Length 6, and outgoing mail — Supabase's built-in
+   mailer reaches only the organisation's members; a free single-sender SMTP
+   (Brevo, or an iCloud alias with an app-specific password) needs no domain.
+5. **Passkeys, once the web has a permanent domain** — the relying-party id is
+   the domain and can never change without orphaning every saved passkey.
+   Supabase's are a beta that adds a passkey to an existing, confirmed account
+   (it cannot create one); they need the `webcredentials:` associated domain, an
+   `apple-app-site-association` file on the site, supabase-swift's
+   `@_spi(Experimental)` passkey calls and supabase-js ≥ 2.118 (Node 22).
 
 ## Later
 

@@ -12,6 +12,7 @@ export function LoginPage() {
   const [signupSent, setSignupSent] = useState(false)
   const signIn = useAuthStore((s) => s.signIn)
   const signUp = useAuthStore((s) => s.signUp)
+  const signInWithApple = useAuthStore((s) => s.signInWithApple)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -34,6 +35,19 @@ export function LoginPage() {
     }
   }
 
+  // The same Apple account the iPhone app signs up with. The browser leaves
+  // for Apple and comes back to where the athlete was going.
+  const handleApple = async () => {
+    setError(null)
+    setLoading(true)
+    try {
+      await signInWithApple(safeReturnPath((location.state as { from?: unknown } | null)?.from))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in with Apple failed')
+      setLoading(false)
+    }
+  }
+
   const switchTab = (t: 'signin' | 'signup') => {
     setTab(t)
     setError(null)
@@ -49,6 +63,24 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">
             {tab === 'signin' ? 'Sign in to access your program' : 'Create an account'}
           </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleApple}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+        >
+          <svg aria-hidden="true" viewBox="0 0 814 1000" className="h-4 w-4 fill-current">
+            <path d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 202-1 3-21 72-69 142-43 62-88 124-156 124s-86-40-165-40c-77 0-104 41-166 41s-106-57-156-127C44 791 0 663 0 541c0-196 127-299 253-299 66 0 122 44 163 44 40 0 102-46 178-46 29 0 133 3 194 101zM554 160c31-37 53-88 53-139 0-7-1-14-2-20-50 2-110 34-146 76-28 32-55 83-55 135 0 8 1 16 2 18 3 1 9 2 14 2 45 0 102-30 134-72z" />
+          </svg>
+          Continue with Apple
+        </button>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
+          <div className="h-px flex-1 bg-border" />
+          or
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         {/* Tab switcher */}

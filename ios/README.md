@@ -39,7 +39,7 @@ SyncManager         — HealthKit relay: bio metrics (sleep, HRV, RHR, SpO2, res
                       rate) and workouts, anchored and background-delivered
 HealthKitManager    — HealthKit queries and authorization
 WatchSessionManager — phone ↔ watch: today's sessions out, workout summaries back
-AuthManager         — Supabase email/password sign-in, Face ID, token refresh
+AuthManager         — Supabase account via supabase-swift: Sign in with Apple, password
 ```
 
 The server's contracts the phone depends on: `philosophy_id` on generate,
