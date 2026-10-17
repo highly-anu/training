@@ -26,6 +26,17 @@ struct AMRAPMovementView: View {
             .foregroundStyle(.green)
 
             Button("Done") {
+                // The count goes in as the step's one set, where the server
+                // reads reps; it used to be dropped here.
+                if repsTapped > 0 {
+                    let start = sessionState.currentSetStartOffset
+                    sessionState.completeSet(
+                        WatchSetLog(setIndex: 0, repsActual: repsTapped, weightKg: exercise.weightKg, rpe: nil,
+                                    completed: true,
+                                    durationSeconds: start.map { sessionState.elapsedSeconds - $0 },
+                                    startOffset: start, endOffset: sessionState.elapsedSeconds),
+                        for: exercise.exerciseId)
+                }
                 sessionState.markExerciseComplete(id: exercise.exerciseId)
                 sessionState.advance(to: exerciseIndex + 1)
             }

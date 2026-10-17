@@ -5,7 +5,9 @@ import WidgetKit
 
 @MainActor
 final class WatchConnectivityManager: NSObject, ObservableObject {
-    enum ProgramState { case loading, ready, noProgram, programExpired, unavailable }
+    /// `unavailable`: the iPhone cannot be reached. `syncFailed`: it was
+    /// reached and could not get the day (no network, the server down).
+    enum ProgramState { case loading, ready, noProgram, programExpired, unavailable, syncFailed }
 
     @Published var todaySessions: [WatchSession] = []
     @Published var completedSessionIds: Set<String> = []
@@ -46,17 +48,36 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
 
+    /// Ask the iPhone for today. The day comes back in the reply; the same
+    /// day is also queued with `transferUserInfo`, which can take minutes. A
+    /// state already known (a day, no program) stays on screen meanwhile —
+    /// asking used to put every screen back to "Syncing…" and then, ten
+    /// seconds on, to "iPhone unreachable" while the phone's answer was
+    /// still in its queue.
     func requestSync() {
-        programState = .loading
-        startLoadingTimeout()
+        if programState == .unavailable || programState == .syncFailed { programState = .loading }
+        if programState == .loading { startLoadingTimeout() }
         guard WCSession.default.isReachable else { return }
-        WCSession.default.sendMessage(["type": "request_sync"], replyHandler: nil)
+        WCSession.default.sendMessage(["type": "request_sync"], replyHandler: { reply in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if reply["type"] != nil { self.apply(reply) }
+                else if self.programState == .loading { self.programState = .syncFailed }
+            }
+        }, errorHandler: { _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.programState == .loading else { return }
+                self.programState = WCSession.default.isReachable ? .syncFailed : .unavailable
+            }
+        })
     }
 
+    /// Unreachable only when the phone is: a reachable phone answers the
+    /// request, or its error handler says why not.
     private func startLoadingTimeout() {
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(10))
-            guard let self, self.programState == .loading else { return }
+            guard let self, self.programState == .loading, !WCSession.default.isReachable else { return }
             self.programState = .unavailable
         }
     }
@@ -203,82 +224,88 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     }
 }
 
+extension WatchConnectivityManager {
+    /// One day from the phone, whether it came as the reply to a request or
+    /// as a queued transfer.
+    func apply(_ userInfo: [String: Any]) {
+        guard let type = userInfo["type"] as? String else { return }
+        switch type {
+        case "today_sessions":
+            // New day's sessions — clear yesterday's completed set
+            if let incomingDate = userInfo["date"] as? String,
+               incomingDate != UserDefaults.standard.string(forKey: completedKey + "_date") {
+                completedSessionIds = []
+                UserDefaults.standard.removeObject(forKey: completedKey)
+                UserDefaults.standard.set(incomingDate, forKey: completedKey + "_date")
+            }
+            // Sessions the server says are done (logged or matched on any
+            // device), joined to what this watch recorded.
+            if let ids = userInfo["completedIds"] as? [String], !ids.isEmpty {
+                completedSessionIds.formUnion(ids)
+                UserDefaults.standard.set(Array(completedSessionIds), forKey: completedKey)
+            }
+            if let progress = userInfo["progress"] as? [String: Any],
+               let data = try? JSONSerialization.data(withJSONObject: progress) {
+                UserDefaults.standard.set(data, forKey: progressKey)
+                UserDefaults.standard.set(todayDateString, forKey: progressKey + "_date")
+                weekDone = Self.weekDone(from: progress)
+            }
+            if let profile = userInfo["profile"] as? [String: Any],
+               let mhr = profile["maxHR"] as? Int {
+                maxHR = mhr
+                UserDefaults.standard.set(mhr, forKey: maxHRKey)
+            }
+            if let raw = userInfo["sessions"],
+               let data = try? JSONSerialization.data(withJSONObject: raw),
+               let decoded = try? JSONDecoder().decode([WatchSession].self, from: data) {
+                todaySessions = decoded
+                if let saved = try? JSONEncoder().encode(decoded) {
+                    UserDefaults.standard.set(saved, forKey: sessionsKey)
+                }
+                // Record the date these sessions are for so loadCache can detect staleness
+                let sessionDate = (userInfo["date"] as? String) ?? todayDateString
+                UserDefaults.standard.set(sessionDate, forKey: sessionsDayKey)
+            } else {
+                todaySessions = []
+                UserDefaults.standard.removeObject(forKey: sessionsDayKey)
+            }
+            // Decode weekly overview
+            if let raw = userInfo["weeklyOverview"],
+               let data = try? JSONSerialization.data(withJSONObject: raw),
+               let decoded = try? JSONDecoder().decode([WeeklyOverviewDay].self, from: data) {
+                weeklyOverview = decoded
+                UserDefaults.standard.set(data, forKey: weeklyOverviewKey)
+            }
+
+            // Decode readiness
+            if let raw = userInfo["readiness"],
+               let data = try? JSONSerialization.data(withJSONObject: raw),
+               let decoded = try? JSONDecoder().decode(ReadinessInfo.self, from: data) {
+                readiness = decoded
+                UserDefaults.standard.set(data, forKey: readinessKey)
+            }
+
+            programState = .ready
+            writeWidgetData(sessions: todaySessions, date: (userInfo["date"] as? String) ?? todayDateString)
+
+        case "no_program":
+            todaySessions = []
+            programState = .noProgram
+
+        case "program_expired":
+            todaySessions = []
+            programState = .programExpired
+
+        default:
+            break
+        }
+    }
+}
+
 extension WatchConnectivityManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession,
                              didReceiveUserInfo userInfo: [String: Any]) {
-        guard let type = userInfo["type"] as? String else { return }
-        Task { @MainActor in
-            switch type {
-            case "today_sessions":
-                // New day's sessions — clear yesterday's completed set
-                if let incomingDate = userInfo["date"] as? String,
-                   incomingDate != UserDefaults.standard.string(forKey: completedKey + "_date") {
-                    completedSessionIds = []
-                    UserDefaults.standard.removeObject(forKey: completedKey)
-                    UserDefaults.standard.set(incomingDate, forKey: completedKey + "_date")
-                }
-                // Sessions the server says are done (logged or matched on any
-                // device), joined to what this watch recorded.
-                if let ids = userInfo["completedIds"] as? [String], !ids.isEmpty {
-                    completedSessionIds.formUnion(ids)
-                    UserDefaults.standard.set(Array(completedSessionIds), forKey: completedKey)
-                }
-                if let progress = userInfo["progress"] as? [String: Any],
-                   let data = try? JSONSerialization.data(withJSONObject: progress) {
-                    UserDefaults.standard.set(data, forKey: progressKey)
-                    UserDefaults.standard.set(todayDateString, forKey: progressKey + "_date")
-                    weekDone = Self.weekDone(from: progress)
-                }
-                if let profile = userInfo["profile"] as? [String: Any],
-                   let mhr = profile["maxHR"] as? Int {
-                    maxHR = mhr
-                    UserDefaults.standard.set(mhr, forKey: maxHRKey)
-                }
-                if let raw = userInfo["sessions"],
-                   let data = try? JSONSerialization.data(withJSONObject: raw),
-                   let decoded = try? JSONDecoder().decode([WatchSession].self, from: data) {
-                    todaySessions = decoded
-                    if let saved = try? JSONEncoder().encode(decoded) {
-                        UserDefaults.standard.set(saved, forKey: sessionsKey)
-                    }
-                    // Record the date these sessions are for so loadCache can detect staleness
-                    let sessionDate = (userInfo["date"] as? String) ?? todayDateString
-                    UserDefaults.standard.set(sessionDate, forKey: sessionsDayKey)
-                } else {
-                    todaySessions = []
-                    UserDefaults.standard.removeObject(forKey: sessionsDayKey)
-                }
-                // Decode weekly overview
-                if let raw = userInfo["weeklyOverview"],
-                   let data = try? JSONSerialization.data(withJSONObject: raw),
-                   let decoded = try? JSONDecoder().decode([WeeklyOverviewDay].self, from: data) {
-                    weeklyOverview = decoded
-                    UserDefaults.standard.set(data, forKey: weeklyOverviewKey)
-                }
-
-                // Decode readiness
-                if let raw = userInfo["readiness"],
-                   let data = try? JSONSerialization.data(withJSONObject: raw),
-                   let decoded = try? JSONDecoder().decode(ReadinessInfo.self, from: data) {
-                    readiness = decoded
-                    UserDefaults.standard.set(data, forKey: readinessKey)
-                }
-
-                programState = .ready
-                writeWidgetData(sessions: todaySessions, date: (userInfo["date"] as? String) ?? todayDateString)
-
-            case "no_program":
-                todaySessions = []
-                programState = .noProgram
-
-            case "program_expired":
-                todaySessions = []
-                programState = .programExpired
-
-            default:
-                break
-            }
-        }
+        Task { @MainActor in self.apply(userInfo) }
     }
 
     nonisolated func session(_ session: WCSession,

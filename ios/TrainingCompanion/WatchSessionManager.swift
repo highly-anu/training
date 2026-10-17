@@ -28,7 +28,8 @@ private let modalityRestDefaults: [String: Int] = [
 @MainActor
 final class WatchSessionManager: NSObject, ObservableObject {
 
-    private let api: APIClient
+    /// Replaced, not the manager, when SyncManager is configured again.
+    var api: APIClient
     private let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
@@ -50,18 +51,20 @@ final class WatchSessionManager: NSObject, ObservableObject {
     // MARK: - Program sync
 
     /// Fetches today's program from the API and sends sessions to the Watch.
-    func syncProgram() async {
+    /// Returns what it sent, so a watch that asked can have it in the reply:
+    /// a queued transfer can take minutes to arrive, and the watch used to
+    /// give up after ten seconds and say the phone was unreachable.
+    @discardableResult
+    func syncProgram() async -> [String: Any]? {
         let todayStr = dayFormatter.string(from: Date())
         do {
             guard let server = try await api.fetchProgram() else {
-                sendNoProgramMessage()
-                return
+                return send(["type": "no_program"])
             }
             guard let program = server.currentProgram,
                   let startDateStr = server.programStartDate,
                   let startDate = dayFormatter.date(from: startDateStr) else {
-                sendNoProgramMessage()
-                return
+                return send(["type": "no_program"])
             }
 
             let calendar = Calendar.current
@@ -71,9 +74,15 @@ final class WatchSessionManager: NSObject, ObservableObject {
             let weekIndex = daysSince / 7
             let dayName = weekdayName(for: Date())
 
+            // A program that starts next week or later has nothing today.
+            // Rounding toward zero hid six days of it; from the seventh,
+            // weeks[-1] crashed the app.
+            guard daysSince >= 0 else {
+                return send(["type": "today_sessions", "date": todayStr, "sessions": [Any](),
+                             "profile": buildProfilePayload()])
+            }
             guard weekIndex < program.weeks.count else {
-                sendMessage(["type": "program_expired"])
-                return
+                return send(["type": "program_expired"])
             }
 
             let week = program.weeks[weekIndex]
@@ -114,13 +123,14 @@ final class WatchSessionManager: NSObject, ObservableObject {
                 if let progress = day.progress { payload["progress"] = progress }
             }
 
-            WCSession.default.transferUserInfo(payload)
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
             AppLogger.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
+            return send(payload)
         } catch {
             // Was a bare silent catch: a failed fetch left the Watch on cached
             // sessions with nothing anywhere saying why.
             AppLogger.logFromBackground("WCSession: syncProgram FAILED — \(error.localizedDescription)")
+            return nil
         }
     }
 
@@ -305,13 +315,12 @@ final class WatchSessionManager: NSObject, ObservableObject {
         ReadinessInfo.fromStoredServerScore()
     }
 
-    private func sendNoProgramMessage() {
-        guard WCSession.default.isReachable else { return }
-        WCSession.default.transferUserInfo(["type": "no_program"])
-    }
-
-    private func sendMessage(_ payload: [String: Any]) {
+    /// Queue a day for the watch. `transferUserInfo` reaches it even when
+    /// it is not reachable now; "no program" used to go only to a reachable
+    /// watch, so one that asked while out of range never heard it.
+    private func send(_ payload: [String: Any]) -> [String: Any] {
         WCSession.default.transferUserInfo(payload)
+        return payload
     }
 
     private func encodedJSON<T: Encodable>(_ value: T) -> Any {
@@ -508,10 +517,26 @@ extension WatchSessionManager: WCSessionDelegate {
             replyHandler([:])
             return
         }
+        // The day itself is the reply; the same payload is queued too, for
+        // when the reply cannot be delivered.
         Task {
-            await syncProgram()
-            replyHandler(["status": "ok"])
+            let payload = await syncProgram()
+            replyHandler(payload ?? ["status": "failed"])
         }
+    }
+
+    /// Paired, installed, reachable: Settings reads these live and redraws on
+    /// this notification. An app that has just been installed gets its day.
+    nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
+        let installed = session.isWatchAppInstalled
+        Task { @MainActor in
+            NotificationCenter.default.post(name: .watchStateDidChange, object: nil)
+            if installed { await syncProgram() }
+        }
+    }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        Task { @MainActor in NotificationCenter.default.post(name: .watchStateDidChange, object: nil) }
     }
 
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
@@ -524,3 +549,8 @@ extension WatchSessionManager: WCSessionDelegate {
     }
 }
 
+
+extension Notification.Name {
+    /// The Apple Watch was paired, installed, removed or came in range.
+    static let watchStateDidChange = Notification.Name("watchStateDidChange")
+}

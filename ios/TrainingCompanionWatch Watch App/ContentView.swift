@@ -13,29 +13,37 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
         case .unavailable:
-            VStack(spacing: 10) {
-                Image(systemName: "iphone.slash")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-                Text("iPhone unreachable")
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-                Text("Open the iPhone app to sync.")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button("Retry") {
-                    connectivity.requestSync()
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .font(.caption)
-            }
-            .padding()
+            syncProblem(icon: "iphone.slash", title: "iPhone unreachable",
+                        detail: "Open the iPhone app to sync.")
+        case .syncFailed:
+            syncProblem(icon: "exclamationmark.icloud", title: "Couldn't sync",
+                        detail: "The iPhone couldn't reach the server.")
         case .noProgram, .programExpired:
             NoProgramView()
         case .ready:
             SessionListView()
         }
+    }
+
+    private func syncProblem(icon: String, title: String, detail: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.caption)
+                .multilineTextAlignment(.center)
+            Text(detail)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Retry") {
+                connectivity.requestSync()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+            .font(.caption)
+        }
+        .padding()
     }
 }

@@ -150,6 +150,11 @@ struct ProgramBuilderFlow: View {
         await appState.loadProgram()
         builder.isGenerating = false
         builder.didSucceed = appState.serverProgram != nil
+        // A generate the server answered without the program then reading
+        // back left the builder as it was, with nothing said.
+        if !builder.didSucceed && builder.generationError == nil {
+            builder.generationError = "The program was generated but didn't load. Please try again."
+        }
     }
 }
 

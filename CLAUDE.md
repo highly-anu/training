@@ -713,6 +713,12 @@ writes.
 
 ## Watch Screens (Connect IQ)
 
+**Two watches, one contract** (`docs/watch.md`: the rule, the parity table, the
+tests). A watch feature lands with its `today-session` key and both watches in
+one branch, or its row in that table says pending. The Apple Watch does not read
+the contract yet — the phone builds its sessions from `/user/program` and it
+picks views by slot type; `docs/roadmap.md` item 13 moves it over.
+
 The Garmin app (`garmin/`) is a **core library** (`garmin/core`) inside an app
 shell (`garmin/TrainingCompanionCIQ`); **packages own their watch screens** the
 way they own their analytics. Layout and the add-a-philosophy walk-through:
@@ -940,7 +946,11 @@ so bump both in one change. With the App Store Connect key in the login
 Keychain (`ios/tools/store_asc_key.sh`, once, from 1Password) `./ios/archive.sh`
 uploads by itself — no 1Password, nobody at the Mac; without it, upload from
 Xcode's Organizer (the account-based command-line upload fails "Failed to Use
-Accounts"). Then tag it `ios-v<VERSION>`.
+Accounts"). Then tag it `ios-v<VERSION>`. The watch app rides inside the phone
+app with the same version and build; on the tester's phone TestFlight's
+*Automatic Updates* and the Watch app's *Automatic App Install* make it follow,
+and Settings ▸ Apple Watch says *App not installed* when it did not
+(`docs/watch.md`, Releases).
 
 The unit tests live in `ios/TrainingCompanionTests/`, a synchronized folder on
 the `TrainingCompanionTests` target, so a new test file needs no project edit:

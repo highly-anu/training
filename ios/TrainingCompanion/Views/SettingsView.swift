@@ -27,8 +27,18 @@ struct SettingsView: View {
     @State private var justPaired = false
     @State private var lastGarminPushDate: Date? = UserDefaults.standard.object(forKey: "lastGarminProgramSyncDate") as? Date
 
-    private var watchPaired: Bool { WCSession.default.isPaired }
-    private var watchReachable: Bool { WCSession.default.isReachable }
+    /// WCSession's answers, read on appear and again whenever the watch's
+    /// state changes (`.watchStateDidChange`): read in the body, they kept
+    /// whatever they said when the screen was first drawn.
+    @State private var watchPaired = WCSession.default.isPaired
+    @State private var watchReachable = WCSession.default.isReachable
+    @State private var watchAppInstalled = WCSession.default.isWatchAppInstalled
+
+    private func readWatchState() {
+        watchPaired = WCSession.default.isPaired
+        watchReachable = WCSession.default.isReachable
+        watchAppInstalled = WCSession.default.isWatchAppInstalled
+    }
     private var normalizedCode: String { garminCode.trimmingCharacters(in: .whitespaces).uppercased() }
     private var canClaim: Bool { normalizedCode.count == 6 && !isClaiming }
 
@@ -59,6 +69,8 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadGarminDevices() }
+        .onAppear(perform: readWatchState)
+        .onReceive(NotificationCenter.default.publisher(for: .watchStateDidChange)) { _ in readWatchState() }
     }
 
     // MARK: - Notifications
@@ -186,16 +198,24 @@ struct SettingsView: View {
                 }
             }
 
-            // Apple Watch
+            // Apple Watch. A TestFlight build can update the phone and leave
+            // the watch without the app, so say so and where to install it.
             HStack {
                 Label("Apple Watch", systemImage: "applewatch")
                 Spacer()
-                if watchPaired {
+                if !watchPaired {
+                    Text("Not paired").foregroundStyle(.secondary).font(.footnote)
+                } else if !watchAppInstalled {
+                    Text("App not installed").foregroundStyle(.orange).font(.footnote)
+                } else {
                     Text(watchReachable ? "Reachable" : "Paired")
                         .foregroundStyle(watchReachable ? .green : .secondary).font(.footnote)
-                } else {
-                    Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 }
+            }
+            if watchPaired && !watchAppInstalled {
+                Text("Install it from the Watch app ▸ My Watch ▸ Available Apps. Turn on Watch app ▸ General ▸ Automatic App Install so later builds follow.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             // Garmin — one row per device, or placeholder

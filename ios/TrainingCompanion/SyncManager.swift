@@ -43,7 +43,10 @@ final class SyncManager: ObservableObject {
     func configure(auth: AuthManager, appState: AppState? = nil) {
         let client = APIClient(auth: auth)
         api = client
-        watchSync = WatchSessionManager(api: client)
+        // One watch bridge for the app's life. configure runs at launch and
+        // again from ContentView; a second manager took over the WCSession
+        // delegate and lost the first one's session names for uploads.
+        if let watchSync { watchSync.api = client } else { watchSync = WatchSessionManager(api: client) }
         self.appState = appState
     }
 

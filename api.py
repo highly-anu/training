@@ -874,7 +874,13 @@ def generate_program():
                 from src.db import get_program_revision as _rev
                 _record_program_history(g.user_id, envelope, 'generate', _rev(g.user_id))
         except Exception as _save_err:
+            # The caller asked for this program to become theirs; answering
+            # 200 here told the phone it had, and its builder sat there with
+            # nothing saved and nothing said (the local DB had lost its
+            # user_programs table). History never raises, so this is the save.
             app.logger.warning('generate: auto-save failed: %s', _save_err)
+            return jsonify({'saved': False,
+                            'detail': 'The program was generated but could not be saved.'}), 503
         return resp
     except Exception as e:
         msg = _tb.format_exc()

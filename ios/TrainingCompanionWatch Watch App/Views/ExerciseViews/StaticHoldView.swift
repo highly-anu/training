@@ -1,14 +1,15 @@
 import SwiftUI
 
+/// A hold, set by set. The set is the session's (`.active(_, setIndex)`), as
+/// in SetsRepsView: the view is rebuilt after every rest, and a count kept
+/// in its own state went back to the first set each time and never reached
+/// the Done that moves on.
 struct StaticHoldView: View {
     let exercise: WatchExercise
     let exerciseIndex: Int
 
     @EnvironmentObject var sessionState: WorkoutSessionState
 
-    @State private var showLogger = false
-    @State private var currentSetIndex = 0
-    @State private var countdownRemaining: Int? = nil
     @State private var actualHoldSeconds = 0
     @State private var isHolding = false
     @State private var holdStartOffset: Int = 0
@@ -26,29 +27,28 @@ struct StaticHoldView: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            setDots
-            timerDisplay
-            actionButtons
-        }
-        .task(id: isHolding) {
-            guard isHolding else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                actualHoldSeconds += 1
-                if let cd = countdownRemaining {
-                    countdownRemaining = max(0, cd - 1)
+        if case let .active(ei, si) = sessionState.phase, ei == exerciseIndex {
+            VStack(spacing: 8) {
+                setDots(currentSet: si)
+                timerDisplay
+                actionButtons(setIndex: si)
+            }
+            .task(id: isHolding) {
+                guard isHolding else { return }
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    actualHoldSeconds += 1
                 }
             }
         }
     }
 
-    private var setDots: some View {
+    private func setDots(currentSet: Int) -> some View {
         HStack(spacing: 6) {
             ForEach(0..<totalSets, id: \.self) { i in
                 Circle()
-                    .fill(i < currentSetIndex ? Color.green :
-                          i == currentSetIndex ? Color.blue : Color.secondary.opacity(0.4))
+                    .fill(i < currentSet ? Color.green :
+                          i == currentSet ? Color.blue : Color.secondary.opacity(0.4))
                     .frame(width: 8, height: 8)
             }
         }
@@ -81,18 +81,25 @@ struct StaticHoldView: View {
     }
 
     @ViewBuilder
-    private var actionButtons: some View {
-        if isHolding {
+    private func actionButtons(setIndex si: Int) -> some View {
+        if si >= totalSets {
+            Button("Done") {
+                sessionState.markExerciseComplete(id: exercise.exerciseId)
+                sessionState.advance(to: exerciseIndex + 1)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+        } else if isHolding {
             HStack(spacing: 10) {
                 Button("Fail") {
-                    completeSet(held: false)
+                    completeSet(si, held: false)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.red)
                 .font(.caption)
 
                 Button("Done") {
-                    completeSet(held: true)
+                    completeSet(si, held: true)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
@@ -103,17 +110,16 @@ struct StaticHoldView: View {
                 holdStartOffset = sessionState.elapsedSeconds
                 isHolding = true
                 actualHoldSeconds = 0
-                countdownRemaining = targetHoldSec
             }
             .buttonStyle(.borderedProminent)
             .tint(.blue)
         }
     }
 
-    private func completeSet(held: Bool) {
+    private func completeSet(_ si: Int, held: Bool) {
         isHolding = false
         let log = WatchSetLog(
-            setIndex: currentSetIndex,
+            setIndex: si,
             repsActual: nil,
             weightKg: nil,
             rpe: nil,
@@ -123,15 +129,9 @@ struct StaticHoldView: View {
             endOffset: sessionState.elapsedSeconds
         )
         sessionState.completeSet(log, for: exercise.exerciseId)
-        currentSetIndex += 1
-
-        if currentSetIndex >= totalSets {
+        if si + 1 >= totalSets {
             sessionState.markExerciseComplete(id: exercise.exerciseId)
-            sessionState.startRest(exerciseIndex: exerciseIndex,
-                                   completedSet: currentSetIndex - 1, seconds: restSec)
-        } else {
-            sessionState.startRest(exerciseIndex: exerciseIndex,
-                                   completedSet: currentSetIndex - 1, seconds: restSec)
         }
+        sessionState.startRest(exerciseIndex: exerciseIndex, completedSet: si, seconds: restSec)
     }
 }
