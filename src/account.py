@@ -120,10 +120,16 @@ def _delete_local(user_id: str) -> dict[str, int]:
 def delete_auth_user(user_id: str) -> None:
     """Delete the Supabase Auth user (and with it its passkeys and identities)."""
     key = _service_role_key()
+    # A legacy service_role key is a JWT and goes in both headers; a newer
+    # secret key (sb_secret_…) is not a JWT and goes in `apikey` only — the
+    # gateway mints the service-role token from it.
+    headers = {'apikey': key}
+    if not key.startswith('sb_'):
+        headers['Authorization'] = f'Bearer {key}'
     try:
         resp = requests.delete(
             f'{_supabase_url()}/auth/v1/admin/users/{user_id}',
-            headers={'apikey': key, 'Authorization': f'Bearer {key}'},
+            headers=headers,
             timeout=15,
         )
     except requests.RequestException as e:

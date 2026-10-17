@@ -85,6 +85,14 @@ def test_preconditions() -> None:
         check('with the service-role key',
               seen.get('headers', {}).get('Authorization') == 'Bearer service-key')
 
+        os.environ['SUPABASE_SERVICE_ROLE_KEY'] = 'sb_secret_abc'
+        seen.clear()
+        account.requests.delete = fake_delete
+        account.delete_account('u1')
+        check('a secret key (sb_secret_) goes in apikey only',
+              seen.get('headers') == {'apikey': 'sb_secret_abc'}, str(seen.get('headers')))
+        os.environ['SUPABASE_SERVICE_ROLE_KEY'] = 'service-key'
+
         account.requests.delete = lambda url, headers, timeout: _Resp(404)
         account.delete_account('u1')
         check('a user already gone is not an error', True)
