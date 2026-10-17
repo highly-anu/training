@@ -761,16 +761,22 @@ a Sign in with Apple key (.p8).
    lapsed one stops only the web's Apple sign-in. A scheduled job could do it
    (the .p8 plus a Supabase access token as CI secrets, the Management API's
    auth config) if the calendar reminder proves unreliable.
-3. **On a phone** (TestFlight; the simulator has no Apple sign-in): sign up with
+3. **Revoke Apple's tokens on account deletion** before App Store or external
+   TestFlight review (App Review requires it of apps with Sign in with Apple
+   since 2022; Supabase does not). The phone sends the credential's
+   `authorizationCode` with the delete; the server exchanges it at
+   `appleid.apple.com/auth/token` (client secret signed with the same .p8, `sub`
+   the bundle id) and posts the refresh token to `/auth/revoke`.
+4. **On a phone** (TestFlight; the simulator has no Apple sign-in): sign up with
    Apple → empty Today; the same account on the web; sign out and back in;
    delete that account; an existing build updating stays signed in (the
    UserDefaults session is handed to the SDK once).
-4. **Email code** (built and removed on 2026-10-17): `signInWithOTP` +
+5. **Email code** (built and removed on 2026-10-17): `signInWithOTP` +
    `verifyOTP`, the "Magic Link" and "Confirm signup" templates carrying
    `{{ .Token }}`, Email OTP Length 6, and outgoing mail — Supabase's built-in
    mailer reaches only the organisation's members; a free single-sender SMTP
    (Brevo, or an iCloud alias with an app-specific password) needs no domain.
-5. **Passkeys, once the web has a permanent domain** — the relying-party id is
+6. **Passkeys, once the web has a permanent domain** — the relying-party id is
    the domain and can never change without orphaning every saved passkey.
    Supabase's are a beta that adds a passkey to an existing, confirmed account
    (it cannot create one); they need the `webcredentials:` associated domain, an
