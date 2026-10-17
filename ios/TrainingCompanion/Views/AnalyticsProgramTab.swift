@@ -352,207 +352,112 @@ private struct IntensityCard: View {
 
 // MARK: - Progress entry
 
-/// One progress entry — a methodology's own metric, in its own currency:
-/// status, why it cannot be measured yet if it cannot, and the actual series
-/// against the expected one.
+/// One progress entry — a methodology's own metric, in its own currency — as
+/// a summary (design-system §6.37): its status beside the header, where it
+/// stands now and which way it is moving, a sparkline, and why it cannot be
+/// measured yet if it cannot. The chart, the exercises, every movement and
+/// standard, the evidence and what the measure is are `MeasureDetailView`'s,
+/// one tap away. Until 2026-10-17 the card carried all of that inline.
 struct ProgressEntryCard: View {
     let entry: ProgramAnalytics.ProgressEntry
-    @State private var selectedExerciseId: String?
 
-    private var exercise: ProgramAnalytics.ExerciseResult? {
-        entry.exercises.first { $0.exerciseId == selectedExerciseId } ?? entry.leadExercise
-    }
-    private var status: String { exercise?.status ?? entry.status }
-    private var trend: ProgramAnalytics.Trend? { exercise?.trend ?? entry.trend }
-    private var series: [ProgramAnalytics.SeriesPoint] { exercise?.series ?? entry.series }
-    private var expected: [ProgramAnalytics.ExpectedPoint] { exercise?.expected ?? entry.expected }
+    /// The card reads the lead exercise; the detail lets the athlete pick another.
+    private var lead: ProgramAnalytics.ExerciseResult? { entry.leadExercise }
+    private var status: String { lead?.status ?? entry.status }
+    private var trend: ProgramAnalytics.Trend? { lead?.trend ?? entry.trend }
+    private var values: [Double] { (lead?.series ?? entry.series).compactMap(\.value) }
+    private var unit: String { lead?.unit ?? entry.unit }
 
-    /// An `AnalyticsCard` like every other section's: the measure's name as
-    /// the header with its status beside it; a star marks the headline.
     var body: some View {
-        AnalyticsCard(header: entry.label) {
+        AnalyticsDetailCard(header: entry.label, hint: "Opens \(entry.label)") {
             AnalyticsStatusBadge(status: status)
+        } destination: {
+            MeasureDetailView(entry: entry)
         } content: {
-            if entry.headline || (trend.map { $0.direction != "insufficient_data" } ?? false) {
-                HStack(spacing: 10) {
-                    if let t = trend, t.direction != "insufficient_data" {
-                        Label("\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt",
-                              systemImage: t.direction == "improving" ? "arrow.up.right"
-                                : t.direction == "declining" ? "arrow.down.right" : "arrow.right")
-                            .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-                            .accessibilityLabel("\(t.direction), \(AnalyticsProgramTab.number(t.slopePct)) percent per point")
+            HStack(alignment: .bottom, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    standing
+                    HStack(spacing: 10) {
+                        if let t = trend, t.direction != "insufficient_data" {
+                            MeasureTrendLabel(trend: t)
+                        }
+                        if entry.headline {
+                            TintCapsule(text: "Headline", symbol: "star.fill", color: .accentColor)
+                        }
                     }
-                    if entry.headline {
-                        TintCapsule(text: "Headline", symbol: "star.fill", color: .accentColor)
-                    }
+                }
+                Spacer(minLength: 0)
+                if values.count >= 2 {
+                    Sparkline(values: values, color: AnalyticsStatusStyle.color(status) == .secondary
+                              ? .green : AnalyticsStatusStyle.color(status))
+                        .accessibilityHidden(true)
                 }
             }
-            if let coverage = entry.coverage { CoverageNoticeView(coverage: coverage) }
-
-            switch entry.primitive {
-            case "unlocks": unlocksBody
-            case "benchmark_level": benchmarksBody
-            default:
-                if entry.exercises.count > 1 { exercisePicker }
-                if series.contains(where: { $0.value != nil }) { chart }
-                if let ex = exercise, ex.stalled {
-                    Label("Stalled · \(ex.name)", systemImage: "pause.circle.fill")
-                        .font(.caption).foregroundStyle(.red)
-                }
-            }
-
-            if !entry.evidence.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(entry.evidence.prefix(4), id: \.self) { line in
-                        Text(line).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
+            if let coverage = entry.coverage, coverage.inScope == 0 || coverage.measured == 0 {
+                CoverageNoticeView(coverage: coverage)
             }
         }
     }
 
-    /// A bodyweight lift beside a loaded one: each exercise says its own unit.
-    private var unit: String { exercise?.unit ?? entry.unit }
-
-    private var exercisePicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(entry.exercises) { ex in
-                    let selected = ex.exerciseId == exercise?.exerciseId
-                    Button {
-                        withAnimation(AppAnimation.springStandard) { selectedExerciseId = ex.exerciseId }
-                    } label: {
-                        Text(ex.series.isEmpty ? ex.name : "\(ex.name) · \(ex.series.count)")
-                            .font(.footnote)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(selected ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1))
-                            .foregroundStyle(selected ? Color.accentColor : Color.secondary)
-                            .clipShape(Capsule())
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(selected ? .isSelected : [])
-                }
-            }
-        }
-    }
-
-    private var chart: some View {
-        Chart {
-            ForEach(series) { p in
-                if let v = p.value {
-                    LineMark(x: .value("Point", p.x), y: .value("Actual", v), series: .value("Series", "Actual"))
-                        .foregroundStyle(by: .value("Series", "Actual"))
-                        .interpolationMethod(.monotone)
-                    PointMark(x: .value("Point", p.x), y: .value("Actual", v))
-                        .foregroundStyle(p.isDeload ? Color.clear : Color.green)
-                        .symbol(.circle)
-                        .symbolSize(p.isDeload ? 50 : 36)
-                }
-            }
-            ForEach(expected) { e in
-                if let v = e.value {
-                    LineMark(x: .value("Point", e.x), y: .value("Expected", v), series: .value("Series", "Expected"))
-                        .foregroundStyle(by: .value("Series", "Expected"))
-                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
-                        .interpolationMethod(.monotone)
-                }
-            }
-        }
-        .chartForegroundStyleScale(["Actual": Color.green, "Expected": Color.indigo])
-        .chartLegend(expected.contains { $0.value != nil } ? .visible : .hidden)
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text("\(AnalyticsProgramTab.number(v))\(unit.isEmpty ? "" : " \(unit)")")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { _ in AxisValueLabel().font(.caption2) }
-        }
-        .frame(height: 160)
-    }
-
-    private var unlocksBody: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+    /// Where the measure stands, in its own currency: the latest value and the
+    /// exercise it is for; movements practised of the program's; standards met
+    /// of those with a target (or with a result).
+    @ViewBuilder
+    private var standing: some View {
+        switch entry.primitive {
+        case "unlocks":
+            HStack(spacing: 14) {
                 Label(entry.programTotal.flatMap { $0 > 0 ? "\(entry.practised.count)/\($0)" : nil }
                       ?? "\(entry.practised.count)", systemImage: "checkmark.circle")
-                    .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-                    .accessibilityLabel(entry.programTotal.flatMap { $0 > 0 ? "Practised \(entry.practised.count) of \($0) in this program" : nil }
-                                        ?? "Practised \(entry.practised.count)")
-                ForEach(entry.practised.prefix(6)) { p in
-                    HStack(spacing: 4) {
-                        Text(p.name)
-                        if let n = p.sessions { Text("\(n)×").foregroundStyle(.secondary).monospacedDigit() }
-                    }
-                    .font(.subheadline)
+                    .accessibilityLabel("Practised \(entry.practised.count)"
+                                        + (entry.programTotal.map { " of \($0)" } ?? ""))
+                if !entry.levelOpensAll {
+                    Label("\(entry.available.count)", systemImage: "lock.open")
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(entry.available.count) now available")
                 }
             }
-            Spacer()
-            VStack(alignment: .leading, spacing: 4) {
-                Label("\(entry.available.count)", systemImage: "lock.open")
-                    .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-                    .accessibilityLabel("Now available \(entry.available.count)")
-                if entry.levelOpensAll {
-                    Text("All").font(.subheadline).foregroundStyle(.secondary)
-                        .accessibilityLabel("All open at your level")
-                } else {
-                    ForEach(entry.available.prefix(6)) { a in
-                        Text(a.name).font(.subheadline)
-                    }
-                }
+            .font(.title3).fontWeight(.semibold).monospacedDigit()
+        case "benchmark_level":
+            let rows = entry.benchmarks.filter { !$0.missing }
+            let targeted = rows.filter { $0.target != nil }
+            if !targeted.isEmpty {
+                let met = targeted.filter { $0.met == true }.count
+                Label("\(met)/\(targeted.count)", systemImage: "target")
+                    .font(.title3).fontWeight(.semibold).monospacedDigit()
+                    .accessibilityLabel("\(met) of \(targeted.count) standards at target")
+            } else if !rows.isEmpty {
+                let logged = rows.filter { $0.latest != nil }.count
+                Label("\(logged)/\(rows.count)", systemImage: "checkmark.circle")
+                    .font(.title3).fontWeight(.semibold).monospacedDigit()
+                    .accessibilityLabel("\(logged) of \(rows.count) standards with a result")
             }
-        }
-    }
-
-    private var benchmarksBody: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach(entry.benchmarks.filter { !$0.missing }) { row in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(row.name ?? row.benchmarkId).font(.subheadline)
-                        Spacer()
-                        if row.latest != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
-                        Text(row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "—")
-                            .font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
-                    }
-                    if let target = row.target {
-                        HStack(spacing: 4) {
-                            Label(target, systemImage: "target")
-                            if let met = row.met {
-                                Image(systemName: met ? "checkmark.circle.fill" : "xmark.circle")
-                                    .foregroundStyle(met ? Color.green : Color.secondary)
-                            }
-                        }
-                        .font(.caption).foregroundStyle(.secondary)
-                    }
-                    // The same ladder as everywhere else; it used to be text only here.
-                    if !row.standardsText.isEmpty {
-                        StandardLadder(thresholds: row.standardsText,
-                                       levelIndex: row.latest == nil ? nil : row.levelIndex, domain: row.domain)
+        default:
+            if let latest = values.last {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(ProgressionView.withUnit(AnalyticsProgramTab.number(latest), unit))
+                        .font(.title3).fontWeight(.semibold).monospacedDigit()
+                    if let name = lead?.name {
+                        Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(benchmarkSummary(row))
             }
         }
     }
+}
 
-    /// The row in words, for VoiceOver.
-    private func benchmarkSummary(_ row: ProgramAnalytics.BenchmarkRow) -> String {
-        var s = "\(row.name ?? row.benchmarkId): "
-        s += row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "no result yet"
-        if let target = row.target {
-            s += ", target \(target)"
-            if let met = row.met { s += met ? ", met" : ", not met" }
-        }
-        return s
+/// A measure's trend as an arrow and its slope per point, as the summary card
+/// and the detail screen both say it.
+struct MeasureTrendLabel: View {
+    let trend: ProgramAnalytics.Trend
+
+    var body: some View {
+        Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/pt",
+              systemImage: trend.direction == "improving" ? "arrow.up.right"
+                : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
+            .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+            .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per point")
     }
 }
 

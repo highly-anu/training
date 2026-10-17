@@ -354,6 +354,9 @@ struct ProgramAnalytics: Decodable {
         /// cadence in General Practice. Absent on older documents: applies.
         let applies: Bool
         let appliesIn: [AppliesIn]
+        /// The measure in words, for its detail screen's About section
+        /// (`vocabulary.about`); nil from an older server.
+        let about: AboutText?
 
         struct AppliesIn: Decodable {
             let trackId: String?
@@ -364,7 +367,7 @@ struct ProgramAnalytics: Decodable {
         private enum CodingKeys: String, CodingKey {
             case id, label, primitive, philosophy, headline, source, metric, unit, status, trend, coverage,
                  evidence, series, expected, exercises, leadExerciseId, practised, available, benchmarks,
-                 lockedCount, assumedCount, programTotal, applies, appliesIn
+                 lockedCount, assumedCount, programTotal, applies, appliesIn, about
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -392,6 +395,7 @@ struct ProgramAnalytics: Decodable {
             programTotal = try? c.decodeIfPresent(Int.self, forKey: .programTotal)
             applies = (try? c.decodeIfPresent(Bool.self, forKey: .applies)) ?? true
             appliesIn = ((try? c.decodeIfPresent([Lossy<AppliesIn>].self, forKey: .appliesIn)) ?? [])?.compactMap(\.value) ?? []
+            about = (try? c.decodeIfPresent(AboutText.self, forKey: .about)).flatMap { $0.isEmpty ? nil : $0 }
         }
 
         /// Practice opens nothing the athlete's level had not already opened

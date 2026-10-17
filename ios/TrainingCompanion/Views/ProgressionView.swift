@@ -5,6 +5,9 @@ import SwiftUI
 /// own: the Analytics container owns the navigation bar.
 struct ProgressionView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var router: AppRouter
+    /// A detail pushed from outside (a deep link); the cards push their own.
+    @State private var route: AppRouter.ProgressDetail?
     /// The symbol column of the recommendation rows, at the reader's text size.
     @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
 
@@ -16,8 +19,13 @@ struct ProgressionView: View {
                 emptyState
             }
         }
+        .navigationDestination(item: $route) { detail($0) }
         .task { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
         .task { await appState.loadIfStale("exerciseHistory") { await appState.loadExerciseHistory() } }
+        .task { applyPendingDetail() }
+        .onChange(of: router.pendingProgressDetail) { applyPendingDetail() }
+        .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
+        .onChange(of: appState.exerciseHistory?.exercises.count) { applyPendingDetail() }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadProgressionReview()
@@ -25,6 +33,38 @@ struct ProgressionView: View {
                 await appState.loadExerciseHistory()
             }
         }
+    }
+
+    // MARK: - Pushed from outside
+
+    @ViewBuilder
+    private func detail(_ detail: AppRouter.ProgressDetail) -> some View {
+        switch detail {
+        case .measure(let id):
+            if let entry = appState.programAnalytics?.progress.first(where: { $0.id == id }) {
+                MeasureDetailView(entry: entry)
+            }
+        case .exercise(let id):
+            if let item = appState.exerciseHistory?.exercises.first(where: { $0.exerciseId == id }) {
+                ExerciseHistoryView(item: item,
+                                    finding: appState.progressionReview?.exerciseFindings.first { $0.exerciseId == id })
+            }
+        }
+    }
+
+    /// Push what a deep link asked for once its data has loaded; one that
+    /// names nothing loaded is dropped then.
+    private func applyPendingDetail() {
+        guard let pending = router.pendingProgressDetail else { return }
+        switch pending {
+        case .measure(let id):
+            guard let progress = appState.programAnalytics?.progress else { return }
+            if progress.contains(where: { $0.id == id }) { route = pending }
+        case .exercise(let id):
+            guard let items = appState.exerciseHistory?.exercises else { return }
+            if items.contains(where: { $0.exerciseId == id }) { route = pending }
+        }
+        router.clearPendingProgressDetail()
     }
 
     // MARK: - Review content

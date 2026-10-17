@@ -585,6 +585,8 @@ def test_set_load() -> None:
     check('status relative to the increment', sq['status'] in ('on_track', 'ahead'), sq['status'])
     check('prescribedNow is the latest prescription (week-3 Wednesday)', sq['prescribedNow'] == kg(3) + 1.25)
     check('stall rule recorded as declared', r['stallRule'] == {'sessions': 3, 'source': 'declared'})
+    check('evidence says each lift\'s status in words, not the engine\'s code',
+          r['evidence'] and all('_' not in line.split(': ', 1)[1] for line in r['evidence']), str(r['evidence']))
 
     # Three flat sessions → stalled.
     flat = {k: v for k, v in logs.items()}
@@ -1137,6 +1139,14 @@ def test_document() -> None:
           and doc['methodologies'][0]['analytics'] == 'declared' and doc['methodologies'][0]['headlineId'] == 'bar_load')
     check('progress entries carry their philosophy and primitive', doc['progress'][0]['primitive'] == 'set_load'
           and doc['progress'][0]['philosophy'] == 'starting_strength')
+    about = doc['progress'][0].get('about') or {}
+    check('each entry says what it measures and what to log, in the vocabulary\'s words',
+          about.get('measures') == 'Best working set and estimated 1RM per session'
+          and about.get('needs') == [{'label': 'Reps and kg per set',
+                                      'where': 'The session logger on the web or the phone, or the watch'}]
+          and 'notes' in about, str(about))
+    check('every entry has an about with its needs',
+          all(isinstance(p.get('about', {}).get('needs'), list) for p in doc['progress']))
     check('load is reframed by phase: TSB −15 in a base block is loading_as_expected',
           doc['load']['reading'] == 'loading_as_expected' and doc['load']['phase'] == 'base', str(doc['load']))
     taper = fixture_program(weeks=3)
