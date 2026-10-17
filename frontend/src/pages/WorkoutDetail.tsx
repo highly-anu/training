@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { HRZoneChart } from '@/components/bio/HRZoneChart'
+import { PlannedZones } from '@/components/bio/ZonePlanComparison'
 import { HRTimeline } from '@/components/workout/HRTimeline'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
 import { useBioStore } from '@/store/bioStore'
@@ -570,6 +571,19 @@ export function WorkoutDetail() {
               HR Zone Distribution
             </h2>
             <HRZoneChart zones={hrZones} />
+          </div>
+        </>
+      )}
+
+      {/* What the matched session planned, beside what was recorded */}
+      {analysis?.planned && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Against the plan
+            </h2>
+            <PlannedZones analysis={analysis} />
           </div>
         </>
       )}

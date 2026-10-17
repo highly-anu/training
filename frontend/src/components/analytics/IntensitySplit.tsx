@@ -3,6 +3,7 @@ import type { AnalyticsIntensity } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { StatusBadge } from './StatusBadge'
 import { CoverageNotice } from './CoverageNotice'
+import { ZonePlanComparison } from '@/components/bio/ZonePlanComparison'
 
 const BUCKETS = INTENSITY_BUCKETS
 
@@ -39,6 +40,12 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
         <StatusBadge status={intensity.status} />
       </div>
       <CoverageNotice coverage={intensity.coverage} />
+      {intensity.zones && intensity.zones.length > 0 && (
+        // Sessions whose programming prescribes zones; one that prescribes
+        // load (a heavy day) counts as max effort in the weeks below.
+        <ZonePlanComparison rows={intensity.zones.map((z) => ({
+          zone: z.zone, label: z.label, planned: z.plannedMinutes, recorded: z.actualMinutes }))} />
+      )}
       {data.length > 0 && (
         <ResponsiveContainer width="100%" height={170}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barCategoryGap={4}>

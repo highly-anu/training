@@ -1643,3 +1643,25 @@ the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
   Save off while it does not read; a test slot asks first for its standard's
   number. The web's `components/standards/SuggestionRow.tsx` is the same row.
 
+### 6.35 Zone Plan Comparison
+
+**Planned zone minutes are an outline, recorded ones fill over it.**
+`Views/ZonePlanComparison.swift`: `ZonePlanComparison(rows:)` draws one row per zone —
+label, a track with the planned minutes as a stroked outline and the recorded minutes as
+a fill in `HRZoneStyle.color` (§8), both against the largest value — and "22/8 min"
+(recorded/planned) at the trailing edge; a Recorded/Planned key under the rows. Zones
+with neither side are left out (`ZonePlanComparison.rows(planned:recorded:)` from the
+server's five-zone arrays). Analytics ▸ Program's intensity card draws it over the block
+(`intensity.zones`).
+
+`PlannedZonesView(analysis:)` is one workout against its session's programming
+(`analysis.planned`, `src/analytics/hr_plan.py`) under "Planned for Fran": the zone
+minutes that **count** — only where an exercise prescribes zones — against the planned
+minutes of the same exercises; a caption saying how they were counted (the watch's
+exercise times, not timed, no heart rate, or why nothing counts); then one row per
+exercise: name, its prescription ("Zone 2", "max effort") and "12 of 15 min" when the
+watch timed it, "not timed", or "not counted" in secondary text. On the workout
+screen's "Against the plan" section and in the Workout complete sheet's effort card
+(§6.30); nothing when the workout is linked to no session. `ZonePlan` holds the words,
+the phone's copy of the web's `lib/zonePlan.ts` (`ZonePlanTests`, `zonePlan.test.ts`).
+

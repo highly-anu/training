@@ -41,6 +41,8 @@ struct WorkoutDetailView: View {
     /// Whether the numbers above are the server's (`analysis`) or this
     /// phone's fallback — said under Training Load, as the PMC footnote does.
     @State private var analysisFromServer: Bool? = nil
+    /// The server's analysis, for what the matched session planned.
+    @State private var serverAnalysis: WorkoutAnalysis? = nil
 
     private var detail: ImportedWorkout { fullWorkout ?? workout }
 
@@ -111,6 +113,12 @@ struct WorkoutDetailView: View {
             if let effect = trainingEffect { trainingEffectSection(effect) }
             if trimpScore != nil || recoveryTimeHours != nil { trimpSection }
             if let zones = hrZones { hrZoneSection(zones) }
+            if let a = serverAnalysis, a.planned != nil {
+                Section("Against the plan") {
+                    PlannedZonesView(analysis: a)
+                        .padding(.vertical, 4)
+                }
+            }
             if let dc = decoupling { decouplingSection(dc) }
             if !bestEffortsResult.isEmpty { bestEffortsSection }
             metricsSection
@@ -132,6 +140,7 @@ struct WorkoutDetailView: View {
             // computes its own only when the server predates it or the
             // fetch failed.
             if let a = loaded?.analysis {
+                serverAnalysis = a
                 hrZones = a.distribution
                 trimpScore = a.trimp
                 decoupling = a.decouplingResult

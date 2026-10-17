@@ -9,13 +9,10 @@ split is `max_effort_pct: 1.0`, the %1RM view that actually says something.
 """
 from __future__ import annotations
 
-import re
-
-from src import progression
+from src.analytics import hr_plan
 from src.analytics import spec as spec_mod
 from src.analytics import zones
 from src.analytics.context import Context
-from src.analytics.families import is_strength
 from src.analytics.primitives import max_hr_for, run
 from src.analytics.primitives.load import best_completed_set
 
@@ -70,61 +67,26 @@ def _pct_1rm(ctx: Context) -> dict:
             'rows': rows[-12:]}
 
 
-def _slot_zones(intensity) -> list[int]:
-    """The zones (1-5) a slot's intensity token prescribes. `zoneN` is that
-    zone and `zoneA_B` the zones from A to B, read off the token itself —
-    progression's band widens `zone2` to 1-2 for the HR window it shows, but
-    a Zone 2 session is planned as Zone 2. Words (`light`, `hard`) take
-    progression's band. Anything else (`heavy`, `bodyweight`) has no zone."""
-    if not isinstance(intensity, str):
-        return []
-    m = re.fullmatch(r'zone([1-5])(?:_([1-5]))?', intensity.strip().lower())
-    if m:
-        lo, hi = int(m.group(1)), int(m.group(2) or m.group(1))
-    else:
-        lo, hi, _ = progression.zone_band(intensity)
-        if lo is None:
-            return []
-    return list(range(lo, hi + 1))
-
-
-def _num(value) -> float:
-    """A number from authored or stored data, 0 for anything that is not one
-    ("20-30", None) — one odd value must not error the whole section."""
-    try:
-        return float(value or 0)
-    except (TypeError, ValueError):
-        return 0.0
-
-
-def _slot_minutes(slot: dict, assignments: list[dict]) -> float:
-    """A slot's planned minutes: its assignments' prescribed time (the
-    longest, so a circuit of three exercises in one block counts once),
-    else the slot's own authored duration."""
-    loads = [ea.get('load') if isinstance(ea.get('load'), dict) else {}
-             for ea in assignments if not ea.get('injury_skip')]
-    prescribed = [_num(load.get('duration_minutes')) or _num(load.get('time_minutes')) for load in loads]
-    if any(prescribed):
-        return max(prescribed)
-    if _num(slot.get('duration_minutes')):
-        return _num(slot['duration_minutes'])
-    work = _num(slot.get('work_sec')) or _num(slot.get('duration_sec'))
-    if work and _num(slot.get('sets')):
-        return _num(slot['sets']) * (work + _num(slot.get('rest_sec'))) / 60.0
-    return _num(slot.get('duration_sec')) / 60.0
+# The slot helpers live with the rule that reads them (src/analytics/hr_plan.py);
+# the names stay for the readers that import them from here.
+_slot_zones = hr_plan.slot_zones
+_slot_minutes = hr_plan.slot_minutes
 
 
 def _zone_detail(ctx: Context) -> list[dict]:
     """Planned against recorded minutes per HR zone (Z1-Z5), over the
-    completed sessions only.
+    completed sessions, counting only the exercises whose programming
+    prescribes zones (src/analytics/hr_plan.py).
 
-    A completed session's slots plan minutes in the zones their intensity
-    names (a slot spanning zones splits its minutes evenly); its matched
-    workout's heart rate records them. Planned minutes count only for a
-    session whose heart rate was recorded, so both sides cover the same
-    sessions. Strength-family sessions are left out: their effort is load,
-    not heart rate, and the bucket split already counts them as max effort.
-    A zone with nothing on either side is left out."""
+    A session whose every prescription is a zone counts its whole recording
+    against all its slots' planned minutes; one that mixes zones with load
+    or effort counts only the minutes the watch timed on its zoned exercises,
+    against those exercises' planned minutes (nothing when the watch timed
+    none); one that prescribes no zone is left out, and the bucket split
+    counts it as max effort. A slot spanning zones splits its planned minutes
+    evenly. Planned minutes count only where heart rate was recorded, so both
+    sides cover the same exercises. A zone with nothing on either side is
+    left out."""
     max_hr = max_hr_for(ctx)
     planned = [0.0] * 5
     actual = [0.0] * 5
@@ -134,31 +96,19 @@ def _zone_detail(ctx: Context) -> list[dict]:
     for hit in ctx.sessions(elapsed_only=True):
         log = ctx.log_for(hit) or {}
         workout = ctx.workout_for(hit)
-        if not (log.get('completedAt') or workout is not None):
+        if workout is None:
             continue
-        session = hit['session']
-        if is_strength(session.get('modality')):
-            continue
-        wid = (workout or {}).get('id')
+        wid = workout.get('id')
         if wid is not None and wid in seen_workouts:
             continue
-        split = zones.zone_minutes(workout, max_hr) if workout else {'method': 'none'}
-        if split['method'] == 'none':
+        counted = hr_plan.attribute(hit['session'], log, workout, max_hr)
+        if counted['timing'] not in ('whole', 'timeline'):
             continue
         seen_workouts.add(wid)
-        for i, v in enumerate(split['minutes']):
+        for i, v in enumerate(counted['zoneMinutes']):
             actual[i] += v
-        exercises = session.get('exercises') or []
-        for slot in (session.get('archetype') or {}).get('slots') or []:
-            zs = _slot_zones(slot.get('intensity'))
-            if not zs:
-                continue
-            assigned = [ea for ea in exercises if ea.get('slot_role') == slot.get('role')]
-            if assigned and all(ea.get('injury_skip') for ea in assigned):
-                continue
-            minutes = _slot_minutes(slot, assigned)
-            for z in zs:
-                planned[z - 1] += minutes / len(zs)
+        for i, v in enumerate(counted['plannedMinutes']):
+            planned[i] += v
     return [{'zone': f'z{i + 1}', 'label': f'Z{i + 1}',
              'plannedMinutes': round(planned[i]), 'actualMinutes': round(actual[i])}
             for i in range(5) if round(planned[i]) or round(actual[i])]

@@ -1035,6 +1035,48 @@ export interface WorkoutAnalysis {
   recoveryHours: number | null
   decoupling: { pct: number; label: 'efficient' | 'moderate' | 'high' } | null
   bestEfforts: { label: string; km: number; seconds: number; secPerKm: number }[]
+  /** What the matched session planned (src/analytics/hr_plan.py); null when
+   *  the workout is linked to no session. */
+  planned?: WorkoutPlanned | null
+}
+
+/** What a session's programming makes of one recording (src/analytics/hr_plan.py):
+ *  heart rate counts only where an exercise prescribes zones. */
+export interface WorkoutPlanned {
+  /** Something in it prescribes zones. */
+  track: boolean
+  /** What counts: the whole recording, only the zoned exercises, or nothing. */
+  mode: 'whole' | 'exercises' | 'none'
+  /** What decided: the archetype's `heart_rate`, its slots, or its modality. */
+  source: 'declared' | 'slots' | 'modality'
+  /** How it was counted: whole, by the watch's exercise times, not timed
+   *  (a mixed session without them), no heart rate recorded, or not at all. */
+  timing: 'whole' | 'timeline' | 'untimed' | 'unrecorded' | 'none'
+  /** Z1–Z5: the planned minutes of the exercises that count. */
+  plannedMinutes: number[]
+  /** Z1–Z5: the recorded minutes that count. */
+  zoneMinutes: number[]
+  countedMinutes: number
+  /** The slots that prescribe load or effort instead ("main: heavy"). */
+  notZoned: string[]
+  slots: WorkoutPlannedSlot[]
+  sessionUid?: string
+  sessionName: string | null
+  modality: string | null
+}
+
+/** One slot of the session: what it prescribes and, where the watch timed
+ *  its exercises, what it recorded. */
+export interface WorkoutPlannedSlot {
+  role: string
+  intensity: string | null
+  zones: number[]
+  prescribes: 'zones' | 'load'
+  exercises: string[]
+  plannedMinutes: number
+  /** Z1–Z5 inside the watch's times for its exercises; null when untimed. */
+  recordedMinutes: number[] | null
+  counted: boolean
 }
 
 export interface SetPerformance {
@@ -1658,6 +1700,9 @@ export interface AnalyticsIntensity {
   byFramework: Array<{ frameworkId: string | null; classifiedMinutes: number; actualPct: Record<string, number | null>; plannedPct: Record<string, number> | null; deviationPts: Record<string, number> | null }>
   maxDeviationPts: number | null
   pct1rm?: { sessions: number; meanPct: number | null; rows: Array<{ week: number; exerciseId: string; pctOf1rm: number; targetPct: number | null }> }
+  /** Planned against recorded minutes per zone, over the completed sessions
+   *  whose programming prescribes heart-rate zones (src/analytics/hr_plan.py). */
+  zones?: Array<{ zone: string; label: string; plannedMinutes: number; actualMinutes: number }>
 }
 
 export interface AnalyticsMovement {
