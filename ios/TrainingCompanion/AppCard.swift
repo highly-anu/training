@@ -44,3 +44,33 @@ struct AnalyticsCard<Content: View, Trailing: View>: View {
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
     }
 }
+
+/// A small capsule in one colour: a 15 % fill, the colour's text and symbol,
+/// and — `bordered` — a 35 % ring (design-system §3.1's badge). The modality
+/// badge, a linked session's chip, a status and a training effect are all
+/// this; each screen used to restyle its own.
+struct TintCapsule: View {
+    let text: String
+    var symbol: String? = nil
+    let color: Color
+    var bordered: Bool = false
+
+    var body: some View {
+        Group {
+            if let symbol {
+                Label(text, systemImage: symbol)
+            } else {
+                Text(text)
+            }
+        }
+        .font(.caption2).fontWeight(.semibold)
+        .lineLimit(1)
+        .padding(.horizontal, 8).padding(.vertical, 3)
+        .background(color.opacity(0.15))
+        .foregroundStyle(color)
+        .clipShape(Capsule())
+        .overlay {
+            if bordered { Capsule().stroke(color.opacity(0.35), lineWidth: 1) }
+        }
+    }
+}

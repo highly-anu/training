@@ -1151,6 +1151,20 @@ struct ProgramHistoryDetail: Codable {
 }
 
 extension ImportedWorkout {
+    /// Where a record came from, in the athlete's language rather than the
+    /// database's.
+    static func sourceLabel(_ source: String) -> String {
+        switch source {
+        case "garmin":           return "Garmin"
+        case "fit_file":         return "FIT file"
+        case "apple_watch_live": return "Apple Watch"
+        case "apple_health":     return "Apple Health"
+        case "strava":           return "Strava"
+        case "manual":           return "Manual"
+        default:                 return source.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+
     /// What the device recorded — never the name of the session it was matched
     /// to. The watch pipeline's placeholder activity types fall back to the
     /// inferred modality. Shared by the workouts list and the Today card.

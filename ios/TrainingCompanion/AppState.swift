@@ -61,6 +61,9 @@ final class AppState: ObservableObject {
     @Published var linkingError: String? = nil
     /// Weak server-side matches still waiting for a decision (Today card).
     @Published var matchSuggestions: [MatchSuggestion] = []
+    /// The newly stored workout the "Workout complete" sheet is showing
+    /// (`WorkoutCompletion`, design-system §6.30); nil when none.
+    @Published var completedWorkout: ImportedWorkout? = nil
 
     // MARK: - Bio Logs (last 30 days)
 
@@ -158,6 +161,9 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProgressionReview() }
             group.addTask { await self.loadMatchSuggestions() }
         }
+        // Workouts, matches, suggestions and the program are all in: the
+        // moment to notice a workout the phone has not shown yet.
+        noticeCompletedWorkout()
     }
 
     /// What each section's load last ran against (`loadIfStale`).
@@ -218,6 +224,129 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
+    }
+
+    // MARK: - Workout complete
+
+    private static let seenWorkoutsKey = "workoutComplete.seen"
+
+    /// Workouts the phone has already celebrated (or that arrived together
+    /// with one it did, or that the athlete imported by hand). nil before the
+    /// first load on this install or build.
+    private var seenWorkoutIds: Set<String>? {
+        get { UserDefaults.standard.stringArray(forKey: Self.seenWorkoutsKey).map(Set.init) }
+        set { UserDefaults.standard.set(newValue.map(Array.init), forKey: Self.seenWorkoutsKey) }
+    }
+
+    /// The sheet is actually up — set by the sheet itself. A presentation
+    /// SwiftUI drops (another sheet is open) leaves it false.
+    var completedWorkoutOnScreen = false
+
+    /// Workouts still to show after this one — `workout-complete?demo=1`
+    /// lines up the newest eight so each can be looked at in turn.
+    private var completedWorkoutQueue: [ImportedWorkout] = []
+
+    /// Present the sheet for the newest workout not yet shown, if one ended
+    /// recently enough to be a moment rather than history.
+    ///
+    /// The first load on an install (or on the build that brings the sheet)
+    /// only records what is there: a workout from yesterday, long since
+    /// linked on the web, is not news.
+    func noticeCompletedWorkout(now: Date = Date()) {
+        guard completedWorkout == nil, !importedWorkouts.isEmpty else { return }
+        guard let seen = seenWorkoutIds else {
+            seenWorkoutIds = Set(importedWorkouts.map(\.id))
+            return
+        }
+        guard let workout = WorkoutCompletion.next(in: importedWorkouts, seen: seen, now: now) else { return }
+        show(workout)
+    }
+
+    /// Show the sheet for a given workout, or the newest when `id` is nil,
+    /// whether or not it was seen — `trainingcompanion://workout-complete[?id=…]`,
+    /// so the simulator can be driven to the screen. An id not in the list
+    /// shows nothing rather than some other workout.
+    func presentCompletedWorkout(id: String?) {
+        let pick = id.map { id in importedWorkouts.first { $0.id == id } }
+            ?? importedWorkouts.max { (WorkoutCompletion.endDate(of: $0) ?? .distantPast)
+                < (WorkoutCompletion.endDate(of: $1) ?? .distantPast) }
+        if let pick { show(pick) }
+    }
+
+    func presentCompletedWorkoutDemo(count: Int = 8) {
+        let newest = importedWorkouts.sorted {
+            (WorkoutCompletion.endDate(of: $0) ?? .distantPast) > (WorkoutCompletion.endDate(of: $1) ?? .distantPast)
+        }
+        guard let first = newest.first else { return }
+        completedWorkoutQueue = Array(newest.dropFirst().prefix(count - 1))
+        show(first)
+    }
+
+    /// Set the sheet's workout, and take it back if the sheet never came up:
+    /// SwiftUI drops a sheet presented over another, and a workout left set
+    /// would block every later one. Not marked seen — the next load retries.
+    private func show(_ workout: ImportedWorkout) {
+        completedWorkoutOnScreen = false
+        completedWorkout = workout
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            if self.completedWorkout?.id == workout.id, !self.completedWorkoutOnScreen {
+                self.completedWorkout = nil
+                self.completedWorkoutQueue = []
+            }
+        }
+    }
+
+    /// The sheet closed: everything listed now is seen, so an older workout
+    /// that arrived in the same sync does not pop up next.
+    func finishCompletedWorkout() {
+        // Only ids still listed need remembering — the list is the record —
+        // unless the list failed to load, when forgetting would re-show them.
+        var seen = importedWorkouts.isEmpty ? (seenWorkoutIds ?? []) : []
+        seen.formUnion(importedWorkouts.map(\.id))
+        if let id = completedWorkout?.id { seen.insert(id) }
+        seenWorkoutIds = seen
+        completedWorkout = nil
+        completedWorkoutOnScreen = false
+        // A demo's next workout, once this sheet is off the screen.
+        if !completedWorkoutQueue.isEmpty {
+            let next = completedWorkoutQueue.removeFirst()
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 450_000_000)
+                self.show(next)
+            }
+        }
+    }
+
+    /// Mark workouts seen without showing them (an import the athlete made).
+    private func markSeen(_ ids: [String]) {
+        seenWorkoutIds = (seenWorkoutIds ?? []).union(ids)
+    }
+
+    /// What the sheet offers to link the workout to.
+    func completionMatch(for workout: ImportedWorkout) -> WorkoutCompletion.Match {
+        let sameDay = sessionsForDate(workout.date).map {
+            WorkoutCompletion.Candidate(key: $0.key, session: $0.session)
+        }
+        // Only a suggestion for a session of this program is confirmed here:
+        // confirming writes a completion under its key, which for an earlier
+        // program's session would tick this program's session of that name.
+        // Those, and one whose session is not in the loaded program, are
+        // decided in Log ▸ Linking.
+        let pending = pendingMatchSuggestions().first { $0.workout.id == workout.id }?.suggestion
+        let suggestion = pending.flatMap { s in
+            WorkoutCompletion.isCurrentProgram(uid: s.sessionUid, versionId: programVersionId)
+                && locateSession(key: s.sessionKey) != nil ? s : nil
+        }
+        // A match dated to an earlier block names a session of this program
+        // too ("4-Monday-0"); it is linked, but not to anything shown here.
+        let earlier = workoutMatches[workout.id]?.inCurrentProgram == false
+        return WorkoutCompletion.match(
+            matchedKey: matchedSessionKey(for: workout.id),
+            suggestionKey: suggestion?.sessionKey,
+            sameDay: sameDay,
+            isComplete: { self.isSessionComplete($0) },
+            session: { earlier ? nil : self.locateSession(key: $0)?.session })
     }
 
     // MARK: - Match suggestions
@@ -819,6 +948,11 @@ final class AppState: ObservableObject {
     }
 
     func makeSessionKey(weekNumber: Int, dayName: String, index: Int) -> String {
+        Self.sessionKey(weekNumber: weekNumber, dayName: dayName, index: index)
+    }
+
+    /// "3-Monday-0": the program-relative key, for code with no `AppState`.
+    nonisolated static func sessionKey(weekNumber: Int, dayName: String, index: Int) -> String {
         "\(weekNumber)-\(dayName)-\(index)"
     }
 
@@ -1139,9 +1273,14 @@ final class AppState: ObservableObject {
         guard let uploaded = parsed.first else {
             throw APIError.serverErrorDetail(422, "The file held no activity.")
         }
+        // The import sheet is its own confirmation; don't celebrate it twice —
+        // marked before the reload, which a concurrent load could notice.
+        markSeen([uploaded.id])
         await loadWorkouts()
         await loadMatchSuggestions()
-        return canonicalWorkout(for: uploaded) ?? uploaded
+        let listed = canonicalWorkout(for: uploaded) ?? uploaded
+        markSeen([listed.id])
+        return listed
     }
 
     /// The listed row an upload became: the same id, or — when the server

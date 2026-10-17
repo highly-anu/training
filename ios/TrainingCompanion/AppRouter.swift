@@ -94,4 +94,18 @@ final class AppRouter: ObservableObject {
     func clearPendingSession() {
         pendingSessionKey = nil
     }
+
+    /// A "Workout complete" sheet asked for by a deep link: a workout id, ""
+    /// for the newest, or `workoutCompleteDemo` for the newest eight in turn.
+    /// `ContentView` presents it once workouts are loaded.
+    static let workoutCompleteDemo = "\u{0}demo"
+    @Published var pendingWorkoutComplete: String? = nil
+
+    func showWorkoutComplete(_ workoutId: String?) {
+        pendingWorkoutComplete = workoutId ?? ""
+    }
+
+    func clearPendingWorkoutComplete() {
+        pendingWorkoutComplete = nil
+    }
 }

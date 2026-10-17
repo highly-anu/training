@@ -1461,3 +1461,79 @@ for accounts made on the web.
 **Settings ▸ Account** (`AccountSection`): the email — "Hidden email (Apple)"
 for a relay address — with how the account signs in, *Sign Out*, and
 *Delete Account…*, a sheet confirmed by typing DELETE.
+
+
+### 6.30 Workout Complete
+
+**A new workout gets a moment, not just a row.**
+`Views/WorkoutCompleteSheet.swift`, presented by `ContentView` the first time
+the phone sees a stored workout — from the watch, Garmin, Strava or Apple
+Health — that ended in the last 36 hours. `WorkoutCompletion` (pure,
+`WorkoutCompletionTests`) picks it: the most recently finished workout not
+yet shown that recorded something. Several arriving in one sync show only the
+newest; closing the sheet marks every listed workout seen
+(`AppState.finishCompletedWorkout`, the ids in `UserDefaults`), so the rest
+wait in Log ▸ Linking rather than popping up one after another. A `.fit`
+import is its own confirmation and is marked seen when it lands.
+
+Top to bottom:
+
+- *Hero*: the activity icon (§6.12) in its modality's colour on a 15 % disc
+  with a 35 % ring, the completion check (§3.3) on its edge — it bounces
+  once when a link is confirmed — "WORKOUT COMPLETE" in green, what the
+  device recorded, date · time · source, and one line of credit.
+- *Route*: the track on a flat map, only when it is one — two real fixes
+  (not 0,0) spread over more than 50 m (`WorkoutRoute.hasRoute`, which the
+  workout detail's Route section asks too). A gym session's handful of
+  points in one spot draws no map.
+- *Numbers*: up to six tiles, in this order: time, distance, average HR, load
+  (TRIMP, coloured by `TrimpStyle`), elevation gain, calories, peak HR. Four
+  sit two by two. The load and everything under *Effort* (training effect,
+  the zone split as one `HRZoneStyle` bar, recovery hours) are the server's
+  `analysis` from `GET /health/workouts/<id>`; without it the card is absent.
+- *The planned session* (`WorkoutCompletion.Match`), as an `AnalyticsCard`
+  with a status capsule:
+  - **Linked** (green): the server, the watch or another client already
+    linked it; the session row carries the check. A match the server dates
+    to an earlier block shows no session of this program (§6.23).
+  - **Suggested** (orange): the server's weak match, with *Not this* on the
+    row and **Confirm & complete** (green) as the sheet's primary action;
+    the day's other open sessions are offered under it.
+  - **Unlinked**: no suggestion, but sessions planned that day are open —
+    each with *Link*.
+  - **Extra**: nothing open that day.
+  Linking goes through `AppState.matchAndComplete`, the same path as Today's
+  Accept.
+- *Week N*: a dot per planned session of the workout's week, in its
+  modality's colour, filled and ticked once done or linked, with done/all.
+
+**The line of credit** (`WorkoutCompletion.cheer`) is chosen by situation —
+the week finished, a long day (90 min+), on plan, planned but not yet linked,
+extra work — and within it by a stable hash of the workout's id, so one
+workout always reads the same and a run of them does not repeat. It is the
+one sentence on the screen; everything else is a symbol and a number (§1.4).
+
+**Any session, any package.** Nothing on the sheet names a philosophy,
+framework or archetype. It reads the recorded workout (activity, times,
+distance, heart rate and the server's `analysis`) and, for the planned
+session, only what every package's program carries: the session's
+`modality`, its archetype's `name` and `duration_estimate_minutes`, and its
+key. It shows no prescription, so a package does not have to describe its
+loads in any particular way for the sheet to work. A new package that
+schedules the existing modalities needs nothing here. A new **modality** is
+the one thing that needs work on the phone: `ModalityStyle` (colour, label,
+icon) is a fixed table of the twelve in `data/commons/modalities/`, and an
+unknown id is drawn grey with a generic figure until it is added there (and to
+the web's `MODALITY_COLORS` and `data/commons/modality_families.json`, which
+the matcher scores with).
+
+Rules: the sheet decides nothing on its own — closing it leaves an unlinked
+workout unlinked, to be decided in Log ▸ Linking. *Details* (toolbar)
+pushes `WorkoutDetailView`. `trainingcompanion://workout-complete[?id=…]`
+opens it for a given workout, or the newest, seen or not, for the simulator;
+`?demo=1` lines up the newest eight, one after another as each is closed.
+A sheet SwiftUI could not present (another was open) is taken back after
+1.5 s without being marked seen; the first load on an install or on this
+build only records what is listed. A suggestion for another program's
+session is not confirmed here (its key would tick this program's session of
+that name); it falls through to the day's open sessions.

@@ -8,6 +8,9 @@ struct WorkoutDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let workout: ImportedWorkout
+    /// The full record when the presenter already fetched it (the Workout
+    /// complete sheet), so it is not downloaded twice.
+    var prefetched: ImportedWorkout? = nil
     var onDeleted: (() -> Void)? = nil
 
     private enum SheetState {
@@ -101,7 +104,7 @@ struct WorkoutDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                WorkoutRouteSection(points: detail.gpsTrack ?? [])
+                WorkoutRouteSection(points: WorkoutRoute.fixes(detail.gpsTrack ?? []))
                 WorkoutChartsSection(workout: detail, hrConfig: appState.profile.hrConfig)
             }
             // Analytics sections (Garmin/Apple/Strava-inspired)
@@ -120,7 +123,8 @@ struct WorkoutDetailView: View {
         .task {
             guard fullWorkout == nil, let api = appState.api else { return }
             isLoadingDetail = true
-            let loaded = try? await api.fetchWorkout(id: workout.id)
+            let loaded: ImportedWorkout?
+            if let prefetched { loaded = prefetched } else { loaded = try? await api.fetchWorkout(id: workout.id) }
             fullWorkout = loaded
             isLoadingDetail = false
 
@@ -342,11 +346,11 @@ struct WorkoutDetailView: View {
                 LabeledContent("Impulse Score") {
                     HStack(spacing: 6) {
                         Text("\(score)").fontWeight(.semibold)
-                        Text(trimpLabel(score))
+                        Text(TrimpStyle.label(score))
                             .font(.caption)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(trimpColor(score))
+                            .background(TrimpStyle.color(score))
                             .clipShape(Capsule())
                     }
                 }
@@ -366,23 +370,7 @@ struct WorkoutDetailView: View {
         }
     }
 
-    private func trimpLabel(_ trimp: Int) -> String {
-        switch trimp {
-        case ..<40:   return "Low"
-        case 40..<70: return "Moderate"
-        case 70..<100: return "High"
-        default:       return "Very High"
-        }
-    }
 
-    private func trimpColor(_ trimp: Int) -> Color {
-        switch trimp {
-        case ..<40:   return .secondary
-        case 40..<70: return .blue
-        case 70..<100: return .orange
-        default:       return .red
-        }
-    }
 
     private func hrZoneSection(_ zones: HRZoneDistribution) -> some View {
         Section("Heart Rate Zones") {

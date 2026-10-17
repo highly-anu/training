@@ -27,6 +27,7 @@ struct ContentView: View {
                         }
                         await sync.syncAll()
                         await appState.loadAll()
+                        presentRequestedWorkoutComplete()
 
                         // Near-real-time import: HealthKit wakes us when a new
                         // workout is written, instead of waiting for the ~6h
@@ -48,6 +49,19 @@ struct ContentView: View {
                     scheduleNextSync()
                     // A section asked for at launch (run_sim.sh ROUTE=…).
                     if let link = DeepLink.fromLaunchEnvironment() { router.open(link) }
+                }
+                .onChange(of: router.pendingWorkoutComplete) { _, _ in
+                    if !appState.importedWorkouts.isEmpty { presentRequestedWorkoutComplete() }
+                }
+                // The "Workout complete" moment (§6.30): a workout stored since
+                // the phone last looked, from any source.
+                .sheet(item: Binding(
+                    get: { appState.completedWorkout },
+                    set: { if $0 == nil { appState.finishCompletedWorkout() } }
+                )) { workout in
+                    WorkoutCompleteSheet(workout: workout)
+                        .id(workout.id)   // a fresh view, and fresh state, per workout
+                        .environmentObject(appState)
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { Task { await appState.refreshIfStale() } }
@@ -71,6 +85,16 @@ struct ContentView: View {
                 }
         } else {
             AuthView()
+        }
+    }
+
+    private func presentRequestedWorkoutComplete() {
+        guard let request = router.pendingWorkoutComplete else { return }
+        router.clearPendingWorkoutComplete()
+        if request == AppRouter.workoutCompleteDemo {
+            appState.presentCompletedWorkoutDemo()
+        } else {
+            appState.presentCompletedWorkout(id: request.isEmpty ? nil : request)
         }
     }
 }

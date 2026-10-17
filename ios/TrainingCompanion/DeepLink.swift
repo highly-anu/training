@@ -22,6 +22,11 @@ enum DeepLink: Equatable {
     case log(LogTab)
     /// `program?section=overview|calendar|history`.
     case program(ProgramTab)
+    /// `workout-complete[?id=<workout id>]` — the "Workout complete" sheet for
+    /// that workout, or the newest, seen or not (design-system §6.30);
+    /// `?demo=1` lines up the newest eight, one after another.
+    case workoutComplete(String?)
+    case workoutCompleteDemo
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -74,6 +79,10 @@ enum DeepLink: Equatable {
                 }
             }
             return .tab(.analytics)
+        case "workout-complete":
+            if query.first(where: { $0.name == "demo" })?.value == "1" { return .workoutCompleteDemo }
+            let id = query.first(where: { $0.name == "id" })?.value
+            return .workoutComplete(id?.isEmpty == false ? id : nil)
         default:
             return nil
         }
@@ -90,6 +99,8 @@ extension AppRouter {
         case .profile(let section): showProfile(section)
         case .log(let section): showLog(section)
         case .program(let section): showProgram(section)
+        case .workoutComplete(let id): showWorkoutComplete(id)
+        case .workoutCompleteDemo: showWorkoutComplete(AppRouter.workoutCompleteDemo)
         }
     }
 }
