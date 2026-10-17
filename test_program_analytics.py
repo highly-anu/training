@@ -785,6 +785,125 @@ def test_duration_and_zones() -> None:
     check('max_hr_for: default when nothing known', max_hr_for(_ctx(prog)) == 190.0)
 
 
+def test_heart_rate_follows_the_programming() -> None:
+    print('\nheart rate counts only where an exercise prescribes zones (src/analytics/hr_plan.py)')
+    from src.analytics import hr_plan
+    from src.analytics import intensity as intensity_mod
+
+    def session(modality, slots, exercises=None, **arch):
+        return {'modality': modality, 'archetype': {'id': 'a', 'slots': slots, **arch},
+                'exercises': exercises or []}
+    ballistic = session('power', [
+        {'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
+        {'role': 'skill', 'intensity': 'moderate', 'duration_minutes': 10},
+        {'role': 'main', 'intensity': 'high', 'duration_minutes': 20},
+        {'role': 'cooldown', 'intensity': 'low', 'duration_minutes': 5}])
+    p = hr_plan.plan(ballistic)
+    check('a kettlebell ballistic session prescribing zones throughout counts whole, whatever its family',
+          p['mode'] == 'whole' and p['source'] == 'slots' and p['plannedMinutes'] == [7.5, 12.5, 15.0, 10.0, 0.0], str(p))
+    heavy = session('max_strength', [{'role': 'primary_squat', 'intensity': 'heavy'},
+                                     {'role': 'upper_press', 'intensity': 'progressing'}])
+    p = hr_plan.plan(heavy)
+    check('a lifting day prescribes load (heavy, progressing): nothing counts, and it says which slots',
+          p['mode'] == 'none' and p['notZoned'] == ['primary_squat: heavy', 'upper_press: progressing'], str(p))
+    warm_then_heavy = session('max_strength', [{'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
+                                               {'role': 'main_lift', 'intensity': 'heavy'}])
+    check('a zoned warm-up before heavy work: only the warm-up counts',
+          hr_plan.plan(warm_then_heavy)['mode'] == 'exercises')
+    check('an archetype can say so outright: track',
+          hr_plan.plan(session('max_strength', heavy['archetype']['slots'], heart_rate='track'))['mode'] == 'whole')
+    check('… or ignore', hr_plan.plan(session('aerobic_base', [{'role': 'z2', 'intensity': 'zone2'}],
+                                               heart_rate='ignore'))['mode'] == 'none')
+    check('slots that prescribe nothing: nothing counts, whatever the family',
+          hr_plan.plan(session('aerobic_base', [{'role': 'x'}]))['mode'] == 'none')
+    check('no slots stored at all: the modality family decides',
+          hr_plan.plan({'modality': 'aerobic_base', 'archetype': {'id': 'a'}})['mode'] == 'whole'
+          and hr_plan.plan({'modality': 'max_strength', 'archetype': {'id': 'a'}})['mode'] == 'none')
+    timed_by_load = session('aerobic_base', [{'role': 'run'}], [
+        {'exercise': {'id': 'run', 'name': 'Run'}, 'slot_role': 'run',
+         'load': {'duration_minutes': 40, 'zone_lower': 1, 'zone_upper': 2}}])
+    p = hr_plan.plan(timed_by_load)
+    check("a slot that names no intensity takes its exercise's prescribed band",
+          p['mode'] == 'whole' and p['plannedMinutes'] == [20.0, 20.0, 0.0, 0.0, 0.0], str(p))
+    skipped = session('max_strength', warm_then_heavy['archetype']['slots'],
+                      [{'slot_role': 'main_lift', 'injury_skip': True}])
+    check('a heavy slot an injury removed prescribes nothing: the zoned work that remains counts whole',
+          hr_plan.plan(skipped)['mode'] == 'whole')
+
+    # A recording: 10 easy minutes (120 bpm), then 35 of lifting (150 bpm).
+    from datetime import datetime as _dt, timedelta as _td
+    t0 = _dt.fromisoformat('2026-03-02T17:00:00+00:00')
+    samples = [{'timestamp': (t0 + _td(minutes=i)).isoformat(), 'bpm': 120 if i < 10 else 150} for i in range(46)]
+    lift = {'id': 'lift', 'date': '2026-03-02', 'startTime': t0.isoformat(), 'durationMinutes': 45,
+            'activityType': 'strength', 'heartRate': {'avg': 140, 'max': 150, 'samples': samples}}
+    mixed = session('max_strength', warm_then_heavy['archetype']['slots'], [
+        {'exercise': {'id': 'row_easy', 'name': 'Easy row'}, 'slot_role': 'warmup', 'load': {'duration_minutes': 10}},
+        {'exercise': {'id': 'back_squat', 'name': 'Back Squat'}, 'slot_role': 'main_lift', 'load': {'weight_kg': 100}}])
+    whole = hr_plan.attribute(mixed, None, dict(lift, heartRate={'avg': 140, 'max': 150}), 185)
+    untimed = hr_plan.attribute(mixed, {'completedAt': 'x', 'exercises': {}}, lift, 185)
+    check('a mixed session the watch did not time counts nothing in zones',
+          untimed['timing'] == 'untimed' and untimed['countedMinutes'] == 0 and sum(untimed['plannedMinutes']) == 0
+          and whole['timing'] == 'untimed', str(untimed))
+    timeline_log = {'completedAt': 'x', 'exercises': {}, 'exerciseTimeline': [
+        {'exerciseId': 'row_easy', 'startOffset': 0, 'endOffset': 600},
+        {'exerciseId': 'back_squat', 'startOffset': 660, 'endOffset': 2700}]}
+    a = hr_plan.attribute(mixed, timeline_log, lift, 185)
+    warm = next(sl for sl in a['slots'] if sl['role'] == 'warmup')
+    squat = next(sl for sl in a['slots'] if sl['role'] == 'main_lift')
+    check('with the watch\'s times only the warm-up\'s 10 minutes count, against its 10 planned',
+          a['timing'] == 'timeline' and abs(a['countedMinutes'] - 10) < 0.01 and sum(a['plannedMinutes']) == 10
+          and warm['counted'] and not squat['counted'] and squat['recordedMinutes'] is not None, str(a))
+    by_sets = hr_plan.attribute(mixed, {'completedAt': 'x', 'exercises': {
+        'row_easy': {'sets': [{'startOffset': 0, 'endOffset': 300}, {'startOffset': 300, 'endOffset': 600}]}}}, lift, 185)
+    check("an exercise's set offsets time it when the log has no timeline",
+          by_sets['timing'] == 'timeline' and abs(by_sets['countedMinutes'] - 10) < 0.01, str(by_sets))
+    absolute = hr_plan.attribute(mixed, {'completedAt': 'x', 'exercises': {}, 'exerciseTimeline': [
+        {'exerciseId': 'Easy row', 'startOffset': 999, 'endOffset': 9999,
+         'startAt': '2026-03-02T17:00:00Z', 'endAt': '2026-03-02T17:05:00Z'}]}, lift, 185)
+    check('absolute times win over offsets, and a name finds its exercise (the Garmin app without an id)',
+          abs(absolute['countedMinutes'] - 5) < 0.01, str(absolute['countedMinutes']))
+
+    # The fixture's Monday made a zoned power session, matched to a workout
+    # with heart rate: it counts in the zones, not as max effort.
+    prog = fixture_program(weeks=3)
+    for wk in prog['weeks']:
+        mon = wk['schedule']['Monday'][0]
+        mon['modality'] = 'power'
+        mon['archetype'] = dict(mon.get('archetype') or {}, slots=ballistic['archetype']['slots'])
+    lift_with_hr = {'id': 'lift', 'date': '2026-03-02', 'durationMinutes': 45, 'activityType': 'strength',
+                    'heartRate': {'avg': 110, 'max': 150, 'samples': _hr_samples(110, 45, '2026-03-02T17:00:00+00:00')}}
+    matches = [{'importedWorkoutId': 'lift', 'sessionKey': '1-Monday-0', 'matchConfidence': 'auto'}]
+    split_entry = E('split', 'zone_minutes', 'uphill_athlete', expected={'framework_field': 'intensity_distribution'})
+    ctx = _ctx(prog, {'1-Monday-0': _log('2026-03-02T18:00:00+00:00')}, [lift_with_hr], matches,
+               today=START + timedelta(days=7), profile={'dateOfBirth': '1990-06-15'})
+    wk1 = run_primitive(split_entry, ctx)['weeks'][0]
+    check('the bucket split counts its heart rate, not max effort',
+          wk1['max_effort_pct'] == 0 and wk1['zone1_2_pct'] + wk1['zone3_pct'] + wk1['zone4_5_pct'] == 45, str(wk1))
+    zs = {z['zone']: z for z in intensity_mod.build(ctx)['zones']}
+    check('the zone rows carry its planned and recorded minutes',
+          sum(z['actualMinutes'] for z in zs.values()) == 45
+          and sum(z['plannedMinutes'] for z in zs.values()) == 45, str(zs))
+
+    # The same Monday as a mixed session: warm-up timed by the watch.
+    for wk in prog['weeks']:
+        mon = wk['schedule']['Monday'][0]
+        mon['modality'] = 'max_strength'
+        mon['archetype'] = dict(mon['archetype'], slots=mixed['archetype']['slots'])
+        mon['exercises'] = mixed['exercises']
+    for log, counted in ((_log('2026-03-02T18:00:00+00:00'), 0),
+                         (_log('2026-03-02T18:00:00+00:00', exerciseTimeline=timeline_log['exerciseTimeline']), 10)):
+        ctx = _ctx(prog, {'1-Monday-0': log}, [lift], matches,
+                   today=START + timedelta(days=7), profile={'dateOfBirth': '1990-06-15'})
+        wk1 = run_primitive(split_entry, ctx)['weeks'][0]
+        zone_total = wk1['zone1_2_pct'] + wk1['zone3_pct'] + wk1['zone4_5_pct']
+        check(f'mixed, {counted} timed zoned minutes: the bucket split counts them and the rest as max effort',
+              zone_total == counted and wk1['max_effort_pct'] == 45 - counted, str(wk1))
+        zs = intensity_mod.build(ctx)['zones']
+        check(f'mixed, {counted} timed zoned minutes: the zone rows cover only those',
+              sum(z['actualMinutes'] for z in zs) == counted and sum(z['plannedMinutes'] for z in zs) == counted,
+              str(zs))
+
+
 def test_unlocks_benchmarks_completion_and_errors() -> None:
     print('\nprimitives: unlocks / benchmark_level / session_completion / errors')
     prog = fixture_program(weeks=3)
@@ -1248,6 +1367,7 @@ if __name__ == '__main__':
     test_load_at_rpe()
     test_rounds_rate_hold_distance()
     test_duration_and_zones()
+    test_heart_rate_follows_the_programming()
     test_unlocks_benchmarks_completion_and_errors()
     test_sections()
     test_document()

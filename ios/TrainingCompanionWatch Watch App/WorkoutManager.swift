@@ -198,11 +198,29 @@ final class WorkoutManager: NSObject, ObservableObject {
         return out.isEmpty ? nil : out
     }
 
+    /// Each step's window — from when it became current to when the athlete
+    /// moved on (`WorkoutSessionState.stepWindows`) — else, for a step with
+    /// none, the span of its sets' offsets.
     private func buildExerciseTimeline() -> [ExerciseTimelineEntry]? {
         let logs = sessionState.setLogs
-        guard !logs.isEmpty else { return nil }
         var entries: [ExerciseTimelineEntry] = []
-        for (exerciseId, sets) in logs {
+        var timed = Set<String>()
+        if let session = activeSession, let startedAt = workoutStartedAt {
+            let now = Date()
+            for (index, window) in sessionState.stepWindows.sorted(by: { $0.key < $1.key })
+            where index < session.exercises.count {
+                let id = session.exercises[index].exerciseId
+                let start = max(0, Int(window.start.timeIntervalSince(startedAt)))
+                let end = Int((window.end ?? now).timeIntervalSince(startedAt))
+                guard end > start, !timed.contains(id) else { continue }
+                timed.insert(id)
+                let samples = hrTimestampedSamples.filter { $0.t >= start && $0.t <= end }
+                entries.append(ExerciseTimelineEntry(
+                    exerciseId: id, startOffset: start, endOffset: end,
+                    avgHRDuring: samples.isEmpty ? nil : samples.reduce(0) { $0 + $1.b } / samples.count))
+            }
+        }
+        for (exerciseId, sets) in logs where !timed.contains(exerciseId) {
             let startOffsets = sets.compactMap { $0.startOffset }
             let endOffsets   = sets.compactMap { $0.endOffset }
             guard let start = startOffsets.min(), let end = endOffsets.max() else { continue }

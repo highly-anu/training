@@ -157,6 +157,52 @@ def _seconds_between(a: str, b: str) -> float:
     return tb - ta
 
 
+def epoch(value) -> float | None:
+    """Epoch seconds of an ISO timestamp, None when it is not one."""
+    try:
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def minutes_in_windows(workout: dict, max_hr: float, windows: list[tuple[float, float]],
+                       bounds: list[float] | None = None) -> list[float] | None:
+    """Minutes per zone the heart rate spent inside `windows` (epoch-second
+    start/end pairs) — one exercise's share of a recording
+    (src/analytics/hr_plan.py). Integrated as zone_fractions does (each
+    sample holds until the next, gaps capped at SAMPLE_GAP_CAP_SEC), clipped
+    to the windows and not scaled to the workout's length. None without a
+    timestamped series: a summary estimate cannot be cut by time."""
+    edges = list(bounds) if bounds else upper_bounds()
+    samples = (workout.get('heartRate') or {}).get('samples') or []
+    if len(samples) < 2:
+        return None
+    try:
+        points = sorted(((epoch(s['timestamp']), float(s['bpm'])) for s in samples),
+                        key=lambda p: p[0])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if any(t is None for t, _ in points):
+        return None
+    merged: list[list[float]] = []
+    for start, end in sorted(w for w in windows if w[1] > w[0]):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    by_zone = [0.0] * 5
+    for (ta, bpm), (tb, _) in zip(points, points[1:]):
+        dt = min(tb - ta, SAMPLE_GAP_CAP_SEC)
+        if dt <= 0:
+            continue
+        zone = assign_zone(bpm, max_hr, edges)
+        for start, end in merged:
+            overlap = min(ta + dt, end) - max(ta, start)
+            if overlap > 0:
+                by_zone[zone] += overlap
+    return [s / 60.0 for s in by_zone]
+
+
 def _norm_cdf(x: float, mean: float, sigma: float) -> float:
     return 0.5 * (1.0 + math.erf((x - mean) / (sigma * math.sqrt(2))))
 

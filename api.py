@@ -2038,7 +2038,45 @@ def health_get_workout(workout_id: str):
         workout['analysis'] = analyse(workout, get_user_profile(g.user_id) or {})
     except Exception as exc:
         app.logger.warning('workout analysis failed for %s: %s', workout_id, exc)
+    # What the program planned for it, beside what it recorded.
+    if isinstance(workout.get('analysis'), dict):
+        try:
+            workout['analysis']['planned'] = _planned_for_workout(g.user_id, workout)
+        except Exception as exc:  # noqa: BLE001 — the recorded side still shows
+            app.logger.warning('workout planned zones failed for %s: %s', workout_id, exc)
     return jsonify(workout)
+
+
+def _planned_for_workout(user_id: str, workout: dict) -> dict | None:
+    """What the matched session's programming makes of this recording
+    (src/analytics/hr_plan.attribute): exercise by exercise, what each
+    prescribes, the minutes it planned and — where the watch timed it — what
+    it recorded, and the zone minutes that count, on the same max HR and
+    edges as the workout's own zones. None when the workout is linked to no
+    session."""
+    from src import program_history
+    from src.analytics import hr_plan
+    match = next((m for m in _health.get_matches(user_id)
+                  if m.get('importedWorkoutId') == workout.get('id')
+                  and m.get('matchConfidence') != 'rejected'), None)
+    if match is None:
+        return None
+    uid = match.get('sessionUid')
+    if not uid and match.get('sessionKey'):
+        planned_row = program_history.resolve_session(user_id, legacy_key=match['sessionKey'],
+                                                      date_str=workout.get('date'))
+        uid = (planned_row or {}).get('session_uid')
+    found = program_history.session_lookup(user_id, [uid]) if uid else []
+    if not found:
+        return None
+    session = found[0]['session']
+    analysis = workout.get('analysis') or {}
+    log = _health.get_session_log(user_id, uid, match.get('sessionKey'), workout.get('date'))
+    out = hr_plan.attribute(session, log, workout, analysis.get('maxHr') or 190,
+                            analysis.get('zoneBoundaries'))
+    out.update({'sessionUid': uid, 'sessionName': found[0].get('archetype_name'),
+                'modality': session.get('modality'), 'date': found[0].get('date')})
+    return out
 
 
 @app.post('/api/health/workouts/recalculate-elevation')
@@ -4585,10 +4623,18 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                             for s in ((d or {}).get('sets') or []) if isinstance(s, dict)],
                        (d or {}).get('rounds'), (d or {}).get('durationSec'), (d or {}).get('distanceKm'),
                        (d or {}).get('clean'))
-                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)))
+                      for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)),
+                      # The watch's exercise times: they decide which minutes count in zones.
+                      v.get('exerciseTimeline'))
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
+        # The matched workouts themselves: a richer copy that merges into a
+        # matched row (a Garmin file after the watch's live upload) changes its
+        # heart rate and length without changing any match.
+        _j.dumps(sorted((w.get('id'), w.get('durationMinutes'), (w.get('heartRate') or {}).get('avg'),
+                         len((w.get('heartRate') or {}).get('samples') or []))
+                        for w in inputs.workouts), default=str),
         _j.dumps(_standards_digest_key(inputs.performance_logs), default=str),
         # Values, not only dates: a same-date resting HR from the watch, or a
         # corrected Apple Health night, has to bust the cache too.
@@ -4605,8 +4651,10 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         _analytics_specs_digest(),
         # The document's shape: bump when a section gains keys, so stored
         # copies are rebuilt (2: scorecard.weeks, for the Today card;
-        # 5: intensity.zones, per-zone planned against recorded minutes).
-        'doc-5',
+        # 5: intensity.zones, per-zone planned against recorded minutes;
+        # 6: a session's programming decides whether its heart rate counts;
+        # 7: only its zoned exercises' timed minutes count).
+        'doc-7',
     ]
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 

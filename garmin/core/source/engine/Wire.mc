@@ -49,6 +49,23 @@ module Wire {
         return out;
     }
 
+    // Each step's window on the session clock (seconds from the start, as the
+    // heart-rate samples are stamped): { exerciseId, startOffset, endOffset }.
+    // The server counts heart rate in zones only inside the windows of steps
+    // that prescribe zones (src/analytics/hr_plan.py). `steps` is the
+    // controller's index -> [exercise, start, end].
+    function timeline(steps) {
+        var out = [];
+        var keys = steps.keys();
+        for (var i = 0; i < keys.size(); i += 1) {
+            var w = steps[keys[i]];
+            if (w[2] > w[1]) {
+                out.add({ "exerciseId" => key(w[0].name(), w[0]), "startOffset" => w[1], "endOffset" => w[2] });
+            }
+        }
+        return out;
+    }
+
     // Steps whose LAP counts a round (or a lap of a carry).
     function countsRounds(ex) {
         return ex.isTemplate("rounds") || ex.isTemplate("for_time")

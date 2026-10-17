@@ -126,6 +126,7 @@ class WorkoutController {
     hidden var _setLogs;
     hidden var _outcomes;   // name -> { durationSec, distanceKm }: what a step produced that is not a set
     hidden var _exStartDistM;   // _distanceM when the current exercise became active
+    hidden var _stepTimes;      // exercise index -> [exercise, start, end] in _elapsed seconds
     hidden var _resultDecision; // "save" | "dismiss" | null: the Results menu's answer
     hidden var _entered;        // name -> true: a result the athlete typed, which the clock never overwrites
     hidden var _uploadOk;   // null until the upload resolves
@@ -168,6 +169,7 @@ class WorkoutController {
         _setLogs = {};
         _outcomes = {};
         _exStartDistM = 0;
+        _stepTimes = {};
         _resultDecision = null;
         _entered = {};
         _uploadOk = null;
@@ -976,7 +978,12 @@ class WorkoutController {
     // distance a distance step covered. Read when the step is left (its last
     // round, Skip, or Save mid-step) and kept by exercise for the upload.
     hidden function noteStepEnd(ex) {
-        if (ex == null || _entered.hasKey(ex.name())) { return; }
+        if (ex == null) { return; }
+        // The step's window, for the session log's exerciseTimeline: a step
+        // returned to keeps its first start.
+        var start = _stepTimes.hasKey(_exIndex) ? _stepTimes[_exIndex][1] : _exStartSec;
+        _stepTimes[_exIndex] = [ex, start, _elapsed];
+        if (_entered.hasKey(ex.name())) { return; }
         var out = _outcomes.hasKey(ex.name()) ? _outcomes[ex.name()] : {};
         if (ex.isTemplate("for_time")) { out["durationSec"] = exerciseElapsedSec(); }
         var d = _distanceM - _exStartDistM;
@@ -1344,6 +1351,7 @@ class WorkoutController {
             "completedAt" => endIso,
             "source" => "garmin",
             "exercises" => Wire.exercises(_setLogs, _outcomes, _session.exercises()),
+            "exerciseTimeline" => Wire.timeline(_stepTimes),
             "notes" => "",
             "avgHR" => avgHR,
             "peakHR" => peakHR

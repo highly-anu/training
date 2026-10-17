@@ -15,9 +15,42 @@ final class WorkoutSessionState: ObservableObject {
         case amrapRunning(exerciseIndex: Int, secondsRemaining: Int)
         case resting(exerciseIndex: Int, completedSet: Int, secondsRemaining: Int)
         case sessionComplete
+
+        /// The exercise the phase is on; nil before the first and after the last.
+        var exerciseIndex: Int? {
+            switch self {
+            case let .active(ei, _), let .timedWork(ei, _), let .emomInterval(ei, _, _, _),
+                 let .amrapRunning(ei, _), let .resting(ei, _, _):
+                return ei
+            case .idle, .sessionComplete:
+                return nil
+            }
+        }
     }
 
-    @Published var phase: Phase = .idle
+    @Published var phase: Phase = .idle {
+        didSet { noteStep(phase.exerciseIndex) }
+    }
+
+    /// Exercise index → when it became current and when the athlete moved
+    /// on, by the wall clock the heart-rate samples are stamped with. The
+    /// session log sends it as `exerciseTimeline`, which the server cuts the
+    /// heart rate by: only an exercise that prescribes zones counts in them
+    /// (src/analytics/hr_plan.py). Sets alone timed only set-logged steps, so
+    /// a warm-up or a timed piece had no window.
+    private(set) var stepWindows: [Int: (start: Date, end: Date?)] = [:]
+    private var currentStep: Int? = nil
+
+    private func noteStep(_ index: Int?, at now: Date = Date()) {
+        guard index != currentStep else { return }
+        if let cur = currentStep, let w = stepWindows[cur] { stepWindows[cur] = (w.start, now) }
+        if let index {
+            // Back to a step already done: it runs on from its first start.
+            let start = stepWindows[index]?.start ?? now
+            stepWindows[index] = (start, nil)
+        }
+        currentStep = index
+    }
 
     // Timer control
     @Published var isTimerPaused: Bool = false
@@ -101,6 +134,7 @@ final class WorkoutSessionState: ObservableObject {
         distanceMeters = 0; currentCadence = 0; currentSpeedMps = 0; floorsAscended = 0
         currentSetStartOffset = nil
         showOvertimePrompt = false
+        stepWindows = [:]; currentStep = nil
     }
 
     // MARK: - Sets / reps

@@ -40,7 +40,7 @@ struct WorkoutCompleteSheet: View {
                     statsGrid(tint: tint)
                     if WorkoutRoute.hasRoute(track) { routeCard }
                     if let analysis, analysis.distribution != nil || analysis.effect != nil
-                        || analysis.recoveryHours != nil {
+                        || analysis.recoveryHours != nil || analysis.planned != nil {
                         effortCard(analysis)
                     }
                     matchCard(match)
@@ -291,6 +291,10 @@ struct WorkoutCompleteSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let z = a.distribution {
                     zoneBar(z)
+                }
+                // What the session planned beside what was recorded (§6.35).
+                if a.planned != nil {
+                    PlannedZonesView(analysis: a)
                 }
                 if let hours = a.recoveryHours {
                     Label("\(hours) h", systemImage: "clock.arrow.circlepath")

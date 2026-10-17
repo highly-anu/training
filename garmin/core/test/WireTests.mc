@@ -40,3 +40,20 @@ function setsGoUpAsTheServerReadsThem(logger as Test.Logger) as Lang.Boolean {
     Test.assertEqualMessage(out["KB Clean"]["sets"][0]["repsActual"], 102, "no id: the name stands");
     return true;
 }
+
+// Each step's window goes up keyed like its sets, in the session clock's
+// seconds; a step with no time on it (skipped at once) is left out.
+(:test)
+function stepWindowsGoUpAsTheTimeline(logger as Test.Logger) as Lang.Boolean {
+    var row = new WorkoutExercise({ "exerciseId" => "row", "name" => "Row", "slotType" => "time_domain" }, {}, null);
+    var fran = new WorkoutExercise({ "exerciseId" => "thruster", "name" => "Thruster", "slotType" => "for_time" }, {}, null);
+    var clean = new WorkoutExercise({ "name" => "KB Clean", "slotType" => "time_domain" }, {}, null);
+    var out = Wire.timeline({ 0 => [row, 0, 900], 1 => [fran, 960, 1258], 2 => [clean, 1300, 1300] });
+    Test.assertEqualMessage(out.size(), 2, "the empty step is left out");
+    var byId = {};
+    for (var i = 0; i < out.size(); i += 1) { byId[out[i]["exerciseId"]] = out[i]; }
+    Test.assertEqual(byId["row"]["startOffset"], 0);
+    Test.assertEqual(byId["row"]["endOffset"], 900);
+    Test.assertEqualMessage(byId["thruster"]["startOffset"], 960, "keyed by exercise id");
+    return true;
+}
