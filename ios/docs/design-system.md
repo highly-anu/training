@@ -1482,6 +1482,10 @@ Top to bottom:
   with a 35 % ring, the completion check (§3.3) on its edge — it bounces
   once when a link is confirmed — "WORKOUT COMPLETE" in green, what the
   device recorded, date · time · source, and one line of credit.
+- *Route*: the track on a flat map, only when it is one — two real fixes
+  (not 0,0) spread over more than 50 m (`WorkoutRoute.hasRoute`, which the
+  workout detail's Route section asks too). A gym session's handful of
+  points in one spot draws no map.
 - *Numbers*: up to six tiles, in this order: time, distance, average HR, load
   (TRIMP, coloured by `TrimpStyle`), elevation gain, calories, peak HR. Four
   sit two by two. The load and everything under *Effort* (training effect,
@@ -1512,4 +1516,10 @@ one sentence on the screen; everything else is a symbol and a number (§1.4).
 Rules: the sheet decides nothing on its own — closing it leaves an unlinked
 workout unlinked, to be decided in Log ▸ Linking. *Details* (toolbar)
 pushes `WorkoutDetailView`. `trainingcompanion://workout-complete[?id=…]`
-opens it for a given workout, or the newest, seen or not, for the simulator.
+opens it for a given workout, or the newest, seen or not, for the simulator;
+`?demo=1` lines up the newest eight, one after another as each is closed.
+A sheet SwiftUI could not present (another was open) is taken back after
+1.5 s without being marked seen; the first load on an install or on this
+build only records what is listed. A suggestion for another program's
+session is not confirmed here (its key would tick this program's session of
+that name); it falls through to the day's open sessions.

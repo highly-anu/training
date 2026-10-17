@@ -60,6 +60,7 @@ struct ContentView: View {
                     set: { if $0 == nil { appState.finishCompletedWorkout() } }
                 )) { workout in
                     WorkoutCompleteSheet(workout: workout)
+                        .id(workout.id)   // a fresh view, and fresh state, per workout
                         .environmentObject(appState)
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -90,7 +91,11 @@ struct ContentView: View {
     private func presentRequestedWorkoutComplete() {
         guard let request = router.pendingWorkoutComplete else { return }
         router.clearPendingWorkoutComplete()
-        appState.presentCompletedWorkout(id: request.isEmpty ? nil : request)
+        if request == AppRouter.workoutCompleteDemo {
+            appState.presentCompletedWorkoutDemo()
+        } else {
+            appState.presentCompletedWorkout(id: request.isEmpty ? nil : request)
+        }
     }
 }
 

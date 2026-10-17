@@ -16,6 +16,10 @@ struct WorkoutCompleteSheet: View {
     let workout: ImportedWorkout
 
     @State private var analysis: WorkoutAnalysis? = nil
+    /// The recorded track — the list row carries none (§6.10).
+    @State private var track: [GPSPoint] = []
+    /// The full record, handed to Details so it is not downloaded twice.
+    @State private var full: ImportedWorkout? = nil
     @State private var appeared = false
     /// The session key a link is in flight for.
     @State private var linkingKey: String? = nil
@@ -24,14 +28,17 @@ struct WorkoutCompleteSheet: View {
     @State private var linkError: String? = nil
 
     var body: some View {
+        // Once per render: each call scans the program and the suggestions.
         let match = appState.completionMatch(for: workout)
+        let tint = tint(for: match)
         let dots = weekDots
         let weekNumber = Self.dayParser.date(from: workout.date).flatMap { appState.week(for: $0)?.weekNumber }
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    hero(match: match, dots: dots)
-                    statsGrid
+                    hero(match: match, dots: dots, tint: tint)
+                    statsGrid(tint: tint)
+                    if WorkoutRoute.hasRoute(track) { routeCard }
                     if let analysis, analysis.distribution != nil || analysis.effect != nil
                         || analysis.recoveryHours != nil {
                         effortCard(analysis)
@@ -47,7 +54,8 @@ struct WorkoutCompleteSheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink {
-                        WorkoutDetailView(workout: workout)
+                        WorkoutDetailView(workout: workout,
+                                          prefetched: full?.id == workout.id ? full : nil)
                             .environmentObject(appState)
                     } label: {
                         Label("Details", systemImage: "chart.xyaxis.line")
@@ -64,13 +72,24 @@ struct WorkoutCompleteSheet: View {
                     .accessibilityLabel("Close")
                 }
             }
-            .task {
-                guard analysis == nil, let api = appState.api else { return }
-                analysis = (try? await api.fetchWorkout(id: workout.id))?.analysis
+            // Keyed on the workout: a demo presents one sheet after another,
+            // and SwiftUI kept the first one's state for the next — the
+            // kettlebell session showed the run's route and load.
+            .task(id: workout.id) {
+                full = nil
+                track = []
+                analysis = nil
+                guard let api = appState.api else { return }
+                let loaded = try? await api.fetchWorkout(id: workout.id)
+                guard loaded?.id == workout.id else { return }
+                full = loaded
+                track = loaded?.gpsTrack ?? []
+                withAnimation(.easeOut(duration: 0.2)) { analysis = loaded?.analysis }
             }
         }
         .presentationDragIndicator(.visible)
         .onAppear {
+            appState.completedWorkoutOnScreen = true
             AppHaptics.success()
             withAnimation(.easeOut(duration: 0.25)) { appeared = true }
         }
@@ -78,18 +97,19 @@ struct WorkoutCompleteSheet: View {
 
     // MARK: - Hero
 
-    private var modalityId: String? {
-        if case .linked(_, let s?) = appState.completionMatch(for: workout) {
-            return workout.inferredModalityId ?? s.modality
-        }
-        return workout.inferredModalityId
+    /// What was recorded first; the linked session's modality only when the
+    /// record names none.
+    private func modalityId(for match: WorkoutCompletion.Match) -> String? {
+        if let inferred = workout.inferredModalityId { return inferred }
+        if case .linked(_, let s?) = match { return s.modality }
+        return nil
     }
 
-    private var tint: Color {
-        modalityId.map { ModalityStyle.color(for: $0) } ?? .accentColor
+    private func tint(for match: WorkoutCompletion.Match) -> Color {
+        modalityId(for: match).map { ModalityStyle.color(for: $0) } ?? .accentColor
     }
 
-    private func hero(match: WorkoutCompletion.Match, dots: [WorkoutCompletion.WeekDot]) -> some View {
+    private func hero(match: WorkoutCompletion.Match, dots: [WorkoutCompletion.WeekDot], tint: Color) -> some View {
         let linked: Bool = { if case .linked = match { return true }; return false }()
         let planned: Bool = {
             switch match {
@@ -108,7 +128,7 @@ struct WorkoutCompleteSheet: View {
                     .frame(width: 104, height: 104)
                     .overlay(
                         Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType,
-                                                              modalityId: modalityId))
+                                                              modalityId: modalityId(for: match)))
                             .font(.system(size: 44, weight: .semibold))
                             .foregroundStyle(tint)
                     )
@@ -151,7 +171,7 @@ struct WorkoutCompleteSheet: View {
     private var metaLine: String {
         var parts: [String] = []
         if let day = Self.dayParser.date(from: workout.date) { parts.append(Self.dayDisplay.string(from: day)) }
-        if let start = WorkoutCompletion.parseInstant(workout.startTime) {
+        if let start = LogSessions.parseServerDate(workout.startTime) {
             parts.append(Self.timeDisplay.string(from: start))
         }
         parts.append(ImportedWorkout.sourceLabel(workout.source))
@@ -169,7 +189,7 @@ struct WorkoutCompleteSheet: View {
         let spoken: String
     }
 
-    private var stats: [Stat] {
+    private func stats(tint: Color) -> [Stat] {
         var out: [Stat] = []
         if let minutes = workout.durationMinutes, minutes >= 1 {
             let m = Int(minutes.rounded())
@@ -211,8 +231,8 @@ struct WorkoutCompleteSheet: View {
     }
 
     @ViewBuilder
-    private var statsGrid: some View {
-        let items = stats
+    private func statsGrid(tint: Color) -> some View {
+        let items = stats(tint: tint)
         if !items.isEmpty {
             // Four read as two by two; otherwise rows of three.
             let columns = items.count == 4 ? 2 : 3
@@ -246,18 +266,25 @@ struct WorkoutCompleteSheet: View {
         }
     }
 
+    // MARK: - Route
+
+    /// Where it went, flat; the 3D Swiss view and the charts are one tap away
+    /// under Details.
+    private var routeCard: some View {
+        AnalyticsCard(header: "Route") {
+            WorkoutRouteMapView(points: WorkoutRoute.fixes(track))
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .accessibilityLabel("Map of the route")
+        }
+    }
+
     // MARK: - Effort
 
     private func effortCard(_ a: WorkoutAnalysis) -> some View {
         AnalyticsCard(header: "Effort") {
             if let effect = a.effect {
-                Label(effect.rawValue, systemImage: effect.icon)
-                    .font(.caption2).fontWeight(.semibold)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(effect.color.opacity(0.15))
-                    .foregroundStyle(effect.color)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(effect.color.opacity(0.35), lineWidth: 1))
+                TintCapsule(text: effect.rawValue, symbol: effect.icon, color: effect.color, bordered: true)
                     .accessibilityLabel("Training effect: \(effect.rawValue)")
             }
         } content: {
@@ -316,7 +343,7 @@ struct WorkoutCompleteSheet: View {
         switch match {
         case .linked(let key, let session):
             AnalyticsCard(header: "Planned session") {
-                statusCapsule("Linked", symbol: "link", color: .green)
+                TintCapsule(text: "Linked", symbol: "link", color: .green)
             } content: {
                 if let session {
                     sessionRow(session, key: key) {
@@ -335,7 +362,7 @@ struct WorkoutCompleteSheet: View {
 
         case .suggested(let key, let session, let others):
             AnalyticsCard(header: "Is this the session?") {
-                statusCapsule("Suggested", symbol: "sparkles", color: .orange)
+                TintCapsule(text: "Suggested", symbol: "sparkles", color: .orange)
             } content: {
                 VStack(alignment: .leading, spacing: 8) {
                     if let session {
@@ -358,7 +385,7 @@ struct WorkoutCompleteSheet: View {
 
         case .candidates(let candidates):
             AnalyticsCard(header: "Planned that day") {
-                statusCapsule("Unlinked", symbol: "link.badge.plus", color: .secondary)
+                TintCapsule(text: "Unlinked", symbol: "link.badge.plus", color: .secondary)
             } content: {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(candidates) { candidate in candidateRow(candidate) }
@@ -368,7 +395,7 @@ struct WorkoutCompleteSheet: View {
 
         case .unplanned:
             AnalyticsCard(header: "Planned session") {
-                statusCapsule("Extra", symbol: "plus.circle", color: .secondary)
+                TintCapsule(text: "Extra", symbol: "plus.circle", color: .secondary)
             } content: {
                 Label("Nothing planned that day", systemImage: "calendar")
                     .font(.subheadline)
@@ -411,13 +438,7 @@ struct WorkoutCompleteSheet: View {
                     .font(.subheadline).fontWeight(.semibold)
                     .lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(ModalityStyle.label(for: s.modality))
-                        .font(.caption2).fontWeight(.semibold)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(color.opacity(0.15))
-                        .foregroundStyle(color)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(color.opacity(0.35), lineWidth: 1))
+                    TintCapsule(text: ModalityStyle.label(for: s.modality), color: color, bordered: true)
                     if let minutes = s.archetype?.durationEstimateMinutes {
                         Label("\(minutes) min", systemImage: "clock")
                             .font(.caption2)
@@ -437,15 +458,6 @@ struct WorkoutCompleteSheet: View {
 
     private func sessionName(_ s: ProgramSession) -> String {
         s.archetype?.name ?? ModalityStyle.label(for: s.modality)
-    }
-
-    private func statusCapsule(_ text: String, symbol: String, color: Color) -> some View {
-        Label(text, systemImage: symbol)
-            .font(.caption2).fontWeight(.semibold)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(color.opacity(0.12))
-            .foregroundStyle(color)
-            .clipShape(Capsule())
     }
 
     @ViewBuilder

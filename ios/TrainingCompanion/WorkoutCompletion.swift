@@ -50,18 +50,17 @@ enum WorkoutCompletion {
     /// When the workout ended: its end time, else start + duration, else the
     /// end of its day (a record with neither still belongs to that day).
     static func endDate(of workout: ImportedWorkout, calendar: Calendar = .current) -> Date? {
-        if let end = parseInstant(workout.endTime) { return end }
-        if let start = parseInstant(workout.startTime) {
+        if let end = LogSessions.parseServerDate(workout.endTime) { return end }
+        if let start = LogSessions.parseServerDate(workout.startTime) {
             return start.addingTimeInterval((workout.durationMinutes ?? 0) * 60)
         }
-        // The date is the athlete's day: read it in the calendar's zone.
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .gregorian)
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = calendar.timeZone
-        f.dateFormat = "yyyy-MM-dd"
-        guard let day = f.date(from: workout.date) else { return nil }
-        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: day))
+        // The date is the athlete's day, read in the calendar's zone — from
+        // its parts, since this runs for every unseen workout on each load.
+        let parts = workout.date.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3,
+              let day = calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+        else { return nil }
+        return calendar.date(byAdding: .day, value: 1, to: day)
     }
 
     /// The workout to celebrate: the most recently finished one the phone
@@ -107,6 +106,15 @@ enum WorkoutCompletion {
                               others: open.filter { $0.key != key })
         }
         return open.isEmpty ? .unplanned : .candidates(open)
+    }
+
+    /// Whether a suggestion's session uid ("<version>:w1-Monday-0") is a
+    /// session of the active program version. A uid of another version is a
+    /// session of an earlier program, whose key would tick this program's
+    /// session of the same name; no uid (an older server) is taken as current.
+    static func isCurrentProgram(uid: String?, versionId: String?) -> Bool {
+        guard let uid, let versionId else { return true }
+        return uid.hasPrefix(versionId + ":")
     }
 
     // MARK: - The cheer
@@ -165,23 +173,9 @@ enum WorkoutCompletion {
     static func weekDots(_ week: ProgramWeek, isComplete: (String) -> Bool) -> [WeekDot] {
         dayOrder.flatMap { day in
             (week.schedule[day] ?? []).enumerated().map { i, s in
-                let key = "\(week.weekNumber)-\(day)-\(i)"
+                let key = AppState.sessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
                 return WeekDot(key: key, modality: s.modality, done: isComplete(key))
             }
         }
-    }
-
-    // MARK: - Parsing
-
-    /// ISO 8601 with or without fractional seconds, and with a space for the
-    /// `T` — the snapshot sends Postgres's own text, "2026-10-17 08:10:00+02:00".
-    static func parseInstant(_ raw: String?) -> Date? {
-        guard let raw, !raw.isEmpty else { return nil }
-        let s = raw.count > 10 && raw[raw.index(raw.startIndex, offsetBy: 10)] == " "
-            ? raw.replacingCharacters(in: raw.index(raw.startIndex, offsetBy: 10)...raw.index(raw.startIndex, offsetBy: 10), with: "T")
-            : raw
-        let frac = ISO8601DateFormatter()
-        frac.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return frac.date(from: s) ?? ISO8601DateFormatter().date(from: s)
     }
 }

@@ -11,6 +11,35 @@ import SwiftUI
 
 /// The map. Renders nothing at all when there is no track, rather than an empty
 /// grey rectangle.
+/// Whether a recorded track is a route worth a map: at least two real fixes
+/// (inside the valid range, not the 0,0 a device writes without a fix) that
+/// spread over more than `minimumSpanMeters`. An indoor or gym session on a
+/// watch can carry a handful of points in one spot; drawn, that is a map of
+/// the gym, not where the workout went. The Workout complete sheet and the
+/// workout detail both ask this.
+enum WorkoutRoute {
+    static let minimumSpanMeters = 50.0
+
+    static func fixes(_ points: [GPSPoint]) -> [GPSPoint] {
+        points.filter { p in
+            abs(p.lat) <= 90 && abs(p.lng) <= 180 && !(p.lat == 0 && p.lng == 0)
+        }
+    }
+
+    static func hasRoute(_ points: [GPSPoint]) -> Bool {
+        let real = fixes(points)
+        guard real.count >= 2,
+              let minLat = real.map(\.lat).min(), let maxLat = real.map(\.lat).max(),
+              let minLng = real.map(\.lng).min(), let maxLng = real.map(\.lng).max()
+        else { return false }
+        // Equirectangular diagonal of the bounding box — plenty for "did it move".
+        let midLat = (minLat + maxLat) / 2 * .pi / 180
+        let dy = (maxLat - minLat) * 111_320
+        let dx = (maxLng - minLng) * 111_320 * cos(midLat)
+        return (dx * dx + dy * dy).squareRoot() > minimumSpanMeters
+    }
+}
+
 struct WorkoutRouteSection: View {
     let points: [GPSPoint]
 
@@ -18,7 +47,7 @@ struct WorkoutRouteSection: View {
     @State private var mapMode: MapMode = .flat
 
     var body: some View {
-        if !points.isEmpty {
+        if WorkoutRoute.hasRoute(points) {
             Section("Route") {
                 if isInSwitzerland(points) {
                     Picker("View", selection: $mapMode) {

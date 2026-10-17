@@ -8,6 +8,9 @@ struct WorkoutDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let workout: ImportedWorkout
+    /// The full record when the presenter already fetched it (the Workout
+    /// complete sheet), so it is not downloaded twice.
+    var prefetched: ImportedWorkout? = nil
     var onDeleted: (() -> Void)? = nil
 
     private enum SheetState {
@@ -101,7 +104,7 @@ struct WorkoutDetailView: View {
                     .padding(.vertical, 4)
                 }
             } else {
-                WorkoutRouteSection(points: detail.gpsTrack ?? [])
+                WorkoutRouteSection(points: WorkoutRoute.fixes(detail.gpsTrack ?? []))
                 WorkoutChartsSection(workout: detail, hrConfig: appState.profile.hrConfig)
             }
             // Analytics sections (Garmin/Apple/Strava-inspired)
@@ -120,7 +123,8 @@ struct WorkoutDetailView: View {
         .task {
             guard fullWorkout == nil, let api = appState.api else { return }
             isLoadingDetail = true
-            let loaded = try? await api.fetchWorkout(id: workout.id)
+            let loaded: ImportedWorkout?
+            if let prefetched { loaded = prefetched } else { loaded = try? await api.fetchWorkout(id: workout.id) }
             fullWorkout = loaded
             isLoadingDetail = false
 

@@ -74,11 +74,6 @@ struct AnalyticsStatusBadge: View {
     let status: String
 
     var body: some View {
-        Text(AnalyticsStatusStyle.label(status))
-            .font(.caption2).fontWeight(.semibold)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(AnalyticsStatusStyle.color(status).opacity(0.15))
-            .foregroundStyle(AnalyticsStatusStyle.color(status))
-            .clipShape(Capsule())
+        TintCapsule(text: AnalyticsStatusStyle.label(status), color: AnalyticsStatusStyle.color(status))
     }
 }

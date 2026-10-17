@@ -116,22 +116,10 @@ struct WorkoutRow: View {
     @ViewBuilder
     private func matchChip(session: ProgramSession?, isMatched: Bool) -> some View {
         if let session {
-            let color = ModalityStyle.color(for: session.modality)
-            Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
-                .font(.caption2).fontWeight(.semibold)
-                .lineLimit(1)
-                .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(color.opacity(0.15))
-                .foregroundStyle(color)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(color.opacity(0.35), lineWidth: 1))
+            TintCapsule(text: session.archetype?.name ?? ModalityStyle.label(for: session.modality),
+                        color: ModalityStyle.color(for: session.modality), bordered: true)
         } else if isMatched {
-            Label("Linked", systemImage: "link")
-                .font(.caption2).fontWeight(.medium)
-                .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(Color.green.opacity(0.15))
-                .foregroundStyle(Color.green)
-                .clipShape(Capsule())
+            TintCapsule(text: "Linked", symbol: "link", color: .green)
         } else {
             Text("Unmatched")
                 .font(.caption2)

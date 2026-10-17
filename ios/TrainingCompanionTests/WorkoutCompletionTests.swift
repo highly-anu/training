@@ -43,10 +43,12 @@ final class WorkoutCompletionTests: XCTestCase {
     }
 
     func testParsesTheSnapshotsPostgresText() {
-        XCTAssertEqual(WorkoutCompletion.parseInstant("2026-10-17 08:10:00+02:00"),
+        XCTAssertEqual(LogSessions.parseServerDate("2026-10-17 08:10:00+02:00"),
                        ISO8601DateFormatter().date(from: "2026-10-17T06:10:00Z"))
-        XCTAssertEqual(WorkoutCompletion.parseInstant("2026-10-17T06:10:00.500Z")?.timeIntervalSince1970,
-                       ISO8601DateFormatter().date(from: "2026-10-17T06:10:00Z")!.timeIntervalSince1970 + 0.5)
+        // Python's str(datetime) with microseconds.
+        XCTAssertEqual(LogSessions.parseServerDate("2026-10-17 08:10:00.123000+02:00")?.timeIntervalSince1970 ?? 0,
+                       ISO8601DateFormatter().date(from: "2026-10-17T06:10:00Z")!.timeIntervalSince1970 + 0.123,
+                       accuracy: 0.001)
     }
 
     func testDateOnlyWorkoutToday() {
@@ -115,6 +117,32 @@ final class WorkoutCompletionTests: XCTestCase {
                        "Every session adds up."].contains(extra))
     }
 
+    // MARK: - Route
+
+    private func fix(_ lat: Double, _ lng: Double) -> GPSPoint {
+        GPSPoint(lat: lat, lng: lng, altitude: nil, timestamp: "2026-10-17T06:10:00Z", bpm: nil, speed: nil)
+    }
+
+    func testNoTrackNoMap() {
+        XCTAssertFalse(WorkoutRoute.hasRoute([]))
+        XCTAssertFalse(WorkoutRoute.hasRoute([fix(47.3779, 8.5402)]))
+    }
+
+    func testNoFixIsNotARoute() {
+        // A device without a fix writes 0,0.
+        XCTAssertFalse(WorkoutRoute.hasRoute([fix(0, 0), fix(0, 0), fix(47.3779, 8.5402)]))
+    }
+
+    func testGymSessionInOneSpotIsNotARoute() {
+        // A strength session on a watch: a few metres of drift.
+        XCTAssertFalse(WorkoutRoute.hasRoute([fix(47.37790, 8.54020), fix(47.37795, 8.54028), fix(47.37788, 8.54015)]))
+    }
+
+    func testARunIsARoute() {
+        XCTAssertTrue(WorkoutRoute.hasRoute([fix(47.3779, 8.5402), fix(47.3712, 8.5240), fix(0, 0)]))
+        XCTAssertEqual(WorkoutRoute.fixes([fix(47.3779, 8.5402), fix(0, 0)]).count, 1)
+    }
+
     // MARK: - The week
 
     func testWeekDotsRunMondayToSunday() {
@@ -128,8 +156,35 @@ final class WorkoutCompletionTests: XCTestCase {
 
     // MARK: - AppState
 
-    func testClosingMarksEveryListedWorkoutSeen() async {
+    func testFirstLoadOnlyRecordsWhatIsThere() async {
         UserDefaults.standard.removeObject(forKey: "workoutComplete.seen")
+        defer { UserDefaults.standard.removeObject(forKey: "workoutComplete.seen") }
+        let state = AppState()
+        state.importedWorkouts = [workout("old", end: "2026-10-17T07:00:00Z")]
+        state.noticeCompletedWorkout(now: now)
+        XCTAssertNil(state.completedWorkout)
+        state.importedWorkouts.append(workout("new", end: "2026-10-17T17:30:00Z"))
+        state.noticeCompletedWorkout(now: now)
+        XCTAssertEqual(state.completedWorkout?.id, "new")
+    }
+
+    func testUnknownIdShowsNothing() async {
+        let state = AppState()
+        state.importedWorkouts = [workout("a", end: "2026-10-17T07:00:00Z")]
+        state.presentCompletedWorkout(id: "typo")
+        XCTAssertNil(state.completedWorkout)
+        state.presentCompletedWorkout(id: nil)
+        XCTAssertEqual(state.completedWorkout?.id, "a")
+    }
+
+    func testSuggestionOfAnotherProgramVersion() {
+        XCTAssertTrue(WorkoutCompletion.isCurrentProgram(uid: "v2:w1-Monday-0", versionId: "v2"))
+        XCTAssertFalse(WorkoutCompletion.isCurrentProgram(uid: "v1:w1-Monday-0", versionId: "v2"))
+        XCTAssertTrue(WorkoutCompletion.isCurrentProgram(uid: nil, versionId: "v2"))
+    }
+
+    func testClosingMarksEveryListedWorkoutSeen() async {
+        UserDefaults.standard.set([String](), forKey: "workoutComplete.seen")
         defer { UserDefaults.standard.removeObject(forKey: "workoutComplete.seen") }
         let state = AppState()
         state.importedWorkouts = [workout("a", end: "2026-10-17T07:00:00Z"),
@@ -160,5 +215,7 @@ final class WorkoutCompletionTests: XCTestCase {
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://workout-complete")!), .workoutComplete(nil))
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://workout-complete?id=w1")!),
                        .workoutComplete("w1"))
+        XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://workout-complete?demo=1")!),
+                       .workoutCompleteDemo)
     }
 }
