@@ -13,8 +13,9 @@ export const queryKeys = {
   modalities: {
     all: ['modalities'] as const,
   },
-  benchmarks: {
-    all: ['benchmarks'] as const,
+  standards: {
+    all: ['standards'] as const,
+    results: ['standards', 'results'] as const,
   },
   equipment: {
     all: ['equipment'] as const,

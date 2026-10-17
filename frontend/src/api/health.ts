@@ -18,7 +18,9 @@ export interface HealthSnapshot {
   sessionLogs: Record<string, SessionPerformanceLog>
   dailyBio: Record<string, DailyBioLog>
   matches: WorkoutMatch[]
-  performanceLogs: Record<string, Array<{ value: number; date: string }>>
+  /** Results on the standards — read through GET /standards/results instead,
+   *  which places each on its ladder. */
+  performanceLogs: Record<string, Array<{ id?: number; value: number; date: string }>>
 }
 
 const BASE = '/health'
@@ -136,17 +138,6 @@ export function dismissMatchSuggestion(workoutId: string): void {
   void apiClient.delete(`${BASE}/matches/suggestions/${encodeURIComponent(workoutId)}`)
 }
 
-export function savePerformanceEntry(
-  benchmarkId: string,
-  value: number,
-  loggedAt: string
-): void {
-  void apiClient.post(`${BASE}/performance`, { benchmarkId, value, loggedAt })
-}
-
-export function deletePerformanceLog(benchmarkId: string): void {
-  void apiClient.delete(`${BASE}/performance/${encodeURIComponent(benchmarkId)}`)
-}
 
 export async function fetchReadiness(): Promise<ReadinessResult> {
   return apiClient.get(`${BASE}/readiness`) as unknown as Promise<ReadinessResult>

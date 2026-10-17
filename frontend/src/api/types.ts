@@ -619,22 +619,63 @@ export interface TracedProgram extends GeneratedProgram {
   generation_trace?: GenerationTrace
 }
 
-// ─── Benchmarks ───────────────────────────────────────────────────────────────
+// ─── Standards ────────────────────────────────────────────────────────────────
+// "Standard" everywhere a person reads it; the type, route and key names keep
+// "benchmark" because they are stored and on the wire (src/analytics/benchmarks_data.py).
 
 export type BenchmarkLevel = 'entry' | 'intermediate' | 'advanced' | 'elite'
 
-/** Drives which benchmark standards the athlete is scored against. */
+/** Drives which standards' tables the athlete is scored against. */
 export type Sex = 'male' | 'female'
 
 export interface BenchmarkStandard {
   id: string
   name: string
   category: 'strength' | 'conditioning' | 'kettlebell' | 'tactical' | 'benchmark_wod' | 'skill' | 'cell'
+  /** The group's name and place, the same on every screen and both clients. */
+  categoryName?: string
+  categoryOrder?: number
+  /** The modality it measures — its ladder is drawn in that colour. */
   domain?: string
   unit: string
   standards: Record<BenchmarkLevel, number>
+  /** The thresholds as printed ("4:30", "1.5×BW"). */
+  standardsText?: Record<BenchmarkLevel, string>
+  /** What a result field reads: "m:ss", "seconds", "×BW", "reps"… */
+  inputHint?: string
   lower_is_better?: boolean
+  metricType?: string
   notes?: string
+  testProtocol?: string
+  description?: string
+}
+
+/** One value placed on a standard's ladder, by the server (src/standards.py). */
+export interface StandardPoint {
+  value: number
+  valueText: string
+  date: string | null
+  /** null = below entry. */
+  level: BenchmarkLevel | null
+  levelIndex: number
+  next: BenchmarkLevel | null
+  nextText: string | null
+  gap: number | null
+  gapText: string | null
+}
+
+export interface StandardResult {
+  current: StandardPoint
+  best: StandardPoint
+  count: number
+  entries: Array<{ id: number | null; value: number; valueText: string; date: string | null; level: BenchmarkLevel | null; levelIndex: number }>
+}
+
+/** GET /api/standards/results */
+export interface StandardResults {
+  sex: Sex
+  standards: Record<string, StandardResult>
+  bodyweight: { value: number; valueText: string; date: string | null } | null
 }
 
 // ─── Modality ─────────────────────────────────────────────────────────────────
@@ -1543,16 +1584,20 @@ export interface AnalyticsBenchmarkRow {
    *  behind "More standards". Absent on older documents. */
   primary?: boolean
   standards: Record<string, number>
+  standardsText?: Record<string, string>
   latest: number | null
   latestDate: string | null
   derived: { value: number | null; est1rm: number; bodyweightKg: number | null; date?: string; reason?: string } | null
   value: number | null
   valueSource: 'logged' | 'derived' | null
+  valueText?: string | null
   level: string | null
   levelIndex: number
   next: string | null
   gapToNext: number | null
-  history: Array<{ date: string; value: number }>
+  nextText?: string | null
+  gapText?: string | null
+  history: Array<{ date: string; value: number; valueText?: string }>
 }
 
 export interface ProgramAnalytics {
@@ -1566,7 +1611,7 @@ export interface ProgramAnalytics {
   progress: AnalyticsProgressEntry[]
   movement: AnalyticsMovement
   archetypes: AnalyticsArchetypeRow[]
-  benchmarks: { sex: string; bodyweightKg: number | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
+  benchmarks: { sex: string; bodyweightKg: number | null; bodyweightText?: string | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
   load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
 }
 
@@ -1633,8 +1678,10 @@ export interface DevelopmentBenchmark {
   benchmarkId: string
   name: string
   unit: string
+  domain?: string | null
+  metricType?: string | null
   lowerIsBetter: boolean
-  history: Array<{ date: string; value: number; level: string | null; levelIndex: number }>
+  history: Array<{ date: string; value: number; valueText?: string; level: string | null; levelIndex: number }>
   latestLevel: string | null
   latestLevelIndex: number
   levelsGained: number

@@ -5,14 +5,14 @@ import SwiftUI
 enum ProfileTab: Int, AppSubTab {
     // The web Profile's tabs, in its order (information-architecture.md §2),
     // except Injuries, which is part of Athlete on the phone.
-    case athlete, equipment, schedule, benchmarks
+    case athlete, equipment, schedule, standards
 
     var label: String {
         switch self {
         case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
         case .schedule:   return "Schedule"
-        case .benchmarks: return "Benchmarks"
+        case .standards:  return "Standards"
         }
     }
 }
@@ -215,107 +215,97 @@ private struct InjuriesSection: View {
     }
 }
 
-// MARK: - Benchmarks Tab
+// MARK: - Standards Tab
 
-private struct BenchmarksTab: View {
+/// Every standard, grouped and named as the server says (the web's groups,
+/// in its order), with the athlete's current result placed on the ladder by
+/// the server. Tap a row to log a new result.
+private struct StandardsTab: View {
     @EnvironmentObject var appState: AppState
-    @State private var editingBenchmarkId: String? = nil
+    @State private var logging: AppBenchmark? = nil
+
+    private var groups: [(name: String, rows: [AppBenchmark])] {
+        let byCategory = Dictionary(grouping: appState.benchmarks, by: \.category)
+        return byCategory.values
+            .sorted { ($0.first?.categoryOrder ?? 99, $0.first?.groupName ?? "") < ($1.first?.categoryOrder ?? 99, $1.first?.groupName ?? "") }
+            .map { (name: $0.first?.groupName ?? "", rows: $0) }
+    }
 
     var body: some View {
-        let grouped = Dictionary(grouping: appState.benchmarks, by: \.category)
-        let categories = grouped.keys.sorted()
-
-        return List {
+        List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(appState.benchmarks.count) benchmark standards.")
+                    Text("\(appState.benchmarks.count) standards.")
                         .font(.headline)
-                    Text("Track your personal records against standardized benchmarks. Your PRs are saved to your profile and used to calculate training loads.")
+                    Text("Log a result whenever you test one. Every result is kept with its date, so you can see where you stand now and how far you have come across programs.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Text(appState.profile.sex.map { "Showing the \($0) standards." }
+                         ?? "Showing the male standards until you set your sex under Athlete.")
+                        .font(.caption2)
+                        .foregroundStyle(appState.profile.sex == nil ? Color.orange : Color.secondary)
+                    if let bw = appState.standardResults?.bodyweight {
+                        Text("Bodyweight \(bw.valueText) — used for the ×BW standards.")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    } else {
+                        Text("No bodyweight logged — the ×BW standards need one (Athlete).")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.vertical, 4)
             }
 
-            ForEach(categories, id: \.self) { category in
-                Section(category.replacingOccurrences(of: "_", with: " ").capitalized) {
-                    ForEach(grouped[category] ?? []) { benchmark in
-                        benchmarkRow(benchmark)
+            ForEach(groups, id: \.name) { group in
+                Section(group.name) {
+                    ForEach(group.rows) { standard in
+                        StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
+                            .contentShape(Rectangle())
+                            .onTapGesture { logging = standard }
                     }
                 }
             }
-
         }
         .listStyle(.insetGrouped)
-        .sheet(isPresented: Binding(
-            get: { editingBenchmarkId != nil },
-            set: { if !$0 { editingBenchmarkId = nil } }
-        )) {
-            if let id = editingBenchmarkId,
-               let benchmark = appState.benchmarks.first(where: { $0.id == id }) {
-                BenchmarkEditSheet(
-                    benchmark: benchmark,
-                    currentValue: appState.profile.performanceLogs?[id]?.last?.value,
-                    onSave: { value in
-                        // Shown immediately; savePerformanceEntry then re-reads the
-                        // server's series, which keeps this entry only if the write
-                        // landed. The profile PUT never carried PRs — the server's
-                        // merge whitelist drops `performanceLogs`.
-                        let entry = PerformanceEntry(value: value, date: todayString())
-                        if appState.profile.performanceLogs == nil { appState.profile.performanceLogs = [:] }
-                        appState.profile.performanceLogs![id, default: []].append(entry)
-                        Task { await appState.savePerformanceEntry(benchmarkId: id, value: value) }
-                        editingBenchmarkId = nil
-                    }
-                )
-            }
+        .refreshable { await AppRefresh.perform { await appState.loadStandardResults() } }
+        .sheet(item: $logging) { standard in
+            StandardResultSheet(standard: standard, result: appState.standardResults?.standards[standard.id])
         }
     }
+}
 
-    private func benchmarkRow(_ benchmark: AppBenchmark) -> some View {
-        let entries = appState.profile.performanceLogs?[benchmark.id] ?? []
-        let current = entries.last?.value
-        return HStack {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(benchmark.name).font(.body)
-                if let unit = benchmark.unit {
-                    Text(unit).font(.caption).foregroundStyle(.secondary)
+private struct StandardRow: View {
+    let standard: AppBenchmark
+    let result: StandardResult?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(standard.name).font(.subheadline).lineLimit(2)
+                Spacer(minLength: 8)
+                if let current = result?.current {
+                    Text(current.valueText).font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                } else {
+                    Text("—").foregroundStyle(.tertiary)
                 }
             }
-            Spacer()
-            if let val = current {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(String(format: "%.1f", val)).font(.headline).monospacedDigit()
-                    Text(levelLabel(val, benchmark: benchmark))
-                        .font(.caption2)
-                        .foregroundStyle(levelColor(val, benchmark: benchmark))
+            if let result {
+                HStack(spacing: 6) {
+                    StandardLevelBadge(level: result.current.level, domain: standard.domain)
+                    Text(detail(result)).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
-            } else {
-                Text("—").foregroundStyle(.tertiary)
             }
+            StandardLadder(thresholds: standard.thresholdTexts, levelIndex: result?.current.levelIndex,
+                           domain: standard.domain)
         }
-        .contentShape(Rectangle())
-        .onTapGesture { editingBenchmarkId = benchmark.id }
+        .padding(.vertical, 2)
     }
 
-    private func todayString() -> String {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
-    }
-    private func levelLabel(_ value: Double, benchmark: AppBenchmark) -> String {
-        guard let s = benchmark.standards else { return "" }
-        let h = benchmark.higherIsBetter
-        if let e = s.elite,        h ? value >= e : value <= e { return "Elite" }
-        if let a = s.advanced,     h ? value >= a : value <= a { return "Advanced" }
-        if let i = s.intermediate, h ? value >= i : value <= i { return "Intermediate" }
-        return "Entry"
-    }
-    private func levelColor(_ value: Double, benchmark: AppBenchmark) -> Color {
-        switch levelLabel(value, benchmark: benchmark) {
-        case "Elite":        return .purple
-        case "Advanced":     return .blue
-        case "Intermediate": return .green
-        default:             return .secondary
-        }
+    private func detail(_ r: StandardResult) -> String {
+        var parts: [String] = []
+        if let day = StandardLevel.day(r.current.date) { parts.append(day) }
+        if r.best.value != r.current.value { parts.append("best \(r.best.valueText)") }
+        if let next = r.current.next, let gap = r.current.gapText { parts.append("\(gap) to \(next)") }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -344,9 +334,8 @@ private struct AthleteTab: View {
         return 190
     }
 
-    private var latestBodyweight: Double? {
-        appState.profile.performanceLogs?["bodyweight_kg"]?.last?.value
-    }
+    private var bodyweight: StandardResults.Bodyweight? { appState.standardResults?.bodyweight }
+    @State private var bodyweightError: String? = nil
 
     var body: some View {
         List {
@@ -375,14 +364,18 @@ private struct AthleteTab: View {
             }
 
             Section("Body") {
-                // Which benchmark standards apply. Clearing the cached ladder
-                // makes the Benchmarks section re-fetch the right table.
+                // Which standards' tables apply. Clearing the cached ladders
+                // makes the Standards section re-fetch the right table, and the
+                // results are re-read so their levels follow.
                 Picker("Sex", selection: Binding(
                     get: { appState.profile.sex ?? "unset" },
                     set: { value in
                         appState.profile.sex = value == "unset" ? nil : value
                         appState.benchmarks = []
-                        Task { await appState.saveProfile() }
+                        Task {
+                            await appState.saveProfile()
+                            await appState.loadStandardResults()
+                        }
                     }
                 )) {
                     Text("Not set").tag("unset")
@@ -394,13 +387,17 @@ private struct AthleteTab: View {
                 if let dob = appState.profile.dateOfBirth, let age = computeAge(dob) {
                     LabeledContent("Age", value: "\(age)")
                 }
-                LabeledContent("Bodyweight",
-                               value: latestBodyweight.map { String(format: "%.1f kg", $0) } ?? "—")
+                LabeledContent("Bodyweight", value: bodyweight.map { bw in
+                    [bw.valueText, StandardLevel.day(bw.date)].compactMap { $0 }.joined(separator: " · ")
+                } ?? "—")
                 HStack {
                     TextField("New weight (kg)", text: $bodyweightInput)
                         .keyboardType(.decimalPad)
                     Button("Log") { logBodyweight() }
-                        .disabled(Double(bodyweightInput) == nil)
+                        .disabled(bodyweightInput.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                if let bodyweightError {
+                    Text(bodyweightError).font(.caption).foregroundStyle(.red)
                 }
             }
 
@@ -470,16 +467,21 @@ private struct AthleteTab: View {
         )
     }
 
-    /// Bodyweight is a benchmark series, not a profile field: the ×BW strength
-    /// standards read `bodyweight_kg` from performance logs on both clients.
+    /// Bodyweight is a series of its own, not a profile field: the ×BW
+    /// standards read `bodyweight_kg` against the day of each result.
     private func logBodyweight() {
-        guard let value = Double(bodyweightInput), value > 0 else { return }
-        AppHaptics.success()
-        let entry = PerformanceEntry(value: value, date: todayString())
-        if appState.profile.performanceLogs == nil { appState.profile.performanceLogs = [:] }
-        appState.profile.performanceLogs!["bodyweight_kg", default: []].append(entry)
-        bodyweightInput = ""
-        Task { await appState.savePerformanceEntry(benchmarkId: "bodyweight_kg", value: value) }
+        let text = bodyweightInput.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return }
+        Task {
+            if let problem = await appState.logResult(benchmarkId: "bodyweight_kg", text: text) {
+                bodyweightError = problem
+                AppHaptics.error()
+            } else {
+                bodyweightError = nil
+                bodyweightInput = ""
+                AppHaptics.success()
+            }
+        }
     }
 
     private func saveMaxHROverride() {
@@ -523,9 +525,6 @@ private struct AthleteTab: View {
     private func computeAge(_ dob: String) -> Int? {
         guard let date = dobDate(dob) else { return nil }
         return Calendar.current.dateComponents([.year], from: date, to: Date()).year
-    }
-    private func todayString() -> String {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
     }
 }
 
@@ -800,7 +799,7 @@ struct ProfileView: View {
                 switch tab {
                 case .athlete:    AthleteTab()
                 case .equipment:  EquipmentTab()
-                case .benchmarks: BenchmarksTab()
+                case .standards:  StandardsTab()
                 case .schedule:   ScheduleTab()
                 }
             }
@@ -825,55 +824,87 @@ struct ProfileView: View {
             .task {
                 await appState.loadInjuryFlagsIfNeeded()
                 await appState.loadBenchmarksIfNeeded()
+                if appState.standardResults == nil { await appState.loadStandardResults() }
             }
         }
     }
 }
 
-// MARK: - Benchmark Edit Sheet
+// MARK: - Log a result
 
-private struct BenchmarkEditSheet: View {
-    let benchmark: AppBenchmark
-    let currentValue: Double?
-    let onSave: (Double) -> Void
+/// Logs a new result on one standard. The field reads what the athlete would
+/// write — "4:58" for a time — and the server parses it; a value it cannot
+/// read comes back in its own words instead of being dropped.
+private struct StandardResultSheet: View {
+    let standard: AppBenchmark
+    let result: StandardResult?
 
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @State private var inputText: String = ""
+    @State private var inputText = ""
+    @State private var problem: String? = nil
+    @State private var saving = false
+
+    private var canSave: Bool { !saving && !inputText.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(benchmark.name) {
+                Section {
                     HStack {
-                        TextField("Value", text: $inputText).keyboardType(.decimalPad)
-                        if let unit = benchmark.unit {
-                            Text(unit).foregroundStyle(.secondary)
-                        }
+                        TextField(standard.inputHint ?? "Result", text: $inputText)
+                            .keyboardType(standard.inputHint == "m:ss" || standard.inputHint == "h:mm:ss"
+                                          ? .numbersAndPunctuation : .decimalPad)
+                            .onSubmit(save)
+                        if let hint = standard.inputHint { Text(hint).foregroundStyle(.secondary) }
+                    }
+                    if let problem {
+                        Text(problem).font(.caption).foregroundStyle(.red)
+                    }
+                } header: {
+                    Text(standard.name)
+                } footer: {
+                    if let current = result?.current {
+                        Text("Now \(current.valueText) (\(StandardLevel.name(current.level).lowercased()))"
+                             + (result.map { $0.best.value != current.value ? ", best \($0.best.valueText)" : "" } ?? ""))
                     }
                 }
-                if let standards = benchmark.standards {
-                    Section("Standards") {
-                        if let e = standards.elite        { LabeledContent("Elite",        value: "\(e)") }
-                        if let a = standards.advanced     { LabeledContent("Advanced",     value: "\(a)") }
-                        if let i = standards.intermediate { LabeledContent("Intermediate", value: "\(i)") }
-                        if let n = standards.entry        { LabeledContent("Entry",        value: "\(n)") }
+                Section("Standards") {
+                    StandardLadder(thresholds: standard.thresholdTexts, levelIndex: result?.current.levelIndex,
+                                   domain: standard.domain)
+                        .padding(.vertical, 4)
+                    if let notes = standard.notes {
+                        Text(notes).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
-            .navigationTitle("Log PR")
+            .navigationTitle("Log a result")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading)  { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
-                        if let v = Double(inputText) { onSave(v) }
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(Double(inputText) == nil)
+                    Button("Save", action: save)
+                        .fontWeight(.semibold)
+                        .disabled(!canSave)
                 }
             }
-            .onAppear { if let c = currentValue { inputText = "\(c)" } }
+        }
+    }
+
+    private func save() {
+        guard canSave else { return }
+        saving = true
+        let text = inputText.trimmingCharacters(in: .whitespaces)
+        Task {
+            let failure = await appState.logResult(benchmarkId: standard.id, text: text)
+            saving = false
+            if let failure {
+                problem = failure
+                AppHaptics.error()
+            } else {
+                AppHaptics.success()
+                dismiss()
+            }
         }
     }
 }

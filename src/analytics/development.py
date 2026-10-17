@@ -287,11 +287,13 @@ def _benchmarks(inputs: DevelopmentInputs) -> list[dict]:
             if day is None or value is None or day < inputs.window_from or day > inputs.window_to:
                 continue
             lv = _bd.level_of(b, float(value), inputs.sex)
-            history.append({'date': day.isoformat(), 'value': value, 'level': lv['level'], 'levelIndex': lv['index']})
+            history.append({'date': day.isoformat(), 'value': value, 'valueText': _bd.format_value(b, float(value)),
+                            'level': lv['level'], 'levelIndex': lv['index']})
         if not history:
             continue
         out.append({
             'benchmarkId': bid, 'name': b.get('name', bid), 'unit': b.get('unit', ''),
+            'domain': b.get('domain'), 'metricType': b.get('metric_type'),
             'lowerIsBetter': bool(b.get('lower_is_better')),
             'history': history,
             'latestLevel': history[-1]['level'], 'latestLevelIndex': history[-1]['levelIndex'],

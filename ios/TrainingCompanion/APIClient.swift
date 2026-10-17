@@ -195,19 +195,26 @@ final class APIClient {
         _ = try await put("/userdata/profile", body: profile)
     }
 
-    func fetchPerformanceLogs() async throws -> [String: [PerformanceEntry]] {
-        try await fetchHealthSnapshot().performanceLogs
+    /// Logs a result on a standard, or a bodyweight (`bodyweight_kg`, the series
+    /// the ×BW standards read). `text` is what the athlete typed — "4:58" for a
+    /// time — and the server parses it, so the phone and the web read input the
+    /// same way. A 422 (not a value) or 503 (not saved) comes back as the
+    /// server's own words. (PRs used to ride on the profile PUT, whose merge
+    /// whitelist drops them.)
+    func addResult(benchmarkId: String, text: String, loggedAt: String) async throws {
+        struct Body: Encodable { let benchmarkId: String; let text: String; let loggedAt: String }
+        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId, text: text, loggedAt: loggedAt))
+        let (data, status) = try await postForStatus("/health/performance", body: body)
+        if status == 401 { throw APIError.unauthenticated }
+        guard (200...299).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not save the result")
+        }
     }
 
-    /// Logs a benchmark value — a PR, or the `bodyweight_kg` series the ×BW
-    /// standards need. PRs used to be appended to `profile.performanceLogs`
-    /// and sent with the profile, which the server's merge whitelist drops,
-    /// so every PR entered on the phone vanished on the next snapshot load.
-    /// This is the route the web app has always used.
-    func addPerformanceEntry(benchmarkId: String, value: Double, loggedAt: String) async throws {
-        struct Body: Encodable { let benchmarkId: String; let value: Double; let loggedAt: String }
-        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId, value: value, loggedAt: loggedAt))
-        _ = try await postRaw("/health/performance", body: body)
+    /// The athlete's results, each placed on its ladder by the server.
+    func fetchStandardResults() async throws -> StandardResults {
+        let data = try await get("/standards/results")
+        return try JSONDecoder().decode(StandardResults.self, from: data)
     }
 
     // MARK: - Catalog
@@ -225,12 +232,14 @@ final class APIClient {
         return (try? JSONDecoder().decode([AppExercise].self, from: data)) ?? []
     }
 
-    /// `sex` picks the standards table; the endpoint serves the male one otherwise.
+    /// The standards. `sex` picks the tables; the endpoint serves the male ones
+    /// otherwise. Each row decodes on its own, so one malformed standard can
+    /// never blank the list again.
     func fetchBenchmarks(sex: String? = nil) async throws -> [AppBenchmark] {
-        var path = "/benchmarks"
+        var path = "/standards"
         if let sex, sex == "male" || sex == "female" { path += "?sex=\(sex)" }
         let data = try await get(path)
-        return (try? JSONDecoder().decode([AppBenchmark].self, from: data)) ?? []
+        return try JSONDecoder().decode([Lossy<AppBenchmark>].self, from: data).compactMap(\.value)
     }
 
     func fetchPhilosophies() async throws -> [PhilosophyCard] {

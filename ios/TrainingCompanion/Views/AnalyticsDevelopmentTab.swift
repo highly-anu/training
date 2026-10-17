@@ -402,12 +402,13 @@ private struct StandardsCard: View {
                         HStack(spacing: 6) {
                             Text(benchmark.name).font(.caption).fontWeight(.semibold).lineLimit(1)
                             Spacer(minLength: 4)
-                            Text(levelText(benchmark))
-                                .font(.caption2).fontWeight(.semibold)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background((benchmark.levelsGained > 0 ? Color.green : Color.secondary).opacity(0.15))
-                                .foregroundStyle(benchmark.levelsGained > 0 ? Color.green : Color.secondary)
-                                .clipShape(Capsule())
+                            // The level in the standard's modality colour, like
+                            // every ladder; a gain is said in words, not in a
+                            // status green.
+                            if let gained = gainedText(benchmark) {
+                                Text(gained).font(.caption2).foregroundStyle(.secondary)
+                            }
+                            StandardLevelBadge(level: benchmark.latestLevel, domain: benchmark.domain)
                         }
                         Text(historyText(benchmark)).font(.caption2).foregroundStyle(.secondary)
                     }
@@ -416,16 +417,17 @@ private struct StandardsCard: View {
         }
     }
 
-    private func levelText(_ b: DevelopmentAnalytics.Benchmark) -> String {
-        var text = b.latestLevel ?? "below entry"
-        if b.levelsGained > 0 { text += " · +\(b.levelsGained) level\(b.levelsGained == 1 ? "" : "s")" }
-        return text
+    private func gainedText(_ b: DevelopmentAnalytics.Benchmark) -> String? {
+        guard b.levelsGained != 0 else { return nil }
+        let n = abs(b.levelsGained)
+        return "\(b.levelsGained > 0 ? "+" : "−")\(n) level\(n == 1 ? "" : "s")"
     }
 
     private func historyText(_ b: DevelopmentAnalytics.Benchmark) -> String {
         b.history.map { entry in
             let when = DevelopmentAnalytics.day(entry.date).map { $0.formatted(.dateTime.day().month(.abbreviated)) } ?? entry.date
-            return "\(AnalyticsProgramTab.number(entry.value))\(b.unit) (\(entry.level ?? "below entry"), \(when))"
+            let value = entry.valueText ?? "\(AnalyticsProgramTab.number(entry.value))\(b.unit)"
+            return "\(value) (\(StandardLevel.name(entry.level).lowercased()), \(when))"
         }.joined(separator: " → ")
     }
 }

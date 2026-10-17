@@ -36,7 +36,7 @@ depends on never closed. This document is the layout those blocks should have ha
         BODY (continuous input): check-in, HealthKit,│ suggestions · import│
         Garmin/Strava, watch                         └─────────────────────┘
         PROFILE (configuration): athlete, equipment, injuries, schedule,
-        benchmarks, HR zones, connections, devices, account
+        standards, HR zones, connections, devices, account
 ```
 
 Rules the layout must satisfy:
@@ -47,7 +47,7 @@ Rules the layout must satisfy:
    Builder, Session → Exercise reference, Program → Methodology, Review → Adjust,
    Body → Today.
 3. **Inputs sit where the question is asked.** Daily check-in on Home and in Recovery;
-   the import action in the workout log; PRs in Benchmarks; suggestions where you decide.
+   the import action in the workout log; results in Standards; suggestions where you decide.
 4. **Configuration is not a destination.** Profile is visited to change something, never
    to learn what happened today.
 5. **Dev tooling is not user navigation.**
@@ -68,7 +68,7 @@ web's Insight group into Train.
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
 | **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| **Profile** | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete (incl. injuries) · Equipment · Schedule · Benchmarks — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there |
+| **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there) |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
 
 Differences kept on purpose:
@@ -101,7 +101,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Train | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Train | **Log** | `/log` | Workouts · Suggestions (count badge) · Sessions | Import (sheet) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Benchmarks | — |
+| You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds) | — |
 | Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
 
@@ -161,16 +161,16 @@ can land on one. Home's Adherence card (Development until 2026-10-16) stays abou
 current program and links to the tab; its Progress card shows the methodology's headline
 measure (`methodologies[].headlineSummary`) and opens Progress.
 
-**Explore** gains a Standards topic (benchmarks) and one CTA per topic where it makes
+**Explore** gains a Standards topic and one CTA per topic where it makes
 sense: philosophy → "Build a program with this" (prefills source and priorities),
 framework → "Build with this framework" (prefills source and framework), Standards →
-"Log a PR". The ontology graph lives in Dev Lab, where it already is.
+"Log a result". The ontology graph lives in Dev Lab, where it already is.
 `PhilosophyExplorerPanel` moves from `components/devlab/` to `components/explore/`;
 Dev Lab does not use it.
 
 **Profile** gains an Athlete tab: training level (from the header), date of birth (from
-Benchmarks), sex (a new profile key; unblocks the female benchmark standards), bodyweight
-(the `bodyweight_kg` benchmark series), and the account switcher and sign-out.
+Standards), sex (a new profile key; unblocks the female standards' tables), bodyweight
+(the `bodyweight_kg` series), and the account switcher and sign-out.
 
 ## 3. iOS — five tabs (the same menu as §2)
 
@@ -180,7 +180,7 @@ Benchmarks), sex (a new profile key; unblocks the female benchmark standards), b
 | **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = every program (design system §6.20); Load = the old Overview. |
-| **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
+| **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Standards | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
 the Sync tab — is deleted; a start-date repair, if still wanted, belongs under Program

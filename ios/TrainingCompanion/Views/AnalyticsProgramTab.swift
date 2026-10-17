@@ -554,20 +554,27 @@ struct ProgressEntryCard: View {
     }
 
     private var benchmarksBody: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(entry.benchmarks.filter { !$0.missing }) { row in
-                HStack {
-                    Text(row.name ?? row.benchmarkId).font(.caption)
-                    Spacer()
-                    Text(benchmarkSummary(row)).font(.caption).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(row.name ?? row.benchmarkId).font(.caption)
+                        Spacer()
+                        if row.latest != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
+                        Text(benchmarkSummary(row)).font(.caption).foregroundStyle(.secondary)
+                    }
+                    // The same ladder as everywhere else; it used to be text only here.
+                    if !row.standardsText.isEmpty {
+                        StandardLadder(thresholds: row.standardsText,
+                                       levelIndex: row.latest == nil ? nil : row.levelIndex, domain: row.domain)
+                    }
                 }
             }
         }
     }
 
     private func benchmarkSummary(_ row: ProgramAnalytics.BenchmarkRow) -> String {
-        var s = row.latest.map { "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "no PR"
-        if let level = row.level { s += " · \(level)" }
+        var s = row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "No result yet"
         if let target = row.target {
             s += " · target \(target)"
             if let met = row.met { s += met ? " ✓" : " ✗" }

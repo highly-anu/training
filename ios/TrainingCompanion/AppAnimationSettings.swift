@@ -17,6 +17,7 @@ enum AppHaptics {
     static func selection() { UISelectionFeedbackGenerator().selectionChanged() }
     static func success()   { UINotificationFeedbackGenerator().notificationOccurred(.success) }
     static func warning()   { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
+    static func error()     { UINotificationFeedbackGenerator().notificationOccurred(.error) }
 }
 
 /// Pull-to-refresh with one contract (design system §7): a light haptic when

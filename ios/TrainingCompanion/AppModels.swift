@@ -104,18 +104,69 @@ struct BenchmarkStandards: Codable {
     let elite: Double?
 }
 
+/// One standard from `GET /api/standards` (the type keeps the wire's
+/// "benchmark" name; everything the athlete reads says "standard").
+///
+/// Every key but the id and name is optional and decoded on its own: this
+/// used to require `higher_is_better`, a key the server has never sent, so the
+/// whole list failed to decode and Profile ▸ Benchmarks showed nothing.
 struct AppBenchmark: Codable, Identifiable {
     let id: String
     let name: String
     let category: String
+    /// The group's name and place — the same on the web and here.
+    let categoryName: String?
+    let categoryOrder: Int?
     let unit: String?
     let standards: BenchmarkStandards?
-    let higherIsBetter: Bool
+    /// The thresholds as the server prints them ("4:30", "1.5×BW").
+    let standardsText: [String: String]
+    let lowerIsBetter: Bool
+    /// The modality it measures; its ladder is drawn in that colour.
+    let domain: String?
+    let metricType: String?
+    /// What a result field reads: "m:ss", "seconds", "×BW", "reps"…
+    let inputHint: String?
+    let notes: String?
+    let testProtocol: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, category, unit, standards
-        case higherIsBetter = "higher_is_better"
+        case id, name, category, categoryName, categoryOrder, unit, standards, standardsText
+        case lowerIsBetter = "lower_is_better"
+        case domain, metricType, inputHint, notes, testProtocol
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = (try? c.decodeIfPresent(String.self, forKey: .name)) ?? id
+        category = (try? c.decodeIfPresent(String.self, forKey: .category)) ?? "other"
+        categoryName = try? c.decodeIfPresent(String.self, forKey: .categoryName)
+        categoryOrder = try? c.decodeIfPresent(Int.self, forKey: .categoryOrder)
+        unit = try? c.decodeIfPresent(String.self, forKey: .unit)
+        standards = try? c.decodeIfPresent(BenchmarkStandards.self, forKey: .standards)
+        standardsText = ((try? c.decodeIfPresent([String: String].self, forKey: .standardsText)) ?? nil) ?? [:]
+        lowerIsBetter = ((try? c.decodeIfPresent(Bool.self, forKey: .lowerIsBetter)) ?? nil) ?? false
+        domain = try? c.decodeIfPresent(String.self, forKey: .domain)
+        metricType = try? c.decodeIfPresent(String.self, forKey: .metricType)
+        inputHint = try? c.decodeIfPresent(String.self, forKey: .inputHint)
+        notes = try? c.decodeIfPresent(String.self, forKey: .notes)
+        testProtocol = try? c.decodeIfPresent(String.self, forKey: .testProtocol)
+    }
+
+    /// The thresholds as text, entry → elite; a number with the unit for a
+    /// server that predates `standardsText`.
+    var thresholdTexts: [String: String] {
+        guard standardsText.isEmpty, let s = standards else { return standardsText }
+        let pairs: [(String, Double?)] = [("entry", s.entry), ("intermediate", s.intermediate),
+                                          ("advanced", s.advanced), ("elite", s.elite)]
+        return Dictionary(uniqueKeysWithValues: pairs.compactMap { level, v in
+            v.map { (level, "\(AnalyticsProgramTab.number($0))\(unit ?? "")") }
+        })
+    }
+
+    /// The group heading: the server's name, or the id made readable.
+    var groupName: String { categoryName ?? category.replacingOccurrences(of: "_", with: " ").capitalized }
 }
 
 // MARK: - Philosophies
@@ -223,8 +274,8 @@ typealias WeeklySchedule = [String: DaySchedule]
 // Do NOT add CodingKeys here — Swift encodes camelCase by default, which is what
 // the server expects on PUT and returns on GET.
 //
-// performanceLogs is NOT part of the server profile payload; it is loaded separately
-// from GET /api/health/snapshot and stored locally.
+// Results on the standards are not part of the profile: they are read from
+// GET /api/standards/results (AppState.standardResults).
 struct HRConfig: Codable {
     var maxHROverride: Int?
     var zoneBoundaries: [Double]?  // 4 upper-boundary fractions, e.g. [0.60, 0.70, 0.80, 0.90]
@@ -261,7 +312,6 @@ struct UserProfile: Codable {
     var injuryFlags: [String]
     var customInjuryFlags: [CustomInjuryFlag]
     var dateOfBirth: String?
-    var performanceLogs: [String: [PerformanceEntry]]?
     var weeklySchedule: WeeklySchedule?
     var hrConfig: HRConfig?
     /// Present so a save from this app does not drop it. The server merges
@@ -269,7 +319,7 @@ struct UserProfile: Codable {
     /// for a client to do.
     var activeGoalId: String?
     var integrations: IntegrationSettings?
-    /// "male" | "female" | nil — which benchmark standards apply.
+    /// "male" | "female" | nil — which standards' tables apply.
     var sex: String?
     /// IANA zone, e.g. "Europe/Zurich". The server dates a FIT file by it when
     /// the file carries no local timestamp; filled from the device when unset.
@@ -281,7 +331,6 @@ struct UserProfile: Codable {
         injuryFlags: [],
         customInjuryFlags: [],
         dateOfBirth: nil,
-        performanceLogs: nil,
         weeklySchedule: nil,
         hrConfig: nil,
         activeGoalId: nil,

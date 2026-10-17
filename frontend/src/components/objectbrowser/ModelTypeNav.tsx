@@ -14,7 +14,7 @@ const MODEL_TYPES: { type: ModelType; label: string; icon: React.ElementType }[]
   { type: 'modalities', label: 'Modalities', icon: Gauge },
   { type: 'frameworks', label: 'Frameworks', icon: Network },
   { type: 'philosophies', label: 'Philosophies', icon: BookOpen },
-  { type: 'benchmarks', label: 'Benchmarks', icon: BarChart2 },
+  { type: 'benchmarks', label: 'Standards', icon: BarChart2 },
   { type: 'injuryFlags', label: 'Injury Flags', icon: Shield },
   { type: 'equipmentProfiles', label: 'Equipment Profiles', icon: Package },
 ]

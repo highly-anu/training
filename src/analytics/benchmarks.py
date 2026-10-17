@@ -98,6 +98,7 @@ def build(ctx: Context, specs: list) -> dict:
                                'reason': 'no_bodyweight_logged'}
         value = latest['value'] if latest else (derived or {}).get('value')
         lv = bd.level_of(b, value, sex)
+        ladder = bd.thresholds(b, sex)
         out.append({
             'benchmarkId': b['id'], 'name': b['name'], 'category': b['category'], 'domain': b.get('domain'),
             'unit': b['unit'], 'metricType': b['metric_type'], 'lowerIsBetter': b['lower_is_better'],
@@ -108,12 +109,17 @@ def build(ctx: Context, specs: list) -> dict:
             # max-strength table for any program that lifts, The Cell's
             # included — waits behind "More standards".
             'primary': bool({'declared', 'philosophy'} & set(why)) or value is not None,
-            'standards': {lvl: b['levels'][lvl].get(sex, b['levels'][lvl]['male']) for lvl in b['levels']},
+            'standards': ladder,
+            'standardsText': {lvl: bd.format_value(b, v) for lvl, v in ladder.items()},
             'latest': latest['value'] if latest else None,
             'latestDate': latest['date'].isoformat() if latest else None,
             'derived': derived, 'value': value, 'valueSource': 'logged' if latest else ('derived' if value is not None else None),
+            'valueText': bd.format_value(b, value),
             'level': lv['level'], 'levelIndex': lv['index'], 'next': lv['next'], 'gapToNext': lv['gap'],
-            'history': [{'date': r['date'].isoformat(), 'value': r['value']} for r in hist],
+            'nextText': bd.format_value(b, ladder.get(lv['next'])) if lv['next'] else None,
+            'gapText': bd.format_value(b, lv['gap']) if lv['gap'] is not None else None,
+            'history': [{'date': r['date'].isoformat(), 'value': r['value'],
+                         'valueText': bd.format_value(b, r['value'])} for r in hist],
         })
     order = {'declared': 0, 'philosophy': 1, 'priority_modality': 2}
     out.sort(key=lambda r: (min(order[w] for w in r['why']), r['name']))
@@ -121,6 +127,7 @@ def build(ctx: Context, specs: list) -> dict:
     return {
         'sex': sex,
         'bodyweightKg': bw[-1]['value'] if bw else None,
+        'bodyweightText': bd.format_value(None, bw[-1]['value']) if bw else None,
         'bodyweightDate': bw[-1]['date'].isoformat() if bw else None,
         'benchmarks': out,
     }

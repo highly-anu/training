@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AnalyticsBenchmarkRow, ProgramAnalytics } from '@/api/types'
-import { LevelBar } from '@/components/benchmarks/LevelBar'
+import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { thresholdTexts } from '@/lib/standards'
 
 const WHY_LABEL: Record<string, string> = { philosophy: 'this methodology', priority_modality: 'priority modality', declared: 'declared' }
 
@@ -21,8 +22,8 @@ export function BenchmarkLadder({ benchmarks }: { benchmarks: ProgramAnalytics['
         <p className="text-xs text-muted-foreground">
           This program's own standards, and any you have a number for.
           {benchmarks.bodyweightKg != null
-            ? <> Bodyweight {benchmarks.bodyweightKg} kg lets ×BW standards derive from your logged sets.</>
-            : <> Log your bodyweight on the Profile page to derive ×BW standards from logged sets.</>}
+            ? <> Bodyweight {benchmarks.bodyweightText ?? `${benchmarks.bodyweightKg} kg`} lets ×BW standards derive from your logged sets.</>
+            : <> Log your bodyweight under Profile ▸ Athlete to derive ×BW standards from logged sets.</>}
         </p>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
@@ -44,13 +45,18 @@ function StandardRow({ b }: { b: AnalyticsBenchmarkRow }) {
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="font-medium">{b.name}</span>
         <span className="text-muted-foreground">
-          {b.value != null ? <><span className="font-semibold text-foreground">{b.value}</span>{b.unit}{b.valueSource === 'derived' ? ' est.' : ''}</> : '—'}
-          {b.level && <> · {b.level}</>}
-          {b.next && b.gapToNext != null && <> · {b.gapToNext}{b.unit} to {b.next}</>}
+          {b.value != null ? (
+            <>
+              <span className="font-semibold text-foreground tabular-nums">{b.valueText ?? `${b.value}${b.unit}`}</span>
+              {b.valueSource === 'derived' ? ' est.' : ''}{' '}
+              <StandardLevelBadge level={b.level} domain={b.domain} />
+            </>
+          ) : 'No result yet'}
+          {b.value != null && b.next && b.gapToNext != null && <> · {b.gapText ?? `${b.gapToNext}${b.unit}`} to {b.next}</>}
         </span>
       </div>
-      <LevelBar standards={b.standards as Record<'entry' | 'intermediate' | 'advanced' | 'elite', number>}
-                unit={b.unit} lowerIsBetter={b.lowerIsBetter} userValue={b.value ?? undefined} />
+      <StandardLadder thresholds={thresholdTexts(b.standardsText, b.standards, b.unit)}
+                      levelIndex={b.value != null ? b.levelIndex : undefined} domain={b.domain} />
       <p className="text-[10px] text-muted-foreground">
         {b.why.map((w) => WHY_LABEL[w]).join(' · ')}
         {b.derived?.reason === 'no_bodyweight_logged' && ' · est. 1RM known, bodyweight not'}

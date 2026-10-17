@@ -11,6 +11,8 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { cn } from '@/lib/utils'
+import { StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { levelName } from '@/lib/standards'
 import {
   blockBands, blockColor, currencySeries, dayStamp, formatDelta, liftSeries, METRIC_UNIT, type BlockBand, type SeriesPoint,
 } from '@/lib/developmentShaping'
@@ -310,8 +312,8 @@ function StandardsOverTime({ data }: { data: DevelopmentAnalytics }) {
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Standards over time</p>
-        <Link to="/profile?tab=benchmarks" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
-          Log a PR <ArrowRight className="size-3" />
+        <Link to="/profile?tab=standards" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+          Log a result <ArrowRight className="size-3" />
         </Link>
       </div>
       <ul className="space-y-2">
@@ -319,16 +321,23 @@ function StandardsOverTime({ data }: { data: DevelopmentAnalytics }) {
           <li key={b.benchmarkId} className="text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-medium">{b.name}</span>
-              <span className={cn('rounded px-1.5 py-0.5 text-[10px]',
-                                  b.levelsGained > 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground')}>
-                {b.latestLevel ?? 'below entry'}{b.levelsGained > 0 && <> · +{b.levelsGained} level{b.levelsGained === 1 ? '' : 's'}</>}
+              {/* The level in the standard's modality colour, like every
+                  ladder; a gain is said in words, not in a status green. */}
+              <span className="inline-flex items-center gap-1.5">
+                {b.levelsGained !== 0 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {b.levelsGained > 0 ? '+' : '−'}{Math.abs(b.levelsGained)} level{Math.abs(b.levelsGained) === 1 ? '' : 's'}
+                  </span>
+                )}
+                <StandardLevelBadge level={b.latestLevel} domain={b.domain} />
               </span>
             </div>
             <p className="mt-0.5 text-muted-foreground">
               {b.history.map((h, i) => (
-                <span key={h.date}>
+                <span key={`${h.date}-${i}`}>
                   {i > 0 && ' → '}
-                  {h.value}{b.unit} <span className="text-[10px]">({h.level ?? 'below entry'}, {format(new Date(dayStamp(h.date)), 'd MMM')})</span>
+                  <span className="tabular-nums">{h.valueText ?? `${h.value}${b.unit}`}</span>{' '}
+                  <span className="text-[10px]">({levelName(h.level).toLowerCase()}, {format(new Date(dayStamp(h.date)), 'd MMM')})</span>
                 </span>
               ))}
             </p>

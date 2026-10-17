@@ -1110,19 +1110,20 @@ def get_matches(user_id: str) -> list[dict]:
 
 # ── Performance logs ──────────────────────────────────────────────────────────
 
-def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_at: str) -> None:
+def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_at: str) -> int:
+    """Store one result and return its id. Raises on failure: the route used to
+    answer "saved" while an empty `loggedAt` made this insert fail silently."""
     from src.db import get_conn
-    try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute(
-                    'INSERT INTO performance_logs (user_id, benchmark_id, value, logged_at) '
-                    'VALUES (%s, %s, %s, %s)',
-                    (user_id, benchmark_id, value, logged_at),
-                )
-            conn.commit()
-    except Exception:
-        pass
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+            cur.execute(
+                'INSERT INTO performance_logs (user_id, benchmark_id, value, logged_at) '
+                'VALUES (%s, %s, %s, %s) RETURNING id',
+                (user_id, benchmark_id, value, logged_at),
+            )
+            row = cur.fetchone()
+        conn.commit()
+    return int(row['id'])
 
 
 def delete_performance_log(user_id: str, benchmark_id: str) -> None:
@@ -1140,14 +1141,14 @@ def delete_performance_log(user_id: str, benchmark_id: str) -> None:
 
 
 def get_performance_logs(user_id: str) -> dict:
-    """Return {benchmarkId: [{value, date}, ...]} sorted by logged_at."""
+    """Return {benchmarkId: [{id, value, date}, ...]} sorted by logged_at."""
     from src.db import get_conn
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
                 cur.execute(
-                    'SELECT benchmark_id, value, logged_at FROM performance_logs '
-                    'WHERE user_id = %s ORDER BY logged_at',
+                    'SELECT id, benchmark_id, value, logged_at FROM performance_logs '
+                    'WHERE user_id = %s ORDER BY logged_at, id',
                     (user_id,),
                 )
                 rows = cur.fetchall()
@@ -1156,7 +1157,7 @@ def get_performance_logs(user_id: str) -> dict:
             bid = row['benchmark_id']
             if bid not in result:
                 result[bid] = []
-            result[bid].append({'value': row['value'], 'date': str(row['logged_at'])})
+            result[bid].append({'id': row['id'], 'value': row['value'], 'date': str(row['logged_at'])})
         return result
     except Exception:
         return {}

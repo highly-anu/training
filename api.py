@@ -228,80 +228,19 @@ def _injury_flags() -> list[dict]:
     return list(loader.load_injury_flags().values())
 
 
-_BENCHMARK_CATEGORY_MAP = {
-    'max_strength':       'strength',
-    'power':              'strength',
-    'relative_strength':  'strength',
-    'strength_endurance': 'conditioning',
-    'aerobic_base':       'conditioning',
-    'anaerobic_intervals': 'conditioning',
-}
-_BENCHMARK_UNIT_MAP = {
-    'bw_ratio':     '×BW',
-    'reps':         ' reps',
-    'time_minutes': ' min',
-}
+# Bumped when a cached analytics document's *shape* changes, so a snapshot
+# written by the previous code (missing the new keys) is recomputed once
+# instead of being served until its inputs happen to change.
+_ANALYTICS_SHAPE = 'standards-text-1'
 
 
-def _parse_time(t: str) -> float:
-    """Convert 'M:SS' time string to minutes as float."""
-    parts = str(t).split(':')
-    return round(int(parts[0]) + int(parts[1]) / 60, 3)
-
-
-# (domain, exercise_key) -> (value_key, unit, lower_is_better, display_name)
-_CELL_EXTRACT = {
-    ('hips',      'back_squat'):           ('male_bw_pct', '×BW',   False, 'Back Squat'),
-    ('hips',      'broad_jump'):           ('metres',      ' m',    False, 'Broad Jump'),
-    ('push',      'shoulder_press'):       ('male_bw_pct', '×BW',   False, 'Shoulder Press'),
-    ('push',      'thruster'):             ('male_bw_pct', '×BW',   False, 'Thruster'),
-    ('pull',      'deadlift'):             ('male_bw_pct', '×BW',   False, 'Deadlift'),
-    ('pull',      'power_clean'):          ('male_bw_pct', '×BW',   False, 'Power Clean'),
-    ('core',      'four_point_ab_bridge'): ('time_min',    ' min',  False, 'Plank Hold'),
-    ('skill',     'double_under'):         ('reps',        ' reps', False, 'Double-Under'),
-    ('endurance', 'run_400m'):             ('male_time',   ' min',  True,  '400m Run'),
-    ('endurance', 'run_800m'):             ('male_time',   ' min',  True,  '800m Run'),
-    ('endurance', 'row_500m'):             ('male_time',   ' min',  True,  '500m Row'),
-}
-
-
-def _cell_benchmarks() -> list[dict]:
-    path = os.path.join(_DATA_DIR, 'benchmarks', 'cell_standards.yaml')
-    data = _load_yaml(path) or {}
-    standards_data = data.get('standards', {})
-    level_map = [('I', 'entry'), ('II', 'intermediate'), ('III', 'advanced'), ('IV', 'elite')]
-    result = []
-
-    for (domain, exercise), (key, unit, lower, name) in _CELL_EXTRACT.items():
-        ex_data = standards_data.get(domain, {}).get(exercise, {})
-        levels_data = ex_data.get('levels', {})
-        standards: dict[str, float] = {}
-
-        for roman, level_name in level_map:
-            lvl = levels_data.get(roman, {})
-            val = lvl.get(key)
-            if val is None:
-                break
-            standards[level_name] = _parse_time(val) if key == 'male_time' else float(val)
-
-        if len(standards) < 4:
-            continue
-
-        result.append({
-            'id':              f'cell_{domain}_{exercise}',
-            'name':            name,
-            'category':        'cell',
-            'domain':          domain,
-            'unit':            unit,
-            'standards':       standards,
-            'lower_is_better': lower,
-        })
-
-    return result
+def _standards_digest_key(performance: dict) -> list:
+    from src.standards import digest_key
+    return digest_key(performance)
 
 
 def _all_benchmarks(sex: str = 'male') -> list[dict]:
-    """Every benchmark in the client shape — now with the fields it never got.
+    """Every standard in the client shape — now with the fields it never got.
 
     Delegates to src/analytics/benchmarks_data.py, which keeps `sources`,
     `goal_relevance`, `domain`, `metric_type` and the female values that this
@@ -531,10 +470,12 @@ def get_injury_flags():
     return jsonify(_injury_flags())
 
 
+@app.get('/api/standards')
 @app.get('/api/benchmarks')
 def get_benchmarks():
-    """Benchmark standards. `?sex=female|male` picks the tables; the default is
-    the male set, which is what every client got before the profile could say."""
+    """The standards. `?sex=female|male` picks the tables; the default is the
+    male set, which is what every client got before the profile could say.
+    `/api/benchmarks` is the old name, kept for installed builds."""
     sex = (request.args.get('sex') or '').lower()
     return jsonify(_all_benchmarks(sex if sex in ('male', 'female') else 'male'))
 
@@ -3752,17 +3693,52 @@ def health_dismiss_suggestion(workout_id: str):
     return jsonify({'dismissed': workout_id})
 
 
+@app.get('/api/standards/results')
+@require_auth
+def standards_results():
+    """The athlete's results on the standards: per standard the current and the
+    best result with their level and text, and every entry (`src/standards.py`).
+    Levels are worked out here so no client computes one."""
+    from src import standards as _standards
+    from src.analytics import benchmarks_data as _bd
+    from src.db import get_user_profile
+    try:
+        sex = ((get_user_profile(g.user_id) or {}).get('sex') or 'male').lower()
+    except Exception:  # noqa: BLE001 — the male tables, as before the profile could say
+        sex = 'male'
+    return jsonify(_standards.summarise(_bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex))
+
+
 @app.post('/api/health/performance')
 @require_auth
 def health_add_performance():
+    """One result on a standard (or a bodyweight). 422 on an id no standard has
+    or a value that is not a number; 503 when the write fails, so a client never
+    believes a result was kept that was not."""
+    from src.analytics import benchmarks_data as _bd
     body = request.get_json(silent=True) or {}
-    benchmark_id = body.get('benchmarkId', '')
-    value = body.get('value')
-    logged_at = body.get('loggedAt', '')
-    if not benchmark_id or value is None:
+    benchmark_id = body.get('benchmarkId') or ''
+    # `text` is what the athlete typed ("4:58"); `value` a number already in
+    # the standard's unit. Either is parsed the one way (`parse_input`).
+    raw = body.get('value') if body.get('value') is not None else body.get('text')
+    if not benchmark_id or raw is None:
         return jsonify({'detail': 'benchmarkId and value required'}), 400
-    _health.add_performance_entry(g.user_id, benchmark_id, float(value), logged_at)
-    return jsonify({'saved': benchmark_id})
+    if benchmark_id not in _bd.known_ids():
+        return jsonify({'detail': f'unknown standard {benchmark_id!r}'}), 422
+    value = _bd.parse_input(_bd.by_id().get(benchmark_id), raw)
+    if value is None:
+        return jsonify({'detail': 'value must be a positive number (or m:ss for a time)'}), 422
+    logged_at = body.get('loggedAt') or _datetime.now(_timezone.utc).isoformat()
+    try:
+        _datetime.fromisoformat(str(logged_at).replace('Z', '+00:00'))
+    except ValueError:
+        return jsonify({'detail': 'loggedAt must be an ISO date or time'}), 422
+    try:
+        entry_id = _health.add_performance_entry(g.user_id, benchmark_id, value, logged_at)
+    except Exception as exc:  # noqa: BLE001 — the client is told, and retries
+        print(f'[standards] result write failed for {benchmark_id}: {exc}')
+        return jsonify({'detail': 'could not save the result'}), 503
+    return jsonify({'saved': benchmark_id, 'id': entry_id})
 
 
 @app.delete('/api/health/performance/<benchmark_id>')
@@ -4295,7 +4271,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     import hashlib as _h
     import json as _j
     parts = [
-        str(revision), inputs.today.isoformat(),
+        _ANALYTICS_SHAPE, str(revision), inputs.today.isoformat(),
         # Each set's values, not only how many: the set logger edits a set's
         # kg, reps or seconds in place.
         _j.dumps({k: (v.get('completedAt'), sorted(
@@ -4308,7 +4284,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
-        _j.dumps({k: len(v) for k, v in inputs.performance_logs.items()}, sort_keys=True),
+        _j.dumps(_standards_digest_key(inputs.performance_logs), default=str),
         # Values, not only dates: a same-date resting HR from the watch, or a
         # corrected Apple Health night, has to bust the cache too.
         _j.dumps(sorted((b.get('date', ''), b.get('resting_hr'), b.get('hrv'), b.get('sleep_duration_min'))
@@ -4393,7 +4369,7 @@ def analytics_development():
         sorted((uid, v.get('completedAt'), len(v.get('exercises') or {})) for uid, v in logs.items()),
         sorted((m.get('importedWorkoutId'), m.get('sessionUid'), m.get('matchConfidence')) for m in matches),
         sorted((w.get('id'), w.get('date'), bool(w.get('metrics'))) for w in workouts),
-        {k: len(v) for k, v in performance.items()},
+        _standards_digest_key(performance), _ANALYTICS_SHAPE,
         today.isoformat(), from_date.isoformat(), to_date.isoformat(),
     ], sort_keys=True, default=str).encode()).hexdigest()
     period_key = f'development:{from_date.isoformat()}:{to_date.isoformat()}'

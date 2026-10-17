@@ -119,7 +119,9 @@ All prefixed `/api/`:
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
-| GET | `/benchmarks?sex=` | `BenchmarkStandard[]` (47; female or male tables) |
+| GET | `/standards?sex=` | `BenchmarkStandard[]` (48; female or male tables, each with `categoryName`, `standardsText`, `inputHint`); `/benchmarks` is the old name, kept for installed builds |
+| GET | `/standards/results` | the athlete's results: per standard `current` (latest) and `best`, each placed on its ladder with its text, and every entry (`src/standards.py`) |
+| POST | `/health/performance` | one result (`benchmarkId`, `value` or typed `text` such as "4:58", `loggedAt`); 422 on an unknown standard or a value `parse_input` cannot read, 503 when the write fails |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
@@ -215,6 +217,30 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
 6. **Progression** — calculates load prescription per slot type (linear_load, rpe_autoregulation, time_to_task, distance, density)
 7. **Validator** — pre-flight checks on equipment, days, session time, injury conflicts, phase validity
 8. **API** — transforms integer day keys → day names; wraps in `{ goal, constraints, validation, weeks, volume_summary }`
+
+## Standards
+
+**One name.** Everything a person reads says *standard* (the ladder), *result* (one dated
+value), *best* (the best result ever), *est.* (derived from training sets). Stored and
+wire identifiers keep *benchmark* — `performance_logs.benchmark_id`, `benchmarkId`, the
+`benchmark_level` primitive, `data/benchmarks/`, `/api/benchmarks` — because renaming them
+would break stored rows and installed builds. "Benchmark workouts" is only the CrossFit
+group's name.
+
+- **The server places every value.** `benchmarks_data.level_of` (the level; `None` is
+  below entry), `format_value` ("4:58", "3:20:00", "1.62×BW", "45 s") and `parse_input`
+  (its inverse, so a field takes what it shows) are the only copies; no client computes a
+  level or formats a result. Thresholds go out as `standardsText`, results as `valueText`.
+- **One ladder, coloured by modality.** Every standard's `domain` is a modality id, and
+  web `components/standards/StandardLadder.tsx` / iOS `Views/StandardLadder.swift` fill
+  the rungs in that modality's colour; a level has no colour of its own (frontend-design
+  §8.1, design-system §6.29). Traffic-light colours only for a declared target.
+- **Current is the latest, best the best.** `src/standards.summarise`; every result is kept.
+- **The Cell maps by its own words:** II entry, III intermediate, IV advanced, V elite
+  (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
+- Cached analytics documents key on `api._ANALYTICS_SHAPE` and on every result's
+  value and date (`standards.digest_key`), not on how many there are.
+- `test_standards.py`; plan and later phases: `docs/roadmap.md`.
 
 ## Key Engine Behaviors
 

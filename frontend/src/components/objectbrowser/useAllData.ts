@@ -4,7 +4,7 @@ import { useModalities } from '@/api/modalities'
 // Goals deprecated
 import { useFrameworks } from '@/api/frameworks'
 import { usePhilosophies } from '@/api/philosophies'
-import { useBenchmarks } from '@/api/benchmarks'
+import { useStandards } from '@/api/standards'
 import { useInjuryFlags, useEquipmentProfiles } from '@/api/constraints'
 
 export function useAllData() {
@@ -14,7 +14,7 @@ export function useAllData() {
   // Goals deprecated - use philosophies instead
   const frameworks = useFrameworks()
   const philosophies = usePhilosophies()
-  const benchmarks = useBenchmarks()
+  const benchmarks = useStandards()
   const injuryFlags = useInjuryFlags()
   const equipmentProfiles = useEquipmentProfiles()
 

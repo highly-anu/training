@@ -47,6 +47,7 @@ deferred is under *Later*.
 | 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
+| 11 | Standards: history, relevance, scheduled tests, results from sessions and watches (phases 2–7) | P2 | L | API, engine, content, web, iOS, watch |
 
 ---
 
@@ -782,6 +783,46 @@ a Sign in with Apple key (.p8).
    (it cannot create one); they need the `webcredentials:` associated domain, an
    `apple-app-site-association` file on the site, supabase-swift's
    `@_spi(Experimental)` passkey calls and supabase-js ≥ 2.118 (Node 22).
+### 11. Standards: history, relevance, tests and the watches — P2 · L
+
+The review of 2026-10-17 found one concept under two names (Benchmarks on the entry
+screens, Standards on the read screens), six colourings of a level, a history nobody
+could manage, and nothing tying a standard to training. Decided with the athlete:
+**Standards** everywhere a person reads it; a ladder **in its modality's colour**
+(level = position + word); a logged session **suggests** a result, the athlete
+confirms; programs schedule **package-declared tests**. Phase 1 shipped the same day
+(see *Done*). Open, one PR each:
+
+2. **History you can manage.** `migrations/011`: `performance_logs` gains `source`,
+   `session_uid`, `workout_id`, `note`, `input`, `logged_on` (the athlete's day, computed
+   in Python — readers still take `logged_at[:10]`, a UTC day), timestamps, an index and a
+   partial unique on `(user, standard, session_uid)`. `PATCH`/`DELETE
+   /standards/results/<id>` (one entry; today clearing deletes a whole series on the old
+   route and nothing deletes one). Standard detail on both clients: protocol, history
+   chart with threshold lines and block bands, history list with source and block, edit,
+   delete, a date on a new result. One accessor for current/best/history in the analytics
+   readers; `benchmark_level` uses the est. value the ladder beside it shows.
+3. **Relevance.** `benchmarks.program_standards`: *this program's* = declared for the
+   running track/framework or measured by a scheduled test; everything else (same domain,
+   cites the philosophy, has a result) behind "More standards" — today a result alone makes
+   a standard primary, so a logged back squat leads a Wildman block's Progress. Profile
+   sections (To confirm · This program · Your results · All), Progress change since block
+   start, Blocks charts across blocks.
+4. **Package-declared tests.** Archetype slot `standard: <id>` (packages → commons only),
+   `test: {selectable: false}`, phase `tests:` positioned on `(phase_id, week_in_phase)`;
+   the generator swaps one session of the modality for the test (protocol unscaled — today
+   a 2 km row would be prescribed 1.5 km), skips with a reason; `_DERIVED_FROM` moves to the
+   standard's YAML as `derived_from`. Content: Wildman pentathlon test, CrossFit benchmark
+   rotation, Gym Jones 2 km row, Horsemen PT test. Fidelity, styles, provenance checks.
+5. **Sessions suggest results.** `standard_result_suggestions` (a pending suggestion is
+   never a result); a hook on the session-log PUTs; confirm on web, phone, or the watch's
+   summary (`standardResults` in the session PUT, so `DEVICE_ROUTES` does not grow).
+6. **Watches.** Capture first: Garmin keys set logs by exercise *name* without `completed`
+   (`WorkoutController.mc:1008`), so analytics reads none of them; neither watch keeps a
+   for-time step's time, the Apple Watch drops AMRAP rounds and distance. Then the standard
+   to beat on a test step and a Save / Not a test summary page.
+7. **Imported best efforts.** 1 mi, 3 mi, 5 mi, 400/800 m windows at import where the series
+   has speed; a suggestion when the workout is linked to that test or beats the best.
 
 ## Later
 
@@ -829,6 +870,20 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 1 (2026-10-17)**: one name, one ladder. Every screen on both
+clients says *Standards* (Profile's tab included; `?tab=benchmarks` and
+`section=benchmarks` land on it) and *result* for a logged value. The server places
+and prints every value (`benchmarks_data.level_of`, `format_value`, `parse_input`;
+`GET /standards/results` via `src/standards.py`), and one `StandardLadder` per client
+draws it in the standard's modality colour. Fixed on the way: the phone's Profile tab
+decoded nothing (it required `higher_is_better`, which the server never sent); the web
+field wrote twice on Enter and on every blur, and clearing it deleted the standard's
+whole history; `POST /health/performance` answered "saved" when the insert failed;
+cached analytics keyed on the number of results, so an edit never showed; female
+tables read `None` thresholds in the analytics rows; Cell's levels were off by one
+(I–IV, now II–V by Cell's own words) and its thruster never loaded; the static
+fallback was a male-only third copy of the loader.
 
 **Session logs (2026-10-04)**: production's `session_logs` never had
 `exercise_timeline`, the column `health_store.upsert_session_log` has inserted

@@ -37,8 +37,8 @@ NEEDS: dict[str, dict] = {
                    'where': 'A matched workout with both'},
     'completion': {'label': 'Sessions marked complete',
                    'where': 'The session check-off'},
-    'prs':        {'label': 'PRs on the standards (and bodyweight for ×BW ratios)',
-                   'where': 'Profile → Benchmarks'},
+    'prs':        {'label': 'Results on the standards (and bodyweight for ×BW ratios)',
+                   'where': 'Profile → Standards'},
 }
 
 PRIMITIVES: dict[str, dict] = {

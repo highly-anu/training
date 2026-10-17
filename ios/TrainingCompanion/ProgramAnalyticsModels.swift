@@ -288,16 +288,23 @@ struct ProgramAnalytics: Decodable {
         let name: String?
         let unit: String?
         let latest: Double?
+        /// The latest result as the server prints it ("4:58").
+        let latestText: String?
         let target: String?
         let targetValue: Double?
         let met: Bool?
         let level: String?
+        let levelIndex: Int?
         let next: String?
+        let domain: String?
+        /// The thresholds as printed, keyed by level, for the ladder.
+        let standardsText: [String: String]
         let missing: Bool
         var id: String { benchmarkId }
 
         private enum CodingKeys: String, CodingKey {
-            case benchmarkId, name, unit, latest, target, targetValue, met, level, next, missing
+            case benchmarkId, name, unit, latest, latestText, target, targetValue, met, level, levelIndex, next,
+                 domain, standardsText, missing
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -305,11 +312,15 @@ struct ProgramAnalytics: Decodable {
             name = try? c.decodeIfPresent(String.self, forKey: .name)
             unit = try? c.decodeIfPresent(String.self, forKey: .unit)
             latest = try? c.decodeIfPresent(Double.self, forKey: .latest)
+            latestText = try? c.decodeIfPresent(String.self, forKey: .latestText)
             target = try? c.decodeIfPresent(String.self, forKey: .target)
             targetValue = try? c.decodeIfPresent(Double.self, forKey: .targetValue)
             met = try? c.decodeIfPresent(Bool.self, forKey: .met)
             level = try? c.decodeIfPresent(String.self, forKey: .level)
+            levelIndex = try? c.decodeIfPresent(Int.self, forKey: .levelIndex)
             next = try? c.decodeIfPresent(String.self, forKey: .next)
+            domain = try? c.decodeIfPresent(String.self, forKey: .domain)
+            standardsText = ((try? c.decodeIfPresent([String: String].self, forKey: .standardsText)) ?? nil) ?? [:]
             missing = (try? c.decodeIfPresent(Bool.self, forKey: .missing)) ?? false
         }
     }
@@ -628,7 +639,7 @@ struct ProgramAnalytics: Decodable {
         }
     }
 
-    // MARK: Standards — the program's benchmark ladder
+    // MARK: Standards — the program's ladders
 
     struct Benchmarks: Decodable {
         struct Row: Decodable, Identifiable {
@@ -642,11 +653,18 @@ struct ProgramAnalytics: Decodable {
             /// rest wait behind "More standards". Absent on older documents.
             let primary: Bool
             let standards: [String: Double]
+            /// The thresholds as the server prints them ("4:30", "1.5×BW").
+            let standardsText: [String: String]
             let value: Double?
+            /// The value as printed; nil on a document from before the server said.
+            let valueText: String?
             let valueSource: String?      // logged | derived
             let level: String?
+            /// 0 = below entry … 4 = elite, from the server.
+            let levelIndex: Int
             let next: String?
             let gapToNext: Double?
+            let gapText: String?
             let derivedReason: String?
             /// The modality the standard measures (`max_strength`,
             /// `strength_endurance`…), which colours its ladder.
@@ -655,8 +673,8 @@ struct ProgramAnalytics: Decodable {
 
             private struct Derived: Decodable { let reason: String? }
             private enum CodingKeys: String, CodingKey {
-                case benchmarkId, name, unit, lowerIsBetter, why, primary, standards, value, valueSource,
-                     level, next, gapToNext, derived, domain
+                case benchmarkId, name, unit, lowerIsBetter, why, primary, standards, standardsText, value, valueText,
+                     valueSource, level, levelIndex, next, gapToNext, gapText, derived, domain
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -667,27 +685,35 @@ struct ProgramAnalytics: Decodable {
                 why = (try? c.decodeIfPresent([String].self, forKey: .why)) ?? []
                 primary = (try? c.decodeIfPresent(Bool.self, forKey: .primary)) ?? true
                 standards = (try? c.decodeIfPresent([String: Double].self, forKey: .standards)) ?? [:]
+                standardsText = ((try? c.decodeIfPresent([String: String].self, forKey: .standardsText)) ?? nil) ?? [:]
                 value = try? c.decodeIfPresent(Double.self, forKey: .value)
+                valueText = try? c.decodeIfPresent(String.self, forKey: .valueText)
                 valueSource = try? c.decodeIfPresent(String.self, forKey: .valueSource)
                 level = try? c.decodeIfPresent(String.self, forKey: .level)
+                levelIndex = ((try? c.decodeIfPresent(Int.self, forKey: .levelIndex)) ?? nil) ?? 0
                 next = try? c.decodeIfPresent(String.self, forKey: .next)
                 gapToNext = try? c.decodeIfPresent(Double.self, forKey: .gapToNext)
+                gapText = try? c.decodeIfPresent(String.self, forKey: .gapText)
                 derivedReason = (try? c.decodeIfPresent(Derived.self, forKey: .derived))?.reason
                 domain = try? c.decodeIfPresent(String.self, forKey: .domain)
             }
 
-            /// The ladder's rungs in order, entry → elite, those the standard has.
-            var rungs: [(level: String, value: Double)] {
-                ["entry", "intermediate", "advanced", "elite"].compactMap { l in standards[l].map { (l, $0) } }
+            /// The thresholds as text — the server's, or number + unit for an
+            /// older cached document.
+            var thresholdTexts: [String: String] {
+                guard standardsText.isEmpty else { return standardsText }
+                return standards.mapValues { "\(AnalyticsProgramTab.number($0))\(unit)" }
             }
         }
         let bodyweightKg: Double?
+        let bodyweightText: String?
         let rows: [Row]
 
-        private enum CodingKeys: String, CodingKey { case bodyweightKg, benchmarks }
+        private enum CodingKeys: String, CodingKey { case bodyweightKg, bodyweightText, benchmarks }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             bodyweightKg = try? c.decodeIfPresent(Double.self, forKey: .bodyweightKg)
+            bodyweightText = try? c.decodeIfPresent(String.self, forKey: .bodyweightText)
             rows = ((try? c.decodeIfPresent([Lossy<Row>].self, forKey: .benchmarks)) ?? [])?.compactMap(\.value) ?? []
         }
     }

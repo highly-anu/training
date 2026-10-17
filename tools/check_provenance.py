@@ -307,28 +307,11 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
 
 
 def _known_benchmark_ids() -> set:
-    """Every benchmark id the API can serve, read from data/benchmarks directly."""
-    import yaml
-    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                        'data', 'benchmarks')
-    ids: set = {'bodyweight_kg'}
-    # The loader's own list: a hand-kept pair here missed the four files added
-    # since (kettlebell pentathlon, ruck & PT, benchmark WODs, movement skill).
-    from src.analytics.benchmarks_data import BENCHMARK_FILES
-    for name in BENCHMARK_FILES:
-        path = os.path.join(root, name)
-        if os.path.exists(path):
-            with open(path, encoding='utf-8') as f:
-                for item in yaml.safe_load(f) or []:
-                    if isinstance(item, dict) and item.get('id'):
-                        ids.add(item['id'])
-    cell = os.path.join(root, 'cell_standards.yaml')
-    if os.path.exists(cell):
-        with open(cell, encoding='utf-8') as f:
-            for domain, entries in ((yaml.safe_load(f) or {}).get('standards') or {}).items():
-                for ex in (entries or {}):
-                    ids.add(f'cell_{domain}_{ex}')
-    return ids
+    """Every standard id the API can serve, plus bodyweight — the loader's own
+    answer. A copy here used to read every Cell item, including the ones the
+    loader drops, so an analytics.yaml could name a standard no screen shows."""
+    from src.analytics.benchmarks_data import known_ids
+    return known_ids()
 
 
 LEVELS = ('novice', 'intermediate', 'advanced')

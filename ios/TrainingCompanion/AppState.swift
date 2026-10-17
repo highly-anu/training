@@ -87,6 +87,8 @@ final class AppState: ObservableObject {
     // MARK: - Catalog (lazy-loaded)
 
     @Published var benchmarks: [AppBenchmark] = []
+    /// The athlete's results on the standards (`GET /standards/results`).
+    @Published var standardResults: StandardResults? = nil
     @Published var philosophies: [PhilosophyCard] = []
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
     /// Every exercise the API knows, by id — the reference the exercise sheet
@@ -153,7 +155,7 @@ final class AppState: ObservableObject {
             // week the server had at 100 %).
             group.addTask { await self.loadProgramAnalytics() }
             group.addTask { await self.loadProfile() }
-            group.addTask { await self.loadPerformanceLogs() }
+            group.addTask { await self.loadStandardResults() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -201,7 +203,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
-            group.addTask { await self.loadPerformanceLogs() }
+            group.addTask { await self.loadStandardResults() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -636,35 +638,33 @@ final class AppState: ObservableObject {
         }
     }
 
-    func loadPerformanceLogs() async {
+    func loadStandardResults() async {
         guard let api else { return }
         do {
-            let logs = try await api.fetchPerformanceLogs()
-            profile.performanceLogs = logs
-            logger.log("profile: performance logs \(logs.count) benchmarks")
+            standardResults = try await api.fetchStandardResults()
+            logger.log("standards: \(standardResults?.standards.count ?? 0) with results")
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
-            logger.log("profile: performance logs ERROR — \(error)")
+            logger.log("standards: results ERROR — \(error)")
         }
     }
 
-    /// Records a PR through `POST /api/health/performance`, then re-reads the
-    /// series so the list shows what the server kept — the optimistic entry the
-    /// caller appended is replaced by the stored one, or dropped if the write
-    /// failed. Returns whether the write succeeded.
-    @discardableResult
-    func savePerformanceEntry(benchmarkId: String, value: Double) async -> Bool {
-        guard let api else { return false }
-        var saved = false
+    /// Logs a result through `POST /api/health/performance`, then re-reads the
+    /// results so every screen shows what the server kept, on the server's
+    /// ladder. Returns nil on success, else the reason in words to show.
+    func logResult(benchmarkId: String, text: String) async -> String? {
+        guard let api else { return "Not connected." }
         do {
-            try await api.addPerformanceEntry(benchmarkId: benchmarkId, value: value,
-                                              loggedAt: ISO8601DateFormatter().string(from: Date()))
-            saved = true
+            try await api.addResult(benchmarkId: benchmarkId, text: text,
+                                    loggedAt: ISO8601DateFormatter().string(from: Date()))
+        } catch APIError.serverErrorDetail(_, let detail) {
+            return detail
         } catch {
-            logger.log("profile: performance entry ERROR — \(error)")
+            logger.log("standards: result ERROR — \(error)")
+            return error.localizedDescription
         }
-        await loadPerformanceLogs()
-        return saved
+        await loadStandardResults()
+        return nil
     }
 
     func saveProfile() async {

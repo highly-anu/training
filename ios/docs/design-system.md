@@ -551,13 +551,13 @@ beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
-    case athlete, equipment, schedule, benchmarks
+    case athlete, equipment, schedule, standards
 
     var label: String {
         switch self {
         case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
-        case .benchmarks: return "Benchmarks"
+        case .standards:  return "Standards"
         case .schedule:   return "Schedule"
         }
     }
@@ -567,7 +567,7 @@ AppSubTabScreen(selection: $selectedTab) { tab in
     switch tab {
     case .athlete:    AthleteTab()
     case .equipment:  EquipmentTab()
-    case .benchmarks: BenchmarksTab()
+    case .standards:  StandardsTab()
     case .schedule:   ScheduleTab()
     }
 }
@@ -828,7 +828,7 @@ answer.
 | **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
-| **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Benchmarks |
+| **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Standards |
 
 The section names and their order are the web's, item for item
 (`docs/information-architecture.md` §2): a section is renamed or moved on
@@ -1066,10 +1066,9 @@ and measures — the web's Progress tab:
   and benchmark-level entries render their own bodies; entries the program
   does not schedule fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
-  rest behind "More standards"; a rung ladder per standard filled to the
-  level reached in the colour of the modality it measures (the row's
-  `domain`, through `ModalityStyle`), with that modality's symbol before the
-  name; the accent for a standard with none.
+  rest behind "More standards"; per standard the modality's symbol and the
+  name, the value as the server prints it, the level badge and the gap on a
+  second line, and the `StandardLadder` (§6.29).
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
   a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
@@ -1537,3 +1536,28 @@ A sheet SwiftUI could not present (another was open) is taken back after
 build only records what is listed. A suggestion for another program's
 session is not confirmed here (its key would tick this program's session of
 that name); it falls through to the day's open sessions.
+### 6.29 Standard Ladder
+
+**One ladder for every standard, on every screen.** `Views/StandardLadder.swift`
+(the web's `components/standards/StandardLadder.tsx`) draws four rungs, entry →
+elite, filled up to the level the **server** reached (`levelIndex`, 0 = below
+entry) in the colour of the modality the standard measures (`domain` →
+`ModalityStyle`), with each rung's word and threshold under it — the threshold
+as the server prints it (`standardsText`: "4:30", "1.5×BW"). `StandardLevelBadge`
+names the level ("Advanced", "Below entry") in a capsule of the same colour.
+
+- Used by Profile ▸ Standards (rows and the *Log a result* sheet), Analytics ▸
+  Progress (`ProgramStandardsCard` and the target-level entries, which were
+  text only) and Blocks (the badge; a gain is said as "+1 level", never in a
+  status green).
+- A level has no colour of its own: position and word carry it, so it cannot
+  be mistaken for a status. The traffic light (§6.15) is only for a declared
+  target (met · partly · below).
+- Nothing on the phone computes a level or formats a value: `level_of` and
+  `format_value` live in `src/analytics/benchmarks_data.py`. Profile used to
+  colour levels purple/blue/green with its own thresholds and had no "below
+  entry".
+- Results are logged by text (`AppState.logResult`): the field takes what the
+  athlete would write ("4:58") and the server parses it; a value it cannot
+  read comes back in its words under the field.
+

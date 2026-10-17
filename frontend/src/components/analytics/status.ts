@@ -49,5 +49,5 @@ export const COVERAGE_REASONS: Record<string, string> = {
   no_gps_hr: 'Needs a matched run or ride with GPS and heart-rate samples.',
   no_exercises_in_scope: 'No exercises in this scope have been completed yet.',
   clean_not_logged: 'A movement is earned by clean sessions. Tick "Clean" on a skill when every rep was owned.',
-  no_pr_logged: 'No PR logged for these standards. Add one on the Profile page.',
+  no_pr_logged: 'No result logged for these standards yet. Log one under Profile ▸ Standards.',
 }

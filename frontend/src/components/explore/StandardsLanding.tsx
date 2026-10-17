@@ -1,36 +1,30 @@
 import { Link } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
-import { useBenchmarks } from '@/api/benchmarks'
-import { LevelBar } from '@/components/benchmarks/LevelBar'
+import { useStandardResults, useStandards } from '@/api/standards'
+import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { thresholdTexts } from '@/lib/standards'
 import { LoadingCard } from '@/components/shared/LoadingCard'
-import { useProfileStore } from '@/store/profileStore'
 import type { BenchmarkStandard } from '@/api/types'
 
-const CATEGORY_LABEL: Record<BenchmarkStandard['category'], string> = {
-  strength: 'Strength',
-  conditioning: 'Conditioning',
-  kettlebell: 'Kettlebell pentathlon',
-  tactical: 'Ruck & PT tests',
-  benchmark_wod: 'Benchmark workouts',
-  skill: 'Movement & skill',
-  cell: 'Cell standards',
-}
-const CATEGORY_ORDER = ['strength', 'conditioning', 'kettlebell', 'tactical', 'benchmark_wod', 'skill', 'cell'] as const
-
 /**
- * Explore ▸ Standards — the benchmark ladders the methodologies measure
- * against, with the athlete's own logged values on them. Logging a PR is a
- * Profile ▸ Benchmarks action; this is the reference view.
+ * Explore ▸ Standards — the ladders the methodologies measure against, with
+ * the athlete's current result on each. Logging one is a Profile ▸ Standards
+ * action; this is the reference view. Groups, their names and order come from
+ * the server, so this and the Profile tab never disagree.
  */
 export function StandardsLanding() {
-  const { data: benchmarks = [], isLoading } = useBenchmarks()
-  const logs = useProfileStore((s) => s.performanceLogs)
+  const { data: standards = [], isLoading } = useStandards()
+  const { data: results } = useStandardResults()
 
   if (isLoading) return <div className="p-6"><LoadingCard /></div>
 
-  const categories = CATEGORY_ORDER
-    .map((cat) => ({ cat, items: benchmarks.filter((b) => b.category === cat) }))
-    .filter((g) => g.items.length > 0)
+  const groups = new Map<string, { name: string; order: number; items: BenchmarkStandard[] }>()
+  for (const s of standards) {
+    const g = groups.get(s.category) ?? { name: s.categoryName ?? s.category, order: s.categoryOrder ?? 99, items: [] }
+    g.items.push(s)
+    groups.set(s.category, g)
+  }
+  const categories = [...groups.values()].sort((a, b) => a.order - b.order)
 
   return (
     <div className="h-full overflow-y-auto">
@@ -39,22 +33,22 @@ export function StandardsLanding() {
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
             Standards
           </p>
-          <h2 className="text-2xl font-semibold leading-snug">{benchmarks.length} benchmark standards.</h2>
+          <h2 className="text-2xl font-semibold leading-snug">{standards.length} standards.</h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-            Entry to elite, as the source methodologies define them. Your logged values sit on the
+            Entry to elite, as the source methodologies define them. Your current result sits on the
             ladder; log a new one under{' '}
-            <Link to="/profile?tab=benchmarks" className="text-primary hover:underline">Profile ▸ Benchmarks</Link>.
+            <Link to="/profile?tab=standards" className="text-primary hover:underline">Profile ▸ Standards</Link>.
           </p>
         </div>
 
-        {categories.map(({ cat, items }) => (
-          <section key={cat} className="space-y-3">
+        {categories.map(({ name, items }) => (
+          <section key={name} className="space-y-3">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-              {CATEGORY_LABEL[cat]}
+              {name}
             </h3>
             <div className="space-y-2">
               {items.map((b) => {
-                const userValue = logs[b.id]?.at(-1)?.value
+                const current = results?.standards[b.id]?.current
                 return (
                   <div key={b.id} className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2">
                     <div className="flex items-center justify-between gap-3">
@@ -64,24 +58,24 @@ export function StandardsLanding() {
                           <p className="text-[11px] text-muted-foreground line-clamp-2">{b.notes}</p>
                         )}
                       </div>
-                      {userValue != null ? (
+                      {current ? (
                         <span className="shrink-0 text-xs tabular-nums text-foreground">
-                          you: <span className="font-semibold">{userValue}</span> {b.unit}
+                          you: <span className="font-semibold">{current.valueText}</span>{' '}
+                          <StandardLevelBadge level={current.level} domain={b.domain} />
                         </span>
                       ) : (
                         <Link
-                          to="/profile?tab=benchmarks"
+                          to="/profile?tab=standards"
                           className="shrink-0 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
                         >
-                          <Trophy className="size-3" aria-hidden="true" /> Log a PR
+                          <Trophy className="size-3" aria-hidden="true" /> Log a result
                         </Link>
                       )}
                     </div>
-                    <LevelBar
-                      standards={b.standards}
-                      userValue={userValue}
-                      unit={b.unit}
-                      lowerIsBetter={b.lower_is_better}
+                    <StandardLadder
+                      thresholds={thresholdTexts(b.standardsText, b.standards, b.unit)}
+                      levelIndex={current?.levelIndex}
+                      domain={b.domain}
                     />
                   </div>
                 )

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import type { AnalyticsProgressEntry, AnalyticsExerciseResult } from '@/api/types'
-import { LevelBar } from '@/components/benchmarks/LevelBar'
+import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { thresholdTexts } from '@/lib/standards'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { CoverageNotice } from './CoverageNotice'
@@ -105,21 +106,28 @@ function Unlocks({ entry }: { entry: AnalyticsProgressEntry }) {
 }
 
 function Benchmarks({ entry }: { entry: AnalyticsProgressEntry }) {
-  const rows = (entry.benchmarks ?? []) as Array<{ benchmarkId: string; name?: string; unit?: string; lowerIsBetter?: boolean; latest?: number | null; standards?: Record<string, number>; target?: string; met?: boolean | null; missing?: boolean }>
+  const rows = (entry.benchmarks ?? []) as Array<{
+    benchmarkId: string; name?: string; unit?: string; domain?: string | null; latest?: number | null; latestText?: string | null
+    level?: string | null; levelIndex?: number; standards?: Record<string, number>; standardsText?: Record<string, string>
+    target?: string; targetText?: string | null; met?: boolean | null; missing?: boolean
+  }>
   return (
     <div className="space-y-3">
       {rows.filter((r) => !r.missing).map((r) => (
         <div key={r.benchmarkId} className="space-y-1">
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-medium">{r.name}</span>
             <span className="text-muted-foreground">
-              {r.latest != null ? <>{r.latest}{r.unit}</> : 'no PR'}
+              {r.latest != null
+                ? <><span className="font-semibold text-foreground tabular-nums">{r.latestText ?? `${r.latest}${r.unit ?? ''}`}</span>{' '}
+                    <StandardLevelBadge level={r.level} domain={r.domain} /></>
+                : 'No result yet'}
               {r.target && <> · target {r.target}{r.met === true ? ' ✓' : r.met === false ? ' ✗' : ''}</>}
             </span>
           </div>
           {r.standards && (
-            <LevelBar standards={r.standards as Record<'entry' | 'intermediate' | 'advanced' | 'elite', number>}
-                      unit={r.unit ?? ''} lowerIsBetter={r.lowerIsBetter ?? false} userValue={r.latest ?? undefined} />
+            <StandardLadder thresholds={thresholdTexts(r.standardsText, r.standards, r.unit ?? '')}
+                            levelIndex={r.latest != null ? r.levelIndex : undefined} domain={r.domain} />
           )}
         </div>
       ))}

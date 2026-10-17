@@ -1,6 +1,6 @@
 """Standards primitives: where you stand on the ladder, and did you show up.
 
-`benchmark_level` reads the athlete's PRs against the benchmark standards a
+`benchmark_level` reads the athlete's results against the standards a
 methodology names as its end state — Starting Strength's "novice completion"
 is `intermediate` on the squat, deadlift and press ratios, and it already
 exists in data/benchmarks with `sources: [starting_strength]`.
@@ -55,18 +55,22 @@ def benchmark_level(entry, ctx) -> dict:
         if latest:
             measured += 1
             met_count += int(met)
-        target_value = (b['levels'].get(target) or {}).get(sex) if target else None
-        if target_value is None and target:
-            target_value = (b['levels'].get(target) or {}).get('male')
+        ladder = bd.thresholds(b, sex)
+        target_value = ladder.get(target) if target else None
         rows.append({
             'benchmarkId': bid, 'name': b['name'], 'unit': b['unit'],
             'lowerIsBetter': b['lower_is_better'], 'metricType': b['metric_type'],
+            'domain': b.get('domain'),
             'latest': latest['value'] if latest else None,
+            'latestText': bd.format_value(b, latest['value']) if latest else None,
             'latestDate': latest['date'].isoformat() if latest else None,
             'level': lv['level'], 'levelIndex': lv['index'], 'next': lv['next'], 'gapToNext': lv['gap'],
             'target': target, 'targetValue': target_value, 'met': met if latest else None,
-            'standards': {lvl: b['levels'][lvl].get(sex, b['levels'][lvl]['male']) for lvl in b['levels']},
-            'history': [{'date': r['date'].isoformat(), 'value': r['value']} for r in hist],
+            'targetText': bd.format_value(b, target_value) if target_value is not None else None,
+            'standards': ladder,
+            'standardsText': {lvl: bd.format_value(b, v) for lvl, v in ladder.items()},
+            'history': [{'date': r['date'].isoformat(), 'value': r['value'],
+                         'valueText': bd.format_value(b, r['value'])} for r in hist],
         })
         for k, r in enumerate(hist):
             series.append({'week': None, 'x': i * 1000 + k, 'value': r['value'], 'isDeload': False,
