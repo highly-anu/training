@@ -1,5 +1,5 @@
 app = "training-api"
-primary_region = "sjc"
+primary_region = "cdg"
 
 [build]
 

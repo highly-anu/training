@@ -36,8 +36,9 @@ if DATABASE_URL:
 
 
 # A link that was used this recently is handed out without a `SELECT 1`.
-# The database is in eu-west-3 and the app in sjc, so every round trip is
-# ~150 ms; pinging on each hand-out cost as much as the queries did. A link
+# Until 2026-10-17 the app ran in sjc and the database in eu-west-3, ~150 ms
+# a round trip, and pinging on each hand-out cost as much as the queries did.
+# Both are in Paris now, but a ping is still a round trip per hand-out. A link
 # psycopg2 saw fail is marked `closed` and still reconnects at once.
 _IDLE_PING_SECONDS = 30
 
@@ -86,8 +87,8 @@ def read_conn():
     """A second per-thread autocommit connection, for reads that may run
     inside a caller's `with get_conn()` block (a nested `with` on the shared
     connection returns nothing and swallows why). Reused across calls, unlike
-    `new_conn()`: opening one costs a TLS and auth handshake across the
-    Atlantic, ~0.7 s, and Log ▸ Linking opened ten per request. Never close
+    `new_conn()`: opening one costs a TLS and auth handshake (~0.7 s when the
+    app ran in sjc), and Log ▸ Linking opened ten per request. Never close
     it, and never turn autocommit off on it; None without a database."""
     return _thread_conn('read_conn')
 

@@ -33,6 +33,11 @@ A training logic system that algorithmically generates periodized training progr
   sync worker, a phone that stopped reading mid-download of `/user/program` held
   it until the 120 s kill, again and again overnight on 2026-10-12, and the
   watch's morning sync queued behind it (`test_worker_stalls.py`).
+- **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both
+  Paris, since 2026-10-17). In `sjc` every query crossed the Atlantic (~150 ms), and
+  Log ▸ Linking took 17 s; keep `primary_region` with the database. Reads that may
+  nest in a `with get_conn()` block take `db.read_conn()` (reused per thread), never
+  a fresh `new_conn()` — that is for transactions.
 - **npm 11.4.2 cannot rebuild this lockfile's ideal tree** (`npm update`, `npm audit fix`
   and plain `npm install <pkg>` die with `Cannot read properties of null (reading 'edgesOut')`
   in arborist's peer-set loader). `npm ci`, `npm ls` and `npm audit` are fine. To change
