@@ -306,17 +306,6 @@ private struct IntensityCard: View {
         }
     }
 
-    /// A zone's colour, easy to hard.
-    private static func zoneColor(_ zone: String) -> Color {
-        switch zone {
-        case "z1": return .blue
-        case "z2": return .green
-        case "z3": return .yellow
-        case "z4": return .orange
-        default: return .red
-        }
-    }
-
     var body: some View {
         AnalyticsCard(header: "Intensity split") {
             AnalyticsStatusBadge(status: intensity.status)
@@ -344,7 +333,7 @@ private struct IntensityCard: View {
         let top = max(rows.map { max($0.actualMinutes, $0.plannedMinutes) }.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 10) {
             ForEach(rows) { row in
-                let color = Self.zoneColor(row.zone)
+                let color = HRZoneStyle.color(row.zone)
                 HStack(spacing: 8) {
                     Text(row.label)
                         .font(.caption).fontWeight(.medium)

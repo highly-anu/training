@@ -3,14 +3,14 @@ import SwiftUI
 // MARK: - Tab definition
 
 enum ProfileTab: Int, AppSubTab {
-    // The web Profile's tabs, in its order (information-architecture.md §2).
-    case athlete, equipment, injuries, schedule, benchmarks
+    // The web Profile's tabs, in its order (information-architecture.md §2),
+    // except Injuries, which is part of Athlete on the phone.
+    case athlete, equipment, schedule, benchmarks
 
     var label: String {
         switch self {
         case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
-        case .injuries:   return "Injuries"
         case .schedule:   return "Schedule"
         case .benchmarks: return "Benchmarks"
         }
@@ -135,100 +135,82 @@ private struct EquipmentTab: View {
     }
 }
 
-// MARK: - Injuries Tab
+// MARK: - Injuries (in Athlete)
 
-private struct InjuriesTab: View {
+/// Active injury flags and custom injuries, a section of Athlete: the system
+/// excludes contraindicated exercises and suggests alternatives.
+private struct InjuriesSection: View {
     @EnvironmentObject var appState: AppState
     @State private var showAddCustomInjury = false
     @State private var newCustomInjury = ""
 
     var body: some View {
-        List {
-            if !appState.constraintDifferences.isEmpty {
-                Section { RegenerateOfferCard() }
-            }
-            Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Active injury flags.")
-                        .font(.headline)
-                    Text("Select any current injuries or movement limitations. The system will exclude contraindicated exercises and suggest alternatives.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        Section {
+            if !appState.injuryFlagDefs.isEmpty {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(appState.injuryFlagDefs) { flag in
+                        let isSelected = appState.profile.injuryFlags.contains(flag.id)
+                        let patternCount = flag.excludedMovementPatterns?.count ?? 0
+                        SelectionCard(
+                            title: flag.name,
+                            subtitle: isSelected ? "\(patternCount) patterns excluded" : "Not active",
+                            isSelected: isSelected,
+                            accentColor: .red
+                        ) {
+                            if isSelected {
+                                appState.profile.injuryFlags.removeAll { $0 == flag.id }
+                            } else {
+                                appState.profile.injuryFlags.append(flag.id)
+                            }
+                            Task { await appState.saveProfile() }
+                        }
+                    }
                 }
                 .padding(.vertical, 4)
             }
 
-            if !appState.injuryFlagDefs.isEmpty {
-                Section {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                        ForEach(appState.injuryFlagDefs) { flag in
-                            let isSelected = appState.profile.injuryFlags.contains(flag.id)
-                            let patternCount = flag.excludedMovementPatterns?.count ?? 0
-                            SelectionCard(
-                                title: flag.name,
-                                subtitle: isSelected ? "\(patternCount) patterns excluded" : "Not active",
-                                isSelected: isSelected,
-                                accentColor: .red
-                            ) {
-                                if isSelected {
-                                    appState.profile.injuryFlags.removeAll { $0 == flag.id }
-                                } else {
-                                    appState.profile.injuryFlags.append(flag.id)
-                                }
-                                Task { await appState.saveProfile() }
-                            }
-                        }
-                    }
-                    .padding(.vertical, 4)
+            ForEach(appState.profile.customInjuryFlags) { custom in
+                HStack {
+                    Text(custom.description)
+                    Spacer()
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.orange)
+                        .font(.caption)
                 }
-            }
-
-            if !appState.profile.customInjuryFlags.isEmpty {
-                Section("Custom") {
-                    ForEach(appState.profile.customInjuryFlags) { custom in
-                        HStack {
-                            Text(custom.description)
-                            Spacer()
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.orange)
-                                .font(.caption)
-                        }
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                appState.profile.customInjuryFlags.removeAll { $0.id == custom.id }
-                                Task { await appState.saveProfile() }
-                            } label: {
-                                Label("Remove", systemImage: "trash")
-                            }
-                        }
+                .swipeActions {
+                    Button(role: .destructive) {
+                        appState.profile.customInjuryFlags.removeAll { $0.id == custom.id }
+                        Task { await appState.saveProfile() }
+                    } label: {
+                        Label("Remove", systemImage: "trash")
                     }
                 }
             }
 
-            Section {
-                Button {
-                    showAddCustomInjury = true
-                } label: {
-                    Label("Add Custom Injury", systemImage: "plus")
+            Button {
+                showAddCustomInjury = true
+            } label: {
+                Label("Add Custom Injury", systemImage: "plus")
+            }
+            .alert("Add Injury", isPresented: $showAddCustomInjury) {
+                TextField("Describe the injury", text: $newCustomInjury)
+                Button("Add") {
+                    let flag = CustomInjuryFlag(id: UUID().uuidString, description: newCustomInjury)
+                    appState.profile.customInjuryFlags.append(flag)
+                    Task { await appState.saveProfile() }
+                    newCustomInjury = ""
                 }
-
-                let totalActive = appState.profile.injuryFlags.count + appState.profile.customInjuryFlags.count
-                Text("\(totalActive) active \(totalActive == 1 ? "injury" : "injuries")")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                Button("Cancel", role: .cancel) { newCustomInjury = "" }
             }
-        }
-        .listStyle(.insetGrouped)
-        .alert("Add Injury", isPresented: $showAddCustomInjury) {
-            TextField("Describe the injury", text: $newCustomInjury)
-            Button("Add") {
-                let flag = CustomInjuryFlag(id: UUID().uuidString, description: newCustomInjury)
-                appState.profile.customInjuryFlags.append(flag)
-                Task { await appState.saveProfile() }
-                newCustomInjury = ""
+        } header: {
+            let total = appState.profile.injuryFlags.count + appState.profile.customInjuryFlags.count
+            HStack {
+                Text("Injuries")
+                Spacer()
+                if total > 0 {
+                    Text("\(total) active").monospacedDigit()
+                }
             }
-            Button("Cancel", role: .cancel) { newCustomInjury = "" }
         }
     }
 }
@@ -340,7 +322,7 @@ private struct BenchmarksTab: View {
 // MARK: - Athlete Tab
 
 /// Who is training: the facts the generator and the analytics read before any
-/// equipment or injury — level, age (max HR), bodyweight (the ×BW standards)
+/// equipment — level, age (max HR), bodyweight (the ×BW standards), injuries,
 /// and the heart-rate zones every HR chart and TRIMP calculation uses.
 private struct AthleteTab: View {
     @EnvironmentObject var appState: AppState
@@ -375,7 +357,7 @@ private struct AthleteTab: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("About you.")
                         .font(.headline)
-                    Text("Level and age shape every program; bodyweight and heart-rate zones shape how your training is measured.")
+                    Text("Level, age and injuries shape every program; bodyweight and heart-rate zones shape how your training is measured.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -437,15 +419,21 @@ private struct AthleteTab: View {
                     Button("Use the estimate from age instead") { clearMaxHROverride() }
                         .font(.footnote)
                 }
+                HRZoneBar(boundaries: boundaries, maxHR: effectiveMaxHR)
+                    .padding(.vertical, 4)
                 ForEach(0..<4, id: \.self) { i in
                     Stepper(value: Binding(
                         get: { Int((boundaries[i] * 100).rounded()) },
                         set: { setBoundary(i, percent: $0) }
                     ), in: 40...97) {
-                        HStack {
+                        HStack(spacing: 8) {
+                            Capsule()
+                                .fill(HRZoneStyle.color(i + 1))
+                                .frame(width: 4, height: 18)
+                                .accessibilityHidden(true)
                             Text(zoneNames[i])
                             Spacer()
-                            Text("\(Int((boundaries[i] * 100).rounded()))% · \(Int((Double(effectiveMaxHR) * boundaries[i]).rounded())) bpm")
+                            Text("\(Int((boundaries[i] * 100).rounded()))%")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
@@ -459,6 +447,8 @@ private struct AthleteTab: View {
             } footer: {
                 Text("Max HR defaults to 220 − age. Zone edges are percentages of max HR and stay at least 3% apart — the same rule the web app enforces.")
             }
+
+            InjuriesSection()
         }
         .listStyle(.insetGrouped)
         .onAppear {
@@ -536,6 +526,65 @@ private struct AthleteTab: View {
     }
     private func todayString() -> String {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
+    }
+}
+
+// MARK: - Zone bar
+
+/// The five zones as one bar in the zone colours (§3.5), each segment as wide
+/// as its share of the heart rates from Z1's floor to max, its name inside and
+/// its bpm range under it. Z1 has no lower edge, so it is drawn from 10 %
+/// under its top.
+private struct HRZoneBar: View {
+    let boundaries: [Double]
+    let maxHR: Int
+
+    private var edges: [Double] {
+        [max(0, boundaries[0] - 0.10)] + boundaries + [1.0]
+    }
+
+    private func bpm(_ fraction: Double) -> Int { Int((Double(maxHR) * fraction).rounded()) }
+
+    private func range(_ zone: Int) -> String {
+        switch zone {
+        case 1: return "<\(bpm(edges[1]))"
+        case 5: return "\(bpm(edges[4]))+"
+        default: return "\(bpm(edges[zone - 1]))–\(bpm(edges[zone]))"
+        }
+    }
+
+    var body: some View {
+        let e = edges
+        let span = e[5] - e[0]
+        GeometryReader { geo in
+            let spacing: CGFloat = 2
+            let usable = geo.size.width - spacing * 4
+            // A floor so a 3 %-wide zone still fits its name, then scaled back
+            // so the five always fill the row exactly.
+            let raw = (1...5).map { max(28, usable * (e[$0] - e[$0 - 1]) / span) }
+            let fit = usable / raw.reduce(0, +)
+            HStack(alignment: .top, spacing: spacing) {
+                ForEach(1...5, id: \.self) { zone in
+                    let width = raw[zone - 1] * fit
+                    VStack(spacing: 3) {
+                        Text("Z\(zone)")
+                            .font(.caption2).fontWeight(.bold)
+                            .foregroundStyle(.black.opacity(0.75))
+                            .frame(maxWidth: .infinity, minHeight: 20)
+                            .background(HRZoneStyle.color(zone),
+                                        in: RoundedRectangle(cornerRadius: 4))
+                        Text(range(zone))
+                            .font(.caption2).monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .frame(width: width)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Zone \(zone), \(range(zone)) beats per minute")
+                }
+            }
+        }
+        .frame(height: 40)
     }
 }
 
@@ -751,7 +800,6 @@ struct ProfileView: View {
                 switch tab {
                 case .athlete:    AthleteTab()
                 case .equipment:  EquipmentTab()
-                case .injuries:   InjuriesTab()
                 case .benchmarks: BenchmarksTab()
                 case .schedule:   ScheduleTab()
                 }

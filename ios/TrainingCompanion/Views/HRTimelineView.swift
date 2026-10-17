@@ -22,13 +22,6 @@ struct HRTimelineView: View {
 
     // Default Friel zone fractions (lo..hi), includes sub-60% band as Z1 floor
     private static let defaultBoundaries: [Double] = [0.60, 0.70, 0.80, 0.90]
-    private static let zoneColors: [Color] = [
-        Color(red: 148/255, green: 163/255, blue: 184/255),  // Z1 slate-400
-        Color(red:  56/255, green: 189/255, blue: 248/255),  // Z2 sky-400
-        Color(red: 251/255, green: 191/255, blue:  36/255),  // Z3 amber-400
-        Color(red: 249/255, green: 115/255, blue:  22/255),  // Z4 orange-500
-        Color(red: 239/255, green:  68/255, blue:  68/255),  // Z5 red-500
-    ]
 
     // Build zone bands from hrConfig boundaries (or defaults)
     private var zoneFractions: [(lo: Double, hi: Double, color: Color)] {
@@ -36,7 +29,7 @@ struct HRTimelineView: View {
         // Prepend 0.0 and append 1.0 to form 5 bands
         let edges = [0.0] + bounds + [1.0]
         return (0..<5).map { i in
-            (lo: edges[i], hi: edges[i + 1], color: Self.zoneColors[i])
+            (lo: edges[i], hi: edges[i + 1], color: HRZoneStyle.colors[i])
         }
     }
 
