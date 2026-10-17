@@ -959,7 +959,7 @@ Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
 still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail,
-`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc` Load's, `movement|shapes` Program's), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

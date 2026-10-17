@@ -199,42 +199,89 @@ private struct StandardRowView: View {
 
 // MARK: - Session shapes
 
-/// Per session shape: done against scheduled, how far measured durations ran
-/// from the archetype's estimate, heart rate, and the lead lift's est. 1RM.
+/// Session shapes as a summary (§6.37): done of scheduled across every
+/// shape, how many ran far from their estimate, and the first three shapes;
+/// the screen lists every shape with its duration against the estimate,
+/// heart rate and lead lift. The list grew with every archetype inline until
+/// 2026-10-17.
 struct SessionShapesCard: View {
     let rows: [ProgramAnalytics.ArchetypeRow]
 
+    private var done: Int { rows.reduce(0) { $0 + $1.completed } }
+    private var scheduled: Int { rows.reduce(0) { $0 + $1.scheduled } }
+    /// Shapes whose measured duration ran past ±25 % of the archetype's estimate.
+    private var offEstimate: Int { rows.filter { abs($0.meanDurationDeltaPct ?? 0) > 25 }.count }
+
     var body: some View {
-        AnalyticsCard(header: "Session shapes") {
+        AnalyticsDetailCard(header: "Session shapes", hint: "Opens every session shape") {
+            SessionShapesDetailView(rows: rows)
+        } content: {
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(rows) { row in
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
-                            if let modality = row.modality {
-                                // The modality's symbol, not a dot: colour is
-                                // never the only signal (§1.6).
-                                Image(symbol: ModalityStyle.icon(for: modality))
-                                    .foregroundStyle(ModalityStyle.color(for: modality))
-                                    .accessibilityLabel(ModalityStyle.label(for: modality))
-                            }
-                            Text(row.name).fontWeight(.medium).lineLimit(2)
-                            Spacer()
-                            Label("\(row.completed)/\(row.scheduled)", systemImage: "checkmark.circle")
-                                .monospacedDigit().foregroundStyle(.secondary)
-                                .accessibilityLabel("\(row.completed) of \(row.scheduled) done")
-                        }
-                        .font(.subheadline)
-                        detail(row)
+                HStack(spacing: 14) {
+                    Label("\(done)/\(scheduled)", systemImage: "checkmark.circle")
+                        .font(.title3).fontWeight(.semibold).monospacedDigit()
+                        .accessibilityLabel("\(done) of \(scheduled) sessions done")
+                    if offEstimate > 0 {
+                        Label("\(offEstimate)", systemImage: "clock.badge.exclamationmark")
+                            .font(.subheadline).foregroundStyle(.yellow)
+                            .accessibilityLabel("\(offEstimate) shapes ran far from their estimate")
                     }
-                    if row.id != rows.last?.id { Divider() }
+                }
+                ForEach(rows.prefix(3)) { row in SessionShapeRow(row: row, showsDetail: false) }
+                if rows.count > 3 {
+                    Text("+\(rows.count - 3)").font(.footnote).foregroundStyle(.secondary)
+                        .accessibilityLabel("\(rows.count - 3) more shapes")
                 }
             }
         }
     }
+}
 
-    /// Duration against the archetype's estimate (amber past ±25 %), average
-    /// and peak HR, and the lead lift's est. 1RM — as symbols.
-    private func detail(_ row: ProgramAnalytics.ArchetypeRow) -> some View {
+/// Every session shape, pushed from its card.
+struct SessionShapesDetailView: View {
+    let rows: [ProgramAnalytics.ArchetypeRow]
+
+    var body: some View {
+        List(rows) { row in
+            SessionShapeRow(row: row, showsDetail: true).padding(.vertical, 2)
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Session shapes")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// One shape: its modality's symbol, name and done of scheduled; with
+/// `showsDetail`, duration against the archetype's estimate (amber past
+/// ±25 %), average and peak HR, and the lead lift's est. 1RM — as symbols.
+private struct SessionShapeRow: View {
+    let row: ProgramAnalytics.ArchetypeRow
+    let showsDetail: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                if let modality = row.modality {
+                    // The modality's symbol, not a dot: colour is never the
+                    // only signal (§1.6).
+                    Image(symbol: ModalityStyle.icon(for: modality))
+                        .foregroundStyle(ModalityStyle.color(for: modality))
+                        .accessibilityLabel(ModalityStyle.label(for: modality))
+                }
+                Text(row.name).fontWeight(.medium).lineLimit(2)
+                Spacer()
+                Label("\(row.completed)/\(row.scheduled)", systemImage: "checkmark.circle")
+                    .monospacedDigit().foregroundStyle(.secondary)
+                    .accessibilityLabel("\(row.completed) of \(row.scheduled) done")
+            }
+            .font(.subheadline)
+            if showsDetail { detail }
+        }
+        // Compact labels in a List too, which otherwise gives each an icon column.
+        .labelStyle(.titleAndIcon)
+    }
+
+    private var detail: some View {
         let delta = row.meanDurationDeltaPct
         return HStack(spacing: 12) {
             if let delta {
