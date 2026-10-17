@@ -199,6 +199,11 @@ def test_readiness_from_the_watch() -> None:
           after['components']['hrv'] == round(20 * 40 / 60 + 15 * 4 / 72), str(after['components']))
     check('68 h of recovery left caps the score at 32', after['score'] == 32, f"{before['score']} → {after['score']}")
     check('…and says why', 'recovery_pending' in after['flags'], str(after['flags']))
+    check('its parts name the watch for HRV and sum past the cap',
+          [p['id'] for p in after['parts']] == ['rhr', 'hrv', 'sleep', 'fatigue', 'tsb']
+          and after['parts'][1]['label'] == 'Body Battery and recovery'
+          and sum(p['max'] for p in after['parts']) == 100
+          and sum(p['points'] for p in after['parts']) > after['score'] == after['cappedAt'], str(after['parts']))
     check('…which is red', after['status'] == 'red')
     check('no insufficient_data for the HRV the watch stood in for',
           'insufficient_data' not in after['flags'], str(after['flags']))

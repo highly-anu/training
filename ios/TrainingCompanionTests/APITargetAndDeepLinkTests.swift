@@ -60,9 +60,13 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://program"), .tab(.program))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=load"), .analytics(.load))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure=bar_load"),
-                       .progressDetail(.measure("bar_load")), "Progress pushes that measure's screen")
+                       .analyticsDetail(.measure("bar_load")), "Progress pushes that measure's screen")
         XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&exercise=back_squat"),
-                       .progressDetail(.exercise("back_squat")))
+                       .analyticsDetail(.exercise("back_squat")))
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=recovery&open=resting-hr"),
+                       .analyticsDetail(.restingHR), "Recovery pushes the resting-HR screen")
+        XCTAssertEqual(parse("trainingcompanion://analytics?open=readiness"), .analyticsDetail(.readiness))
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=recovery&open=nope"), .analytics(.recovery))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure="), .analytics(.progress),
                        "an empty id lands on the section")
         XCTAssertEqual(parse("trainingcompanion://analytics?section=blocks"), .analytics(.blocks))
@@ -88,10 +92,12 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(router.analyticsSection, .program)
         router.open(.tab(.profile))
         XCTAssertEqual(router.tab, .profile)
-        router.open(.progressDetail(.exercise("back_squat")))
+        router.open(.analyticsDetail(.exercise("back_squat")))
         XCTAssertEqual(router.tab, .analytics)
         XCTAssertEqual(router.analyticsSection, .progress)
-        XCTAssertEqual(router.pendingProgressDetail, .exercise("back_squat"))
+        XCTAssertEqual(router.pendingAnalyticsDetail, .exercise("back_squat"))
+        router.open(.analyticsDetail(.sleep))
+        XCTAssertEqual(router.analyticsSection, .recovery, "a Recovery detail opens Recovery")
         router.open(.programPhase("compare"))
         XCTAssertEqual(router.tab, .program)
         XCTAssertEqual(router.programSection, .overview)

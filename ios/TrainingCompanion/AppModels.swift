@@ -816,6 +816,18 @@ struct ReadinessResult: Codable {
     /// (api._score_watch_recovery). Absent without a reading from today or
     /// yesterday, and from older servers.
     var watch: ReadinessWatch? = nil
+    /// The score's parts with their maxima, in the server's words — the
+    /// readiness detail lays them out (§6.37). Absent from older servers.
+    var parts: [ReadinessPart]? = nil
+    /// Set when recovery time still left capped the score below its parts' sum.
+    var cappedAt: Int? = nil
+}
+
+struct ReadinessPart: Codable, Equatable, Identifiable {
+    let id: String
+    let label: String
+    let points: Int
+    let max: Int
 }
 
 struct ReadinessWatch: Codable, Equatable {
