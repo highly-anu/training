@@ -139,8 +139,8 @@ React 19 + Vite 8 + TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, TanSt
 **Pages (grouped sidebar, `components/layout/Sidebar.tsx`):** the same items and sections,
 in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — rename or move
 a section on both clients in one change). Train — Today `/`
-(`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Calendar · Overview ·
-History via `?tab=`; the builder is the flow `/program/new`), Analytics `/analytics`
+(`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Overview · Calendar ·
+History via `?tab=`, Overview first since 2026-10-17; the builder is the flow `/program/new`), Analytics `/analytics`
 (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks;
 before Log since 2026-10-16, which folded the old Insight group into Train), Log `/log` (Workouts ·
 Linking · Sessions, Import as a sheet; Linking is one card per day, workouts beside
@@ -757,7 +757,7 @@ LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.
 LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
 ```
 
-Routes: `today`, `program?section=calendar|overview|history`,
+Routes: `today`, `program?section=overview|calendar|history`,
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
 still alias Load and Blocks), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels

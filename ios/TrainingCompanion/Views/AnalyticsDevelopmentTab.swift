@@ -30,7 +30,7 @@ struct AnalyticsDevelopmentTab: View {
             } else {
                 emptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
                            message: "Blocks appear here as programs are saved.",
-                           actionLabel: "Go to Program") { router.show(.program) }
+                           actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
         }
         // A new revision means a program was saved or generated, which is

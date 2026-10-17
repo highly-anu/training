@@ -52,7 +52,7 @@ export function SessionDetail() {
         className="p-6"
       >
         <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
-          <Link to="/program"><ChevronLeft className="size-4" /> Program</Link>
+          <Link to="/program?tab=calendar"><ChevronLeft className="size-4" /> Program</Link>
         </Button>
         <EmptyState
           title="Rest day"
@@ -73,7 +73,7 @@ export function SessionDetail() {
       {/* Back nav */}
       <div className="border-b bg-card/50 px-6 py-3">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link to="/program"><ChevronLeft className="size-4" /> Program</Link>
+          <Link to="/program?tab=calendar"><ChevronLeft className="size-4" /> Program</Link>
         </Button>
       </div>
 

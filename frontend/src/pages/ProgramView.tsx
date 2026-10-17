@@ -23,8 +23,9 @@ import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
 import { regenerateSource, tailResume } from '@/lib/programSource'
 
-type ProgramTab = 'calendar' | 'overview' | 'history'
-const PROGRAM_TABS: ProgramTab[] = ['calendar', 'overview', 'history']
+type ProgramTab = 'overview' | 'calendar' | 'history'
+// Overview leads since 2026-10-17, the same order as the phone's (information-architecture.md §2).
+const PROGRAM_TABS: ProgramTab[] = ['overview', 'calendar', 'history']
 
 export function ProgramView() {
   const navigate = useNavigate()
@@ -33,12 +34,12 @@ export function ProgramView() {
   // URL-driven so History can be linked to directly (it was its own page).
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
-  const activeTab: ProgramTab = PROGRAM_TABS.includes(tabParam as ProgramTab) ? (tabParam as ProgramTab) : 'calendar'
+  const activeTab: ProgramTab = PROGRAM_TABS.includes(tabParam as ProgramTab) ? (tabParam as ProgramTab) : 'overview'
   function setActiveTab(tab: ProgramTab) {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        if (tab === 'calendar') next.delete('tab')
+        if (tab === 'overview') next.delete('tab')
         else next.set('tab', tab)
         return next
       },

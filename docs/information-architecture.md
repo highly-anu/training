@@ -64,7 +64,7 @@ web's Insight group into Train.
 | Item | Web sections (`?tab=`) | iOS sections (`AppSubTabs`) |
 |---|---|---|
 | **Today** | — (web route `/`) | — |
-| **Program** | Calendar · Overview · History | Calendar · Overview · History |
+| **Program** | Overview · Calendar · History | Overview · Calendar · History |
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
 | **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
@@ -97,7 +97,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Group | Item | Route | Sub-tabs (header pills) | Header actions |
 |---|---|---|---|---|
 | Train | **Today** | `/` | — | Program settings sheet |
-| Train | **Program** | `/program` | Calendar · Overview · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
+| Train | **Program** | `/program` | Overview · Calendar · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
 | Train | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Train | **Log** | `/log` | Workouts · Suggestions (count badge) · Sessions | Import (sheet) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
@@ -177,7 +177,7 @@ Benchmarks), sex (a new profile key; unblocks the female benchmark standards), b
 | Tab | Root | Sections (`AppSubTabs`) | Notes |
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
-| **Program** | `ProgramView` | Calendar · Overview · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
+| **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = every program (design system §6.20); Load = the old Overview. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
