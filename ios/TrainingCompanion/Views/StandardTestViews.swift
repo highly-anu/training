@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Marks a session that tests the phase's standards (design-system §6.32).
+/// Marks a session that tests the phase's standards (design-system §6.33).
 struct TestBadge: View {
     var body: some View {
         Label("Test", systemImage: "trophy.fill")

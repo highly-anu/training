@@ -21,7 +21,7 @@ enum StandardSubject: Identifiable {
 }
 
 /// One standard — or the bodyweight series — and every result on it
-/// (design-system §6.31; the web's `StandardDetailSheet`): where the athlete
+/// (design-system §6.32; the web's `StandardDetailSheet`): where the athlete
 /// stands, the ladder, the history across programs, and each result to
 /// correct or delete. A result belongs to the athlete, not a program.
 struct StandardDetailSheet: View {

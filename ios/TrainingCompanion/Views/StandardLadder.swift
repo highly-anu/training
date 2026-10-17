@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Where a result sits on a standard — the one ladder every screen draws
-/// (design-system §6.30; the web's `StandardLadder`).
+/// (design-system §6.31; the web's `StandardLadder`).
 ///
 /// The rungs fill, up to the level the server reached, in the colour of the
 /// modality the standard measures; the level is read from position and its
