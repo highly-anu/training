@@ -91,7 +91,24 @@ private struct BlocksCard: View {
                 .clipShape(Capsule())
                 .accessibilityLabel("Program timeline, \(doc.blocks.count) blocks")
 
-                ForEach(doc.blocks) { block in blockRow(block) }
+                ForEach(doc.blocks) { block in
+                    // The block as it was planned, week by week (§6.37) — the
+                    // screen Program ▸ History opens.
+                    NavigationLink {
+                        ProgramVersionDetailView(versionId: block.versionId, title: block.name)
+                    } label: {
+                        HStack(spacing: 8) {
+                            blockRow(block)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the block, week by week")
+                }
             }
         }
     }
@@ -101,7 +118,7 @@ private struct BlocksCard: View {
             Circle().fill(doc.color(of: block.id)).frame(width: 8, height: 8).padding(.top, 5)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(block.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                    Text(block.name).font(.subheadline).fontWeight(.semibold).lineLimit(2)
                     if block.isActive {
                         TintCapsule(text: "current", color: .accentColor)
                     }
@@ -136,6 +153,8 @@ private struct BlocksCard: View {
 private struct SeriesCard: View {
     let doc: DevelopmentAnalytics
     @Binding var selected: String?
+    /// The day the athlete is touching on the chart, if any.
+    @State private var touched: Date?
 
     private enum Option: Identifiable {
         case lift(DevelopmentAnalytics.Lift)
@@ -151,6 +170,12 @@ private struct SeriesCard: View {
             switch self {
             case .lift(let l): return l.blocks > 1 ? "\(l.name) · \(l.blocks) blocks" : l.name
             case .currency(let c): return "\(c.name) · \(c.unit)"
+            }
+        }
+        var name: String {
+            switch self {
+            case .lift(let l): return l.name
+            case .currency(let c): return c.name
             }
         }
         var unit: String {
@@ -187,14 +212,49 @@ private struct SeriesCard: View {
         options.first { $0.id == selected } ?? options.first
     }
 
+    /// The summary (§6.37): which series, its chart across the blocks (touch
+    /// it for a session's set), the trend, and a row to the per-block numbers.
+    /// A row of chips picked the series and every block's row sat under the
+    /// chart until 2026-10-17.
     var body: some View {
         AnalyticsCard(header: "Lifts across blocks") {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
-                    chips
+                    if options.count > 1 {
+                        // A display choice inside the card, so a menu (§6.8).
+                        LabeledContent {
+                            Picker("Series", selection: Binding(get: { current?.id }, set: { id in
+                                withAnimation(AppAnimation.springStandard) { selected = id; touched = nil }
+                            })) {
+                                ForEach(options) { o in Text(o.label).tag(Optional(o.id)) }
+                            }
+                            .pickerStyle(.menu)
+                        } label: {
+                            Text(option.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                        }
+                    } else {
+                        Text(option.name).font(.subheadline).fontWeight(.semibold)
+                    }
                     chart(option)
                     TrendText(trend: option.trend)
-                    perBlockRows(option)
+                    if !option.perBlock.isEmpty {
+                        Divider()
+                        NavigationLink {
+                            SeriesBlocksView(title: option.name, unit: option.unit, rows: option.perBlock, doc: doc)
+                        } label: {
+                            HStack {
+                                Text("By block").font(.subheadline)
+                                Spacer()
+                                Text("\(option.perBlock.count)").font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens \(option.name) block by block")
+                    }
                 }
             } else {
                 Text("Nothing logged yet")
@@ -203,32 +263,11 @@ private struct SeriesCard: View {
         }
     }
 
-    private var chips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(options) { option in
-                    let isOn = option.id == current?.id
-                    Button {
-                        withAnimation(AppAnimation.springStandard) { selected = option.id }
-                    } label: {
-                        Text(option.label)
-                            .font(.footnote).fontWeight(isOn ? .semibold : .regular)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(isOn ? Color.accentColor.opacity(0.15) : Color(.systemGray5))
-                            .foregroundStyle(isOn ? Color.accentColor : Color.primary)
-                            .clipShape(Capsule())
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(isOn ? .isSelected : [])
-                }
-            }
-        }
-    }
-
     private func chart(_ option: Option) -> some View {
         let points = option.points
+        let touchedPoint = touched.flatMap { day in
+            points.min { abs($0.date.timeIntervalSince(day)) < abs($1.date.timeIntervalSince(day)) }
+        }
         return Chart {
             ForEach(doc.blocks) { block in
                 if let span = doc.span(of: block) {
@@ -241,11 +280,33 @@ private struct SeriesCard: View {
                     .foregroundStyle(Color.green)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.monotone)
+                // A deload point is hollow, as on Progress: a fill in the
+                // page's background read as a dark dot on the card.
                 PointMark(x: .value("Date", p.date), y: .value(option.unit, p.value))
-                    .foregroundStyle(p.isDeload ? Color(.systemBackground) : doc.color(of: p.blockId))
-                    .symbolSize(50)
+                    .symbol {
+                        if p.isDeload {
+                            Circle().strokeBorder(doc.color(of: p.blockId), lineWidth: 2).frame(width: 9, height: 9)
+                        } else {
+                            Circle().fill(doc.color(of: p.blockId)).frame(width: 8, height: 8)
+                        }
+                    }
+            }
+            if let p = touchedPoint {
+                RuleMark(x: .value("Date", p.date))
+                    .foregroundStyle(Color.secondary.opacity(0.5))
+                    .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(p.date, format: .dateTime.day().month(.abbreviated))
+                                .font(.caption2).foregroundStyle(.secondary)
+                            Text(p.detail ?? "\(number(p.value)) \(option.unit)")
+                                .font(.caption).monospacedDigit()
+                        }
+                        .padding(6)
+                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+                    }
             }
         }
+        .chartXSelection(value: $touched)
         .chartYScale(domain: .automatic(includesZero: false))
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { value in
@@ -270,32 +331,46 @@ private struct SeriesCard: View {
             }
         }
         .frame(height: 180)
+        .accessibilityLabel("\(option.name): \(points.count) sessions across \(doc.blocks.count) blocks")
     }
 
-    private func perBlockRows(_ option: Option) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(option.perBlock) { row in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Circle().fill(doc.color(of: row.blockId)).frame(width: 8, height: 8)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(doc.block(row.blockId)?.name ?? "Block \(row.blockId)")
-                            .font(.subheadline).fontWeight(.semibold).lineLimit(1)
-                        HStack(spacing: 10) {
-                            Text("\(number(row.first)) → \(number(row.last)) \(option.unit)")
-                            Label(number(row.best), systemImage: "trophy")
-                            Label("\(row.sessions)", systemImage: "list.bullet")
-                        }
-                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(number(row.first)) to \(number(row.last)) \(option.unit), best \(number(row.best)), \(row.sessions) sessions")
-                    }
+    private func number(_ v: Double) -> String { AnalyticsProgramTab.number(v) }
+}
+
+/// One series block by block (§6.37), pushed from "By block" on Lifts across
+/// blocks: per block its first and last value, best, sessions and the change.
+private struct SeriesBlocksView: View {
+    let title: String
+    let unit: String
+    let rows: [DevelopmentAnalytics.PerBlock]
+    let doc: DevelopmentAnalytics
+
+    var body: some View {
+        List(rows) { row in
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Circle().fill(doc.color(of: row.blockId)).frame(width: 10, height: 10)
+                    Text(doc.block(row.blockId)?.name ?? "Block \(row.blockId)")
+                        .font(.subheadline).fontWeight(.semibold).lineLimit(2)
                     Spacer(minLength: 4)
                     Text(DevelopmentAnalytics.formatDelta(row.delta))
                         .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                         .foregroundStyle(row.delta > 0 ? Color.green : row.delta < 0 ? Color.yellow : Color.secondary)
                 }
+                HStack(spacing: 14) {
+                    Text("\(number(row.first)) → \(number(row.last)) \(unit)")
+                    Label(number(row.best), systemImage: "trophy")
+                    Label("\(row.sessions)", systemImage: "list.bullet")
+                }
+                .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
             }
+            .padding(.vertical, 2)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(doc.block(row.blockId)?.name ?? "Block"): \(number(row.first)) to \(number(row.last)) \(unit), best \(number(row.best)), \(row.sessions) sessions, change \(DevelopmentAnalytics.formatDelta(row.delta))")
         }
+        .listStyle(.insetGrouped)
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func number(_ v: Double) -> String { AnalyticsProgramTab.number(v) }
@@ -374,28 +449,59 @@ private struct LoadByBlockCard: View {
                 }
             }
             .frame(height: 130)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(doc.blocks) { block in
+                        HStack(spacing: 4) {
+                            Circle().fill(doc.color(of: block.id)).frame(width: 8, height: 8)
+                            Text(block.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
+                }
+            }
+            .accessibilityHidden(true)
         }
     }
 }
 
 // MARK: - Standards over time
 
-/// Every standard with a result in the window, as a small chart across the
-/// blocks — results belong to the athlete, so they run through every program.
-/// The current program's own first; a gain is said in words, the level in the
-/// standard's modality colour. Tap one for its history.
+/// Every standard with a result in the window — results belong to the
+/// athlete, so they run through every program. A row is the summary: the
+/// name, the latest result, the level, the levels gained and a line of the
+/// results; it opens the standard's sheet here (§6.32), whose chart has the
+/// blocks as bands. The current program's own come first; the rest fold
+/// behind "More standards". Each row drew a 120 pt chart, inside a button
+/// that left for Profile, until 2026-10-17.
 private struct StandardsCard: View {
     let doc: DevelopmentAnalytics
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var appState: AppState
+    @State private var showMore = false
+    @State private var sheet: StandardSubject?
 
     private var own: [DevelopmentAnalytics.Benchmark] { doc.benchmarks.filter(\.inCurrentProgram) }
     private var other: [DevelopmentAnalytics.Benchmark] { doc.benchmarks.filter { !$0.inCurrentProgram } }
+    /// With none of the program's own, the others lead and nothing folds.
+    private var shown: [DevelopmentAnalytics.Benchmark] { own.isEmpty || showMore ? own + other : own }
 
     var body: some View {
         AnalyticsCard(header: "Standards over time") {
-            VStack(alignment: .leading, spacing: 14) {
-                group(title: !own.isEmpty && !other.isEmpty ? "This program" : nil, rows: own)
-                group(title: !own.isEmpty ? "Other standards" : nil, rows: other)
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(shown) { benchmark in
+                    if benchmark.id != shown.first?.id { Divider() }
+                    Button { open(benchmark.benchmarkId) } label: { row(benchmark) }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens the standard")
+                }
+                if !own.isEmpty && !other.isEmpty {
+                    Button(showMore ? "Fewer standards" : "More standards (\(other.count))") {
+                        withAnimation(AppAnimation.layoutChange) { showMore.toggle() }
+                    }
+                    .font(.footnote)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
                 Button { router.showProfile(.standards) } label: {
                     Label("Log a result", systemImage: "plus.circle")
                         .frame(minHeight: 44)
@@ -405,52 +511,50 @@ private struct StandardsCard: View {
                 .accessibilityHint("Opens Profile, Standards")
             }
         }
-    }
-
-    @ViewBuilder
-    private func group(title: String?, rows: [DevelopmentAnalytics.Benchmark]) -> some View {
-        if !rows.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                if let title {
-                    Text(title.uppercased()).font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
-                }
-                ForEach(rows) { benchmark in
-                    Button { router.openStandard(benchmark.benchmarkId) } label: { row(benchmark) }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Opens Profile, Standards")
-                }
-            }
-        }
+        .sheet(item: $sheet) { StandardDetailSheet(subject: $0).environmentObject(appState) }
+        .task { await appState.loadBenchmarksIfNeeded() }
     }
 
     private func row(_ b: DevelopmentAnalytics.Benchmark) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(b.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
-                Spacer(minLength: 4)
-                // The latest result is the row's number; the chart is its history.
-                if let last = b.history.last {
-                    Text(last.valueText ?? AnalyticsProgramTab.number(last.value))
-                        .font(.subheadline).monospacedDigit()
+                HStack(spacing: 6) {
+                    StandardLevelBadge(level: b.latestLevel, domain: b.domain)
+                    if let gained = gainedText(b) {
+                        Text(gained).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
-                StandardLevelBadge(level: b.latestLevel, domain: b.domain)
-                Image(systemName: "chevron.right")
-                    .font(.caption).foregroundStyle(.tertiary)
+            }
+            Spacer(minLength: 6)
+            if b.history.count >= 2 {
+                Sparkline(values: b.history.map(\.value),
+                          color: b.domain.map { ModalityStyle.color(for: $0) } ?? .accentColor,
+                          width: 56, height: 18)
                     .accessibilityHidden(true)
             }
-            if let gained = gainedText(b) {
-                Text(gained).font(.caption).foregroundStyle(.secondary)
+            if let last = b.history.last {
+                Text(last.valueText ?? AnalyticsProgramTab.number(last.value))
+                    .font(.subheadline).fontWeight(.semibold).monospacedDigit()
             }
-            StandardHistoryChart(
-                points: b.history.compactMap { StandardChartPoint(id: $0.id, day: $0.date, value: $0.value,
-                                                                  valueText: $0.valueText ?? AnalyticsProgramTab.number($0.value),
-                                                                  level: $0.level) },
-                levels: StandardChartLevel.from(standards: b.standards, texts: b.standardsText),
-                domain: b.domain,
-                bands: doc.blocks.map { StandardChartBand(from: $0.from, to: $0.to) })
-                .frame(height: 120)
+            Image(systemName: "chevron.right")
+                .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The standard's sheet in place; Profile ▸ Standards only when the
+    /// catalog has not loaded.
+    private func open(_ id: String) {
+        AppHaptics.light()
+        if let benchmark = appState.benchmarks.first(where: { $0.id == id }) {
+            sheet = .standard(benchmark)
+        } else {
+            router.openStandard(id)
+        }
     }
 
     private func gainedText(_ b: DevelopmentAnalytics.Benchmark) -> String? {

@@ -47,7 +47,7 @@ struct ProgramHistoryView: View {
         List {
             ForEach(appState.programHistory) { entry in
                 NavigationLink {
-                    ProgramVersionDetailView(entry: entry)
+                    ProgramVersionDetailView(versionId: entry.versionId, title: entry.displayName)
                 } label: {
                     ProgramHistoryRow(entry: entry)
                 }
@@ -99,9 +99,12 @@ private struct ProgramHistoryRow: View {
     }
 }
 
-/// One archived program, exactly as it was planned.
-private struct ProgramVersionDetailView: View {
-    let entry: ProgramHistoryEntry
+/// One archived program, exactly as it was planned: week by week, each
+/// session with its day, whether it was done and linked. Program ▸ History
+/// and Analytics ▸ Blocks both push it, so a block reads the same from either.
+struct ProgramVersionDetailView: View {
+    let versionId: String
+    let title: String
     @EnvironmentObject var appState: AppState
 
     @State private var detail: ProgramHistoryDetail? = nil
@@ -119,10 +122,10 @@ private struct ProgramVersionDetailView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(entry.displayName)
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            detail = try? await appState.api?.fetchProgramVersion(entry.versionId)
+            detail = try? await appState.api?.fetchProgramVersion(versionId)
             isLoading = false
         }
     }
