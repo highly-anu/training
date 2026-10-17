@@ -64,7 +64,18 @@ struct ContentView: View {
                         .environmentObject(appState)
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { Task { await appState.refreshIfStale() } }
+                    // Also a workout noticed while the app was in the
+                    // background (a watch upload wakes it), whose sheet could
+                    // not come up then; the refresh may not be due.
+                    if phase == .active {
+                        Task {
+                            await appState.refreshIfStale()
+                            appState.noticeCompletedWorkout()
+                        }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutStored)) { _ in
+                    Task { await appState.refreshAfterWatchWorkout() }
                 }
                 .onOpenURL { url in
                     // .fit file import

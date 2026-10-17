@@ -154,7 +154,9 @@ extension WatchSessionManager: WCSessionDelegate {
         if let data = try? JSONEncoder().encode(summary) {
             WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
         }
-        return await handleWorkoutComplete(summary)
+        let stored = await handleWorkoutComplete(summary)
+        if stored { NotificationCenter.default.post(name: .watchWorkoutStored, object: summary.sessionId) }
+        return stored
     }
 
     /// Stores a session from the watch: its log, the workout, the match.
@@ -242,6 +244,7 @@ extension WatchSessionManager: WCSessionDelegate {
         do {
             try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt, source: "apple_watch_live")
             AppLogger.logFromBackground("API: marked session complete \(sessionId) ✓")
+            NotificationCenter.default.post(name: .watchWorkoutStored, object: sessionId)
             return true
         } catch {
             AppLogger.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
@@ -346,4 +349,6 @@ extension WatchSessionManager: WCSessionDelegate {
 extension Notification.Name {
     /// The Apple Watch was paired, installed, removed or came in range.
     static let watchStateDidChange = Notification.Name("watchStateDidChange")
+    /// The server has a session the Apple Watch recorded (object: its key).
+    static let watchWorkoutStored = Notification.Name("watchWorkoutStored")
 }

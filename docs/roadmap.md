@@ -880,7 +880,10 @@ branch:
    transfer is the fallback — between simulators it was never delivered, so an end-to-end
    run (watch → phone → workout, log, match → `completed` on the next sync) now passes
    there. The watch's done mark keeps the log's `apple_watch_live` source, and
-   `standard_results` files that source as the watch's.
+   `standard_results` files that source as the watch's. The phone refreshes when it has stored
+   a watch session (`.watchWorkoutStored`), so Today marks it done and the Workout complete
+   sheet comes up; an empty first load now counts as the install's first, so the first
+   workout ever is news, not history.
 3. **Spec rendering (M).** `gen_vocab.py` also writes `ios/Shared/WatchVocab.swift`; a
    Swift renderer switches exhaustively on it (a new id breaks the build until both watches
    draw it); the eight templates map onto today's views plus a round timer; behaviours
