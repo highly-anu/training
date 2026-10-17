@@ -1550,6 +1550,13 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
   Progress (`ProgramStandardsCard` and the target-level entries, which were
   text only) and Blocks (the badge; a gain is said as "+1 level", never in a
   status green).
+- Where: Profile ▸ Standards is *This program* (the server's `programStandards`)
+  · *Your results* · the other standards behind *Show all*; Progress shows the
+  program's own and says how far each moved this block with a
+  `StandardSparkline` (56 × 16, the modality's colour, no axis) from the block's
+  start; Blocks draws each as a compact `StandardHistoryChart`, the current
+  program's first. A row on Progress or Blocks opens its sheet through
+  `AppRouter.openStandard`.
 - A level has no colour of its own: position and word carry it, so it cannot
   be mistaken for a status. The traffic light (§6.15) is only for a declared
   target (met · partly · below).

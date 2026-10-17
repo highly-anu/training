@@ -702,6 +702,8 @@ export interface StandardResults {
   /** The program timeline, oldest first, for shading a history chart. */
   blocks?: StandardBlock[]
   bodyweight: { value: number; valueText: string; date: string | null; entries?: StandardEntry[] } | null
+  /** The current program's own standards (declared or tested), for Profile's "This program". */
+  programStandards?: Array<{ id: string; why: string[] }>
 }
 
 /** What a result is sent as: typed text ("4:58"), or for a ×BW standard the load lifted. */
@@ -1615,9 +1617,9 @@ export interface AnalyticsBenchmarkRow {
   unit: string
   metricType: string
   lowerIsBetter: boolean
-  why: Array<'philosophy' | 'priority_modality' | 'declared'>
-  /** Declared, this methodology's own, or already has a number. The rest sit
-   *  behind "More standards". Absent on older documents. */
+  why: Array<'philosophy' | 'priority_modality' | 'declared' | 'tested'>
+  /** The program's own: declared by its package or measured by a test it
+   *  schedules. The rest sit behind "More standards". */
   primary?: boolean
   standards: Record<string, number>
   standardsText?: Record<string, string>
@@ -1633,7 +1635,15 @@ export interface AnalyticsBenchmarkRow {
   gapToNext: number | null
   nextText?: string | null
   gapText?: string | null
+  best?: number | null
+  bestText?: string | null
   history: Array<{ date: string; value: number; valueText?: string }>
+  /** Where the athlete stood when the block began. */
+  atBlockStart?: { value: number; valueText: string; date: string; level: string | null; levelIndex: number } | null
+  /** Levels moved this block; null with nothing to compare. */
+  levelChange?: number | null
+  /** The block's results, its starting standing first. */
+  blockHistory?: Array<{ date: string; value: number; valueText: string; level: string | null }>
 }
 
 export interface ProgramAnalytics {
@@ -1647,7 +1657,7 @@ export interface ProgramAnalytics {
   progress: AnalyticsProgressEntry[]
   movement: AnalyticsMovement
   archetypes: AnalyticsArchetypeRow[]
-  benchmarks: { sex: string; bodyweightKg: number | null; bodyweightText?: string | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
+  benchmarks: { sex: string; blockStart?: string; bodyweightKg: number | null; bodyweightText?: string | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
   load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
 }
 
@@ -1717,7 +1727,11 @@ export interface DevelopmentBenchmark {
   domain?: string | null
   metricType?: string | null
   lowerIsBetter: boolean
-  history: Array<{ date: string; value: number; valueText?: string; level: string | null; levelIndex: number }>
+  standards?: Record<string, number>
+  standardsText?: Record<string, string>
+  /** One of the current program's own standards. */
+  inCurrentProgram?: boolean
+  history: Array<{ date: string; value: number; valueText?: string; level: string | null; levelIndex: number; blockId?: number | null }>
   latestLevel: string | null
   latestLevelIndex: number
   levelsGained: number

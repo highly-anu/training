@@ -5,7 +5,19 @@ import {
 import { format } from 'date-fns'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { levelName, STANDARD_LEVELS } from '@/lib/standards'
-import type { ModalityId, StandardBlock, StandardEntry } from '@/api/types'
+import type { ModalityId, StandardBlock } from '@/api/types'
+
+/** A result as the chart needs it — a Profile entry or a Blocks history point. */
+export interface ChartEntry {
+  id?: number | null
+  date: string
+  value: number
+  valueText?: string
+  level: string | null
+  source?: string
+  inputText?: string | null
+  block?: { name: string } | null
+}
 
 const DAY = 86_400_000
 // Room on the right for the longest level label ("intermediate 1.5×BW"), and
@@ -24,15 +36,16 @@ const SOURCE_LABEL: Record<string, string> = {
 }
 
 interface Props {
-  entries: StandardEntry[]
+  entries: ChartEntry[]
   /** Threshold values and their text, for the dashed level lines. */
   thresholds?: Partial<Record<string, number>>
   thresholdText?: Partial<Record<string, string>>
   domain?: string | null
   blocks?: StandardBlock[]
+  height?: number
 }
 
-interface TooltipProps { active?: boolean; payload?: Array<{ payload: StandardEntry & { x: number } }> }
+interface TooltipProps { active?: boolean; payload?: Array<{ payload: ChartEntry & { x: number } }> }
 
 function PointTooltip({ active, payload }: TooltipProps) {
   if (!active || !payload?.length) return null
@@ -40,9 +53,13 @@ function PointTooltip({ active, payload }: TooltipProps) {
   return (
     <div className="rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md space-y-0.5">
       <p className="font-medium text-muted-foreground">{format(new Date(e.x), 'd MMM yyyy')}</p>
-      <p className="text-foreground"><span className="font-semibold tabular-nums">{e.valueText}</span> · {levelName(e.level).toLowerCase()}</p>
+      <p className="text-foreground"><span className="font-semibold tabular-nums">{e.valueText ?? e.value}</span> · {levelName(e.level).toLowerCase()}</p>
       {e.inputText && <p className="text-muted-foreground">{e.inputText}</p>}
-      <p className="text-muted-foreground">{SOURCE_LABEL[e.source] ?? e.source}{e.block ? ` · ${e.block.name}` : ''}</p>
+      {(e.source || e.block) && (
+        <p className="text-muted-foreground">
+          {[e.source ? (SOURCE_LABEL[e.source] ?? e.source) : null, e.block?.name].filter(Boolean).join(' · ')}
+        </p>
+      )}
     </div>
   )
 }
@@ -55,7 +72,7 @@ function PointTooltip({ active, payload }: TooltipProps) {
  * results fell in as alternating bands — results belong to the athlete and run
  * across programs. Hover a point for its day, value, level and source.
  */
-export function StandardHistoryChart({ entries, thresholds, thresholdText, domain, blocks = [] }: Props) {
+export function StandardHistoryChart({ entries, thresholds, thresholdText, domain, blocks = [], height = 200 }: Props) {
   const color = (domain && MODALITY_COLORS[domain as ModalityId]?.hex) || 'var(--color-primary)'
   const data = useMemo(() => entries.map((e) => ({ ...e, x: dayMs(e.date) })), [entries])
 
@@ -77,7 +94,7 @@ export function StandardHistoryChart({ entries, thresholds, thresholdText, domai
 
   return (
     <div className="space-y-1" role="img" aria-label={`${data.length} results over time`}>
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 16, right: LABEL_GUTTER, left: 8, bottom: 0 }}>
                     {bands.map((b, i) => (
             // A block too narrow for its name stays unlabelled; the tooltip names it.

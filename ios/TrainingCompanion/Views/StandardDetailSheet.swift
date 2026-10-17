@@ -160,33 +160,50 @@ private struct EntryRow: View {
 
 // MARK: - History chart
 
+/// One result as the chart draws it — a Profile entry or a Blocks history point.
+struct StandardChartPoint: Identifiable {
+    let id: String
+    let date: Date
+    let value: Double
+    let valueText: String
+    let level: String?
+
+    init?(id: String, day: String?, value: Double, valueText: String, level: String?) {
+        guard let date = StandardLevel.date(day) else { return nil }
+        self.id = id; self.date = date; self.value = value; self.valueText = valueText; self.level = level
+    }
+}
+
+/// A level's dashed line: its word, threshold and the server's text for it.
+struct StandardChartLevel {
+    let level: String
+    let value: Double
+    let text: String
+
+    static func from(standards: [String: Double], texts: [String: String]) -> [StandardChartLevel] {
+        StandardLevel.all.compactMap { l in standards[l].map { StandardChartLevel(level: l, value: $0, text: texts[l] ?? "") } }
+    }
+}
+
+/// A program block, as a band behind the line.
+struct StandardChartBand {
+    let from: String
+    let to: String?
+}
+
 /// A standard's results over time (the web's `StandardHistoryChart`): one
 /// series in the modality's colour, each level a dashed line labelled with its
 /// word and value (the server's text, so no value axis), and the program blocks
 /// as bands. Drag across it for a result's day, value and level.
 struct StandardHistoryChart: View {
-    let entries: [StandardResult.Entry]
-    let benchmark: AppBenchmark?
-    let blocks: [StandardResults.Block]
+    let points: [StandardChartPoint]
+    let levels: [StandardChartLevel]
+    let domain: String?
+    let bands: [StandardChartBand]
 
     @State private var selected: Date? = nil
 
-    private struct Point: Identifiable {
-        let entry: StandardResult.Entry
-        let date: Date
-        var id: String { entry.id }
-    }
-
-    private var points: [Point] {
-        entries.compactMap { e in StandardLevel.date(e.date).map { Point(entry: e, date: $0) } }
-    }
-    private var color: Color { benchmark?.domain.map { ModalityStyle.color(for: $0) } ?? .accentColor }
-    private var levels: [(level: String, value: Double, text: String)] {
-        guard let b = benchmark, let s = b.standards else { return [] }
-        let pairs: [(String, Double?)] = [("entry", s.entry), ("intermediate", s.intermediate),
-                                          ("advanced", s.advanced), ("elite", s.elite)]
-        return pairs.compactMap { l, v in v.map { (l, $0, b.thresholdTexts[l] ?? "") } }
-    }
+    private var color: Color { domain.map { ModalityStyle.color(for: $0) } ?? .accentColor }
 
     var body: some View {
         let pts = points
@@ -194,14 +211,14 @@ struct StandardHistoryChart: View {
         let last = pts.last?.date ?? Date()
         let pad = max(last.timeIntervalSince(first) * 0.06, 10 * 86_400)
         let xDomain = first.addingTimeInterval(-pad)...last.addingTimeInterval(pad)
-        let values = pts.map(\.entry.value) + levels.map(\.value)
+        let values = pts.map(\.value) + levels.map(\.value)
         let lo = values.min() ?? 0, hi = values.max() ?? 1
         let span = (hi - lo) == 0 ? max(abs(hi), 1) : (hi - lo)
         let yDomain = max(0, lo - span * 0.08)...(hi + span * 0.08)
         let nearest = selected.flatMap { s in pts.min { abs($0.date.timeIntervalSince(s)) < abs($1.date.timeIntervalSince(s)) } }
 
         Chart {
-            ForEach(Array(bands(in: xDomain).enumerated()), id: \.offset) { i, band in
+            ForEach(Array(bandRanges(in: xDomain).enumerated()), id: \.offset) { i, band in
                 RectangleMark(xStart: .value("From", band.from), xEnd: .value("To", band.to))
                     .foregroundStyle(Color.primary.opacity(i % 2 == 0 ? 0.06 : 0.025))
             }
@@ -214,10 +231,10 @@ struct StandardHistoryChart: View {
                     }
             }
             ForEach(pts) { p in
-                LineMark(x: .value("Day", p.date), y: .value("Value", p.entry.value))
+                LineMark(x: .value("Day", p.date), y: .value("Value", p.value))
                     .foregroundStyle(color)
                     .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                PointMark(x: .value("Day", p.date), y: .value("Value", p.entry.value))
+                PointMark(x: .value("Day", p.date), y: .value("Value", p.value))
                     .foregroundStyle(color)
                     .symbolSize(p.id == nearest?.id ? 90 : 45)
             }
@@ -226,9 +243,10 @@ struct StandardHistoryChart: View {
                     .foregroundStyle(Color.secondary.opacity(0.4))
                     .annotation(position: .top, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("\(n.entry.valueText) · \(StandardLevel.name(n.entry.level).lowercased())")
+                            Text("\(n.valueText) · \(StandardLevel.name(n.level).lowercased())")
                                 .font(.caption2).fontWeight(.semibold)
-                            Text(StandardLevel.day(n.entry.date) ?? "").font(.caption2).foregroundStyle(.secondary)
+                            Text(n.date.formatted(.dateTime.day().month(.abbreviated).year()))
+                                .font(.caption2).foregroundStyle(.secondary)
                         }
                         .padding(6)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
@@ -264,13 +282,30 @@ struct StandardHistoryChart: View {
         return months < 2 ? 0 : max(1, Int((months / 4).rounded(.up)))
     }
 
-    private func bands(in domain: ClosedRange<Date>) -> [(from: Date, to: Date)] {
-        blocks.compactMap { b in
+    private func bandRanges(in domain: ClosedRange<Date>) -> [(from: Date, to: Date)] {
+        bands.compactMap { b in
             guard let start = StandardLevel.date(b.from) else { return nil }
             let end = b.to.flatMap(StandardLevel.date).map { $0.addingTimeInterval(86_400) } ?? domain.upperBound
             let from = max(start, domain.lowerBound), to = min(end, domain.upperBound)
             return from < to ? (from, to) : nil
         }
+    }
+}
+
+extension StandardHistoryChart {
+    /// A standard's (or the bodyweight's) Profile entries.
+    init(entries: [StandardResult.Entry], benchmark: AppBenchmark?, blocks: [StandardResults.Block]) {
+        self.init(
+            points: entries.compactMap { StandardChartPoint(id: $0.id, day: $0.date, value: $0.value,
+                                                           valueText: $0.valueText, level: $0.level) },
+            levels: benchmark.map { b in
+                StandardChartLevel.from(standards: [
+                    "entry": b.standards?.entry, "intermediate": b.standards?.intermediate,
+                    "advanced": b.standards?.advanced, "elite": b.standards?.elite,
+                ].compactMapValues { $0 }, texts: b.thresholdTexts)
+            } ?? [],
+            domain: benchmark?.domain,
+            bands: blocks.map { StandardChartBand(from: $0.from, to: $0.to) })
     }
 }
 

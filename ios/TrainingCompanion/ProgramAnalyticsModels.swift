@@ -647,10 +647,10 @@ struct ProgramAnalytics: Decodable {
             let name: String
             let unit: String
             let lowerIsBetter: Bool
-            /// philosophy | priority_modality | declared
+            /// declared | tested | philosophy | priority_modality
             let why: [String]
-            /// Declared, this methodology's own, or already has a number; the
-            /// rest wait behind "More standards". Absent on older documents.
+            /// The program's own: declared by its package or measured by a test
+            /// it schedules; the rest wait behind "More standards".
             let primary: Bool
             let standards: [String: Double]
             /// The thresholds as the server prints them ("4:30", "1.5×BW").
@@ -669,12 +669,26 @@ struct ProgramAnalytics: Decodable {
             /// The modality the standard measures (`max_strength`,
             /// `strength_endurance`…), which colours its ladder.
             let domain: String?
+            /// Where the athlete stood when the block began.
+            let atBlockStart: BlockPoint?
+            /// Levels moved this block; nil with nothing to compare.
+            let levelChange: Int?
+            /// The block's results, its starting standing first.
+            let blockHistory: [BlockPoint]
             var id: String { benchmarkId }
+
+            struct BlockPoint: Decodable {
+                let date: String
+                let value: Double
+                let valueText: String
+                let level: String?
+            }
 
             private struct Derived: Decodable { let reason: String? }
             private enum CodingKeys: String, CodingKey {
                 case benchmarkId, name, unit, lowerIsBetter, why, primary, standards, standardsText, value, valueText,
-                     valueSource, level, levelIndex, next, gapToNext, gapText, derived, domain
+                     valueSource, level, levelIndex, next, gapToNext, gapText, derived, domain,
+                     atBlockStart, levelChange, blockHistory
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -696,6 +710,10 @@ struct ProgramAnalytics: Decodable {
                 gapText = try? c.decodeIfPresent(String.self, forKey: .gapText)
                 derivedReason = (try? c.decodeIfPresent(Derived.self, forKey: .derived))?.reason
                 domain = try? c.decodeIfPresent(String.self, forKey: .domain)
+                atBlockStart = try? c.decodeIfPresent(BlockPoint.self, forKey: .atBlockStart)
+                levelChange = try? c.decodeIfPresent(Int.self, forKey: .levelChange)
+                blockHistory = ((try? c.decodeIfPresent([Lossy<BlockPoint>].self, forKey: .blockHistory)) ?? nil)?
+                    .compactMap(\.value) ?? []
             }
 
             /// The thresholds as text — the server's, or number + unit for an

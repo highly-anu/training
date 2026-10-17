@@ -249,6 +249,14 @@ group's name.
   session's when it has a `session_uid`). `analytics.benchmarks.standing` is the one reading
   of a standard (latest result, else the estimate from logged sets) the program ladder and
   `benchmark_level` share.
+- **Only a program's own standards lead.** `analytics.benchmarks.program_standards(goal,
+  weeks, specs)` — declared by the package's `analytics.yaml` for the frameworks the program
+  runs, or measured by a test it schedules (a slot's or session's `standard`) — is the one
+  answer for Progress (`primary`), Profile ▸ Standards' *This program* (`programStandards`
+  on `/standards/results`) and Blocks (`inCurrentProgram`, sorted first). Same domain, cites
+  the philosophy or merely has a result: secondary ("More standards", *Your results*). A
+  result alone used to make a standard primary. Progress rows carry `atBlockStart`,
+  `levelChange` and `blockHistory` (the block's results, its starting standing first).
 - **The Cell maps by its own words:** II entry, III intermediate, IV advanced, V elite
   (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
 - Cached analytics documents key on `api._ANALYTICS_SHAPE` and on every result's

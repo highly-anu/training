@@ -16,7 +16,7 @@ import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel, Sex } from '@/api/types'
+import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -284,26 +284,84 @@ function useOpenStandard(): [string | null, (id: string | null) => void] {
   return [open, set]
 }
 
+function StandardCard({ s, result, onOpen }: {
+  s: BenchmarkStandard; result?: StandardResult; onOpen: () => void
+}) {
+  const r = result
+  const bestDiffers = r && r.best.value !== r.current.value
+  return (
+    <div className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-0.5">
+          <button type="button" onClick={onOpen}
+                  className="block max-w-full truncate text-left text-sm font-medium hover:underline underline-offset-2">
+            {s.name}
+          </button>
+          {r ? (
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground tabular-nums">{r.current.valueText}</span>
+              {' '}<StandardLevelBadge level={r.current.level} domain={s.domain} />
+              {r.current.date && <> · {formatDay(r.current.date)}</>}
+              {bestDiffers && <> · best {r.best.valueText}</>}
+              {r.current.next && r.current.gapText && <> · {r.current.gapText} to {r.current.next}</>}
+              {' · '}
+              <button type="button" onClick={onOpen} className="underline underline-offset-2 hover:text-foreground">
+                {r.count} result{r.count === 1 ? '' : 's'}
+              </button>
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/70">No result yet</p>
+          )}
+        </div>
+        <ResultInput benchId={s.id} hint={s.inputHint ?? s.unit.trim()} label={s.name} />
+      </div>
+      <StandardLadder
+        thresholds={thresholdTexts(s.standardsText, s.standards, s.unit)}
+        levelIndex={r ? r.current.levelIndex : undefined}
+        domain={s.domain}
+      />
+    </div>
+  )
+}
+
 function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const { data: standards = [], isLoading } = useStandards()
   const { data: results } = useStandardResults()
   const sex = useProfileStore((s) => s.sex)
   const [openId, setOpenId] = useOpenStandard()
+  const [showAll, setShowAll] = useState(false)
   const openStandard = standards.find((s) => s.id === openId)
 
   if (isLoading) return <LoadingCard />
 
-  // Groups and their order come from the server, so this tab, Explore and the
-  // phone list the same groups under the same names.
-  const groups = new Map<string, { name: string; order: number; rows: typeof standards }>()
+  const byId = new Map(standards.map((s) => [s.id, s]))
+  // This program's own (declared by its package or tested), in the server's
+  // order; then every other standard with a result; then the rest, by group.
+  const programIds = (results?.programStandards ?? []).map((p) => p.id).filter((id) => byId.has(id))
+  const mine = standards.filter((s) => results?.standards[s.id] && !programIds.includes(s.id))
+  const placed = new Set([...programIds, ...mine.map((s) => s.id)])
+  const groups = new Map<string, { name: string; order: number; rows: BenchmarkStandard[] }>()
   for (const s of standards) {
+    if (placed.has(s.id)) continue
     const g = groups.get(s.category) ?? { name: s.categoryName ?? s.category, order: s.categoryOrder ?? 99, rows: [] }
     g.rows.push(s)
     groups.set(s.category, g)
   }
   const ordered = [...groups.values()].sort((a, b) => a.order - b.order)
+  const rest = ordered.reduce((n, g) => n + g.rows.length, 0)
   const withResults = Object.keys(results?.standards ?? {}).length
   const bodyweight = results?.bodyweight
+  // With nothing of the program's and no result, the reference is the page.
+  const allOpen = showAll || (programIds.length === 0 && mine.length === 0)
+  const card = (s: BenchmarkStandard) => (
+    <StandardCard key={s.id} s={s} result={results?.standards[s.id]} onOpen={() => setOpenId(s.id)} />
+  )
+  const heading = (text: string, sub?: string) => (
+    <div className="space-y-0.5">
+      <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">{text}</h3>
+      {sub && <p className="text-[11px] text-muted-foreground/70">{sub}</p>}
+    </div>
+  )
 
   return (
     <div className="h-full overflow-y-auto">
@@ -340,52 +398,35 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
           </p>
         </div>
 
-        {ordered.map((group) => (
-          <div key={group.name} className="space-y-3">
-            <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-              {group.name}
-            </h3>
-            <div className="grid gap-3">
-              {group.rows.map((s) => {
-                const r = results?.standards[s.id]
-                const bestDiffers = r && r.best.value !== r.current.value
-                return (
-                  <div key={s.id} className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-0.5">
-                        <button type="button" onClick={() => setOpenId(s.id)}
-                                className="block max-w-full truncate text-left text-sm font-medium hover:underline underline-offset-2">
-                          {s.name}
-                        </button>
-                        {r ? (
-                          <p className="text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground tabular-nums">{r.current.valueText}</span>
-                            {' '}<StandardLevelBadge level={r.current.level} domain={s.domain} />
-                            {r.current.date && <> · {formatDay(r.current.date)}</>}
-                            {bestDiffers && <> · best {r.best.valueText}</>}
-                            {r.current.next && r.current.gapText && <> · {r.current.gapText} to {r.current.next}</>}
-                            {' · '}
-                            <button type="button" onClick={() => setOpenId(s.id)} className="underline underline-offset-2 hover:text-foreground">
-                              {r.count} result{r.count === 1 ? '' : 's'}
-                            </button>
-                          </p>
-                        ) : (
-                          <p className="text-[11px] text-muted-foreground/70">No result yet</p>
-                        )}
-                      </div>
-                      <ResultInput benchId={s.id} hint={s.inputHint ?? s.unit.trim()} label={s.name} />
-                    </div>
-                    <StandardLadder
-                      thresholds={thresholdTexts(s.standardsText, s.standards, s.unit)}
-                      levelIndex={r ? r.current.levelIndex : undefined}
-                      domain={s.domain}
-                    />
-                  </div>
-                )
-              })}
-            </div>
+        {programIds.length > 0 && (
+          <div className="space-y-3">
+            {heading('This program', 'What your current program is measured by: declared by its methodology, or tested in it.')}
+            <div className="grid gap-3">{programIds.map((id) => card(byId.get(id)!))}</div>
           </div>
-        ))}
+        )}
+
+        {mine.length > 0 && (
+          <div className="space-y-3">
+            {heading('Your results', 'Every other standard you have a result on, from this program or earlier ones.')}
+            <div className="grid gap-3">{mine.map(card)}</div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {heading('All standards', `${rest} more, by group — the reference ladders.`)}
+          {(programIds.length > 0 || mine.length > 0) && (
+            <button type="button" onClick={() => setShowAll((v) => !v)}
+                    className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground">
+              {showAll ? 'Hide them' : `Show all ${rest}`}
+            </button>
+          )}
+          {allOpen && ordered.map((group) => (
+            <div key={group.name} className="space-y-3">
+              <h4 className="text-[11px] font-medium text-muted-foreground">{group.name}</h4>
+              <div className="grid gap-3">{group.rows.map(card)}</div>
+            </div>
+          ))}
+        </div>
 
         <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
           {withResults} of {standards.length} standards with a result
@@ -394,7 +435,6 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
         <StandardDetailSheet open={openId != null && (openId === 'bodyweight_kg' || !!openStandard)}
                              onOpenChange={(o) => { if (!o) setOpenId(null) }}
                              standard={openId === 'bodyweight_kg' ? undefined : openStandard} />
-
       </div>
     </div>
   )

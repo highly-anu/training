@@ -12,6 +12,9 @@ struct StandardResults: Decodable {
     let bodyweight: Bodyweight?
     /// The program timeline, oldest first, so a history chart can shade each block.
     let blocks: [Block]
+    /// The current program's own standards (declared or tested), in order,
+    /// for Profile's "This program".
+    let programStandards: [String]
 
     struct Bodyweight: Decodable {
         let value: Double
@@ -38,7 +41,8 @@ struct StandardResults: Decodable {
         let to: String?
     }
 
-    private enum CodingKeys: String, CodingKey { case sex, standards, bodyweight, blocks }
+    private struct ProgramStandard: Decodable { let id: String }
+    private enum CodingKeys: String, CodingKey { case sex, standards, bodyweight, blocks, programStandards }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sex = try? c.decodeIfPresent(String.self, forKey: .sex)
@@ -46,6 +50,8 @@ struct StandardResults: Decodable {
         standards = lossy.compactMapValues(\.value)
         bodyweight = try? c.decodeIfPresent(Bodyweight.self, forKey: .bodyweight)
         blocks = ((try? c.decodeIfPresent([Lossy<Block>].self, forKey: .blocks)) ?? nil)?.compactMap(\.value) ?? []
+        programStandards = ((try? c.decodeIfPresent([Lossy<ProgramStandard>].self, forKey: .programStandards)) ?? nil)?
+            .compactMap(\.value?.id) ?? []
     }
 }
 
@@ -131,6 +137,19 @@ enum StandardLevel {
     static func name(_ level: String?) -> String {
         guard let level, let first = level.first else { return "Below entry" }
         return first.uppercased() + level.dropFirst()
+    }
+
+    /// How a standard moved this block, in words, from the server's numbers:
+    /// "+1 level this block", "first result this block", "not retested this
+    /// block" — or nil (the web's `blockChangeText`).
+    static func blockChange(levelChange: Int?, hasStart: Bool, points: Int) -> String? {
+        if let n = levelChange {
+            if n == 0 { return "same level as at the block's start" }
+            return "\(n > 0 ? "+" : "−")\(abs(n)) level\(abs(n) == 1 ? "" : "s") this block"
+        }
+        if !hasStart && points > 0 { return "first result this block" }
+        if hasStart && points <= 1 { return "not retested this block" }
+        return nil
     }
 
     /// A local calendar day as the server's YYYY-MM-DD.

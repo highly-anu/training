@@ -973,7 +973,22 @@ def test_sections() -> None:
           and sq['derived']['value'] == round(round(101.25 * (1 + 0.0333 * 5), 1) / 82.0, 2), str(sq['derived']))
     check('bodyweight surfaced', bm['bodyweightKg'] == 82.0)
     check("the methodology's own standard is primary", ids['back_squat_bw_ratio']['primary'])
-    check('a priority-domain standard with a logged PR is primary', ids['run_3mile_minutes']['primary'])
+    check('a result alone does not make a standard the program\'s own (it waits behind "More standards")',
+          not ids['run_3mile_minutes']['primary'], str(ids['run_3mile_minutes']['why']))
+    r3 = ids['run_3mile_minutes']
+    check('the standing when the block began (a result the day before)',
+          r3['atBlockStart'] and r3['atBlockStart']['date'] == '2026-03-01' and r3['levelChange'] is None
+          and [p['date'] for p in r3['blockHistory']] == ['2026-03-01'], str({k: r3[k] for k in ('atBlockStart', 'levelChange')}))
+    perf_moved = {**perf, 'run_3mile_minutes': perf['run_3mile_minutes'] + [{'value': 22.0, 'date': '2026-03-12'}]}
+    r3b = {b['benchmarkId']: b for b in benchmarks_mod.build(_ctx(prog, logs, [run], matches, perf=perf_moved), specs)['benchmarks']}['run_3mile_minutes']
+    check('levels moved this block (24:00 intermediate → 22:00 advanced)',
+          r3b['levelChange'] == 1 and [p['valueText'] for p in r3b['blockHistory']] == ['24:00', '22:00'], str(r3b['levelChange']))
+    tested_prog = fixture_program(weeks=3)
+    sat = tested_prog['weeks'][1]['schedule']['Saturday'][0]
+    sat['exercises'][0]['standard'] = {'id': 'row_2km_minutes', 'result': 'duration'}
+    own = benchmarks_mod.program_standards(tested_prog['goal'], tested_prog['weeks'], specs)
+    check('a scheduled test makes its standard the program\'s own', own.get('row_2km_minutes') == ['tested'], str(own.get('row_2km_minutes')))
+    check('…next to what the package declares', own.get('back_squat_bw_ratio') == ['declared'], str(own))
     domain_only = [b for b in bm['benchmarks'] if b['why'] == ['priority_modality'] and b['value'] is None]
     check('a priority-domain standard with no number waits behind "More standards"',
           domain_only and not any(b['primary'] for b in domain_only), str(len(domain_only)))

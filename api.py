@@ -231,7 +231,7 @@ def _injury_flags() -> list[dict]:
 # Bumped when a cached analytics document's *shape* changes, so a snapshot
 # written by the previous code (missing the new keys) is recomputed once
 # instead of being served until its inputs happen to change.
-_ANALYTICS_SHAPE = 'standards-text-1'
+_ANALYTICS_SHAPE = 'standards-block-1'
 
 
 def _standards_digest_key(performance: dict) -> list:
@@ -3728,9 +3728,32 @@ def standards_results():
     except Exception:  # noqa: BLE001 — results without blocks rather than none
         activations = []
     names = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
-    return jsonify(_standards.summarise(
+    doc = _standards.summarise(
         _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, tz,
-        _standards.blocks_from_activations(activations, names)))
+        _standards.blocks_from_activations(activations, names))
+    # The current program's own standards, for Profile's "This program".
+    own = _current_program_standards(g.user_id)
+    doc['programStandards'] = [{'id': sid, 'why': why} for sid, why in own.items()]
+    return jsonify(doc)
+
+
+def _current_program_standards(user_id: str) -> dict:
+    """{standard id: [why…]} for the athlete's current program
+    (analytics.benchmarks.program_standards), {} without one."""
+    from src.analytics import benchmarks as _bm, spec as _spec
+    from src.program_keys import normalize_program_keys
+    try:
+        stored = _db.get_user_program(user_id)
+        if not isinstance(stored, dict):
+            return {}
+        stored = normalize_program_keys(stored)
+        program = stored.get('currentProgram') or {'weeks': stored.get('weeks') or []}
+        goal = program.get('goal') or {}
+        specs = _spec.compose(goal, stored.get('sourceGoalWeights') or {})
+        return _bm.program_standards(goal, program.get('weeks') or [], specs)
+    except Exception as exc:  # noqa: BLE001 — sections without a program rather than none
+        app.logger.warning('standards: program standards failed: %s', exc)
+        return {}
 
 
 def _result_day(body: dict, tz: str | None) -> str:
@@ -4509,6 +4532,7 @@ def analytics_development():
         activations=activations, planned=planned, logs_by_uid=logs, matches=matches,
         workouts=workouts, pmc=pmc, trimp_of=lambda w: _calc_workout_trimp(w, max_hr),
         performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex, timezone=tz,
+        program_standards=_current_program_standards(user_id),
         exercise_names={eid: ex.get('name', eid) for eid, ex in exercises.items()},
         philosophy_names=philosophies,
     ))

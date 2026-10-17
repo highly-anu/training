@@ -30,3 +30,25 @@ export function thresholdTexts(
   }
   return out
 }
+
+/**
+ * How a standard moved during the current block, in words, from the server's
+ * `levelChange` / `atBlockStart` / `blockHistory`: "+1 level this block",
+ * "first result this block", "not retested this block" — or nothing.
+ */
+export function blockChangeText(row: {
+  levelChange?: number | null
+  atBlockStart?: unknown | null
+  blockHistory?: unknown[]
+}): string | null {
+  const n = row.levelChange
+  if (n != null) {
+    if (n === 0) return "same level as at the block's start"
+    const abs = Math.abs(n)
+    return `${n > 0 ? '+' : '−'}${abs} level${abs === 1 ? '' : 's'} this block`
+  }
+  const points = row.blockHistory?.length ?? 0
+  if (!row.atBlockStart && points > 0) return 'first result this block'
+  if (row.atBlockStart && points <= 1) return 'not retested this block'
+  return null
+}

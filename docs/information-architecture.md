@@ -68,7 +68,7 @@ web's Insight group into Train.
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
 | **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there) |
+| **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there): *This program* · *Your results* · *All standards*, each standard's history one tap away |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
 
 Differences kept on purpose:

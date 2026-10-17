@@ -391,43 +391,70 @@ private struct LoadByBlockCard: View {
 
 // MARK: - Standards over time
 
+/// Every standard with a result in the window, as a small chart across the
+/// blocks — results belong to the athlete, so they run through every program.
+/// The current program's own first; a gain is said in words, the level in the
+/// standard's modality colour. Tap one for its history.
 private struct StandardsCard: View {
     let doc: DevelopmentAnalytics
+    @EnvironmentObject private var router: AppRouter
+
+    private var own: [DevelopmentAnalytics.Benchmark] { doc.benchmarks.filter(\.inCurrentProgram) }
+    private var other: [DevelopmentAnalytics.Benchmark] { doc.benchmarks.filter { !$0.inCurrentProgram } }
 
     var body: some View {
         AnalyticsCard(header: "Standards over time") {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(doc.benchmarks) { benchmark in
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
-                            Text(benchmark.name).font(.caption).fontWeight(.semibold).lineLimit(1)
-                            Spacer(minLength: 4)
-                            // The level in the standard's modality colour, like
-                            // every ladder; a gain is said in words, not in a
-                            // status green.
-                            if let gained = gainedText(benchmark) {
-                                Text(gained).font(.caption2).foregroundStyle(.secondary)
-                            }
-                            StandardLevelBadge(level: benchmark.latestLevel, domain: benchmark.domain)
-                        }
-                        Text(historyText(benchmark)).font(.caption2).foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                group(title: !own.isEmpty && !other.isEmpty ? "This program" : nil, rows: own)
+                group(title: !own.isEmpty ? "Other standards" : nil, rows: other)
+                Button { router.showProfile(.standards) } label: {
+                    Label("Log a result", systemImage: "plus.circle")
+                }
+                .font(.caption)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func group(title: String?, rows: [DevelopmentAnalytics.Benchmark]) -> some View {
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                if let title {
+                    Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary)
+                }
+                ForEach(rows) { benchmark in
+                    Button { router.openStandard(benchmark.benchmarkId) } label: { row(benchmark) }
+                        .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private func row(_ b: DevelopmentAnalytics.Benchmark) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text(b.name).font(.caption).fontWeight(.semibold).lineLimit(1)
+                Spacer(minLength: 4)
+                if let gained = gainedText(b) {
+                    Text(gained).font(.caption2).foregroundStyle(.secondary)
+                }
+                StandardLevelBadge(level: b.latestLevel, domain: b.domain)
+            }
+            StandardHistoryChart(
+                points: b.history.compactMap { StandardChartPoint(id: $0.id, day: $0.date, value: $0.value,
+                                                                  valueText: $0.valueText ?? AnalyticsProgramTab.number($0.value),
+                                                                  level: $0.level) },
+                levels: StandardChartLevel.from(standards: b.standards, texts: b.standardsText),
+                domain: b.domain,
+                bands: doc.blocks.map { StandardChartBand(from: $0.from, to: $0.to) })
+                .frame(height: 120)
+        }
+        .contentShape(Rectangle())
     }
 
     private func gainedText(_ b: DevelopmentAnalytics.Benchmark) -> String? {
         guard b.levelsGained != 0 else { return nil }
         let n = abs(b.levelsGained)
         return "\(b.levelsGained > 0 ? "+" : "−")\(n) level\(n == 1 ? "" : "s")"
-    }
-
-    private func historyText(_ b: DevelopmentAnalytics.Benchmark) -> String {
-        b.history.map { entry in
-            let when = DevelopmentAnalytics.day(entry.date).map { $0.formatted(.dateTime.day().month(.abbreviated)) } ?? entry.date
-            let value = entry.valueText ?? "\(AnalyticsProgramTab.number(entry.value))\(b.unit)"
-            return "\(value) (\(StandardLevel.name(entry.level).lowercased()), \(when))"
-        }.joined(separator: " → ")
     }
 }

@@ -50,6 +50,7 @@ class DevelopmentInputs:
     benchmarks: list = field(default_factory=list)           # benchmarks_data.load_benchmarks()
     sex: str = 'male'
     timezone: str | None = None                              # the athlete's, for a result's day
+    program_standards: dict = field(default_factory=dict)    # analytics.benchmarks.program_standards of the current program
     exercise_names: dict = field(default_factory=dict)
     philosophy_names: dict = field(default_factory=dict)
 
@@ -275,7 +276,7 @@ def _load(inputs: DevelopmentInputs, timeline: _Timeline) -> dict:
 
 # ── benchmarks ───────────────────────────────────────────────────────────────
 
-def _benchmarks(inputs: DevelopmentInputs) -> list[dict]:
+def _benchmarks(inputs: DevelopmentInputs, timeline: '_Timeline') -> list[dict]:
     by_id = {b['id']: b for b in inputs.benchmarks}
     out = []
     for bid, entries in inputs.performance_logs.items():
@@ -283,25 +284,33 @@ def _benchmarks(inputs: DevelopmentInputs) -> list[dict]:
         if not b:
             continue
         history = []
-        # Each result on the athlete's day (src/standards.entries), not its UTC timestamp's.
+        # Each result on the athlete's day (src/standards.entries), not its UTC
+        # timestamp's, in the block in force that day (its test session's first).
         for e in _standards.entries(entries, inputs.timezone):
             day, value = date.fromisoformat(e['date']), e['value']
             if day < inputs.window_from or day > inputs.window_to:
                 continue
             lv = _bd.level_of(b, float(value), inputs.sex)
+            vid = (e.get('sessionUid') or '').split(':', 1)[0] or None
             history.append({'date': day.isoformat(), 'value': value, 'valueText': _bd.format_value(b, float(value)),
-                            'level': lv['level'], 'levelIndex': lv['index']})
+                            'level': lv['level'], 'levelIndex': lv['index'],
+                            'blockId': timeline.block_on(day, vid)})
         if not history:
             continue
+        ladder = _bd.thresholds(b, inputs.sex)
         out.append({
             'benchmarkId': bid, 'name': b.get('name', bid), 'unit': b.get('unit', ''),
             'domain': b.get('domain'), 'metricType': b.get('metric_type'),
             'lowerIsBetter': bool(b.get('lower_is_better')),
+            'standards': ladder,
+            'standardsText': {lvl: _bd.format_value(b, v) for lvl, v in ladder.items()},
+            # One of the current program's own standards (declared or tested).
+            'inCurrentProgram': bid in inputs.program_standards,
             'history': history,
             'latestLevel': history[-1]['level'], 'latestLevelIndex': history[-1]['levelIndex'],
             'levelsGained': history[-1]['levelIndex'] - history[0]['levelIndex'],
         })
-    out.sort(key=lambda r: (-r['levelsGained'], -len(r['history']), r['name']))
+    out.sort(key=lambda r: (not r['inCurrentProgram'], -r['levelsGained'], -len(r['history']), r['name']))
     return out
 
 
@@ -318,5 +327,5 @@ def compute_development(inputs: DevelopmentInputs) -> dict:
         'lifts': _lifts(inputs, lifts_raw, blocks),
         'currencies': _currencies(inputs, currencies_raw, blocks),
         'load': _load(inputs, timeline),
-        'benchmarks': _benchmarks(inputs),
+        'benchmarks': _benchmarks(inputs, timeline),
     }

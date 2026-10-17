@@ -794,12 +794,7 @@ confirms; programs schedule **package-declared tests**. Phase 1 shipped the same
 (see *Done*). Open, one PR each:
 
 2. ~~**History you can manage.**~~ — shipped 2026-10-17 (see *Done*).
-3. **Relevance.** `benchmarks.program_standards`: *this program's* = declared for the
-   running track/framework or measured by a scheduled test; everything else (same domain,
-   cites the philosophy, has a result) behind "More standards" — today a result alone makes
-   a standard primary, so a logged back squat leads a Wildman block's Progress. Profile
-   sections (To confirm · This program · Your results · All), Progress change since block
-   start, Blocks charts across blocks.
+3. ~~**Relevance.**~~ — shipped 2026-10-17 (see *Done*).
 4. **Package-declared tests.** Archetype slot `standard: <id>` (packages → commons only),
    `test: {selectable: false}`, phase `tests:` positioned on `(phase_id, week_in_phase)`;
    the generator swaps one session of the modality for the test (protocol unscaled — today
@@ -862,6 +857,15 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 3 (2026-10-17)**: only a program's own standards lead.
+`analytics.benchmarks.program_standards` (declared by the package for the frameworks the
+program runs, or tested by it) decides Progress's standards, Profile ▸ Standards' *This
+program* and Blocks' order; a result alone no longer makes a standard primary (a logged
+back squat used to lead a kettlebell block). Progress says how far each moved this block
+("+1 level this block", a sparkline from the block's start); Blocks draws each standard as a
+chart across blocks; Profile is *This program* · *Your results* · *All standards*
+(collapsed). Every standard on Progress and Blocks opens its detail, on both clients.
 
 **Standards, phase 2 (2026-10-17)**: a history the athlete can manage. Every result
 can be logged with its day and a note, and corrected or deleted on its own (it used to

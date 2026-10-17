@@ -62,31 +62,37 @@ struct MethodologySectionView: View {
 
 // MARK: - Standards
 
-/// The standards this program is measured by, and where the athlete stands.
-/// The program's own (declared, its methodology's, or already logged) show;
-/// same-domain tables from other sources wait behind "More standards".
+/// The standards this program is measured by — what its package declares and
+/// what it tests — with how far the athlete has moved this block. Standards
+/// that only share a domain or cite the methodology wait behind "More
+/// standards"; a result alone no longer makes a standard the program's own.
+/// Tap one for its history (Profile ▸ Standards, through the router).
 struct ProgramStandardsCard: View {
     let benchmarks: ProgramAnalytics.Benchmarks
+    @EnvironmentObject private var router: AppRouter
     @State private var showMore = false
 
     private var own: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter(\.primary) }
     private var more: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter { !$0.primary } }
-    private var shown: [ProgramAnalytics.Benchmarks.Row] {
-        own.isEmpty ? benchmarks.rows : showMore ? own + more : own
-    }
+    private var shown: [ProgramAnalytics.Benchmarks.Row] { showMore ? own + more : own }
 
     var body: some View {
         AnalyticsCard(header: "Standards") {
             VStack(alignment: .leading, spacing: 12) {
+                if own.isEmpty {
+                    Text("This program declares no standards of its own.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 // ×BW standards derive from logged sets with a bodyweight.
                 Label(benchmarks.bodyweightText.map { "BW \($0)" }
                       ?? benchmarks.bodyweightKg.map { "BW \(AnalyticsProgramTab.number($0)) kg" } ?? "No bodyweight",
                       systemImage: "figure.stand")
                     .font(.caption2).foregroundStyle(.secondary)
                 ForEach(shown) { row in
-                    StandardRowView(row: row)
+                    Button { router.openStandard(row.benchmarkId) } label: { StandardRowView(row: row) }
+                        .buttonStyle(.plain)
                 }
-                if !own.isEmpty && !more.isEmpty {
+                if !more.isEmpty {
                     Button(showMore ? "Fewer standards" : "More standards (\(more.count))") {
                         withAnimation(AppAnimation.layoutChange) { showMore.toggle() }
                     }
@@ -106,11 +112,17 @@ private struct StandardRowView: View {
         }
     }
 
-    private var gapText: String? {
-        guard row.value != nil, let next = row.next,
-              let gap = row.gapText ?? row.gapToNext.map({ "\(AnalyticsProgramTab.number($0))\(row.unit)" })
-        else { return nil }
-        return "\(gap) to \(next)"
+    private var detail: String? {
+        var parts: [String] = []
+        if let change = StandardLevel.blockChange(levelChange: row.levelChange, hasStart: row.atBlockStart != nil,
+                                                 points: row.blockHistory.count) {
+            parts.append(change)
+        }
+        if row.value != nil, let next = row.next,
+           let gap = row.gapText ?? row.gapToNext.map({ "\(AnalyticsProgramTab.number($0))\(row.unit)" }) {
+            parts.append("\(gap) to \(next)")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     var body: some View {
@@ -131,15 +143,21 @@ private struct StandardRowView: View {
                     .fontWeight(row.value == nil ? .regular : .semibold)
                     .foregroundStyle(row.value == nil ? .secondary : .primary)
             }
-            if row.value != nil {
+            if row.value != nil || detail != nil {
                 HStack(spacing: 6) {
-                    StandardLevelBadge(level: row.level, domain: row.domain)
-                    if let gapText { Text(gapText).font(.caption2).foregroundStyle(.secondary) }
+                    if row.value != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
+                    if let detail { Text(detail).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
+                    Spacer(minLength: 0)
+                    if row.blockHistory.count >= 2 {
+                        StandardSparkline(values: row.blockHistory.map(\.value), domain: row.domain)
+                            .accessibilityLabel("This block: " + row.blockHistory.map(\.valueText).joined(separator: " → "))
+                    }
                 }
             }
             StandardLadder(thresholds: row.thresholdTexts, levelIndex: row.value == nil ? nil : row.levelIndex,
                            domain: row.domain)
         }
+        .contentShape(Rectangle())
     }
 }
 

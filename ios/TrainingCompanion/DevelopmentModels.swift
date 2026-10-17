@@ -247,9 +247,11 @@ struct DevelopmentAnalytics: Decodable {
             let valueText: String?
             let level: String?
             let levelIndex: Int
+            /// The block in force that day (or the test session's).
+            let blockId: Int?
             var id: String { "\(date)-\(value)" }
 
-            private enum CodingKeys: String, CodingKey { case date, value, valueText, level, levelIndex }
+            private enum CodingKeys: String, CodingKey { case date, value, valueText, level, levelIndex, blockId }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 date = try c.decode(String.self, forKey: .date)
@@ -257,6 +259,7 @@ struct DevelopmentAnalytics: Decodable {
                 valueText = try? c.decodeIfPresent(String.self, forKey: .valueText)
                 level = try? c.decodeIfPresent(String.self, forKey: .level)
                 levelIndex = (try? c.decodeIfPresent(Int.self, forKey: .levelIndex)) ?? -1
+                blockId = try? c.decodeIfPresent(Int.self, forKey: .blockId)
             }
         }
         let benchmarkId: String
@@ -265,12 +268,20 @@ struct DevelopmentAnalytics: Decodable {
         /// The modality the standard measures; its level badge takes that colour.
         let domain: String?
         let lowerIsBetter: Bool
+        /// The ladder and its text, for the chart's level lines.
+        let standards: [String: Double]
+        let standardsText: [String: String]
+        /// One of the current program's own standards.
+        let inCurrentProgram: Bool
         let history: [Entry]
         let latestLevel: String?
         let levelsGained: Int
         var id: String { benchmarkId }
 
-        private enum CodingKeys: String, CodingKey { case benchmarkId, name, unit, domain, lowerIsBetter, history, latestLevel, levelsGained }
+        private enum CodingKeys: String, CodingKey {
+            case benchmarkId, name, unit, domain, lowerIsBetter, standards, standardsText, inCurrentProgram, history,
+                 latestLevel, levelsGained
+        }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             benchmarkId = try c.decode(String.self, forKey: .benchmarkId)
@@ -278,6 +289,9 @@ struct DevelopmentAnalytics: Decodable {
             unit = (try? c.decodeIfPresent(String.self, forKey: .unit)) ?? ""
             domain = try? c.decodeIfPresent(String.self, forKey: .domain)
             lowerIsBetter = (try? c.decodeIfPresent(Bool.self, forKey: .lowerIsBetter)) ?? false
+            standards = ((try? c.decodeIfPresent([String: Double].self, forKey: .standards)) ?? nil) ?? [:]
+            standardsText = ((try? c.decodeIfPresent([String: String].self, forKey: .standardsText)) ?? nil) ?? [:]
+            inCurrentProgram = ((try? c.decodeIfPresent(Bool.self, forKey: .inCurrentProgram)) ?? nil) ?? false
             history = ((try? c.decodeIfPresent([Lossy<Entry>].self, forKey: .history)) ?? [])?.compactMap(\.value) ?? []
             latestLevel = try? c.decodeIfPresent(String.self, forKey: .latestLevel)
             levelsGained = (try? c.decodeIfPresent(Int.self, forKey: .levelsGained)) ?? 0

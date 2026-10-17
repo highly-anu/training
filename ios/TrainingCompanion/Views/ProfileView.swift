@@ -225,9 +225,22 @@ private struct StandardsTab: View {
     @EnvironmentObject private var router: AppRouter
     @State private var open: AppBenchmark? = nil
     @State private var bodyweightOpen = false
+    @State private var showAll = false
 
+    /// The current program's own standards (declared or tested), in the server's order.
+    private var programRows: [AppBenchmark] {
+        let byId = Dictionary(uniqueKeysWithValues: appState.benchmarks.map { ($0.id, $0) })
+        return (appState.standardResults?.programStandards ?? []).compactMap { byId[$0] }
+    }
+    /// Every other standard with a result, from this program or earlier ones.
+    private var resultRows: [AppBenchmark] {
+        let own = Set(programRows.map(\.id))
+        return appState.benchmarks.filter { appState.standardResults?.standards[$0.id] != nil && !own.contains($0.id) }
+    }
+    /// The rest, by group: the reference ladders.
     private var groups: [(name: String, rows: [AppBenchmark])] {
-        let byCategory = Dictionary(grouping: appState.benchmarks, by: \.category)
+        let placed = Set((programRows + resultRows).map(\.id))
+        let byCategory = Dictionary(grouping: appState.benchmarks.filter { !placed.contains($0.id) }, by: \.category)
         return byCategory.values
             .sorted { ($0.first?.categoryOrder ?? 99, $0.first?.groupName ?? "") < ($1.first?.categoryOrder ?? 99, $1.first?.groupName ?? "") }
             .map { (name: $0.first?.groupName ?? "", rows: $0) }
@@ -257,12 +270,37 @@ private struct StandardsTab: View {
                 .padding(.vertical, 4)
             }
 
-            ForEach(groups, id: \.name) { group in
-                Section(group.name) {
-                    ForEach(group.rows) { standard in
-                        StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
-                            .contentShape(Rectangle())
-                            .onTapGesture { open = standard }
+            if !programRows.isEmpty {
+                Section {
+                    ForEach(programRows) { row($0) }
+                } header: {
+                    Text("This program")
+                } footer: {
+                    Text("What your current program is measured by: declared by its methodology, or tested in it.")
+                }
+            }
+            if !resultRows.isEmpty {
+                Section {
+                    ForEach(resultRows) { row($0) }
+                } header: {
+                    Text("Your results")
+                } footer: {
+                    Text("Every other standard you have a result on, from this program or earlier ones.")
+                }
+            }
+            // With nothing of the program's and no result, the reference is the page.
+            let allOpen = showAll || (programRows.isEmpty && resultRows.isEmpty)
+            if !(programRows.isEmpty && resultRows.isEmpty) {
+                Section {
+                    Button(allOpen ? "Hide the other standards" : "Show all \(groups.reduce(0) { $0 + $1.rows.count }) other standards") {
+                        withAnimation(AppAnimation.layoutChange) { showAll.toggle() }
+                    }
+                }
+            }
+            if allOpen {
+                ForEach(groups, id: \.name) { group in
+                    Section(group.name) {
+                        ForEach(group.rows) { row($0) }
                     }
                 }
             }
@@ -280,6 +318,12 @@ private struct StandardsTab: View {
 }
 
 extension StandardsTab {
+    fileprivate func row(_ standard: AppBenchmark) -> some View {
+        StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
+            .contentShape(Rectangle())
+            .onTapGesture { open = standard }
+    }
+
     /// Open the sheet a deep link asked for, once the standards are loaded.
     fileprivate func applyPendingStandard() {
         guard let id = router.pendingStandardId else { return }
