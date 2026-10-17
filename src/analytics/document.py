@@ -9,7 +9,7 @@ from __future__ import annotations
 import traceback
 from datetime import date
 
-from src.analytics import archetypes, benchmarks, frame, intensity, movement, scorecard
+from src.analytics import archetypes, benchmarks, frame, intensity, movement, scorecard, vocabulary
 from src.analytics import spec as spec_mod
 from src import loader, phases
 from src.analytics.context import AnalyticsInputs, Context
@@ -38,6 +38,7 @@ def compute_program_analytics(inputs: AnalyticsInputs, *, load: dict | None = No
         for entry in s.entries:
             r = run_primitive(entry, ctx)
             r['programScope'] = _program_scope(entry, ctx)
+            r['about'] = vocabulary.about(entry.primitive, entry.notes)
             r['applies'] = r['programScope']['planned'] > 0
             if not r['applies']:
                 r['appliesIn'] = _applies_in(entry, phil_cache)

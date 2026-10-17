@@ -163,6 +163,27 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertFalse(old.progress[0].levelOpensAll)
     }
 
+    func testAMeasureCarriesItsAboutInTheServersWords() throws {
+        let json = Data("""
+        {"progress": [
+           {"id": "bar_load", "label": "Load on the bar", "primitive": "set_load", "philosophy": "starting_strength",
+            "about": {"measures": "Best working set and estimated 1RM per session",
+                      "needs": [{"label": "Reps and kg per set", "where": "The session logger"}, {"label": 3}],
+                      "notes": null}},
+           {"id": "attendance", "label": "Attendance", "primitive": "session_completion", "philosophy": "starting_strength",
+            "about": {"measures": null, "needs": [], "notes": null}},
+           {"id": "old", "label": "Old", "primitive": "rounds", "philosophy": "starting_strength"}]}
+        """.utf8)
+        let doc = try JSONDecoder().decode(ProgramAnalytics.self, from: json)
+        let about = try XCTUnwrap(doc.progress[0].about)
+        XCTAssertEqual(about.measures, "Best working set and estimated 1RM per session")
+        XCTAssertEqual(about.needs, [.init(label: "Reps and kg per set", place: "The session logger")],
+                       "a malformed need drops alone")
+        XCTAssertNil(about.notes)
+        XCTAssertNil(doc.progress[1].about, "an empty about is no About section")
+        XCTAssertNil(doc.progress[2].about, "an older server sends none")
+    }
+
     func testTodayCardsDecodeTheWeekAndTheHeadline() throws {
         let json = Data("""
         {"scorecard": {"headline": "off_plan", "overallPct": 28.6, "plannedSessions": 7, "completedSessions": 2,

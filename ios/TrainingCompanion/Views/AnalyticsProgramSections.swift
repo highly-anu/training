@@ -76,11 +76,15 @@ struct MethodologySectionView: View {
 /// what it tests — with how far the athlete has moved this block. Standards
 /// that only share a domain or cite the methodology wait behind "More
 /// standards"; a result alone no longer makes a standard the program's own.
-/// Tap one for its history (Profile ▸ Standards, through the router).
+/// A row is the summary — value, level, gap, the block's line; tap it for the
+/// standard's own sheet, here (§6.32), with the ladder and every result. It
+/// used to jump to Profile ▸ Standards and draw a ladder on every row.
 struct ProgramStandardsCard: View {
     let benchmarks: ProgramAnalytics.Benchmarks
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var appState: AppState
     @State private var showMore = false
+    @State private var sheet: StandardSubject?
 
     private var own: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter(\.primary) }
     private var more: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter { !$0.primary } }
@@ -99,9 +103,9 @@ struct ProgramStandardsCard: View {
                       systemImage: "figure.stand")
                     .font(.caption).foregroundStyle(.secondary)
                 ForEach(shown) { row in
-                    Button { router.openStandard(row.benchmarkId) } label: { StandardRowView(row: row) }
+                    Button { open(row.benchmarkId) } label: { StandardRowView(row: row) }
                         .buttonStyle(.plain)
-                        .accessibilityHint("Opens Profile, Standards")
+                        .accessibilityHint("Opens the standard")
                 }
                 if !more.isEmpty {
                     Button(showMore ? "Fewer standards" : "More standards (\(more.count))") {
@@ -112,6 +116,19 @@ struct ProgramStandardsCard: View {
                     .contentShape(Rectangle())
                 }
             }
+        }
+        .sheet(item: $sheet) { StandardDetailSheet(subject: $0).environmentObject(appState) }
+        .task { await appState.loadBenchmarksIfNeeded() }
+    }
+
+    /// The standard's sheet in place; Profile ▸ Standards only when the
+    /// catalog has not loaded.
+    private func open(_ id: String) {
+        AppHaptics.light()
+        if let benchmark = appState.benchmarks.first(where: { $0.id == id }) {
+            sheet = .standard(benchmark)
+        } else {
+            router.openStandard(id)
         }
     }
 }
@@ -155,7 +172,7 @@ private struct StandardRowView: View {
                     .fontWeight(row.value == nil ? .regular : .semibold)
                     .foregroundStyle(row.value == nil ? .secondary : .primary)
                     .accessibilityLabel(valueText ?? "No result yet")
-                // It opens the standard on Profile ▸ Standards (§6.9).
+                // It opens the standard's sheet (§6.9).
                 Image(systemName: "chevron.right")
                     .font(.caption).foregroundStyle(.tertiary)
                     .accessibilityHidden(true)
@@ -167,13 +184,14 @@ private struct StandardRowView: View {
                     if let detail { Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
                     Spacer(minLength: 0)
                     if row.blockHistory.count >= 2 {
-                        StandardSparkline(values: row.blockHistory.map(\.value), domain: row.domain)
+                        Sparkline(values: row.blockHistory.map(\.value),
+                                  color: row.domain.map { ModalityStyle.color(for: $0) } ?? .accentColor,
+                                  width: 56, height: 16)
+                            .accessibilityElement()
                             .accessibilityLabel("This block: " + row.blockHistory.map(\.valueText).joined(separator: " → "))
                     }
                 }
             }
-            StandardLadder(thresholds: row.thresholdTexts, levelIndex: row.value == nil ? nil : row.levelIndex,
-                           domain: row.domain)
         }
         .contentShape(Rectangle())
     }

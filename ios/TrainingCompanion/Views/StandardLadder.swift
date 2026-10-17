@@ -59,34 +59,3 @@ struct StandardLevelBadge: View {
         TintCapsule(text: StandardLevel.name(level), color: tint)
     }
 }
-
-/// A block's results as a small line in the standard's modality colour, from
-/// where the block started to where it stands. No axis: the words beside it
-/// ("+1 level this block") carry the reading.
-struct StandardSparkline: View {
-    let values: [Double]
-    let domain: String?
-
-    var body: some View {
-        let color = domain.map { ModalityStyle.color(for: $0) } ?? Color.accentColor
-        GeometryReader { geo in
-            let lo = values.min() ?? 0, hi = values.max() ?? 1
-            let span = hi - lo == 0 ? 1 : hi - lo
-            let pts = values.enumerated().map { i, v in
-                CGPoint(x: geo.size.width * CGFloat(i) / CGFloat(max(values.count - 1, 1)),
-                        y: geo.size.height * (1 - CGFloat((v - lo) / span)))
-            }
-            Path { p in
-                guard let first = pts.first else { return }
-                p.move(to: first)
-                pts.dropFirst().forEach { p.addLine(to: $0) }
-            }
-            .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-            if let last = pts.last {
-                Circle().fill(color).frame(width: 5, height: 5).position(last)
-            }
-        }
-        .frame(width: 56, height: 16)
-        .padding(.vertical, 2)
-    }
-}

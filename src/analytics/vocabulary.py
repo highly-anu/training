@@ -129,5 +129,19 @@ PRIMITIVES: dict[str, dict] = {
 }
 
 
+def about(primitive: str, notes: str = '') -> dict:
+    """One measure in words, for the About section of its detail screen on
+    either client: what it measures, what has to be logged for it and where,
+    and the package's own note when it wrote one. Built here so the web and the
+    phone cannot word one measure two ways."""
+    prim = PRIMITIVES.get(primitive) or {}
+    return {
+        'measures': prim.get('measures'),
+        'needs': [{'label': NEEDS[n]['label'], 'where': NEEDS[n]['where']}
+                  for n in prim.get('needs') or [] if n in NEEDS],
+        'notes': notes or None,
+    }
+
+
 def to_client() -> dict:
     return {'primitives': PRIMITIVES, 'needs': NEEDS}

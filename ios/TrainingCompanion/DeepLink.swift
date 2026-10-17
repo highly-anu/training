@@ -14,6 +14,9 @@ import Foundation
 enum DeepLink: Equatable {
     case tab(AppRouter.Tab)
     case analytics(AnalyticsTab)
+    /// `analytics?section=progress&measure=<entry id>` or `&exercise=<exercise id>` —
+    /// Progress pushes that measure's or exercise's screen (§6.37).
+    case progressDetail(AppRouter.ProgressDetail)
     /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
     case session(String)
     /// `profile?section=athlete|equipment|schedule|standards` (`injuries` aliases Athlete,
@@ -89,6 +92,12 @@ enum DeepLink: Equatable {
             }
             return .tab(.profile)
         case "analytics":
+            if let id = query.first(where: { $0.name == "measure" })?.value, !id.isEmpty {
+                return .progressDetail(.measure(id))
+            }
+            if let id = query.first(where: { $0.name == "exercise" })?.value, !id.isEmpty {
+                return .progressDetail(.exercise(id))
+            }
             if let raw = query.first(where: { $0.name == "section" })?.value?.lowercased() {
                 let wanted = ["overview": "load", "development": "blocks"][raw] ?? raw
                 if let section = AnalyticsTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
@@ -112,6 +121,7 @@ extension AppRouter {
         switch link {
         case .tab(let tab): show(tab)
         case .analytics(let section): showAnalytics(section)
+        case .progressDetail(let detail): openProgressDetail(detail)
         case .session(let key): openSession(key)
         case .profile(let section): showProfile(section)
         case .standard(let id): openStandard(id)

@@ -660,6 +660,11 @@ writes.
   edges; both clients lay it out (web `bio/ZonePlanComparison.tsx` +
   `lib/zonePlan.ts`, iOS `ZonePlanComparison.swift`, design-system §6.35).
   Fidelity's planning-side split still uses the family rule (roadmap 13).
+- **Each measure says what it is.** Every `progress` entry carries `about`
+  (`vocabulary.about`: what it measures, what to log and where, the package's
+  `notes`), which ends the phone's measure screen (design-system §6.37); the
+  cards keep to numbers. Evidence lines word a status ("on track", "not
+  enough data yet"), never the engine's code.
 - **Trend** is a least-squares slope over non-deload points (`trend.py`),
   ±1 %/point; stall for load is per *session*, over the package's declared
   window. A deload week — flagged, or a taper — is never a stall.
@@ -950,7 +955,7 @@ LOCAL_API=0 ./ios/run_sim.sh                                                    
 Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest workout if no id), `program?section=overview|calendar|history`
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
-still alias Load and Blocks), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

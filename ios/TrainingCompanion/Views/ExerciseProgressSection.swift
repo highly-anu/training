@@ -1,5 +1,4 @@
 import SwiftUI
-import Charts
 
 /// Analytics ▸ Progress's exercises: three named counts — in the program, so
 /// far, with data — a filter on them, and a card per exercise. The web's
@@ -47,8 +46,22 @@ struct ExerciseProgressSection: View {
                     .font(.footnote).foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             } else {
+                // Each row opens the exercise's history (§6.37).
                 ForEach(visible) { item in
-                    ExerciseProgressCardView(item: item, finding: findings.first { $0.exerciseId == item.exerciseId })
+                    let finding = findings.first { $0.exerciseId == item.exerciseId }
+                    NavigationLink {
+                        ExerciseHistoryView(item: item, finding: finding)
+                    } label: {
+                        HStack(spacing: 8) {
+                            ExerciseProgressCardView(item: item, finding: finding)
+                            Image(systemName: "chevron.right")
+                                .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens \(item.name)")
                     if item.id != visible.last?.id { Divider() }
                 }
             }
@@ -104,14 +117,8 @@ struct ExerciseProgressCardView: View {
                 }
                 Spacer()
                 if values.count >= 2 {
-                    Chart(Array(values.enumerated()), id: \.offset) { i, v in
-                        LineMark(x: .value("Point", i), y: .value("Value", v))
-                            .foregroundStyle(AnalyticsStatusStyle.color(status))
-                    }
-                    .chartXAxis(.hidden).chartYAxis(.hidden)
-                    .chartYScale(domain: .automatic(includesZero: false))
-                    .frame(width: 72, height: 26)
-                    .accessibilityHidden(true)
+                    Sparkline(values: values, color: AnalyticsStatusStyle.color(status), width: 72, height: 26)
+                        .accessibilityHidden(true)
                 }
             }
             if let last = item.history.last, last.hrAvg != nil || last.hrMax != nil {
