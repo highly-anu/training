@@ -54,6 +54,7 @@ final class AppRouter: ObservableObject {
         case exercise(String)
         case readiness, sleep, hrv, restingHR, checkIns
         case pmc
+        case movement, sessionShapes
 
         /// The section that pushes it.
         var section: AnalyticsTab {
@@ -61,6 +62,7 @@ final class AppRouter: ObservableObject {
             case .measure, .exercise: return .progress
             case .readiness, .sleep, .hrv, .restingHR, .checkIns: return .recovery
             case .pmc: return .load
+            case .movement, .sessionShapes: return .program
             }
         }
     }

@@ -1060,10 +1060,16 @@ intensity footer until 2026-10-16.
   filled over it, "recorded/planned min" beside it. A zone shows only when it
   has either. An older server sends no `zones`; the card then draws minutes per
   bucket per week. % of 1RM for max-effort frameworks.
-- *Movement*: sets and minutes done against planned by pattern (planned the
-  grey track, done over it), balance ratios, unilateral share, assumed minutes.
-- *Session shapes* (`SessionShapesCard`): done of scheduled, duration against
-  the archetype's estimate (amber past ±25 %), HR, the lead lift's est. 1RM.
+- *Movement* (a summary, §6.37): the three patterns the program plans most,
+  done against planned (planned the grey track, done over it, on the whole
+  table's scale), the balance pairs out of range with a mark, or "Balance in
+  range"; an "N out of range" badge beside the header. `MovementDetailView`
+  has both tables in full, every pair, the unilateral share and the minutes
+  assumed (the footer under Minutes).
+- *Session shapes* (`SessionShapesCard`, a summary): done of scheduled across
+  every shape, how many ran past ±25 % of their estimate, and the first three
+  shapes. `SessionShapesDetailView` lists every shape with its duration against
+  the archetype's estimate (amber past ±25 %), HR and the lead lift's est. 1RM.
 - *Load* (TSB read in the phase's terms).
 
 **Analytics ▸ Progress** (`Views/ProgressionView.swift`) reads the same
@@ -1769,7 +1775,7 @@ a screen with the full chart, the numbers and, at the end, *About*.
   standards' block line and the Exercises card's chart were two.
 - A detail a deep link can open, for screenshots and other screens:
   `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`,
-  `analytics?open=readiness|sleep|hrv|resting-hr|checkins`
+  `analytics?open=readiness|sleep|hrv|resting-hr|checkins|pmc|movement|shapes`
   (`AppRouter.openAnalyticsDetail`; each section pushes its own).
 
 Users: Analytics ▸ Progress's measure cards (`MeasureDetailView`), its
@@ -1783,8 +1789,15 @@ Management (`PMCDetailView`: today's CTL, ATL and TSB — whole numbers, one
 decimal under ten — over a compact `PMCChart` on the card, the full chart with
 a drag-to-read rule on the screen); Analytics ▸ Blocks' block rows
 (`ProgramVersionDetailView`), "By block" (`SeriesBlocksView`) and standards
-(the sheet); and Program ▸ Overview's phases (§6.26, before this section was
-written).
+(the sheet); Analytics ▸ Program's Movement and Session shapes
+(`MovementDetailView`, `SessionShapesDetailView`; Scorecard, Intensity and
+Load were summaries already); and Program ▸ Overview's phases (§6.26, before
+this section was written).
+
+**A `Label` inside a `List` gets an icon column** — the icon in a fixed-width
+leading slot, the title far from it. A row that carries labels as inline
+symbols (a trend badge, a shape's duration and HR) sets
+`.labelStyle(.titleAndIcon)`; the badge and the shape row do it themselves.
 
 Where two cards were the same data two ways they became one card with a
 segmented display picker (§6.8's "mode inside content"): Load's **Mix**
