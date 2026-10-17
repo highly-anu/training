@@ -1249,20 +1249,25 @@ Four cards, each an `AnalyticsCard` (§6.15):
   its colour — then a row per block: methodology names, span, weeks, sessions
   done of those the block reached (`checkmark.circle 3/10`; the percentage is
   VoiceOver's), "never reached" for the rest (`forward.end`), and a `current`
-  `TintCapsule` on the active one.
-- *Lifts across blocks*: a chip row (44 pt targets) of every lift and currency
-  — rounds, minutes, km — with points in the window; the chart plots the
-  heaviest completed set's est-1RM per session over real dates with the
-  blocks as `RectangleMark` bands. Under it the trend as an arrow and
-  %/session (`.subheadline`), and one row per block: first → last, best,
-  sessions, Δ.
+  `TintCapsule` on the active one. A row pushes `ProgramVersionDetailView`,
+  the block week by week — the screen Program ▸ History opens (§6.37).
+- *Lifts across blocks*: the series by name with a menu picker of every lift
+  and currency — rounds, minutes, km — with points in the window; the chart
+  plots the heaviest completed set's est-1RM per session over real dates with
+  the blocks as `RectangleMark` bands, deload points hollow, and a touch reads
+  that session's set (`ChartPoint.detail`, "57.5 kg × 5"). Under it the trend
+  as an arrow and %/session, and "By block", which pushes the per-block rows:
+  first → last, best, sessions, Δ. Chips and the rows sat inline until
+  2026-10-17.
 - *TRIMP per week by block*: weekly TRIMP as bars coloured by block over the
-  whole history (Load's card is the last 12 weeks); hidden when no workout
-  carried load.
-- *Standards over time*: per standard the name, the latest result, the level
-  badge and a chevron, levels gained under it, then its history chart
-  (`StandardHistoryChart`); a row opens the standard (Profile ▸ Standards,
-  through the router), as does "Log a result". Hidden when nothing is logged.
+  whole history (Load's card is the last 12 weeks), with a key naming each
+  block; hidden when no workout carried load.
+- *Standards over time*: per standard the name, the level badge and levels
+  gained, a `Sparkline` of its results, the latest result and a chevron; a
+  row presents the standard's sheet in place (§6.32), whose chart carries the
+  blocks as bands. The current program's own first, the rest behind "More
+  standards"; "Log a result" opens Profile ▸ Standards. Hidden when nothing is
+  logged.
 
 **Block colour is positional**: `DevelopmentAnalytics.palette` (indigo,
 emerald, amber, pink, sky — the web's `BLOCK_PALETTE`) indexed by the
@@ -1776,8 +1781,10 @@ both, like `RecoveryTrendChartView`) and "All check-ins" (`CheckInHistoryView`;
 the card keeps the last seven `CheckInRow`s); Analytics ▸ Load's Performance
 Management (`PMCDetailView`: today's CTL, ATL and TSB — whole numbers, one
 decimal under ten — over a compact `PMCChart` on the card, the full chart with
-a drag-to-read rule on the screen); and Program ▸ Overview's phases (§6.26,
-before this section was written).
+a drag-to-read rule on the screen); Analytics ▸ Blocks' block rows
+(`ProgramVersionDetailView`), "By block" (`SeriesBlocksView`) and standards
+(the sheet); and Program ▸ Overview's phases (§6.26, before this section was
+written).
 
 Where two cards were the same data two ways they became one card with a
 segmented display picker (§6.8's "mode inside content"): Load's **Mix**
