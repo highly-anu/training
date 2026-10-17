@@ -1589,3 +1589,20 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
   block and note; tap or swipe to edit, swipe to delete behind a confirmation
   that says the rest of the history stays.
 
+### 6.31 Test Badge and Standard Target
+
+**A test says what it measures.** `Views/StandardTestViews.swift`: `TestBadge` (a
+capsule, `trophy.fill`, "Test") marks a session that tests the phase's standards
+(`ProgramSession.testInfo`, read from the round-tripped `test` key) on Today's
+session card, Program's rows and the session header. `StandardTargetRow` names one
+standard with the athlete's best, its level badge and "90 reps for intermediate"
+under it — the server's words — and opens its sheet (§6.30) through the router.
+
+- Session detail: under the header, "A test, in place of …" and a
+  `StandardTargetRow` per standard; each scored exercise (`standardId`) names its
+  standard beside the prescription.
+- Today: the session card shows the badge and "N standards" instead of the
+  exercise count.
+- The catalog and results load when a session with scored slots opens, since
+  only Profile loaded them before.
+

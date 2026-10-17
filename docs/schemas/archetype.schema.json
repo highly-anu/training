@@ -222,6 +222,40 @@
           "paced": {
             "type": "boolean",
             "description": "The slot is worked at a target RPM taken from the chosen exercise's competition_pace (max_reps / minutes); the load carries it as target_rpm and the watch paces the set."
+          },
+          "standard": {
+            "description": "The standard (data/benchmarks id) this slot measures, and which logged field is the result. A string is the id, the result kind following from the slot type. Packages point at commons standards, never the reverse.",
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_]+$"
+                  },
+                  "result": {
+                    "type": "string",
+                    "enum": [
+                      "duration",
+                      "rounds",
+                      "reps",
+                      "hold",
+                      "load",
+                      "distance"
+                    ],
+                    "description": "duration: the time a for-time piece took; rounds: an AMRAP's rounds; reps: max reps (the best set, or reps in a timed set); hold: seconds held; load: a single's kg ÷ bodyweight; distance: metres covered."
+                  }
+                }
+              }
+            ]
           }
         }
       }
@@ -378,6 +412,18 @@
     },
     "notes": {
       "type": "string"
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "This archetype is a test of one or more standards: its slots with `standard` produce the results. A test is placed only by a phase's `tests:` (philosophy.yaml) unless `selectable` is true; its standard slots are prescribed exactly as written (no weekly ramp, level, phase or deload scaling).",
+      "properties": {
+        "selectable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether ordinary archetype selection may pick it too. Default false: tests are placed, not chosen."
+        }
+      }
     }
   }
 }

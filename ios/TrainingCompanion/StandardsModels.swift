@@ -181,3 +181,40 @@ enum StandardLevel {
         return d.formatted(.dateTime.day().month(.abbreviated).year())
     }
 }
+
+// MARK: - Tests in the program
+
+/// A session that tests the phase's standards (`test` on the session,
+/// src/generator._plan_week_tests), read from the keys the program round-trips.
+struct SessionTestInfo {
+    let archetypeId: String?
+    let standards: [String]
+    /// The session it stands in for, by name.
+    let insteadOf: String?
+}
+
+extension JSONValue {
+    fileprivate var objectValue: [String: JSONValue]? {
+        if case .object(let o) = self { return o }
+        return nil
+    }
+    fileprivate var arrayValue: [JSONValue]? {
+        if case .array(let a) = self { return a }
+        return nil
+    }
+}
+
+extension ProgramSession {
+    var testInfo: SessionTestInfo? {
+        guard let t = extra["test"]?.objectValue else { return nil }
+        return SessionTestInfo(
+            archetypeId: t["archetype"]?.stringValue,
+            standards: (t["standards"]?.arrayValue ?? []).compactMap(\.stringValue),
+            insteadOf: t["instead_of"]?.objectValue?["name"]?.stringValue)
+    }
+}
+
+extension ProgramExerciseAssignment {
+    /// The standard this slot measures, when it is a test's scored slot.
+    var standardId: String? { extra["standard"]?.objectValue?["id"]?.stringValue }
+}

@@ -1,0 +1,49 @@
+id: gym_jones_row_2k_test
+name: "2 km Row — Test"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 35
+
+# A test of row_2km_minutes: placed by the block's first and last weeks
+# (philosophy.yaml `tests:`), never picked for an ordinary session, and rowed
+# as written — 2000 m, whatever the week.
+test: {}
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      exercise_ids: [row_easy, row_interval]
+    notes: "10 min easy rowing with three 20-stroke pieces at test pace in the last four minutes."
+
+  - role: row_2k
+    slot_type: for_time
+    distance_m: 2000
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [row_2km_test]
+    standard: row_2km_minutes
+    notes: "2000 m for time. Hold your target split for 1500 m, then empty the tank. Log the time."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone1
+    exercise_filter:
+      category: mobility
+    notes: "Easy rowing or walking until breathing settles, then hips and thoracic spine."
+
+required_equipment:
+  - rower
+sources:
+  - Gym Jones
+notes: >
+  The 2 km row as Gym Jones' block test: rowed in the first week of
+  accumulation to set the baseline and in the last week of realization to see
+  what the block built. The time is the result on the row_2km_minutes standard.

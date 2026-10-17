@@ -133,6 +133,8 @@ def load_benchmarks() -> tuple:
                 'notes': (item.get('notes') or '').strip() or None,
                 'test_protocol': (item.get('test_protocol') or '').strip() or None,
                 'description': (item.get('description') or '').strip() or None,
+                # Training that estimates it (est. 1RM ÷ bodyweight that day).
+                'derived_from': item.get('derived_from'),
             })
     out.extend(_cell_benchmarks())
     return tuple(out)

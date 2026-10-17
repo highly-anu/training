@@ -39,6 +39,10 @@
     - max_strength_focus
     - alpine_climbing
     - general_gpp
+  # Training that estimates it: the best est. 1RM of these lifts' logged sets
+  # ÷ the bodyweight that day (analytics/benchmarks.py).
+  derived_from:
+    exercises: [back_squat, mf_back_squat]
   sources:
     - starting_strength
     - horsemen_gpp
@@ -85,6 +89,10 @@
     - max_strength_focus
     - general_gpp
     - alpine_climbing
+  # Training that estimates it: the best est. 1RM of these lifts' logged sets
+  # ÷ the bodyweight that day (analytics/benchmarks.py).
+  derived_from:
+    exercises: [deadlift, mf_deadlift, sumo_deadlift]
   sources:
     - starting_strength
     - horsemen_gpp
@@ -129,6 +137,10 @@
     - sof_operator
     - max_strength_focus
     - general_gpp
+  # Training that estimates it: the best est. 1RM of these lifts' logged sets
+  # ÷ the bodyweight that day (analytics/benchmarks.py).
+  derived_from:
+    exercises: [strict_press, mf_overhead_press]
   sources:
     - starting_strength
     - horsemen_gpp
@@ -170,6 +182,10 @@
     - sof_operator
     - max_strength_focus
     - general_gpp
+  # Training that estimates it: the best est. 1RM of these lifts' logged sets
+  # ÷ the bodyweight that day (analytics/benchmarks.py).
+  derived_from:
+    exercises: [bench_press, mf_bench_press]
   sources:
     - horsemen_gpp
     - starting_strength
@@ -216,6 +232,10 @@
     - max_strength_focus
     - general_gpp
     - alpine_climbing
+  # Training that estimates it: the best est. 1RM of these lifts' logged sets
+  # ÷ the bodyweight that day (analytics/benchmarks.py).
+  derived_from:
+    exercises: [power_clean]
   sources:
     - starting_strength
     - horsemen_gpp

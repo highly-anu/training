@@ -157,6 +157,27 @@ final class StandardsCodableTests: XCTestCase {
                        ["12:00", "3:30"], "the level lines in order, with the server's text")
     }
 
+    func testATestSessionSaysWhatItMeasures() throws {
+        let json = Data("""
+        {"modality": "strength_endurance", "is_deload": false,
+         "archetype": {"id": "kb_pentathlon_test", "name": "KB Pentathlon (IKMF) — Test", "duration_estimate_minutes": 60},
+         "test": {"archetype": "kb_pentathlon_test", "standards": ["kb_pentathlon_clean_reps", "kb_pentathlon_jerk_reps"],
+                  "phase_id": "competition", "week_in_phase": 2, "in_place_of": "strength_endurance",
+                  "instead_of": {"archetype": "kb_pentathlon_training", "name": "KB Pentathlon Timed Sets", "minutes": 50}},
+         "exercises": [{"exercise": {"id": "wk_kb_clean_single", "name": "Clean"}, "load": {"duration_minutes": 6, "test": true},
+                        "slot_role": "clean", "slot_type": "time_domain", "meta": false, "injury_skip": false,
+                        "standard": {"id": "kb_pentathlon_clean_reps", "result": "reps"}}]}
+        """.utf8)
+        let session = try JSONDecoder().decode(ProgramSession.self, from: json)
+        let test = try XCTUnwrap(session.testInfo)
+        XCTAssertEqual(test.standards, ["kb_pentathlon_clean_reps", "kb_pentathlon_jerk_reps"])
+        XCTAssertEqual(test.insteadOf, "KB Pentathlon Timed Sets")
+        XCTAssertEqual(session.exercises.first?.standardId, "kb_pentathlon_clean_reps")
+        let again = try JSONDecoder().decode(ProgramSession.self, from: JSONEncoder().encode(session))
+        XCTAssertEqual(again.testInfo?.standards.count, 2, "the test round-trips through a save")
+        XCTAssertEqual(again.exercises.first?.standardId, "kb_pentathlon_clean_reps")
+    }
+
     func testDeepLinkRenamedSection() {
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=benchmarks")!),
                        .profile(.standards), "an old link lands on Standards")

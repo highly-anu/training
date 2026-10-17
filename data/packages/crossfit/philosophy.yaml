@@ -75,5 +75,11 @@ tracks:
         intensity: "High intensity, low volume"
         # Variation is the method: the main lift changes from session to session.
         rotate_main_lifts: true
+        # Benchmark testing is how CrossFit tracks adaptation: a benchmark girl
+        # every fourth week, in turn, in place of a conditioning day.
+        tests:
+          - archetypes: [cf_benchmark_cindy, cf_benchmark_fran, cf_benchmark_helen]
+            every: 4
+            in_place_of: mixed_modal_conditioning
         checks:
           modalities_required: [mixed_modal_conditioning]

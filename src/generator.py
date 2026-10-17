@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import loader, phases, provenance
+from . import loader, phases, provenance, standard_tests
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -181,6 +181,122 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
 _GEN_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
+def _test_slot(resolved_by_day: dict, modalities: list, day_pref: str, taken: set):
+    """(day, index, session) of the session a test replaces: the first (or
+    last) of the week in the first of `modalities` that has one. A session
+    that is already a stand-in (another modality's substitute, a relaxed-
+    equipment fallback) or already taken by another test is not a candidate."""
+    days = sorted(resolved_by_day)
+    if day_pref == 'last':
+        days = list(reversed(days))
+    for mod in modalities:
+        for day in days:
+            sessions = list(enumerate(resolved_by_day[day]))
+            if day_pref == 'last':
+                sessions.reverse()
+            for idx, sess in sessions:
+                if sess.get('modality') != mod or (day, idx) in taken:
+                    continue
+                if sess.get('_substituted_for') or sess.get('_commons_fallback'):
+                    continue
+                return day, idx, sess
+    return None
+
+
+def _stand_in(session: dict) -> dict:
+    """The session a test replaced: its archetype, planned minutes and minutes
+    per intensity bucket (src/fidelity.py's reading), so a test counts as the
+    work it stands in for wherever the plan's volume and intensity are read."""
+    from src import fidelity
+    arch = session.get('archetype') or {}
+    return {
+        'archetype': arch.get('id'), 'name': arch.get('name'), 'modality': session.get('modality'),
+        'minutes': round(fidelity.session_minutes(session), 1),
+        'buckets': {b: round(m, 1) for b, m in fidelity.session_buckets(session).items() if m},
+    }
+
+
+def _plan_week_tests(entry: dict, resolved_by_day: dict, archetypes: list, constraints: dict,
+                     is_deload: bool, populate) -> tuple[dict, list]:
+    """The week's tests (src/standard_tests.tests_for_week), each put in place
+    of one session — {(day, index): {session, populated}} — and the ones the
+    athlete cannot do, with why.
+
+    A test goes in only when the athlete can do it as written: their level,
+    their equipment (a test is never equipment-scaled: the score would not
+    compare), a session of the modality to replace, the time (a test past
+    1.25× the session limit needs a long day), and every scored slot filled
+    (an injury can rule a movement out). The rotation's next archetype is tried
+    before the test is skipped; a skipped test leaves the week as scheduled.
+    """
+    specs = standard_tests.tests_for_week(entry)
+    if not specs:
+        return {}, []
+    by_id = {a.get('id'): a for a in archetypes}
+    level = constraints.get('training_level', 'intermediate')
+    equipment = set(constraints.get('equipment') or [])
+    day_configs = constraints.get('day_configs') or {}
+    cap = constraints.get('session_time_minutes')
+    placed: dict = {}
+    skipped: list = []
+    taken: set = set()
+    for spec in specs:
+        record = {'archetypes': spec['archetypes'], 'phase_id': entry.get('phase_id'),
+                  'week_in_phase': entry.get('week_in_phase')}
+        if constraints.get('fatigue_state') == 'overreached':
+            skipped.append({**record, 'reason': 'overreached'})
+            continue
+        if is_deload and spec['on_deload'] == 'skip':
+            skipped.append({**record, 'reason': 'deload'})
+            continue
+        reason = None
+        for aid in spec['archetypes']:
+            arch = by_id.get(aid)
+            if not arch or not standard_tests.is_test(arch):
+                reason = reason or 'archetype_unavailable'
+                continue
+            if arch.get('training_levels') and level not in arch['training_levels']:
+                reason = 'level'
+                continue
+            if not (set(arch.get('required_equipment') or []) - {'open_space'}) <= equipment:
+                reason = 'equipment_gap'
+                continue
+            found = _test_slot(resolved_by_day, spec['in_place_of'] or [arch.get('modality')], spec['day'], taken)
+            if found is None:
+                reason = 'no_session_of_modality'
+                continue
+            day, idx, session = found
+            types = (day_configs.get(day) or {}).get('session_types') or []
+            # The tolerance tools/check_fidelity.py allows a session (1.1×).
+            if cap and (arch.get('duration_estimate_minutes') or 0) > cap * 1.1 and 'long' not in types:
+                reason = 'session_too_short'
+                continue
+            test_session = {**session, 'modality': arch.get('modality')}
+            populated = populate(test_session, arch)
+            # The scored piece is every slot with a standard and the movements
+            # inside it (Helen's swings and pull-ups): all of it, or no test.
+            eas = populated.get('exercises', [])
+            scored_roles = {ea.get('slot_role') for ea in eas if standard_tests.standard_ref(ea.get('slot'))}
+            piece = [ea for ea in eas if ea.get('slot_role') in scored_roles
+                     or (ea.get('slot') or {}).get('parent_slot_role') in scored_roles]
+            if not scored_roles or any(ea.get('exercise') is None and not ea.get('meta') for ea in piece):
+                reason = 'injury_skip' if any(ea.get('injury_skip') for ea in piece) else 'equipment_gap'
+                continue
+            populated['test'] = {
+                'archetype': aid, 'standards': standard_tests.standards_of(arch),
+                'phase_id': entry.get('phase_id'), 'week_in_phase': entry.get('week_in_phase'),
+                'in_place_of': session.get('modality'),
+            }
+            placed[(day, idx)] = {'session': test_session, 'populated': populated}
+            taken.add((day, idx))
+            reason = None
+            break
+        if reason:
+            skipped.append({**record, 'reason': reason})
+    return placed, skipped
+
+
+
 
 def _build_coverage_report(program: dict, policy) -> dict:
     """What the philosophy could not cover, and what it borrowed to cover it.
@@ -193,6 +309,8 @@ def _build_coverage_report(program: dict, policy) -> dict:
     unfilled_slots: list[dict] = []
     borrowed_sessions: list[dict] = []
     substituted_sessions: list[dict] = []
+    placed_tests: list[dict] = []
+    skipped_tests: list[dict] = []
     seen_slots: set = set()
 
     for week in program.get('weeks', []):
@@ -200,11 +318,15 @@ def _build_coverage_report(program: dict, policy) -> dict:
         # report used to read `week` (always None) and pass the integer on,
         # where the clients' types expect a number and a day name.
         week_no = week.get('week_number', week.get('week'))
+        for t in week.get('tests_skipped') or []:
+            skipped_tests.append({'week': week_no, **t})
         for day_key, sessions in (week.get('schedule') or {}).items():
             day_name = (_GEN_DAY_NAMES[day_key - 1] if isinstance(day_key, int) and 1 <= day_key <= 7
                         else day_key)
             for session in sessions:
                 arch = session.get('archetype')
+                if session.get('test'):
+                    placed_tests.append({'week': week_no, 'day': day_name, **session['test']})
                 if session.get('substituted_for'):
                     substituted_sessions.append({
                         'week': week_no, 'day': day_name,
@@ -251,6 +373,8 @@ def _build_coverage_report(program: dict, policy) -> dict:
         'unfilled_slots': unfilled_slots,
         'borrowed_sessions': borrowed_sessions,
         'substituted_sessions': substituted_sessions,
+        'placed_tests': placed_tests,
+        'skipped_tests': skipped_tests,
     }
 
 
@@ -410,6 +534,27 @@ def generate(
         # 2. Populate each session with archetype + exercises + loads
         populated_schedule: dict[int, list] = {}
 
+        # Resolve every day first (pure), so the week's tests can be put in
+        # place of the sessions they replace before anything is populated.
+        resolved_by_day = {day: _resolve_session(week_schedule[day], archetypes, fallback_archetypes,
+                                                 constraints, phase)
+                           for day in sorted(week_schedule.keys())}
+
+        def _populate_test(test_session: dict, arch: dict) -> dict:
+            return populate_session(
+                test_session, goal, constraints, exercises, archetypes,
+                injury_flags_data, phase, week_in_phase,
+                recent_arch_ids, recent_ex_ids,
+                forced_archetype=arch,
+                exercises_by_package=lib.get('exercises_by_package'),
+                policy=policy, level_seeds=lib.get('level_seeds'),
+                exclude_exercise_ids=phase_excluded,
+                pinned_lifts=None, deload_keep=deload_keep, unfilled_cache={},
+            )
+
+        placed_tests, skipped_tests = _plan_week_tests(entry, resolved_by_day, archetypes, constraints,
+                                                       is_deload, _populate_test)
+
         for day in sorted(week_schedule.keys()):
             populated_sessions = []
             day_name = _GEN_DAY_NAMES[day - 1] if 1 <= day <= 7 else f'Day {day}'
@@ -420,7 +565,8 @@ def generate(
             mobility_hint = day_cfg.get('mobility_archetype_hint')
             day_session_types = day_cfg.get('session_types')
 
-            for session in _resolve_session(week_schedule[day], archetypes, fallback_archetypes, constraints, phase):
+            for idx, session in enumerate(resolved_by_day[day]):
+                test = placed_tests.get((day, idx))
                 # Determine if this session should use the mobility hint
                 preferred_arch = None
                 if session['modality'] == 'mobility' and mobility_hint:
@@ -438,8 +584,11 @@ def generate(
                     if msg not in all_compromises:
                         all_compromises.append(msg)
 
-                # Select archetype + exercises
-                populated = populate_session(
+                # Select archetype + exercises. A test was populated when it was
+                # placed; the session it stands in for is still selected, so the
+                # rest of the program rotates exactly as it would have without
+                # the test (its picks feed the recency lists below).
+                rotation_source = populate_session(
                     session, goal, constraints, exercises, session_archetypes,
                     injury_flags_data, phase, week_in_phase,
                     recent_arch_ids, recent_ex_ids,
@@ -455,10 +604,12 @@ def generate(
                     deload_keep=deload_keep,
                     unfilled_cache=unfilled_cache,
                 )
+                populated = test['populated'] if test is not None else rotation_source
 
                 session_trace: dict | None = None
                 if include_trace:
-                    session_trace = populated.pop('session_trace', {})
+                    session_trace = rotation_source.pop('session_trace', {}) if test is None \
+                        else populated.pop('session_trace', {})
                     session_trace['progression'] = []
 
                 # Detect slots that could not be filled and surface a compromise message.
@@ -484,6 +635,19 @@ def generate(
                 # (Filly's strength work as RPE targets); else the modality's.
                 prog = ((framework.get('progression_overrides') or {}).get(mod_id)
                         or prog_model_for.get(mod_id, 'linear_load'))
+
+                # The session a test stands in for, prescribed as it would have
+                # been: what the week would have trained, recorded on the test
+                # so the plan's minutes and intensity read it as that session.
+                if test is not None:
+                    for ea in rotation_source.get('exercises', []):
+                        if ea.get('exercise') is not None:
+                            ea['load'] = calculate_load(
+                                ea['exercise'], ea['slot'], prog, week_in_phase, phase,
+                                constraints.get('training_level', 'intermediate'), is_deload,
+                                session_time_minutes=constraints.get('session_time_minutes', 75),
+                                deload_keep=deload_keep)
+                    populated['test']['instead_of'] = _stand_in(rotation_source)
 
                 for ea in populated.get('exercises', []):
                     if ea.get('exercise') is None:
@@ -515,10 +679,17 @@ def generate(
                             'output': dict(load),
                         })
 
-                    # Track exercise variety
-                    recent_ex_ids.append(ea['exercise']['id'])
-                    if len(recent_ex_ids) > 40:
-                        recent_ex_ids.pop(0)
+                    # Track exercise variety (from the session a test stands in for)
+                    if test is None:
+                        recent_ex_ids.append(ea['exercise']['id'])
+                        if len(recent_ex_ids) > 40:
+                            recent_ex_ids.pop(0)
+                if test is not None:
+                    for ea in rotation_source.get('exercises', []):
+                        if ea.get('exercise') is not None:
+                            recent_ex_ids.append(ea['exercise']['id'])
+                            if len(recent_ex_ids) > 40:
+                                recent_ex_ids.pop(0)
 
                 # A session scheduled as another modality because the package
                 # has no archetype for this one in this phase at this level
@@ -539,8 +710,8 @@ def generate(
                     if msg not in all_compromises:
                         all_compromises.append(msg)
 
-                if populated.get('archetype'):
-                    recent_arch_ids.append(populated['archetype']['id'])
+                if rotation_source.get('archetype'):
+                    recent_arch_ids.append(rotation_source['archetype']['id'])
                     if len(recent_arch_ids) > 14:
                         recent_arch_ids.pop(0)
 
@@ -589,6 +760,8 @@ def generate(
             week_out['phase_name'] = entry['phase_name']
         if track_id:
             week_out['track_id'] = track_id
+        if skipped_tests:
+            week_out['tests_skipped'] = skipped_tests
         program['weeks'].append(week_out)
         if include_trace and generation_trace is not None and week_trace is not None:
             generation_trace['weeks'].append(week_trace)

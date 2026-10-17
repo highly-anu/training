@@ -11,6 +11,7 @@ import { useBioStore } from '@/store/bioStore'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
+import { StandardChip } from '@/components/standards/StandardChip'
 import { useExerciseMedia } from '@/api/exercises'
 import type { ExerciseAssignment, ExercisePerformance, SetPerformance } from '@/api/types'
 
@@ -148,6 +149,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
             {assignment.load_note && (
               <p className="mt-0.5 text-[11px] text-muted-foreground">{assignment.load_note}</p>
             )}
+            {assignment.standard && <StandardChip standardId={assignment.standard.id} />}
           </div>
           {hasSets && (
             <PerformanceLogger

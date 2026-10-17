@@ -353,9 +353,16 @@ struct TodayView: View {
                         Label("\(mins) min", systemImage: "clock")
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    let count = session.exercises.filter { !$0.injurySkip }.count
-                    Label("\(count) exercises", systemImage: "list.bullet")
-                        .font(.caption).foregroundStyle(.secondary)
+                    if let test = session.testInfo {
+                        // A test day says so: what it measures, not how many rows.
+                        TestBadge()
+                        Text("\(test.standards.count) standard\(test.standards.count == 1 ? "" : "s")")
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        let count = session.exercises.filter { !$0.injurySkip }.count
+                        Label("\(count) exercises", systemImage: "list.bullet")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
 

@@ -197,13 +197,17 @@ def richness(envelope: dict) -> int:
     score = sum(1 for key in ('goal', 'constraints', 'validation',
                               'volume_summary', 'coverage_report')
                 if program.get(key))
+    has_slot = has_test = False
     for week in (program.get('weeks') or []):
         for sessions in (week.get('schedule') or {}).values():
             for session in (sessions or []):
-                for ea in (session.get('exercises') or []):
-                    if ea.get('slot'):
-                        return score + 1
-    return score
+                # A test's link to its standards: a copy that dropped it (an
+                # older client that strips unknown keys) is the poorer one.
+                has_test = has_test or bool(session.get('test'))
+                has_slot = has_slot or any(ea.get('slot') for ea in (session.get('exercises') or []))
+                if has_slot and has_test:
+                    return score + 2
+    return score + int(has_slot) + int(has_test)
 
 
 # ── Flattening ───────────────────────────────────────────────────────────────

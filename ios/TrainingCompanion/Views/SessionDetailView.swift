@@ -109,6 +109,12 @@ struct SessionDetailView: View {
                     .environmentObject(appState)
             }
             .task {
+                // A test names its standards: their names and the athlete's
+                // results come from the catalog and the results.
+                if currentSession.testInfo != nil || currentSession.exercises.contains(where: { $0.standardId != nil }) {
+                    await appState.loadBenchmarksIfNeeded()
+                    if appState.standardResults == nil { await appState.loadStandardResults() }
+                }
                 if let log = appState.sessionLogs[sessionKey] {
                     notes = log.notes ?? ""
                     if let f = log.fatigueRating {
@@ -160,6 +166,7 @@ struct SessionDetailView: View {
                                 Label("Deload", systemImage: "arrow.down.circle")
                                     .foregroundStyle(.orange)
                             }
+                            if currentSession.testInfo != nil { TestBadge() }
                         }
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -167,6 +174,18 @@ struct SessionDetailView: View {
                 }
             }
             .padding(.vertical, 4)
+
+            // A test of the phase's standards: what each result is measured
+            // against, before the session starts.
+            if let test = currentSession.testInfo {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result on its exercise." }
+                         ?? "A test of this phase's standards. Log each result on its exercise.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    ForEach(test.standards, id: \.self) { StandardTargetRow(standardId: $0) }
+                }
+                .padding(.vertical, 2)
+            }
 
             if let log = appState.sessionLogs[sessionKey], let completedAt = log.completedAt {
                 Label("Completed · \(shortDateTime(completedAt))", systemImage: "checkmark.circle.fill")
@@ -327,6 +346,10 @@ struct SessionDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+            if let sid = ea.standardId {
+                Label(appState.benchmarks.first { $0.id == sid }?.name ?? sid, systemImage: "trophy")
+                    .font(.caption).foregroundStyle(Color.accentColor)
+            }
             if let logged = loggedSummary(ea) {
                 Label(logged, systemImage: "checkmark.circle.fill")
                     .font(.caption)

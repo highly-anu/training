@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Clock, CheckCircle2, Activity } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { TestBadge } from '@/components/standards/TestBadge'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
@@ -49,6 +50,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className 
           <p className="text-xs font-semibold text-foreground truncate">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <ModalityBadge modality={session.modality} size="sm" />
+            {session.test && <TestBadge test={session.test} />}
             {session.provenance?.borrowed && (
               // This session came from a package the philosophy declares it
               // borrows from — say so rather than passing it off as its own.

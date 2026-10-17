@@ -261,6 +261,29 @@
                   "default": false,
                   "description": "Main-lift slots (heavy sets x reps, or a %1RM) draw a new exercise each session. Off by default: the generator keeps each main lift on one exercise for the phase so its load can progress."
                 },
+                "tests": {
+                  "type": "array",
+                  "description": "When this phase tests its standards. The generator puts the test archetype in place of one session of `in_place_of` in each week the test falls in, keeping the week's cadence and session count; the week records it as skipped (with why) when the athlete cannot do it. Positions are weeks in the phase (a repeatable phase repeats them every cycle).",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "oneOf": [{ "required": ["archetype"] }, { "required": ["archetypes"] }],
+                    "properties": {
+                      "archetype": { "type": "string", "pattern": "^[a-z0-9_]+$", "description": "A test archetype of this package." },
+                      "archetypes": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+                                      "description": "Several, rotated by occurrence (the first the athlete can do from there wins)." },
+                      "week": { "oneOf": [{ "type": "string", "enum": ["first", "last"] }, { "type": "integer", "minimum": 1 }],
+                                "description": "The week in the phase." },
+                      "every": { "type": "integer", "minimum": 1, "description": "Instead of `week`: every N weeks of the phase." },
+                      "start": { "type": "integer", "minimum": 1, "description": "With `every`: the first week it falls in (default: N)." },
+                      "in_place_of": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" }, "minItems": 1 }],
+                                       "description": "The modality (or modalities, tried in order) whose session the test replaces. Default: the test archetype's own." },
+                      "day": { "type": "string", "enum": ["first", "last"], "description": "Which matching session of the week. Default: last for `week: last`, else first." },
+                      "on_deload": { "type": "string", "enum": ["keep", "skip"], "default": "keep",
+                                     "description": "In a deload week: keep (the test runs unscaled while the rest of the week deloads) or skip." }
+                    }
+                  }
+                },
                 "checks": {
                   "type": "object",
                   "additionalProperties": false,

@@ -375,6 +375,8 @@ export interface ExerciseAssignment {
   parent_slot_role?: string
   /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */
   skip_exercise?: boolean
+  /** The standard this slot measures, when it is a test's scored slot. */
+  standard?: { id: string; result: string | null }
 }
 
 export interface ComplementaryExercise {
@@ -406,6 +408,19 @@ export interface Session {
   complementary_work?: ComplementaryExercise[]
   duration_min?: number
   provenance?: SessionProvenance | null
+  /** A test of the phase's standards, put in place of a session (src/generator._plan_week_tests). */
+  test?: SessionTest
+}
+
+export interface SessionTest {
+  archetype: string
+  standards: string[]
+  phase_id?: string
+  week_in_phase?: number
+  /** The modality of the session it stands in for. */
+  in_place_of?: string
+  /** That session: its archetype and planned minutes. */
+  instead_of?: { archetype?: string; name?: string; modality?: string; minutes?: number }
 }
 
 /** What the philosophy could not cover on its own, and what it borrowed. */
@@ -506,6 +521,17 @@ export interface PhaseSummary {
   archetypes: PhaseSummaryItem[]
   exercises: PhaseSummaryItem[]
   lifts: PhaseSummaryLift[]
+  /** The phase's tests of its standards, run or skipped (with why). */
+  tests?: Array<{
+    week_number: number
+    week_in_phase?: number
+    day?: string | null
+    status: 'planned' | 'skipped'
+    reason?: string
+    archetype: { id: string | null; name: string | null }
+    standards?: Array<{ id: string; name: string }>
+    in_place_of?: string | null
+  }>
   dropped: {
     archetypes: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]
     exercises: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]

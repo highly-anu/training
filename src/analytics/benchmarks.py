@@ -7,8 +7,8 @@ the athlete's PRs from performance_logs, the level reached and the gap to the
 next one.
 
 Bodyweight is a benchmark series too (`bodyweight_kg`), so a strength standard
-expressed as a ratio can be derived from an estimated 1RM ÷ the latest
-bodyweight at or before that session — which is how a lifter who never tests a
+expressed as a ratio can be derived (its YAML's `derived_from`) from an
+estimated 1RM ÷ the latest bodyweight at or before that session — which is how a lifter who never tests a
 true 1RM still sees where their squat sits.
 """
 from __future__ import annotations
@@ -19,14 +19,13 @@ from src.analytics import benchmarks_data as bd
 from src.analytics import spec as spec_mod
 from src.analytics.context import Context
 
-# benchmark id → exercise ids whose logged sets estimate it
-_DERIVED_FROM = {
-    'back_squat_bw_ratio':   ('back_squat',),
-    'deadlift_bw_ratio':     ('deadlift', 'trap_bar_deadlift', 'sumo_deadlift'),
-    'strict_press_bw_ratio': ('strict_press', 'overhead_press'),
-    'bench_press_bw_ratio':  ('bench_press',),
-    'power_clean_bw_ratio':  ('power_clean',),
-}
+def derived_exercises(b: dict) -> tuple:
+    """The lifts whose logged sets estimate a ×BW standard — its YAML's
+    `derived_from` (data, not code: the list here named exercises no package
+    has, and missed the ones Marcus Filly's athletes log)."""
+    if b.get('metric_type') != 'bw_ratio':
+        return ()
+    return tuple((b.get('derived_from') or {}).get('exercises') or ())
 
 
 def _series(ctx: Context, benchmark_id: str) -> list[dict]:
@@ -71,8 +70,8 @@ def standing(ctx: Context, b: dict, sex: str) -> dict:
     latest = hist[-1] if hist else None
     best = (min if b['lower_is_better'] else max)(hist, key=lambda r: r['value']) if hist else None
     derived = None
-    if b['metric_type'] == 'bw_ratio' and b['id'] in _DERIVED_FROM:
-        est = _best_est1rm(ctx, _DERIVED_FROM[b['id']])
+    if derived_exercises(b):
+        est = _best_est1rm(ctx, derived_exercises(b))
         if est:
             bw = _bodyweight_at(ctx, est[1])
             if bw:

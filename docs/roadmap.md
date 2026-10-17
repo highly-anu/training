@@ -795,12 +795,7 @@ confirms; programs schedule **package-declared tests**. Phase 1 shipped the same
 
 2. ~~**History you can manage.**~~ — shipped 2026-10-17 (see *Done*).
 3. ~~**Relevance.**~~ — shipped 2026-10-17 (see *Done*).
-4. **Package-declared tests.** Archetype slot `standard: <id>` (packages → commons only),
-   `test: {selectable: false}`, phase `tests:` positioned on `(phase_id, week_in_phase)`;
-   the generator swaps one session of the modality for the test (protocol unscaled — today
-   a 2 km row would be prescribed 1.5 km), skips with a reason; `_DERIVED_FROM` moves to the
-   standard's YAML as `derived_from`. Content: Wildman pentathlon test, CrossFit benchmark
-   rotation, Gym Jones 2 km row, Horsemen PT test. Fidelity, styles, provenance checks.
+4. ~~**Package-declared tests.**~~ — shipped 2026-10-17 (see *Done*).
 5. **Sessions suggest results.** `standard_result_suggestions` (a pending suggestion is
    never a result); a hook on the session-log PUTs; confirm on web, phone, or the watch's
    summary (`standardResults` in the session PUT, so `DEVICE_ROUTES` does not grow).
@@ -857,6 +852,18 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 4 (2026-10-17)**: programs test their standards. A phase's `tests:`
+places a test archetype (`test:`, scored slots with `standard:`) in place of one session of
+its week; the replaced session is still selected so nothing else in the program changes, and
+is recorded (`test.instead_of`) so fidelity and the phase summary read the test as that
+session. A test is prescribed as written, skipped with a reason when the athlete cannot do it
+(level, equipment, time, an injury), and never picked by ordinary selection. Wildman's
+pentathlon, Gym Jones' 2 km row, Horsemen's PT test and CrossFit's benchmark girls; CrossFit's
+level seed unlocks its own pull-up for intermediates (it was locked for everyone but an
+elite). `_DERIVED_FROM` became each standard's `derived_from`; the six standards files are
+validated against `benchmark.schema.json`. Both clients badge test sessions and name what
+each scored exercise measures; Today says "Test today" on the web.
 
 **Standards, phase 3 (2026-10-17)**: only a program's own standards lead.
 `analytics.benchmarks.program_standards` (declared by the package for the frameworks the

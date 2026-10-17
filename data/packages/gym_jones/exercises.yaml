@@ -2347,3 +2347,34 @@ exercises:
     functional walking pattern.
 
     '
+- id: row_2km_test
+  name: 2000m Row Time Trial
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  equipment:
+  - rower
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires:
+  - row_interval
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc_pathology
+  progressions:
+    volume: add_sets
+  scaling_down:
+  - row_interval
+  typical_volume:
+    sets: 1
+    distance_m: 2000
+  sources:
+  - Gym Jones
+  notes: 'The 2 km row for time: the standard row_2km_minutes, run as the Gym Jones
+    block test (first week of accumulation, last of realization). Damper 4-6,
+    a steady first 1500 m and everything left in the last 500 m.
+
+    '

@@ -4,7 +4,7 @@ import os as _os
 import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
-from . import phases, provenance
+from . import phases, provenance, standard_tests
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -284,6 +284,9 @@ def select_archetype(
     too_long = []  # passed every filter but the session-time one
     for arch in archetypes:
         if arch.get('modality') != modality:
+            continue
+        # A test is placed by its phase (philosophy.yaml `tests:`), never picked.
+        if standard_tests.is_test_only(arch):
             continue
         n_modality += 1
 
@@ -990,6 +993,11 @@ def populate_session(
                 'exercise': ex,
                 'slot': slot,
             }
+            # The standard this slot measures, outside `slot` so it survives
+            # api._clean_exercise_assignment and storage.
+            ref = standard_tests.standard_ref(slot)
+            if ref:
+                assignment['standard'] = ref
             if substituted_for:
                 assignment['substituted_for'] = substituted_for
             exercise_assignments.append(assignment)
@@ -1007,12 +1015,14 @@ def populate_session(
     # Compute the effective duration (deload-scaled and time-capped) and store it on
     # the archetype so output.py and the frontend render the correct session length.
     effective_duration = arch.get('duration_estimate_minutes', 60)
-    if is_deload:
+    if standard_tests.is_test(arch):
+        pass                      # a test runs as written, whatever the week
+    elif is_deload:
         deload_sc = arch.get('scaling', {}).get('deload', {})
         keep = deload_keep if deload_keep is not None else 0.7
         effective_duration = deload_sc.get('duration_estimate_minutes', int(effective_duration * keep))
     session_time = constraints.get('session_time_minutes', 9999)
-    if effective_duration > session_time:
+    if effective_duration > session_time and not standard_tests.is_test(arch):
         effective_duration = session_time
     if effective_duration != arch.get('duration_estimate_minutes'):
         arch = {**arch, 'duration_estimate_minutes': effective_duration}

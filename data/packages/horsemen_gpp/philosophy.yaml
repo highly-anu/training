@@ -80,6 +80,11 @@ tracks:
           - "Maximal and relative strength"
           - "Fatigue management across modalities"
         intensity: "Heavy strength; conditioning held back"
+        # The macro's baseline: the PT standards in its first week.
+        tests:
+          - archetype: horsemen_pt_test
+            week: first
+            in_place_of: [mixed_modal_conditioning, strength_endurance]
       - id: power_endurance
         name: "Power Endurance"
         kind: build
@@ -122,6 +127,11 @@ tracks:
           - "Retained strength and conditioning"
           - "Recovery"
         intensity: "Sustainable; recovery at ≤65% max HR"
+        # The macro's close: the PT standards again in its last week.
+        tests:
+          - archetype: horsemen_pt_test
+            week: last
+            in_place_of: [mixed_modal_conditioning, strength_endurance]
   - id: gpp_circuits
     name: "GPP Circuits"
     description: >

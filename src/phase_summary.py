@@ -65,14 +65,15 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
     shape: Counter = Counter()
     for w in work:
         for _, s in fidelity._sessions(w):
-            shape[s.get('modality')] += 1
+            # A test counts as the session it stands in for.
+            shape[(s.get('test') or {}).get('in_place_of') or s.get('modality')] += 1
     spw = {m: round(n / len(work), 1) for m, n in shape.most_common()}
 
     minutes = [fidelity.week_minutes(w) for w in work]
     buckets = dict.fromkeys(fidelity.BUCKETS, 0.0)
     for w in work:
         for _, s in fidelity._sessions(w):
-            for b, m in fidelity.session_buckets(s).items():
+            for b, m in fidelity._counted_buckets(s).items():
                 buckets[b] += m
     total = sum(buckets.values())
     intensity = {b.replace('_pct', ''): round(m / total, 3) for b, m in buckets.items()} if total else {}
@@ -85,8 +86,26 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
     # so the rate agrees with `sessions_per_week`.
     work_ids = {id(w) for w in work}
     in_work: Counter = Counter()
+    tests: list[dict] = []
     for w in pweeks:
-        for _, s in fidelity._sessions(w):
+        for t in w.get('tests_skipped') or []:
+            tests.append({'week_number': w.get('week_number'), 'week_in_phase': w.get('week_in_phase'),
+                          'status': 'skipped', 'reason': t.get('reason'),
+                          'archetype': {'id': (t.get('archetypes') or [None])[0],
+                                        'name': _test_name((t.get('archetypes') or [None])[0])}})
+        for day, s in fidelity._sessions(w):
+            if s.get('test'):
+                # Its own list: a test is not a session the phase trains, so it
+                # is neither "new" here nor "gone" in the next phase.
+                arch = s.get('archetype') or {}
+                tests.append({
+                    'week_number': w.get('week_number'), 'week_in_phase': w.get('week_in_phase'),
+                    'day': fidelity._DAY_NAMES[day - 1] if 1 <= day <= 7 else None, 'status': 'planned',
+                    'archetype': {'id': arch.get('id'), 'name': arch.get('name') or arch.get('id')},
+                    'standards': [_standard_named(sid) for sid in s['test'].get('standards') or []],
+                    'in_place_of': (s['test'].get('instead_of') or {}).get('name'),
+                })
+                continue
             arch = s.get('archetype') or {}
             if arch.get('id'):
                 a = archetypes.setdefault(arch['id'], {
@@ -135,7 +154,32 @@ def _summarise(phase_id: str, pweeks: list, goal: dict | None) -> dict:
         'archetypes': sorted(archetypes.values(), key=lambda a: (-a['sessions'], a['name'])),
         'exercises': sorted(exercises.values(), key=lambda e: (-e['sessions'], e['name'])),
         'lifts': sorted(lifts.values(), key=lambda lf: -lf['last_kg']),
+        # The phase's tests of its standards, run or skipped (with why).
+        'tests': sorted(tests, key=lambda t: (t['week_number'] or 0)),
     }
+
+
+def _test_name(aid: str | None) -> str | None:
+    if not aid:
+        return None
+    from src import loader
+    arch = next((a for a in loader.load_all_data()['archetypes'] if a.get('id') == aid), None)
+    return (arch or {}).get('name') or aid
+
+
+def _standard_named(sid: str) -> dict:
+    from src.analytics import benchmarks_data
+    b = benchmarks_data.by_id().get(sid) or {}
+    return {'id': sid, 'name': b.get('name') or sid}
+
+
+def _test_changes(cur: dict, changes: list) -> None:
+    for t in cur.get('tests') or []:
+        name = (t.get('archetype') or {}).get('name') or 'Test'
+        if t['status'] == 'planned':
+            changes.append(f"Test: {name}, week {t['week_number']}")
+        else:
+            changes.append(f"Test skipped: {name}, week {t['week_number']} ({str(t.get('reason') or '').replace('_', ' ')})")
 
 
 def _diff(cur: dict, prev: dict | None) -> None:
@@ -145,6 +189,7 @@ def _diff(cur: dict, prev: dict | None) -> None:
             item['status'] = None
         cur['dropped'] = {'archetypes': [], 'exercises': []}
         cur['changes'] = []
+        _test_changes(cur, cur['changes'])
         return
 
     for key in ('archetypes', 'exercises'):
@@ -186,6 +231,7 @@ def _diff(cur: dict, prev: dict | None) -> None:
     gone = [x['name'] for x in cur['dropped']['archetypes']]
     if gone:
         changes.append('Gone: ' + ', '.join(gone[:3]) + (f' (+{len(gone) - 3})' if len(gone) > 3 else ''))
+    _test_changes(cur, changes)
     cur['changes'] = changes
 
 

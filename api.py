@@ -331,6 +331,9 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # as the movements of one AMRAP.
         'parent_slot_role': slot.get('parent_slot_role'),
         'skip_exercise':    bool(slot.get('skip_exercise')),
+        # The standard this slot measures ({id, result}), when it is a test's
+        # scored slot (src/standard_tests.py); absent otherwise.
+        **({'standard': ea['standard']} if ea.get('standard') else {}),
     }
 
 
@@ -369,6 +372,9 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     # otherwise.
                     **({'substituted_for': session['substituted_for']}
                        if session.get('substituted_for') else {}),
+                    # A test of the phase's standards, put in place of a
+                    # session of `in_place_of` (src/generator._plan_week_tests).
+                    **({'test': session['test']} if session.get('test') else {}),
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])
@@ -388,7 +394,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
             'schedule':      named_schedule,
         }
         # The philosophy's own phase: id and display name, and the track.
-        for key in ('phase_id', 'phase_name', 'track_id'):
+        for key in ('phase_id', 'phase_name', 'track_id', 'tests_skipped'):
             if wk.get(key):
                 week_out[key] = wk[key]
         weeks.append(week_out)
@@ -2481,7 +2487,8 @@ def _adjust_each(weeks: list, start: int, matches):
             for session in sessions or []:
                 for ea in session.get('exercises') or []:
                     ex = ea.get('exercise')
-                    if ex and matches(ex):
+                    # A test's scored slot is a protocol; no adjustment rescales it.
+                    if ex and matches(ex) and not ea.get('standard'):
                         yield wi, session, ea
 
 
@@ -2515,7 +2522,8 @@ def _week_assignments_ordered(week: dict):
     for day in days:
         for session in schedule.get(day) or []:
             for ea in session.get('exercises') or []:
-                yield session, ea
+                if not ea.get('standard'):          # a test's protocol stays as written
+                    yield session, ea
 
 
 def _adjust_reduce_volume(weeks, start, adj, exercises):
@@ -2573,7 +2581,7 @@ def _adjust_early_deload(weeks, start, adj, exercises):
             session['is_deload'] = True
             for ea in session.get('exercises') or []:
                 load = ea.get('load') or {}
-                if not ea.get('exercise') or not load:
+                if not ea.get('exercise') or not load or ea.get('standard'):
                     continue
                 if isinstance(load.get('weight_kg'), (int, float)):
                     load['weight_kg'] = _adjust_round_kg(load['weight_kg'] * 0.9)

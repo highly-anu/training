@@ -1781,3 +1781,82 @@ exercises:
   - CrossFit
   notes: 'Flexion, extension and rotation under bodyweight before front rack and
     handstand work. Cheap, and the wrists take more volume here than anywhere else.'
+- id: thruster
+  name: Thruster
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - power
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  - ballistic
+  requires:
+  - squat_air
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  progressions:
+    load: add_2.5_5kg_per_session
+    volume: add_reps_per_set
+  scaling_down:
+  - squat_air
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources:
+  - CrossFit
+  notes: 'Front squat into push press in one movement: the hips drive the bar
+    overhead off the bottom of the squat. 21-15-9 with pull-ups is Fran, the
+    benchmark of benchmarks. Scale the load before the movement.
+
+    '
+- id: kb_swing_two_hand
+  name: Kettlebell Swing (Two-Hand)
+  category: kettlebell
+  modality:
+  - power
+  - aerobic_base
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires:
+  - hip_hinge
+  - bracing_mechanics
+  unlocks:
+  - kb_swing_single_arm
+  - kb_deadlift
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  progressions:
+    load: increase_bell_weight
+    volume: increase_duration_or_reps
+    complexity: kb_swing_single_arm
+  scaling_down:
+  - kb_deadlift
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - CrossFit
+  notes: 'Hip-hinge kettlebell swing, two hands. Helen is three rounds of a 400 m
+    run, 21 swings at 24/16 kg and 12 pull-ups for time.
+
+    '

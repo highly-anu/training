@@ -151,6 +151,11 @@ tracks:
           - "Five events back to back"
           - "Arriving fresh for the test"
         intensity: "Target pace; reduced volume"
+        # The test itself, in the phase's last week, in place of one of its
+        # pentathlon sessions: each event is a result on its own standard.
+        tests:
+          - archetype: kb_pentathlon_test
+            week: last
         checks:
           archetypes_required: [kb_pentathlon_training]
           volume_vs_previous_phase: [-0.6, -0.1]

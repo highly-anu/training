@@ -261,8 +261,27 @@ group's name.
   (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
 - Cached analytics documents key on `api._ANALYTICS_SHAPE` and on every result's
   value and date (`standards.digest_key`), not on how many there are.
+- **Programs test their standards** (`src/standard_tests.py`). A package marks an archetype
+  `test:` and points each scored slot at a commons standard (`standard: <id>` or
+  `{id, result}`); a phase's `tests:` says when (`week: first|last|<n>` or `every: <n>`, a
+  rotation of `archetypes:`, `in_place_of`, `on_deload`). The generator
+  (`_plan_week_tests`) puts the test in place of one session of the week — same day, same
+  count — when the athlete can do it as written (level, equipment, the time within 1.1×,
+  every movement of the scored piece fillable), else the week records `tests_skipped` with
+  why. The session it stands in for is still selected, so the rest of the program is exactly
+  what it would have been, and recorded as `test.instead_of` (archetype, minutes, intensity
+  minutes) so fidelity and the phase summary count the test as that session. A scored slot
+  is prescribed as written (`protocol_load`: no ramp, level, phase or deload scaling;
+  `load.test`); adjust and swap leave it alone; selection never picks a test-only
+  archetype. Sessions carry `test`, scored assignments `standard` (outside `slot`, so it
+  survives storage); the skeleton hash ignores both. Tests today: Wildman's pentathlon
+  (competition, last week), Gym Jones' 2 km row (first week of accumulation, last of
+  realization), Horsemen's PT test (start of strength, end of maintenance), CrossFit's
+  Cindy → Fran → Helen every fourth week. A standard's `derived_from` (its YAML) names the
+  lifts whose sets estimate it. Both clients badge a test session, list its standards with
+  the number to beat, and Today says "Test today".
 - `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
-  database); plan and later phases: `docs/roadmap.md` item 11.
+  database), `test_standard_tests.py`; plan and later phases: `docs/roadmap.md` item 11.
 
 ## Key Engine Behaviors
 
@@ -281,8 +300,9 @@ group's name.
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
   and a phase's optional `checks:` block in `philosophy.yaml` (the prose's numbers made
-  testable; the generator never reads it). Two phase keys the generator does read:
-  `exclude_exercises` (a lift the method has not reached) and `rotate_main_lifts`. Main-lift
+  testable; the generator never reads it). Three phase keys the generator does read:
+  `exclude_exercises` (a lift the method has not reached), `rotate_main_lifts`, and `tests`
+  (when the phase tests its standards — see *Standards*). Main-lift
   slots (`selector.is_main_lift_slot`) keep one exercise per phase unless a phase rotates;
   ties go to the least recently used, then first authored, archetype or exercise. An empty
   slot always says why (`injury_skip`, `equipment_gap`, `gap_reason`), and an injury flag's
@@ -343,7 +363,8 @@ group's name.
     `TrackPhaseList` / `StartPhasePicker` (design-system §3.2, §6.22;
     `PhaseTrackTests`).
   - `tools/check_styles.py` generates every phase of every track and fails if a week
-    runs another framework; `check_provenance.py --coverage` fails if a phase's
+    runs another framework, and generates a phase that tests at full length and fails
+    unless every declared test is placed; `check_provenance.py --coverage` fails if a phase's
     framework schedules a modality no package archetype applies to for its kind;
     `validate_entities.py` checks track/phase ids and framework ownership;
     `test_phases.py` covers the rest.
@@ -916,7 +937,7 @@ scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-coun
 Run these after touching engine code or package data:
 
 ```bash
-.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (125 files)
+.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (packages, commons, standards)
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
@@ -957,6 +978,7 @@ Run these after touching standards or results (the SQL one makes and drops its o
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
+SUPABASE_URL='' .venv/bin/python test_standard_tests.py   # when a phase tests, what it replaces, skips, carry
 .venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
 ```
 
