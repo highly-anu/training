@@ -2364,7 +2364,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | Page | Icon | Title | Inline subtitle | Sub-tabs | Actions | Status |
 |---|---|---|---|---|---|---|
 | **Home** | `House` | "Home" | None | None | Program settings sheet | ✅ — see §17.9 |
-| **Program** | `CalendarDays` | Program name | None | Calendar · Overview · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
+| **Program** | `CalendarDays` | Program name | None | Overview · Calendar · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
 | **Log** | `ClipboardList` | "Log" | None | Workouts · Suggestions (count) | Import (opens a sheet) | ✅ |
 | **Analytics** | `BarChart3` | "Analytics" | None | Program · Progress · Load · Recovery (`?tab=`) | None (the period selector is content-level) | ✅ |
 | **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |

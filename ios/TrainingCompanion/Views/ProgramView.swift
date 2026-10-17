@@ -2,15 +2,16 @@ import SwiftUI
 
 /// Internal so `AppRouter` and deep links can name a section.
 /// The web Program's tabs, in its order (information-architecture.md §2):
-/// the weeks you are on, what the plan is, and the plans you have been on.
-/// One word each (§6.8). Calendar was "Current" until 2026-10-13.
+/// what the plan is, the weeks you are on, and the plans you have been on.
+/// One word each (§6.8). Calendar was "Current" until 2026-10-13; Overview
+/// leads since 2026-10-17.
 enum ProgramTab: Int, AppSubTab {
-    case calendar, overview, history
+    case overview, calendar, history
 
     var label: String {
         switch self {
-        case .calendar: return "Calendar"
         case .overview: return "Overview"
+        case .calendar: return "Calendar"
         case .history: return "History"
         }
     }
@@ -29,7 +30,7 @@ struct ProgramView: View {
     @State private var showBuilder = false
     @State private var showSettings = false
     @State private var selectedDay: DaySelection? = nil
-    @State private var section: ProgramTab = .calendar
+    @State private var section: ProgramTab = .overview
 
     @ViewBuilder
     private var currentProgramSection: some View {
@@ -54,8 +55,8 @@ struct ProgramView: View {
             // this screen does not invent a third selector.
             AppSubTabScreen(selection: $section) { tab in
                 switch tab {
-                case .calendar: currentProgramSection
                 case .overview: ProgramOverviewTab()
+                case .calendar: currentProgramSection
                 case .history: ProgramHistoryView()
                 }
             }

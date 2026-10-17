@@ -20,7 +20,7 @@ enum DeepLink: Equatable {
     case profile(ProfileTab)
     /// `log?section=workouts|linking|sessions` (`suggestions`, the old name, still works).
     case log(LogTab)
-    /// `program?section=calendar|overview|history`.
+    /// `program?section=overview|calendar|history`.
     case program(ProgramTab)
 
     static let scheme = "trainingcompanion"

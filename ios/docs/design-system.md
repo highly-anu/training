@@ -825,7 +825,7 @@ answer.
 | Tab | Root | Sections (`AppSubTabs`) |
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
-| **Program** | `ProgramView` | Calendar · Overview · History |
+| **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
 | **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Benchmarks |
