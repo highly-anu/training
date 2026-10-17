@@ -25,7 +25,7 @@ struct AnalyticsProgramTab: View {
             } else {
                 emptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
                            message: "Generate a program to measure it here.",
-                           actionLabel: "Go to Program") { router.show(.program) }
+                           actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
         }
         // Reload whenever the stored program changes revision; the server
