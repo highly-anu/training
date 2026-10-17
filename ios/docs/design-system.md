@@ -1513,6 +1513,20 @@ extra work — and within it by a stable hash of the workout's id, so one
 workout always reads the same and a run of them does not repeat. It is the
 one sentence on the screen; everything else is a symbol and a number (§1.4).
 
+**Any session, any package.** Nothing on the sheet names a philosophy,
+framework or archetype. It reads the recorded workout (activity, times,
+distance, heart rate and the server's `analysis`) and, for the planned
+session, only what every package's program carries: the session's
+`modality`, its archetype's `name` and `duration_estimate_minutes`, and its
+key. It shows no prescription, so a package does not have to describe its
+loads in any particular way for the sheet to work. A new package that
+schedules the existing modalities needs nothing here. A new **modality** is
+the one thing that needs work on the phone: `ModalityStyle` (colour, label,
+icon) is a fixed table of the twelve in `data/commons/modalities/`, and an
+unknown id is drawn grey with a generic figure until it is added there (and to
+the web's `MODALITY_COLORS` and `data/commons/modality_families.json`, which
+the matcher scores with).
+
 Rules: the sheet decides nothing on its own — closing it leaves an unlinked
 workout unlinked, to be decided in Log ▸ Linking. *Details* (toolbar)
 pushes `WorkoutDetailView`. `trainingcompanion://workout-complete[?id=…]`
