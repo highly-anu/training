@@ -26,6 +26,7 @@ from datetime import date, datetime, timedelta
 from typing import Callable
 
 from src.analytics import trend as _trend
+from src import standards as _standards
 from src.analytics import benchmarks_data as _bd
 from src.analytics.primitives.load import best_completed_set
 
@@ -45,9 +46,10 @@ class DevelopmentInputs:
     workouts: list = field(default_factory=list)             # summary rows
     pmc: list = field(default_factory=list)                  # [{date, ctl, atl, tsb, trimp}] over the window
     trimp_of: Callable[[dict], float] = lambda w: 0.0
-    performance_logs: dict = field(default_factory=dict)     # benchmark id -> [{value, date}]
+    performance_logs: dict = field(default_factory=dict)     # benchmark id -> [{value, date, loggedOn}]
     benchmarks: list = field(default_factory=list)           # benchmarks_data.load_benchmarks()
     sex: str = 'male'
+    timezone: str | None = None                              # the athlete's, for a result's day
     exercise_names: dict = field(default_factory=dict)
     philosophy_names: dict = field(default_factory=dict)
 
@@ -281,10 +283,10 @@ def _benchmarks(inputs: DevelopmentInputs) -> list[dict]:
         if not b:
             continue
         history = []
-        for e in sorted(entries, key=lambda e: str(e.get('date'))):
-            day = _as_date(e.get('date'))
-            value = e.get('value')
-            if day is None or value is None or day < inputs.window_from or day > inputs.window_to:
+        # Each result on the athlete's day (src/standards.entries), not its UTC timestamp's.
+        for e in _standards.entries(entries, inputs.timezone):
+            day, value = date.fromisoformat(e['date']), e['value']
+            if day < inputs.window_from or day > inputs.window_to:
                 continue
             lv = _bd.level_of(b, float(value), inputs.sex)
             history.append({'date': day.isoformat(), 'value': value, 'valueText': _bd.format_value(b, float(value)),

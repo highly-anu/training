@@ -649,21 +649,40 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Logs a result through `POST /api/health/performance`, then re-reads the
-    /// results so every screen shows what the server kept, on the server's
-    /// ladder. Returns nil on success, else the reason in words to show.
+    /// Logs a result, then re-reads the results so every screen shows what the
+    /// server kept, on the server's ladder. Returns nil on success, else the
+    /// reason in words to show.
     func logResult(benchmarkId: String, text: String) async -> String? {
+        await logResult(benchmarkId: benchmarkId, input: StandardResultInput(text: text))
+    }
+
+    func logResult(benchmarkId: String, input: StandardResultInput) async -> String? {
+        await standardsChange { try await $0.addResult(benchmarkId: benchmarkId, input: input) }
+    }
+
+    /// Corrects one result (value, day or note). Nil on success, else why not.
+    func updateResult(id: Int, input: StandardResultInput) async -> String? {
+        await standardsChange { try await $0.updateResult(id: id, input: input) }
+    }
+
+    /// Deletes one result. Nil on success, else why not.
+    func deleteResult(id: Int) async -> String? {
+        await standardsChange { try await $0.deleteResult(id: id) }
+    }
+
+    private func standardsChange(_ work: (APIClient) async throws -> Void) async -> String? {
         guard let api else { return "Not connected." }
         do {
-            try await api.addResult(benchmarkId: benchmarkId, text: text,
-                                    loggedAt: ISO8601DateFormatter().string(from: Date()))
+            try await work(api)
         } catch APIError.serverErrorDetail(_, let detail) {
             return detail
         } catch {
-            logger.log("standards: result ERROR — \(error)")
+            logger.log("standards: change ERROR — \(error)")
             return error.localizedDescription
         }
         await loadStandardResults()
+        // Progress and Blocks read results too.
+        await loadProgramAnalytics()
         return nil
     }
 

@@ -664,18 +664,54 @@ export interface StandardPoint {
   gapText: string | null
 }
 
+/** Who logged a result: typed in, from a session, a watch, an imported workout. */
+export type StandardSource = 'manual' | 'session' | 'garmin' | 'apple_watch' | 'workout'
+
+/** One result, as the server places it (src/standards.py). */
+export interface StandardEntry {
+  id: number | null
+  value: number
+  valueText: string
+  /** The athlete's day it counts for. */
+  date: string
+  level: BenchmarkLevel | null
+  levelIndex: number
+  source: StandardSource
+  note: string | null
+  /** "140 kg × 2 at 82 kg · est." for a ×BW result logged as a load. */
+  inputText: string | null
+  sessionUid: string | null
+  workoutId: string | null
+  /** The program block in force that day (or the test session's). */
+  block: { id: number; name: string } | null
+}
+
 export interface StandardResult {
   current: StandardPoint
   best: StandardPoint
   count: number
-  entries: Array<{ id: number | null; value: number; valueText: string; date: string | null; level: BenchmarkLevel | null; levelIndex: number }>
+  entries: StandardEntry[]
 }
+
+export interface StandardBlock { id: number; name: string; from: string; to: string | null }
 
 /** GET /api/standards/results */
 export interface StandardResults {
   sex: Sex
   standards: Record<string, StandardResult>
-  bodyweight: { value: number; valueText: string; date: string | null } | null
+  /** The program timeline, oldest first, for shading a history chart. */
+  blocks?: StandardBlock[]
+  bodyweight: { value: number; valueText: string; date: string | null; entries?: StandardEntry[] } | null
+}
+
+/** What a result is sent as: typed text ("4:58"), or for a ×BW standard the load lifted. */
+export interface StandardResultInput {
+  text?: string
+  kg?: number
+  reps?: number
+  /** The athlete's day (YYYY-MM-DD); today when absent. */
+  loggedOn?: string
+  note?: string
 }
 
 // ─── Modality ─────────────────────────────────────────────────────────────────

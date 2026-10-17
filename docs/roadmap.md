@@ -793,15 +793,7 @@ could manage, and nothing tying a standard to training. Decided with the athlete
 confirms; programs schedule **package-declared tests**. Phase 1 shipped the same day
 (see *Done*). Open, one PR each:
 
-2. **History you can manage.** `migrations/011`: `performance_logs` gains `source`,
-   `session_uid`, `workout_id`, `note`, `input`, `logged_on` (the athlete's day, computed
-   in Python — readers still take `logged_at[:10]`, a UTC day), timestamps, an index and a
-   partial unique on `(user, standard, session_uid)`. `PATCH`/`DELETE
-   /standards/results/<id>` (one entry; today clearing deletes a whole series on the old
-   route and nothing deletes one). Standard detail on both clients: protocol, history
-   chart with threshold lines and block bands, history list with source and block, edit,
-   delete, a date on a new result. One accessor for current/best/history in the analytics
-   readers; `benchmark_level` uses the est. value the ladder beside it shows.
+2. ~~**History you can manage.**~~ — shipped 2026-10-17 (see *Done*).
 3. **Relevance.** `benchmarks.program_standards`: *this program's* = declared for the
    running track/framework or measured by a scheduled test; everything else (same domain,
    cites the philosophy, has a result) behind "More standards" — today a result alone makes
@@ -870,6 +862,16 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 2 (2026-10-17)**: a history the athlete can manage. Every result
+can be logged with its day and a note, and corrected or deleted on its own (it used to
+be add-only, clearing a web field deleted the whole series, and nothing chose the day).
+A ×BW standard may be logged as the load lifted (kg × reps ÷ the bodyweight that day,
+Epley past one rep). A result counts for the athlete's day (`logged_on`,
+`migrations/011`; readers took the UTC timestamp's day, a day late every evening west of
+Greenwich) and falls in the block in force then. Standard detail on both clients: the
+ladder, a history chart across blocks, the list. The `benchmark_level` measure now reads
+the same estimate as the ladder beside it (`analytics.benchmarks.standing`).
 
 **Standards, phase 1 (2026-10-17)**: one name, one ladder. Every screen on both
 clients says *Standards* (Profile's tab included; `?tab=benchmarks` and

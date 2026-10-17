@@ -187,7 +187,8 @@ def thresholds(b: dict, sex: str = 'male') -> dict[str, float]:
             else b['levels'][lvl]['male'] for lvl in LEVELS if lvl in b['levels']}
 
 
-def _num(v: float, places: int = 2) -> str:
+def number_text(v: float, places: int = 2) -> str:
+    """A number without trailing noughts: 1.5, 2, 82.4."""
     text = f'{v:.{places}f}'
     if '.' in text:
         text = text.rstrip('0').rstrip('.')
@@ -211,13 +212,13 @@ def format_value(b: dict | None, value: float | None) -> str | None:
     if value is None:
         return None
     if b is None:
-        return f'{_num(value, 1)} kg'
+        return f'{number_text(value, 1)} kg'
     metric = b.get('metric_type')
     if metric == 'time_minutes':
         return _clock(value * 60)
     if metric in ('time_seconds', 'time_sec'):
-        return f'{_num(value, 1)} s'
-    text, unit = (_num(value, 0), b.get('unit') or ' reps') if metric == 'reps' else (_num(value), b.get('unit') or '')
+        return f'{number_text(value, 1)} s'
+    text, unit = (number_text(value, 0), b.get('unit') or ' reps') if metric == 'reps' else (number_text(value), b.get('unit') or '')
     if text == '1' and unit in (' reps', ' rounds'):
         unit = unit[:-1]
     return f'{text}{unit}'
@@ -234,6 +235,12 @@ def parse_input(b: dict | None, text) -> float | None:
         value = float(text)
     else:
         raw = str(text).strip().replace(',', '.')
+        # A value as it is printed reads back: "1.62×BW", "45 reps", "90 s".
+        for suffix in sorted({(b or {}).get('unit', '').strip(), '×BW', 'xBW', 'reps', 'rep', 'rounds',
+                              'round', 'kg', 's', 'm'} - {''}, key=len, reverse=True):
+            if raw.lower().endswith(suffix.lower()):
+                raw = raw[:-len(suffix)].strip()
+                break
         metric = (b or {}).get('metric_type')
         if ':' in raw and metric in ('time_minutes', 'time_seconds', 'time_sec'):
             try:

@@ -59,13 +59,14 @@ export function StandardsLanding() {
                         )}
                       </div>
                       {current ? (
-                        <span className="shrink-0 text-xs tabular-nums text-foreground">
+                        <Link to={`/profile?tab=standards&standard=${b.id}`}
+                              className="shrink-0 text-xs tabular-nums text-foreground hover:underline underline-offset-2">
                           you: <span className="font-semibold">{current.valueText}</span>{' '}
                           <StandardLevelBadge level={current.level} domain={b.domain} />
-                        </span>
+                        </Link>
                       ) : (
                         <Link
-                          to="/profile?tab=standards"
+                          to={`/profile?tab=standards&standard=${b.id}`}
                           className="shrink-0 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
                         >
                           <Trophy className="size-3" aria-hidden="true" /> Log a result

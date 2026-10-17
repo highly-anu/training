@@ -1561,3 +1561,24 @@ names the level ("Advanced", "Below entry") in a capsule of the same colour.
   athlete would write ("4:58") and the server parses it; a value it cannot
   read comes back in its words under the field.
 
+### 6.30 Standard Detail
+
+**One standard, every result.** `Views/StandardDetailSheet.swift` (the web's
+`StandardDetailSheet.tsx`) is presented from a Profile ▸ Standards row, from Athlete's
+*Bodyweight history* (`StandardSubject.bodyweight`), and by the deep link
+`profile?section=standards&standard=<id>` (`AppRouter.openStandard`):
+
+- the current result with its level badge, best and the gap to the next level, the
+  `StandardLadder` (§6.29), the test protocol;
+- *History*: `StandardHistoryChart` — the results as one line in the modality's
+  colour, each level a dashed `RuleMark` labelled with its word and the server's
+  threshold text (no value axis: nothing on the phone formats a value), the
+  program blocks as alternating bands, a month tick (a week tick under two
+  months), and drag-to-read (`chartXSelection`);
+- *Log a result* → `StandardResultSheet`: the value as typed ("4:58"; for a ×BW
+  standard *Load lifted* kg × reps or *Ratio ×BW*), the day (`DatePicker`, no
+  future days), a note. Editing sends only what changed.
+- the results, newest first: value, level, day, source ("Typed in", "Garmin"…),
+  block and note; tap or swipe to edit, swipe to delete behind a confirmation
+  that says the rest of the history stays.
+

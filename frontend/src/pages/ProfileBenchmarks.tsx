@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { StandardDetailSheet } from '@/components/standards/StandardDetailSheet'
 import { thresholdTexts } from '@/lib/standards'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
@@ -269,10 +270,26 @@ function formatDay(day: string | null | undefined): string {
   return new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+/** The open standard's sheet lives in the URL (`?standard=<id>`), so a link
+ *  from Explore, Analytics or a session lands on it. */
+function useOpenStandard(): [string | null, (id: string | null) => void] {
+  const [params, setParams] = useSearchParams()
+  const open = params.get('standard')
+  const set = (id: string | null) => {
+    const next = new URLSearchParams(params)
+    if (id) next.set('standard', id)
+    else next.delete('standard')
+    setParams(next, { replace: true })
+  }
+  return [open, set]
+}
+
 function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const { data: standards = [], isLoading } = useStandards()
   const { data: results } = useStandardResults()
   const sex = useProfileStore((s) => s.sex)
+  const [openId, setOpenId] = useOpenStandard()
+  const openStandard = standards.find((s) => s.id === openId)
 
   if (isLoading) return <LoadingCard />
 
@@ -336,7 +353,10 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
                   <div key={s.id} className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 space-y-0.5">
-                        <p className="text-sm font-medium truncate">{s.name}</p>
+                        <button type="button" onClick={() => setOpenId(s.id)}
+                                className="block max-w-full truncate text-left text-sm font-medium hover:underline underline-offset-2">
+                          {s.name}
+                        </button>
                         {r ? (
                           <p className="text-[11px] text-muted-foreground">
                             <span className="font-semibold text-foreground tabular-nums">{r.current.valueText}</span>
@@ -344,6 +364,10 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
                             {r.current.date && <> · {formatDay(r.current.date)}</>}
                             {bestDiffers && <> · best {r.best.valueText}</>}
                             {r.current.next && r.current.gapText && <> · {r.current.gapText} to {r.current.next}</>}
+                            {' · '}
+                            <button type="button" onClick={() => setOpenId(s.id)} className="underline underline-offset-2 hover:text-foreground">
+                              {r.count} result{r.count === 1 ? '' : 's'}
+                            </button>
                           </p>
                         ) : (
                           <p className="text-[11px] text-muted-foreground/70">No result yet</p>
@@ -366,6 +390,10 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
         <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
           {withResults} of {standards.length} standards with a result
         </p>
+
+        <StandardDetailSheet open={openId != null && (openId === 'bodyweight_kg' || !!openStandard)}
+                             onOpenChange={(o) => { if (!o) setOpenId(null) }}
+                             standard={openId === 'bodyweight_kg' ? undefined : openStandard} />
 
       </div>
     </div>
@@ -800,6 +828,7 @@ function HeartRateSection() {
  */
 function AthleteOverview() {
   const bodyweight = useStandardResults().data?.bodyweight
+  const [bodyweightOpen, setBodyweightOpen] = useState(false)
   const trainingLevel = useProfileStore((s) => s.trainingLevel)
   const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
   const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
@@ -899,10 +928,14 @@ function AthleteOverview() {
               <p className="text-sm font-medium">Bodyweight</p>
               <p className="text-[11px] text-muted-foreground">
                 {bodyweight ? <>{bodyweight.valueText}{bodyweight.date ? `, ${formatDay(bodyweight.date)}` : ''}. </> : null}
-                Kept with its history; turns a logged lift into ×BW.
+                Kept with its history; turns a logged lift into ×BW.{' '}
+                <button type="button" onClick={() => setBodyweightOpen(true)} className="underline underline-offset-2 hover:text-foreground">
+                  History
+                </button>
               </p>
             </div>
             <ResultInput benchId="bodyweight_kg" hint="kg" label="Bodyweight" />
+            <StandardDetailSheet open={bodyweightOpen} onOpenChange={setBodyweightOpen} />
           </div>
         </div>
 

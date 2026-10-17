@@ -196,18 +196,52 @@ final class APIClient {
     }
 
     /// Logs a result on a standard, or a bodyweight (`bodyweight_kg`, the series
-    /// the ×BW standards read). `text` is what the athlete typed — "4:58" for a
-    /// time — and the server parses it, so the phone and the web read input the
-    /// same way. A 422 (not a value) or 503 (not saved) comes back as the
-    /// server's own words. (PRs used to ride on the profile PUT, whose merge
-    /// whitelist drops them.)
-    func addResult(benchmarkId: String, text: String, loggedAt: String) async throws {
-        struct Body: Encodable { let benchmarkId: String; let text: String; let loggedAt: String }
-        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId, text: text, loggedAt: loggedAt))
-        let (data, status) = try await postForStatus("/health/performance", body: body)
+    /// the ×BW standards read): text as typed ("4:58"), or for a ×BW standard the
+    /// kg and reps lifted, with the athlete's day and a note. The server reads
+    /// and converts it, so the phone and the web read input the same way. A 422
+    /// (not a value) or 503 (not saved) comes back as the server's own words.
+    /// (PRs used to ride on the profile PUT, whose merge whitelist drops them.)
+    func addResult(benchmarkId: String, input: StandardResultInput) async throws {
+        struct Body: Encodable {
+            let benchmarkId: String
+            let loggedAt: String
+            let input: StandardResultInput
+            func encode(to encoder: Encoder) throws {
+                try input.encode(to: encoder)
+                var c = encoder.container(keyedBy: Keys.self)
+                try c.encode(benchmarkId, forKey: .benchmarkId)
+                try c.encode(loggedAt, forKey: .loggedAt)
+            }
+            enum Keys: String, CodingKey { case benchmarkId, loggedAt }
+        }
+        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId,
+                                                 loggedAt: ISO8601DateFormatter().string(from: Date()), input: input))
+        try await sendExpectingSuccess("POST", "/standards/results", body: body, fallback: "Could not save the result")
+    }
+
+    /// Corrects one result: value, day or note — only the fields set.
+    func updateResult(id: Int, input: StandardResultInput) async throws {
+        let body = try JSONEncoder().encode(input)
+        try await sendExpectingSuccess("PATCH", "/standards/results/\(id)", body: body, fallback: "Could not save the change")
+    }
+
+    /// Deletes one result — never the standard's whole history.
+    func deleteResult(id: Int) async throws {
+        try await sendExpectingSuccess("DELETE", "/standards/results/\(id)", body: nil, fallback: "Could not delete the result")
+    }
+
+    private func sendExpectingSuccess(_ method: String, _ path: String, body: Data?, fallback: String) async throws {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        try await addAuth(to: &request)
+        request.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 { throw APIError.unauthenticated }
         guard (200...299).contains(status) else {
-            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not save the result")
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? fallback)
         }
     }
 

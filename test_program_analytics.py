@@ -977,6 +977,12 @@ def test_sections() -> None:
     domain_only = [b for b in bm['benchmarks'] if b['why'] == ['priority_modality'] and b['value'] is None]
     check('a priority-domain standard with no number waits behind "More standards"',
           domain_only and not any(b['primary'] for b in domain_only), str(len(domain_only)))
+    lvl = run_primitive(E('std', 'benchmark_level', 'starting_strength', benchmarks=['back_squat_bw_ratio'],
+                          target_level='intermediate'), ctx)
+    row = lvl['benchmarks'][0]
+    check('benchmark_level reads the same estimate as the ladder beside it',
+          row['value'] == sq['value'] and row['valueSource'] == 'derived' and row['latest'] is None
+          and lvl['coverage']['measured'] == 1, str({k: row[k] for k in ('value', 'valueSource', 'latest')}))
     ctx_nobw = _ctx(prog, logs, [run], matches, perf={})
     sq2 = {b['benchmarkId']: b for b in benchmarks_mod.build(ctx_nobw, specs)['benchmarks']}['back_squat_bw_ratio']
     check('without bodyweight the derivation says why it cannot',

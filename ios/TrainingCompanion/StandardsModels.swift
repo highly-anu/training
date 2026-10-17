@@ -10,20 +10,42 @@ struct StandardResults: Decodable {
     let sex: String?
     let standards: [String: StandardResult]
     let bodyweight: Bodyweight?
+    /// The program timeline, oldest first, so a history chart can shade each block.
+    let blocks: [Block]
 
     struct Bodyweight: Decodable {
         let value: Double
         let valueText: String
         let date: String?
+        /// Every weight logged, so one can be corrected.
+        let entries: [StandardResult.Entry]
+
+        private enum CodingKeys: String, CodingKey { case value, valueText, date, entries }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            value = try c.decode(Double.self, forKey: .value)
+            valueText = try c.decode(String.self, forKey: .valueText)
+            date = try? c.decodeIfPresent(String.self, forKey: .date)
+            entries = ((try? c.decodeIfPresent([Lossy<StandardResult.Entry>].self, forKey: .entries)) ?? nil)?
+                .compactMap(\.value) ?? []
+        }
     }
 
-    private enum CodingKeys: String, CodingKey { case sex, standards, bodyweight }
+    struct Block: Decodable, Identifiable {
+        let id: Int
+        let name: String
+        let from: String
+        let to: String?
+    }
+
+    private enum CodingKeys: String, CodingKey { case sex, standards, bodyweight, blocks }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sex = try? c.decodeIfPresent(String.self, forKey: .sex)
         let lossy = ((try? c.decodeIfPresent([String: Lossy<StandardResult>].self, forKey: .standards)) ?? nil) ?? [:]
         standards = lossy.compactMapValues(\.value)
         bodyweight = try? c.decodeIfPresent(Bodyweight.self, forKey: .bodyweight)
+        blocks = ((try? c.decodeIfPresent([Lossy<Block>].self, forKey: .blocks)) ?? nil)?.compactMap(\.value) ?? []
     }
 }
 
@@ -40,21 +62,64 @@ struct StandardPoint: Decodable {
 }
 
 struct StandardResult: Decodable {
+    /// One result, placed on its ladder by the server.
     struct Entry: Decodable, Identifiable {
+        struct BlockRef: Decodable { let id: Int; let name: String }
+
         let entryId: Int?
         let value: Double
         let valueText: String
+        /// The athlete's day it counts for.
         let date: String?
         let level: String?
         let levelIndex: Int
+        /// manual | session | garmin | apple_watch | workout
+        let source: String
+        let note: String?
+        /// "140 kg × 2 at 82 kg · est." for a ×BW result logged as a load.
+        let inputText: String?
+        /// The program block in force that day (or the test session's).
+        let block: BlockRef?
         var id: String { entryId.map(String.init) ?? "\(date ?? "")-\(value)" }
 
-        private enum CodingKeys: String, CodingKey { case entryId = "id", value, valueText, date, level, levelIndex }
+        private enum CodingKeys: String, CodingKey {
+            case entryId = "id", value, valueText, date, level, levelIndex, source, note, inputText, block
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            entryId = try? c.decodeIfPresent(Int.self, forKey: .entryId)
+            value = try c.decode(Double.self, forKey: .value)
+            valueText = try c.decode(String.self, forKey: .valueText)
+            date = try? c.decodeIfPresent(String.self, forKey: .date)
+            level = try? c.decodeIfPresent(String.self, forKey: .level)
+            levelIndex = ((try? c.decodeIfPresent(Int.self, forKey: .levelIndex)) ?? nil) ?? 0
+            source = ((try? c.decodeIfPresent(String.self, forKey: .source)) ?? nil) ?? "manual"
+            note = try? c.decodeIfPresent(String.self, forKey: .note)
+            inputText = try? c.decodeIfPresent(String.self, forKey: .inputText)
+            block = try? c.decodeIfPresent(BlockRef.self, forKey: .block)
+        }
+
+        /// Who logged it, in words.
+        var sourceText: String {
+            ["manual": "Typed in", "session": "From a session", "garmin": "Garmin",
+             "apple_watch": "Apple Watch", "workout": "From a workout"][source] ?? source
+        }
     }
     let current: StandardPoint
     let best: StandardPoint
     let count: Int
     let entries: [Entry]
+}
+
+/// What a result is sent as: typed text ("4:58"), or for a ×BW standard the
+/// load lifted; the server reads and converts it. Nil fields are left out.
+struct StandardResultInput: Encodable {
+    var text: String? = nil
+    var kg: Double? = nil
+    var reps: Int? = nil
+    /// The athlete's day (YYYY-MM-DD); today when nil.
+    var loggedOn: String? = nil
+    var note: String? = nil
 }
 
 // MARK: - Words
@@ -66,6 +131,25 @@ enum StandardLevel {
     static func name(_ level: String?) -> String {
         guard let level, let first = level.first else { return "Below entry" }
         return first.uppercased() + level.dropFirst()
+    }
+
+    /// A local calendar day as the server's YYYY-MM-DD.
+    static func isoDay(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
+    }
+
+    /// A server day (YYYY-MM-DD) as a local date at noon, for pickers and charts.
+    static func date(_ iso: String?) -> Date? {
+        guard let iso, iso.count >= 10 else { return nil }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.dateFormat = "yyyy-MM-dd HH:mm"
+        return f.date(from: String(iso.prefix(10)) + " 12:00")
     }
 
     /// "17 Oct 2026" for a server day (YYYY-MM-DD), the day itself otherwise.

@@ -219,10 +219,12 @@ private struct InjuriesSection: View {
 
 /// Every standard, grouped and named as the server says (the web's groups,
 /// in its order), with the athlete's current result placed on the ladder by
-/// the server. Tap a row to log a new result.
+/// the server. Tap a row for its history, to log, correct or delete a result.
 private struct StandardsTab: View {
     @EnvironmentObject var appState: AppState
-    @State private var logging: AppBenchmark? = nil
+    @EnvironmentObject private var router: AppRouter
+    @State private var open: AppBenchmark? = nil
+    @State private var bodyweightOpen = false
 
     private var groups: [(name: String, rows: [AppBenchmark])] {
         let byCategory = Dictionary(grouping: appState.benchmarks, by: \.category)
@@ -260,16 +262,35 @@ private struct StandardsTab: View {
                     ForEach(group.rows) { standard in
                         StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
                             .contentShape(Rectangle())
-                            .onTapGesture { logging = standard }
+                            .onTapGesture { open = standard }
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
         .refreshable { await AppRefresh.perform { await appState.loadStandardResults() } }
-        .sheet(item: $logging) { standard in
-            StandardResultSheet(standard: standard, result: appState.standardResults?.standards[standard.id])
+        .sheet(item: $open) { standard in
+            StandardDetailSheet(subject: .standard(standard))
         }
+        .sheet(isPresented: $bodyweightOpen) { StandardDetailSheet(subject: .bodyweight) }
+        .task { applyPendingStandard() }
+        .onChange(of: router.pendingStandardId) { applyPendingStandard() }
+        .onChange(of: appState.benchmarks.count) { applyPendingStandard() }
+    }
+}
+
+extension StandardsTab {
+    /// Open the sheet a deep link asked for, once the standards are loaded.
+    fileprivate func applyPendingStandard() {
+        guard let id = router.pendingStandardId else { return }
+        if id == "bodyweight_kg" {
+            bodyweightOpen = true
+        } else if let standard = appState.benchmarks.first(where: { $0.id == id }) {
+            open = standard
+        } else {
+            return
+        }
+        router.clearPendingStandard()
     }
 }
 
@@ -336,6 +357,7 @@ private struct AthleteTab: View {
 
     private var bodyweight: StandardResults.Bodyweight? { appState.standardResults?.bodyweight }
     @State private var bodyweightError: String? = nil
+    @State private var showBodyweightHistory = false
 
     var body: some View {
         List {
@@ -399,6 +421,10 @@ private struct AthleteTab: View {
                 if let bodyweightError {
                     Text(bodyweightError).font(.caption).foregroundStyle(.red)
                 }
+                if bodyweight != nil {
+                    Button("Bodyweight history") { showBodyweightHistory = true }
+                        .font(.footnote)
+                }
             }
 
             Section {
@@ -448,6 +474,7 @@ private struct AthleteTab: View {
             InjuriesSection()
         }
         .listStyle(.insetGrouped)
+        .sheet(isPresented: $showBodyweightHistory) { StandardDetailSheet(subject: .bodyweight) }
         .onAppear {
             if let o = appState.profile.hrConfig?.maxHROverride { maxHRInput = String(o) }
         }
@@ -825,85 +852,6 @@ struct ProfileView: View {
                 await appState.loadInjuryFlagsIfNeeded()
                 await appState.loadBenchmarksIfNeeded()
                 if appState.standardResults == nil { await appState.loadStandardResults() }
-            }
-        }
-    }
-}
-
-// MARK: - Log a result
-
-/// Logs a new result on one standard. The field reads what the athlete would
-/// write — "4:58" for a time — and the server parses it; a value it cannot
-/// read comes back in its own words instead of being dropped.
-private struct StandardResultSheet: View {
-    let standard: AppBenchmark
-    let result: StandardResult?
-
-    @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
-    @State private var inputText = ""
-    @State private var problem: String? = nil
-    @State private var saving = false
-
-    private var canSave: Bool { !saving && !inputText.trimmingCharacters(in: .whitespaces).isEmpty }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    HStack {
-                        TextField(standard.inputHint ?? "Result", text: $inputText)
-                            .keyboardType(standard.inputHint == "m:ss" || standard.inputHint == "h:mm:ss"
-                                          ? .numbersAndPunctuation : .decimalPad)
-                            .onSubmit(save)
-                        if let hint = standard.inputHint { Text(hint).foregroundStyle(.secondary) }
-                    }
-                    if let problem {
-                        Text(problem).font(.caption).foregroundStyle(.red)
-                    }
-                } header: {
-                    Text(standard.name)
-                } footer: {
-                    if let current = result?.current {
-                        Text("Now \(current.valueText) (\(StandardLevel.name(current.level).lowercased()))"
-                             + (result.map { $0.best.value != current.value ? ", best \($0.best.valueText)" : "" } ?? ""))
-                    }
-                }
-                Section("Standards") {
-                    StandardLadder(thresholds: standard.thresholdTexts, levelIndex: result?.current.levelIndex,
-                                   domain: standard.domain)
-                        .padding(.vertical, 4)
-                    if let notes = standard.notes {
-                        Text(notes).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .navigationTitle("Log a result")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading)  { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save", action: save)
-                        .fontWeight(.semibold)
-                        .disabled(!canSave)
-                }
-            }
-        }
-    }
-
-    private func save() {
-        guard canSave else { return }
-        saving = true
-        let text = inputText.trimmingCharacters(in: .whitespaces)
-        Task {
-            let failure = await appState.logResult(benchmarkId: standard.id, text: text)
-            saving = false
-            if let failure {
-                problem = failure
-                AppHaptics.error()
-            } else {
-                AppHaptics.success()
-                dismiss()
             }
         }
     }

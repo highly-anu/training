@@ -120,8 +120,9 @@ All prefixed `/api/`:
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
 | GET | `/standards?sex=` | `BenchmarkStandard[]` (48; female or male tables, each with `categoryName`, `standardsText`, `inputHint`); `/benchmarks` is the old name, kept for installed builds |
-| GET | `/standards/results` | the athlete's results: per standard `current` (latest) and `best`, each placed on its ladder with its text, and every entry (`src/standards.py`) |
-| POST | `/health/performance` | one result (`benchmarkId`, `value` or typed `text` such as "4:58", `loggedAt`); 422 on an unknown standard or a value `parse_input` cannot read, 503 when the write fails |
+| GET | `/standards/results` | the athlete's results: per standard `current` (latest) and `best`, each placed on its ladder with its text, and every entry with its day, source, note and block; `blocks`; bodyweight with its entries (`src/standards.py`) |
+| POST | `/standards/results` | one result: typed `text` ("4:58"), a `value`, or for a ×BW standard `kg` + `reps` (÷ the bodyweight that day; Epley past one rep); `loggedOn` (the athlete's day, today by default), `note`. 422 when it cannot be a result, 503 when the write fails. `/health/performance` is the old name |
+| PATCH / DELETE | `/standards/results/<id>` | correct one result (value, day, note — a load is re-read on its new day's bodyweight) or delete one; 404 when it is not the athlete's |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
@@ -235,12 +236,25 @@ group's name.
   web `components/standards/StandardLadder.tsx` / iOS `Views/StandardLadder.swift` fill
   the rungs in that modality's colour; a level has no colour of its own (frontend-design
   §8.1, design-system §6.29). Traffic-light colours only for a declared target.
-- **Current is the latest, best the best.** `src/standards.summarise`; every result is kept.
+- **Current is the latest, best the best.** `src/standards.summarise`; every result is kept,
+  and each can be corrected or deleted on its own (Standard detail on both clients: web
+  `components/standards/StandardDetailSheet.tsx` at `/profile?tab=standards&standard=<id>`,
+  iOS `Views/StandardDetailSheet.swift`, deep link `profile?section=standards&standard=<id>`).
+- **A result counts for the athlete's day** — `performance_logs.logged_on`
+  (`migrations/011_standard_results.sql`, lazily added by `src/standards_store.py`, which
+  raises on a failed write), never `logged_at::date`; a row from before 011 reads its
+  timestamp's day in the profile timezone (`standards.day_of`) until
+  `scripts/backfill_performance_logged_on.py` fills it. Run 011 and the backfill after
+  `scripts/backup_prod.sh`. Each result is placed in the block in force that day (its test
+  session's when it has a `session_uid`). `analytics.benchmarks.standing` is the one reading
+  of a standard (latest result, else the estimate from logged sets) the program ladder and
+  `benchmark_level` share.
 - **The Cell maps by its own words:** II entry, III intermediate, IV advanced, V elite
   (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
 - Cached analytics documents key on `api._ANALYTICS_SHAPE` and on every result's
   value and date (`standards.digest_key`), not on how many there are.
-- `test_standards.py`; plan and later phases: `docs/roadmap.md`.
+- `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
+  database); plan and later phases: `docs/roadmap.md` item 11.
 
 ## Key Engine Behaviors
 
@@ -928,6 +942,14 @@ Run this after touching anything under `ios/` (in addition to the simulator):
 
 ```bash
 ./ios/run_tests.sh                         # TrainingCompanionTests on the booted sim
+```
+
+Run these after touching standards or results (the SQL one makes and drops its own database;
+`TEST_ADMIN_DSN` points it at a server, and it skips without one):
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
+.venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
 ```
 
 Run these after touching program history, the matcher or the session-log path:

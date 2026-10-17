@@ -30,16 +30,14 @@ _DERIVED_FROM = {
 
 
 def _series(ctx: Context, benchmark_id: str) -> list[dict]:
+    """A standard's results up to today, by the athlete's day (src/standards.entries)."""
+    from src import standards
     rows = []
-    for e in ctx.performance_logs.get(benchmark_id) or []:
-        raw = e.get('date') or e.get('loggedAt') or e.get('logged_at')
-        try:
-            when = date.fromisoformat(str(raw)[:10])
-        except (TypeError, ValueError):
-            continue
-        if when <= ctx.today and isinstance(e.get('value'), (int, float)):
-            rows.append({'date': when, 'value': float(e['value'])})
-    return sorted(rows, key=lambda r: r['date'])
+    for e in standards.entries(ctx.performance_logs.get(benchmark_id), (ctx.profile or {}).get('timezone')):
+        when = date.fromisoformat(e['date'])
+        if when <= ctx.today:
+            rows.append({'date': when, 'value': e['value']})
+    return rows
 
 
 def _bodyweight_at(ctx: Context, when: date) -> float | None:
@@ -57,6 +55,36 @@ def _best_est1rm(ctx: Context, exercise_ids: tuple) -> tuple[float, date] | None
             if b and b.get('est1rm') and (best is None or b['est1rm'] > best[0]):
                 best = (b['est1rm'], hit['date'])
     return best
+
+
+def standing(ctx: Context, b: dict, sex: str) -> dict:
+    """Where the athlete stands on one standard — the one reading the program
+    document's ladder and the `benchmark_level` measures share (they used to
+    disagree: the measure read only logged results while the ladder beside it
+    showed the estimate from training sets).
+
+    {hist, latest, best, derived, value, valueSource, level}: `value` is the
+    latest result, else the estimate (est. 1RM ÷ bodyweight that day) for a
+    ×BW standard a logged lift derives; `best` the best logged result.
+    """
+    hist = _series(ctx, b['id'])
+    latest = hist[-1] if hist else None
+    best = (min if b['lower_is_better'] else max)(hist, key=lambda r: r['value']) if hist else None
+    derived = None
+    if b['metric_type'] == 'bw_ratio' and b['id'] in _DERIVED_FROM:
+        est = _best_est1rm(ctx, _DERIVED_FROM[b['id']])
+        if est:
+            bw = _bodyweight_at(ctx, est[1])
+            if bw:
+                derived = {'value': round(est[0] / bw, 2), 'est1rm': est[0], 'bodyweightKg': bw,
+                           'date': est[1].isoformat()}
+            else:
+                derived = {'value': None, 'est1rm': est[0], 'bodyweightKg': None,
+                           'reason': 'no_bodyweight_logged'}
+    value = latest['value'] if latest else (derived or {}).get('value')
+    return {'hist': hist, 'latest': latest, 'best': best, 'derived': derived, 'value': value,
+            'valueSource': 'logged' if latest else ('derived' if value is not None else None),
+            'level': bd.level_of(b, value, sex)}
 
 
 def build(ctx: Context, specs: list) -> dict:
@@ -83,21 +111,8 @@ def build(ctx: Context, specs: list) -> dict:
             why.append('declared')
         if not why:
             continue
-        hist = _series(ctx, b['id'])
-        latest = hist[-1] if hist else None
-        derived = None
-        if b['metric_type'] == 'bw_ratio' and b['id'] in _DERIVED_FROM:
-            est = _best_est1rm(ctx, _DERIVED_FROM[b['id']])
-            if est:
-                bw = _bodyweight_at(ctx, est[1])
-                if bw:
-                    derived = {'value': round(est[0] / bw, 2), 'est1rm': est[0], 'bodyweightKg': bw,
-                               'date': est[1].isoformat()}
-                else:
-                    derived = {'value': None, 'est1rm': est[0], 'bodyweightKg': None,
-                               'reason': 'no_bodyweight_logged'}
-        value = latest['value'] if latest else (derived or {}).get('value')
-        lv = bd.level_of(b, value, sex)
+        st = standing(ctx, b, sex)
+        hist, latest, derived, value, lv = st['hist'], st['latest'], st['derived'], st['value'], st['level']
         ladder = bd.thresholds(b, sex)
         out.append({
             'benchmarkId': b['id'], 'name': b['name'], 'category': b['category'], 'domain': b.get('domain'),
@@ -113,7 +128,9 @@ def build(ctx: Context, specs: list) -> dict:
             'standardsText': {lvl: bd.format_value(b, v) for lvl, v in ladder.items()},
             'latest': latest['value'] if latest else None,
             'latestDate': latest['date'].isoformat() if latest else None,
-            'derived': derived, 'value': value, 'valueSource': 'logged' if latest else ('derived' if value is not None else None),
+            'derived': derived, 'value': value, 'valueSource': st['valueSource'],
+            'best': st['best']['value'] if st['best'] else None,
+            'bestText': bd.format_value(b, st['best']['value']) if st['best'] else None,
             'valueText': bd.format_value(b, value),
             'level': lv['level'], 'levelIndex': lv['index'], 'next': lv['next'], 'gapToNext': lv['gap'],
             'nextText': bd.format_value(b, ladder.get(lv['next'])) if lv['next'] else None,

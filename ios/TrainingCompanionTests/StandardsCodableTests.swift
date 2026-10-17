@@ -75,10 +75,51 @@ final class StandardsCodableTests: XCTestCase {
         XCTAssertEqual(r.bodyweight?.valueText, "81.5 kg")
     }
 
+    func testEntriesCarryTheirDaySourceAndBlock() throws {
+        let json = """
+        {"sex": "male",
+         "standards": {"back_squat_bw_ratio": {
+           "current": {"value": 1.787, "valueText": "1.79×BW", "date": "2026-10-14", "level": "intermediate",
+                       "levelIndex": 2, "next": "advanced", "nextText": "2×BW", "gap": 0.213, "gapText": "0.21×BW"},
+           "best": {"value": 1.787, "valueText": "1.79×BW", "date": "2026-10-14", "level": "intermediate",
+                    "levelIndex": 2, "next": "advanced", "nextText": "2×BW", "gap": 0.213, "gapText": "0.21×BW"},
+           "count": 1,
+           "entries": [{"id": 11, "value": 1.787, "date": "2026-10-14", "valueText": "1.79×BW", "level": "intermediate",
+                        "levelIndex": 2, "source": "manual", "note": "belt", "inputText": "130 kg × 3 at 80 kg · est.",
+                        "sessionUid": null, "workoutId": null, "block": {"id": 7, "name": "Mark Wildman Kettlebell"}}]}},
+         "blocks": [{"id": 3, "name": "Marcus Filly", "from": "2026-10-05", "to": "2026-10-10"},
+                    {"id": 7, "name": "Mark Wildman Kettlebell", "from": "2026-10-11", "to": null}],
+         "bodyweight": {"value": 80, "valueText": "80 kg", "date": "2026-09-07",
+                        "entries": [{"id": 2, "value": 80, "date": "2026-09-07", "valueText": "80 kg", "level": null,
+                                     "levelIndex": 0, "source": "manual", "note": null, "inputText": null, "block": null}]}}
+        """.data(using: .utf8)!
+        let r = try JSONDecoder().decode(StandardResults.self, from: json)
+        let e = try XCTUnwrap(r.standards["back_squat_bw_ratio"]?.entries.first)
+        XCTAssertEqual(e.entryId, 11)
+        XCTAssertEqual(e.sourceText, "Typed in")
+        XCTAssertEqual(e.block?.name, "Mark Wildman Kettlebell")
+        XCTAssertEqual(e.inputText, "130 kg × 3 at 80 kg · est.")
+        XCTAssertEqual(r.blocks.map(\.id), [3, 7])
+        XCTAssertNil(r.blocks[1].to, "the current block runs to today")
+        XCTAssertEqual(r.bodyweight?.entries.map(\.entryId), [2], "bodyweight entries, so one can be corrected")
+        XCTAssertEqual(StandardLevel.isoDay(try XCTUnwrap(StandardLevel.date("2026-10-14"))), "2026-10-14",
+                       "a server day survives the round trip through a local date")
+    }
+
+    func testResultInputSendsOnlyWhatIsSet() throws {
+        let note = try JSONSerialization.jsonObject(with: JSONEncoder().encode(StandardResultInput(note: "belt"))) as? [String: Any]
+        XCTAssertEqual(note?.keys.sorted(), ["note"], "an edit of the note sends nothing else")
+        let load = try JSONSerialization.jsonObject(with: JSONEncoder().encode(
+            StandardResultInput(kg: 140, reps: 2, loggedOn: "2026-10-01"))) as? [String: Any]
+        XCTAssertEqual(load?.keys.sorted(), ["kg", "loggedOn", "reps"])
+    }
+
     func testDeepLinkRenamedSection() {
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=benchmarks")!),
                        .profile(.standards), "an old link lands on Standards")
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=standards")!),
                        .profile(.standards))
+        XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=standards&standard=wod_fran_minutes")!),
+                       .standard("wod_fran_minutes"), "a standard's sheet")
     }
 }

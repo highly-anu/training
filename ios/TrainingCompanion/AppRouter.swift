@@ -82,6 +82,19 @@ final class AppRouter: ObservableObject {
         profileSection = nil
     }
 
+    /// A standard whose sheet Profile ▸ Standards should open (a deep link,
+    /// or Analytics' "tap a standard"); cleared once the sheet is up.
+    @Published var pendingStandardId: String? = nil
+
+    func openStandard(_ id: String) {
+        pendingStandardId = id
+        showProfile(.standards)
+    }
+
+    func clearPendingStandard() {
+        pendingStandardId = nil
+    }
+
     /// A session key Today should open, set by a widget or a deep link;
     /// Today clears it once the sheet is up.
     @Published var pendingSessionKey: String? = nil

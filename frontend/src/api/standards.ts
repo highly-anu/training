@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
-import type { BenchmarkStandard, StandardResults } from './types'
+import type { BenchmarkStandard, StandardResultInput, StandardResults } from './types'
 import { useProfileStore } from '@/store/profileStore'
 import benchmarksData from '@/data/static/benchmarks.json'
 
@@ -38,19 +38,44 @@ export function useStandardResults() {
   })
 }
 
+function useRefreshResults() {
+  const qc = useQueryClient()
+  return () => {
+    void qc.invalidateQueries({ queryKey: queryKeys.standards.results })
+    void qc.invalidateQueries({ queryKey: queryKeys.analytics.program })
+    void qc.invalidateQueries({ queryKey: queryKeys.analytics.development })
+  }
+}
+
 /**
  * Log one result (or a bodyweight). `text` is what the athlete typed — "4:58"
- * for a time — and the server parses it. Refreshes everything that reads results.
+ * for a time — or, for a ×BW standard, `kg` and `reps`; the server parses and
+ * converts. Refreshes everything that reads results.
  */
 export function useLogResult() {
-  const qc = useQueryClient()
-  return useMutation<{ saved: string; id: number }, Error, { benchmarkId: string; text: string }>({
-    mutationFn: ({ benchmarkId, text }) =>
-      apiClient.post('/health/performance', { benchmarkId, text, loggedAt: new Date().toISOString() }) as unknown as Promise<{ saved: string; id: number }>,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.standards.results })
-      void qc.invalidateQueries({ queryKey: queryKeys.analytics.program })
-      void qc.invalidateQueries({ queryKey: queryKeys.analytics.development })
-    },
+  const refresh = useRefreshResults()
+  return useMutation<{ saved: string; id: number; valueText: string }, Error, StandardResultInput & { benchmarkId: string }>({
+    mutationFn: (body) =>
+      apiClient.post('/standards/results', { ...body, loggedAt: new Date().toISOString() }) as unknown as Promise<{ saved: string; id: number; valueText: string }>,
+    onSuccess: refresh,
+  })
+}
+
+/** Correct one result: its value, its day or its note. */
+export function useUpdateResult() {
+  const refresh = useRefreshResults()
+  return useMutation<{ updated: number }, Error, StandardResultInput & { id: number }>({
+    mutationFn: ({ id, ...body }) =>
+      apiClient.patch(`/standards/results/${id}`, body) as unknown as Promise<{ updated: number }>,
+    onSuccess: refresh,
+  })
+}
+
+/** Delete one result — never the standard's whole history. */
+export function useDeleteResult() {
+  const refresh = useRefreshResults()
+  return useMutation<{ deleted: number }, Error, number>({
+    mutationFn: (id) => apiClient.delete(`/standards/results/${id}`) as unknown as Promise<{ deleted: number }>,
+    onSuccess: refresh,
   })
 }

@@ -3693,52 +3693,166 @@ def health_dismiss_suggestion(workout_id: str):
     return jsonify({'dismissed': workout_id})
 
 
+def _standards_context(user_id: str) -> tuple[str, str | None]:
+    """(sex, timezone) from the profile: which tables, and the athlete's day."""
+    from src.db import get_user_profile
+    try:
+        profile = get_user_profile(user_id) or {}
+    except Exception:  # noqa: BLE001 — the male tables and UTC, as before the profile could say
+        profile = {}
+    sex = (profile.get('sex') or 'male').lower()
+    return (sex if sex in ('male', 'female') else 'male'), profile.get('timezone') or None
+
+
+def _today_for(tz: str | None) -> _date:
+    from zoneinfo import ZoneInfo
+    try:
+        return _datetime.now(ZoneInfo(tz)).date() if tz else _datetime.now(_timezone.utc).date()
+    except Exception:  # noqa: BLE001 — an unknown zone reads as UTC
+        return _datetime.now(_timezone.utc).date()
+
+
 @app.get('/api/standards/results')
 @require_auth
 def standards_results():
     """The athlete's results on the standards: per standard the current and the
-    best result with their level and text, and every entry (`src/standards.py`).
-    Levels are worked out here so no client computes one."""
+    best result with their level and text, and every entry with its day,
+    source, note and the block it fell in (`src/standards.py`). Levels are
+    worked out here so no client computes one."""
+    from src import program_history
     from src import standards as _standards
     from src.analytics import benchmarks_data as _bd
-    from src.db import get_user_profile
+    sex, tz = _standards_context(g.user_id)
     try:
-        sex = ((get_user_profile(g.user_id) or {}).get('sex') or 'male').lower()
-    except Exception:  # noqa: BLE001 — the male tables, as before the profile could say
-        sex = 'male'
-    return jsonify(_standards.summarise(_bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex))
+        activations = program_history.list_activations(g.user_id)
+    except Exception:  # noqa: BLE001 — results without blocks rather than none
+        activations = []
+    names = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
+    return jsonify(_standards.summarise(
+        _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, tz,
+        _standards.blocks_from_activations(activations, names)))
 
 
+def _result_day(body: dict, tz: str | None) -> str:
+    """The athlete's day for a result: `loggedOn` as sent, else today where
+    they are. A day after tomorrow is a typo, not a result. Raises InputError."""
+    from src.standards import InputError
+    today = _today_for(tz)
+    raw = body.get('loggedOn')
+    if raw in (None, ''):
+        return today.isoformat()
+    try:
+        day = _date.fromisoformat(str(raw))
+    except ValueError:
+        raise InputError('loggedOn must be a date (YYYY-MM-DD)') from None
+    if day > today + _timedelta(days=1):
+        raise InputError('a result cannot be dated in the future')
+    return day.isoformat()
+
+
+@app.post('/api/standards/results')
 @app.post('/api/health/performance')
 @require_auth
 def health_add_performance():
-    """One result on a standard (or a bodyweight). 422 on an id no standard has
-    or a value that is not a number; 503 when the write fails, so a client never
-    believes a result was kept that was not."""
+    """One result on a standard (or a bodyweight): `text` as typed ("4:58"), a
+    `value` in the standard's unit, or for a ×BW standard the `kg` and `reps`
+    lifted; `loggedOn` the athlete's day (today by default) and an optional
+    `note`. 422 when it cannot be a result, 503 when the write fails — a client
+    never believes a result was kept that was not. `/api/health/performance`
+    is the old name, kept for installed builds."""
+    from src import standards as _standards
     from src.analytics import benchmarks_data as _bd
     body = request.get_json(silent=True) or {}
     benchmark_id = body.get('benchmarkId') or ''
-    # `text` is what the athlete typed ("4:58"); `value` a number already in
-    # the standard's unit. Either is parsed the one way (`parse_input`).
-    raw = body.get('value') if body.get('value') is not None else body.get('text')
-    if not benchmark_id or raw is None:
+    if not benchmark_id or all(body.get(k) is None for k in ('value', 'text', 'kg')):
         return jsonify({'detail': 'benchmarkId and value required'}), 400
     if benchmark_id not in _bd.known_ids():
         return jsonify({'detail': f'unknown standard {benchmark_id!r}'}), 422
-    value = _bd.parse_input(_bd.by_id().get(benchmark_id), raw)
-    if value is None:
-        return jsonify({'detail': 'value must be a positive number (or m:ss for a time)'}), 422
+    _sex, tz = _standards_context(g.user_id)
     logged_at = body.get('loggedAt') or _datetime.now(_timezone.utc).isoformat()
     try:
         _datetime.fromisoformat(str(logged_at).replace('Z', '+00:00'))
     except ValueError:
         return jsonify({'detail': 'loggedAt must be an ISO date or time'}), 422
+    note = (str(body.get('note') or '').strip() or None)
     try:
-        entry_id = _health.add_performance_entry(g.user_id, benchmark_id, value, logged_at)
+        day = _result_day(body, tz)
+        logs = _health.get_performance_logs(g.user_id) if body.get('kg') is not None else {}
+        value, inp = _standards.resolve_input(_bd.by_id().get(benchmark_id), body, logs, day, tz)
+    except _standards.InputError as exc:
+        return jsonify({'detail': str(exc)}), 422
+    try:
+        entry_id = _health.add_performance_entry(g.user_id, benchmark_id, value, logged_at, day,
+                                                 note=note, input_=inp or None)
     except Exception as exc:  # noqa: BLE001 — the client is told, and retries
-        print(f'[standards] result write failed for {benchmark_id}: {exc}')
+        app.logger.warning('standards: result write failed for %s: %s', benchmark_id, exc)
         return jsonify({'detail': 'could not save the result'}), 503
-    return jsonify({'saved': benchmark_id, 'id': entry_id})
+    return jsonify({'saved': benchmark_id, 'id': entry_id, 'value': value,
+                    'valueText': _bd.format_value(_bd.by_id().get(benchmark_id), value), 'loggedOn': day})
+
+
+@app.patch('/api/standards/results/<int:entry_id>')
+@require_auth
+def standards_update_result(entry_id: int):
+    """Correct one result: its value (as typed, or kg × reps), its day or its
+    note. A ×BW result logged as a load is re-read against the bodyweight of
+    its new day. 404 when it is not the athlete's."""
+    from src import standards as _standards
+    from src import standards_store as _store
+    from src.analytics import benchmarks_data as _bd
+    body = request.get_json(silent=True) or {}
+    try:
+        current = _store.get_result(g.user_id, entry_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: read %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not read the result'}), 503
+    if current is None:
+        return jsonify({'detail': 'no such result'}), 404
+    _sex, tz = _standards_context(g.user_id)
+    fields: dict = {}
+    try:
+        day = _result_day(body, tz) if 'loggedOn' in body else _standards.day_of(current, tz)
+        if 'loggedOn' in body:
+            fields['logged_on'] = day
+        b = _bd.by_id().get(current['benchmarkId'])
+        sent = {k: body[k] for k in ('value', 'text', 'kg', 'reps', 'bodyweightKg') if body.get(k) is not None}
+        prior = current.get('input') or {}
+        if not sent and 'loggedOn' in body and prior.get('kg') is not None:
+            # A load re-read against the new day's bodyweight — unless the
+            # athlete gave the bodyweight with it, which stays theirs.
+            sent = {'kg': prior['kg'], 'reps': prior.get('reps', 1)}
+            if prior.get('bodyweightGiven'):
+                sent['bodyweightKg'] = prior.get('bodyweightKg')
+        if sent:
+            logs = _health.get_performance_logs(g.user_id) if sent.get('kg') is not None else {}
+            fields['value'], inp = _standards.resolve_input(b, sent, logs, day, tz)
+            fields['input'] = inp or None
+    except _standards.InputError as exc:
+        return jsonify({'detail': str(exc)}), 422
+    if 'note' in body:
+        fields['note'] = str(body.get('note') or '').strip() or None
+    try:
+        if not _store.update_result(g.user_id, entry_id, fields):
+            return jsonify({'detail': 'no such result'}), 404
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: update %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not save the change'}), 503
+    return jsonify({'updated': entry_id})
+
+
+@app.delete('/api/standards/results/<int:entry_id>')
+@require_auth
+def standards_delete_result(entry_id: int):
+    """Delete one result. 404 when it is not the athlete's."""
+    from src import standards_store as _store
+    try:
+        deleted = _store.delete_result(g.user_id, entry_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: delete %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not delete the result'}), 503
+    if not deleted:
+        return jsonify({'detail': 'no such result'}), 404
+    return jsonify({'deleted': entry_id})
 
 
 @app.delete('/api/health/performance/<benchmark_id>')
@@ -4378,10 +4492,7 @@ def analytics_development():
         if cached and cached.get('session_hash') == digest:
             return jsonify(cached['data'])
 
-    try:
-        sex = (_db.get_user_profile(user_id) or {}).get('sex') or 'male'
-    except Exception:
-        sex = 'male'
+    sex, tz = _standards_context(user_id)
     exercises, _ = loader.load_all_exercises()
     philosophies = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
     planned = {vid: program_history.sessions_for_version(user_id, vid)
@@ -4397,7 +4508,7 @@ def analytics_development():
         today=today, window_from=from_date, window_to=to_date,
         activations=activations, planned=planned, logs_by_uid=logs, matches=matches,
         workouts=workouts, pmc=pmc, trimp_of=lambda w: _calc_workout_trimp(w, max_hr),
-        performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex,
+        performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex, timezone=tz,
         exercise_names={eid: ex.get('name', eid) for eid, ex in exercises.items()},
         philosophy_names=philosophies,
     ))

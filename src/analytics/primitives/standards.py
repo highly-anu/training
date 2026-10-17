@@ -1,6 +1,7 @@
 """Standards primitives: where you stand on the ladder, and did you show up.
 
-`benchmark_level` reads the athlete's results against the standards a
+`benchmark_level` reads the athlete's results (or, for a ×BW standard, the
+estimate from logged sets) against the standards a
 methodology names as its end state — Starting Strength's "novice completion"
 is `intermediate` on the squat, deadlift and press ratios, and it already
 exists in data/benchmarks with `sources: [starting_strength]`.
@@ -12,24 +13,11 @@ from __future__ import annotations
 from datetime import date
 
 from src.analytics import benchmarks_data as bd
+from src.analytics.benchmarks import standing
 from src.analytics import trend as trend_mod
 from src.analytics.primitives import coverage, primitive, result, scoped_hits, trend_dict
 
 LEVEL_INDEX = {lvl: i + 1 for i, lvl in enumerate(bd.LEVELS)}
-
-
-def _pr_history(ctx, benchmark_id: str) -> list[dict]:
-    rows = []
-    for entry in ctx.performance_logs.get(benchmark_id) or []:
-        d = entry.get('date') or entry.get('loggedAt') or entry.get('logged_at')
-        try:
-            when = date.fromisoformat(str(d)[:10])
-        except (TypeError, ValueError):
-            continue
-        if when <= ctx.today and isinstance(entry.get('value'), (int, float)):
-            rows.append({'date': when, 'value': float(entry['value'])})
-    rows.sort(key=lambda r: r['date'])
-    return rows
 
 
 @primitive('benchmark_level')
@@ -48,11 +36,12 @@ def benchmark_level(entry, ctx) -> dict:
         if not b:
             rows.append({'benchmarkId': bid, 'missing': True})
             continue
-        hist = _pr_history(ctx, bid)
-        latest = hist[-1] if hist else None
-        lv = bd.level_of(b, latest['value'] if latest else None, sex)
+        # The same reading as the program's ladder (benchmarks.standing): the
+        # latest result, else the estimate from logged sets, flagged.
+        st = standing(ctx, b, sex)
+        hist, latest, value, lv = st['hist'], st['latest'], st['value'], st['level']
         met = target is not None and lv['index'] >= LEVEL_INDEX.get(target, 99)
-        if latest:
+        if value is not None:
             measured += 1
             met_count += int(met)
         ladder = bd.thresholds(b, sex)
@@ -64,8 +53,11 @@ def benchmark_level(entry, ctx) -> dict:
             'latest': latest['value'] if latest else None,
             'latestText': bd.format_value(b, latest['value']) if latest else None,
             'latestDate': latest['date'].isoformat() if latest else None,
+            'value': value, 'valueText': bd.format_value(b, value), 'valueSource': st['valueSource'],
+            'best': st['best']['value'] if st['best'] else None,
+            'bestText': bd.format_value(b, st['best']['value']) if st['best'] else None,
             'level': lv['level'], 'levelIndex': lv['index'], 'next': lv['next'], 'gapToNext': lv['gap'],
-            'target': target, 'targetValue': target_value, 'met': met if latest else None,
+            'target': target, 'targetValue': target_value, 'met': met if value is not None else None,
             'targetText': bd.format_value(b, target_value) if target_value is not None else None,
             'standards': ladder,
             'standardsText': {lvl: bd.format_value(b, v) for lvl, v in ladder.items()},
