@@ -178,6 +178,42 @@ final class StandardsCodableTests: XCTestCase {
         XCTAssertEqual(again.exercises.first?.standardId, "kb_pentathlon_clean_reps")
     }
 
+    /// `GET /standards/suggestions` and a session-log save's `standards`, as
+    /// src/standard_results.describe writes them; one bad row is dropped, not
+    /// the list.
+    func testSuggestionsDecodeAndFindTheirSession() throws {
+        let json = """
+        {"suggestions": [
+          {"id": 4, "benchmarkId": "row_2km_minutes", "name": "2km Row (time in minutes)",
+           "domain": "anaerobic_intervals", "value": 7.5333, "valueText": "7:32", "level": "intermediate",
+           "levelIndex": 2, "next": "advanced", "nextText": "7:00", "inputText": null,
+           "current": {"value": 7.75, "valueText": "7:45", "date": "2026-09-01", "level": "intermediate",
+                       "levelIndex": 2, "next": "advanced", "nextText": "7:00", "gapText": "0:45"},
+           "bestText": "7:45", "isBest": true, "origin": "test_slot", "status": "pending",
+           "loggedOn": "2026-10-17", "sessionUid": "v:w0-Friday-0", "sessionKey": "1-Friday",
+           "sessionName": "2 km Row — Test"},
+          {"id": "not a number"}
+        ]}
+        """.data(using: .utf8)!
+        let list = try JSONDecoder().decode(StandardSuggestionList.self, from: json).suggestions
+        XCTAssertEqual(list.count, 1)
+        let s = try XCTUnwrap(list.first)
+        XCTAssertEqual(s.valueText, "7:32")
+        XCTAssertEqual(s.current?.valueText, "7:45")
+        XCTAssertTrue(s.isBest)
+        XCTAssertTrue(s.isFromTest(sessionKey: "1-Friday-0"), "the phone's key finds the web's day-level log")
+        XCTAssertFalse(s.isFromTest(sessionKey: "2-Friday-0"))
+
+        let saved = """
+        {"saved": "1-Friday-0", "standards": {"pending": [{"id": 4, "benchmarkId": "row_2km_minutes",
+          "value": 7.5333, "valueText": "7:32"}], "confirmed": [], "skipped": [], "problems": [], "error": null}}
+        """.data(using: .utf8)!
+        struct Saved: Decodable { let standards: SessionLogStandards? }
+        let st = try XCTUnwrap(try JSONDecoder().decode(Saved.self, from: saved).standards)
+        XCTAssertEqual(st.pending.map(\.benchmarkId), ["row_2km_minutes"])
+        XCTAssertNil(st.error)
+    }
+
     func testDeepLinkRenamedSection() {
         XCTAssertEqual(DeepLink.parse(URL(string: "trainingcompanion://profile?section=benchmarks")!),
                        .profile(.standards), "an old link lands on Standards")

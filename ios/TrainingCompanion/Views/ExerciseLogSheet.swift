@@ -24,6 +24,9 @@ struct ExerciseLogSheet: View {
 
     @State private var sets: [SetDraft] = []
     @State private var minutes: Double? = nil
+    /// A for-time clock as typed ("7:32"); never prefilled from the cap, which
+    /// would otherwise be saved as the result of a test nobody changed.
+    @State private var clock = ""
     @State private var km: Double? = nil
     @State private var rounds: Int? = nil
     @State private var reps: Int? = nil
@@ -37,9 +40,19 @@ struct ExerciseLogSheet: View {
     private var isHold: Bool { slotType == "static_hold" }
     private var fields: [OutcomeField] {
         SessionLogging.outcomeFields(for: slotType, category: assignment.exercise?.category,
-                                     patterns: SessionLogging.patterns(of: assignment.exercise))
+                                     patterns: SessionLogging.patterns(of: assignment.exercise),
+                                     standardResult: assignment.standardResult)
+    }
+    /// A clock that does not read as one keeps Save off rather than saving something else.
+    private var clockInvalid: Bool {
+        fields.contains(.time) && !clock.trimmingCharacters(in: .whitespaces).isEmpty
+            && SessionLogging.parseClock(clock) == nil
     }
     private var exerciseId: String? { assignment.exercise?.id }
+    /// The cap as a hint, never as a value.
+    private var timePlaceholder: String {
+        assignment.load.timeMinutes.map { "cap \($0):00" } ?? "m:ss"
+    }
 
     var body: some View {
         NavigationStack {
@@ -66,7 +79,7 @@ struct ExerciseLogSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isSaving ? "Saving…" : "Save") { Task { await save() } }
-                        .disabled(isSaving || exerciseId == nil)
+                        .disabled(isSaving || exerciseId == nil || clockInvalid)
                 }
             }
             .onAppear { if !loaded { prefill(); loaded = true } }
@@ -135,6 +148,9 @@ struct ExerciseLogSheet: View {
                     case .minutes:
                         TextField("0", value: $minutes, format: .number).multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad).frame(width: 90)
+                    case .time:
+                        TextField(timePlaceholder, text: $clock).multilineTextAlignment(.trailing)
+                            .keyboardType(.numbersAndPunctuation).frame(width: 90)
                     case .km:
                         TextField("0", value: $km, format: .number).multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad).frame(width: 90)
@@ -154,7 +170,13 @@ struct ExerciseLogSheet: View {
         } header: {
             Text("What you did")
         } footer: {
-            Text("This is the currency the program's analytics read for this slot.")
+            if clockInvalid {
+                Text("Enter the time as m:ss, like 7:32.").foregroundStyle(.red)
+            } else if assignment.standardId != nil {
+                Text("This is a test: what you log comes back as a result to save on the standard.")
+            } else {
+                Text("This is the currency the program's analytics read for this slot.")
+            }
         }
     }
 
@@ -180,6 +202,7 @@ struct ExerciseLogSheet: View {
         } else {
             minutes = existing?.durationSec.map { Double($0) / 60 }
                 ?? (load.durationMinutes ?? load.timeMinutes).map(Double.init)
+            clock = existing?.durationSec.map(SessionLogging.formatClock) ?? ""
             km = existing?.distanceKm ?? load.distanceKm
             rounds = existing?.rounds ?? load.targetRounds
             reps = existing?.sets.first?.repsActual
@@ -200,6 +223,7 @@ struct ExerciseLogSheet: View {
             }
         } else {
             if fields.contains(.minutes), let m = minutes, m > 0 { perf.durationSec = Int((m * 60).rounded()) }
+            if fields.contains(.time), let sec = SessionLogging.parseClock(clock) { perf.durationSec = sec }
             if fields.contains(.km), let k = km, k > 0 { perf.distanceKm = k }
             if fields.contains(.rounds), let r = rounds, r > 0 { perf.rounds = r }
             // Reps in a window and a hold's seconds sit on the first set, where

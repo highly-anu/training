@@ -128,6 +128,109 @@ struct StandardResultInput: Encodable {
     var note: String? = nil
 }
 
+// MARK: - Suggestions
+
+/// A result a logged session suggests — a test slot's outcome, or a single
+/// that beats the current result on a ×BW standard — waiting for the athlete
+/// (`GET /api/standards/suggestions`, `src/standard_results.py`). It is not a
+/// result until confirmed; every word is the server's.
+struct StandardSuggestion: Decodable, Identifiable {
+    let id: Int
+    let benchmarkId: String
+    let name: String
+    let domain: String?
+    let value: Double
+    let valueText: String
+    let level: String?
+    let levelIndex: Int
+    let next: String?
+    let nextText: String?
+    /// "20 + 7" for a partial round, the load for a single.
+    let inputText: String?
+    /// The result it would follow.
+    let current: StandardPoint?
+    let bestText: String?
+    let isBest: Bool
+    /// A re-logged value reopened a saved suggestion: the result saving it corrects.
+    let replacesText: String?
+    /// test_slot | derived_single | best_effort
+    let origin: String
+    /// pending | confirmed | dismissed
+    let status: String
+    let loggedOn: String?
+    let sessionUid: String?
+    let sessionKey: String?
+    let sessionName: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, benchmarkId, name, domain, value, valueText, level, levelIndex, next, nextText, inputText
+        case current, bestText, isBest, replacesText, origin, status, loggedOn, sessionUid, sessionKey, sessionName
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        benchmarkId = try c.decode(String.self, forKey: .benchmarkId)
+        name = ((try? c.decodeIfPresent(String.self, forKey: .name)) ?? nil) ?? benchmarkId
+        domain = try? c.decodeIfPresent(String.self, forKey: .domain)
+        value = try c.decode(Double.self, forKey: .value)
+        valueText = try c.decode(String.self, forKey: .valueText)
+        level = try? c.decodeIfPresent(String.self, forKey: .level)
+        levelIndex = ((try? c.decodeIfPresent(Int.self, forKey: .levelIndex)) ?? nil) ?? 0
+        next = try? c.decodeIfPresent(String.self, forKey: .next)
+        nextText = try? c.decodeIfPresent(String.self, forKey: .nextText)
+        inputText = try? c.decodeIfPresent(String.self, forKey: .inputText)
+        current = try? c.decodeIfPresent(StandardPoint.self, forKey: .current)
+        bestText = try? c.decodeIfPresent(String.self, forKey: .bestText)
+        isBest = ((try? c.decodeIfPresent(Bool.self, forKey: .isBest)) ?? nil) ?? false
+        replacesText = try? c.decodeIfPresent(String.self, forKey: .replacesText)
+        origin = ((try? c.decodeIfPresent(String.self, forKey: .origin)) ?? nil) ?? "test_slot"
+        status = ((try? c.decodeIfPresent(String.self, forKey: .status)) ?? nil) ?? "pending"
+        loggedOn = try? c.decodeIfPresent(String.self, forKey: .loggedOn)
+        sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
+        sessionKey = try? c.decodeIfPresent(String.self, forKey: .sessionKey)
+        sessionName = try? c.decodeIfPresent(String.self, forKey: .sessionName)
+    }
+
+    /// Whether it came from the test slot of the session with this key. The
+    /// web logs under the day ("3-Monday"), the phone under the session
+    /// ("3-Monday-0"); a day has one test, so the day decides.
+    func isFromTest(sessionKey key: String) -> Bool {
+        origin == "test_slot" && Self.dayKey(sessionKey ?? "") == Self.dayKey(key)
+    }
+
+    /// "3-Monday" from "3-Monday" or "3-Monday-0".
+    static func dayKey(_ key: String) -> String {
+        let parts = key.split(separator: "-")
+        if parts.count >= 3, Int(parts.last!) != nil { return parts.dropLast().joined(separator: "-") }
+        return key
+    }
+}
+
+/// `{suggestions: [...]}`, one bad row dropped rather than the list.
+struct StandardSuggestionList: Decodable {
+    let suggestions: [StandardSuggestion]
+    private enum CodingKeys: String, CodingKey { case suggestions }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        suggestions = ((try? c.decodeIfPresent([Lossy<StandardSuggestion>].self, forKey: .suggestions)) ?? nil)?
+            .compactMap(\.value) ?? []
+    }
+}
+
+/// What a session-log save says about the standards it bears on: the
+/// suggestions it produced, and any problem in words.
+struct SessionLogStandards: Decodable {
+    let pending: [StandardSuggestion]
+    let error: String?
+    private enum CodingKeys: String, CodingKey { case pending, error }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pending = ((try? c.decodeIfPresent([Lossy<StandardSuggestion>].self, forKey: .pending)) ?? nil)?
+            .compactMap(\.value) ?? []
+        error = try? c.decodeIfPresent(String.self, forKey: .error)
+    }
+}
+
 // MARK: - Words
 
 enum StandardLevel {
@@ -217,4 +320,6 @@ extension ProgramSession {
 extension ProgramExerciseAssignment {
     /// The standard this slot measures, when it is a test's scored slot.
     var standardId: String? { extra["standard"]?.objectValue?["id"]?.stringValue }
+    /// The result kind it is logged as (duration, rounds, reps, hold, load, distance).
+    var standardResult: String? { extra["standard"]?.objectValue?["result"]?.stringValue }
 }

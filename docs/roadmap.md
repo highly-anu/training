@@ -796,9 +796,9 @@ confirms; programs schedule **package-declared tests**. Phase 1 shipped the same
 2. ~~**History you can manage.**~~ — shipped 2026-10-17 (see *Done*).
 3. ~~**Relevance.**~~ — shipped 2026-10-17 (see *Done*).
 4. ~~**Package-declared tests.**~~ — shipped 2026-10-17 (see *Done*).
-5. **Sessions suggest results.** `standard_result_suggestions` (a pending suggestion is
-   never a result); a hook on the session-log PUTs; confirm on web, phone, or the watch's
-   summary (`standardResults` in the session PUT, so `DEVICE_ROUTES` does not grow).
+5. ~~**Sessions suggest results.**~~ — shipped 2026-10-17 (see *Done*). Run
+   `migrations/012_standard_suggestions.sql` after `scripts/backup_prod.sh`, before the
+   code (the store creates the table lazily, without the RLS policy).
 6. **Watches.** Capture first: Garmin keys set logs by exercise *name* without `completed`
    (`WorkoutController.mc:1008`), so analytics reads none of them; neither watch keeps a
    for-time step's time, the Apple Watch drops AMRAP rounds and distance. Then the standard
@@ -852,6 +852,18 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Standards, phase 5 (2026-10-17)**: sessions suggest results. A logged test slot — a
+2 km row's clock, Cindy's rounds with the partial round, reps in six minutes, a hold — and a
+single that beats the current result on a ×BW lift come back from the session-log save as
+suggestions (`standard_result_suggestions`), never as results until the athlete saves them:
+Save result · Correct · Not a test, on Profile ▸ Standards' *To confirm*, Today and under the
+test, on both clients. A re-logged value reopens a saved one to correct its result; a
+dismissal sticks. The session-log PUT now answers 503 when the write fails (it said "saved"
+over lost writes) and accepts a watch's decisions in `standardResults`. A for-time slot logs
+m:ss on both clients (the web stored whole minutes; the phone prefilled the cap, which a test
+nobody changed would have saved as its result), and a test slot asks for its standard's
+number first (push-ups in three minutes logged minutes and km).
 
 **Standards, phase 4 (2026-10-17)**: programs test their standards. A phase's `tests:`
 places a test archetype (`test:`, scored slots with `standard:`) in place of one session of

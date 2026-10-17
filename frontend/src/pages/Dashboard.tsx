@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
 import { TodaySession } from '@/components/dashboard/TodaySession'
 import { TestDayCard } from '@/components/dashboard/TestDayCard'
+import { ResultsToConfirmCard } from '@/components/dashboard/ResultsToConfirmCard'
 import { WeekOverview } from '@/components/dashboard/WeekOverview'
 import { DayWorkoutPanel } from '@/components/dashboard/DayWorkoutPanel'
 import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
@@ -135,6 +136,10 @@ function WeekTab({
 
       {/* Workouts waiting for a match decision — only when there are any */}
       <SuggestionsCard />
+
+      {/* Results logged sessions suggest — today's test shows its own below */}
+      <ResultsToConfirmCard exclude={(program.weeks[weekIndex]?.schedule[format(new Date(), 'EEEE')] ?? [])
+        .flatMap((s) => s.test?.standards ?? [])} />
 
       {/* Today + Readiness + Adherence + Progress */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:items-stretch">

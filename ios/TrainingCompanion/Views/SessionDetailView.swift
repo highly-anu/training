@@ -114,6 +114,7 @@ struct SessionDetailView: View {
                 if currentSession.testInfo != nil || currentSession.exercises.contains(where: { $0.standardId != nil }) {
                     await appState.loadBenchmarksIfNeeded()
                     if appState.standardResults == nil { await appState.loadStandardResults() }
+                    await appState.loadStandardSuggestions()
                 }
                 if let log = appState.sessionLogs[sessionKey] {
                     notes = log.notes ?? ""
@@ -179,10 +180,13 @@ struct SessionDetailView: View {
             // against, before the session starts.
             if let test = currentSession.testInfo {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result on its exercise." }
-                         ?? "A test of this phase's standards. Log each result on its exercise.")
+                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result on its exercise; it comes back here to save." }
+                         ?? "A test of this phase's standards. Log each result on its exercise; it comes back here to save.")
                         .font(.caption).foregroundStyle(.secondary)
-                    ForEach(test.standards, id: \.self) { StandardTargetRow(standardId: $0) }
+                    ForEach(test.standards, id: \.self) { id in
+                        StandardTargetRow(standardId: id)
+                        SessionSuggestion(standardId: id, sessionKey: sessionKey)
+                    }
                 }
                 .padding(.vertical, 2)
             }

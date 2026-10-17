@@ -7,11 +7,13 @@ import type {
   MatchSuggestion,
   WorkoutAnalysis,
   HRZoneDistribution,
+  SessionLogStandards,
 } from '@/api/types'
 import type { ReadinessResult } from '@/lib/readiness'
 import type { RecentSessionLog } from '@/lib/logSessions'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from './queryKeys'
+import { queryClient } from '@/lib/queryClient'
 
 export interface HealthSnapshot {
   workouts: ImportedWorkout[]
@@ -112,7 +114,13 @@ export function removeWorkout(id: string): void {
 }
 
 export function saveSessionLog(log: SessionPerformanceLog): void {
-  void apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log)
+  void (apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log) as unknown as
+    Promise<{ standards?: SessionLogStandards }>)
+    .then((res) => {
+      // A logged test slot (or a single on a derived lift) came back as a
+      // suggestion: refresh "To confirm" wherever it is shown.
+      if (res?.standards) void queryClient.invalidateQueries({ queryKey: queryKeys.standards.suggestions })
+    })
 }
 
 /** Undo "mark complete" for one session; the upsert cannot clear completed_at. */

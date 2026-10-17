@@ -742,6 +742,51 @@ export interface StandardResultInput {
   note?: string
 }
 
+/**
+ * A result a logged session suggests — a test slot's outcome, or a single on a
+ * lift a ×BW standard is read from — waiting for the athlete
+ * (`GET /api/standards/suggestions`, src/standard_results.py). Not a result
+ * until confirmed; every word is the server's.
+ */
+export interface StandardSuggestion {
+  id: number
+  benchmarkId: string
+  name: string
+  domain: string | null
+  value: number
+  valueText: string
+  level: BenchmarkLevel | null
+  levelIndex: number
+  next: BenchmarkLevel | null
+  nextText: string | null
+  /** "20 + 7" for a partial round, the load for a single. */
+  inputText: string | null
+  /** The result it would follow. */
+  current: StandardPoint | null
+  bestText: string | null
+  isBest: boolean
+  /** A re-logged value reopened a saved suggestion: the result saving it corrects. */
+  replacesText?: string | null
+  origin: 'test_slot' | 'derived_single' | 'best_effort'
+  status: 'pending' | 'confirmed' | 'dismissed'
+  source: string
+  loggedOn: string | null
+  sessionUid: string | null
+  sessionKey: string | null
+  sessionName: string | null
+  exerciseId: string | null
+  resultId: number | null
+}
+
+/** What a session-log save says about the standards it bears on. */
+export interface SessionLogStandards {
+  pending: StandardSuggestion[]
+  confirmed: StandardSuggestion[]
+  skipped: Array<{ benchmarkId: string; reason: string }>
+  problems: string[]
+  error: string | null
+}
+
 // ─── Modality ─────────────────────────────────────────────────────────────────
 
 export interface Modality {

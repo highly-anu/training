@@ -245,6 +245,21 @@ final class APIClient {
         }
     }
 
+    /// Results logged sessions suggest, waiting for a decision.
+    func fetchStandardSuggestions() async throws -> [StandardSuggestion] {
+        let data = try await get("/standards/suggestions")
+        return try JSONDecoder().decode(StandardSuggestionList.self, from: data).suggestions
+    }
+
+    /// Save a suggestion as a result (`confirm`, with `text` when the athlete
+    /// corrected it), "Not a test" (`dismiss`) or undo that (`reopen`).
+    func decideSuggestion(id: Int, action: String, text: String? = nil) async throws {
+        var body: [String: String] = ["via": "ios"]
+        if let text { body["text"] = text }
+        try await sendExpectingSuccess("POST", "/standards/suggestions/\(id)/\(action)",
+                                       body: try JSONEncoder().encode(body), fallback: "Could not save the result")
+    }
+
     /// The athlete's results, each placed on its ladder by the server.
     func fetchStandardResults() async throws -> StandardResults {
         let data = try await get("/standards/results")
@@ -312,15 +327,21 @@ final class APIClient {
     /// Log what was done for one exercise. The server merges `exercises` per
     /// key and keeps the completion, notes and fatigue it already has, so a
     /// log before "Mark Session Complete" is fine and so is one after.
+    /// What the save says about the standards: a test slot's outcome comes
+    /// back as a suggestion (`standards.pending`), nil when the log bears on
+    /// no standard.
+    @discardableResult
     func saveExerciseLog(sessionKey: String, exerciseId: String,
-                         performance: ExercisePerformanceLog) async throws {
+                         performance: ExercisePerformanceLog) async throws -> SessionLogStandards? {
         struct Body: Encodable {
             let exercises: [String: ExercisePerformanceLog]
             let source: String
         }
+        struct Saved: Decodable { let standards: SessionLogStandards? }
         let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
-        _ = try await put("/health/sessions/\(escaped)",
-                          body: Body(exercises: [exerciseId: performance], source: "manual"))
+        let data = try await put("/health/sessions/\(escaped)",
+                                 body: Body(exercises: [exerciseId: performance], source: "manual"))
+        return (try? JSONDecoder().decode(Saved.self, from: data))?.standards
     }
 
     func saveSessionNotes(sessionKey: String, notes: String, fatigueRating: Int?) async throws {

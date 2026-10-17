@@ -1234,6 +1234,29 @@ def active_session_uid(user_id: str, legacy: str) -> str | None:
     return found[0]['session_uid'] if len(found) == 1 else None
 
 
+def planned_rows_for_key(user_id: str, legacy: str) -> list[dict]:
+    """The active plan's flat rows a log key names: one for a full key, every
+    session of the day for a day-level one ('3-Monday', which the web logs
+    under). What src/standard_results needs when a day has two sessions and
+    `active_session_uid` cannot pick one: it looks for the day's test among
+    them, and the test's own uid then keys the suggestion."""
+    if not legacy:
+        return []
+    vid = active_version_id(user_id)
+    if not vid:
+        return []
+    rows = _query(
+        'SELECT session_uid, program_version_id, date, week_index, week_number, '
+        'day_name, session_index, legacy_key, modality, archetype_id, archetype_name, '
+        'phase, is_deload '
+        'FROM planned_sessions WHERE user_id = %s AND program_version_id = %s',
+        (user_id, vid))
+    found = _by_legacy_key(rows, legacy)
+    for r in found:
+        r['date'] = str(r['date'])
+    return found
+
+
 def prune_versions(user_id: str, keep: int = 40) -> int:
     """Drop closed versions nothing refers to, beyond the most recent `keep`.
 

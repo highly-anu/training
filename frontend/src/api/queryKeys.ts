@@ -16,6 +16,7 @@ export const queryKeys = {
   standards: {
     all: ['standards'] as const,
     results: ['standards', 'results'] as const,
+    suggestions: ['standards', 'suggestions'] as const,
   },
   equipment: {
     all: ['equipment'] as const,

@@ -123,6 +123,8 @@ All prefixed `/api/`:
 | GET | `/standards/results` | the athlete's results: per standard `current` (latest) and `best`, each placed on its ladder with its text, and every entry with its day, source, note and block; `blocks`; bodyweight with its entries (`src/standards.py`) |
 | POST | `/standards/results` | one result: typed `text` ("4:58"), a `value`, or for a ×BW standard `kg` + `reps` (÷ the bodyweight that day; Epley past one rep); `loggedOn` (the athlete's day, today by default), `note`. 422 when it cannot be a result, 503 when the write fails. `/health/performance` is the old name |
 | PATCH / DELETE | `/standards/results/<id>` | correct one result (value, day, note — a load is re-read on its new day's bodyweight) or delete one; 404 when it is not the athlete's |
+| GET | `/standards/suggestions` | results logged sessions suggest, pending, each in the server's words — value, level, what it would follow, `isBest`, `replacesText`, the session's name (`src/standard_results.py`) |
+| POST | `/standards/suggestions/<id>/confirm\|dismiss\|reopen` | save one as a result (the body may correct it: `text`, `value`, `kg`), "Not a test", or undo that; 404 when it is not the athlete's or not in a state that allows it, 503 when the write fails |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
@@ -280,8 +282,35 @@ group's name.
   Cindy → Fran → Helen every fourth week. A standard's `derived_from` (its YAML) names the
   lifts whose sets estimate it. Both clients badge a test session, list its standards with
   the number to beat, and Today says "Test today".
+- **Sessions suggest results; the athlete confirms** (`src/standard_results.py`). Both
+  session-log PUTs store the log (`health_store.upsert_session_log` now returns the merged
+  row, and the route answers **503** when the write fails — it used to say "saved"), then
+  read it: a test slot's logged outcome (`read_result` per result kind — a for-time clock,
+  rounds with the partial round kept, reps summed over a timed slot, the longest hold) and
+  a completed single on a `derived_from` lift that beats the current result (÷ the
+  bodyweight that day) become rows in `standard_result_suggestions`
+  (`migrations/012_standard_suggestions.sql`, lazily created by `standards_store`). A
+  pending suggestion is **never a result** — the `workout_match_suggestions` lesson —
+  until `POST /standards/suggestions/<id>/confirm` writes it to `performance_logs` (source
+  `session`, or `garmin` / `apple_watch` for a watch-logged session; the test's
+  `session_uid`) in one transaction. A re-logged value reopens a confirmed suggestion
+  (`replacesText`; the confirm corrects that result); a dismissal sticks; deleting a
+  confirmed result dismisses its suggestion. The gate is cheap: only a log of a test
+  archetype (`planned_sessions.archetype_id`) or of a derived lift loads a snapshot. A
+  day-level web key ("3-Monday") finds the day's test through `planned_rows_for_key`;
+  Garmin's name-keyed logs are matched by id → name → case-folded name → slot role, never
+  a name two slots share. The PUT answers `standards: {pending, confirmed, skipped,
+  problems, error}`, and takes `standardResults: {id: {decision: save|dismiss, text?}}`
+  — honoured only for a standard that session tests, so the device-token route reaches no
+  further. UI: one row on both clients (web `components/standards/SuggestionRow.tsx`, iOS
+  `Views/StandardSuggestionRow.swift`, design-system §6.32) — Save result · Correct · Not a
+  test — on Profile ▸ Standards' *To confirm*, Today and under the test standard. A
+  for-time slot logs a clock (`time`, m:ss) on both clients, never prefilled from its cap,
+  and a test slot asks first for its standard's number (`outcomeFieldsFor(…, standard)`,
+  `SessionLogging.outcomeFields(…, standardResult:)`).
 - `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
-  database), `test_standard_tests.py`; plan and later phases: `docs/roadmap.md` item 11.
+  database), `test_standard_tests.py`, `test_standard_suggestions.py` (pure, then the routes
+  on a scratch database); plan and later phases: `docs/roadmap.md` item 11.
 
 ## Key Engine Behaviors
 
@@ -980,6 +1009,7 @@ Run these after touching standards or results (the SQL one makes and drops its o
 SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
 SUPABASE_URL='' .venv/bin/python test_standard_tests.py   # when a phase tests, what it replaces, skips, carry
 .venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
+SUPABASE_URL='' .venv/bin/python test_standard_suggestions.py  # a logged test → a suggestion → a result (SQL half on a scratch DB)
 ```
 
 Run these after touching program history, the matcher or the session-log path:

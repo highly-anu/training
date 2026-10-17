@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useBioStore } from '@/store/bioStore'
 import type { ExerciseLoad } from '@/api/types'
-import { outcomeFieldsFor, type OutcomeExercise, type OutcomeField } from '@/lib/outcomeFields'
+import { formatClock, outcomeFieldsFor, parseClock, type OutcomeExercise, type OutcomeField } from '@/lib/outcomeFields'
 
 /**
  * Logging for slots that are not sets × reps.
@@ -22,17 +22,20 @@ interface OutcomeLoggerProps {
   exerciseId: string
   sessionKey: string
   load: ExerciseLoad
+  /** A test's scored slot: the result its standard needs is asked for first. */
+  standard?: { result?: string | null } | null
 }
 
 type Field = OutcomeField
 
-const LABEL: Record<Field, string> = { rounds: 'Rounds', minutes: 'Min', km: 'km', reps: 'Reps', seconds: 'Hold s' }
+const LABEL: Record<Field, string> = { rounds: 'Rounds', minutes: 'Min', time: 'Time', km: 'km', reps: 'Reps', seconds: 'Hold s' }
 
 function prescribed(load: ExerciseLoad, field: Field): string | undefined {
   switch (field) {
     case 'rounds':  return load.target_rounds != null ? String(load.target_rounds) : undefined
     case 'minutes': return load.duration_minutes != null ? String(load.duration_minutes)
                          : load.time_minutes != null ? String(load.time_minutes) : undefined
+    case 'time':    return 'm:ss'
     case 'km':      return load.distance_km != null ? String(load.distance_km)
                          : load.distance_m != null ? String(load.distance_m / 1000) : undefined
     case 'reps':    return load.reps_per_round != null ? String(load.reps_per_round) : undefined
@@ -40,27 +43,38 @@ function prescribed(load: ExerciseLoad, field: Field): string | undefined {
   }
 }
 
-export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load }: OutcomeLoggerProps) {
-  const fields = outcomeFieldsFor(slotType, exercise)
+export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load, standard }: OutcomeLoggerProps) {
+  const fields = outcomeFieldsFor(slotType, exercise, standard)
   const stored = useBioStore((s) => s.sessionPerformanceLogs[sessionKey]?.exercises[exerciseId])
   const setExerciseOutcome = useBioStore((s) => s.setExerciseOutcome)
 
   const [draft, setDraft] = useState<Record<Field, string>>({
     rounds:  stored?.rounds != null ? String(stored.rounds) : '',
     minutes: stored?.durationSec != null ? String(Math.round(stored.durationSec / 60)) : '',
+    time:    stored?.durationSec != null ? formatClock(stored.durationSec) : '',
     km:      stored?.distanceKm != null ? String(stored.distanceKm) : '',
     reps:    stored?.sets?.[0]?.repsActual != null ? String(stored.sets[0].repsActual) : '',
     seconds: stored?.sets?.[0]?.durationSeconds != null ? String(stored.sets[0].durationSeconds) : '',
   })
+  // What each field last saved: a blur that changed nothing writes nothing.
+  const saved = useRef(draft)
 
   if (fields.length === 0) return null
 
   function commit(field: Field, raw: string) {
+    if (raw.trim() === saved.current[field].trim()) return
     const n = raw.trim() === '' ? undefined : parseFloat(raw)
     const value = n != null && !isNaN(n) ? n : undefined
+    // A clock that does not read stays in the field, unsaved, rather than
+    // being stored as something else.
+    const clock = field === 'time' ? parseClock(raw) : undefined
+    if (field === 'time' && raw.trim() !== '' && clock == null) return
+    if (field === 'time' && clock != null) setDraft((d) => ({ ...d, time: formatClock(clock) }))
+    saved.current = { ...saved.current, [field]: field === 'time' && clock != null ? formatClock(clock) : raw }
     setExerciseOutcome(sessionKey, exerciseId, {
       rounds:      field === 'rounds'  ? value : stored?.rounds,
-      durationSec: field === 'minutes' ? (value != null ? Math.round(value * 60) : undefined) : stored?.durationSec,
+      durationSec: field === 'minutes' ? (value != null ? Math.round(value * 60) : undefined)
+                 : field === 'time'    ? clock : stored?.durationSec,
       distanceKm:  field === 'km'      ? value : stored?.distanceKm,
       reps:        field === 'reps'    ? value : undefined,
       holdSec:     field === 'seconds' ? value : undefined,
@@ -75,17 +89,19 @@ export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load
         <label key={f} className="flex items-center gap-1 text-[10px] text-muted-foreground">
           <span className="w-9 text-right">{LABEL[f]}</span>
           <input
-            type="number"
+            type={f === 'time' ? 'text' : 'number'}
             min={0}
             step={f === 'km' ? 0.1 : 1}
-            inputMode="decimal"
+            inputMode={f === 'time' ? 'text' : 'decimal'}
             placeholder={prescribed(load, f) ?? '—'}
             value={draft[f]}
             onChange={(e) => setDraft((d) => ({ ...d, [f]: e.target.value }))}
             onBlur={(e) => commit(f, e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { commit(f, (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur() } }}
+            // Enter only blurs: the blur saves, once.
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
             className={cn(
-              'h-6 w-14 rounded border border-border bg-background px-1.5 text-center text-[11px]',
+              'h-6 rounded border border-border bg-background px-1.5 text-center text-[11px]',
+              f === 'time' ? 'w-16' : 'w-14',
               'focus:outline-none focus:ring-1 focus:ring-primary',
               draft[f] !== '' && 'border-primary/50'
             )}

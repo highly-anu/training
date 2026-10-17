@@ -1606,3 +1606,26 @@ under it — the server's words — and opens its sheet (§6.30) through the rou
 - The catalog and results load when a session with scored slots opens, since
   only Profile loaded them before.
 
+### 6.32 Standard Suggestion
+
+**A result a session suggests is saved by the athlete, never by the app.**
+`Views/StandardSuggestionRow.swift`: `StandardSuggestionRow` shows one suggestion —
+standard name, the value as the server prints it, `StandardLevelBadge` (§6.29), then
+"New best", "Was 7:45", "First result" or, for a re-logged value, "Corrects 7:32",
+and where it came from (session, day) — with three answers: **Save result**
+(`.borderedProminent`), **Correct** (an inline field, saved with the typed value),
+**Not a test** (`.bordered`). `AppHaptics.success` / `.error`; the server's words on
+a failure. `SessionSuggestion` is the same row, compact and without the name, for
+one standard of one session (`StandardSuggestion.isFromTest(sessionKey:)` compares
+the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
+
+- Profile ▸ Standards: *To confirm*, above *This program*, when any are waiting.
+- Today: "N results to confirm", the first three, then "All N in Profile".
+- Session detail: under each test standard's `StandardTargetRow` (§6.31) — not in
+  the exercise row, whose tap and swipe actions would take the buttons' touches.
+- `ExerciseLogSheet` (§6.16): a for-time slot's **Time** field takes m:ss
+  (`SessionLogging.parseClock`), starts empty (the cap is only its placeholder —
+  prefilled, a test nobody changed would have saved its cap as the result) and keeps
+  Save off while it does not read; a test slot asks first for its standard's
+  number. The web's `components/standards/SuggestionRow.tsx` is the same row.
+

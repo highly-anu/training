@@ -270,6 +270,15 @@ private struct StandardsTab: View {
                 .padding(.vertical, 4)
             }
 
+            if !appState.standardSuggestions.isEmpty {
+                Section {
+                    ForEach(appState.standardSuggestions) { StandardSuggestionRow(suggestion: $0) }
+                } header: {
+                    Text("To confirm")
+                } footer: {
+                    Text("Results your logged sessions suggest. They count once you save them.")
+                }
+            }
             if !programRows.isEmpty {
                 Section {
                     ForEach(programRows) { row($0) }
@@ -306,7 +315,12 @@ private struct StandardsTab: View {
             }
         }
         .listStyle(.insetGrouped)
-        .refreshable { await AppRefresh.perform { await appState.loadStandardResults() } }
+        .refreshable {
+            await AppRefresh.perform {
+                await appState.loadStandardResults()
+                await appState.loadStandardSuggestions()
+            }
+        }
         .sheet(item: $open) { standard in
             StandardDetailSheet(subject: .standard(standard))
         }

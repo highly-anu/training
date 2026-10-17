@@ -67,8 +67,9 @@ def _ensure_timeline_column(cur) -> bool:
     """Add session_logs.exercise_timeline when missing; report whether it exists.
 
     Mirrors migrations/008_session_log_timeline.sql the way _ensure_metrics_column
-    mirrors 007. upsert_session_log always names the column and swallows errors,
-    so a table without it would drop every log without a sign. Returns False
+    mirrors 007. upsert_session_log always names the column, so a table without
+    it would refuse every log (it swallowed the error until standards phase 5;
+    the route now answers 503). Returns False
     when the DDL is not permitted.
     """
     global _TIMELINE_COLUMN_READY
@@ -581,7 +582,18 @@ def _log_session_uid(user_id: str, log: dict) -> str | None:
         return None
 
 
-def upsert_session_log(user_id: str, log: dict) -> None:
+def upsert_session_log(user_id: str, log: dict) -> dict | None:
+    """Write one session log, merged into what is stored; the merged row
+    (`exercises`, `completed_at`, `session_uid`, `session_key`, `source`), or
+    None when the write failed.
+
+    It used to swallow every error and the routes answered "saved" — the
+    session_logs column that production lacked (exercise_timeline) lost every
+    log for weeks without a sign. The routes now answer 503, the watch keeps
+    the upload and retries, and a test result read from the merged row
+    (src/standard_results.py) sees every exercise logged so far.
+    """
+    import logging
     from src.db import get_conn
     timeline = log.get('exerciseTimeline')
     # Scopes the row to one program version. Without it the primary key was the
@@ -619,6 +631,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                         avg_hr            = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
                         peak_hr           = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr),
                         exercise_timeline = COALESCE(EXCLUDED.exercise_timeline, session_logs.exercise_timeline)
+                    RETURNING exercises, completed_at, session_uid, session_key, source
                 ''', (
                     log['sessionKey'],
                     user_id,
@@ -632,9 +645,12 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     json.dumps(timeline) if timeline else None,
                     session_uid,
                 ))
+                row = cur.fetchone()
             conn.commit()
-    except Exception:
-        pass
+        return dict(row) if row else None
+    except Exception as exc:
+        logging.getLogger(__name__).warning('session log %s not saved: %s', log.get('sessionKey'), exc)
+        return None
 
 
 def clear_session_completion(user_id: str, session_key: str) -> None:

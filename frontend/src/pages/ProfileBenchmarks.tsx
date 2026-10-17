@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
 import { StandardDetailSheet } from '@/components/standards/StandardDetailSheet'
+import { SuggestionRow } from '@/components/standards/SuggestionRow'
 import { thresholdTexts } from '@/lib/standards'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
-import { useLogResult, useStandardResults, useStandards } from '@/api/standards'
+import { useLogResult, useStandardResults, useStandardSuggestions, useStandards } from '@/api/standards'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
@@ -327,6 +328,7 @@ function StandardCard({ s, result, onOpen }: {
 function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const { data: standards = [], isLoading } = useStandards()
   const { data: results } = useStandardResults()
+  const { data: suggestions = [] } = useStandardSuggestions()
   const sex = useProfileStore((s) => s.sex)
   const [openId, setOpenId] = useOpenStandard()
   const [showAll, setShowAll] = useState(false)
@@ -397,6 +399,13 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
             </button>
           </p>
         </div>
+
+        {suggestions.length > 0 && (
+          <div className="space-y-3">
+            {heading('To confirm', 'Results your logged sessions suggest. They count once you save them.')}
+            <div className="grid gap-2">{suggestions.map((sg) => <SuggestionRow key={sg.id} suggestion={sg} />)}</div>
+          </div>
+        )}
 
         {programIds.length > 0 && (
           <div className="space-y-3">

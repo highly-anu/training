@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
-import type { BenchmarkStandard, StandardResultInput, StandardResults } from './types'
+import type { BenchmarkStandard, StandardResultInput, StandardResults, StandardSuggestion } from './types'
 import { useProfileStore } from '@/store/profileStore'
 import benchmarksData from '@/data/static/benchmarks.json'
 
@@ -77,5 +77,43 @@ export function useDeleteResult() {
   return useMutation<{ deleted: number }, Error, number>({
     mutationFn: (id) => apiClient.delete(`/standards/results/${id}`) as unknown as Promise<{ deleted: number }>,
     onSuccess: refresh,
+  })
+}
+
+/**
+ * Results logged sessions suggest, waiting for a decision: a test slot's
+ * outcome, or a single that beats the current result. Not results until
+ * confirmed (src/standard_results.py).
+ */
+export function useStandardSuggestions() {
+  const sex = useProfileStore((s) => s.sex) ?? 'male'
+  return useQuery({
+    queryKey: [...queryKeys.standards.suggestions, sex],
+    queryFn: async () => {
+      const res = await (apiClient.get('/standards/suggestions') as unknown as Promise<{ suggestions: StandardSuggestion[] }>)
+      return res.suggestions
+    },
+    staleTime: 60_000,
+  })
+}
+
+type Decision = { id: number; action: 'confirm' | 'dismiss' | 'reopen'; text?: string }
+
+/**
+ * Save (confirm, optionally correcting the value as typed), "Not a test"
+ * (dismiss) or undo a dismissal. Refreshes the suggestions and everything
+ * that reads results.
+ */
+export function useDecideSuggestion() {
+  const qc = useQueryClient()
+  const refresh = useRefreshResults()
+  return useMutation<{ suggestion: StandardSuggestion | null }, Error, Decision>({
+    mutationFn: ({ id, action, text }) =>
+      apiClient.post(`/standards/suggestions/${id}/${action}`, { via: 'web', ...(text ? { text } : {}) }) as unknown as
+        Promise<{ suggestion: StandardSuggestion | null }>,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.standards.suggestions })
+      refresh()
+    },
   })
 }

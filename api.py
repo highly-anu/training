@@ -3564,7 +3564,8 @@ def health_upsert_session_notes(session_key: str):
            'exercises': {}, 'source': body.get('source') or 'ios'}
     if body.get('fatigueRating') is not None:
         log['fatigueRating'] = body['fatigueRating']
-    _health.upsert_session_log(g.user_id, log)
+    if _health.upsert_session_log(g.user_id, log) is None:
+        return jsonify({'detail': 'could not save the session log'}), 503
     return jsonify({'saved': session_key})
 
 
@@ -3597,23 +3598,47 @@ def health_upsert_session_by_uid(session_uid: str):
     The session key is still stored alongside, because plenty of readers speak
     only that; it is recovered from the uid when the body omits it.
     """
-    log = request.get_json(silent=True) or {}
+    log = _normalise_fatigue(request.get_json(silent=True) or {})
     log['sessionUid'] = session_uid
     if not log.get('sessionKey'):
         from src import program_history
         planned = program_history.resolve_session(g.user_id, session_uid=session_uid)
         log['sessionKey'] = planned['legacy_key'] if planned else session_uid
-    _health.upsert_session_log(g.user_id, log)
-    return jsonify({'saved': session_uid, 'sessionKey': log['sessionKey']})
+    return _save_session_log(log, {'saved': session_uid, 'sessionKey': log['sessionKey']})
 
 
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):
+    """Write a session log under its program-relative key.
+
+    `standardResults` — {standardId: {decision: save|dismiss, value?|text?}}
+    — carries a watch's answer to "save this result?" for a test it ran; it
+    is honoured only for standards that session tests, so a device token
+    (auth.DEVICE_ROUTES) reaches no further than the session it logged.
+    """
     log = _normalise_fatigue(request.get_json(silent=True) or {})
     log['sessionKey'] = session_key
-    _health.upsert_session_log(g.user_id, log)
-    return jsonify({'saved': session_key})
+    return _save_session_log(log, {'saved': session_key})
+
+
+def _save_session_log(log: dict, answer: dict):
+    """Store a log, then read it for the standards it bears on.
+
+    503 when the write fails (it answered "saved" over a lost write for as
+    long as the store swallowed errors). A test slot's logged outcome comes
+    back as `standards.pending` — a suggestion, never yet a result — and
+    whatever went wrong reading it as `standards.error`; the log is kept
+    either way (src/standard_results.py).
+    """
+    from src import standard_results
+    row = _health.upsert_session_log(g.user_id, log)
+    if row is None:
+        return jsonify({'detail': 'could not save the session log'}), 503
+    standards = standard_results.after_session_log(g.user_id, log, row, session_uid=row.get('session_uid'))
+    if standards is not None:
+        answer['standards'] = standards
+    return jsonify(answer)
 
 
 @app.get('/api/health/bio/synced-dates')
@@ -3884,6 +3909,98 @@ def standards_delete_result(entry_id: int):
     if not deleted:
         return jsonify({'detail': 'no such result'}), 404
     return jsonify({'deleted': entry_id})
+
+
+def _suggestions_doc(user_id: str, rows: list[dict]) -> list[dict]:
+    """Suggestion rows in the server's words (standard_results.describe),
+    each naming the session it came from."""
+    from src import program_history, standard_results
+    from src.analytics import benchmarks_data as _bd
+    sex, tz = _standards_context(user_id)
+    try:
+        planned = program_history.planned_rows_for_uids(user_id, [r['sessionUid'] for r in rows if r['sessionUid']])
+    except Exception:  # noqa: BLE001 — unnamed sessions rather than no suggestions
+        planned = {}
+    names = {uid: p.get('archetype_name') for uid, p in planned.items()}
+    return standard_results.describe(rows, _bd.by_id(), _health.get_performance_logs(user_id), sex, tz, names)
+
+
+@app.get('/api/standards/suggestions')
+@require_auth
+def standards_suggestions():
+    """Results logged sessions suggest, waiting for the athlete: Profile ▸
+    Standards' "To confirm" and Today. A pending suggestion is not a result
+    and no reader of results sees it (src/standard_results.py)."""
+    from src import standards_store as _store
+    return jsonify({'suggestions': _suggestions_doc(g.user_id, _store.list_suggestions(g.user_id))})
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/confirm')
+@require_auth
+def standards_confirm_suggestion(suggestion_id: int):
+    """Make a suggestion a result. The body may correct it — `text`, `value`
+    or for a ×BW standard `kg` (and `reps`) — read against the session's day.
+    Idempotent; 404 when it is not the athlete's, 503 when the write fails."""
+    from src import standards as _standards
+    from src import standards_store as _store
+    from src.analytics import benchmarks_data as _bd
+    body = request.get_json(silent=True) or {}
+    via = str(body.get('via') or 'web')[:20]
+    value = inp = None
+    try:
+        current = _store.get_suggestion(g.user_id, suggestion_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: read suggestion %s failed: %s', suggestion_id, exc)
+        return jsonify({'detail': 'could not read the suggestion'}), 503
+    if current is None:
+        return jsonify({'detail': 'no such suggestion'}), 404
+    sent = {k: body[k] for k in ('value', 'text', 'kg', 'reps') if body.get(k) is not None}
+    if sent:
+        _sex, tz = _standards_context(g.user_id)
+        try:
+            logs = _health.get_performance_logs(g.user_id) if sent.get('kg') is not None else {}
+            value, inp = _standards.resolve_input(_bd.by_id().get(current['benchmarkId']), sent, logs,
+                                                  current['loggedOn'] or _today_for(tz).isoformat(), tz)
+        except _standards.InputError as exc:
+            return jsonify({'detail': str(exc)}), 422
+    try:
+        done = _store.confirm_suggestion(g.user_id, suggestion_id, via=via, value=value, input_=inp or None)
+    except Exception as exc:  # noqa: BLE001 — the client is told, and retries
+        app.logger.warning('standards: confirm %s failed: %s', suggestion_id, exc)
+        return jsonify({'detail': 'could not save the result'}), 503
+    if done is None:
+        return jsonify({'detail': 'no such suggestion'}), 404
+    return jsonify({'suggestion': (_suggestions_doc(g.user_id, [done]) or [None])[0],
+                    'resultId': done['performanceLogId']})
+
+
+def _set_suggestion(suggestion_id: int, status: str, from_statuses: tuple):
+    from src import standards_store as _store
+    body = request.get_json(silent=True) or {}
+    try:
+        done = _store.set_suggestion_status(g.user_id, suggestion_id, status,
+                                            via=str(body.get('via') or 'web')[:20], from_statuses=from_statuses)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: %s %s failed: %s', status, suggestion_id, exc)
+        return jsonify({'detail': 'could not save the change'}), 503
+    if done is None:
+        return jsonify({'detail': f'no {"/".join(from_statuses)} suggestion {suggestion_id}'}), 404
+    return jsonify({'suggestion': (_suggestions_doc(g.user_id, [done]) or [None])[0]})
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/dismiss')
+@require_auth
+def standards_dismiss_suggestion(suggestion_id: int):
+    """"Not a test": the suggestion stays dismissed, even when the session is
+    logged again. 404 unless it is pending."""
+    return _set_suggestion(suggestion_id, 'dismissed', ('pending',))
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/reopen')
+@require_auth
+def standards_reopen_suggestion(suggestion_id: int):
+    """Undo a dismissal. 404 unless it is dismissed."""
+    return _set_suggestion(suggestion_id, 'pending', ('dismissed',))
 
 
 @app.delete('/api/health/performance/<benchmark_id>')

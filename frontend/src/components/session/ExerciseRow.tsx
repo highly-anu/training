@@ -6,12 +6,13 @@ import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
-import { isHoldSlot, outcomeFieldsFor } from '@/lib/outcomeFields'
+import { formatClock, isHoldSlot, outcomeFieldsFor } from '@/lib/outcomeFields'
 import { useBioStore } from '@/store/bioStore'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
 import { StandardChip } from '@/components/standards/StandardChip'
+import { SessionSuggestion } from '@/components/standards/SuggestionRow'
 import { useExerciseMedia } from '@/api/exercises'
 import type { ExerciseAssignment, ExercisePerformance, SetPerformance } from '@/api/types'
 
@@ -101,11 +102,12 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
   // slot_type via lib/outcomeFields. A slot with neither logs nothing. Until
   // this dispatch existed the row showed a logger only when load.sets > 0, so
   // every rounds/duration/distance analytics primitive had zero coverage.
-  const hasOutcome = !hasSets && outcomeFieldsFor(assignment.slot_type, assignment.exercise).length > 0
+  const fields = hasSets ? [] : outcomeFieldsFor(assignment.slot_type, assignment.exercise, assignment.standard)
+  const hasOutcome = fields.length > 0
   const watchKey = sessionIdx != null ? `${sessionKey}-${sessionIdx}` : `${sessionKey}-0`
   const perfLog = getPerformanceLog(watchKey) ?? getPerformanceLog(sessionKey)
   const logged = perfLog?.exercises[assignment.exercise.id]
-  const outcomeLine = logged ? formatOutcomeLine(logged, hasOutcome) : null
+  const outcomeLine = logged ? formatOutcomeLine(logged, hasOutcome, fields.includes('time')) : null
 
   return (
     <motion.div
@@ -150,6 +152,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
               <p className="mt-0.5 text-[11px] text-muted-foreground">{assignment.load_note}</p>
             )}
             {assignment.standard && <StandardChip standardId={assignment.standard.id} />}
+            {assignment.standard && <SessionSuggestion standardId={assignment.standard.id} sessionKey={sessionKey} />}
           </div>
           {hasSets && (
             <PerformanceLogger
@@ -172,6 +175,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
               exerciseId={assignment.exercise.id}
               sessionKey={sessionKey}
               load={assignment.load}
+              standard={assignment.standard}
             />
           )}
         </div>
@@ -226,10 +230,10 @@ function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; ex
   )
 }
 
-function formatOutcomeLine(p: ExercisePerformance, outcomeRow: boolean): string | null {
+function formatOutcomeLine(p: ExercisePerformance, outcomeRow: boolean, clock = false): string | null {
   const parts: string[] = []
   if (p.rounds != null) parts.push(`${p.rounds} rounds`)
-  if (p.durationSec != null) parts.push(`${Math.round(p.durationSec / 60)} min`)
+  if (p.durationSec != null) parts.push(clock ? formatClock(p.durationSec) : `${Math.round(p.durationSec / 60)} min`)
   if (p.distanceKm != null) parts.push(`${p.distanceKm} km`)
   // Reps and a hold on the first set are an outcome row's; a lift's sets say
   // theirs on the per-set lines (and the watch writes every set's seconds).

@@ -757,6 +757,14 @@ a pass/fail status; the §8.8 traffic light appears only where a package declare
 Blocks all draw this one component; until 2026-10-17 they used a flat accent, a status
 green and (on the phone) purple/blue/green per level.
 
+**A suggested result wears the ladder's colours, not a status.**
+`components/standards/SuggestionRow.tsx` — a result a logged session suggests: the value,
+`StandardLevelBadge`, "new best" / "was 7:45" / "corrects 7:32" in muted text, and
+Save result · Correct · Not a test, in a `border-primary/30 bg-primary/5` panel like
+`StandardChip`. On Profile ▸ Standards (*To confirm*), Today (`ResultsToConfirmCard`, and
+inside `TestDayCard` for today's test) and under the test slot (`SessionSuggestion`).
+"New best" is words, never a green.
+
 ### 8.2 Training Phase Colors
 
 ```typescript
