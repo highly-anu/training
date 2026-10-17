@@ -6,6 +6,12 @@ import Charts
 struct PMCNumbers: View {
     let entry: PMCEntry
 
+    /// Whole numbers, as the scale usually runs; one decimal under ten, where
+    /// a first week's load would otherwise all read 0.
+    static func text(_ v: Double) -> String {
+        abs(v) >= 10 ? "\(Int(v.rounded()))" : String(format: "%.1f", v)
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             cell("CTL", entry.ctl, color: .blue, spoken: "Fitness")
@@ -18,7 +24,7 @@ struct PMCNumbers: View {
 
     private func cell(_ term: String, _ value: Double, color: Color, spoken: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(Int(value.rounded()))")
+            Text(Self.text(value))
                 .font(.title3).fontWeight(.semibold).monospacedDigit()
             HStack(spacing: 4) {
                 Circle().fill(color).frame(width: 8, height: 8)
@@ -26,7 +32,7 @@ struct PMCNumbers: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(spoken), \(term), \(Int(value.rounded()))")
+        .accessibilityLabel("\(spoken), \(term), \(Self.text(value))")
     }
 }
 
@@ -78,7 +84,7 @@ struct PMCChart: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(e.date, format: .dateTime.day().month(.abbreviated))
                                 .font(.caption2).foregroundStyle(.secondary)
-                            Text("CTL \(Int(e.ctl.rounded())) · ATL \(Int(e.atl.rounded())) · TSB \(Int(e.tsb.rounded()))")
+                            Text("CTL \(PMCNumbers.text(e.ctl)) · ATL \(PMCNumbers.text(e.atl)) · TSB \(PMCNumbers.text(e.tsb))")
                                 .font(.caption).monospacedDigit()
                         }
                         .padding(6)
@@ -89,8 +95,14 @@ struct PMCChart: View {
         .chartXSelection(value: compact ? .constant(nil) : $selected)
         .chartXAxis {
             if !compact {
-                AxisMarks(values: .stride(by: .day, count: 14)) { _ in
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day()).font(.caption2)
+                AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                    AxisValueLabel {
+                        if let d = value.as(Date.self) {
+                            // fixedSize: the last label would truncate to "1…".
+                            Text(d, format: .dateTime.day().month(.abbreviated))
+                                .font(.caption2).foregroundStyle(.secondary).fixedSize()
+                        }
+                    }
                 }
             }
         }
@@ -99,7 +111,7 @@ struct PMCChart: View {
                 AxisMarks(position: .leading) { value in
                     AxisValueLabel {
                         if let v = value.as(Double.self) {
-                            Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
+                            Text(AnalyticsProgramTab.number(v)).font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }
