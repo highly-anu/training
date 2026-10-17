@@ -11,6 +11,9 @@ struct AnalyticsOverviewTab: View {
     /// the web reads the same endpoints — and the on-device engine is the
     /// fallback when it cannot be reached, so the chart says which it was.
     @State private var loadSource: LoadSource = .server
+    /// Load Focus's label and share columns, at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var focusLabelWidth: CGFloat = 84
+    @ScaledMetric(relativeTo: .subheadline) private var focusShareWidth: CGFloat = 48
 
     private enum LoadSource { case server, device }
 
@@ -79,9 +82,6 @@ struct AnalyticsOverviewTab: View {
             LazyVStack(spacing: 16) {
                 AnalyticsPeriodPicker(period: $period)
                 kpiGrid
-                if summary == nil && appState.loadSummaryFailed.contains(period) {
-                    onDeviceMark.frame(maxWidth: .infinity, alignment: .leading)
-                }
                 if loadFocus.total > 0 { loadFocusCard }
                 if !modalities.isEmpty { modalityDonutCard }
                 if !activities.isEmpty { activityBarCard }
@@ -111,7 +111,10 @@ struct AnalyticsOverviewTab: View {
     // MARK: - KPI Grid (Apple Fitness-style with trend arrows)
 
     private var kpiGrid: some View {
+        // "On device" beside the header when the server could not answer.
         AnalyticsCard(header: "Totals") {
+            if summary == nil && appState.loadSummaryFailed.contains(period) { onDeviceMark }
+        } content: {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 kpiCell(
                     label: "Sessions",
@@ -167,16 +170,16 @@ struct AnalyticsOverviewTab: View {
                           prev: Double?, curr: Double?, higherIsBetter: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .top, spacing: 2) {
-                Text(value).font(.title3).fontWeight(.semibold)
+                Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
                 if !unit.isEmpty {
-                    Text(unit).font(.caption2).foregroundStyle(.secondary).padding(.top, 4)
+                    Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
                 }
                 Spacer(minLength: 0)
                 if let p = prev, let c = curr, p > 0, period != .all {
                     trendArrow(prev: p, curr: c, higherIsBetter: higherIsBetter)
                 }
             }
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+            Text(label).font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -190,10 +193,12 @@ struct AnalyticsOverviewTab: View {
             if abs(delta) > 0.01 {
                 HStack(spacing: 1) {
                     Image(systemName: isPositive ? "arrow.up.right" : "arrow.down.right")
-                        .font(.caption2)
-                    Text(String(format: "%.0f%%", pct)).font(.caption2)
+                    Text(String(format: "%.0f%%", pct)).monospacedDigit()
                 }
+                .font(.caption)
                 .foregroundStyle(isGood ? .green : .red)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(String(format: "%.0f percent %@ than the previous period", pct, isPositive ? "more" : "less"))
             }
         }
     }
@@ -204,26 +209,32 @@ struct AnalyticsOverviewTab: View {
         AnalyticsCard(header: "Load Focus · 28 days") {
             VStack(spacing: 10) {
                 let total = loadFocus.total
+                // The heart-rate zones' colours (§3.5): base is Z1–2, threshold
+                // Z3–4, anaerobic Z5. They were system blue, orange and red.
                 let rows: [(label: String, minutes: Double, color: Color)] = [
-                    ("Base", loadFocus.baseMinutes, .blue),
-                    ("Threshold", loadFocus.thresholdMinutes, .orange),
-                    ("Anaerobic", loadFocus.anaerobicMinutes, .red)
+                    ("Base", loadFocus.baseMinutes, HRZoneStyle.color("z2")),
+                    ("Threshold", loadFocus.thresholdMinutes, HRZoneStyle.color("z4")),
+                    ("Anaerobic", loadFocus.anaerobicMinutes, HRZoneStyle.color("z5"))
                 ]
                 ForEach(rows, id: \.label) { row in
                     HStack(spacing: 10) {
-                        Text(row.label).font(.caption).frame(width: 72, alignment: .leading)
+                        Text(row.label).font(.subheadline).lineLimit(1)
+                            .frame(width: focusLabelWidth, alignment: .leading)
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color(.systemGray5)).frame(height: 8)
                                 Capsule()
-                                    .fill(row.color.gradient)
+                                    .fill(row.color)
                                     .frame(width: total > 0 ? geo.size.width * row.minutes / total : 0, height: 8)
                             }
                         }
                         .frame(height: 8)
                         Text(total > 0 ? String(format: "%.0f%%", row.minutes / total * 100) : "—")
-                            .font(.caption2).foregroundStyle(.secondary).frame(width: 32, alignment: .trailing)
+                            .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                            .fixedSize()
+                            .frame(minWidth: focusShareWidth, alignment: .trailing)
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -245,22 +256,25 @@ struct AnalyticsOverviewTab: View {
                 }
                 if let top = modalities.first {
                     VStack(spacing: 2) {
-                        Text("\(top.pct)%").font(.title3).fontWeight(.bold)
-                        Text(top.label).font(.caption2).foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+                        Text("\(top.pct)%").font(.title3).fontWeight(.bold).monospacedDigit()
+                        Text(top.label).font(.caption).foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center).lineLimit(2)
                     }
-                    .frame(width: 80)
+                    // Inside the hole of the ring, however large the text.
+                    .frame(maxWidth: 96)
                 }
             }
             .frame(height: 180)
             .padding(.vertical, 4)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(modalities.prefix(6)) { share in
+                    // Every segment named: the ring draws them all, so the
+                    // legend does too (colour is never the only label).
+                    ForEach(modalities) { share in
                         HStack(spacing: 4) {
                             Circle().fill(share.color).frame(width: 8, height: 8)
                             Text("\(share.label) \(share.pct)%")
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -277,12 +291,12 @@ struct AnalyticsOverviewTab: View {
                     x: .value("Hours", entry.hours),
                     y: .value("Activity", entry.name)
                 )
-                .foregroundStyle(entry.color.gradient)
+                .foregroundStyle(entry.color)
                 .cornerRadius(4)
                 .annotation(position: .trailing, alignment: .leading) {
                     Text(String(format: "%.1fh", entry.hours))
-                        .font(.caption2).foregroundStyle(.secondary)
-                        .frame(width: 36, alignment: .leading)
+                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                        .fixedSize()
                 }
             }
             .chartXAxis(.hidden)
@@ -308,7 +322,7 @@ struct AnalyticsOverviewTab: View {
                     x: .value("Week", entry.weekStart, unit: .weekOfYear),
                     y: .value("Sessions", entry.sessionCount)
                 )
-                .foregroundStyle(consistencyColor(entry.sessionCount).gradient)
+                .foregroundStyle(consistencyColor(entry.sessionCount))
                 .cornerRadius(4)
             }
             .chartXAxis {
@@ -362,13 +376,18 @@ struct AnalyticsOverviewTab: View {
     // MARK: - Weekly Load (TRIMP)
 
     private var weeklyLoadCard: some View {
+        // The bars' own source: they come from `serverWeeklyLoad`
+        // independently of the PMC, so one request can answer and the
+        // other not.
         AnalyticsCard(header: "Weekly TRIMP · 12 weeks") {
+            if (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
+        } content: {
             Chart(weeklyLoadBars) { bar in
                 BarMark(
                     x: .value("Week", bar.weekStart, unit: .weekOfYear),
                     y: .value("TRIMP", bar.trimp)
                 )
-                .foregroundStyle(Color.orange.gradient)
+                .foregroundStyle(Color.orange)
                 .cornerRadius(4)
             }
             .chartXAxis {
@@ -391,10 +410,6 @@ struct AnalyticsOverviewTab: View {
                 }
             }
             .frame(height: 130)
-            // The bars' own source: they come from `serverWeeklyLoad`
-            // independently of the PMC, so one request can answer and the
-            // other not.
-            if (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
         }
     }
 
@@ -402,7 +417,7 @@ struct AnalyticsOverviewTab: View {
     /// server could not answer; the server's numbers carry no mark.
     private var onDeviceMark: some View {
         Label("On device", systemImage: "iphone")
-            .font(.caption2).foregroundStyle(.tertiary)
+            .font(.caption).foregroundStyle(.secondary)
             .accessibilityLabel("Computed on this phone; the server could not be reached")
     }
 
@@ -410,6 +425,8 @@ struct AnalyticsOverviewTab: View {
 
     private var pmcCard: some View {
         AnalyticsCard(header: "Performance Management") {
+            if loadSource == .device && !isLoadingPMC { onDeviceMark }
+        } content: {
             if isLoadingPMC {
                 ProgressView().frame(maxWidth: .infinity, minHeight: 160)
             } else {
@@ -451,13 +468,25 @@ struct AnalyticsOverviewTab: View {
                         }
                     }
                     .frame(height: 160)
+                    // The terms, not their glosses: what each means is said to
+                    // VoiceOver (and, in time, the chart's own detail screen).
                     HStack(spacing: 12) {
-                        legendLine(color: .blue,   label: "CTL (fitness)")
-                        legendLine(color: .orange, label: "ATL (fatigue)")
-                        legendLine(color: .green,  label: "TSB (form)")
+                        legendLine(color: .blue,   label: "CTL")
+                            .accessibilityLabel("CTL, fitness: blue line")
+                        legendLine(color: .orange, label: "ATL")
+                            .accessibilityLabel("ATL, fatigue: orange line")
+                        HStack(spacing: 4) {
+                            // Form is green above zero and red below, so the key shows both.
+                            HStack(spacing: 1) {
+                                Rectangle().fill(Color.green.opacity(0.5)).frame(width: 7, height: 8)
+                                Rectangle().fill(Color.red.opacity(0.5)).frame(width: 7, height: 8)
+                            }
+                            Text("TSB").foregroundStyle(.secondary)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("TSB, form: bars, green above zero and red below")
                     }
                     .font(.caption2)
-                    if loadSource == .device { onDeviceMark }
                 }
             }
         }

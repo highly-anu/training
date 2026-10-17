@@ -27,30 +27,40 @@ struct MethodologySectionView: View {
         // Analytics sections lay out theirs (§6.15).
         return VStack(alignment: .leading, spacing: 16) {
             AnalyticsCard(header: name) {
-                HStack(spacing: 10) {
-                    Label("\(method.measurable)/\(method.applicable ?? method.total) measurable", systemImage: "ruler")
+                HStack(spacing: 12) {
+                    Label("\(method.measurable)/\(method.applicable ?? method.total)", systemImage: "ruler")
+                        .fontWeight(.semibold)
+                        .accessibilityLabel("\(method.measurable) of \(method.applicable ?? method.total) measures measurable")
                     if method.weight < 1 {
                         Label("\(Int((method.weight * 100).rounded()))%", systemImage: "chart.pie")
+                            .foregroundStyle(.secondary)
                             .accessibilityLabel("\(Int((method.weight * 100).rounded())) percent of the blend")
                     }
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.subheadline).monospacedDigit()
                 if !elsewhere.isEmpty {
                     // Folded: the measures this program does not schedule,
                     // each with the tracks that do.
                     DisclosureGroup {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             ForEach(elsewhere) { e in
                                 let tracks = e.appliesIn.map(\.track)
-                                Text(tracks.isEmpty ? e.label : "\(e.label) · \(tracks.joined(separator: ", "))")
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(e.label).font(.subheadline)
+                                    if !tracks.isEmpty {
+                                        Text(tracks.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                }
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 4)
                     } label: {
                         Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
+                            .font(.footnote).foregroundStyle(.secondary)
+                            .frame(minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
-                    .font(.caption).foregroundStyle(.secondary)
                 }
             }
             ForEach(entries) { entry in
@@ -81,22 +91,25 @@ struct ProgramStandardsCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 if own.isEmpty {
                     Text("This program declares no standards of its own.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(.secondary)
                 }
                 // ×BW standards derive from logged sets with a bodyweight.
                 Label(benchmarks.bodyweightText.map { "BW \($0)" }
                       ?? benchmarks.bodyweightKg.map { "BW \(AnalyticsProgramTab.number($0)) kg" } ?? "No bodyweight",
                       systemImage: "figure.stand")
-                    .font(.caption2).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondary)
                 ForEach(shown) { row in
                     Button { router.openStandard(row.benchmarkId) } label: { StandardRowView(row: row) }
                         .buttonStyle(.plain)
+                        .accessibilityHint("Opens Profile, Standards")
                 }
                 if !more.isEmpty {
                     Button(showMore ? "Fewer standards" : "More standards (\(more.count))") {
                         withAnimation(AppAnimation.layoutChange) { showMore.toggle() }
                     }
-                    .font(.caption)
+                    .font(.footnote)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
             }
         }
@@ -131,22 +144,27 @@ private struct StandardRowView: View {
                 if let domain = row.domain {
                     // The modality's symbol beside its colour: colour is
                     // never the only signal (§1.6).
-                    Image(systemName: ModalityStyle.icon(for: domain))
-                        .font(.caption2)
+                    Image(symbol: ModalityStyle.icon(for: domain))
                         .foregroundStyle(ModalityStyle.color(for: domain))
                         .accessibilityLabel(ModalityStyle.label(for: domain))
                 }
-                Text(row.name).font(.caption).fontWeight(.medium)
+                Text(row.name).fontWeight(.medium)
                 Spacer(minLength: 6)
-                Text(valueText ?? "No result yet")
-                    .font(.caption).monospacedDigit()
+                Text(valueText ?? "—")
+                    .monospacedDigit()
                     .fontWeight(row.value == nil ? .regular : .semibold)
                     .foregroundStyle(row.value == nil ? .secondary : .primary)
+                    .accessibilityLabel(valueText ?? "No result yet")
+                // It opens the standard on Profile ▸ Standards (§6.9).
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
             }
+            .font(.subheadline)
             if row.value != nil || detail != nil {
                 HStack(spacing: 6) {
                     if row.value != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
-                    if let detail { Text(detail).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
+                    if let detail { Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
                     Spacer(minLength: 0)
                     if row.blockHistory.count >= 2 {
                         StandardSparkline(values: row.blockHistory.map(\.value), domain: row.domain)
@@ -175,14 +193,19 @@ struct SessionShapesCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
                             if let modality = row.modality {
-                                Circle().fill(ModalityStyle.color(for: modality)).frame(width: 7, height: 7)
+                                // The modality's symbol, not a dot: colour is
+                                // never the only signal (§1.6).
+                                Image(symbol: ModalityStyle.icon(for: modality))
+                                    .foregroundStyle(ModalityStyle.color(for: modality))
+                                    .accessibilityLabel(ModalityStyle.label(for: modality))
                             }
-                            Text(row.name).font(.caption).fontWeight(.medium).lineLimit(2)
+                            Text(row.name).fontWeight(.medium).lineLimit(2)
                             Spacer()
                             Label("\(row.completed)/\(row.scheduled)", systemImage: "checkmark.circle")
-                                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                                .monospacedDigit().foregroundStyle(.secondary)
                                 .accessibilityLabel("\(row.completed) of \(row.scheduled) done")
                         }
+                        .font(.subheadline)
                         detail(row)
                     }
                     if row.id != rows.last?.id { Divider() }
@@ -211,6 +234,6 @@ struct SessionShapesCard: View {
                     .accessibilityLabel("\(lift.exerciseId.replacingOccurrences(of: "_", with: " ")) est 1RM \(AnalyticsProgramTab.number(first)) to \(AnalyticsProgramTab.number(latest))")
             }
         }
-        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
     }
 }

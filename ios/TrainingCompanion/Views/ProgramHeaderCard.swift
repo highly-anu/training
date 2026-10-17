@@ -67,12 +67,7 @@ struct ProgramHeaderCard<Footer: View>: View {
 
     private func phaseRow(_ phase: Phase) -> some View {
         HStack(spacing: 6) {
-            Text(phase.label)
-                .font(.caption).fontWeight(.semibold)
-                .foregroundStyle(PhaseStyle.color(for: phase.kind))
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(PhaseStyle.color(for: phase.kind).opacity(0.15))
-                .clipShape(Capsule())
+            TintCapsule(text: phase.label, color: PhaseStyle.color(for: phase.kind))
             Label("\(phase.week)/\(phase.totalWeeks)", systemImage: "calendar")
                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .accessibilityLabel("Week \(phase.week) of \(phase.totalWeeks)")
@@ -92,6 +87,7 @@ struct ProgramHeaderCard<Footer: View>: View {
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
             .accessibilityLabel("About this methodology")
+            .accessibilityHint("Opens the methodology")
         if methodologies.count == 1, let card = methodologies.first {
             Button { AppHaptics.light(); sheet = card } label: { icon }
                 .padding(.vertical, -12)
@@ -120,14 +116,14 @@ struct ProgramHeaderStat<Mark: View>: View {
     }
 
     var body: some View {
+        // The value is the cell's subject; its unit qualifies it (§4.1).
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
-                Image(systemName: icon).foregroundStyle(.secondary)
-                Text(value).fontWeight(.semibold).monospacedDigit()
-                mark()
+                Image(systemName: icon).font(.footnote).foregroundStyle(.secondary)
+                Text(value).font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                mark().font(.footnote)
             }
-            .font(.caption)
-            Text(unit).font(.caption2).foregroundStyle(.tertiary)
+            Text(unit).font(.caption).foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibility)

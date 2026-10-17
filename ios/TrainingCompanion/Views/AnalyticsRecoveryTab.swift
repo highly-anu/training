@@ -3,6 +3,9 @@ import SwiftUI
 struct AnalyticsRecoveryTab: View {
     @EnvironmentObject var appState: AppState
     @Binding var showBioEntry: Bool
+    /// Check-in history's day and value columns, at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var dayWidth: CGFloat = 96
+    @ScaledMetric(relativeTo: .subheadline) private var valueWidth: CGFloat = 62
 
     var body: some View {
         ScrollView {
@@ -29,48 +32,37 @@ struct AnalyticsRecoveryTab: View {
     // MARK: - Readiness Card
 
     private var readinessCard: some View {
+        // The server's score, as on Today, with its status once — as the
+        // badge. A coloured circle, the score's colour and a status word
+        // under it said the same thing three times.
         AnalyticsCard(header: "Today's Readiness") {
+            if let result = appState.readinessResult {
+                TintCapsule(text: result.statusLabel, symbol: result.statusIcon, color: result.statusColor)
+            }
+        } content: {
           VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 16) {
-                // The server's score, as on Today. This circle used to come
-                // from an on-phone HRV rule and could disagree with the
-                // number beside it.
+            HStack(alignment: .center, spacing: 16) {
                 if let result = appState.readinessResult {
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(result.statusColor.gradient)
-                            .frame(width: 52, height: 52)
-                            .overlay(
-                                Image(systemName: result.statusIcon)
-                                    .foregroundStyle(.white).font(.headline)
-                            )
-                        Text("Readiness").font(.caption2).foregroundStyle(.secondary)
-                    }
+                    Text("\(result.score)")
+                        .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded).monospacedDigit()
+                        .foregroundStyle(result.statusColor)
+                        .accessibilityLabel("Readiness \(result.score), \(result.statusLabel)")
                 }
                 if let latest = appState.recentBioLogs.first {
                     VStack(alignment: .leading, spacing: 6) {
                         if let hrv = latest.hrv {
-                            recoveryMetric(label: "HRV", value: "\(Int(hrv)) ms")
+                            recoveryMetric(symbol: "waveform.path.ecg", name: "HRV", value: "\(Int(hrv)) ms")
                         }
                         if let hr = latest.restingHR {
-                            recoveryMetric(label: "Resting HR", value: "\(Int(hr)) bpm")
+                            recoveryMetric(symbol: "heart.fill", name: "Resting HR", value: "\(Int(hr)) bpm")
                         }
                         if let sleep = latest.sleepDurationMin, sleep > 0 {
                             let h = sleep / 60; let m = sleep % 60
-                            recoveryMetric(label: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
+                            recoveryMetric(symbol: "moon.fill", name: "Sleep", value: m > 0 ? "\(h)h \(m)m" : "\(h)h")
                         }
                     }
                 }
-                Spacer()
-                if let result = appState.readinessResult {
-                    VStack(spacing: 4) {
-                        Text("\(result.score)")
-                            .font(.title2).fontWeight(.bold)
-                            .foregroundStyle(result.statusColor)
-                        Text(result.statusLabel)
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
+                Spacer(minLength: 0)
             }
             if let result = appState.readinessResult {
                 ReadinessFlagChips(flags: result.flags)
@@ -80,11 +72,16 @@ struct AnalyticsRecoveryTab: View {
         }
     }
 
-    private func recoveryMetric(label: String, value: String) -> some View {
-        HStack(spacing: 4) {
-            Text(label + ":").font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.caption).fontWeight(.medium)
+    /// A reading as its symbol and number; the name is for VoiceOver (§1.4).
+    private func recoveryMetric(symbol: String, name: String, value: String) -> some View {
+        Label {
+            Text(value).fontWeight(.medium).monospacedDigit()
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(.secondary)
         }
+        .font(.subheadline)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name) \(value)")
     }
 
     // MARK: - Sleep Debt Card (Whoop-style)
@@ -100,15 +97,12 @@ struct AnalyticsRecoveryTab: View {
         let debtHours = Double(debtMin) / 60.0
         let maxDebt = Double(targetPerNight * 7) / 60.0
 
-        return AnyView(AnalyticsCard(header: "Sleep Debt") {
+        return AnyView(AnalyticsCard(header: "Sleep Debt · 7 days") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%.1fh", debtHours))
-                            .font(.title2).fontWeight(.bold)
-                            .foregroundStyle(debtHours < 2 ? .green : debtHours < 5 ? .orange : .red)
-                        Text("7-day sleep debt").font(.caption).foregroundStyle(.secondary)
-                    }
+                    Text(String(format: "%.1fh", debtHours))
+                        .font(.title2).fontWeight(.bold).monospacedDigit()
+                        .foregroundStyle(debtHours < 2 ? .green : debtHours < 5 ? .orange : .red)
                     Spacer()
                     Gauge(value: Swift.min(debtHours, maxDebt), in: 0...maxDebt) {
                         EmptyView()
@@ -116,12 +110,13 @@ struct AnalyticsRecoveryTab: View {
                     .gaugeStyle(.accessoryCircularCapacity)
                     .tint(debtHours < 2 ? .green : debtHours < 5 ? .orange : .red)
                     .frame(width: 52, height: 52)
+                    .accessibilityLabel(String(format: "%.1f of %.0f hours of sleep owed this week", debtHours, maxDebt))
                 }
                 HStack(spacing: 12) {
                     Label("8h", systemImage: "target")
                     Label("\(sleepNights.count) nights", systemImage: "moon")
                 }
-                .font(.caption2).foregroundStyle(.tertiary)
+                .font(.caption).foregroundStyle(.secondary)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Target 8 hours a night, \(sleepNights.count) nights tracked")
             }
@@ -149,21 +144,15 @@ struct AnalyticsRecoveryTab: View {
                         Spacer()
                         Image(systemName: "moon.fill")
                             .font(.title2).foregroundStyle(.indigo)
+                            .accessibilityHidden(true)
                     }
-                    // Stage pills
-                    HStack(spacing: 8) {
-                        if let deep = latest.deepSleepMin, deep > 0 {
-                            stagePill(label: "Deep", minutes: deep, color: Color(red: 0.2, green: 0.2, blue: 0.7))
-                        }
-                        if let rem = latest.remSleepMin, rem > 0 {
-                            stagePill(label: "REM", minutes: rem, color: Color(red: 0.4, green: 0.3, blue: 0.8))
-                        }
-                        if let light = latest.lightSleepMin, light > 0 {
-                            stagePill(label: "Light", minutes: light, color: Color(red: 0.45, green: 0.65, blue: 0.9))
-                        }
-                        if let awake = latest.awakeMins, awake > 0 {
-                            stagePill(label: "Awake", minutes: awake, color: .orange.opacity(0.8))
-                        }
+                    // The stages as labelled dots in the chart's colours — a
+                    // tile per stage was a card inside the card (§6.15).
+                    HStack(spacing: 12) {
+                        if let deep = latest.deepSleepMin, deep > 0 { stage("Deep", minutes: deep) }
+                        if let rem = latest.remSleepMin, rem > 0 { stage("REM", minutes: rem) }
+                        if let light = latest.lightSleepMin, light > 0 { stage("Light", minutes: light) }
+                        if let awake = latest.awakeMins, awake > 0 { stage("Awake", minutes: awake) }
                     }
                     if latest.spo2Avg != nil || latest.respiratoryRateAvg != nil {
                         HStack(spacing: 16) {
@@ -182,16 +171,18 @@ struct AnalyticsRecoveryTab: View {
         }
     }
 
-    private func stagePill(label: String, minutes: Int, color: Color) -> some View {
+    private func stage(_ name: String, minutes: Int) -> some View {
         let h = minutes / 60; let m = minutes % 60
-        return VStack(spacing: 2) {
-            Text(m > 0 ? "\(h)h\(m)m" : "\(h)h")
-                .font(.caption).fontWeight(.medium).foregroundStyle(color)
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+        let duration = h > 0 ? (m > 0 ? "\(h)h\(m)m" : "\(h)h") : "\(m)m"
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Circle().fill(SleepStagesChartView.stageColors[name] ?? .secondary).frame(width: 8, height: 8)
+                Text(name).font(.caption).foregroundStyle(.secondary)
+            }
+            Text(duration).font(.subheadline).fontWeight(.medium).monospacedDigit()
         }
-        .padding(.horizontal, 8).padding(.vertical, 4)
-        .background(color.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name) \(duration)")
     }
 
     // MARK: - Sleep Stages Chart
@@ -213,7 +204,11 @@ struct AnalyticsRecoveryTab: View {
         let hasHRV = appState.recentBioLogs.contains { $0.hrv != nil }
         if hasHRV {
             AnalyticsCard(header: "HRV Trend") {
-                HRVTrendChartView(logs: appState.recentBioLogs)
+                if let trend = RecoveryTrendChartView.trend(appState.recentBioLogs, metric: .hrv) {
+                    RecoveryTrendBadge(trend: trend, metric: .hrv)
+                }
+            } content: {
+                RecoveryTrendChartView(logs: appState.recentBioLogs, metric: .hrv)
             }
         }
     }
@@ -225,7 +220,11 @@ struct AnalyticsRecoveryTab: View {
         let hasRHR = appState.recentBioLogs.contains { $0.restingHR != nil }
         if hasRHR {
             AnalyticsCard(header: "Resting Heart Rate") {
-                RHRTrendChartView(logs: appState.recentBioLogs)
+                if let trend = RecoveryTrendChartView.trend(appState.recentBioLogs, metric: .restingHR) {
+                    RecoveryTrendBadge(trend: trend, metric: .restingHR)
+                }
+            } content: {
+                RecoveryTrendChartView(logs: appState.recentBioLogs, metric: .restingHR)
             }
         }
     }
@@ -238,54 +237,72 @@ struct AnalyticsRecoveryTab: View {
                 if appState.recentBioLogs.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "waveform.path.ecg")
-                            .font(.system(size: 32)).foregroundStyle(.secondary)
+                            .font(.title).foregroundStyle(.secondary)
                         Text("No bio data yet")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                 } else {
+                    // Adding an entry is the toolbar's "+"; a second button
+                    // here did the same thing.
                     ForEach(appState.recentBioLogs.prefix(30)) { log in
                         bioRow(log)
                         if log.id != appState.recentBioLogs.prefix(30).last?.id {
-                            Divider().padding(.leading, 90)
+                            Divider()
                         }
                     }
                 }
-                Divider()
-                Button {
-                    AppHaptics.light()
-                    showBioEntry = true
-                } label: {
-                    Label("Add Entry", systemImage: "plus.circle")
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                }
             }
         }
     }
 
+    /// A day's check-in: the day, then HRV, resting HR and sleep, each in its
+    /// own column — a missing value leaves its column empty instead of
+    /// sliding the others left, where colour became the only label.
     private func bioRow(_ log: DailyBioLog) -> some View {
         HStack {
-            Text(log.date)
+            Text(Self.dayText(log.date))
                 .font(.subheadline).fontWeight(.medium)
-                .frame(width: 90, alignment: .leading)
+                .frame(width: dayWidth, alignment: .leading)
             Spacer()
-            if let hrv = log.hrv { bioChip(value: "\(Int(hrv))", unit: "ms", color: .cyan) }
-            if let hr = log.restingHR { bioChip(value: "\(Int(hr))", unit: "bpm", color: .red) }
-            if let sleep = log.sleepDurationMin, sleep > 0 {
-                bioChip(value: "\(sleep / 60)h", unit: "", color: .indigo)
-            }
+            bioChip(value: log.hrv.map { "\(Int($0))" }, unit: "ms", color: .cyan)
+            bioChip(value: log.restingHR.map { "\(Int($0))" }, unit: "bpm", color: .red)
+            bioChip(value: log.sleepDurationMin.flatMap { $0 > 0 ? Self.hours($0) : nil }, unit: "", color: .indigo)
         }
         .padding(.vertical, 8)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel([Self.dayText(log.date),
+                             log.hrv.map { "HRV \(Int($0)) ms" },
+                             log.restingHR.map { "resting HR \(Int($0)) bpm" },
+                             log.sleepDurationMin.flatMap { $0 > 0 ? "sleep \(Self.hours($0))" : nil }]
+            .compactMap { $0 }.joined(separator: ", "))
     }
 
-    private func bioChip(value: String, unit: String, color: Color) -> some View {
+    private func bioChip(value: String?, unit: String, color: Color) -> some View {
         HStack(spacing: 2) {
-            Text(value).font(.caption).fontWeight(.medium).foregroundStyle(color)
-            if !unit.isEmpty { Text(unit).font(.caption2).foregroundStyle(.secondary) }
+            if let value {
+                Text(value).font(.subheadline).fontWeight(.medium).monospacedDigit().foregroundStyle(color)
+                if !unit.isEmpty { Text(unit).font(.caption).foregroundStyle(.secondary) }
+            }
         }
-        .frame(width: 52, alignment: .trailing)
+        .frame(width: valueWidth, alignment: .trailing)
+    }
+
+    /// "7h 20m" — sleep was cut to whole hours.
+    private static func hours(_ minutes: Int) -> String {
+        let h = minutes / 60, m = minutes % 60
+        return m > 0 ? "\(h)h \(m)m" : "\(h)h"
+    }
+
+    private static let isoDay: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
+
+    /// "Fri 17 Oct" for the stored "2026-10-17".
+    private static func dayText(_ iso: String) -> String {
+        isoDay.date(from: iso).map { $0.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) } ?? iso
     }
 
     // MARK: - Card Container
@@ -297,7 +314,7 @@ struct AnalyticsRecoveryTab: View {
         parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let date = parser.date(from: iso) ?? ISO8601DateFormatter().date(from: iso)
         guard let date else { return iso }
-        let fmt = DateFormatter(); fmt.dateFormat = "h:mm a"
-        return fmt.string(from: date)
+        // The reader's own clock, 12- or 24-hour; it was always "h:mm a".
+        return date.formatted(date: .omitted, time: .shortened)
     }
 }

@@ -5,6 +5,8 @@ import SwiftUI
 /// own: the Analytics container owns the navigation bar.
 struct ProgressionView: View {
     @EnvironmentObject var appState: AppState
+    /// The symbol column of the recommendation rows, at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
 
     var body: some View {
         Group {
@@ -76,13 +78,7 @@ struct ProgressionView: View {
 
         return AnalyticsCard(header: "Score") {
             if score != nil, let band {
-                Text(band.label)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(color)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(color.opacity(0.12))
-                    .clipShape(Capsule())
+                TintCapsule(text: band.label, color: color)
             }
         } content: {
             VStack(alignment: .leading, spacing: 10) {
@@ -90,7 +86,7 @@ struct ProgressionView: View {
                     if let s = score {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text("\(s)")
-                                .font(.system(size: 42, weight: .bold, design: .rounded))
+                                .font(.largeTitle.bold()).fontDesign(.rounded)
                                 .foregroundStyle(color)
                             Text("/ 100")
                                 .font(.subheadline)
@@ -102,18 +98,12 @@ struct ProgressionView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .accessibilityLabel("\(review.compliancePct) percent of sessions done")
-                        if let scope = review.scopeLabel {
-                            Text(scope)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
+                    // What the percentage covers is said to VoiceOver; on
+                    // screen it repeated the percentage in words (§1.4).
+                    Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
+                        .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                        .accessibilityLabel("\(review.compliancePct) percent of sessions done"
+                                            + (review.scopeLabel.map { ", \($0)" } ?? ""))
                 }
                 if let status = review.scoreStatus {
                     Text(status.reason)
@@ -136,9 +126,9 @@ struct ProgressionView: View {
                 ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb")
-                            .font(.caption)
+                            .font(.subheadline)
                             .foregroundStyle(.yellow)
-                            .frame(width: 16)
+                            .frame(width: iconWidth)
                         Text(rec)
                             .font(.subheadline)
                             .foregroundStyle(.primary)
@@ -172,20 +162,8 @@ struct ProgressionView: View {
     // MARK: - Empty state
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("No progression data yet")
-                .font(.headline)
-            Text("Log sets to start tracking.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        ContentUnavailableView("No progression data yet", systemImage: "chart.line.uptrend.xyaxis",
+                               description: Text("Log sets to start tracking."))
     }
 
     // MARK: - Helpers
@@ -220,9 +198,12 @@ struct ScoreExplanation: View {
                         .rotationEffect(.degrees(open ? 180 : 0))
                 }
                 .font(.footnote.weight(.medium))
+                .frame(minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.accentColor)
+            .accessibilityValue(open ? "Expanded" : "Collapsed")
 
             if open {
                 if let b = breakdown {
@@ -237,26 +218,26 @@ struct ScoreExplanation: View {
                             Text("\(part.value) × \(part.weight.formatted(.number.precision(.fractionLength(0...1)))) = \(part.points)")
                                 .monospacedDigit()
                         }
-                        .font(.footnote)
+                        .font(.subheadline)
                     }
                 }
                 if let measures = breakdown?.measures, !measures.isEmpty {
                     Divider()
                     ForEach(measures) { m in
                         HStack(alignment: .firstTextBaseline) {
-                            Text(m.name) + Text(m.detail.map { " · \($0)" } ?? "").foregroundColor(.secondary)
+                            Text(m.name).font(.subheadline)
+                                + Text(m.detail.map { " · \($0)" } ?? "").font(.footnote).foregroundColor(.secondary)
                             Spacer()
                             Text(m.points.map { "\($0) pts" } ?? "collecting")
-                                .monospacedDigit().foregroundStyle(.secondary)
+                                .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
                         }
-                        .font(.footnote)
                     }
                 }
                 if !pending.isEmpty {
                     Divider()
                     ForEach(pending) { m in
-                        (Text(m.label) + Text(" · \(m.reason)").foregroundColor(.secondary))
-                            .font(.footnote)
+                        (Text(m.label).font(.subheadline)
+                            + Text(" · \(m.reason)").font(.footnote).foregroundColor(.secondary))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -271,9 +252,9 @@ struct ScoreExplanation: View {
                                 .fontWeight(band.id == s.id ? .semibold : .regular)
                             Spacer()
                             Text(ProgressionScore.range(s.bands, at: i))
-                                .foregroundStyle(.secondary)
+                                .monospacedDigit().foregroundStyle(.secondary)
                         }
-                        .font(.footnote)
+                        .font(.subheadline)
                     }
                 }
             }
@@ -288,6 +269,7 @@ private struct AdjustmentRow: View {
     let adjustment: ProgressionAdjustment
 
     @EnvironmentObject var appState: AppState
+    @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
     @State private var isApplying = false
     @State private var applied = false
     @State private var outcome: String? = nil
@@ -296,10 +278,9 @@ private struct AdjustmentRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: adjustment.isAppliable ? "slider.horizontal.3" : "lightbulb")
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.orange)
-                    .frame(width: 16)
-                    .padding(.top, 2)
+                    .frame(width: iconWidth)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(adjustment.label)
@@ -325,17 +306,16 @@ private struct AdjustmentRow: View {
                             ProgressView().scaleEffect(0.8)
                         } else {
                             Text(applied ? "Applied" : "Apply")
-                                .font(.caption)
+                                .font(.subheadline)
                                 .fontWeight(.semibold)
                         }
                     }
                     .buttonStyle(.bordered)
+                    .controlSize(.regular)
                     .tint(applied ? .green : .orange)
                     .disabled(isApplying || applied)
                 } else {
-                    Text("advice")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                    TintCapsule(text: "advice", color: .secondary)
                 }
             }
             if let outcome {

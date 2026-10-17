@@ -6,6 +6,15 @@ import Charts
 struct SleepStagesChartView: View {
     let logs: [DailyBioLog]
 
+    /// One colour per stage, for this chart and Last Night's stage row —
+    /// "Awake" was tan here and orange there.
+    static let stageColors: [String: Color] = [
+        "Deep":  Color(red: 0.2, green: 0.2, blue: 0.7),
+        "REM":   Color(red: 0.4, green: 0.3, blue: 0.8),
+        "Light": Color(red: 0.45, green: 0.65, blue: 0.9),
+        "Awake": Color(red: 0.8, green: 0.7, blue: 0.4),
+    ]
+
     private struct SleepPoint: Identifiable {
         let id = UUID()
         let date: Date
@@ -43,12 +52,8 @@ struct SleepStagesChartView: View {
                 .foregroundStyle(by: .value("Stage", pt.stage))
                 .cornerRadius(2)
             }
-            .chartForegroundStyleScale([
-                "Deep":  Color(red: 0.2, green: 0.2, blue: 0.7),
-                "REM":   Color(red: 0.4, green: 0.3, blue: 0.8),
-                "Light": Color(red: 0.45, green: 0.65, blue: 0.9),
-                "Awake": Color(red: 0.8, green: 0.7, blue: 0.4)
-            ])
+            .chartForegroundStyleScale(domain: ["Deep", "REM", "Light", "Awake"],
+                                       range: ["Deep", "REM", "Light", "Awake"].map { Self.stageColors[$0]! })
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisValueLabel {
@@ -76,10 +81,10 @@ struct SleepStagesChartView: View {
     private var emptyState: some View {
         VStack(spacing: 8) {
             Image(systemName: "bed.double")
-                .font(.system(size: 32))
+                .font(.title2)
                 .foregroundStyle(.secondary)
             Text("No sleep stage data")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 100)
     }
