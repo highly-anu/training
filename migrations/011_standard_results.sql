@@ -17,7 +17,10 @@
 -- logged_on    the athlete's day (computed in Python from their timezone;
 --              never logged_at::date, which is the server's UTC day)
 --
--- Run: python run_migration.py 011_standard_results
+-- Run (local): python run_migration.py 011_standard_results
+-- Run (production): psql "$(grep '^DATABASE_URL=' .env | cut -d= -f2-)" -v ON_ERROR_STOP=1 -f migrations/011_standard_results.sql
+-- — run_migration.py layers .env.local over .env, so from a dev checkout it
+-- migrates training_test, not production (docs/program-history-release.md).
 -- Additive: nullable columns and defaults; existing rows read as `manual`
 -- with logged_on NULL until scripts/backfill_performance_logged_on.py fills
 -- it (readers fall back to logged_at's day in the athlete's timezone).

@@ -21,7 +21,10 @@
 --              confirmed one (to correct its result) and never revives a
 --              dismissed one
 --
--- Run: python run_migration.py 012_standard_suggestions
+-- Run (local): python run_migration.py 012_standard_suggestions
+-- Run (production): psql "$(grep '^DATABASE_URL=' .env | cut -d= -f2-)" -v ON_ERROR_STOP=1 -f migrations/012_standard_suggestions.sql
+-- — run_migration.py layers .env.local over .env, so from a dev checkout it
+-- migrates training_test, not production (docs/program-history-release.md).
 -- Additive: one new table. src/standards_store.py also creates it lazily,
 -- with row security on and no policy (deny-by-default) — the policy below is
 -- what lets an athlete read their own rows through PostgREST.
