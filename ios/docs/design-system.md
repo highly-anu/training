@@ -279,6 +279,16 @@ func slotTypeIcon(_ slotType: String) -> String {
 }
 ```
 
+### 3.5 Heart-Rate Zone Colors
+
+`HRZoneStyle` (`HRZoneStyle.swift`): Z1 blue, Z2 green, Z3 yellow, Z4 orange,
+Z5 red — easy to hard. Every zone drawn on the phone reads it: Analytics ▸
+Program's intensity rows, a workout's zone distribution and HR timeline bands,
+and Profile ▸ Athlete's zone bar (the five zones as one bar, each segment as
+wide as its share of heart rate, its bpm range under it; each edge's stepper
+carries the colour of the zone it ends). The timeline used to draw slate/sky
+bands from the web palette while the rest drew blue…red.
+
 ---
 
 ## 4. Typography
@@ -541,12 +551,12 @@ beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
-    case equipment, injuries, benchmarks, schedule
+    case athlete, equipment, schedule, benchmarks
 
     var label: String {
         switch self {
+        case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
-        case .injuries:   return "Injuries"
         case .benchmarks: return "Benchmarks"
         case .schedule:   return "Schedule"
         }
@@ -555,8 +565,8 @@ private enum ProfileTab: Int, AppSubTab {
 
 AppSubTabScreen(selection: $selectedTab) { tab in
     switch tab {
+    case .athlete:    AthleteTab()
     case .equipment:  EquipmentTab()
-    case .injuries:   InjuriesTab()
     case .benchmarks: BenchmarksTab()
     case .schedule:   ScheduleTab()
     }
@@ -818,7 +828,7 @@ answer.
 | **Program** | `ProgramView` | Calendar · Overview · History |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
-| **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+| **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Benchmarks |
 
 The section names and their order are the web's, item for item
 (`docs/information-architecture.md` §2): a section is renamed or moved on
@@ -1108,8 +1118,8 @@ the prescription.
 ### 6.17 Regenerate Offer
 
 **A changed profile offers to rebuild the plan from this week, never
-silently.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete,
-Equipment, Injuries and Schedule tabs whenever `AppState.constraintDifferences`
+silently.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete
+(which holds injuries), Equipment and Schedule tabs whenever `AppState.constraintDifferences`
 is non-empty — `ProgramConstraintsDiff` (the phone's copy of the web's
 `lib/programConstraintsDiff.ts`) compares the profile's level, equipment, days
 per week and injuries with the `constraints` the active program was built for,

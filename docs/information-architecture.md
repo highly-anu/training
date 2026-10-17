@@ -68,7 +68,7 @@ web's Insight group into Train.
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
 | **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
-| **Profile** | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete · Equipment · Injuries · Schedule · Benchmarks |
+| **Profile** | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete (incl. injuries) · Equipment · Schedule · Benchmarks — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
 
 Differences kept on purpose:
@@ -180,7 +180,7 @@ Benchmarks), sex (a new profile key; unblocks the female benchmark standards), b
 | **Program** | `ProgramView` | Calendar · Overview · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = every program (design system §6.20); Load = the old Overview. |
-| **Profile** | `ProfileView` | Athlete · Equipment · Injuries · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
+| **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Benchmarks | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
 the Sync tab — is deleted; a start-date repair, if still wanted, belongs under Program

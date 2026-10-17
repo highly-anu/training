@@ -15,9 +15,8 @@ struct HRZoneDistributionView: View {
 
     private var rows: [ZoneRow] {
         let pcts = [zones.z1, zones.z2, zones.z3, zones.z4, zones.z5]
-        let colors: [Color] = [.blue, .green, .yellow, .orange, .red]
         let labels = ["Z1 Recovery", "Z2 Aerobic", "Z3 Tempo", "Z4 Threshold", "Z5 VO₂max"]
-        return (0..<5).map { i in ZoneRow(id: i + 1, label: labels[i], pct: pcts[i], color: colors[i]) }
+        return (0..<5).map { i in ZoneRow(id: i + 1, label: labels[i], pct: pcts[i], color: HRZoneStyle.colors[i]) }
             .filter { $0.pct > 0 }
     }
 
