@@ -732,9 +732,14 @@ writes.
 
 **Two watches, one contract** (`docs/watch.md`: the rule, the parity table, the
 tests). A watch feature lands with its `today-session` key and both watches in
-one branch, or its row in that table says pending. The Apple Watch does not read
-the contract yet — the phone builds its sessions from `/user/program` and it
-picks views by slot type; `docs/roadmap.md` item 14 moves it over.
+one branch, or its row in that table says pending. The Apple Watch reads it
+through the phone, which relays `today-session?spec=1&week=1` as the server
+wrote it (`WatchDayMessage`: the JSON, lzfse-compressed, in the reply to the
+watch's request and queued with `transferUserInfo`); the watch decodes
+`WatchDay` and still picks views by slot type until `docs/roadmap.md` item
+14.3. `data/watch_day_fixture.json` is that body, written by the route
+(`test_today_session.py --write`, which fails when they part) and decoded by
+`WatchDayTests`.
 
 The Garmin app (`garmin/`) is a **core library** (`garmin/core`) inside an app
 shell (`garmin/TrainingCompanionCIQ`); **packages own their watch screens** the
@@ -771,9 +776,9 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   methodology's headline sentence read from the cached `/analytics/program`
   snapshot — never computed on the watch's sync. The Garmin glance adds
   "3/5 THIS WK" to its label on a rest day, in the evening and once the day is
-  done (GlanceCache keeps the two numbers); the phone forwards the server's
-  completed session ids and `progress` to the Apple Watch, which joins them to
-  what it recorded itself and shows the week's count under This Week. The
+  done (GlanceCache keeps the two numbers); the Apple Watch reads `completed`
+  and `progress` from the day the phone relays, joins them to what it recorded
+  itself and shows the week's count over the week ahead. The
   Garmin app's activity menu has a Progress page (week, programme, the
   headline); the Apple Watch complication rings the week around today's
   session. With `?spec=1` each exercise carries `last` — what was done last

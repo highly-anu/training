@@ -62,7 +62,7 @@ struct CurrentExerciseView: View {
 
     @ViewBuilder
     private var slotView: some View {
-        switch exercise.resolvedSlotType {
+        switch exercise.slotType {
         case "sets_reps":
             SetsRepsView(exercise: exercise, exerciseIndex: exerciseIndex)
         case "time_domain", "skill_practice":

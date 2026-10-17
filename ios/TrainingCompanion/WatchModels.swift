@@ -641,8 +641,12 @@ struct UserProgramSavePayload: Encodable {
     }
 }
 
-// MARK: - Watch payload (sent from iPhone to Watch via WCSession)
+// MARK: - Watch payload (the server's day, relayed by the iPhone)
 
+/// One session as `GET /user/today-session` encodes it for both watches
+/// (`api.encode_watch_session`). The phone used to build these itself from
+/// `/user/program`, with its own week and day maths, slot-type guesses and
+/// load wording; now it forwards the server's.
 struct WatchSession: Codable, Identifiable, Hashable {
     var id: String { sessionId }
     let sessionId: String           // "\(weekNumber)-\(dayName)-\(sessionIndex)"
@@ -651,6 +655,36 @@ struct WatchSession: Codable, Identifiable, Hashable {
     let estimatedMinutes: Int
     let isDeload: Bool
     let exercises: [WatchExercise]
+    /// Done on any device: a log with a completion time or a matched workout.
+    var completed: Bool = false
+
+    enum CodingKeys: String, CodingKey {
+        case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
+    }
+}
+
+extension WatchSession {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try c.decode(String.self, forKey: .sessionId)
+        modalityId = try c.decodeIfPresent(String.self, forKey: .modalityId) ?? ""
+        archetypeName = try c.decodeIfPresent(String.self, forKey: .archetypeName) ?? modalityId
+        estimatedMinutes = c.lenientInt(.estimatedMinutes) ?? 45
+        isDeload = try c.decodeIfPresent(Bool.self, forKey: .isDeload) ?? false
+        exercises = try c.decodeIfPresent([WatchExercise].self, forKey: .exercises) ?? []
+        completed = try c.decodeIfPresent(Bool.self, forKey: .completed) ?? false
+    }
+}
+
+extension KeyedDecodingContainer {
+    /// A count the YAML may write as 7.5 or "8": the whole day failed to
+    /// decode over one such number when the phone forwarded it as JSON.
+    func lenientInt(_ key: Key) -> Int? {
+        if let i = try? decodeIfPresent(Int.self, forKey: key) { return i }
+        if let d = try? decodeIfPresent(Double.self, forKey: key) { return Int(d.rounded()) }
+        if let s = try? decodeIfPresent(String.self, forKey: key) { return Int(s) }
+        return nil
+    }
 }
 
 struct WatchExercise: Codable, Hashable {
@@ -692,6 +726,48 @@ struct WatchExercise: Codable, Hashable {
     /// number for the next level, from today-session's `standard`; nil on
     /// every other step.
     var standard: WatchStandard? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseId, name, slotType, slotRole, isMeta, loadDescription, loadNote, coachingCue
+        case sets, reps, weightKg, targetRpe, durationMinutes, zoneTarget, timeMinutes, targetRounds
+        case emomFormat, holdSeconds, distanceKm, restSeconds, prescribedZoneLower, prescribedZoneUpper
+        case lastTime = "last", standard
+    }
+}
+
+extension WatchExercise {
+    /// The server's exercise (`api._encode_watch_exercise`). Its slot type
+    /// is already resolved — the server infers one for a slot that names
+    /// none — so the watch no longer guesses it.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        // A block with no exercise (a BJJ round, a circuit's wrapper) has no
+        // id; it is logged by its name, as the Garmin logs it (Wire.mc).
+        exerciseId = try c.decodeIfPresent(String.self, forKey: .exerciseId) ?? name
+        slotType = try c.decodeIfPresent(String.self, forKey: .slotType) ?? "sets_reps"
+        slotRole = try c.decodeIfPresent(String.self, forKey: .slotRole) ?? ""
+        isMeta = try c.decodeIfPresent(Bool.self, forKey: .isMeta) ?? false
+        loadDescription = try c.decodeIfPresent(String.self, forKey: .loadDescription) ?? ""
+        loadNote = try c.decodeIfPresent(String.self, forKey: .loadNote)
+        coachingCue = try c.decodeIfPresent(String.self, forKey: .coachingCue)
+        sets = c.lenientInt(.sets)
+        reps = (try? c.decodeIfPresent(String.self, forKey: .reps)) ?? c.lenientInt(.reps).map(String.init)
+        weightKg = try? c.decodeIfPresent(Double.self, forKey: .weightKg)
+        targetRpe = c.lenientInt(.targetRpe)
+        durationMinutes = c.lenientInt(.durationMinutes)
+        zoneTarget = try c.decodeIfPresent(String.self, forKey: .zoneTarget)
+        timeMinutes = c.lenientInt(.timeMinutes)
+        targetRounds = c.lenientInt(.targetRounds)
+        emomFormat = try c.decodeIfPresent(String.self, forKey: .emomFormat)
+        holdSeconds = c.lenientInt(.holdSeconds)
+        distanceKm = try? c.decodeIfPresent(Double.self, forKey: .distanceKm)
+        restSeconds = c.lenientInt(.restSeconds)
+        prescribedZoneLower = c.lenientInt(.prescribedZoneLower)
+        prescribedZoneUpper = c.lenientInt(.prescribedZoneUpper)
+        lastTime = try c.decodeIfPresent(String.self, forKey: .lastTime)
+        standard = try c.decodeIfPresent(WatchStandard.self, forKey: .standard)
+    }
 }
 
 /// A test step's standard as the server words it for the watches
@@ -729,7 +805,7 @@ enum WatchResults {
             let reps = sets.filter(\.completed).compactMap(\.repsActual).filter { $0 > 0 }
             guard !reps.isEmpty else { return nil }
             // Reps in a window add up (a pentathlon set); otherwise the best set.
-            let timed = ["time_domain", "skill_practice"].contains(ex.resolvedSlotType)
+            let timed = ["time_domain", "skill_practice"].contains(ex.slotType)
             return Double(timed ? reps.reduce(0, +) : reps.max()!)
         default: return nil
         }
@@ -801,6 +877,44 @@ nonisolated struct WatchWorkoutSummary: Codable {
     var standardResults: [String: String]? = nil
 }
 
+/// What the watch sends the phone after a session, in one shape whichever
+/// way it travels: live (`sendMessage`) while the phone is reachable — the
+/// phone stores it on the server and answers `stored` — and queued
+/// (`transferUserInfo`) otherwise or when no such answer comes. Queued alone,
+/// a workout reached the server whenever the system delivered it, and
+/// between simulators never: the phone's daemon took the transfer and did
+/// not hand it on. A delivery that arrives both ways is stored once: the
+/// workout's id is deterministic, the log merges exercise by exercise and
+/// the match is an upsert.
+nonisolated enum WatchUploadMessage {
+    static let workout = "workout_complete"
+    static let sessionDone = "session_marked_complete"
+    /// A summary past this goes as a file: a message, live or queued, is
+    /// capped near 65 KB.
+    static let maxMessageBytes = 50_000
+
+    static func message(_ summary: WatchWorkoutSummary) -> [String: Any]? {
+        guard let data = try? JSONEncoder().encode(summary),
+              var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        dict["type"] = workout
+        return dict
+    }
+
+    static func summary(from message: [String: Any]) -> WatchWorkoutSummary? {
+        guard message["type"] as? String == workout,
+              let data = try? JSONSerialization.data(withJSONObject: message) else { return nil }
+        return try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data)
+    }
+
+    static func sessionDone(_ sessionId: String, at date: Date = Date()) -> [String: Any] {
+        ["type": sessionDone, "sessionId": sessionId, "markedAt": ISO8601DateFormatter().string(from: date)]
+    }
+
+    /// The phone's answer: the server has it.
+    static func reply(stored: Bool) -> [String: Any] { ["stored": stored] }
+    static func stored(_ reply: [String: Any]) -> Bool { reply["stored"] as? Bool == true }
+}
+
 nonisolated struct WatchSetLog: Codable, Equatable {
     let setIndex: Int
     let repsActual: Int?
@@ -812,39 +926,109 @@ nonisolated struct WatchSetLog: Codable, Equatable {
     let endOffset: Int?     // seconds from session startedAt when this set was logged
 }
 
-// MARK: - Watch sync extras (iPhone → Watch, appended to today_sessions payload)
+// MARK: - The day (GET /user/today-session?spec=1&week=1, relayed as it is)
 
-/// Compact per-day overview for the "This Week" section on the Watch.
-struct WeeklyOverviewDay: Codable {
-    let dayName: String        // "Monday" … "Sunday"
+/// What the server says about the athlete's day — the payload both watches
+/// read (docs/watch.md). The phone forwards it unchanged and the watch
+/// decodes it here, so a key the server adds reaches the Apple Watch with no
+/// phone code, as it reaches the Garmin.
+struct WatchDay: Codable {
+    /// ok | no_program | not_started | program_expired
+    let status: String
+    var date: String? = nil
+    /// The first day of a program that has not started (`not_started`).
+    var startsOn: String? = nil
+    var weekNumber: Int? = nil
+    var totalWeeks: Int? = nil
+    var dayName: String? = nil
+    var sessions: [WatchSession]? = nil
+    var readiness: WatchReadiness? = nil
+    var tomorrow: WatchTomorrow? = nil
+    var progress: WatchProgress? = nil
+    /// Today and the six days after it, inside the program (`week=1`).
+    var days: [WatchDayAhead]? = nil
+    /// hrConfig, else 220 − age, for the zone alerts.
+    var maxHR: Int? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case status, date, startsOn, weekNumber, totalWeeks, dayName, sessions
+        case readiness, tomorrow, progress, days, maxHR
+    }
+}
+
+extension WatchDay {
+    /// The sessions must decode; each block beside them is read on its own,
+    /// so an odd readiness or progress costs that block, not the day.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        status = try c.decode(String.self, forKey: .status)
+        date = try? c.decodeIfPresent(String.self, forKey: .date)
+        startsOn = try? c.decodeIfPresent(String.self, forKey: .startsOn)
+        weekNumber = c.lenientInt(.weekNumber)
+        totalWeeks = c.lenientInt(.totalWeeks)
+        dayName = try? c.decodeIfPresent(String.self, forKey: .dayName)
+        sessions = try c.decodeIfPresent([WatchSession].self, forKey: .sessions)
+        readiness = try? c.decodeIfPresent(WatchReadiness.self, forKey: .readiness)
+        tomorrow = try? c.decodeIfPresent(WatchTomorrow.self, forKey: .tomorrow)
+        progress = try? c.decodeIfPresent(WatchProgress.self, forKey: .progress)
+        days = try? c.decodeIfPresent([WatchDayAhead].self, forKey: .days)
+        maxHR = c.lenientInt(.maxHR)
+    }
+}
+
+/// The server's readiness: a 0–100 score and green | yellow | red.
+struct WatchReadiness: Codable, Hashable {
+    let score: Double
+    let status: String
+}
+
+struct WatchTomorrow: Codable, Hashable {
+    let dayName: String
     let sessionCount: Int
-    let modalityIds: [String]  // in order (empty = rest day)
+    var modalityId: String? = nil
+    var archetypeName: String? = nil
+    var estimatedMinutes: Int? = nil
 }
 
-/// Derived readiness signal sent from iPhone (based on HRV + resting HR vs. 30-day baseline).
-struct ReadinessInfo: Codable {
-    let score: Double           // 0.0 – 1.0
-    let signal: String          // "green" | "yellow" | "red"
-    let restingHR: Int?
-    let hrv: Int?               // ms, rounded
+/// This program week's sessions done of those due and of all it holds, the
+/// program's so far, and the methodology's headline (`api._watch_progress`).
+struct WatchProgress: Codable, Hashable {
+    struct Week: Codable, Hashable { let number: Int; let of: Int; let done: Int; let due: Int; let sessions: Int }
+    struct Program: Codable, Hashable { let done: Int; let due: Int; var pct: Int? = nil }
+    struct Headline: Codable, Hashable {
+        var label: String? = nil; var text: String? = nil; var trendText: String? = nil; var status: String? = nil
+    }
+    let week: Week
+    var program: Program? = nil
+    var headline: Headline? = nil
 }
 
-// MARK: - Slot-type resolution
+/// One day of the week ahead: "Strength A +1", its sessions (no screens).
+struct WatchDayAhead: Codable, Hashable, Identifiable {
+    var id: String { date }
+    let offset: Int
+    let date: String
+    let title: String
+    let sessions: [WatchSession]
+}
 
-extension WatchExercise {
-    /// Canonical screen-selection key. Passes through known slot_type values;
-    /// falls back to field-based inference for custom archetypes that omit slot_type.
-    var resolvedSlotType: String {
-        let known = ["sets_reps", "time_domain", "skill_practice", "emom",
-                     "amrap", "amrap_movement", "for_time", "distance", "static_hold"]
-        if known.contains(slotType) { return slotType }
-        // Field-based inference — order matters
-        if distanceKm    != nil { return "distance" }
-        if holdSeconds   != nil { return "static_hold" }
-        if emomFormat    != nil { return "emom" }
-        if durationMinutes != nil { return "time_domain" }
-        if timeMinutes != nil && targetRounds != nil { return "amrap" }
-        if targetRounds  != nil { return "for_time" }
-        return "sets_reps"
+/// The day on the wire between the phone and the watch: the server's JSON,
+/// compressed, under one key. A dictionary of the JSON could not carry its
+/// nulls (`transferUserInfo` takes property-list types only), and a week of
+/// sessions is past the size a message may be uncompressed.
+enum WatchDayMessage {
+    static let type = "watch_day"
+
+    static func payload(json: Data) -> [String: Any]? {
+        guard let packed = try? (json as NSData).compressed(using: .lzfse) else { return nil }
+        return ["type": type, "day": packed as Data]
+    }
+
+    /// The day and its JSON, or nil for any other message.
+    static func day(from message: [String: Any]) -> (day: WatchDay, json: Data)? {
+        guard message["type"] as? String == type, let packed = message["day"] as? Data,
+              let json = try? (packed as NSData).decompressed(using: .lzfse) as Data,
+              let day = try? JSONDecoder().decode(WatchDay.self, from: json) else { return nil }
+        return (day, json)
     }
 }

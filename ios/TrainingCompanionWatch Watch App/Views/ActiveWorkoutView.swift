@@ -85,7 +85,7 @@ struct ActiveWorkoutView: View {
                 ForEach(session.exercises, id: \.exerciseId) { ex in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
-                            Image(systemName: ModalityStyle.slotTypeIcon(for: ex.resolvedSlotType))
+                            Image(systemName: ModalityStyle.slotTypeIcon(for: ex.slotType))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                             Text(ex.name).font(.caption).lineLimit(1)
