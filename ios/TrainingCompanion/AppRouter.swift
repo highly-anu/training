@@ -46,22 +46,32 @@ final class AppRouter: ObservableObject {
         analyticsSection = nil
     }
 
-    /// A screen Analytics ▸ Progress pushes: one measure's, or one exercise's.
-    enum ProgressDetail: Hashable {
+    /// A detail screen an Analytics section pushes (§6.37): Progress's
+    /// measures and exercises, Recovery's readiness, sleep, trends and check-ins.
+    enum AnalyticsDetail: Hashable {
         case measure(String)
         case exercise(String)
+        case readiness, sleep, hrv, restingHR, checkIns
+
+        /// The section that pushes it.
+        var section: AnalyticsTab {
+            switch self {
+            case .measure, .exercise: return .progress
+            case .readiness, .sleep, .hrv, .restingHR, .checkIns: return .recovery
+            }
+        }
     }
 
-    /// Asked for by a deep link; Progress pushes it once its data is loaded.
-    @Published var pendingProgressDetail: ProgressDetail? = nil
+    /// Asked for by a deep link; the section pushes it once its data is loaded.
+    @Published var pendingAnalyticsDetail: AnalyticsDetail? = nil
 
-    func openProgressDetail(_ detail: ProgressDetail) {
-        pendingProgressDetail = detail
-        showAnalytics(.progress)
+    func openAnalyticsDetail(_ detail: AnalyticsDetail) {
+        pendingAnalyticsDetail = detail
+        showAnalytics(detail.section)
     }
 
-    func clearPendingProgressDetail() {
-        pendingProgressDetail = nil
+    func clearPendingAnalyticsDetail() {
+        pendingAnalyticsDetail = nil
     }
 
     /// A Log section asked for from outside, cleared once applied.

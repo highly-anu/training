@@ -7,7 +7,7 @@ struct ProgressionView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
     /// A detail pushed from outside (a deep link); the cards push their own.
-    @State private var route: AppRouter.ProgressDetail?
+    @State private var route: AppRouter.AnalyticsDetail?
     /// The symbol column of the recommendation rows, at the reader's text size.
     @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
 
@@ -23,7 +23,7 @@ struct ProgressionView: View {
         .task { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
         .task { await appState.loadIfStale("exerciseHistory") { await appState.loadExerciseHistory() } }
         .task { applyPendingDetail() }
-        .onChange(of: router.pendingProgressDetail) { applyPendingDetail() }
+        .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
         .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
         .onChange(of: appState.exerciseHistory?.exercises.count) { applyPendingDetail() }
         .refreshable {
@@ -38,7 +38,7 @@ struct ProgressionView: View {
     // MARK: - Pushed from outside
 
     @ViewBuilder
-    private func detail(_ detail: AppRouter.ProgressDetail) -> some View {
+    private func detail(_ detail: AppRouter.AnalyticsDetail) -> some View {
         switch detail {
         case .measure(let id):
             if let entry = appState.programAnalytics?.progress.first(where: { $0.id == id }) {
@@ -49,13 +49,15 @@ struct ProgressionView: View {
                 ExerciseHistoryView(item: item,
                                     finding: appState.progressionReview?.exerciseFindings.first { $0.exerciseId == id })
             }
+        default:
+            EmptyView()
         }
     }
 
     /// Push what a deep link asked for once its data has loaded; one that
     /// names nothing loaded is dropped then.
     private func applyPendingDetail() {
-        guard let pending = router.pendingProgressDetail else { return }
+        guard let pending = router.pendingAnalyticsDetail, pending.section == .progress else { return }
         switch pending {
         case .measure(let id):
             guard let progress = appState.programAnalytics?.progress else { return }
@@ -63,8 +65,10 @@ struct ProgressionView: View {
         case .exercise(let id):
             guard let items = appState.exerciseHistory?.exercises else { return }
             if items.contains(where: { $0.exerciseId == id }) { route = pending }
+        default:
+            break
         }
-        router.clearPendingProgressDetail()
+        router.clearPendingAnalyticsDetail()
     }
 
     // MARK: - Review content

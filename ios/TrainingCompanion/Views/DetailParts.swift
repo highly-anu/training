@@ -33,6 +33,23 @@ struct AboutText: Decodable, Equatable {
     var isEmpty: Bool { (measures ?? "").isEmpty && needs.isEmpty && (notes ?? "").isEmpty }
 }
 
+/// One load or recovery term in words (`vocabulary.TERMS`): "TSB · form" and
+/// what it is, in a sentence or two.
+struct AnalyticsTerm: Decodable, Equatable {
+    let label: String
+    let text: String
+}
+
+extension AboutText {
+    /// The About for a screen that explains terms rather than a measure: each
+    /// term's sentence, in the order given, skipping any the server lacks.
+    init(terms ids: [String], from terms: [String: AnalyticsTerm]) {
+        let found = ids.compactMap { terms[$0] }
+        self.init(measures: found.isEmpty ? nil
+                  : found.map { found.count > 1 ? "\($0.label): \($0.text)" : $0.text }.joined(separator: "\n\n"))
+    }
+}
+
 /// The end of every detail screen (design-system §6.37), as Apple Health ends
 /// a metric's screen with "About": what the number measures and the
 /// package's note, then what to log for it and where. The cards above say
