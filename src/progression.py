@@ -313,6 +313,11 @@ def calculate_load(
     (0.6 of time, distance and sets, 0.7 of rounds). An archetype's own
     `scaling.deload.volume_multiplier` still wins for its sets.
     """
+    if slot.get('standard'):
+        # A test of a standard is a protocol: prescribed exactly as written
+        # (src/standard_tests.py), never ramped, levelled or deloaded.
+        from src.standard_tests import protocol_load
+        return protocol_load(exercise, slot)
     load = _calculate_load(exercise, slot, progression_model, week_number, phase,
                            training_level, is_deload, session_time_minutes, deload_keep)
     rpm = paced_rpm(exercise, slot)

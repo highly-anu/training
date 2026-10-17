@@ -375,6 +375,8 @@ export interface ExerciseAssignment {
   parent_slot_role?: string
   /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */
   skip_exercise?: boolean
+  /** The standard this slot measures, when it is a test's scored slot. */
+  standard?: { id: string; result: string | null }
 }
 
 export interface ComplementaryExercise {
@@ -406,6 +408,19 @@ export interface Session {
   complementary_work?: ComplementaryExercise[]
   duration_min?: number
   provenance?: SessionProvenance | null
+  /** A test of the phase's standards, put in place of a session (src/generator._plan_week_tests). */
+  test?: SessionTest
+}
+
+export interface SessionTest {
+  archetype: string
+  standards: string[]
+  phase_id?: string
+  week_in_phase?: number
+  /** The modality of the session it stands in for. */
+  in_place_of?: string
+  /** That session: its archetype and planned minutes. */
+  instead_of?: { archetype?: string; name?: string; modality?: string; minutes?: number }
 }
 
 /** What the philosophy could not cover on its own, and what it borrowed. */
@@ -506,6 +521,17 @@ export interface PhaseSummary {
   archetypes: PhaseSummaryItem[]
   exercises: PhaseSummaryItem[]
   lifts: PhaseSummaryLift[]
+  /** The phase's tests of its standards, run or skipped (with why). */
+  tests?: Array<{
+    week_number: number
+    week_in_phase?: number
+    day?: string | null
+    status: 'planned' | 'skipped'
+    reason?: string
+    archetype: { id: string | null; name: string | null }
+    standards?: Array<{ id: string; name: string }>
+    in_place_of?: string | null
+  }>
   dropped: {
     archetypes: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]
     exercises: Omit<PhaseSummaryItem, 'sessions' | 'status'>[]
@@ -619,22 +645,150 @@ export interface TracedProgram extends GeneratedProgram {
   generation_trace?: GenerationTrace
 }
 
-// ─── Benchmarks ───────────────────────────────────────────────────────────────
+// ─── Standards ────────────────────────────────────────────────────────────────
+// "Standard" everywhere a person reads it; the type, route and key names keep
+// "benchmark" because they are stored and on the wire (src/analytics/benchmarks_data.py).
 
 export type BenchmarkLevel = 'entry' | 'intermediate' | 'advanced' | 'elite'
 
-/** Drives which benchmark standards the athlete is scored against. */
+/** Drives which standards' tables the athlete is scored against. */
 export type Sex = 'male' | 'female'
 
 export interface BenchmarkStandard {
   id: string
   name: string
   category: 'strength' | 'conditioning' | 'kettlebell' | 'tactical' | 'benchmark_wod' | 'skill' | 'cell'
+  /** The group's name and place, the same on every screen and both clients. */
+  categoryName?: string
+  categoryOrder?: number
+  /** The modality it measures — its ladder is drawn in that colour. */
   domain?: string
   unit: string
   standards: Record<BenchmarkLevel, number>
+  /** The thresholds as printed ("4:30", "1.5×BW"). */
+  standardsText?: Record<BenchmarkLevel, string>
+  /** What a result field reads: "m:ss", "seconds", "×BW", "reps"… */
+  inputHint?: string
   lower_is_better?: boolean
+  metricType?: string
   notes?: string
+  testProtocol?: string
+  /** A run standard: the distance an imported run's fastest window reads as. */
+  bestEffort?: { km: number; label: string }
+  description?: string
+}
+
+/** One value placed on a standard's ladder, by the server (src/standards.py). */
+export interface StandardPoint {
+  value: number
+  valueText: string
+  date: string | null
+  /** null = below entry. */
+  level: BenchmarkLevel | null
+  levelIndex: number
+  next: BenchmarkLevel | null
+  nextText: string | null
+  gap: number | null
+  gapText: string | null
+}
+
+/** Who logged a result: typed in, from a session, a watch, an imported workout. */
+export type StandardSource = 'manual' | 'session' | 'garmin' | 'apple_watch' | 'workout'
+
+/** One result, as the server places it (src/standards.py). */
+export interface StandardEntry {
+  id: number | null
+  value: number
+  valueText: string
+  /** The athlete's day it counts for. */
+  date: string
+  level: BenchmarkLevel | null
+  levelIndex: number
+  source: StandardSource
+  note: string | null
+  /** "140 kg × 2 at 82 kg · est." for a ×BW result logged as a load. */
+  inputText: string | null
+  sessionUid: string | null
+  workoutId: string | null
+  /** The program block in force that day (or the test session's). */
+  block: { id: number; name: string } | null
+}
+
+export interface StandardResult {
+  current: StandardPoint
+  best: StandardPoint
+  count: number
+  entries: StandardEntry[]
+}
+
+export interface StandardBlock { id: number; name: string; from: string; to: string | null }
+
+/** GET /api/standards/results */
+export interface StandardResults {
+  sex: Sex
+  standards: Record<string, StandardResult>
+  /** The program timeline, oldest first, for shading a history chart. */
+  blocks?: StandardBlock[]
+  bodyweight: { value: number; valueText: string; date: string | null; entries?: StandardEntry[] } | null
+  /** The current program's own standards (declared or tested), for Profile's "This program". */
+  programStandards?: Array<{ id: string; why: string[] }>
+}
+
+/** What a result is sent as: typed text ("4:58"), or for a ×BW standard the load lifted. */
+export interface StandardResultInput {
+  text?: string
+  kg?: number
+  reps?: number
+  /** The athlete's day (YYYY-MM-DD); today when absent. */
+  loggedOn?: string
+  note?: string
+}
+
+/**
+ * A result a logged session suggests — a test slot's outcome, or a single on a
+ * lift a ×BW standard is read from — waiting for the athlete
+ * (`GET /api/standards/suggestions`, src/standard_results.py). Not a result
+ * until confirmed; every word is the server's.
+ */
+export interface StandardSuggestion {
+  id: number
+  benchmarkId: string
+  name: string
+  /** The name without its parenthesis: "1-Mile Run". */
+  shortName?: string
+  domain: string | null
+  value: number
+  valueText: string
+  level: BenchmarkLevel | null
+  levelIndex: number
+  next: BenchmarkLevel | null
+  nextText: string | null
+  /** "20 + 7" for a partial round, the load for a single. */
+  inputText: string | null
+  /** The result it would follow. */
+  current: StandardPoint | null
+  bestText: string | null
+  isBest: boolean
+  /** A re-logged value reopened a saved suggestion: the result saving it corrects. */
+  replacesText?: string | null
+  origin: 'test_slot' | 'derived_single' | 'best_effort'
+  status: 'pending' | 'confirmed' | 'dismissed'
+  source: string
+  loggedOn: string | null
+  sessionUid: string | null
+  sessionKey: string | null
+  sessionName: string | null
+  exerciseId: string | null
+  resultId: number | null
+}
+
+/** What a session-log save says about the standards it bears on. */
+export interface SessionLogStandards {
+  pending: StandardSuggestion[]
+  confirmed: StandardSuggestion[]
+  skipped: Array<{ benchmarkId: string; reason: string }>
+  problems: string[]
+  error: string | null
 }
 
 // ─── Modality ─────────────────────────────────────────────────────────────────
@@ -1538,21 +1692,33 @@ export interface AnalyticsBenchmarkRow {
   unit: string
   metricType: string
   lowerIsBetter: boolean
-  why: Array<'philosophy' | 'priority_modality' | 'declared'>
-  /** Declared, this methodology's own, or already has a number. The rest sit
-   *  behind "More standards". Absent on older documents. */
+  why: Array<'philosophy' | 'priority_modality' | 'declared' | 'tested'>
+  /** The program's own: declared by its package or measured by a test it
+   *  schedules. The rest sit behind "More standards". */
   primary?: boolean
   standards: Record<string, number>
+  standardsText?: Record<string, string>
   latest: number | null
   latestDate: string | null
   derived: { value: number | null; est1rm: number; bodyweightKg: number | null; date?: string; reason?: string } | null
   value: number | null
   valueSource: 'logged' | 'derived' | null
+  valueText?: string | null
   level: string | null
   levelIndex: number
   next: string | null
   gapToNext: number | null
-  history: Array<{ date: string; value: number }>
+  nextText?: string | null
+  gapText?: string | null
+  best?: number | null
+  bestText?: string | null
+  history: Array<{ date: string; value: number; valueText?: string }>
+  /** Where the athlete stood when the block began. */
+  atBlockStart?: { value: number; valueText: string; date: string; level: string | null; levelIndex: number } | null
+  /** Levels moved this block; null with nothing to compare. */
+  levelChange?: number | null
+  /** The block's results, its starting standing first. */
+  blockHistory?: Array<{ date: string; value: number; valueText: string; level: string | null }>
 }
 
 export interface ProgramAnalytics {
@@ -1566,7 +1732,7 @@ export interface ProgramAnalytics {
   progress: AnalyticsProgressEntry[]
   movement: AnalyticsMovement
   archetypes: AnalyticsArchetypeRow[]
-  benchmarks: { sex: string; bodyweightKg: number | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
+  benchmarks: { sex: string; blockStart?: string; bodyweightKg: number | null; bodyweightText?: string | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
   load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
 }
 
@@ -1633,8 +1799,14 @@ export interface DevelopmentBenchmark {
   benchmarkId: string
   name: string
   unit: string
+  domain?: string | null
+  metricType?: string | null
   lowerIsBetter: boolean
-  history: Array<{ date: string; value: number; level: string | null; levelIndex: number }>
+  standards?: Record<string, number>
+  standardsText?: Record<string, string>
+  /** One of the current program's own standards. */
+  inCurrentProgram?: boolean
+  history: Array<{ date: string; value: number; valueText?: string; level: string | null; levelIndex: number; blockId?: number | null }>
   latestLevel: string | null
   latestLevelIndex: number
   levelsGained: number

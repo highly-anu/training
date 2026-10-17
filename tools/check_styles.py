@@ -48,6 +48,20 @@ def _days_for(track: dict, fw_by_id: dict) -> int:
     return min(max(want, lo), hi)
 
 
+def _test_problems(weeks: list, ph: dict) -> list[str]:
+    from src import standard_tests
+    problems = []
+    for w in weeks:
+        entry = {'tests': ph['tests'], 'phase_weeks': ph['weeks'], 'repeatable': ph.get('repeatable'),
+                 'week_in_phase': w.get('week_in_phase')}
+        want = standard_tests.tests_for_week(entry)
+        got = [s for day in (w.get('schedule') or {}).values() for s in day if s.get('test')]
+        if len(got) != len(want):
+            why = [t.get('reason') for t in w.get('tests_skipped') or []]
+            problems.append(f"week {w.get('week_in_phase')}: {len(got)} of {len(want)} tests placed {why or ''}".rstrip())
+    return problems
+
+
 def main() -> int:
     frameworks = list(loader.load_all_frameworks().values())
     fw_by_id = {f['id']: f for f in frameworks}
@@ -101,6 +115,16 @@ def main() -> int:
                       f"{'ok' if ok else 'FAIL ' + str(why)}")
                 if not ok:
                     failures.append(f"{label}: {why}")
+
+                # A phase that tests: generated at full length, every declared
+                # test must be placed — an intermediate with every piece of
+                # equipment can do each one, so a skip here is authoring.
+                if ok and ph.get('tests'):
+                    raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints,
+                                   num_weeks=int(ph['weeks']), output_format='dict')
+                    problems = _test_problems(raw.get('weeks', []), ph)
+                    print(f"  {label + ' (tests)':52} {'ok' if not problems else 'FAIL ' + '; '.join(problems)}")
+                    failures += [f"{label}: {p}" for p in problems]
 
     print()
     if failures:

@@ -387,6 +387,7 @@ struct ProgramView: View {
                                      ?? ModalityStyle.label(for: session.modality))
                                     .font(.subheadline)
                                     .foregroundStyle(done ? .secondary : .primary)
+                                if session.testInfo != nil { TestBadge() }
                             }
                         }
                     }
@@ -495,6 +496,7 @@ private struct DaySessionsSheet: View {
                     if let mins = session.archetype?.durationEstimateMinutes {
                         Text("· \(mins) min").font(.caption).foregroundStyle(.secondary)
                     }
+                    if session.testInfo != nil { TestBadge() }
                 }
             }
             Spacer()

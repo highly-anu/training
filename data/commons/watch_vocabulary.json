@@ -98,7 +98,8 @@
     "ladder_total": "Reps so far on the ladder, then next_step.",
     "hold_prompt": "Start / end-early prompt for a hold.",
     "interval_next": "The coming work or rest phase.",
-    "phases": "The spec's phases strip, then next_step."
+    "phases": "The spec's phases strip, then next_step.",
+    "standard_target": "A test step's standard: the best result and the number for the next level (the exercise's `standard`, the server's words), else next_step. Set by the server on a test's scored slots, never by a package."
   },
   "actions": {
     "complete_set": "Ends the set and starts the rest.",

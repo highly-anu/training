@@ -84,6 +84,12 @@ tracks:
           - "Strength-endurance and power-endurance base"
           - "Aerobic support for repeat efforts"
         intensity: "Hard/easy alternation at moderate intensity"
+        # The block's baseline: the 2 km row in its first week, in place of a
+        # conditioning day (the framework schedules no interval day of its own).
+        tests:
+          - archetype: gym_jones_row_2k_test
+            week: first
+            in_place_of: [mixed_modal_conditioning, aerobic_base]
       - id: transmutation
         name: "Transmutation"
         kind: build
@@ -115,3 +121,8 @@ tracks:
           - "Expressed performance"
           - "Mental durability under load"
         intensity: "Peak intensity, low volume"
+        # What the block built: the 2 km row again in its last week.
+        tests:
+          - archetype: gym_jones_row_2k_test
+            week: last
+            in_place_of: [mixed_modal_conditioning, aerobic_base]

@@ -87,6 +87,10 @@ final class AppState: ObservableObject {
     // MARK: - Catalog (lazy-loaded)
 
     @Published var benchmarks: [AppBenchmark] = []
+    /// The athlete's results on the standards (`GET /standards/results`).
+    @Published var standardResults: StandardResults? = nil
+    /// Results logged sessions suggest, waiting for the athlete (not results yet).
+    @Published var standardSuggestions: [StandardSuggestion] = []
     @Published var philosophies: [PhilosophyCard] = []
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
     /// Every exercise the API knows, by id — the reference the exercise sheet
@@ -153,7 +157,8 @@ final class AppState: ObservableObject {
             // week the server had at 100 %).
             group.addTask { await self.loadProgramAnalytics() }
             group.addTask { await self.loadProfile() }
-            group.addTask { await self.loadPerformanceLogs() }
+            group.addTask { await self.loadStandardResults() }
+            group.addTask { await self.loadStandardSuggestions() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -201,7 +206,8 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadProfile() }
-            group.addTask { await self.loadPerformanceLogs() }
+            group.addTask { await self.loadStandardResults() }
+            group.addTask { await self.loadStandardSuggestions() }
             group.addTask { await self.loadRecentBioLogs() }
             group.addTask { await self.loadRecentSessionLogs() }
             group.addTask { await self.loadReadiness() }
@@ -636,35 +642,70 @@ final class AppState: ObservableObject {
         }
     }
 
-    func loadPerformanceLogs() async {
+    func loadStandardResults() async {
         guard let api else { return }
         do {
-            let logs = try await api.fetchPerformanceLogs()
-            profile.performanceLogs = logs
-            logger.log("profile: performance logs \(logs.count) benchmarks")
+            standardResults = try await api.fetchStandardResults()
+            logger.log("standards: \(standardResults?.standards.count ?? 0) with results")
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
-            logger.log("profile: performance logs ERROR — \(error)")
+            logger.log("standards: results ERROR — \(error)")
         }
     }
 
-    /// Records a PR through `POST /api/health/performance`, then re-reads the
-    /// series so the list shows what the server kept — the optimistic entry the
-    /// caller appended is replaced by the stored one, or dropped if the write
-    /// failed. Returns whether the write succeeded.
-    @discardableResult
-    func savePerformanceEntry(benchmarkId: String, value: Double) async -> Bool {
-        guard let api else { return false }
-        var saved = false
+    func loadStandardSuggestions() async {
+        guard let api else { return }
         do {
-            try await api.addPerformanceEntry(benchmarkId: benchmarkId, value: value,
-                                              loggedAt: ISO8601DateFormatter().string(from: Date()))
-            saved = true
+            standardSuggestions = try await api.fetchStandardSuggestions()
         } catch {
-            logger.log("profile: performance entry ERROR — \(error)")
+            if (error as? URLError)?.code == .cancelled { return }
+            logger.log("standards: suggestions ERROR — \(error)")
         }
-        await loadPerformanceLogs()
-        return saved
+    }
+
+    /// Save a suggested result (optionally corrected as typed), dismiss it as
+    /// "Not a test", or reopen it. Nil on success, else why not, in words.
+    func decideSuggestion(id: Int, action: String, text: String? = nil) async -> String? {
+        let failure = await standardsChange { try await $0.decideSuggestion(id: id, action: action, text: text) }
+        await loadStandardSuggestions()
+        return failure
+    }
+
+    /// Logs a result, then re-reads the results so every screen shows what the
+    /// server kept, on the server's ladder. Returns nil on success, else the
+    /// reason in words to show.
+    func logResult(benchmarkId: String, text: String) async -> String? {
+        await logResult(benchmarkId: benchmarkId, input: StandardResultInput(text: text))
+    }
+
+    func logResult(benchmarkId: String, input: StandardResultInput) async -> String? {
+        await standardsChange { try await $0.addResult(benchmarkId: benchmarkId, input: input) }
+    }
+
+    /// Corrects one result (value, day or note). Nil on success, else why not.
+    func updateResult(id: Int, input: StandardResultInput) async -> String? {
+        await standardsChange { try await $0.updateResult(id: id, input: input) }
+    }
+
+    /// Deletes one result. Nil on success, else why not.
+    func deleteResult(id: Int) async -> String? {
+        await standardsChange { try await $0.deleteResult(id: id) }
+    }
+
+    private func standardsChange(_ work: (APIClient) async throws -> Void) async -> String? {
+        guard let api else { return "Not connected." }
+        do {
+            try await work(api)
+        } catch APIError.serverErrorDetail(_, let detail) {
+            return detail
+        } catch {
+            logger.log("standards: change ERROR — \(error)")
+            return error.localizedDescription
+        }
+        await loadStandardResults()
+        // Progress and Blocks read results too.
+        await loadProgramAnalytics()
+        return nil
     }
 
     func saveProfile() async {
@@ -724,7 +765,10 @@ final class AppState: ObservableObject {
         sessionLogs[sessionKey] = entry
         guard let api else { return }
         do {
-            try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId, performance: performance)
+            let standards = try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId,
+                                                          performance: performance)
+            // A test slot's outcome comes back as a suggestion to save.
+            if standards != nil { await loadStandardSuggestions() }
             // A logged set moves the exercise into "With data" on Progress.
             if exerciseHistory != nil { await loadExerciseHistory() }
         } catch {
@@ -1278,6 +1322,8 @@ final class AppState: ObservableObject {
         markSeen([uploaded.id])
         await loadWorkouts()
         await loadMatchSuggestions()
+        // A run's fastest mile can come back as a suggested result.
+        await loadStandardSuggestions()
         let listed = canonicalWorkout(for: uploaded) ?? uploaded
         markSeen([listed.id])
         return listed

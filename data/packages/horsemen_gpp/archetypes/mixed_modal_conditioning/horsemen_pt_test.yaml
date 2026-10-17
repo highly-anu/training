@@ -1,0 +1,63 @@
+id: horsemen_pt_test
+name: "Horsemen PT Test"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 50
+
+# A test of three standards — push-ups and sit-ups in three minutes and a
+# 3-mile run — placed at the start and the end of the four-month macro
+# (philosophy.yaml `tests:`), never picked, and run as written.
+test: {}
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      exercise_ids: [run_zone2]
+    notes: "10 min easy jog with a few push-ups and sit-ups to wake the pattern."
+
+  - role: push_ups
+    slot_type: time_domain
+    duration_minutes: 3
+    rest_sec: 300
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [push_up]
+    standard: pt_push_ups_3min_reps
+    notes: "Three minutes. Count clean reps only: chest to the floor, full lockout."
+
+  - role: sit_ups
+    slot_type: time_domain
+    duration_minutes: 3
+    rest_sec: 300
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [sit_up]
+    standard: pt_sit_ups_3min_reps
+    notes: "Three minutes, feet anchored. Count clean reps."
+
+  - role: run_3_mile
+    slot_type: for_time
+    distance_m: 4828
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [run_tempo_horsemen]
+    standard: run_3mile_minutes
+    notes: "3 miles for time on a flat, measured course. Log the time."
+
+required_equipment:
+  - open_space
+sources:
+  - Horsemen
+notes: >
+  The Horsemen PT standards as one test: push-ups in three minutes, sit-ups in
+  three minutes, then the 3-mile run, five minutes between pieces. Run in the
+  first week of the strength phase for a baseline and the last week of
+  maintenance to close the macro; each piece is a result on its own standard.

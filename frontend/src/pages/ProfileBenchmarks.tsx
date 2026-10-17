@@ -5,20 +5,23 @@ import { User, Dumbbell, AlertTriangle, Trophy, Calendar, RotateCcw, Settings as
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { LevelBar } from '@/components/benchmarks/LevelBar'
+import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
+import { StandardDetailSheet } from '@/components/standards/StandardDetailSheet'
+import { SuggestionRow } from '@/components/standards/SuggestionRow'
+import { thresholdTexts } from '@/lib/standards'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
-import { useBenchmarks } from '@/api/benchmarks'
+import { useLogResult, useStandardResults, useStandardSuggestions, useStandards } from '@/api/standards'
 import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
-import type { Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, TrainingLevel, Sex } from '@/api/types'
+import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'athlete' | 'equipment' | 'injuries' | 'schedule' | 'benchmarks'
+type SubTab = 'athlete' | 'equipment' | 'injuries' | 'schedule' | 'standards'
 
 interface SubTabItem {
   id: SubTab
@@ -31,7 +34,7 @@ const SUB_TABS: SubTabItem[] = [
   { id: 'equipment',  label: 'Equipment',  Icon: Dumbbell      },
   { id: 'injuries',   label: 'Injuries',   Icon: AlertTriangle },
   { id: 'schedule',   label: 'Schedule',   Icon: Calendar      },
-  { id: 'benchmarks', label: 'Benchmarks', Icon: Trophy        },
+  { id: 'standards',  label: 'Standards',  Icon: Trophy        },
 ]
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
@@ -223,72 +226,144 @@ function InjuriesOverview() {
   )
 }
 
-// ── Benchmarks Overview ────────────────────────────────────────────────────────
+// ── Standards Overview ─────────────────────────────────────────────────────────
 
-interface PrInputProps {
-  benchId: string
-  unit: string
-}
-
-function PrInput({ benchId, unit }: PrInputProps) {
-  const logs = useProfileStore((s) => s.performanceLogs)
-  const logPerformance = useProfileStore((s) => s.logPerformance)
-  const removePerformanceLog = useProfileStore((s) => s.removePerformanceLog)
-
-  const stored = logs[benchId]?.at(-1)?.value
-  const [draft, setDraft] = useState(stored !== undefined ? String(stored) : '')
-
-  // Re-derive during render rather than in an effect. An effect would paint
-  // the stale draft first and only correct it on a second render; React
-  // explicitly sanctions this pattern for resetting state when a value changes.
-  const [prevStored, setPrevStored] = useState(stored)
-  if (stored !== prevStored) {
-    setPrevStored(stored)
-    setDraft(stored !== undefined ? String(stored) : '')
-  }
+/**
+ * Log a new result. Empty until typed into — it is for the next result, not an
+ * editor of the last one — and saved once, on blur (Enter blurs). It used to be
+ * prefilled with the latest value and saved on every blur and again on Enter,
+ * writing duplicates, and clearing it deleted the standard's whole history.
+ */
+function ResultInput({ benchId, hint, label }: { benchId: string; hint: string; label: string }) {
+  const [draft, setDraft] = useState('')
+  const log = useLogResult()
 
   function commit() {
-    const n = parseFloat(draft)
-    if (!isNaN(n) && n > 0) {
-      logPerformance(benchId, n)
-    } else if (draft.trim() === '') {
-      removePerformanceLog(benchId)
-    }
+    const text = draft.trim()
+    if (!text || log.isPending) return
+    log.mutate({ benchmarkId: benchId, text }, { onSuccess: () => setDraft('') })
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-col items-end gap-0.5">
       <input
-        type="number"
-        min={0}
-        step="any"
+        type="text"
+        inputMode="decimal"
+        aria-label={`Log a result: ${label}`}
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => { setDraft(e.target.value); if (log.isError) log.reset() }}
         onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter') { commit(); (e.target as HTMLInputElement).blur() } }}
-        placeholder="—"
-        className="w-16 h-7 rounded border border-border/30 bg-card/40 text-right text-xs text-foreground placeholder:text-muted-foreground/30 hover:border-input focus:border-primary focus:bg-card focus:outline-none px-2 transition-colors"
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        placeholder={hint}
+        disabled={log.isPending}
+        className={cn(
+          'w-20 h-7 rounded border bg-card/40 text-right text-xs text-foreground placeholder:text-muted-foreground/40 hover:border-input focus:border-primary focus:bg-card focus:outline-none px-2 transition-colors',
+          log.isError ? 'border-red-500/60' : 'border-border/30',
+        )}
       />
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{unit}</span>
+      {log.isError && <span className="text-[10px] text-red-700 dark:text-red-300 max-w-48 text-right">{log.error.message}</span>}
     </div>
   )
 }
 
-function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
-  const { data: benchmarks = [], isLoading } = useBenchmarks()
-  const logs = useProfileStore((s) => s.performanceLogs)
+function formatDay(day: string | null | undefined): string {
+  if (!day) return ''
+  return new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+/** The open standard's sheet lives in the URL (`?standard=<id>`), so a link
+ *  from Explore, Analytics or a session lands on it. */
+function useOpenStandard(): [string | null, (id: string | null) => void] {
+  const [params, setParams] = useSearchParams()
+  const open = params.get('standard')
+  const set = (id: string | null) => {
+    const next = new URLSearchParams(params)
+    if (id) next.set('standard', id)
+    else next.delete('standard')
+    setParams(next, { replace: true })
+  }
+  return [open, set]
+}
+
+function StandardCard({ s, result, onOpen }: {
+  s: BenchmarkStandard; result?: StandardResult; onOpen: () => void
+}) {
+  const r = result
+  const bestDiffers = r && r.best.value !== r.current.value
+  return (
+    <div className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-0.5">
+          <button type="button" onClick={onOpen}
+                  className="block max-w-full truncate text-left text-sm font-medium hover:underline underline-offset-2">
+            {s.name}
+          </button>
+          {r ? (
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground tabular-nums">{r.current.valueText}</span>
+              {' '}<StandardLevelBadge level={r.current.level} domain={s.domain} />
+              {r.current.date && <> · {formatDay(r.current.date)}</>}
+              {bestDiffers && <> · best {r.best.valueText}</>}
+              {r.current.next && r.current.gapText && <> · {r.current.gapText} to {r.current.next}</>}
+              {' · '}
+              <button type="button" onClick={onOpen} className="underline underline-offset-2 hover:text-foreground">
+                {r.count} result{r.count === 1 ? '' : 's'}
+              </button>
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/70">No result yet</p>
+          )}
+        </div>
+        <ResultInput benchId={s.id} hint={s.inputHint ?? s.unit.trim()} label={s.name} />
+      </div>
+      <StandardLadder
+        thresholds={thresholdTexts(s.standardsText, s.standards, s.unit)}
+        levelIndex={r ? r.current.levelIndex : undefined}
+        domain={s.domain}
+      />
+    </div>
+  )
+}
+
+function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
+  const { data: standards = [], isLoading } = useStandards()
+  const { data: results } = useStandardResults()
+  const { data: suggestions = [] } = useStandardSuggestions()
   const sex = useProfileStore((s) => s.sex)
+  const [openId, setOpenId] = useOpenStandard()
+  const [showAll, setShowAll] = useState(false)
+  const openStandard = standards.find((s) => s.id === openId)
 
   if (isLoading) return <LoadingCard />
 
-  const categories = ['strength', 'conditioning', 'kettlebell', 'tactical', 'benchmark_wod', 'skill', 'cell'] as const
-  const categoryLabel: Record<(typeof categories)[number], string> = {
-    strength: 'strength', conditioning: 'conditioning', kettlebell: 'kettlebell pentathlon',
-    tactical: 'ruck & PT tests', benchmark_wod: 'benchmark workouts', skill: 'movement & skill', cell: 'cell standards',
+  const byId = new Map(standards.map((s) => [s.id, s]))
+  // This program's own (declared by its package or tested), in the server's
+  // order; then every other standard with a result; then the rest, by group.
+  const programIds = (results?.programStandards ?? []).map((p) => p.id).filter((id) => byId.has(id))
+  const mine = standards.filter((s) => results?.standards[s.id] && !programIds.includes(s.id))
+  const placed = new Set([...programIds, ...mine.map((s) => s.id)])
+  const groups = new Map<string, { name: string; order: number; rows: BenchmarkStandard[] }>()
+  for (const s of standards) {
+    if (placed.has(s.id)) continue
+    const g = groups.get(s.category) ?? { name: s.categoryName ?? s.category, order: s.categoryOrder ?? 99, rows: [] }
+    g.rows.push(s)
+    groups.set(s.category, g)
   }
-  const byCategory = Object.fromEntries(
-    categories.map((cat) => [cat, benchmarks.filter((b) => b.category === cat)])
-  ) as Record<(typeof categories)[number], typeof benchmarks>
+  const ordered = [...groups.values()].sort((a, b) => a.order - b.order)
+  const rest = ordered.reduce((n, g) => n + g.rows.length, 0)
+  const withResults = Object.keys(results?.standards ?? {}).length
+  const bodyweight = results?.bodyweight
+  // With nothing of the program's and no result, the reference is the page.
+  const allOpen = showAll || (programIds.length === 0 && mine.length === 0)
+  const card = (s: BenchmarkStandard) => (
+    <StandardCard key={s.id} s={s} result={results?.standards[s.id]} onOpen={() => setOpenId(s.id)} />
+  )
+  const heading = (text: string, sub?: string) => (
+    <div className="space-y-0.5">
+      <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">{text}</h3>
+      {sub && <p className="text-[11px] text-muted-foreground/70">{sub}</p>}
+    </div>
+  )
 
   return (
     <div className="h-full overflow-y-auto">
@@ -299,10 +374,11 @@ function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
             Performance tracking
           </p>
           <h2 className="text-2xl font-semibold leading-snug">
-            {benchmarks.length} benchmark standards.
+            {standards.length} standards.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-            Track your personal records against standardized benchmarks. Your PRs are saved to your profile and used to calculate training loads.
+            Log a result whenever you test one. Every result is kept with its date, so you can see where you
+            stand now and how far you have come across programs.
           </p>
           {sex ? (
             <p className="text-[11px] text-muted-foreground/70">Showing the {sex} standards.</p>
@@ -312,62 +388,62 @@ function BenchmarksOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
               <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">Athlete</button>.
             </p>
           )}
+          {/* Bodyweight is a series of its own (logged under Athlete): what
+              turns a lift into the ×BW standards below. */}
+          <p className="text-[11px] text-muted-foreground/70">
+            {bodyweight
+              ? <>Bodyweight {bodyweight.valueText}{bodyweight.date ? `, ${formatDay(bodyweight.date)}` : ''} — used for the ×BW standards. </>
+              : <>No bodyweight logged — the ×BW standards need one. </>}
+            <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">
+              {bodyweight ? 'Update' : 'Log it'}
+            </button>
+          </p>
         </div>
 
-        {/* Bodyweight is a benchmark series, not a profile field: logged here
-            with the PRs, kept with its history, and what turns an estimated
-            1RM into the ×BW standards below. Without it six of them cannot be
-            read at all. */}
-        <div className="space-y-3">
-          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-            bodyweight
-          </h3>
-          <div className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-1">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Bodyweight</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Used to derive the ×BW strength standards from your logged sets.
-                </p>
-              </div>
-              <PrInput benchId="bodyweight_kg" unit="kg" />
-            </div>
+        {suggestions.length > 0 && (
+          <div className="space-y-3">
+            {heading('To confirm', 'Results your sessions and imported runs suggest. They count once you save them.')}
+            <div className="grid gap-2">{suggestions.map((sg) => <SuggestionRow key={sg.id} suggestion={sg} />)}</div>
           </div>
-        </div>
+        )}
 
-        {categories.map((cat) => (
-          byCategory[cat].length > 0 && (
-            <div key={cat} className="space-y-3">
-              <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
-                {categoryLabel[cat]}
-              </h3>
-              <div className="grid gap-3">
-                {byCategory[cat].map((bench) => {
-                  const userValue = logs[bench.id]?.at(-1)?.value
-                  return (
-                    <div key={bench.id} className="rounded-lg border border-border/30 bg-card/40 p-4 space-y-2.5">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-medium truncate">{bench.name}</p>
-                        <PrInput benchId={bench.id} unit={bench.unit} />
-                      </div>
-                      <LevelBar
-                        standards={bench.standards as Record<'entry' | 'intermediate' | 'advanced' | 'elite', number>}
-                        unit={bench.unit}
-                        lowerIsBetter={bench.lower_is_better ?? false}
-                        userValue={userValue}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
+        {programIds.length > 0 && (
+          <div className="space-y-3">
+            {heading('This program', 'What your current program is measured by: declared by its methodology, or tested in it.')}
+            <div className="grid gap-3">{programIds.map((id) => card(byId.get(id)!))}</div>
+          </div>
+        )}
+
+        {mine.length > 0 && (
+          <div className="space-y-3">
+            {heading('Your results', 'Every other standard you have a result on, from this program or earlier ones.')}
+            <div className="grid gap-3">{mine.map(card)}</div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {heading('All standards', `${rest} more, by group — the reference ladders.`)}
+          {(programIds.length > 0 || mine.length > 0) && (
+            <button type="button" onClick={() => setShowAll((v) => !v)}
+                    className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground">
+              {showAll ? 'Hide them' : `Show all ${rest}`}
+            </button>
+          )}
+          {allOpen && ordered.map((group) => (
+            <div key={group.name} className="space-y-3">
+              <h4 className="text-[11px] font-medium text-muted-foreground">{group.name}</h4>
+              <div className="grid gap-3">{group.rows.map(card)}</div>
             </div>
-          )
-        ))}
+          ))}
+        </div>
 
         <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
-          {Object.values(logs).length} PRs logged
+          {withResults} of {standards.length} standards with a result
         </p>
 
+        <StandardDetailSheet open={openId != null && (openId === 'bodyweight_kg' || !!openStandard)}
+                             onOpenChange={(o) => { if (!o) setOpenId(null) }}
+                             standard={openId === 'bodyweight_kg' ? undefined : openStandard} />
       </div>
     </div>
   )
@@ -613,7 +689,7 @@ function HeartRateSection() {
   const [localBoundaries, setLocalBoundaries] = useState<number[]>(boundaries)
 
   // Keep localBoundaries in sync when hrConfig changes from outside, derived
-  // during render for the same reason as the benchmark draft above.
+  // during render rather than in an effect, which would paint the stale value first.
   const [prevZoneBoundaries, setPrevZoneBoundaries] = useState(hrConfig.zoneBoundaries)
   if (hrConfig.zoneBoundaries !== prevZoneBoundaries) {
     setPrevZoneBoundaries(hrConfig.zoneBoundaries)
@@ -794,12 +870,14 @@ function HeartRateSection() {
 
 /**
  * Who is training: the facts the generator and the analytics read — level,
- * date of birth (max HR), sex (which benchmark standards apply), bodyweight
+ * date of birth (max HR), sex (which standards' tables apply), bodyweight
  * (the ×BW standards) — and the account. Level, account switcher and sign-out
  * used to sit in the page header; sex was never writable from any client, so
  * every athlete was scored against the male tables.
  */
 function AthleteOverview() {
+  const bodyweight = useStandardResults().data?.bodyweight
+  const [bodyweightOpen, setBodyweightOpen] = useState(false)
   const trainingLevel = useProfileStore((s) => s.trainingLevel)
   const setTrainingLevel = useProfileStore((s) => s.setTrainingLevel)
   const dateOfBirth = useProfileStore((s) => s.dateOfBirth)
@@ -823,7 +901,7 @@ function AthleteOverview() {
           <h2 className="text-2xl font-semibold leading-snug">Who is training.</h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
             The generator reads your level; the analytics read your date of birth for max heart rate,
-            your sex for which benchmark standards apply, and your bodyweight for the ×BW standards.
+            your sex for which standards' tables apply, and your bodyweight for the ×BW standards.
           </p>
         </div>
 
@@ -861,7 +939,7 @@ function AthleteOverview() {
           <div className="flex items-center justify-between gap-3 p-4">
             <div>
               <p className="text-sm font-medium">Sex</p>
-              <p className="text-[11px] text-muted-foreground">Chooses the benchmark standards you are scored against.</p>
+              <p className="text-[11px] text-muted-foreground">Chooses the standards' tables you are scored against.</p>
             </div>
             <Select value={sex ?? 'unset'} onValueChange={(v) => setSex(v === 'unset' ? null : (v as Sex))}>
               <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -897,9 +975,16 @@ function AthleteOverview() {
           <div className="flex items-center justify-between gap-3 p-4">
             <div>
               <p className="text-sm font-medium">Bodyweight</p>
-              <p className="text-[11px] text-muted-foreground">A benchmark series with its own history; turns a logged lift into ×BW.</p>
+              <p className="text-[11px] text-muted-foreground">
+                {bodyweight ? <>{bodyweight.valueText}{bodyweight.date ? `, ${formatDay(bodyweight.date)}` : ''}. </> : null}
+                Kept with its history; turns a logged lift into ×BW.{' '}
+                <button type="button" onClick={() => setBodyweightOpen(true)} className="underline underline-offset-2 hover:text-foreground">
+                  History
+                </button>
+              </p>
             </div>
-            <PrInput benchId="bodyweight_kg" unit="kg" />
+            <ResultInput benchId="bodyweight_kg" hint="kg" label="Bodyweight" />
+            <StandardDetailSheet open={bodyweightOpen} onOpenChange={setBodyweightOpen} />
           </div>
         </div>
 
@@ -959,9 +1044,10 @@ export function ProfileBenchmarks() {
   // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
   // straight on Connections — they redirect to /profile?tab=connections.
   const [searchParams] = useSearchParams()
-  // Heart Rate folded into Athlete on 2026-10-13; old links land there.
+  // Heart Rate folded into Athlete on 2026-10-13, and Benchmarks was renamed
+  // Standards on 2026-10-17; old links land on the new names.
   const tabParam = searchParams.get('tab')
-  const requestedTab = (tabParam === 'heartrate' ? 'athlete' : tabParam) as SubTab | null
+  const requestedTab = (tabParam === 'heartrate' ? 'athlete' : tabParam === 'benchmarks' ? 'standards' : tabParam) as SubTab | null
   const [activeTab, setActiveTab] = useState<SubTab>(
     requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
   )
@@ -1001,7 +1087,7 @@ export function ProfileBenchmarks() {
           {activeTab === 'athlete'    && <AthleteOverview />}
           {activeTab === 'equipment'  && <EquipmentOverview />}
           {activeTab === 'injuries'   && <InjuriesOverview />}
-          {activeTab === 'benchmarks' && <BenchmarksOverview onOpenAthlete={() => setActiveTab('athlete')} />}
+          {activeTab === 'standards'  && <StandardsOverview onOpenAthlete={() => setActiveTab('athlete')} />}
           {activeTab === 'schedule'   && <ScheduleOverview />}
         </div>
       </div>

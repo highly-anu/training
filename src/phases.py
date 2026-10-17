@@ -129,6 +129,17 @@ def validate_philosophy_tracks(phil: dict, framework_ids: set | None = None) -> 
             phase_ids.add(phid)
             if ph.get('kind') not in known_kinds:
                 errors.append(f"{pid}/{tid}/{phid}: unknown kind '{ph.get('kind')}'")
+            for t in ph.get('tests') or []:
+                week = t.get('week')
+                if isinstance(week, int) and week > int(ph.get('weeks') or 1):
+                    errors.append(f"{pid}/{tid}/{phid}: a test in week {week} of a {ph.get('weeks')}-week phase")
+                if t.get('week') is not None and t.get('every') is not None:
+                    errors.append(f"{pid}/{tid}/{phid}: a test gives both `week` and `every`")
+                weeks = int(ph.get('weeks') or 1)
+                first = t.get('start') or t.get('every')
+                if not ph.get('repeatable') and isinstance(first, int) and first > weeks:
+                    errors.append(f"{pid}/{tid}/{phid}: a test first due in week {first} "
+                                  f"of a {weeks}-week phase never runs")
             fid = ph.get('framework_id')
             if not fid:
                 errors.append(f"{pid}/{tid}/{phid}: no framework_id")
@@ -168,6 +179,8 @@ def phase_sequence_for(track: dict) -> list[dict]:
             entry['exclude_exercises'] = list(ph['exclude_exercises'])
         if ph.get('rotate_main_lifts'):
             entry['rotate_main_lifts'] = True
+        if ph.get('tests'):
+            entry['tests'] = [dict(t) for t in ph['tests']]
         out.append(entry)
     return out
 
@@ -255,4 +268,10 @@ def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> d
         entry['exclude_exercises'] = list(phase_entry['exclude_exercises'])
     if phase_entry.get('rotate_main_lifts'):
         entry['rotate_main_lifts'] = True
+    if phase_entry.get('tests'):
+        # What src/standard_tests.tests_for_week needs to place the phase's
+        # tests by week in the phase (repeating every cycle when repeatable).
+        entry['tests'] = phase_entry['tests']
+        entry['phase_weeks'] = int(phase_entry.get('weeks') or 1)
+        entry['repeatable'] = bool(phase_entry.get('repeatable'))
     return entry

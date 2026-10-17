@@ -1,0 +1,53 @@
+id: cf_benchmark_helen
+name: "Helen — Benchmark"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 40
+test: {}
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      exercise_ids: [run_easy]
+    notes: "10 min easy run, then a round of swings and pull-ups at half effort."
+
+  - role: helen
+    slot_type: for_time
+    time_cap_sec: 1200
+    rounds: 3
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [run_interval]
+    standard: wod_helen_minutes
+    notes: "3 rounds for time: 400 m run, 21 kettlebell swings (24/16 kg), 12 pull-ups. Log the time."
+
+  - role: helen_swings
+    slot_type: amrap_movement
+    parent_slot_role: helen
+    reps_per_round: 21
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+
+  - role: helen_pull_ups
+    slot_type: amrap_movement
+    parent_slot_role: helen
+    reps_per_round: 12
+    exercise_filter:
+      exercise_ids: [pull_up]
+
+required_equipment:
+  - kettlebell
+  - pull_up_bar
+  - open_space
+sources:
+  - CrossFit
+notes: >
+  Helen: three rounds of a 400 m run, 21 kettlebell swings and 12 pull-ups,
+  for time — the aerobic end of the benchmark girls.

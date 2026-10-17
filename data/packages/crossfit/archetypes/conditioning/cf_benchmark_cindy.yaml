@@ -1,0 +1,51 @@
+id: cf_benchmark_cindy
+name: "Cindy — Benchmark"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 40
+test: {}
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_sec: 600
+    intensity: zone2
+    exercise_filter:
+      exercise_ids: [row_easy, run_easy, jump_rope_single_under]
+    notes: "10 min easy, then two slow rounds of the workout."
+
+  - role: cindy
+    slot_type: amrap
+    duration_sec: 1200
+    intensity: heavy
+    exercise_filter:
+      exercise_ids: [pull_up]
+    standard: wod_cindy_rounds
+    notes: "20-minute AMRAP: 5 pull-ups, 10 push-ups, 15 air squats. Log rounds plus partial reps."
+
+  - role: cindy_push_ups
+    slot_type: amrap_movement
+    parent_slot_role: cindy
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+
+  - role: cindy_squats
+    slot_type: amrap_movement
+    parent_slot_role: cindy
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [squat_air]
+
+required_equipment:
+  - pull_up_bar
+sources:
+  - CrossFit
+notes: >
+  Cindy: as many rounds as possible in 20 minutes of 5 pull-ups, 10 push-ups
+  and 15 air squats. A CrossFit benchmark girl, repeated to measure work
+  capacity; the score is the rounds.

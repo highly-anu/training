@@ -190,6 +190,41 @@ def best_efforts(gps_track: list[dict]) -> list[dict]:
     return out
 
 
+def fastest_seconds(gps_track: list[dict], km: float) -> float | None:
+    """The fastest time over exactly `km` of the recorded speed, or None.
+
+    For a result on a standard (src/standard_results), so stricter than
+    `best_efforts`, whose windows may fall 5 % short — a "mile" of 0.95 mi
+    reads 5 % fast, which is fine on a workout screen and wrong as a result.
+    Every window here covers the whole distance, and its time is scaled to
+    the distance exactly (an even pace inside the window).
+    """
+    pts = sorted(((t, float(p['speed'])) for p in gps_track or []
+                  if p.get('speed') is not None and float(p['speed']) > _SPEED_FLOOR_MPS
+                  and (t := _ts(p.get('timestamp'))) is not None),
+                 key=lambda p: p[0])
+    if len(pts) < 10:
+        return None
+    cum = [(0.0, 0.0)]                                # (metres, seconds from start)
+    for (t0, s0), (t1, _) in zip(pts, pts[1:]):
+        cum.append((cum[-1][0] + s0 * (t1 - t0), t1 - pts[0][0]))
+    target = km * 1000.0
+    if cum[-1][0] < target:
+        return None
+    best = None
+    lo = 0
+    for hi in range(1, len(cum)):
+        # The shortest window ending at hi that still covers the distance.
+        while lo + 1 < hi and cum[hi][0] - cum[lo + 1][0] >= target:
+            lo += 1
+        covered = cum[hi][0] - cum[lo][0]
+        if covered >= target:
+            sec = (cum[hi][1] - cum[lo][1]) * target / covered
+            if sec > 0 and (best is None or sec < best):
+                best = sec
+    return round(best, 1) if best is not None else None
+
+
 def analyse(workout: dict, profile: dict, today: date | None = None) -> dict:
     """The `analysis` object for one workout in the health_store shape."""
     max_hr, max_source = resolve_max_hr(profile or {}, today or date.today())

@@ -185,8 +185,24 @@ def _day_num(day) -> int:
     return _DAY_NAMES.index(day) + 1 if day in _DAY_NAMES else 0
 
 
+def _counted_minutes(s: dict) -> float:
+    """A session's planned minutes — a test's are the session it stands in for
+    (`test.instead_of`, src/generator._stand_in): a test runs as written
+    whatever the week, and would read as a deload that did not deload."""
+    if s.get('test'):
+        return float(((s['test'].get('instead_of') or {}).get('minutes')) or 0)
+    return session_minutes(s)
+
+
+def _counted_buckets(s: dict) -> dict:
+    """Minutes per intensity bucket — a test's are the session it stands in for."""
+    if s.get('test'):
+        return dict((s['test'].get('instead_of') or {}).get('buckets') or {})
+    return session_buckets(s)
+
+
 def week_minutes(week: dict) -> float:
-    return sum(session_minutes(s) for _, s in _sessions(week))
+    return sum(_counted_minutes(s) for _, s in _sessions(week))
 
 
 # ---------------------------------------------------------------------------
@@ -266,6 +282,7 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
         _check_required(out, phase_id, work_weeks, checks)
         _check_fixed(out, phase_id, pweeks, modalities, not phase.get('rotate_main_lifts'))
         _check_volume(out, phase_id, work_weeks, checks, prev_phase_tail_minutes)
+        _check_tests(out, phase_id, phase, pweeks)
         if work_weeks:
             prev_phase_tail_minutes = week_minutes(work_weeks[-1])
     return out.findings()
@@ -410,7 +427,8 @@ def _check_shape(out, phase_id, fw, work_weeks, philosophy):
     n_sessions = 0
     for w in work_weeks:
         for _, s in _sessions(w):
-            counts[s.get('modality')] += 1
+            # A test counts as the session it stands in for.
+            counts[(s.get('test') or {}).get('in_place_of') or s.get('modality')] += 1
             n_sessions += 1
     if not n_sessions:
         out.add('empty_phase', 'error', phase_id, fw.get('id'), "no sessions in any working week")
@@ -449,9 +467,11 @@ def _check_intensity(out, phase_id, fw, work_weeks, checks):
     totals = dict.fromkeys(BUCKETS, 0.0)
     for w in work_weeks:
         for _, s in _sessions(w):
-            if not include_strength and is_strength(s.get('modality')):
+            # A test counts as the session it stands in for, as in the shape.
+            modality = (s.get('test') or {}).get('in_place_of') or s.get('modality')
+            if not include_strength and is_strength(modality):
                 continue
-            for b, m in session_buckets(s).items():
+            for b, m in _counted_buckets(s).items():
                 totals[b] += m
     grand = sum(totals.values())
     if grand <= 0:
@@ -497,6 +517,9 @@ def _check_deload(out, phase_id, fw, pweeks, constraints):
 
 
 def _check_required(out, phase_id, work_weeks, checks):
+    # A week that tests is a test week: the test stands in for a session the
+    # phase would otherwise require.
+    work_weeks = [w for w in work_weeks if not any(s.get('test') for _, s in _sessions(w))]
     for aid in checks.get('archetypes_required') or []:
         for w in work_weeks:
             if not any((s.get('archetype') or {}).get('id') == aid for _, s in _sessions(w)):
@@ -521,7 +544,7 @@ def _check_fixed(out, phase_id, pweeks, modalities, fixed: bool):
     seen: dict[tuple, list] = defaultdict(list)
     for w in pweeks:
         for _, s in _sessions(w):
-            if (modalities.get(s.get('modality')) or {}).get('progression_model', 'linear_load') != 'linear_load':
+            if s.get('test') or (modalities.get(s.get('modality')) or {}).get('progression_model', 'linear_load') != 'linear_load':
                 continue
             aid = (s.get('archetype') or {}).get('id')
             for ea in _work(s):
@@ -558,3 +581,44 @@ def _check_volume(out, phase_id, work_weeks, checks, prev_tail):
             out.add('volume_vs_previous_phase', 'warn', phase_id, 'minutes',
                     f"mean weekly minutes {change:+.0%} against the previous phase; "
                     f"the phase calls for {lo:+.0%} to {hi:+.0%}")
+
+
+# Why a declared test was not run: the athlete's circumstances (fine, said
+# once) or the package's authoring (a test that can never be placed).
+_ATHLETE_SKIPS = {'level', 'equipment_gap', 'injury_skip', 'session_too_short', 'overreached', 'deload'}
+
+
+def _check_tests(out, phase_id, phase, pweeks):
+    """Every test the phase declares is in its week — run, or skipped with a
+    reason — no other week tests, and a test's scored slots are prescribed as
+    written (src/standard_tests.protocol_load)."""
+    from src import standard_tests
+    declared = phase.get('tests') or []
+    for w in pweeks:
+        wn = w.get('week_number')
+        entry = {'tests': declared, 'phase_weeks': phase.get('weeks') or 1,
+                 'repeatable': phase.get('repeatable'), 'week_in_phase': w.get('week_in_phase')}
+        expected = len(standard_tests.tests_for_week(entry)) if declared else 0
+        placed = [s for _, s in _sessions(w) if s.get('test')]
+        skipped = w.get('tests_skipped') or []
+        if len(placed) + len(skipped) < expected:
+            out.add('test_missing', 'error', phase_id, 'tests',
+                    f"week {w.get('week_in_phase')} of the phase should test; it neither tests nor says why not", wn)
+        if len(placed) > expected:
+            out.add('test_unexpected', 'error', phase_id, (placed[0].get('test') or {}).get('archetype'),
+                    f"a test in week {w.get('week_in_phase')}, where the phase declares none", wn)
+        for t in skipped:
+            reason = t.get('reason')
+            subject = ','.join(t.get('archetypes') or [])
+            if reason in _ATHLETE_SKIPS:
+                out.add('test_skipped', 'info', phase_id, subject, f"test skipped: {reason}", wn)
+            else:
+                out.add('test_unplaceable', 'error', phase_id, subject,
+                        f"the phase's test cannot be placed: {reason}", wn)
+        for s in placed:
+            for ea in _work(s):
+                if ea.get('standard') and ea.get('exercise') and not (ea.get('load') or {}).get('test'):
+                    out.add('test_scaled', 'error', phase_id, (s.get('test') or {}).get('archetype'),
+                            f"{ea.get('slot_role')} measures {ea['standard'].get('id')} but is not "
+                            f"prescribed as the test", wn)
+

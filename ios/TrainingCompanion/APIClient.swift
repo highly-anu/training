@@ -70,19 +70,28 @@ final class APIClient {
     /// the `progress` block. Nulls are dropped — `transferUserInfo` takes
     /// property-list types only.
     func fetchWatchDay(date: String) async throws
-        -> (completedIds: [String], progress: [String: Any]?, last: [String: String]) {
-        // spec=1: the payload that carries each exercise's `last`.
+        -> (completedIds: [String], progress: [String: Any]?, last: [String: String],
+            standards: [String: WatchStandard]) {
+        // spec=1: the payload that carries each exercise's `last`, and a test
+        // step's `standard`.
         let data = try await get("/user/today-session?date=\(date)&spec=1")
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         let sessions = json["sessions"] as? [[String: Any]] ?? []
         let done = sessions.compactMap { ($0["completed"] as? Bool) == true ? $0["sessionId"] as? String : nil }
         var last: [String: String] = [:]
+        var standards: [String: WatchStandard] = [:]
         for s in sessions {
             for e in s["exercises"] as? [[String: Any]] ?? [] {
-                if let id = e["exerciseId"] as? String, let line = e["last"] as? String { last[id] = line }
+                guard let id = e["exerciseId"] as? String else { continue }
+                if let line = e["last"] as? String { last[id] = line }
+                if let st = e["standard"] as? [String: Any], let sid = st["id"] as? String {
+                    standards[id] = WatchStandard(id: sid, name: st["name"] as? String ?? sid,
+                                                  result: st["result"] as? String, best: st["best"] as? String,
+                                                  target: st["target"] as? String)
+                }
             }
         }
-        return (done, (json["progress"] as? [String: Any]).map(Self.dropNulls), last)
+        return (done, (json["progress"] as? [String: Any]).map(Self.dropNulls), last, standards)
     }
 
     static func dropNulls(_ dict: [String: Any]) -> [String: Any] {
@@ -195,19 +204,75 @@ final class APIClient {
         _ = try await put("/userdata/profile", body: profile)
     }
 
-    func fetchPerformanceLogs() async throws -> [String: [PerformanceEntry]] {
-        try await fetchHealthSnapshot().performanceLogs
+    /// Logs a result on a standard, or a bodyweight (`bodyweight_kg`, the series
+    /// the ×BW standards read): text as typed ("4:58"), or for a ×BW standard the
+    /// kg and reps lifted, with the athlete's day and a note. The server reads
+    /// and converts it, so the phone and the web read input the same way. A 422
+    /// (not a value) or 503 (not saved) comes back as the server's own words.
+    /// (PRs used to ride on the profile PUT, whose merge whitelist drops them.)
+    func addResult(benchmarkId: String, input: StandardResultInput) async throws {
+        struct Body: Encodable {
+            let benchmarkId: String
+            let loggedAt: String
+            let input: StandardResultInput
+            func encode(to encoder: Encoder) throws {
+                try input.encode(to: encoder)
+                var c = encoder.container(keyedBy: Keys.self)
+                try c.encode(benchmarkId, forKey: .benchmarkId)
+                try c.encode(loggedAt, forKey: .loggedAt)
+            }
+            enum Keys: String, CodingKey { case benchmarkId, loggedAt }
+        }
+        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId,
+                                                 loggedAt: ISO8601DateFormatter().string(from: Date()), input: input))
+        try await sendExpectingSuccess("POST", "/standards/results", body: body, fallback: "Could not save the result")
     }
 
-    /// Logs a benchmark value — a PR, or the `bodyweight_kg` series the ×BW
-    /// standards need. PRs used to be appended to `profile.performanceLogs`
-    /// and sent with the profile, which the server's merge whitelist drops,
-    /// so every PR entered on the phone vanished on the next snapshot load.
-    /// This is the route the web app has always used.
-    func addPerformanceEntry(benchmarkId: String, value: Double, loggedAt: String) async throws {
-        struct Body: Encodable { let benchmarkId: String; let value: Double; let loggedAt: String }
-        let body = try JSONEncoder().encode(Body(benchmarkId: benchmarkId, value: value, loggedAt: loggedAt))
-        _ = try await postRaw("/health/performance", body: body)
+    /// Corrects one result: value, day or note — only the fields set.
+    func updateResult(id: Int, input: StandardResultInput) async throws {
+        let body = try JSONEncoder().encode(input)
+        try await sendExpectingSuccess("PATCH", "/standards/results/\(id)", body: body, fallback: "Could not save the change")
+    }
+
+    /// Deletes one result — never the standard's whole history.
+    func deleteResult(id: Int) async throws {
+        try await sendExpectingSuccess("DELETE", "/standards/results/\(id)", body: nil, fallback: "Could not delete the result")
+    }
+
+    private func sendExpectingSuccess(_ method: String, _ path: String, body: Data?, fallback: String) async throws {
+        let url = URL(string: APIClient.baseURL + path)!
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        try await addAuth(to: &request)
+        request.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 401 { throw APIError.unauthenticated }
+        guard (200...299).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? fallback)
+        }
+    }
+
+    /// Results logged sessions suggest, waiting for a decision.
+    func fetchStandardSuggestions() async throws -> [StandardSuggestion] {
+        let data = try await get("/standards/suggestions")
+        return try JSONDecoder().decode(StandardSuggestionList.self, from: data).suggestions
+    }
+
+    /// Save a suggestion as a result (`confirm`, with `text` when the athlete
+    /// corrected it), "Not a test" (`dismiss`) or undo that (`reopen`).
+    func decideSuggestion(id: Int, action: String, text: String? = nil) async throws {
+        var body: [String: String] = ["via": "ios"]
+        if let text { body["text"] = text }
+        try await sendExpectingSuccess("POST", "/standards/suggestions/\(id)/\(action)",
+                                       body: try JSONEncoder().encode(body), fallback: "Could not save the result")
+    }
+
+    /// The athlete's results, each placed on its ladder by the server.
+    func fetchStandardResults() async throws -> StandardResults {
+        let data = try await get("/standards/results")
+        return try JSONDecoder().decode(StandardResults.self, from: data)
     }
 
     // MARK: - Catalog
@@ -225,12 +290,14 @@ final class APIClient {
         return (try? JSONDecoder().decode([AppExercise].self, from: data)) ?? []
     }
 
-    /// `sex` picks the standards table; the endpoint serves the male one otherwise.
+    /// The standards. `sex` picks the tables; the endpoint serves the male ones
+    /// otherwise. Each row decodes on its own, so one malformed standard can
+    /// never blank the list again.
     func fetchBenchmarks(sex: String? = nil) async throws -> [AppBenchmark] {
-        var path = "/benchmarks"
+        var path = "/standards"
         if let sex, sex == "male" || sex == "female" { path += "?sex=\(sex)" }
         let data = try await get(path)
-        return (try? JSONDecoder().decode([AppBenchmark].self, from: data)) ?? []
+        return try JSONDecoder().decode([Lossy<AppBenchmark>].self, from: data).compactMap(\.value)
     }
 
     func fetchPhilosophies() async throws -> [PhilosophyCard] {
@@ -269,15 +336,21 @@ final class APIClient {
     /// Log what was done for one exercise. The server merges `exercises` per
     /// key and keeps the completion, notes and fatigue it already has, so a
     /// log before "Mark Session Complete" is fine and so is one after.
+    /// What the save says about the standards: a test slot's outcome comes
+    /// back as a suggestion (`standards.pending`), nil when the log bears on
+    /// no standard.
+    @discardableResult
     func saveExerciseLog(sessionKey: String, exerciseId: String,
-                         performance: ExercisePerformanceLog) async throws {
+                         performance: ExercisePerformanceLog) async throws -> SessionLogStandards? {
         struct Body: Encodable {
             let exercises: [String: ExercisePerformanceLog]
             let source: String
         }
+        struct Saved: Decodable { let standards: SessionLogStandards? }
         let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
-        _ = try await put("/health/sessions/\(escaped)",
-                          body: Body(exercises: [exerciseId: performance], source: "manual"))
+        let data = try await put("/health/sessions/\(escaped)",
+                                 body: Body(exercises: [exerciseId: performance], source: "manual"))
+        return (try? JSONDecoder().decode(Saved.self, from: data))?.standards
     }
 
     func saveSessionNotes(sessionKey: String, notes: String, fatigueRating: Int?) async throws {

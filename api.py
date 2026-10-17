@@ -25,6 +25,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
+from src import standards as _standards_mod
+from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
 from src import phases
 from src.phases import PhaseResolutionError
@@ -228,80 +230,19 @@ def _injury_flags() -> list[dict]:
     return list(loader.load_injury_flags().values())
 
 
-_BENCHMARK_CATEGORY_MAP = {
-    'max_strength':       'strength',
-    'power':              'strength',
-    'relative_strength':  'strength',
-    'strength_endurance': 'conditioning',
-    'aerobic_base':       'conditioning',
-    'anaerobic_intervals': 'conditioning',
-}
-_BENCHMARK_UNIT_MAP = {
-    'bw_ratio':     '×BW',
-    'reps':         ' reps',
-    'time_minutes': ' min',
-}
+# Bumped when a cached analytics document's *shape* changes, so a snapshot
+# written by the previous code (missing the new keys) is recomputed once
+# instead of being served until its inputs happen to change.
+_ANALYTICS_SHAPE = 'standards-block-1'
 
 
-def _parse_time(t: str) -> float:
-    """Convert 'M:SS' time string to minutes as float."""
-    parts = str(t).split(':')
-    return round(int(parts[0]) + int(parts[1]) / 60, 3)
-
-
-# (domain, exercise_key) -> (value_key, unit, lower_is_better, display_name)
-_CELL_EXTRACT = {
-    ('hips',      'back_squat'):           ('male_bw_pct', '×BW',   False, 'Back Squat'),
-    ('hips',      'broad_jump'):           ('metres',      ' m',    False, 'Broad Jump'),
-    ('push',      'shoulder_press'):       ('male_bw_pct', '×BW',   False, 'Shoulder Press'),
-    ('push',      'thruster'):             ('male_bw_pct', '×BW',   False, 'Thruster'),
-    ('pull',      'deadlift'):             ('male_bw_pct', '×BW',   False, 'Deadlift'),
-    ('pull',      'power_clean'):          ('male_bw_pct', '×BW',   False, 'Power Clean'),
-    ('core',      'four_point_ab_bridge'): ('time_min',    ' min',  False, 'Plank Hold'),
-    ('skill',     'double_under'):         ('reps',        ' reps', False, 'Double-Under'),
-    ('endurance', 'run_400m'):             ('male_time',   ' min',  True,  '400m Run'),
-    ('endurance', 'run_800m'):             ('male_time',   ' min',  True,  '800m Run'),
-    ('endurance', 'row_500m'):             ('male_time',   ' min',  True,  '500m Row'),
-}
-
-
-def _cell_benchmarks() -> list[dict]:
-    path = os.path.join(_DATA_DIR, 'benchmarks', 'cell_standards.yaml')
-    data = _load_yaml(path) or {}
-    standards_data = data.get('standards', {})
-    level_map = [('I', 'entry'), ('II', 'intermediate'), ('III', 'advanced'), ('IV', 'elite')]
-    result = []
-
-    for (domain, exercise), (key, unit, lower, name) in _CELL_EXTRACT.items():
-        ex_data = standards_data.get(domain, {}).get(exercise, {})
-        levels_data = ex_data.get('levels', {})
-        standards: dict[str, float] = {}
-
-        for roman, level_name in level_map:
-            lvl = levels_data.get(roman, {})
-            val = lvl.get(key)
-            if val is None:
-                break
-            standards[level_name] = _parse_time(val) if key == 'male_time' else float(val)
-
-        if len(standards) < 4:
-            continue
-
-        result.append({
-            'id':              f'cell_{domain}_{exercise}',
-            'name':            name,
-            'category':        'cell',
-            'domain':          domain,
-            'unit':            unit,
-            'standards':       standards,
-            'lower_is_better': lower,
-        })
-
-    return result
+def _standards_digest_key(performance: dict) -> list:
+    from src.standards import digest_key
+    return digest_key(performance)
 
 
 def _all_benchmarks(sex: str = 'male') -> list[dict]:
-    """Every benchmark in the client shape — now with the fields it never got.
+    """Every standard in the client shape — now with the fields it never got.
 
     Delegates to src/analytics/benchmarks_data.py, which keeps `sources`,
     `goal_relevance`, `domain`, `metric_type` and the female values that this
@@ -392,6 +333,9 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # as the movements of one AMRAP.
         'parent_slot_role': slot.get('parent_slot_role'),
         'skip_exercise':    bool(slot.get('skip_exercise')),
+        # The standard this slot measures ({id, result}), when it is a test's
+        # scored slot (src/standard_tests.py); absent otherwise.
+        **({'standard': ea['standard']} if ea.get('standard') else {}),
     }
 
 
@@ -430,6 +374,9 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     # otherwise.
                     **({'substituted_for': session['substituted_for']}
                        if session.get('substituted_for') else {}),
+                    # A test of the phase's standards, put in place of a
+                    # session of `in_place_of` (src/generator._plan_week_tests).
+                    **({'test': session['test']} if session.get('test') else {}),
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])
@@ -449,7 +396,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
             'schedule':      named_schedule,
         }
         # The philosophy's own phase: id and display name, and the track.
-        for key in ('phase_id', 'phase_name', 'track_id'):
+        for key in ('phase_id', 'phase_name', 'track_id', 'tests_skipped'):
             if wk.get(key):
                 week_out[key] = wk[key]
         weeks.append(week_out)
@@ -531,10 +478,12 @@ def get_injury_flags():
     return jsonify(_injury_flags())
 
 
+@app.get('/api/standards')
 @app.get('/api/benchmarks')
 def get_benchmarks():
-    """Benchmark standards. `?sex=female|male` picks the tables; the default is
-    the male set, which is what every client got before the profile could say."""
+    """The standards. `?sex=female|male` picks the tables; the default is the
+    male set, which is what every client got before the profile could say.
+    `/api/benchmarks` is the old name, kept for installed builds."""
     sex = (request.args.get('sex') or '').lower()
     return jsonify(_all_benchmarks(sex if sex in ('male', 'female') else 'male'))
 
@@ -1887,6 +1836,10 @@ def parse_workout_file():
 
         if results:
             _health.upsert_workouts(g.user_id, results)
+            # A run's fastest mile can be a result on a run standard: the FIT
+            # track has the speed to read it from (src/standard_results.py).
+            from src import standard_results
+            standard_results.after_workouts_import(g.user_id, results)
         return jsonify(results)
 
     return jsonify({'detail': 'Unsupported file type — use .xml, .json, or .fit'}), 415
@@ -2540,7 +2493,8 @@ def _adjust_each(weeks: list, start: int, matches):
             for session in sessions or []:
                 for ea in session.get('exercises') or []:
                     ex = ea.get('exercise')
-                    if ex and matches(ex):
+                    # A test's scored slot is a protocol; no adjustment rescales it.
+                    if ex and matches(ex) and not ea.get('standard'):
                         yield wi, session, ea
 
 
@@ -2574,7 +2528,8 @@ def _week_assignments_ordered(week: dict):
     for day in days:
         for session in schedule.get(day) or []:
             for ea in session.get('exercises') or []:
-                yield session, ea
+                if not ea.get('standard'):          # a test's protocol stays as written
+                    yield session, ea
 
 
 def _adjust_reduce_volume(weeks, start, adj, exercises):
@@ -2632,7 +2587,7 @@ def _adjust_early_deload(weeks, start, adj, exercises):
             session['is_deload'] = True
             for ea in session.get('exercises') or []:
                 load = ea.get('load') or {}
-                if not ea.get('exercise') or not load:
+                if not ea.get('exercise') or not load or ea.get('standard'):
                     continue
                 if isinstance(load.get('weight_kg'), (int, float)):
                     load['weight_kg'] = _adjust_round_kg(load['weight_kg'] * 0.9)
@@ -3142,11 +3097,15 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         'restSeconds': rest,
         'prescribedZoneLower': zlo,
         'prescribedZoneUpper': zhi,
+        # A test's scored slot ({id, result}); encode_watch_session turns it
+        # into the compact `standard` with `?spec=1` and drops it otherwise.
+        '_standard': ea.get('standard'),
     }
 
 
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
-                         spec_level: int = 0, last: dict | None = None) -> dict:
+                         spec_level: int = 0, last: dict | None = None,
+                         results: dict | None = None, sex: str = 'male') -> dict:
     """One stored session in the watch's shape.
 
     With spec_level >= 1 the session also says which package owns it and
@@ -3154,11 +3113,19 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     the package-level settings, `screens` the deduplicated specs, and each
     exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
     the demo programmes through this too, so demo and real sessions agree.
+
+    A test's scored slot also carries `standard` — its short name, result
+    kind, best and the number for the next level (`standards.watch_standard`,
+    from `results`, summarise()'s standards; the entry level without one) —
+    and its screen shows it (`standard_target`), whatever the package's spec
+    says. Only with `?spec=1`, and only on test slots: the Garmin payload is
+    small.
     """
     modality = s.get('modality') or ''
     archetype = s.get('archetype') or {}
     exercises = [e for e in (_encode_watch_exercise(ea, modality)
                              for ea in (s.get('exercises') or [])) if e is not None]
+    refs = [e.pop('_standard', None) for e in exercises]
     out = {
         'sessionId': session_key,
         'completed': completed,
@@ -3178,11 +3145,18 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
             package_id, archetype.get('id'),
             [(e['slotRole'] or None, e['slotType']) for e in exercises],
         )
-        for e, key in zip(exercises, keys):
+        by_id = _bd.by_id() if any(refs) else {}
+        for e, key, ref in zip(exercises, keys, refs):
             e['screen'] = key
             # What was done last time ("24kg × 10"), src/last_time.py.
             if last and e.get('exerciseId') in last:
                 e['last'] = last[e['exerciseId']]
+            sid = (ref.get('id') if isinstance(ref, dict) else ref) if ref else None
+            if sid in by_id:
+                e['standard'] = _standards_mod.watch_standard(
+                    by_id[sid], (results or {}).get(sid), sex,
+                    ref.get('result') if isinstance(ref, dict) else None)
+                e['screen'] = _watch_spec.with_lines(table, key, 'standard_target')
         out['packageId'] = package_id
         out['watch'] = _watch_spec.session_identity(package_id)
         out['screens'] = table
@@ -3349,6 +3323,17 @@ def get_today_session():
         except Exception as e:
             app.logger.warning('today-session: last time failed: %s', e)
 
+    # A test today: each scored slot says its standard's best and the number
+    # for the next level. Read only when today has a test.
+    std_results, std_sex = None, 'male'
+    if spec_level >= 1 and any(ea.get('standard') for s in sessions for ea in (s.get('exercises') or [])):
+        try:
+            std_sex, std_tz = _standards_context(g.user_id)
+            std_results = _standards_mod.summarise(
+                _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), std_sex, std_tz)['standards']
+        except Exception as e:
+            app.logger.warning('today-session: standards failed: %s', e)
+
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]
         out = []
@@ -3356,7 +3341,7 @@ def get_today_session():
             session_key = f"{_pick(w, 'week_number', 'weekNumber')}-{d_name}-{i}"
             out.append(encode_watch_session(
                 s, session_key, completed=is_done(w_index, d_name, i), spec_level=level,
-                last=last if level >= 1 else None,
+                last=last if level >= 1 else None, results=std_results, sex=std_sex,
             ))
         return out
 
@@ -3544,6 +3529,11 @@ def health_upsert_workouts():
     if auto_match:
         from src import workout_matcher
         result['matched'] = workout_matcher.match_and_store(g.user_id, workouts)
+    # After matching, so a run matched to a test session reads as that test.
+    from src import standard_results
+    standards = standard_results.after_workouts_import(g.user_id, workouts)
+    if standards is not None:
+        result['standards'] = standards
     return jsonify(result)
 
 
@@ -3615,7 +3605,8 @@ def health_upsert_session_notes(session_key: str):
            'exercises': {}, 'source': body.get('source') or 'ios'}
     if body.get('fatigueRating') is not None:
         log['fatigueRating'] = body['fatigueRating']
-    _health.upsert_session_log(g.user_id, log)
+    if _health.upsert_session_log(g.user_id, log) is None:
+        return jsonify({'detail': 'could not save the session log'}), 503
     return jsonify({'saved': session_key})
 
 
@@ -3648,23 +3639,47 @@ def health_upsert_session_by_uid(session_uid: str):
     The session key is still stored alongside, because plenty of readers speak
     only that; it is recovered from the uid when the body omits it.
     """
-    log = request.get_json(silent=True) or {}
+    log = _normalise_fatigue(request.get_json(silent=True) or {})
     log['sessionUid'] = session_uid
     if not log.get('sessionKey'):
         from src import program_history
         planned = program_history.resolve_session(g.user_id, session_uid=session_uid)
         log['sessionKey'] = planned['legacy_key'] if planned else session_uid
-    _health.upsert_session_log(g.user_id, log)
-    return jsonify({'saved': session_uid, 'sessionKey': log['sessionKey']})
+    return _save_session_log(log, {'saved': session_uid, 'sessionKey': log['sessionKey']})
 
 
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):
+    """Write a session log under its program-relative key.
+
+    `standardResults` — {standardId: {decision: save|dismiss, value?|text?}}
+    — carries a watch's answer to "save this result?" for a test it ran; it
+    is honoured only for standards that session tests, so a device token
+    (auth.DEVICE_ROUTES) reaches no further than the session it logged.
+    """
     log = _normalise_fatigue(request.get_json(silent=True) or {})
     log['sessionKey'] = session_key
-    _health.upsert_session_log(g.user_id, log)
-    return jsonify({'saved': session_key})
+    return _save_session_log(log, {'saved': session_key})
+
+
+def _save_session_log(log: dict, answer: dict):
+    """Store a log, then read it for the standards it bears on.
+
+    503 when the write fails (it answered "saved" over a lost write for as
+    long as the store swallowed errors). A test slot's logged outcome comes
+    back as `standards.pending` — a suggestion, never yet a result — and
+    whatever went wrong reading it as `standards.error`; the log is kept
+    either way (src/standard_results.py).
+    """
+    from src import standard_results
+    row = _health.upsert_session_log(g.user_id, log)
+    if row is None:
+        return jsonify({'detail': 'could not save the session log'}), 503
+    standards = standard_results.after_session_log(g.user_id, log, row, session_uid=row.get('session_uid'))
+    if standards is not None:
+        answer['standards'] = standards
+    return jsonify(answer)
 
 
 @app.get('/api/health/bio/synced-dates')
@@ -3752,23 +3767,283 @@ def health_dismiss_suggestion(workout_id: str):
     return jsonify({'dismissed': workout_id})
 
 
+def _standards_context(user_id: str) -> tuple[str, str | None]:
+    """(sex, timezone) from the profile: which tables, and the athlete's day."""
+    from src.db import get_user_profile
+    try:
+        profile = get_user_profile(user_id) or {}
+    except Exception:  # noqa: BLE001 — the male tables and UTC, as before the profile could say
+        profile = {}
+    sex = (profile.get('sex') or 'male').lower()
+    return (sex if sex in ('male', 'female') else 'male'), profile.get('timezone') or None
+
+
+def _today_for(tz: str | None) -> _date:
+    from zoneinfo import ZoneInfo
+    try:
+        return _datetime.now(ZoneInfo(tz)).date() if tz else _datetime.now(_timezone.utc).date()
+    except Exception:  # noqa: BLE001 — an unknown zone reads as UTC
+        return _datetime.now(_timezone.utc).date()
+
+
+@app.get('/api/standards/results')
+@require_auth
+def standards_results():
+    """The athlete's results on the standards: per standard the current and the
+    best result with their level and text, and every entry with its day,
+    source, note and the block it fell in (`src/standards.py`). Levels are
+    worked out here so no client computes one."""
+    from src import program_history
+    from src import standards as _standards
+    from src.analytics import benchmarks_data as _bd
+    sex, tz = _standards_context(g.user_id)
+    try:
+        activations = program_history.list_activations(g.user_id)
+    except Exception:  # noqa: BLE001 — results without blocks rather than none
+        activations = []
+    names = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
+    doc = _standards.summarise(
+        _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, tz,
+        _standards.blocks_from_activations(activations, names))
+    # The current program's own standards, for Profile's "This program".
+    own = _current_program_standards(g.user_id)
+    doc['programStandards'] = [{'id': sid, 'why': why} for sid, why in own.items()]
+    return jsonify(doc)
+
+
+def _current_program_standards(user_id: str) -> dict:
+    """{standard id: [why…]} for the athlete's current program
+    (standard_results.current_program_standards), {} without one."""
+    from src import standard_results
+    try:
+        return standard_results.current_program_standards(user_id)
+    except Exception as exc:  # noqa: BLE001 — sections without a program rather than none
+        app.logger.warning('standards: program standards failed: %s', exc)
+        return {}
+
+
+def _result_day(body: dict, tz: str | None) -> str:
+    """The athlete's day for a result: `loggedOn` as sent, else today where
+    they are. A day after tomorrow is a typo, not a result. Raises InputError."""
+    from src.standards import InputError
+    today = _today_for(tz)
+    raw = body.get('loggedOn')
+    if raw in (None, ''):
+        return today.isoformat()
+    try:
+        day = _date.fromisoformat(str(raw))
+    except ValueError:
+        raise InputError('loggedOn must be a date (YYYY-MM-DD)') from None
+    if day > today + _timedelta(days=1):
+        raise InputError('a result cannot be dated in the future')
+    return day.isoformat()
+
+
+@app.post('/api/standards/results')
 @app.post('/api/health/performance')
 @require_auth
 def health_add_performance():
+    """One result on a standard (or a bodyweight): `text` as typed ("4:58"), a
+    `value` in the standard's unit, or for a ×BW standard the `kg` and `reps`
+    lifted; `loggedOn` the athlete's day (today by default) and an optional
+    `note`. 422 when it cannot be a result, 503 when the write fails — a client
+    never believes a result was kept that was not. `/api/health/performance`
+    is the old name, kept for installed builds."""
+    from src import standards as _standards
+    from src.analytics import benchmarks_data as _bd
     body = request.get_json(silent=True) or {}
-    benchmark_id = body.get('benchmarkId', '')
-    value = body.get('value')
-    logged_at = body.get('loggedAt', '')
-    if not benchmark_id or value is None:
+    benchmark_id = body.get('benchmarkId') or ''
+    if not benchmark_id or all(body.get(k) is None for k in ('value', 'text', 'kg')):
         return jsonify({'detail': 'benchmarkId and value required'}), 400
-    _health.add_performance_entry(g.user_id, benchmark_id, float(value), logged_at)
-    return jsonify({'saved': benchmark_id})
+    if benchmark_id not in _bd.known_ids():
+        return jsonify({'detail': f'unknown standard {benchmark_id!r}'}), 422
+    _sex, tz = _standards_context(g.user_id)
+    logged_at = body.get('loggedAt') or _datetime.now(_timezone.utc).isoformat()
+    try:
+        _datetime.fromisoformat(str(logged_at).replace('Z', '+00:00'))
+    except ValueError:
+        return jsonify({'detail': 'loggedAt must be an ISO date or time'}), 422
+    note = (str(body.get('note') or '').strip() or None)
+    try:
+        day = _result_day(body, tz)
+        logs = _health.get_performance_logs(g.user_id) if body.get('kg') is not None else {}
+        value, inp = _standards.resolve_input(_bd.by_id().get(benchmark_id), body, logs, day, tz)
+    except _standards.InputError as exc:
+        return jsonify({'detail': str(exc)}), 422
+    try:
+        entry_id = _health.add_performance_entry(g.user_id, benchmark_id, value, logged_at, day,
+                                                 note=note, input_=inp or None)
+    except Exception as exc:  # noqa: BLE001 — the client is told, and retries
+        app.logger.warning('standards: result write failed for %s: %s', benchmark_id, exc)
+        return jsonify({'detail': 'could not save the result'}), 503
+    return jsonify({'saved': benchmark_id, 'id': entry_id, 'value': value,
+                    'valueText': _bd.format_value(_bd.by_id().get(benchmark_id), value), 'loggedOn': day})
+
+
+@app.patch('/api/standards/results/<int:entry_id>')
+@require_auth
+def standards_update_result(entry_id: int):
+    """Correct one result: its value (as typed, or kg × reps), its day or its
+    note. A ×BW result logged as a load is re-read against the bodyweight of
+    its new day. 404 when it is not the athlete's."""
+    from src import standards as _standards
+    from src import standards_store as _store
+    from src.analytics import benchmarks_data as _bd
+    body = request.get_json(silent=True) or {}
+    try:
+        current = _store.get_result(g.user_id, entry_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: read %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not read the result'}), 503
+    if current is None:
+        return jsonify({'detail': 'no such result'}), 404
+    _sex, tz = _standards_context(g.user_id)
+    fields: dict = {}
+    try:
+        day = _result_day(body, tz) if 'loggedOn' in body else _standards.day_of(current, tz)
+        if 'loggedOn' in body:
+            fields['logged_on'] = day
+        b = _bd.by_id().get(current['benchmarkId'])
+        sent = {k: body[k] for k in ('value', 'text', 'kg', 'reps', 'bodyweightKg') if body.get(k) is not None}
+        prior = current.get('input') or {}
+        if not sent and 'loggedOn' in body and prior.get('kg') is not None:
+            # A load re-read against the new day's bodyweight — unless the
+            # athlete gave the bodyweight with it, which stays theirs.
+            sent = {'kg': prior['kg'], 'reps': prior.get('reps', 1)}
+            if prior.get('bodyweightGiven'):
+                sent['bodyweightKg'] = prior.get('bodyweightKg')
+        if sent:
+            logs = _health.get_performance_logs(g.user_id) if sent.get('kg') is not None else {}
+            fields['value'], inp = _standards.resolve_input(b, sent, logs, day, tz)
+            fields['input'] = inp or None
+    except _standards.InputError as exc:
+        return jsonify({'detail': str(exc)}), 422
+    if 'note' in body:
+        fields['note'] = str(body.get('note') or '').strip() or None
+    try:
+        if not _store.update_result(g.user_id, entry_id, fields):
+            return jsonify({'detail': 'no such result'}), 404
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: update %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not save the change'}), 503
+    return jsonify({'updated': entry_id})
+
+
+@app.delete('/api/standards/results/<int:entry_id>')
+@require_auth
+def standards_delete_result(entry_id: int):
+    """Delete one result. 404 when it is not the athlete's."""
+    from src import standards_store as _store
+    try:
+        deleted = _store.delete_result(g.user_id, entry_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: delete %s failed: %s', entry_id, exc)
+        return jsonify({'detail': 'could not delete the result'}), 503
+    if not deleted:
+        return jsonify({'detail': 'no such result'}), 404
+    return jsonify({'deleted': entry_id})
+
+
+def _suggestions_doc(user_id: str, rows: list[dict]) -> list[dict]:
+    """Suggestion rows in the server's words (standard_results.describe),
+    each naming the session it came from."""
+    from src import program_history, standard_results
+    from src.analytics import benchmarks_data as _bd
+    sex, tz = _standards_context(user_id)
+    try:
+        planned = program_history.planned_rows_for_uids(user_id, [r['sessionUid'] for r in rows if r['sessionUid']])
+    except Exception:  # noqa: BLE001 — unnamed sessions rather than no suggestions
+        planned = {}
+    names = {uid: p.get('archetype_name') for uid, p in planned.items()}
+    return standard_results.describe(rows, _bd.by_id(), _health.get_performance_logs(user_id), sex, tz, names)
+
+
+@app.get('/api/standards/suggestions')
+@require_auth
+def standards_suggestions():
+    """Results logged sessions suggest, waiting for the athlete: Profile ▸
+    Standards' "To confirm" and Today. A pending suggestion is not a result
+    and no reader of results sees it (src/standard_results.py)."""
+    from src import standards_store as _store
+    return jsonify({'suggestions': _suggestions_doc(g.user_id, _store.list_suggestions(g.user_id))})
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/confirm')
+@require_auth
+def standards_confirm_suggestion(suggestion_id: int):
+    """Make a suggestion a result. The body may correct it — `text`, `value`
+    or for a ×BW standard `kg` (and `reps`) — read against the session's day.
+    Idempotent; 404 when it is not the athlete's, 503 when the write fails."""
+    from src import standards as _standards
+    from src import standards_store as _store
+    from src.analytics import benchmarks_data as _bd
+    body = request.get_json(silent=True) or {}
+    via = str(body.get('via') or 'web')[:20]
+    value = inp = None
+    try:
+        current = _store.get_suggestion(g.user_id, suggestion_id)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: read suggestion %s failed: %s', suggestion_id, exc)
+        return jsonify({'detail': 'could not read the suggestion'}), 503
+    if current is None:
+        return jsonify({'detail': 'no such suggestion'}), 404
+    sent = {k: body[k] for k in ('value', 'text', 'kg', 'reps') if body.get(k) is not None}
+    if sent:
+        _sex, tz = _standards_context(g.user_id)
+        try:
+            logs = _health.get_performance_logs(g.user_id) if sent.get('kg') is not None else {}
+            value, inp = _standards.resolve_input(_bd.by_id().get(current['benchmarkId']), sent, logs,
+                                                  current['loggedOn'] or _today_for(tz).isoformat(), tz)
+        except _standards.InputError as exc:
+            return jsonify({'detail': str(exc)}), 422
+    try:
+        done = _store.confirm_suggestion(g.user_id, suggestion_id, via=via, value=value, input_=inp or None)
+    except Exception as exc:  # noqa: BLE001 — the client is told, and retries
+        app.logger.warning('standards: confirm %s failed: %s', suggestion_id, exc)
+        return jsonify({'detail': 'could not save the result'}), 503
+    if done is None:
+        return jsonify({'detail': 'no such suggestion'}), 404
+    return jsonify({'suggestion': (_suggestions_doc(g.user_id, [done]) or [None])[0],
+                    'resultId': done['performanceLogId']})
+
+
+def _set_suggestion(suggestion_id: int, status: str, from_statuses: tuple):
+    from src import standards_store as _store
+    body = request.get_json(silent=True) or {}
+    try:
+        done = _store.set_suggestion_status(g.user_id, suggestion_id, status,
+                                            via=str(body.get('via') or 'web')[:20], from_statuses=from_statuses)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning('standards: %s %s failed: %s', status, suggestion_id, exc)
+        return jsonify({'detail': 'could not save the change'}), 503
+    if done is None:
+        return jsonify({'detail': f'no {"/".join(from_statuses)} suggestion {suggestion_id}'}), 404
+    return jsonify({'suggestion': (_suggestions_doc(g.user_id, [done]) or [None])[0]})
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/dismiss')
+@require_auth
+def standards_dismiss_suggestion(suggestion_id: int):
+    """"Not a test": the suggestion stays dismissed, even when the session is
+    logged again. 404 unless it is pending."""
+    return _set_suggestion(suggestion_id, 'dismissed', ('pending',))
+
+
+@app.post('/api/standards/suggestions/<int:suggestion_id>/reopen')
+@require_auth
+def standards_reopen_suggestion(suggestion_id: int):
+    """Undo a dismissal. 404 unless it is dismissed."""
+    return _set_suggestion(suggestion_id, 'pending', ('dismissed',))
 
 
 @app.delete('/api/health/performance/<benchmark_id>')
 @require_auth
 def health_delete_performance(benchmark_id: str):
-    _health.delete_performance_log(g.user_id, benchmark_id)
+    try:
+        _health.delete_performance_log(g.user_id, benchmark_id)
+    except Exception as exc:  # noqa: BLE001 — said, as every standards write is
+        app.logger.warning('standards: delete series %s failed: %s', benchmark_id, exc)
+        return jsonify({'detail': 'could not delete the results'}), 503
     return jsonify({'deleted': benchmark_id})
 
 
@@ -4295,7 +4570,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     import hashlib as _h
     import json as _j
     parts = [
-        str(revision), inputs.today.isoformat(),
+        _ANALYTICS_SHAPE, str(revision), inputs.today.isoformat(),
         # Each set's values, not only how many: the set logger edits a set's
         # kg, reps or seconds in place.
         _j.dumps({k: (v.get('completedAt'), sorted(
@@ -4308,7 +4583,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                   for k, v in inputs.session_logs.items()}, sort_keys=True, default=str),
         _j.dumps(sorted((m.get('importedWorkoutId'), m.get('sessionKey'), m.get('matchConfidence'))
                         for m in inputs.matches), default=str),
-        _j.dumps({k: len(v) for k, v in inputs.performance_logs.items()}, sort_keys=True),
+        _j.dumps(_standards_digest_key(inputs.performance_logs), default=str),
         # Values, not only dates: a same-date resting HR from the watch, or a
         # corrected Apple Health night, has to bust the cache too.
         _j.dumps(sorted((b.get('date', ''), b.get('resting_hr'), b.get('hrv'), b.get('sleep_duration_min'))
@@ -4393,7 +4668,7 @@ def analytics_development():
         sorted((uid, v.get('completedAt'), len(v.get('exercises') or {})) for uid, v in logs.items()),
         sorted((m.get('importedWorkoutId'), m.get('sessionUid'), m.get('matchConfidence')) for m in matches),
         sorted((w.get('id'), w.get('date'), bool(w.get('metrics'))) for w in workouts),
-        {k: len(v) for k, v in performance.items()},
+        _standards_digest_key(performance), _ANALYTICS_SHAPE,
         today.isoformat(), from_date.isoformat(), to_date.isoformat(),
     ], sort_keys=True, default=str).encode()).hexdigest()
     period_key = f'development:{from_date.isoformat()}:{to_date.isoformat()}'
@@ -4402,10 +4677,7 @@ def analytics_development():
         if cached and cached.get('session_hash') == digest:
             return jsonify(cached['data'])
 
-    try:
-        sex = (_db.get_user_profile(user_id) or {}).get('sex') or 'male'
-    except Exception:
-        sex = 'male'
+    sex, tz = _standards_context(user_id)
     exercises, _ = loader.load_all_exercises()
     philosophies = {p['id']: p.get('name', p['id']) for p in loader.load_philosophies()}
     planned = {vid: program_history.sessions_for_version(user_id, vid)
@@ -4421,7 +4693,8 @@ def analytics_development():
         today=today, window_from=from_date, window_to=to_date,
         activations=activations, planned=planned, logs_by_uid=logs, matches=matches,
         workouts=workouts, pmc=pmc, trimp_of=lambda w: _calc_workout_trimp(w, max_hr),
-        performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex,
+        performance_logs=performance, benchmarks=_bd.load_benchmarks(), sex=sex, timezone=tz,
+        program_standards=_current_program_standards(user_id),
         exercise_names={eid: ex.get('name', eid) for eid, ex in exercises.items()},
         philosophy_names=philosophies,
     ))

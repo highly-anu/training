@@ -6,6 +6,8 @@ import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'd
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
 import { TodaySession } from '@/components/dashboard/TodaySession'
+import { TestDayCard } from '@/components/dashboard/TestDayCard'
+import { ResultsToConfirmCard } from '@/components/dashboard/ResultsToConfirmCard'
 import { WeekOverview } from '@/components/dashboard/WeekOverview'
 import { DayWorkoutPanel } from '@/components/dashboard/DayWorkoutPanel'
 import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
@@ -135,12 +137,19 @@ function WeekTab({
       {/* Workouts waiting for a match decision — only when there are any */}
       <SuggestionsCard />
 
+      {/* Results logged sessions suggest — today's test shows its own below */}
+      <ResultsToConfirmCard
+        testDayKey={program.weeks[weekIndex] ? `${program.weeks[weekIndex].week_number}-${format(new Date(), 'EEEE')}` : undefined}
+        testStandards={(program.weeks[weekIndex]?.schedule[format(new Date(), 'EEEE')] ?? [])
+          .flatMap((s) => s.test?.standards ?? [])} />
+
       {/* Today + Readiness + Adherence + Progress */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:items-stretch">
         <div className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today</h2>
           <div className="flex-1 flex flex-col">
             <TodaySession program={program} weekIndex={weekIndex} />
+            <TestDayCard program={program} weekIndex={weekIndex} />
           </div>
         </div>
         <div className="flex flex-col gap-2">

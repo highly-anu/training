@@ -3228,3 +3228,60 @@ exercises:
   - Horsemen
   notes: 'Lowest-impact aerobic option. Preferred for the active-recovery sessions
     the program caps at 65% MHR, and when ankle or knee load needs unloading.'
+- id: push_up
+  name: Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 4
+    reps: 15
+  sources:
+  - Horsemen
+  notes: 'Strict push-up: chest to the floor, full lockout. The PT test counts
+    clean reps in three minutes; resting in the plank is allowed, on the knees
+    is not.
+
+    '
+- id: sit_up
+  name: Sit-Up (Abmat)
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  progressions:
+    volume: increase_reps_per_set
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources:
+  - Horsemen
+  notes: 'Sit-up, feet anchored, hands crossed on the chest. The PT test counts
+    clean reps in three minutes.
+
+    '

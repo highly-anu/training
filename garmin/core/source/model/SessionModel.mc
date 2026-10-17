@@ -116,6 +116,9 @@ class WorkoutExercise {
     // What was done last time ("24kg × 10"), from the server's session logs
     // (src/last_time.py); null on a first time, a demo day or an older server.
     function last()            { return g("last"); }
+    // A test's scored slot: { id, name, result, best, target }, the server's
+    // words (standards.watch_standard); null on every other step.
+    function standard()        { return g("standard"); }
     function rir()             { return g("rir"); }
     // Set on an amrap_movement to name the amrap slot it belongs to.
     function parentSlotRole()  { return g("parentSlotRole"); }

@@ -1,0 +1,11 @@
+# What a CrossFit athlete is assumed to arrive with, per level
+# (loader.load_level_seeds; package-scoped, cascading upward).
+#
+# An intermediate CrossFit athlete hangs and pulls with control: without this
+# the package's own pull-up (requires dead_hang + scapular_control) stayed
+# locked for every athlete but an elite, so no CrossFit session could
+# prescribe one — and no benchmark girl with pull-ups (Cindy, Fran, Helen)
+# could be tested.
+seeds:
+  intermediate:
+    - scapular_control

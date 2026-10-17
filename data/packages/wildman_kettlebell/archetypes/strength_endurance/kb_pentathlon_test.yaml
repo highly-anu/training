@@ -1,0 +1,91 @@
+id: kb_pentathlon_test
+name: "KB Pentathlon (IKMF) — Test"
+modality: strength_endurance
+category: kettlebell
+training_levels:
+  - intermediate
+  - advanced
+  - elite
+duration_estimate_minutes: 60
+
+# A test of the five pentathlon standards: placed by the competition phase
+# (philosophy.yaml `tests:`), never picked for an ordinary session, and run as
+# written — no ramp, no deload scaling of the events.
+test: {}
+
+slots:
+  - role: warmup
+    slot_type: time_domain
+    duration_minutes: 10
+    intensity: low
+    exercise_filter:
+      category: kettlebell
+      movement_pattern: hip_hinge
+    notes: "Swings and light cleans; a few reps of each event at the bell you will test with."
+
+  - role: clean
+    slot_type: time_domain
+    duration_minutes: 6
+    rest_sec: 300
+    intensity: high
+    paced: true
+    exercise_filter:
+      exercise_ids: [wk_kb_clean_single]
+    standard: kb_pentathlon_clean_reps
+    notes: "Event 1. Six minutes, hand changes free, the bell never set down. Reps up to 120 score."
+
+  - role: long_cycle_press
+    slot_type: time_domain
+    duration_minutes: 6
+    rest_sec: 300
+    intensity: high
+    paced: true
+    exercise_filter:
+      exercise_ids: [wk_kb_long_cycle_press]
+    standard: kb_pentathlon_long_cycle_press_reps
+    notes: "Event 2. Reps up to 60 score."
+
+  - role: jerk
+    slot_type: time_domain
+    duration_minutes: 6
+    rest_sec: 300
+    intensity: high
+    paced: true
+    exercise_filter:
+      exercise_ids: [kb_jerk_single]
+    standard: kb_pentathlon_jerk_reps
+    notes: "Event 3. Reps up to 120 score."
+
+  - role: half_snatch
+    slot_type: time_domain
+    duration_minutes: 6
+    rest_sec: 300
+    intensity: high
+    paced: true
+    exercise_filter:
+      exercise_ids: [wk_kb_half_snatch]
+    standard: kb_pentathlon_half_snatch_reps
+    notes: "Event 4. Reps up to 108 score."
+
+  - role: push_press
+    slot_type: time_domain
+    duration_minutes: 6
+    intensity: high
+    paced: true
+    exercise_filter:
+      exercise_ids: [wk_kb_push_press_single]
+    standard: kb_pentathlon_push_press_reps
+    notes: "Event 5. Reps up to 120 score."
+
+required_equipment:
+  - kettlebell
+sources:
+  - IKMF
+  - Wildman
+notes: >
+  The IKMF kettlebell pentathlon as a test (Valery Fedorenko's event,
+  ikmf-world.com/disciplines/ikmf-pentathlon): clean, long cycle press, jerk,
+  half snatch, strict push press — six minutes each, five minutes rest after
+  each of the first four, one bell, hand changes free, the bell may not be set
+  down. Log each event's reps: each is a result on its own standard. The pace
+  shown is the scoring cap, a ceiling rather than a target.

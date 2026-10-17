@@ -746,6 +746,25 @@ export function ModalityBadge({ modality, size = 'default' }) {
 <div className="h-0.5 w-full" style={{ backgroundColor: MODALITY_COLORS[modality].hex }} />
 ```
 
+**A standard's ladder is drawn in its modality's colour.** Every standard has a
+`domain` that is a modality id (`test_standards.py` holds every one to it), and
+`components/standards/StandardLadder.tsx` fills its rungs, up to the level the server
+reached, in that modality's `hex`; `StandardLevelBadge` names the level in the same
+modality's `bg`/`text`. A level has no colour of its own — position and the word carry
+it (below entry · entry · intermediate · advanced · elite) — so it can never be read as
+a pass/fail status; the §8.8 traffic light appears only where a package declares a
+*target* level (met · partly met · below). Profile, Explore, Analytics ▸ Progress and
+Blocks all draw this one component; until 2026-10-17 they used a flat accent, a status
+green and (on the phone) purple/blue/green per level.
+
+**A suggested result wears the ladder's colours, not a status.**
+`components/standards/SuggestionRow.tsx` — a result a logged session suggests: the value,
+`StandardLevelBadge`, "new best" / "was 7:45" / "corrects 7:32" in muted text, and
+Save result · Correct · Not a test, in a `border-primary/30 bg-primary/5` panel like
+`StandardChip`. On Profile ▸ Standards (*To confirm*), Today (`ResultsToConfirmCard`, and
+inside `TestDayCard` for today's test) and under the test slot (`SessionSuggestion`).
+"New best" is words, never a green.
+
 ### 8.2 Training Phase Colors
 
 ```typescript
@@ -1871,7 +1890,7 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 ### 13.6 Explorer Landing Page Pattern
 
-**Use case:** Browsing/selecting from a collection (philosophies, modalities, exercises, equipment profiles, injury flags, benchmarks).
+**Use case:** Browsing/selecting from a collection (philosophies, modalities, exercises, equipment profiles, injury flags, standards).
 
 **Structure:**
 ```tsx
@@ -1934,7 +1953,7 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 **When to use:**
 - Browsing mode before selection (Explore tab for philosophies/modalities/exercises)
-- Profile tab sub-sections (equipment picker, injury flags, benchmarks)
+- Profile tab sub-sections (equipment picker, injury flags, standards)
 - Any "choose from collection" UI
 
 **When NOT to use:**
@@ -2368,7 +2387,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Log** | `ClipboardList` | "Log" | None | Workouts · Suggestions (count) | Import (opens a sheet) | ✅ |
 | **Analytics** | `BarChart3` | "Analytics" | None | Program · Progress · Load · Recovery (`?tab=`) | None (the period selector is content-level) | ✅ |
 | **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |
-| **Profile** | `User` | "Profile" | None | Athlete · Equipment · Injuries · Schedule · Benchmarks · Heart Rate | None | ✅ |
+| **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
 | **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |

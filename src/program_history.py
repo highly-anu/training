@@ -197,13 +197,17 @@ def richness(envelope: dict) -> int:
     score = sum(1 for key in ('goal', 'constraints', 'validation',
                               'volume_summary', 'coverage_report')
                 if program.get(key))
+    has_slot = has_test = False
     for week in (program.get('weeks') or []):
         for sessions in (week.get('schedule') or {}).values():
             for session in (sessions or []):
-                for ea in (session.get('exercises') or []):
-                    if ea.get('slot'):
-                        return score + 1
-    return score
+                # A test's link to its standards: a copy that dropped it (an
+                # older client that strips unknown keys) is the poorer one.
+                has_test = has_test or bool(session.get('test'))
+                has_slot = has_slot or any(ea.get('slot') for ea in (session.get('exercises') or []))
+                if has_slot and has_test:
+                    return score + 2
+    return score + int(has_slot) + int(has_test)
 
 
 # ── Flattening ───────────────────────────────────────────────────────────────
@@ -521,8 +525,10 @@ def _is_referenced(cur, user_id: str, vid: str) -> bool:
 
 def _carry_over(cur, user_id: str, old_vid: str, new_vid: str,
                 kept_rows: list[dict]) -> int:
-    """Re-point matches, suggestions and logs from the predecessor's kept
-    sessions to the same sessions of its successor; returns rows moved.
+    """Re-point matches, suggestions, logs and test results (a standard's
+    result and its suggestion carry the test session's uid) from the
+    predecessor's kept sessions to the same sessions of its successor;
+    returns rows moved.
 
     A kept session sits at the same date, so at the same week index, day and
     slot — the uid differs only in its version prefix. A log whose new uid is
@@ -541,8 +547,16 @@ def _carry_over(cur, user_id: str, old_vid: str, new_vid: str,
     guards = {
         'session_logs': ' AND NOT EXISTS (SELECT 1 FROM session_logs s2 WHERE '
                         's2.user_id = t.user_id AND s2.session_uid = m.new_uid)',
+        # A test's result and its suggestion are unique per standard and session.
+        'standard_result_suggestions': ' AND NOT EXISTS (SELECT 1 FROM standard_result_suggestions s2 WHERE '
+                                       's2.user_id = t.user_id AND s2.benchmark_id = t.benchmark_id '
+                                       'AND s2.session_uid = m.new_uid)',
+        'performance_logs': ' AND NOT EXISTS (SELECT 1 FROM performance_logs s2 WHERE '
+                            's2.user_id = t.user_id AND s2.benchmark_id = t.benchmark_id '
+                            'AND s2.session_uid = m.new_uid)',
     }
-    for table in ('workout_matches', 'workout_match_suggestions', 'session_logs'):
+    for table in ('workout_matches', 'workout_match_suggestions', 'session_logs',
+                  'standard_result_suggestions', 'performance_logs'):
         cur.execute('SAVEPOINT carry_over')
         try:
             cur.execute(f'''
@@ -1228,6 +1242,29 @@ def active_session_uid(user_id: str, legacy: str) -> str | None:
                   'WHERE user_id = %s AND program_version_id = %s', (user_id, vid))
     found = _by_legacy_key(rows, legacy)
     return found[0]['session_uid'] if len(found) == 1 else None
+
+
+def planned_rows_for_key(user_id: str, legacy: str) -> list[dict]:
+    """The active plan's flat rows a log key names: one for a full key, every
+    session of the day for a day-level one ('3-Monday', which the web logs
+    under). What src/standard_results needs when a day has two sessions and
+    `active_session_uid` cannot pick one: it looks for the day's test among
+    them, and the test's own uid then keys the suggestion."""
+    if not legacy:
+        return []
+    vid = active_version_id(user_id)
+    if not vid:
+        return []
+    rows = _query(
+        'SELECT session_uid, program_version_id, date, week_index, week_number, '
+        'day_name, session_index, legacy_key, modality, archetype_id, archetype_name, '
+        'phase, is_deload '
+        'FROM planned_sessions WHERE user_id = %s AND program_version_id = %s',
+        (user_id, vid))
+    found = _by_legacy_key(rows, legacy)
+    for r in found:
+        r['date'] = str(r['date'])
+    return found
 
 
 def prune_versions(user_id: str, keep: int = 40) -> int:

@@ -124,6 +124,10 @@
       },
       "default": []
     },
+    "test_only": {
+      "type": "boolean",
+      "description": "A test's own exercise (a time trial): selected only by a slot that names it in exercise_filter.exercise_ids, never for an ordinary slot."
+    },
     "contraindicated_with": {
       "type": "array",
       "description": "Injury flag IDs. If any of these flags are active in the constraint layer, this exercise is excluded from selection.",

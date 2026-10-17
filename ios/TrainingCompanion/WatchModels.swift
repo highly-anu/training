@@ -687,6 +687,65 @@ struct WatchExercise: Codable, Hashable {
     /// What was done last time ("24kg × 10"), from today-session's `last`
     /// (src/last_time.py); nil on a first time.
     var lastTime: String? = nil
+
+    /// A test's scored slot: the standard it measures, its best and the
+    /// number for the next level, from today-session's `standard`; nil on
+    /// every other step.
+    var standard: WatchStandard? = nil
+}
+
+/// A test step's standard as the server words it for the watches
+/// (`standards.watch_standard`): "2km Row", best "7:32", "7:00 for advanced".
+struct WatchStandard: Codable, Hashable {
+    let id: String
+    let name: String
+    /// How the step is read: duration | rounds | reps | hold | distance.
+    var result: String? = nil
+    var best: String? = nil
+    var target: String? = nil
+}
+
+/// What a step produced that is not a set — a for-time clock, an AMRAP's
+/// rounds, a distance — in the session log's per-exercise keys.
+nonisolated struct WatchOutcome: Codable, Equatable {
+    var rounds: Int? = nil
+    var durationSec: Int? = nil
+    var distanceKm: Double? = nil
+}
+
+/// A test step's captured value, read the way the server reads it
+/// (`src/standard_results.read_result`), and how the watch prints it.
+enum WatchResults {
+    /// In the step's own terms: seconds for a clock or a hold, a count of
+    /// reps or rounds, km; nil when nothing was captured.
+    static func value(_ ex: WatchExercise, sets: [WatchSetLog], outcome: WatchOutcome?) -> Double? {
+        switch ex.standard?.result {
+        case "duration": return outcome?.durationSec.map(Double.init)
+        case "rounds":   return outcome?.rounds.map(Double.init)
+        case "distance": return outcome?.distanceKm
+        case "hold":
+            return sets.filter(\.completed).compactMap(\.durationSeconds).max().map(Double.init)
+        case "reps":
+            let reps = sets.filter(\.completed).compactMap(\.repsActual).filter { $0 > 0 }
+            guard !reps.isEmpty else { return nil }
+            // Reps in a window add up (a pentathlon set); otherwise the best set.
+            let timed = ["time_domain", "skill_practice"].contains(ex.resolvedSlotType)
+            return Double(timed ? reps.reduce(0, +) : reps.max()!)
+        default: return nil
+        }
+    }
+
+    /// "7:32", "102 reps", "20 rounds", "45 s", "2.00 km".
+    static func text(_ ex: WatchExercise, value: Double) -> String {
+        let n = Int(value.rounded())
+        switch ex.standard?.result {
+        case "duration": return String(format: "%d:%02d", n / 60, n % 60)
+        case "distance": return String(format: "%.2f km", value)
+        case "hold":     return "\(n) s"
+        case "rounds":   return "\(n) round\(n == 1 ? "" : "s")"
+        default:         return "\(n) rep\(n == 1 ? "" : "s")"
+        }
+    }
 }
 
 // MARK: - Post-workout summary (Watch → iPhone → API)
@@ -734,6 +793,12 @@ nonisolated struct WatchWorkoutSummary: Codable {
     let cadenceAvg: Double?
     let paceSecsPerKm: Double?
     let exerciseTimeline: [ExerciseTimelineEntry]?
+    /// exerciseId → what a step produced that is not a set (a for-time clock,
+    /// an AMRAP's rounds). Optional, so a summary from an older watch decodes.
+    var outcomes: [String: WatchOutcome]? = nil
+    /// standard id → "save" | "dismiss": the Results answer on the watch; the
+    /// server makes each a result only then (src/standard_results.py).
+    var standardResults: [String: String]? = nil
 }
 
 nonisolated struct WatchSetLog: Codable, Equatable {

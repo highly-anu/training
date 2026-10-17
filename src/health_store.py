@@ -67,8 +67,9 @@ def _ensure_timeline_column(cur) -> bool:
     """Add session_logs.exercise_timeline when missing; report whether it exists.
 
     Mirrors migrations/008_session_log_timeline.sql the way _ensure_metrics_column
-    mirrors 007. upsert_session_log always names the column and swallows errors,
-    so a table without it would drop every log without a sign. Returns False
+    mirrors 007. upsert_session_log always names the column, so a table without
+    it would refuse every log (it swallowed the error until standards phase 5;
+    the route now answers 503). Returns False
     when the DDL is not permitted.
     """
     global _TIMELINE_COLUMN_READY
@@ -297,6 +298,29 @@ def upsert_workouts(user_id: str, workouts: list[dict], dedupe: bool = True,
         if raise_on_error:
             raise
         return written
+
+
+def canonical_ids(user_id: str, ids: list[str]) -> dict[str, str]:
+    """{id: the row it is the same activity as} — itself unless dedup folded
+    it into another source's copy (`canonical_id`). Ids not stored map to
+    themselves; a table without the column reads as no folds."""
+    from src.db import read_conn
+    wanted = sorted({i for i in ids if i})
+    out = {i: i for i in wanted}
+    if not wanted:
+        return out
+    conn = read_conn()
+    if conn is None:
+        return out
+    try:
+        with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+            cur.execute('SELECT id, canonical_id FROM workouts WHERE user_id = %s AND id = ANY(%s::text[])',
+                        (user_id, wanted))
+            for row in cur.fetchall():
+                out[row['id']] = row.get('canonical_id') or row['id']
+    except Exception:
+        pass
+    return out
 
 
 def recalculate_workouts_elevation(user_id: str, calc_elevation_fn) -> dict:
@@ -581,7 +605,18 @@ def _log_session_uid(user_id: str, log: dict) -> str | None:
         return None
 
 
-def upsert_session_log(user_id: str, log: dict) -> None:
+def upsert_session_log(user_id: str, log: dict) -> dict | None:
+    """Write one session log, merged into what is stored; the merged row
+    (`exercises`, `completed_at`, `session_uid`, `session_key`, `source`), or
+    None when the write failed.
+
+    It used to swallow every error and the routes answered "saved" — the
+    session_logs column that production lacked (exercise_timeline) lost every
+    log for weeks without a sign. The routes now answer 503, the watch keeps
+    the upload and retries, and a test result read from the merged row
+    (src/standard_results.py) sees every exercise logged so far.
+    """
+    import logging
     from src.db import get_conn
     timeline = log.get('exerciseTimeline')
     # Scopes the row to one program version. Without it the primary key was the
@@ -619,6 +654,7 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                         avg_hr            = COALESCE(EXCLUDED.avg_hr, session_logs.avg_hr),
                         peak_hr           = COALESCE(EXCLUDED.peak_hr, session_logs.peak_hr),
                         exercise_timeline = COALESCE(EXCLUDED.exercise_timeline, session_logs.exercise_timeline)
+                    RETURNING exercises, completed_at, session_uid, session_key, source
                 ''', (
                     log['sessionKey'],
                     user_id,
@@ -632,9 +668,12 @@ def upsert_session_log(user_id: str, log: dict) -> None:
                     json.dumps(timeline) if timeline else None,
                     session_uid,
                 ))
+                row = cur.fetchone()
             conn.commit()
-    except Exception:
-        pass
+        return dict(row) if row else None
+    except Exception as exc:
+        logging.getLogger(__name__).warning('session log %s not saved: %s', log.get('sessionKey'), exc)
+        return None
 
 
 def clear_session_completion(user_id: str, session_key: str) -> None:
@@ -1109,57 +1148,27 @@ def get_matches(user_id: str) -> list[dict]:
 
 
 # ── Performance logs ──────────────────────────────────────────────────────────
+# Results on the standards live in src/standards_store.py (migrations/011);
+# these names stay for the callers that read them.
 
-def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_at: str) -> None:
-    from src.db import get_conn
-    try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute(
-                    'INSERT INTO performance_logs (user_id, benchmark_id, value, logged_at) '
-                    'VALUES (%s, %s, %s, %s)',
-                    (user_id, benchmark_id, value, logged_at),
-                )
-            conn.commit()
-    except Exception:
-        pass
+def add_performance_entry(user_id: str, benchmark_id: str, value: float, logged_at: str,
+                          logged_on: str | None = None, **extra) -> int:
+    """Store one result and return its id. Raises on failure."""
+    from src import standards_store
+    return standards_store.add_result(user_id, benchmark_id, value, logged_at=logged_at,
+                                      logged_on=logged_on or str(logged_at)[:10], **extra)
 
 
 def delete_performance_log(user_id: str, benchmark_id: str) -> None:
-    from src.db import get_conn
-    try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute(
-                    'DELETE FROM performance_logs WHERE benchmark_id = %s AND user_id = %s',
-                    (benchmark_id, user_id),
-                )
-            conn.commit()
-    except Exception:
-        pass
+    """Every result on one standard (the old route, kept for installed builds)."""
+    from src import standards_store
+    standards_store.delete_series(user_id, benchmark_id)
 
 
 def get_performance_logs(user_id: str) -> dict:
-    """Return {benchmarkId: [{value, date}, ...]} sorted by logged_at."""
-    from src.db import get_conn
-    try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute(
-                    'SELECT benchmark_id, value, logged_at FROM performance_logs '
-                    'WHERE user_id = %s ORDER BY logged_at',
-                    (user_id,),
-                )
-                rows = cur.fetchall()
-        result: dict = {}
-        for row in rows:
-            bid = row['benchmark_id']
-            if bid not in result:
-                result[bid] = []
-            result[bid].append({'value': row['value'], 'date': str(row['logged_at'])})
-        return result
-    except Exception:
-        return {}
+    """{benchmarkId: [{id, value, date, loggedOn, source, note, …}]}, oldest first."""
+    from src import standards_store
+    return standards_store.list_results(user_id)
 
 
 # ── Progression snapshots ─────────────────────────────────────────────────────

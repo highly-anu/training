@@ -507,7 +507,7 @@ struct SettingsView: View {
         }
 
         await appState.loadProfile()
-        await appState.loadPerformanceLogs()
+        await appState.loadStandardResults()
         await appState.loadRecentBioLogs()
         await appState.loadReadiness()
         await appState.loadWorkouts()

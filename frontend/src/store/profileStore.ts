@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, IntegrationSettings, TrainingLevel, Sex } from '@/api/types'
-import * as healthApi from '@/api/health'
 import { fetchProfile, saveProfile } from '@/api/userdata'
+import { queryKeys } from '@/api/queryKeys'
+import { queryClient } from '@/lib/queryClient'
 
 /** Mirrors default_integrations() in api.py. Auto-import defaults on, but a
  *  source only imports once it is also connected, so this changes nothing
@@ -15,21 +16,15 @@ export const DEFAULT_INTEGRATIONS: IntegrationSettings = {
   },
 }
 
-interface PerformanceEntry {
-  value: number
-  date: string
-}
-
 interface ProfileStore {
   trainingLevel: TrainingLevel
   equipment: EquipmentId[]
   injuryFlags: InjuryFlagId[]
   customInjuryFlags: CustomInjuryFlag[]
-  performanceLogs: Record<string, PerformanceEntry[]>
   sessionLogs: Record<string, boolean[]>
   activeGoalId: string | null
   dateOfBirth: string | null // YYYY-MM-DD, used for max HR estimation
-  /** Which benchmark standards apply. Null until the athlete says. */
+  /** Which standards' tables apply. Null until the athlete says. */
   sex: Sex | null
   /** IANA zone used to date imported FIT files; null means UTC. */
   timezone: string | null
@@ -43,8 +38,6 @@ interface ProfileStore {
   addCustomInjuryFlag: (flag: CustomInjuryFlag) => void
   removeCustomInjuryFlag: (id: string) => void
   setActiveGoalId: (id: string | null) => void
-  logPerformance: (benchmarkId: string, value: number) => void
-  removePerformanceLog: (benchmarkId: string) => void
   setSessionLog: (key: string, completed: boolean[]) => void
   setDateOfBirth: (dob: string | null) => void
   setSex: (sex: Sex | null) => void
@@ -52,16 +45,14 @@ interface ProfileStore {
   setWeeklySchedule: (schedule: Record<Day, DaySchedule>) => void
   setHRConfig: (config: HRConfig) => void
   setIntegrations: (settings: IntegrationSettings) => void
-  // Hydrate performance logs from server health snapshot
-  initPerformanceLogs: (logs: Record<string, PerformanceEntry[]>) => void
   // Hydrate session completion from server health snapshot
   initSessionLogs: (sessionLogs: Record<string, boolean[]>) => void
   // Load full profile from server (called on login)
   loadFromServer: () => Promise<void>
 }
 
-function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; initPerformanceLogs: unknown; logPerformance: unknown; removePerformanceLog: unknown; setSessionLog: unknown } & Record<string, unknown>>) {
-  saveProfile({
+function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; setSessionLog: unknown } & Record<string, unknown>>) {
+  return saveProfile({
     trainingLevel:      state.trainingLevel,
     equipment:          state.equipment,
     injuryFlags:        state.injuryFlags,
@@ -81,7 +72,6 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   equipment: [],
   injuryFlags: [],
   customInjuryFlags: [],
-  performanceLogs: {},
   sessionLogs: {},
   activeGoalId: null,
   dateOfBirth: null,
@@ -120,24 +110,6 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     set({ activeGoalId })
     _sync({ ...get(), activeGoalId })
   },
-  logPerformance: (benchmarkId, value) => {
-    const loggedAt = new Date().toISOString()
-    healthApi.savePerformanceEntry(benchmarkId, value, loggedAt)
-    set((s) => ({
-      performanceLogs: {
-        ...s.performanceLogs,
-        [benchmarkId]: [...(s.performanceLogs[benchmarkId] ?? []), { value, date: loggedAt }],
-      },
-    }))
-  },
-  removePerformanceLog: (benchmarkId) => {
-    healthApi.deletePerformanceLog(benchmarkId)
-    set((s) => {
-       
-      const { [benchmarkId]: _removed, ...rest } = s.performanceLogs
-      return { performanceLogs: rest }
-    })
-  },
   setSessionLog: (key, completed) =>
     set((s) => ({ sessionLogs: { ...s.sessionLogs, [key]: completed } })),
   setDateOfBirth: (dateOfBirth) => {
@@ -146,7 +118,15 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   },
   setSex: (sex) => {
     set({ sex })
-    _sync({ ...get(), sex })
+    // The server reads the sex from the profile to place results on the
+    // female or male tables: refresh them once it has the new one, or levels
+    // from the old tables stay cached beside the new thresholds.
+    void _sync({ ...get(), sex }).then(() => {
+      for (const key of [queryKeys.standards.results, queryKeys.standards.suggestions,
+                         queryKeys.analytics.program, queryKeys.analytics.development]) {
+        void queryClient.invalidateQueries({ queryKey: key })
+      }
+    })
   },
   setTimezone: (timezone) => {
     set({ timezone })
@@ -165,7 +145,6 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
     set({ integrations })
     _sync({ ...get(), integrations })
   },
-  initPerformanceLogs: (logs) => set({ performanceLogs: logs }),
   initSessionLogs: (logs) => set({ sessionLogs: logs }),
 
   loadFromServer: async () => {

@@ -190,8 +190,9 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
             {"benchmarkId": "ssst_reps", "name": "SSST", "unit": " reps", "lowerIsBetter": false,
              "why": ["declared", "philosophy"], "primary": true,
              "standards": {"entry": 100, "intermediate": 150, "advanced": 200, "elite": 250},
-             "value": 160, "valueSource": "logged", "level": "intermediate", "next": "advanced", "gapToNext": 40,
-             "derived": null},
+             "standardsText": {"entry": "100 reps", "intermediate": "150 reps", "advanced": "200 reps", "elite": "250 reps"},
+             "value": 160, "valueText": "160 reps", "valueSource": "logged", "level": "intermediate", "levelIndex": 2,
+             "next": "advanced", "gapToNext": 40, "gapText": "40 reps", "derived": null},
             {"benchmarkId": "cell_strength_squat", "name": "Squat", "unit": "×BW", "lowerIsBetter": false,
              "why": ["priority_modality"], "primary": false, "standards": {"entry": 1, "elite": 2.5},
              "value": null, "derived": {"value": null, "est1rm": 120, "bodyweightKg": null, "reason": "no_bodyweight_logged"}}]},
@@ -217,8 +218,12 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(rows.map(\.benchmarkId), ["ssst_reps", "cell_strength_squat"])
         XCTAssertTrue(rows[0].primary)
         XCTAssertFalse(rows[1].primary)
-        XCTAssertEqual(rows[0].rungs.map(\.level), ["entry", "intermediate", "advanced", "elite"])
-        XCTAssertEqual(rows[1].rungs.map(\.level), ["entry", "elite"], "only the rungs the standard has")
+        XCTAssertEqual(rows[0].thresholdTexts["advanced"], "200 reps", "the server's text")
+        XCTAssertEqual(rows[0].levelIndex, 2)
+        XCTAssertEqual(rows[0].valueText, "160 reps")
+        XCTAssertEqual(rows[1].thresholdTexts, ["entry": "1×BW", "elite": "2.5×BW"],
+                       "an older document without text: number + unit, only the rungs it has")
+        XCTAssertEqual(rows[1].levelIndex, 0)
         XCTAssertEqual(rows[1].derivedReason, "no_bodyweight_logged")
         XCTAssertEqual(doc.benchmarks?.bodyweightKg, 82)
 
@@ -283,7 +288,7 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
         XCTAssertEqual(AnalyticsStatusStyle.label("stable_by_design"), "Holding")
         XCTAssertEqual(AnalyticsStatusStyle.label("insufficient_data"), "Not enough data")
         XCTAssertEqual(AnalyticsStatusStyle.label("something_new"), "something new")
-        XCTAssertTrue(AnalyticsStatusStyle.coverageReason("no_pr_logged").contains("No PR logged"))
+        XCTAssertTrue(AnalyticsStatusStyle.coverageReason("no_pr_logged").contains("No result logged"))
         XCTAssertEqual(AnalyticsStatusStyle.coverageReason("unheard_of"), "Nothing logged for this metric yet.")
         XCTAssertEqual(AnalyticsStatusStyle.coverageReason(nil), "Nothing logged for this metric yet.")
     }

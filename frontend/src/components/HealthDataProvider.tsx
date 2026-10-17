@@ -14,7 +14,6 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
   const user = useAuthStore((s) => s.user)
   const initBio = useBioStore((s) => s.init)
   const mergeServerSuggestions = useBioStore((s) => s.mergeServerSuggestions)
-  const initPerformanceLogs = useProfileStore((s) => s.initPerformanceLogs)
   const initSessionLogs = useProfileStore((s) => s.initSessionLogs)
   const loadProfile = useProfileStore((s) => s.loadFromServer)
   const loadProgram = useProgramStore((s) => s.loadFromServer)
@@ -32,7 +31,6 @@ export function HealthDataProvider({ children }: { children: React.ReactNode }) 
     fetchHealthSnapshot()
       .then((snapshot) => {
         initBio(snapshot)
-        initPerformanceLogs(snapshot.performanceLogs)
         // Derive completion flags from per-session keys ("weekN-Day-si" → sessionLogs["weekN-Day"][si])
         const completionFlags: Record<string, boolean[]> = {}
         for (const [key, log] of Object.entries(snapshot.sessionLogs)) {

@@ -1,6 +1,7 @@
 import { Clock } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
+import { TestBadge } from '@/components/standards/TestBadge'
 import type { Session, TrainingPhase } from '@/api/types'
 
 interface SessionHeaderProps {
@@ -19,7 +20,13 @@ export function SessionHeader({ session, day, weekNumber, weekInPhase, phase, ph
       <div className="flex items-center gap-2 flex-wrap">
         <ModalityBadge modality={session.modality} />
         <PhaseBadge phase={phase} label={phaseLabel} />
+        {session.test && <TestBadge test={session.test} size="md" />}
       </div>
+      {session.test?.instead_of?.name && (
+        <p className="text-xs text-muted-foreground">
+          A test of this phase's standards, in place of {session.test.instead_of.name}. Log each result on its exercise below.
+        </p>
+      )}
       <h2 className="text-lg font-bold text-foreground">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</h2>
       <p className="text-sm text-muted-foreground">
         Week {weekNumber} — {day}

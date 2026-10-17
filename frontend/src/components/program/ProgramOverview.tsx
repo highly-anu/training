@@ -658,9 +658,9 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
       {/* 4. Entry standards */}
       {Object.keys(prerequisites).length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold mb-1">Entry Standards</h2>
+          <h2 className="text-sm font-semibold mb-1">Entry standards</h2>
           <p className="text-xs text-muted-foreground mb-3">
-            Minimum benchmarks recommended before starting this program.{' '}
+            Minimum standards recommended before starting this program.{' '}
             <Link to="/explore?topic=standards" className="text-primary hover:underline">
               Compare against the standards →
             </Link>

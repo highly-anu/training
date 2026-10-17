@@ -7,18 +7,22 @@ import type {
   MatchSuggestion,
   WorkoutAnalysis,
   HRZoneDistribution,
+  SessionLogStandards,
 } from '@/api/types'
 import type { ReadinessResult } from '@/lib/readiness'
 import type { RecentSessionLog } from '@/lib/logSessions'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from './queryKeys'
+import { queryClient } from '@/lib/queryClient'
 
 export interface HealthSnapshot {
   workouts: ImportedWorkout[]
   sessionLogs: Record<string, SessionPerformanceLog>
   dailyBio: Record<string, DailyBioLog>
   matches: WorkoutMatch[]
-  performanceLogs: Record<string, Array<{ value: number; date: string }>>
+  /** Results on the standards — read through GET /standards/results instead,
+   *  which places each on its ladder. */
+  performanceLogs: Record<string, Array<{ id?: number; value: number; date: string }>>
 }
 
 const BASE = '/health'
@@ -110,7 +114,13 @@ export function removeWorkout(id: string): void {
 }
 
 export function saveSessionLog(log: SessionPerformanceLog): void {
-  void apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log)
+  void (apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log) as unknown as
+    Promise<{ standards?: SessionLogStandards }>)
+    .then((res) => {
+      // A logged test slot (or a single on a derived lift) came back as a
+      // suggestion: refresh "To confirm" wherever it is shown.
+      if (res?.standards) void queryClient.invalidateQueries({ queryKey: queryKeys.standards.suggestions })
+    })
 }
 
 /** Undo "mark complete" for one session; the upsert cannot clear completed_at. */
@@ -136,17 +146,6 @@ export function dismissMatchSuggestion(workoutId: string): void {
   void apiClient.delete(`${BASE}/matches/suggestions/${encodeURIComponent(workoutId)}`)
 }
 
-export function savePerformanceEntry(
-  benchmarkId: string,
-  value: number,
-  loggedAt: string
-): void {
-  void apiClient.post(`${BASE}/performance`, { benchmarkId, value, loggedAt })
-}
-
-export function deletePerformanceLog(benchmarkId: string): void {
-  void apiClient.delete(`${BASE}/performance/${encodeURIComponent(benchmarkId)}`)
-}
 
 export async function fetchReadiness(): Promise<ReadinessResult> {
   return apiClient.get(`${BASE}/readiness`) as unknown as Promise<ReadinessResult>

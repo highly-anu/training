@@ -185,6 +185,10 @@
   domain: aerobic_base
   metric_type: time_minutes
   lower_is_better: true
+  best_effort:
+    km: 8.04672
+    label: 5 miles
+    sports: [running]
   description: >
     Timed five-mile run on flat ground. Horsemen PT Test II: under 35:00.
   test_protocol: >

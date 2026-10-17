@@ -30,6 +30,13 @@ struct CurrentExerciseView: View {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                        // A test step: the best to beat and the number for the next level.
+                        if let st = exercise.standard {
+                            Text([st.best.map { "Best \($0)" } ?? "First result", st.target]
+                                    .compactMap { $0 }.joined(separator: " · "))
+                                .font(.caption2)
+                                .foregroundStyle(.yellow)
+                        }
                         if let note = exercise.loadNote {
                             Text(note)
                                 .font(.caption2)

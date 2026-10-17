@@ -20,7 +20,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src import goals, loader, phases, provenance  # noqa: E402
+from src import goals, loader, phases, provenance, standard_tests  # noqa: E402
 from src.generator import generate  # noqa: E402
 
 ALL_EQUIPMENT = [
@@ -307,28 +307,11 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
 
 
 def _known_benchmark_ids() -> set:
-    """Every benchmark id the API can serve, read from data/benchmarks directly."""
-    import yaml
-    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                        'data', 'benchmarks')
-    ids: set = {'bodyweight_kg'}
-    # The loader's own list: a hand-kept pair here missed the four files added
-    # since (kettlebell pentathlon, ruck & PT, benchmark WODs, movement skill).
-    from src.analytics.benchmarks_data import BENCHMARK_FILES
-    for name in BENCHMARK_FILES:
-        path = os.path.join(root, name)
-        if os.path.exists(path):
-            with open(path, encoding='utf-8') as f:
-                for item in yaml.safe_load(f) or []:
-                    if isinstance(item, dict) and item.get('id'):
-                        ids.add(item['id'])
-    cell = os.path.join(root, 'cell_standards.yaml')
-    if os.path.exists(cell):
-        with open(cell, encoding='utf-8') as f:
-            for domain, entries in ((yaml.safe_load(f) or {}).get('standards') or {}).items():
-                for ex in (entries or {}):
-                    ids.add(f'cell_{domain}_{ex}')
-    return ids
+    """Every standard id the API can serve, plus bodyweight — the loader's own
+    answer. A copy here used to read every Cell item, including the ones the
+    loader drops, so an analytics.yaml could name a standard no screen shows."""
+    from src.analytics.benchmarks_data import known_ids
+    return known_ids()
 
 
 LEVELS = ('novice', 'intermediate', 'advanced')
@@ -347,7 +330,9 @@ def report_level_phase_gaps(frameworks: list, data: dict) -> list[str]:
     out: list[str] = []
     for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
         phil_id = phil['id']
-        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
+        # A test is placed by its phase, never selected: it covers no gap.
+        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id
+                      and not standard_tests.is_test_only(a)]
         uses: dict = {}                     # framework id -> phase kinds it runs in
         for track in phases.tracks_of(phil):
             for ph in track['phases']:
@@ -379,7 +364,8 @@ def report_coverage() -> int:
     print('-' * 110)
     for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
         phil_id = phil['id']
-        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
+        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id
+                      and not standard_tests.is_test_only(a)]
         have = {a.get('modality') for a in archetypes}
 
         prescribed: set = set()

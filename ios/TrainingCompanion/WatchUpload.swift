@@ -84,6 +84,40 @@ enum WatchUpload {
         return workout
     }
 
+    /// The session log `PUT /api/health/sessions/<key>` merges: each
+    /// exercise's sets (keyed by exercise id, as the analytics read them) with
+    /// what the step produced beside them — a for-time clock (`durationSec`),
+    /// an AMRAP's `rounds`, a `distanceKm` — and the Results answer given on
+    /// the watch as `standardResults` ({id: {decision}}). The watch used to
+    /// keep a for-time clock and an AMRAP's rounds in the view and drop them.
+    static func sessionLog(summary: WatchWorkoutSummary) -> [String: Any] {
+        var exercises: [String: [String: Any]] = [:]
+        for (id, sets) in summary.setLogs {
+            let encoded = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(sets))) as? [Any] ?? []
+            exercises[id] = ["sets": encoded]
+        }
+        for (id, outcome) in summary.outcomes ?? [:] {
+            var entry = exercises[id] ?? ["sets": [Any]()]
+            if let r = outcome.rounds { entry["rounds"] = r }
+            if let d = outcome.durationSec { entry["durationSec"] = d }
+            if let k = outcome.distanceKm { entry["distanceKm"] = k }
+            exercises[id] = entry
+        }
+        var log: [String: Any] = [
+            "sessionKey":  summary.sessionId,
+            "completedAt": summary.endedAt,
+            "source":      summary.source,
+            "exercises":   exercises,
+            "notes":       "",
+        ]
+        if let avg = summary.avgHR { log["avgHR"] = avg }
+        if let peak = summary.peakHR { log["peakHR"] = peak }
+        if let decisions = summary.standardResults, !decisions.isEmpty {
+            log["standardResults"] = decisions.mapValues { ["decision": $0] }
+        }
+        return log
+    }
+
     /// `POST /api/health/matches` body: a manual match, which the server also
     /// treats as the answer to any suggestion it held for this workout.
     static func matchPayload(workoutId: String, sessionKey: String, matchedAt: Date = Date()) -> [String: Any] {

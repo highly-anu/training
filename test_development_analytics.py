@@ -110,6 +110,21 @@ def test_currencies_load_and_benchmarks():
     assert [b['benchmarkId'] for b in bench] == ['back_squat_1rm'], 'a PR for an unknown standard is skipped'
     assert [h['level'] for h in bench[0]['history']] == ['entry', 'intermediate']
     assert bench[0]['levelsGained'] == 1 and bench[0]['latestLevel'] == 'intermediate'
+    assert [h['blockId'] for h in bench[0]['history']] == [1, 2], 'each result in the block in force that day'
+    assert bench[0]['inCurrentProgram'] is False and bench[0]['standardsText']['advanced'] == '140kg'
+
+    inputs = _history()
+    inputs.program_standards = {'back_squat_1rm': ['declared']}
+    inputs.benchmarks = inputs.benchmarks + [{'id': 'fran', 'name': 'Fran', 'unit': ' min', 'lower_is_better': True,
+                                              'metric_type': 'time_minutes',
+                                              'levels': {'entry': {'male': 12}, 'intermediate': {'male': 8},
+                                                         'advanced': {'male': 5}, 'elite': {'male': 3.5}}}]
+    inputs.performance_logs = {**inputs.performance_logs,
+                               'fran': [{'value': 9, 'date': '2026-08-20'}, {'value': 4.5, 'date': '2026-09-25'}]}
+    bench = compute_development(inputs)['benchmarks']
+    assert [b['benchmarkId'] for b in bench] == ['back_squat_1rm', 'fran'], \
+        "the current program's standards first, though Fran gained more levels"
+    assert bench[0]['inCurrentProgram'] and not bench[1]['inCurrentProgram']
 
 
 def test_window_and_empty_history():

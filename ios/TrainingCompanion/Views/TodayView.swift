@@ -115,6 +115,7 @@ struct TodayView: View {
                 programHeader
                 todaySection
                 suggestionsSection
+                resultsToConfirmSection
                 readinessSection
                 adherenceSection
                 progressSection
@@ -353,9 +354,16 @@ struct TodayView: View {
                         Label("\(mins) min", systemImage: "clock")
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    let count = session.exercises.filter { !$0.injurySkip }.count
-                    Label("\(count) exercises", systemImage: "list.bullet")
-                        .font(.caption).foregroundStyle(.secondary)
+                    if let test = session.testInfo {
+                        // A test day says so: what it measures, not how many rows.
+                        TestBadge()
+                        Text("\(test.standards.count) standard\(test.standards.count == 1 ? "" : "s")")
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        let count = session.exercises.filter { !$0.injurySkip }.count
+                        Label("\(count) exercises", systemImage: "list.bullet")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -415,6 +423,45 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .accessibilityHint("Opens Log, Suggestions")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Results to confirm
+
+    /// Results logged sessions suggest — a test slot's outcome, or a single
+    /// that beat the current result — waiting for Save or "Not a test" (the
+    /// web's `ResultsToConfirmCard`). The first three live here; the rest are
+    /// Profile ▸ Standards' "To confirm".
+    @ViewBuilder
+    private var resultsToConfirmSection: some View {
+        let pending = appState.standardSuggestions
+        if !pending.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                sectionLabel(pending.count == 1 ? "1 result to confirm" : "\(pending.count) results to confirm")
+                VStack(spacing: 8) {
+                    ForEach(pending.prefix(3)) { s in
+                        StandardSuggestionRow(suggestion: s)
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.background.secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    if pending.count > 3 {
+                        Button {
+                            router.showProfile(.standards)
+                        } label: {
+                            HStack {
+                                Text("All \(pending.count) in Profile")
+                                Image(systemName: "chevron.right").font(.caption2)
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 }
             }

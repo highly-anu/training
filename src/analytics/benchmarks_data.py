@@ -1,4 +1,8 @@
-"""The benchmark standards, with nothing dropped.
+"""The standards, with nothing dropped.
+
+(The files, ids and keys still say "benchmark" — `benchmark_id`, `/api/benchmarks`
+— because they are stored and on the wire; everything a person reads says
+"standard", a logged value is a "result".)
 
 api._all_benchmarks flattened data/benchmarks into a client shape and lost, on
 the way, the one authored link from a standard to a goal: `sources` (which
@@ -22,6 +26,25 @@ CATEGORY_OF_DOMAIN = {
     'strength_endurance': 'conditioning', 'aerobic_base': 'conditioning',
     'anaerobic_intervals': 'conditioning',
 }
+# One set of group names, in one order, for every screen that lists standards.
+# Web Profile, Explore and iOS each used to word and order these themselves.
+CATEGORIES = (
+    ('strength', 'Strength'),
+    ('conditioning', 'Conditioning'),
+    ('kettlebell', 'Kettlebell pentathlon'),
+    ('tactical', 'Ruck & PT tests'),
+    ('benchmark_wod', 'Benchmark workouts'),
+    ('skill', 'Movement & skill'),
+    ('cell', 'The Cell'),
+)
+CATEGORY_NAME = dict(CATEGORIES)
+CATEGORY_ORDER = {c: i for i, (c, _) in enumerate(CATEGORIES)}
+
+# Bodyweight is stored as a standard's series (`bodyweight_kg`) so a ×BW ratio
+# can be read against the weight on that day; it is a valid result id without
+# being a standard.
+BODYWEIGHT_ID = 'bodyweight_kg'
+
 UNIT_OF_METRIC = {'bw_ratio': '×BW', 'reps': ' reps', 'time_minutes': ' min',
                   'metres': ' m', 'time_sec': ' s', 'time_seconds': ' s', 'kg': ' kg',
                   'score': ''}
@@ -44,16 +67,22 @@ _CELL_EXTRACT = {
     ('hips',      'back_squat'):           ('bw_pct',    '×BW',   False, 'Back Squat',     'bw_ratio'),
     ('hips',      'broad_jump'):           ('metres',    ' m',    False, 'Broad Jump',     'metres'),
     ('push',      'shoulder_press'):       ('bw_pct',    '×BW',   False, 'Shoulder Press', 'bw_ratio'),
-    ('push',      'thruster'):             ('bw_pct',    '×BW',   False, 'Thruster',       'bw_ratio'),
     ('pull',      'deadlift'):             ('bw_pct',    '×BW',   False, 'Deadlift',       'bw_ratio'),
     ('pull',      'power_clean'):          ('bw_pct',    '×BW',   False, 'Power Clean',    'bw_ratio'),
+    ('work_capacity', 'thruster'):         ('bw_pct',    '×BW',   False, 'Thruster',       'bw_ratio'),
     ('core',      'four_point_ab_bridge'): ('time_min',  ' min',  False, 'Plank Hold',     'time_minutes'),
     ('skill',     'double_under'):         ('reps',      ' reps', False, 'Double-Under',   'reps'),
     ('endurance', 'run_400m'):             ('time',      ' min',  True,  '400m Run',       'time_minutes'),
     ('endurance', 'run_800m'):             ('time',      ' min',  True,  '800m Run',       'time_minutes'),
     ('endurance', 'row_500m'):             ('time',      ' min',  True,  '500m Row',       'time_minutes'),
 }
-_CELL_LEVELS = [('I', 'entry'), ('II', 'intermediate'), ('III', 'advanced'), ('IV', 'elite')]
+# The Cell has five levels and names them: I basic, II beginner, III
+# intermediate, IV advanced, V elite. Its own words decide the mapping, so the
+# app's elite is Cell V (it used to be IV, which Cell calls "Advanced") and
+# Cell I sits below entry.
+_CELL_LEVELS = [('II', 'entry'), ('III', 'intermediate'), ('IV', 'advanced'), ('V', 'elite')]
+# Standards whose threshold is a load for a number of reps.
+_CELL_NOTES = {('work_capacity', 'thruster'): 'Load as ×BW for 21 reps (30 reps at elite).'}
 _CELL_DOMAIN_MODALITY = {'hips': 'max_strength', 'push': 'max_strength', 'pull': 'max_strength',
                          'core': 'durability', 'skill': 'movement_skill',
                          'endurance': 'anaerobic_intervals', 'work_capacity': 'strength_endurance'}
@@ -104,6 +133,10 @@ def load_benchmarks() -> tuple:
                 'notes': (item.get('notes') or '').strip() or None,
                 'test_protocol': (item.get('test_protocol') or '').strip() or None,
                 'description': (item.get('description') or '').strip() or None,
+                # Training that estimates it (est. 1RM ÷ bodyweight that day).
+                'derived_from': item.get('derived_from'),
+                # A distance an imported run's fastest window reads as.
+                'best_effort': item.get('best_effort'),
             })
     out.extend(_cell_benchmarks())
     return tuple(out)
@@ -136,7 +169,7 @@ def _cell_benchmarks() -> list[dict]:
             'id': f'cell_{domain}_{exercise}', 'name': name, 'category': 'cell',
             'domain': _CELL_DOMAIN_MODALITY.get(domain, domain), 'metric_type': metric,
             'unit': unit, 'lower_is_better': lower, 'levels': norm,
-            'goal_relevance': [], 'sources': ['the_cell'], 'notes': None,
+            'goal_relevance': [], 'sources': ['the_cell'], 'notes': _CELL_NOTES.get((domain, exercise)),
             'test_protocol': None, 'description': None,
         })
     return out
@@ -146,14 +179,118 @@ def by_id() -> dict[str, dict]:
     return {b['id']: b for b in load_benchmarks()}
 
 
+def known_ids() -> set[str]:
+    """Every id a result may be stored under: the standards plus bodyweight."""
+    return {b['id'] for b in load_benchmarks()} | {BODYWEIGHT_ID}
+
+
+def thresholds(b: dict, sex: str = 'male') -> dict[str, float]:
+    """{level: value} for one sex, the male value standing in where a table
+    has none. (`levels[lvl].get(sex, male)` is wrong: the key exists with None.)"""
+    return {lvl: b['levels'][lvl][sex] if b['levels'][lvl].get(sex) is not None
+            else b['levels'][lvl]['male'] for lvl in LEVELS if lvl in b['levels']}
+
+
+def number_text(v: float, places: int = 2) -> str:
+    """A number without trailing noughts: 1.5, 2, 82.4."""
+    text = f'{v:.{places}f}'
+    if '.' in text:
+        text = text.rstrip('0').rstrip('.')
+    return '0' if text == '-0' else text
+
+
+def _clock(total_seconds: float) -> str:
+    secs = int(round(total_seconds))
+    h, rem = divmod(secs, 3600)
+    m, s = divmod(rem, 60)
+    return f'{h}:{m:02d}:{s:02d}' if h else f'{m}:{s:02d}'
+
+
+def format_value(b: dict | None, value: float | None) -> str | None:
+    """A value as every screen and both watches print it: 4:58, 1.62×BW, 45 reps.
+
+    Times are clocks (a Fran of 4.97 min is "4:58", a 12-mile ruck "3:20:00");
+    seconds stay seconds (a handstand of "45 s"); everything else is the number
+    with the standard's unit. `b` None formats bodyweight.
+    """
+    if value is None:
+        return None
+    if b is None:
+        return f'{number_text(value, 1)} kg'
+    metric = b.get('metric_type')
+    if metric == 'time_minutes':
+        return _clock(value * 60)
+    if metric in ('time_seconds', 'time_sec'):
+        return f'{number_text(value, 1)} s'
+    text, unit = (number_text(value, 0), b.get('unit') or ' reps') if metric == 'reps' else (number_text(value), b.get('unit') or '')
+    if text == '1' and unit in (' reps', ' rounds'):
+        unit = unit[:-1]
+    return f'{text}{unit}'
+
+
+def parse_input(b: dict | None, text) -> float | None:
+    """What an athlete typed, in the standard's unit: "4:58" or "1:12:30" for a
+    time, "1:30" or "90" for a hold, a plain number for the rest. None when it
+    is not a value. The inverse of `format_value`, so a field can show a result
+    the way it will be printed and take it back the same way."""
+    if isinstance(text, bool) or text is None:
+        return None
+    if isinstance(text, (int, float)):
+        value = float(text)
+    else:
+        raw = str(text).strip().replace(',', '.')
+        # A value as it is printed reads back: "1.62×BW", "45 reps", "90 s".
+        for suffix in sorted({(b or {}).get('unit', '').strip(), '×BW', 'xBW', 'reps', 'rep', 'rounds',
+                              'round', 'kg', 's', 'm'} - {''}, key=len, reverse=True):
+            if raw.lower().endswith(suffix.lower()):
+                raw = raw[:-len(suffix)].strip()
+                break
+        metric = (b or {}).get('metric_type')
+        if ':' in raw and metric in ('time_minutes', 'time_seconds', 'time_sec'):
+            try:
+                parts = [float(p) for p in raw.split(':')]
+            except ValueError:
+                return None
+            if len(parts) > 3 or any(p < 0 for p in parts) or any(p >= 60 for p in parts[1:]):
+                return None
+            seconds = 0.0
+            for p in parts:
+                seconds = seconds * 60 + p
+            value = seconds / 60 if metric == 'time_minutes' else seconds
+        else:
+            try:
+                value = float(raw)
+            except ValueError:
+                return None
+    if value != value or value in (float('inf'), float('-inf')) or value < 0:
+        return None
+    # Nought pull-ups is a result (below entry); a nought time or load is a typo.
+    if value == 0 and (b or {}).get('metric_type') not in ('reps', 'score'):
+        return None
+    return round(value, 4)
+
+
+def input_hint(b: dict) -> str:
+    """The placeholder a result field shows: the shape `parse_input` reads."""
+    metric = b.get('metric_type')
+    if metric == 'time_minutes':
+        return 'h:mm:ss' if max(lv['male'] for lv in b['levels'].values()) >= 60 else 'm:ss'
+    if metric in ('time_seconds', 'time_sec'):
+        return 'seconds'
+    return (b.get('unit') or '').strip() or 'value'
+
+
 def to_client(b: dict, sex: str = 'male') -> dict:
     """The shape frontend/src/api/types.ts BenchmarkStandard expects, plus the
     fields it never got before (additive, so nothing that reads it breaks)."""
-    standards = {lvl: b['levels'][lvl][sex] if b['levels'][lvl].get(sex) is not None
-                 else b['levels'][lvl]['male'] for lvl in LEVELS if lvl in b['levels']}
+    standards = thresholds(b, sex)
     out = {
         'id': b['id'], 'name': b['name'], 'category': b['category'],
+        'categoryName': CATEGORY_NAME.get(b['category'], b['category']),
+        'categoryOrder': CATEGORY_ORDER.get(b['category'], len(CATEGORIES)),
         'unit': b['unit'], 'standards': standards, 'lower_is_better': b['lower_is_better'],
+        'standardsText': {lvl: format_value(b, v) for lvl, v in standards.items()},
+        'inputHint': input_hint(b),
         'domain': b.get('domain'), 'metricType': b.get('metric_type'),
         'sources': b.get('sources', []), 'goalRelevance': b.get('goal_relevance', []),
         'femaleStandards': {lvl: b['levels'][lvl]['female'] for lvl in LEVELS
@@ -161,6 +298,13 @@ def to_client(b: dict, sex: str = 'male') -> dict:
     }
     if b.get('notes'):
         out['notes'] = b['notes']
+    if b.get('test_protocol'):
+        out['testProtocol'] = b['test_protocol']
+    if b.get('description'):
+        out['description'] = b['description']
+    if b.get('best_effort'):
+        # The Standard detail says imported runs can suggest a result here.
+        out['bestEffort'] = {'km': b['best_effort']['km'], 'label': b['best_effort']['label']}
     return out
 
 
@@ -172,19 +316,18 @@ def level_of(b: dict, value: float | None, sex: str = 'male') -> dict:
     """
     if value is None:
         return {'index': 0, 'level': None, 'next': 'entry', 'gap': None}
-    thresholds = [(lvl, b['levels'][lvl].get(sex) if b['levels'][lvl].get(sex) is not None
-                   else b['levels'][lvl]['male']) for lvl in LEVELS if lvl in b['levels']]
+    thresholds_ = list(thresholds(b, sex).items())
     better = (lambda v, t: v <= t) if b['lower_is_better'] else (lambda v, t: v >= t)
     reached = None
     idx = 0
-    for i, (lvl, t) in enumerate(thresholds, start=1):
+    for i, (lvl, t) in enumerate(thresholds_, start=1):
         if better(value, t):
             reached, idx = lvl, i
         else:
             break
-    nxt = thresholds[idx][0] if idx < len(thresholds) else None
+    nxt = thresholds_[idx][0] if idx < len(thresholds_) else None
     gap = None
     if nxt is not None:
-        t = thresholds[idx][1]
+        t = thresholds_[idx][1]
         gap = round((value - t) if b['lower_is_better'] else (t - value), 3)
     return {'index': idx, 'level': reached, 'next': nxt, 'gap': gap}

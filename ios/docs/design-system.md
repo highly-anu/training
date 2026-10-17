@@ -551,13 +551,13 @@ beneath it:
 
 ```swift
 private enum ProfileTab: Int, AppSubTab {
-    case athlete, equipment, schedule, benchmarks
+    case athlete, equipment, schedule, standards
 
     var label: String {
         switch self {
         case .athlete:    return "Athlete"
         case .equipment:  return "Equipment"
-        case .benchmarks: return "Benchmarks"
+        case .standards:  return "Standards"
         case .schedule:   return "Schedule"
         }
     }
@@ -567,7 +567,7 @@ AppSubTabScreen(selection: $selectedTab) { tab in
     switch tab {
     case .athlete:    AthleteTab()
     case .equipment:  EquipmentTab()
-    case .benchmarks: BenchmarksTab()
+    case .standards:  StandardsTab()
     case .schedule:   ScheduleTab()
     }
 }
@@ -828,7 +828,7 @@ answer.
 | **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Workouts · Suggestions · Sessions |
-| **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Benchmarks |
+| **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Standards |
 
 The section names and their order are the web's, item for item
 (`docs/information-architecture.md` §2): a section is renamed or moved on
@@ -984,7 +984,18 @@ Watch uses the same semantic scale but effectively one size smaller:
 
 Same modality colors, but use them more sparingly — the watch face is small. The 2pt color stripe on cards translates to a 3pt stripe (slightly more prominent). HR zone colors are the primary semantic layer during active workout.
 
-### 9.4 Motion on Watch
+### 9.4 Results on Watch
+
+A test step says what it is for under its prescription: "Best 7:32 · 7:00 for
+advanced" (`WatchExercise.standard`, the server's words) in `.caption2`, yellow —
+the one test accent on the watch, never a level colour. At the end of a test
+session `SessionCompleteView` lists each standard with what the watch captured
+(tap one to enter it with the crown: `ResultEntryView`), then **Save Results** /
+**Not a test** in place of *Save Workout* — still two buttons, as §9.2 asks. The
+answer travels in the summary (`standardResults`); the phone's §6.34 row is where an
+unanswered one is decided.
+
+### 9.5 Motion on Watch
 
 No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
 
@@ -1066,10 +1077,9 @@ and measures — the web's Progress tab:
   and benchmark-level entries render their own bodies; entries the program
   does not schedule fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
-  rest behind "More standards"; a rung ladder per standard filled to the
-  level reached in the colour of the modality it measures (the row's
-  `domain`, through `ModalityStyle`), with that modality's symbol before the
-  name; the accent for a standard with none.
+  rest behind "More standards"; per standard the modality's symbol and the
+  name, the value as the server prints it, the level badge and the gap on a
+  second line, and the `StandardLadder` (§6.31).
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
   a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
   per exercise — latest value, this week's prescription as the target, a
@@ -1537,3 +1547,99 @@ A sheet SwiftUI could not present (another was open) is taken back after
 build only records what is listed. A suggestion for another program's
 session is not confirmed here (its key would tick this program's session of
 that name); it falls through to the day's open sessions.
+
+### 6.31 Standard Ladder
+
+**One ladder for every standard, on every screen.** `Views/StandardLadder.swift`
+(the web's `components/standards/StandardLadder.tsx`) draws four rungs, entry →
+elite, filled up to the level the **server** reached (`levelIndex`, 0 = below
+entry) in the colour of the modality the standard measures (`domain` →
+`ModalityStyle`), with each rung's word and threshold under it — the threshold
+as the server prints it (`standardsText`: "4:30", "1.5×BW"). `StandardLevelBadge`
+names the level ("Advanced", "Below entry") in a capsule of the same colour.
+
+- Used by Profile ▸ Standards (rows and the *Log a result* sheet), Analytics ▸
+  Progress (`ProgramStandardsCard` and the target-level entries, which were
+  text only) and Blocks (the badge; a gain is said as "+1 level", never in a
+  status green).
+- Where: Profile ▸ Standards is *This program* (the server's `programStandards`)
+  · *Your results* · the other standards behind *Show all*; Progress shows the
+  program's own and says how far each moved this block with a
+  `StandardSparkline` (56 × 16, the modality's colour, no axis) from the block's
+  start; Blocks draws each as a compact `StandardHistoryChart`, the current
+  program's first. A row on Progress or Blocks opens its sheet through
+  `AppRouter.openStandard`.
+- A level has no colour of its own: position and word carry it, so it cannot
+  be mistaken for a status. The traffic light (§6.15) is only for a declared
+  target (met · partly · below).
+- Nothing on the phone computes a level or formats a value: `level_of` and
+  `format_value` live in `src/analytics/benchmarks_data.py`. Profile used to
+  colour levels purple/blue/green with its own thresholds and had no "below
+  entry".
+- Results are logged by text (`AppState.logResult`): the field takes what the
+  athlete would write ("4:58") and the server parses it; a value it cannot
+  read comes back in its words under the field.
+
+### 6.32 Standard Detail
+
+**One standard, every result.** `Views/StandardDetailSheet.swift` (the web's
+`StandardDetailSheet.tsx`) is presented from a Profile ▸ Standards row, from Athlete's
+*Bodyweight history* (`StandardSubject.bodyweight`), and by the deep link
+`profile?section=standards&standard=<id>` (`AppRouter.openStandard`):
+
+- the current result with its level badge, best and the gap to the next level, the
+  `StandardLadder` (§6.31), the test protocol;
+- *History*: `StandardHistoryChart` — the results as one line in the modality's
+  colour, each level a dashed `RuleMark` labelled with its word and the server's
+  threshold text (no value axis: nothing on the phone formats a value), the
+  program blocks as alternating bands, a month tick (a week tick under two
+  months), and drag-to-read (`chartXSelection`);
+- *Log a result* → `StandardResultSheet`: the value as typed ("4:58"; for a ×BW
+  standard *Load lifted* kg × reps or *Ratio ×BW*), the day (`DatePicker`, no
+  future days), a note. Editing sends only what changed.
+- the results, newest first: value, level, day, source ("Typed in", "Garmin"…),
+  block and note; tap or swipe to edit, swipe to delete behind a confirmation
+  that says the rest of the history stays.
+
+### 6.33 Test Badge and Standard Target
+
+**A test says what it measures.** `Views/StandardTestViews.swift`: `TestBadge` (a
+capsule, `trophy.fill`, "Test") marks a session that tests the phase's standards
+(`ProgramSession.testInfo`, read from the round-tripped `test` key) on Today's
+session card, Program's rows and the session header. `StandardTargetRow` names one
+standard with the athlete's best, its level badge and "90 reps for intermediate"
+under it — the server's words — and opens its sheet (§6.32) through the router.
+
+- Session detail: under the header, "A test, in place of …" and a
+  `StandardTargetRow` per standard; each scored exercise (`standardId`) names its
+  standard beside the prescription.
+- Today: the session card shows the badge and "N standards" instead of the
+  exercise count.
+- The catalog and results load when a session with scored slots opens, since
+  only Profile loaded them before.
+
+### 6.34 Standard Suggestion
+
+**A result a session suggests is saved by the athlete, never by the app.**
+`Views/StandardSuggestionRow.swift`: `StandardSuggestionRow` shows one suggestion —
+standard name, the value as the server prints it, `StandardLevelBadge` (§6.31), then
+"New best", "Was 7:45", "First result" or, for a re-logged value, "Corrects 7:32",
+and where it came from (session, day) — with three answers: **Save result**
+(`.borderedProminent`), **Correct** (an inline field, saved with the typed value),
+**Not a test** (`.bordered`). `AppHaptics.success` / `.error`; the server's words on
+a failure. The first line is the short name ("1-Mile Run"), the value and the badge;
+everything else — standing, what was logged ("fastest 1 mile of 5.2 km"), where it came
+from — is the second, so nothing truncates the name. `SessionSuggestion` is the same row, compact and without the name, for
+one standard of one session (`StandardSuggestion.isFromTest(sessionKey:)` compares
+the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
+
+- Profile ▸ Standards: *To confirm*, above *This program*, when any are waiting.
+- Today: "N results to confirm", the first three, then "All N in Profile".
+- Session detail: under each test standard's `StandardTargetRow` (§6.33) — not in
+  the exercise row, whose tap and swipe actions would take the buttons' touches.
+- `ExerciseLogSheet` (§6.16): a for-time slot's **Time** field takes m:ss
+  (`SessionLogging.parseClock`), starts empty (the cap is only its placeholder —
+  prefilled, a test nobody changed would have saved its cap as the result) and keeps
+  Save off while it does not read; a test slot asks first for its standard's
+  number. The web's `components/standards/SuggestionRow.tsx` is the same row.
+

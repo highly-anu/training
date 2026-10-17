@@ -189,6 +189,21 @@ def session_screens(package_id: str | None, archetype_id: str | None,
     return table, keys
 
 
+def with_lines(table: dict, key: str, lines: str) -> str:
+    """The key of `table[key]` with its `lines` replaced, added to the table
+    (deduplicated) when no spec there already reads so. A test's scored slot
+    shows its standard (`standard_target`) whatever its package's spec says."""
+    spec = dict(table[key])
+    spec['lines'] = lines
+    canon = json.dumps(spec, sort_keys=True)
+    for k, v in table.items():
+        if json.dumps(v, sort_keys=True) == canon:
+            return k
+    new = f's{len(table)}'
+    table[new] = spec
+    return new
+
+
 # ── validation (tools/check_provenance.py and test_watch_spec.py) ─────────────
 
 def spec_errors(spec: dict, where: str) -> list[str]:

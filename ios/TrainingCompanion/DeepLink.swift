@@ -16,8 +16,12 @@ enum DeepLink: Equatable {
     case analytics(AnalyticsTab)
     /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
     case session(String)
-    /// `profile?section=athlete|equipment|schedule|benchmarks` (`injuries` aliases Athlete).
+    /// `profile?section=athlete|equipment|schedule|standards` (`injuries` aliases Athlete,
+    /// `benchmarks` Standards).
     case profile(ProfileTab)
+    /// `profile?section=standards&standard=<id>` — one standard's sheet
+    /// (`bodyweight_kg` opens the bodyweight series).
+    case standard(String)
     /// `log?section=workouts|linking|sessions` (`suggestions`, the old name, still works).
     case log(LogTab)
     /// `program?section=overview|calendar|history`.
@@ -64,11 +68,16 @@ enum DeepLink: Equatable {
             }
             return .tab(.log)
         case "profile":
-            // Injuries moved into Athlete on 2026-10-17; the old link lands there.
-            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased()
-                .replacingOccurrences(of: "injuries", with: "athlete"),
-               let section = ProfileTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
-                return .profile(section)
+            // Injuries moved into Athlete, and Benchmarks was renamed Standards,
+            // on 2026-10-17; the old links land on the new names.
+            if let id = query.first(where: { $0.name == "standard" })?.value, !id.isEmpty {
+                return .standard(id)
+            }
+            if let raw = query.first(where: { $0.name == "section" })?.value?.lowercased() {
+                let wanted = ["injuries": "athlete", "benchmarks": "standards"][raw] ?? raw
+                if let section = ProfileTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
+                    return .profile(section)
+                }
             }
             return .tab(.profile)
         case "analytics":
@@ -97,6 +106,7 @@ extension AppRouter {
         case .analytics(let section): showAnalytics(section)
         case .session(let key): openSession(key)
         case .profile(let section): showProfile(section)
+        case .standard(let id): openStandard(id)
         case .log(let section): showLog(section)
         case .program(let section): showProgram(section)
         case .workoutComplete(let id): showWorkoutComplete(id)

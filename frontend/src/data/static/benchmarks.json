@@ -3,6 +3,8 @@
     "id": "back_squat_bw_ratio",
     "name": "Back Squat (bodyweight ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 0.75,
@@ -11,12 +13,42 @@
       "elite": 2.5
     },
     "lower_is_better": false,
-    "notes": "Horsemen benchmark is 2.5×BW. SS novice completion is 1.5×BW. Female standards reflect strength-to-weight ratios adjusted for average sex-based lean mass distribution."
+    "standardsText": {
+      "entry": "0.75×BW",
+      "intermediate": "1.5×BW",
+      "advanced": "2×BW",
+      "elite": "2.5×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "starting_strength",
+      "horsemen_gpp",
+      "gym_jones"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "alpine_climbing",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 0.55,
+      "intermediate": 1.1,
+      "advanced": 1.5,
+      "elite": 2.0
+    },
+    "notes": "Horsemen benchmark is 2.5×BW. SS novice completion is 1.5×BW. Female standards reflect strength-to-weight ratios adjusted for average sex-based lean mass distribution.",
+    "testProtocol": "After a thorough warm-up (multiple progressive sets), perform 1 rep maximum effort back squat to legal depth (hip crease below knee). Full equipment or raw (record which). Rest 3–5 min between heavy attempts. Divide load (kg or lb) by bodyweight in the same unit.",
+    "description": "1-rep max back squat expressed as a multiple of bodyweight. The most broadly applicable measure of lower-body strength and overall athletic development. Squat strength is a proxy for general development (Rippetoe). Horsemen standard: 2.0–2.5×BW."
   },
   {
     "id": "deadlift_bw_ratio",
     "name": "Deadlift (bodyweight ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 1.0,
@@ -25,12 +57,42 @@
       "elite": 3.0
     },
     "lower_is_better": false,
-    "notes": "Horsemen target is 2.5×BW. Elite 3.0×BW is world-class powerlifting territory. Tactical standards typically target the advanced tier (2.5×BW)."
+    "standardsText": {
+      "entry": "1×BW",
+      "intermediate": "2×BW",
+      "advanced": "2.5×BW",
+      "elite": "3×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "starting_strength",
+      "horsemen_gpp",
+      "gym_jones"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "general_gpp",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 0.75,
+      "intermediate": 1.5,
+      "advanced": 2.0,
+      "elite": 2.5
+    },
+    "notes": "Horsemen target is 2.5×BW. Elite 3.0×BW is world-class powerlifting territory. Tactical standards typically target the advanced tier (2.5×BW).",
+    "testProtocol": "Conventional or sumo stance (record which). After a thorough warm-up, perform 1 rep maximum effort deadlift from floor. Rest 3–5 min between heavy attempts. Divide load by bodyweight.",
+    "description": "1-rep max conventional deadlift expressed as a multiple of bodyweight. The deadlift is the most complete measure of posterior chain and overall pulling strength. Horsemen standard is 2.5×BW."
   },
   {
     "id": "strict_press_bw_ratio",
     "name": "Strict Press (bodyweight ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 0.4,
@@ -39,12 +101,40 @@
       "elite": 1.25
     },
     "lower_is_better": false,
-    "notes": "Horsemen benchmark is 1×BW military press. SS novice completion is 0.75×BW. One of the most honest upper-body strength tests as no momentum assistance is permitted."
+    "standardsText": {
+      "entry": "0.4×BW",
+      "intermediate": "0.75×BW",
+      "advanced": "1×BW",
+      "elite": "1.25×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "starting_strength",
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 0.3,
+      "intermediate": 0.55,
+      "advanced": 0.75,
+      "elite": 0.9
+    },
+    "notes": "Horsemen benchmark is 1×BW military press. SS novice completion is 0.75×BW. One of the most honest upper-body strength tests as no momentum assistance is permitted.",
+    "testProtocol": "Standing strict press: feet hip-width, no knee bend, bar from rack or cleaned to shoulders. After warm-up, perform 1 rep max overhead. Rest 3–5 min between attempts. Divide load by bodyweight.",
+    "description": "1-rep max strict overhead press (no leg drive) expressed as a multiple of bodyweight. A demanding test of shoulder and overhead pressing strength. Horsemen standard is 1.0×BW military press."
   },
   {
     "id": "bench_press_bw_ratio",
     "name": "Bench Press (bodyweight ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 0.6,
@@ -53,12 +143,40 @@
       "elite": 2.0
     },
     "lower_is_better": false,
-    "notes": "Horsemen benchmark is 1.5×BW. Horsemen PT Test II includes 10×BW bench press (10 reps at bodyweight), which is a strength endurance variant."
+    "standardsText": {
+      "entry": "0.6×BW",
+      "intermediate": "1×BW",
+      "advanced": "1.5×BW",
+      "elite": "2×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "horsemen_gpp",
+      "starting_strength"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 0.45,
+      "intermediate": 0.75,
+      "advanced": 1.1,
+      "elite": 1.5
+    },
+    "notes": "Horsemen benchmark is 1.5×BW. Horsemen PT Test II includes 10×BW bench press (10 reps at bodyweight), which is a strength endurance variant.",
+    "testProtocol": "Flat bench, bar to chest, full lockout. No extreme arch (powerlifting federation rules acceptable). After warm-up, perform 1 rep max. Rest 3–5 min between attempts. Divide load by bodyweight.",
+    "description": "1-rep max flat barbell bench press expressed as a multiple of bodyweight. Standard test of horizontal pushing strength. Horsemen benchmark is 1.5×BW."
   },
   {
     "id": "power_clean_bw_ratio",
     "name": "Power Clean (bodyweight ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 0.5,
@@ -67,26 +185,87 @@
       "elite": 1.35
     },
     "lower_is_better": false,
-    "notes": "Horsemen Olympic day workouts use 80–90% 1RM in wave patterns. Power clean is a key SS program exercise at intermediate level."
+    "standardsText": {
+      "entry": "0.5×BW",
+      "intermediate": "0.85×BW",
+      "advanced": "1.1×BW",
+      "elite": "1.35×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "power",
+    "metricType": "bw_ratio",
+    "sources": [
+      "starting_strength",
+      "horsemen_gpp",
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "general_gpp",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 0.35,
+      "intermediate": 0.65,
+      "advanced": 0.85,
+      "elite": 1.0
+    },
+    "notes": "Horsemen Olympic day workouts use 80–90% 1RM in wave patterns. Power clean is a key SS program exercise at intermediate level.",
+    "testProtocol": "Power clean from floor. Bar received in partial squat (above parallel hip). After warm-up covering technique and progressive loads, perform 1 rep max. Rest 3–5 min between heavy attempts. Divide load by bodyweight.",
+    "description": "1-rep max power clean (bar received above parallel) expressed as a multiple of bodyweight. Tests explosive hip extension, bar speed, and pulling power. A primary power development and assessment tool in Olympic and tactical strength programs."
   },
   {
     "id": "pull_up_reps",
     "name": "Pull-ups (max unweighted reps)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": " reps",
     "standards": {
-      "entry": 1,
-      "intermediate": 10,
-      "advanced": 20,
-      "elite": 30
+      "entry": 1.0,
+      "intermediate": 10.0,
+      "advanced": 20.0,
+      "elite": 30.0
     },
     "lower_is_better": false,
-    "notes": "Horsemen PT standard is 15+ strict pull-ups. Horsemen PT Test II requires 15 reps at +25# added weight — use pull_up_weighted_bw_ratio for that standard. Female standards reflect body composition differences in upper-body lean mass."
+    "standardsText": {
+      "entry": "1 rep",
+      "intermediate": "10 reps",
+      "advanced": "20 reps",
+      "elite": "30 reps"
+    },
+    "inputHint": "reps",
+    "domain": "relative_strength",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp",
+      "starting_strength",
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "bjj_competitor",
+      "general_gpp",
+      "alpine_climbing",
+      "max_strength_focus"
+    ],
+    "femaleStandards": {
+      "entry": 1.0,
+      "intermediate": 5.0,
+      "advanced": 12.0,
+      "elite": 20.0
+    },
+    "notes": "Horsemen PT standard is 15+ strict pull-ups. Horsemen PT Test II requires 15 reps at +25# added weight — use pull_up_weighted_bw_ratio for that standard. Female standards reflect body composition differences in upper-body lean mass.",
+    "testProtocol": "Dead hang from bar (overhand grip, shoulder-width). From full arm extension, pull until chin clears bar. No kipping, no momentum. Count reps to failure. No rest between reps. One attempt after adequate warm-up.",
+    "description": "Maximum consecutive strict dead-hang pull-ups (chin over bar, full arm extension at bottom). The most practical measure of relative upper-body pulling strength and bodyweight mastery. Horsemen PT standard is 15+."
   },
   {
     "id": "pull_up_weighted_bw_ratio",
     "name": "Weighted Pull-up 1RM (added load as BW ratio)",
     "category": "strength",
+    "categoryName": "Strength",
+    "categoryOrder": 0,
     "unit": "×BW",
     "standards": {
       "entry": 0.1,
@@ -95,12 +274,40 @@
       "elite": 0.75
     },
     "lower_is_better": false,
-    "notes": "Horsemen Riley Black protocol includes weighted pull-up ladders at 85%/90%/95% of 1RM. PT Test II standard of 15 reps at +25# is a strength endurance target, not a 1RM; map to pull_up_reps for that test."
+    "standardsText": {
+      "entry": "0.1×BW",
+      "intermediate": "0.25×BW",
+      "advanced": "0.5×BW",
+      "elite": "0.75×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "relative_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "horsemen_gpp",
+      "starting_strength"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "max_strength_focus",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 0.05,
+      "intermediate": 0.15,
+      "advanced": 0.35,
+      "elite": 0.55
+    },
+    "notes": "Horsemen Riley Black protocol includes weighted pull-up ladders at 85%/90%/95% of 1RM. PT Test II standard of 15 reps at +25# is a strength endurance target, not a 1RM; map to pull_up_reps for that test.",
+    "testProtocol": "Dead-hang pull-up with weight belt or vest. Added load only (excluding bodyweight). From full arm extension, pull until chin clears bar. After warm-up including bodyweight and progressive loaded sets, perform 1 rep max. Rest 3–5 min between attempts. Divide added load by bodyweight.",
+    "description": "1-rep max weighted pull-up expressed as the added load as a ratio of bodyweight (not total load). Tests maximal relative upper-body pulling strength beyond bodyweight capacity. Horsemen PT Test II requires 15 reps at +25# added weight as a strength endurance standard."
   },
   {
     "id": "run_3mile_minutes",
     "name": "3-Mile Run (time in minutes)",
     "category": "conditioning",
+    "categoryName": "Conditioning",
+    "categoryOrder": 1,
     "unit": " min",
     "standards": {
       "entry": 36.0,
@@ -109,26 +316,87 @@
       "elite": 20.0
     },
     "lower_is_better": true,
-    "notes": "Horsemen performance benchmark is sub-20:00 (male). PT test standard is sub-22:30. PT Test II includes a 5-mile run standard (sub-35:00). Female thresholds adjusted proportionally by typical sex-based aerobic capacity differences (~15%)."
+    "standardsText": {
+      "entry": "36:00",
+      "intermediate": "27:00",
+      "advanced": "22:30",
+      "elite": "20:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "aerobic_base",
+    "metricType": "time_minutes",
+    "sources": [
+      "horsemen_gpp",
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "ultra_endurance",
+      "general_gpp",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 42.0,
+      "intermediate": 32.0,
+      "advanced": 27.0,
+      "elite": 24.0
+    },
+    "notes": "Horsemen performance benchmark is sub-20:00 (male). PT test standard is sub-22:30. PT Test II includes a 5-mile run standard (sub-35:00). Female thresholds adjusted proportionally by typical sex-based aerobic capacity differences (~15%).",
+    "testProtocol": "Flat, measured 3-mile course (road, track, or treadmill at 0% grade). Maximum effort run — no prescribed warm-up, but standard pre-run mobility acceptable. Record time to nearest second; convert to decimal minutes. Athlete should be rested (not within 24h of hard training).",
+    "description": "Timed 3-mile run on flat ground at maximum sustainable pace. The primary aerobic conditioning test in Horsemen GPP and military/tactical fitness standards. Horsemen performance target is sub-20:00. PT test standard is sub-22:30.",
+    "bestEffort": {
+      "km": 4.828032,
+      "label": "3 miles"
+    }
   },
   {
     "id": "ssst_reps",
     "name": "Secret Service Snatch Test (SSST) — Reps in 10 Minutes",
     "category": "conditioning",
+    "categoryName": "Conditioning",
+    "categoryOrder": 1,
     "unit": " reps",
     "standards": {
-      "entry": 100,
-      "intermediate": 150,
-      "advanced": 200,
-      "elite": 250
+      "entry": 100.0,
+      "intermediate": 150.0,
+      "advanced": 200.0,
+      "elite": 250.0
     },
     "lower_is_better": false,
-    "notes": "Horsemen documentation: 200+ reps = Team Guy Standard; 250 = \"ridiculous\"; 275 = record. Female standard uses 16kg (35 lb) bell. This test combines aerobic, anaerobic, grip, and mental endurance in a single 10-minute window — it is both a benchmark and a training tool. SSST prep requires progressive KB snatch volume work over 4–8 weeks before testing."
+    "standardsText": {
+      "entry": "100 reps",
+      "intermediate": "150 reps",
+      "advanced": "200 reps",
+      "elite": "250 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp",
+      "wildman_kettlebell"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "general_gpp",
+      "ultra_endurance"
+    ],
+    "femaleStandards": {
+      "entry": 80.0,
+      "intermediate": 120.0,
+      "advanced": 160.0,
+      "elite": 200.0
+    },
+    "notes": "Horsemen documentation: 200+ reps = Team Guy Standard; 250 = \"ridiculous\"; 275 = record. Female standard uses 16kg (35 lb) bell. This test combines aerobic, anaerobic, grip, and mental endurance in a single 10-minute window — it is both a benchmark and a training tool. SSST prep requires progressive KB snatch volume work over 4–8 weeks before testing.",
+    "testProtocol": "Use a 24kg (53 lb) kettlebell for male athletes (16kg/35 lb for females). From a standing start, snatch the bell continuously for 10 full minutes. Can switch hands freely but may not rest the bell on the ground, rack it on the forearm, or otherwise stop movement. Count every completed snatch rep (hand switch counts as a rep opportunity — must lock out overhead for each rep to count). Record total reps at 10:00. Test should be attempted only after establishing solid snatch mechanics and adequate grip conditioning.",
+    "description": "10-minute kettlebell snatch test using a 24kg (53 lb) bell. Can switch hands as many times as needed; cannot put the bell down. The premier test of power endurance, grip endurance, aerobic capacity, and mental toughness in the Horsemen and tactical fitness world. Team Guy Standard is 200 reps. Record is 275 reps per Horsemen documentation."
   },
   {
     "id": "row_2km_minutes",
     "name": "2km Row (time in minutes)",
     "category": "conditioning",
+    "categoryName": "Conditioning",
+    "categoryOrder": 1,
     "unit": " min",
     "standards": {
       "entry": 10.0,
@@ -137,12 +405,42 @@
       "elite": 6.5
     },
     "lower_is_better": true,
-    "notes": "Horsemen workouts include 500m row sub-1:30 + 400m run as a power cardiovascular benchmark (maps to ~6:00/2k pace territory). CrossFit uses 2k row as a standard benchmark. Gym Jones uses rowing extensively for power endurance testing. Female standards adjusted for typical sex-based aerobic and mass differences."
+    "standardsText": {
+      "entry": "10:00",
+      "intermediate": "8:00",
+      "advanced": "7:00",
+      "elite": "6:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "anaerobic_intervals",
+    "metricType": "time_minutes",
+    "sources": [
+      "horsemen_gpp",
+      "crossfit",
+      "gym_jones"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "general_gpp",
+      "ultra_endurance",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 11.5,
+      "intermediate": 9.5,
+      "advanced": 8.5,
+      "elite": 7.75
+    },
+    "notes": "Horsemen workouts include 500m row sub-1:30 + 400m run as a power cardiovascular benchmark (maps to ~6:00/2k pace territory). CrossFit uses 2k row as a standard benchmark. Gym Jones uses rowing extensively for power endurance testing. Female standards adjusted for typical sex-based aerobic and mass differences.",
+    "testProtocol": "Concept2 rowing ergometer, damper setting 4–6 (or test-consistent setting; record the setting used). Full 2000m time trial at maximum sustainable effort. Standard warm-up: 5–10 min light rowing + 2–3 bursts at race pace. Record total time to nearest second; convert to decimal minutes. Athlete must be rested (not within 24h of hard training session).",
+    "description": "Maximum effort 2000m ergometer row (Concept2 or equivalent). Tests aerobic power, anaerobic capacity, and upper/lower body pulling endurance. A universal fitness benchmark used across CrossFit, Gym Jones, Horsemen, and rowing-specific programs."
   },
   {
     "id": "run_1mile_minutes",
     "name": "1-Mile Run (time in minutes)",
     "category": "conditioning",
+    "categoryName": "Conditioning",
+    "categoryOrder": 1,
     "unit": " min",
     "standards": {
       "entry": 12.0,
@@ -151,135 +449,404 @@
       "elite": 5.5
     },
     "lower_is_better": true,
-    "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences."
+    "standardsText": {
+      "entry": "12:00",
+      "intermediate": "9:00",
+      "advanced": "7:00",
+      "elite": "5:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "anaerobic_intervals",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit",
+      "horsemen_gpp",
+      "uphill_athlete"
+    ],
+    "goalRelevance": [
+      "bjj_competitor",
+      "general_gpp",
+      "sof_operator",
+      "ultra_endurance",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 14.0,
+      "intermediate": 11.0,
+      "advanced": 8.5,
+      "elite": 6.5
+    },
+    "notes": "BJJ competitor minimum prerequisite is sub-10:00 (1 mile ≤ 10 min). Used as an aerobic readiness gate — athletes who cannot run a sub-10 mile lack the aerobic base to sustain hard rolling without excessive cardiac drift. Female standards adjusted for typical sex-based aerobic capacity differences.",
+    "testProtocol": "Flat, measured 1-mile course (track preferred: 4 laps standard track). Maximum effort. Brief warm-up (5–10 min light jog + 2–3 strides) acceptable. Record time to nearest second; convert to decimal minutes. Athlete should be rested.",
+    "description": "Timed 1-mile run at maximum sustainable effort. Tests aerobic power and anaerobic threshold capacity — sits at the overlap of aerobic and anaerobic energy systems. Used as a conditioning benchmark and prerequisite test for several goal profiles.",
+    "bestEffort": {
+      "km": 1.609344,
+      "label": "1 mile"
+    }
   },
   {
     "id": "kb_pentathlon_clean_reps",
     "name": "KB Pentathlon — Clean (reps in 6 min)",
     "category": "kettlebell",
+    "categoryName": "Kettlebell pentathlon",
+    "categoryOrder": 2,
     "unit": " reps",
     "standards": {
-      "entry": 60,
-      "intermediate": 90,
-      "advanced": 108,
-      "elite": 120
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_clean_single."
+    "standardsText": {
+      "entry": "60 reps",
+      "intermediate": "90 reps",
+      "advanced": "108 reps",
+      "elite": "120 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "IKMF"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
+    },
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_clean_single.",
+    "testProtocol": "One bell of your choice, six minutes continuous without setting it down, hand changes as often as you like. The bell stops in the rack each rep. Five minutes rest before the next event.",
+    "description": "Single-kettlebell clean for six minutes: swing, catch in the rack, back to the swing. The first event."
   },
   {
     "id": "kb_pentathlon_long_cycle_press_reps",
     "name": "KB Pentathlon — Long Cycle Press (reps in 6 min)",
     "category": "kettlebell",
+    "categoryName": "Kettlebell pentathlon",
+    "categoryOrder": 2,
     "unit": " reps",
     "standards": {
-      "entry": 30,
-      "intermediate": 45,
-      "advanced": 54,
-      "elite": 60
+      "entry": 30.0,
+      "intermediate": 45.0,
+      "advanced": 54.0,
+      "elite": 60.0
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_long_cycle_press."
+    "standardsText": {
+      "entry": "30 reps",
+      "intermediate": "45 reps",
+      "advanced": "54 reps",
+      "elite": "60 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "IKMF"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 30.0,
+      "intermediate": 45.0,
+      "advanced": 54.0,
+      "elite": 60.0
+    },
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_long_cycle_press.",
+    "testProtocol": "One bell of your choice, six minutes continuous without setting it down, hand changes as often as you like. A still moment in the rack between clean and press; no knee bend before the press; the bell fixed overhead without sway. Five minutes rest before the next event.",
+    "description": "A clean and a strict press every rep, for six minutes. The second event and the slowest."
   },
   {
     "id": "kb_pentathlon_jerk_reps",
     "name": "KB Pentathlon — Jerk (reps in 6 min)",
     "category": "kettlebell",
+    "categoryName": "Kettlebell pentathlon",
+    "categoryOrder": 2,
     "unit": " reps",
     "standards": {
-      "entry": 60,
-      "intermediate": 90,
-      "advanced": 108,
-      "elite": 120
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with kb_jerk_single."
+    "standardsText": {
+      "entry": "60 reps",
+      "intermediate": "90 reps",
+      "advanced": "108 reps",
+      "elite": "120 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "IKMF"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
+    },
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with kb_jerk_single.",
+    "testProtocol": "One bell of your choice, six minutes continuous without setting it down, hand changes as often as you like. Locked out overhead and fixed before the descent. Five minutes rest before the next event.",
+    "description": "Single-kettlebell jerk from the rack for six minutes. The third event."
   },
   {
     "id": "kb_pentathlon_half_snatch_reps",
     "name": "KB Pentathlon — Half Snatch (reps in 6 min)",
     "category": "kettlebell",
+    "categoryName": "Kettlebell pentathlon",
+    "categoryOrder": 2,
     "unit": " reps",
     "standards": {
-      "entry": 54,
-      "intermediate": 81,
-      "advanced": 97,
-      "elite": 108
+      "entry": 54.0,
+      "intermediate": 81.0,
+      "advanced": 97.0,
+      "elite": 108.0
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_half_snatch."
+    "standardsText": {
+      "entry": "54 reps",
+      "intermediate": "81 reps",
+      "advanced": "97 reps",
+      "elite": "108 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "IKMF"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 54.0,
+      "intermediate": 81.0,
+      "advanced": 97.0,
+      "elite": 108.0
+    },
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_half_snatch.",
+    "testProtocol": "One bell of your choice, six minutes continuous without setting it down, hand changes as often as you like. A stop in the rack on the way down; the bell caught overhead with a straight arm. Five minutes rest before the next event.",
+    "description": "Snatch to a straight-arm lockout, lower to the rack with a stop, drop from the rack into the next swing. The fourth event."
   },
   {
     "id": "kb_pentathlon_push_press_reps",
     "name": "KB Pentathlon — Strict Push Press (reps in 6 min)",
     "category": "kettlebell",
+    "categoryName": "Kettlebell pentathlon",
+    "categoryOrder": 2,
     "unit": " reps",
     "standards": {
-      "entry": 60,
-      "intermediate": 90,
-      "advanced": 108,
-      "elite": 120
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
     },
     "lower_is_better": false,
-    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_push_press_single."
+    "standardsText": {
+      "entry": "60 reps",
+      "intermediate": "90 reps",
+      "advanced": "108 reps",
+      "elite": "120 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "IKMF"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 60.0,
+      "intermediate": 90.0,
+      "advanced": 108.0,
+      "elite": 120.0
+    },
+    "notes": "Reps, not points: IKMF scores reps × a bell-weight coefficient. Trained with wk_kb_push_press_single.",
+    "testProtocol": "One bell of your choice, six minutes continuous without setting it down, hand changes as often as you like. Heels stay down; no bouncing out of the rack into the next rep. Five minutes rest before the next event.",
+    "description": "Single-kettlebell push press from the rack for six minutes, heels down. The fifth event."
   },
   {
     "id": "ruck_12mi_40lb_minutes",
     "name": "12-Mile Ruck, 40 lb (time in minutes)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " min",
     "standards": {
-      "entry": 240,
-      "intermediate": 200,
-      "advanced": 180,
-      "elite": 150
+      "entry": 240.0,
+      "intermediate": 200.0,
+      "advanced": 180.0,
+      "elite": 150.0
     },
     "lower_is_better": true,
-    "notes": "Pack weight for the selection ruck has moved between 35 and 45 lb over the years; 40 lb is the figure the programs here train to. Time, not pace, because the course is fixed."
+    "standardsText": {
+      "entry": "4:00:00",
+      "intermediate": "3:20:00",
+      "advanced": "3:00:00",
+      "elite": "2:30:00"
+    },
+    "inputHint": "h:mm:ss",
+    "domain": "durability",
+    "metricType": "time_minutes",
+    "sources": [
+      "horsemen_gpp",
+      "uphill_athlete"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 270.0,
+      "intermediate": 230.0,
+      "advanced": 200.0,
+      "elite": 170.0
+    },
+    "notes": "Pack weight for the selection ruck has moved between 35 and 45 lb over the years; 40 lb is the figure the programs here train to. Time, not pace, because the course is fixed.",
+    "testProtocol": "Measured 12-mile course, pack weighed dry at 40 lb (water on top). No running required but allowed. Record total time to the minute. Rested (no hard session within 48 h).",
+    "description": "Twelve miles on roads or trail with a 40 lb dry pack. The selection ruck; sub-3:00 is the pass line, and everything in Horsemen GPP's load-carriage work points here."
   },
   {
     "id": "pack_vertical_ft_per_hour",
     "name": "Pack Carry — Vertical Pace, 20 % BW (ft per hour)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " ft/h",
     "standards": {
-      "entry": 500,
-      "intermediate": 1000,
-      "advanced": 1500,
-      "elite": 2000
+      "entry": 500.0,
+      "intermediate": 1000.0,
+      "advanced": 1500.0,
+      "elite": 2000.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "500 ft/h",
+      "intermediate": "1000 ft/h",
+      "advanced": "1500 ft/h",
+      "elite": "2000 ft/h"
+    },
+    "inputHint": "ft/h",
+    "domain": "aerobic_base",
+    "metricType": "score",
+    "sources": [
+      "uphill_athlete"
+    ],
+    "goalRelevance": [
+      "alpine_climbing",
+      "sof_operator"
+    ],
+    "femaleStandards": {
+      "entry": 450.0,
+      "intermediate": 900.0,
+      "advanced": 1300.0,
+      "elite": 1800.0
+    },
+    "testProtocol": "A steady climb of at least 1,000 ft, pack at 20 % bodyweight, nose breathing or conversational effort throughout (Zone 2 — this is an aerobic test, not a race). Record vertical gain divided by moving time.",
+    "description": "How much vertical you can climb in an hour, aerobically, with a pack of a fifth of your bodyweight. Uphill Athlete's check that the aerobic base is real: 1,000 ft/hour at a conversational pace is the base-phase standard for a mountain objective."
   },
   {
     "id": "pt_push_ups_3min_reps",
     "name": "PT Test — Push-ups (reps in 3 min)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " reps",
     "standards": {
-      "entry": 40,
-      "intermediate": 60,
-      "advanced": 80,
-      "elite": 100
+      "entry": 40.0,
+      "intermediate": 60.0,
+      "advanced": 80.0,
+      "elite": 100.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "40 reps",
+      "intermediate": "60 reps",
+      "advanced": "80 reps",
+      "elite": "100 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 20.0,
+      "intermediate": 35.0,
+      "advanced": 50.0,
+      "elite": 65.0
+    },
+    "testProtocol": "Chest to a fist on the floor, full lockout, hands under shoulders. Rest only in the top position. Three minutes.",
+    "description": "Maximum strict push-ups in three minutes. Horsemen PT Test I: 80+."
   },
   {
     "id": "pt_sit_ups_3min_reps",
     "name": "PT Test — Sit-ups (reps in 3 min)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " reps",
     "standards": {
-      "entry": 45,
-      "intermediate": 65,
-      "advanced": 90,
-      "elite": 110
+      "entry": 45.0,
+      "intermediate": 65.0,
+      "advanced": 90.0,
+      "elite": 110.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "45 reps",
+      "intermediate": "65 reps",
+      "advanced": "90 reps",
+      "elite": "110 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator"
+    ],
+    "femaleStandards": {
+      "entry": 40.0,
+      "intermediate": 58.0,
+      "advanced": 80.0,
+      "elite": 100.0
+    },
+    "testProtocol": "Feet anchored, knees bent, hands crossed on chest; elbows to thighs, shoulder blades to the floor. Three minutes.",
+    "description": "Maximum sit-ups in three minutes, feet held. Horsemen PT Test I: 90+."
   },
   {
     "id": "swim_800m_minutes",
     "name": "PT Test — 800 m Swim (time in minutes)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " min",
     "standards": {
       "entry": 22.0,
@@ -287,12 +854,37 @@
       "advanced": 14.5,
       "elite": 12.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "22:00",
+      "intermediate": "17:30",
+      "advanced": "14:30",
+      "elite": "12:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "aerobic_base",
+    "metricType": "time_minutes",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator"
+    ],
+    "femaleStandards": {
+      "entry": 24.0,
+      "intermediate": 19.0,
+      "advanced": 16.0,
+      "elite": 14.0
+    },
+    "testProtocol": "Pool, push off the wall, any stroke, continuous. Record time to the second and convert to decimal minutes.",
+    "description": "800 m freestyle or combat sidestroke, no fins. Horsemen PT Test I: under 14:30."
   },
   {
     "id": "run_5mile_minutes",
     "name": "PT Test II — 5-Mile Run (time in minutes)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " min",
     "standards": {
       "entry": 55.0,
@@ -300,39 +892,119 @@
       "advanced": 35.0,
       "elite": 31.0
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "55:00",
+      "intermediate": "44:00",
+      "advanced": "35:00",
+      "elite": "31:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "aerobic_base",
+    "metricType": "time_minutes",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator"
+    ],
+    "femaleStandards": {
+      "entry": 62.0,
+      "intermediate": 50.0,
+      "advanced": 40.0,
+      "elite": 36.0
+    },
+    "testProtocol": "Flat, measured course. Maximum sustainable effort. Record time to the second and convert to decimal minutes.",
+    "description": "Timed five-mile run on flat ground. Horsemen PT Test II: under 35:00.",
+    "bestEffort": {
+      "km": 8.04672,
+      "label": "5 miles"
+    }
   },
   {
     "id": "bench_press_bodyweight_reps",
     "name": "PT Test II — Bench Press at Bodyweight (reps)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " reps",
     "standards": {
-      "entry": 1,
-      "intermediate": 5,
-      "advanced": 10,
-      "elite": 15
+      "entry": 1.0,
+      "intermediate": 5.0,
+      "advanced": 10.0,
+      "elite": 15.0
     },
     "lower_is_better": false,
-    "notes": "Women lift the same bar — their own bodyweight — so the rep tiers sit lower; the strength ratio behind them is the same."
+    "standardsText": {
+      "entry": "1 rep",
+      "intermediate": "5 reps",
+      "advanced": "10 reps",
+      "elite": "15 reps"
+    },
+    "inputHint": "reps",
+    "domain": "strength_endurance",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator"
+    ],
+    "femaleStandards": {
+      "entry": 1.0,
+      "intermediate": 3.0,
+      "advanced": 6.0,
+      "elite": 10.0
+    },
+    "notes": "Women lift the same bar — their own bodyweight — so the rep tiers sit lower; the strength ratio behind them is the same.",
+    "testProtocol": "Bar weight equal to bodyweight on the day, touch-and-go not allowed — pause the bar on the chest. Count full lockouts.",
+    "description": "Maximum reps at a bar loaded to bodyweight. Horsemen PT Test II: 10."
   },
   {
     "id": "pull_ups_weighted_25lb_reps",
     "name": "PT Test II — Pull-ups with 25 lb (reps)",
     "category": "tactical",
+    "categoryName": "Ruck & PT tests",
+    "categoryOrder": 3,
     "unit": " reps",
     "standards": {
-      "entry": 3,
-      "intermediate": 8,
-      "advanced": 15,
-      "elite": 20
+      "entry": 3.0,
+      "intermediate": 8.0,
+      "advanced": 15.0,
+      "elite": 20.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "3 reps",
+      "intermediate": "8 reps",
+      "advanced": "15 reps",
+      "elite": "20 reps"
+    },
+    "inputHint": "reps",
+    "domain": "relative_strength",
+    "metricType": "reps",
+    "sources": [
+      "horsemen_gpp"
+    ],
+    "goalRelevance": [
+      "sof_operator",
+      "alpine_climbing"
+    ],
+    "femaleStandards": {
+      "entry": 1.0,
+      "intermediate": 4.0,
+      "advanced": 8.0,
+      "elite": 12.0
+    },
+    "testProtocol": "Dead hang start, chin over the bar, no kip, 25 lb on a dip belt. Count reps to failure.",
+    "description": "Strict pull-ups with 25 lb on a belt. Horsemen PT Test II: 15."
   },
   {
     "id": "wod_fran_minutes",
     "name": "Fran (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 12.0,
@@ -340,12 +1012,38 @@
       "advanced": 5.0,
       "elite": 3.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "12:00",
+      "intermediate": "8:00",
+      "advanced": "5:00",
+      "elite": "3:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 13.0,
+      "intermediate": 9.0,
+      "advanced": 6.0,
+      "elite": 4.0
+    },
+    "testProtocol": "Thrusters from the floor, full squat to lockout; pull-ups chin over bar, kipping allowed. Record total time.",
+    "description": "21-15-9 thrusters (95 lb / 65 lb) and pull-ups, for time. The benchmark of benchmarks: a measure of how hard you can go for three to ten minutes."
   },
   {
     "id": "wod_grace_minutes",
     "name": "Grace (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 7.0,
@@ -353,12 +1051,37 @@
       "advanced": 3.5,
       "elite": 2.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "7:00",
+      "intermediate": "5:00",
+      "advanced": "3:30",
+      "elite": "2:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 8.0,
+      "intermediate": 6.0,
+      "advanced": 4.0,
+      "elite": 3.0
+    },
+    "testProtocol": "Ground to overhead, any style, each rep from the floor. Record total time.",
+    "description": "30 clean and jerks (135 lb / 95 lb) for time. Barbell cycling under fatigue; the test of whether the technique survives the clock."
   },
   {
     "id": "wod_helen_minutes",
     "name": "Helen (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 16.0,
@@ -366,12 +1089,38 @@
       "advanced": 11.0,
       "elite": 9.0
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "16:00",
+      "intermediate": "13:00",
+      "advanced": "11:00",
+      "elite": "9:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 17.0,
+      "intermediate": 14.0,
+      "advanced": 12.0,
+      "elite": 10.0
+    },
+    "testProtocol": "Measured 400 m, swings to overhead (American), pull-ups chin over bar. Record total time.",
+    "description": "Three rounds: 400 m run, 21 kettlebell swings (53 lb / 35 lb), 12 pull-ups. The aerobic Girl — pacing across three rounds matters more than any one."
   },
   {
     "id": "wod_diane_minutes",
     "name": "Diane (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 12.0,
@@ -379,12 +1128,37 @@
       "advanced": 5.0,
       "elite": 3.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "12:00",
+      "intermediate": "8:00",
+      "advanced": "5:00",
+      "elite": "3:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 13.0,
+      "intermediate": 9.0,
+      "advanced": 6.0,
+      "elite": 4.0
+    },
+    "testProtocol": "Deadlifts to full lockout, handstand push-ups head to the floor with full lockout. Record total time.",
+    "description": "21-15-9 deadlifts (225 lb / 155 lb) and handstand push-ups, for time. Heavy posterior chain against a gymnastics press."
   },
   {
     "id": "wod_isabel_minutes",
     "name": "Isabel (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 8.0,
@@ -392,12 +1166,37 @@
       "advanced": 3.5,
       "elite": 2.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "8:00",
+      "intermediate": "5:30",
+      "advanced": "3:30",
+      "elite": "2:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 9.0,
+      "intermediate": 6.5,
+      "advanced": 4.0,
+      "elite": 3.0
+    },
+    "testProtocol": "Ground to overhead in one movement, power or full. Record total time.",
+    "description": "30 snatches (135 lb / 95 lb) for time. Grace's harder sibling: the same thirty reps with a longer bar path."
   },
   {
     "id": "wod_annie_minutes",
     "name": "Annie (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 14.0,
@@ -405,12 +1204,38 @@
       "advanced": 7.0,
       "elite": 5.5
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "14:00",
+      "intermediate": "10:00",
+      "advanced": "7:00",
+      "elite": "5:30"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 15.0,
+      "intermediate": 11.0,
+      "advanced": 8.0,
+      "elite": 6.0
+    },
+    "testProtocol": "Double-unders consecutive or not, sit-ups shoulders to floor and hands past the feet. Record total time.",
+    "description": "50-40-30-20-10 double-unders and sit-ups, for time. No load; the whole workout is skill under a rising heart rate."
   },
   {
     "id": "wod_elizabeth_minutes",
     "name": "Elizabeth (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 14.0,
@@ -418,12 +1243,37 @@
       "advanced": 7.0,
       "elite": 5.0
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "14:00",
+      "intermediate": "10:00",
+      "advanced": "7:00",
+      "elite": "5:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 15.0,
+      "intermediate": 11.0,
+      "advanced": 8.0,
+      "elite": 6.0
+    },
+    "testProtocol": "Cleans from the floor, squat or power; ring dips with the shoulder below the elbow at the bottom and full lockout. Record total time.",
+    "description": "21-15-9 cleans (135 lb / 95 lb) and ring dips, for time."
   },
   {
     "id": "wod_murph_minutes",
     "name": "Murph (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 65.0,
@@ -431,25 +1281,79 @@
       "advanced": 40.0,
       "elite": 33.0
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "1:05:00",
+      "intermediate": "50:00",
+      "advanced": "40:00",
+      "elite": "33:00"
+    },
+    "inputHint": "h:mm:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit",
+      "gym_jones"
+    ],
+    "goalRelevance": [
+      "crossfit_performance",
+      "sof_operator",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 70.0,
+      "intermediate": 55.0,
+      "advanced": 45.0,
+      "elite": 38.0
+    },
+    "testProtocol": "Unvested here; a 20 lb / 14 lb vest is the full Rx and adds roughly 20 %. Record total time.",
+    "description": "1-mile run, 100 pull-ups, 200 push-ups, 300 squats, 1-mile run. Partition the middle as you like. The Hero WOD everyone has a time for."
   },
   {
     "id": "wod_cindy_rounds",
     "name": "Cindy (rounds in 20 min)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " rounds",
     "standards": {
-      "entry": 10,
-      "intermediate": 15,
-      "advanced": 20,
-      "elite": 26
+      "entry": 10.0,
+      "intermediate": 15.0,
+      "advanced": 20.0,
+      "elite": 26.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "10 rounds",
+      "intermediate": "15 rounds",
+      "advanced": "20 rounds",
+      "elite": "26 rounds"
+    },
+    "inputHint": "rounds",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "score",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance",
+      "general_gpp"
+    ],
+    "femaleStandards": {
+      "entry": 9.0,
+      "intermediate": 13.0,
+      "advanced": 18.0,
+      "elite": 23.0
+    },
+    "testProtocol": "Record complete rounds; a partial round counts as its reps (e.g. 20 + 7).",
+    "description": "AMRAP 20 minutes: 5 pull-ups, 10 push-ups, 15 air squats. Bodyweight work capacity — the only Girl scored by rounds here."
   },
   {
     "id": "wod_dt_minutes",
     "name": "DT (time in minutes)",
     "category": "benchmark_wod",
+    "categoryName": "Benchmark workouts",
+    "categoryOrder": 4,
     "unit": " min",
     "standards": {
       "entry": 16.0,
@@ -457,12 +1361,37 @@
       "advanced": 8.0,
       "elite": 6.0
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "16:00",
+      "intermediate": "11:00",
+      "advanced": "8:00",
+      "elite": "6:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "mixed_modal_conditioning",
+    "metricType": "time_minutes",
+    "sources": [
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 17.0,
+      "intermediate": 12.0,
+      "advanced": 9.0,
+      "elite": 7.0
+    },
+    "testProtocol": "One bar, all reps from the same bar; drops allowed. Record total time.",
+    "description": "Five rounds: 12 deadlifts, 9 hang power cleans, 6 push jerks, all at 155 lb / 105 lb. Barbell cycling with no place to hide."
   },
   {
     "id": "turkish_get_up_bw_ratio",
     "name": "Turkish Get-Up (bodyweight ratio)",
     "category": "skill",
+    "categoryName": "Movement & skill",
+    "categoryOrder": 5,
     "unit": "×BW",
     "standards": {
       "entry": 0.2,
@@ -470,172 +1399,485 @@
       "advanced": 0.4,
       "elite": 0.5
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "0.2×BW",
+      "intermediate": "0.3×BW",
+      "advanced": "0.4×BW",
+      "elite": "0.5×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "movement_skill",
+    "metricType": "bw_ratio",
+    "sources": [
+      "wildman_kettlebell",
+      "kelly_starrett"
+    ],
+    "goalRelevance": [
+      "kettlebell_sport",
+      "general_gpp",
+      "movement_practice"
+    ],
+    "femaleStandards": {
+      "entry": 0.15,
+      "intermediate": 0.25,
+      "advanced": 0.33,
+      "elite": 0.4
+    },
+    "testProtocol": "Bell pressed from the floor, all five positions each way, elbow locked throughout, both sides at the same weight. Divide bell weight by bodyweight.",
+    "description": "Heaviest kettlebell for a full get-up, each side, as a fraction of bodyweight. Shoulder stability, hip mobility and the ability to own a load overhead through every position between the floor and standing."
   },
   {
     "id": "handstand_hold_wall_seconds",
     "name": "Handstand Hold, Wall (seconds)",
     "category": "skill",
+    "categoryName": "Movement & skill",
+    "categoryOrder": 5,
     "unit": " s",
     "standards": {
-      "entry": 15,
-      "intermediate": 30,
-      "advanced": 60,
-      "elite": 120
+      "entry": 15.0,
+      "intermediate": 30.0,
+      "advanced": 60.0,
+      "elite": 120.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "15 s",
+      "intermediate": "30 s",
+      "advanced": "60 s",
+      "elite": "120 s"
+    },
+    "inputHint": "seconds",
+    "domain": "movement_skill",
+    "metricType": "time_seconds",
+    "sources": [
+      "ido_portal",
+      "crossfit"
+    ],
+    "goalRelevance": [
+      "movement_practice",
+      "crossfit_performance"
+    ],
+    "femaleStandards": {
+      "entry": 15.0,
+      "intermediate": 30.0,
+      "advanced": 60.0,
+      "elite": 120.0
+    },
+    "testProtocol": "Chest facing the wall, heels touching, elbows locked, ribs down. Time from a stable position until the first break of form.",
+    "description": "Chest-to-wall handstand hold. The shoulder's overhead endurance and the line of the body before any free balance is attempted."
   },
   {
     "id": "handstand_hold_free_seconds",
     "name": "Freestanding Handstand Hold (seconds)",
     "category": "skill",
+    "categoryName": "Movement & skill",
+    "categoryOrder": 5,
     "unit": " s",
     "standards": {
-      "entry": 3,
-      "intermediate": 10,
-      "advanced": 30,
-      "elite": 60
+      "entry": 3.0,
+      "intermediate": 10.0,
+      "advanced": 30.0,
+      "elite": 60.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "3 s",
+      "intermediate": "10 s",
+      "advanced": "30 s",
+      "elite": "60 s"
+    },
+    "inputHint": "seconds",
+    "domain": "movement_skill",
+    "metricType": "time_seconds",
+    "sources": [
+      "ido_portal"
+    ],
+    "goalRelevance": [
+      "movement_practice"
+    ],
+    "femaleStandards": {
+      "entry": 3.0,
+      "intermediate": 10.0,
+      "advanced": 30.0,
+      "elite": 60.0
+    },
+    "testProtocol": "Enter any way; time starts when the feet are together and still and ends when a foot touches the floor or a step is taken.",
+    "description": "Freestanding handstand, kicked or pressed to, held still. Balance is a skill with its own currency: seconds, not reps."
   },
   {
     "id": "cell_hips_back_squat",
     "name": "Back Squat",
     "category": "cell",
-    "domain": "hips",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": "×BW",
     "standards": {
-      "entry": 0.85,
-      "intermediate": 1.25,
-      "advanced": 1.5,
-      "elite": 1.75
+      "entry": 1.25,
+      "intermediate": 1.5,
+      "advanced": 1.75,
+      "elite": 2.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "1.25×BW",
+      "intermediate": "1.5×BW",
+      "advanced": "1.75×BW",
+      "elite": "2×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 0.75,
+      "intermediate": 0.9,
+      "advanced": 1.15,
+      "elite": 1.5
+    }
   },
   {
     "id": "cell_hips_broad_jump",
     "name": "Broad Jump",
     "category": "cell",
-    "domain": "hips",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " m",
     "standards": {
-      "entry": 1.0,
-      "intermediate": 1.5,
-      "advanced": 2.0,
-      "elite": 2.25
+      "entry": 1.5,
+      "intermediate": 2.0,
+      "advanced": 2.25,
+      "elite": 2.5
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "1.5 m",
+      "intermediate": "2 m",
+      "advanced": "2.25 m",
+      "elite": "2.5 m"
+    },
+    "inputHint": "m",
+    "domain": "max_strength",
+    "metricType": "metres",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 1.5,
+      "intermediate": 2.0,
+      "advanced": 2.25,
+      "elite": 2.5
+    }
   },
   {
     "id": "cell_push_shoulder_press",
     "name": "Shoulder Press",
     "category": "cell",
-    "domain": "push",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": "×BW",
     "standards": {
-      "entry": 0.5,
-      "intermediate": 0.6,
-      "advanced": 0.7,
-      "elite": 0.85
+      "entry": 0.6,
+      "intermediate": 0.7,
+      "advanced": 0.85,
+      "elite": 1.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "0.6×BW",
+      "intermediate": "0.7×BW",
+      "advanced": "0.85×BW",
+      "elite": "1×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 0.4,
+      "intermediate": 0.5,
+      "advanced": 0.6,
+      "elite": 0.7
+    }
   },
   {
     "id": "cell_pull_deadlift",
     "name": "Deadlift",
     "category": "cell",
-    "domain": "pull",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": "×BW",
     "standards": {
-      "entry": 0.8,
-      "intermediate": 1.5,
-      "advanced": 1.75,
-      "elite": 2.15
+      "entry": 1.5,
+      "intermediate": 1.75,
+      "advanced": 2.15,
+      "elite": 2.5
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "1.5×BW",
+      "intermediate": "1.75×BW",
+      "advanced": "2.15×BW",
+      "elite": "2.5×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 0.85,
+      "intermediate": 1.15,
+      "advanced": 1.5,
+      "elite": 1.75
+    }
   },
   {
     "id": "cell_pull_power_clean",
     "name": "Power Clean",
     "category": "cell",
-    "domain": "pull",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": "×BW",
     "standards": {
-      "entry": 0.5,
-      "intermediate": 0.75,
-      "advanced": 1.1,
-      "elite": 1.25
+      "entry": 0.75,
+      "intermediate": 1.1,
+      "advanced": 1.25,
+      "elite": 1.5
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "0.75×BW",
+      "intermediate": "1.1×BW",
+      "advanced": "1.25×BW",
+      "elite": "1.5×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "max_strength",
+    "metricType": "bw_ratio",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 0.5,
+      "intermediate": 0.65,
+      "advanced": 0.85,
+      "elite": 1.05
+    }
+  },
+  {
+    "id": "cell_work_capacity_thruster",
+    "name": "Thruster",
+    "category": "cell",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
+    "unit": "×BW",
+    "standards": {
+      "entry": 0.4,
+      "intermediate": 0.5,
+      "advanced": 0.6,
+      "elite": 0.7
+    },
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "0.4×BW",
+      "intermediate": "0.5×BW",
+      "advanced": "0.6×BW",
+      "elite": "0.7×BW"
+    },
+    "inputHint": "×BW",
+    "domain": "strength_endurance",
+    "metricType": "bw_ratio",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 0.3,
+      "intermediate": 0.4,
+      "advanced": 0.5,
+      "elite": 0.6
+    },
+    "notes": "Load as ×BW for 21 reps (30 reps at elite)."
   },
   {
     "id": "cell_core_four_point_ab_bridge",
     "name": "Plank Hold",
     "category": "cell",
-    "domain": "core",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " min",
     "standards": {
-      "entry": 1.0,
-      "intermediate": 1.5,
-      "advanced": 2.0,
-      "elite": 3.0
+      "entry": 1.5,
+      "intermediate": 2.0,
+      "advanced": 3.0,
+      "elite": 4.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "1:30",
+      "intermediate": "2:00",
+      "advanced": "3:00",
+      "elite": "4:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "durability",
+    "metricType": "time_minutes",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 1.5,
+      "intermediate": 2.0,
+      "advanced": 3.0,
+      "elite": 4.0
+    }
   },
   {
     "id": "cell_skill_double_under",
     "name": "Double-Under",
     "category": "cell",
-    "domain": "skill",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " reps",
     "standards": {
-      "entry": 2.0,
-      "intermediate": 10.0,
-      "advanced": 40.0,
-      "elite": 60.0
+      "entry": 10.0,
+      "intermediate": 40.0,
+      "advanced": 60.0,
+      "elite": 80.0
     },
-    "lower_is_better": false
+    "lower_is_better": false,
+    "standardsText": {
+      "entry": "10 reps",
+      "intermediate": "40 reps",
+      "advanced": "60 reps",
+      "elite": "80 reps"
+    },
+    "inputHint": "reps",
+    "domain": "movement_skill",
+    "metricType": "reps",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 10.0,
+      "intermediate": 40.0,
+      "advanced": 60.0,
+      "elite": 80.0
+    }
   },
   {
     "id": "cell_endurance_run_400m",
     "name": "400m Run",
     "category": "cell",
-    "domain": "endurance",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " min",
     "standards": {
+      "entry": 1.833,
+      "intermediate": 1.5,
+      "advanced": 1.167,
+      "elite": 1.0
+    },
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "1:50",
+      "intermediate": "1:30",
+      "advanced": "1:10",
+      "elite": "1:00"
+    },
+    "inputHint": "m:ss",
+    "domain": "anaerobic_intervals",
+    "metricType": "time_minutes",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
       "entry": 2.083,
       "intermediate": 1.833,
       "advanced": 1.5,
       "elite": 1.167
-    },
-    "lower_is_better": true
+    }
   },
   {
     "id": "cell_endurance_run_800m",
     "name": "800m Run",
     "category": "cell",
-    "domain": "endurance",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " min",
     "standards": {
+      "entry": 4.333,
+      "intermediate": 3.5,
+      "advanced": 2.833,
+      "elite": 2.333
+    },
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "4:20",
+      "intermediate": "3:30",
+      "advanced": "2:50",
+      "elite": "2:20"
+    },
+    "inputHint": "m:ss",
+    "domain": "anaerobic_intervals",
+    "metricType": "time_minutes",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
       "entry": 5.0,
       "intermediate": 4.333,
       "advanced": 3.5,
       "elite": 2.833
-    },
-    "lower_is_better": true
+    }
   },
   {
     "id": "cell_endurance_row_500m",
     "name": "500m Row",
     "category": "cell",
-    "domain": "endurance",
+    "categoryName": "The Cell",
+    "categoryOrder": 6,
     "unit": " min",
     "standards": {
-      "entry": 2.167,
-      "intermediate": 1.833,
-      "advanced": 1.667,
-      "elite": 1.583
+      "entry": 1.833,
+      "intermediate": 1.667,
+      "advanced": 1.583,
+      "elite": 1.467
     },
-    "lower_is_better": true
+    "lower_is_better": true,
+    "standardsText": {
+      "entry": "1:50",
+      "intermediate": "1:40",
+      "advanced": "1:35",
+      "elite": "1:28"
+    },
+    "inputHint": "m:ss",
+    "domain": "anaerobic_intervals",
+    "metricType": "time_minutes",
+    "sources": [
+      "the_cell"
+    ],
+    "goalRelevance": [],
+    "femaleStandards": {
+      "entry": 2.25,
+      "intermediate": 2.033,
+      "advanced": 1.883,
+      "elite": 1.767
+    }
   }
 ]

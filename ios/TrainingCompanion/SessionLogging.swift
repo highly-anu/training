@@ -7,12 +7,13 @@ import Foundation
 /// kilometres, reps — which is what the analytics primitives read. Until the
 /// phone could log, the only logger it had was the watch, and only for sets.
 enum OutcomeField: String, CaseIterable {
-    case rounds, minutes, km, reps, seconds
+    case rounds, minutes, time, km, reps, seconds
 
     var label: String {
         switch self {
         case .rounds: return "Rounds"
         case .minutes: return "Minutes"
+        case .time: return "Time"
         case .km: return "Kilometres"
         case .reps: return "Reps"
         case .seconds: return "Hold (seconds)"
@@ -33,16 +34,51 @@ enum SessionLogging {
         "amrap_movement":  [.reps],
     ]
 
+    /// The field a standard's result kind is logged in (src/standard_tests.RESULTS).
+    private static let resultField: [String: OutcomeField] = [
+        "duration": .time, "rounds": .rounds, "reps": .reps, "hold": .seconds, "distance": .km,
+    ]
+
     /// The currency fields a slot can log; empty for a sets slot. Two rules on
     /// the exercise, as `lib/outcomeFields.ts` has them — change both: a
     /// kettlebell in a timed slot logs reps beside minutes (Wildman's cadence
     /// is reps per minute), and an isometric in a skill-practice slot logs the
-    /// hold in seconds (Ido's handstand and L-sit holds).
+    /// hold in seconds (Ido's handstand and L-sit holds). A for-time slot logs
+    /// a clock, and a test's scored slot asks first for the number its
+    /// standard needs (`standardResult`): reps for push-ups in three minutes.
     static func outcomeFields(for slotType: String?, category: String? = nil,
-                              patterns: [String] = []) -> [OutcomeField] {
-        if slotType == "time_domain", category == "kettlebell" { return [.minutes, .reps] }
-        if slotType == "skill_practice", patterns.contains("isometric") { return [.minutes, .seconds] }
-        return fieldsFor[slotType ?? ""] ?? []
+                              patterns: [String] = [], standardResult: String? = nil) -> [OutcomeField] {
+        var base: [OutcomeField]
+        if slotType == "time_domain", category == "kettlebell" { base = [.minutes, .reps] }
+        else if slotType == "skill_practice", patterns.contains("isometric") { base = [.minutes, .seconds] }
+        else { base = fieldsFor[slotType ?? ""] ?? [] }
+        if slotType == "for_time" || slotType == "rounds_for_time" { base = base.map { $0 == .minutes ? .time : $0 } }
+        guard let want = standardResult.flatMap({ resultField[$0] }) else { return base }
+        if want == .time { base = base.map { $0 == .minutes ? .time : $0 } }
+        return [want] + base.filter { $0 != want && ($0 != .km || want == .km) }
+    }
+
+    /// A clock as typed — "7:32", "1:02:30", or plain minutes ("7.5") — in
+    /// seconds; nil when it is not one (`lib/outcomeFields.parseClock`).
+    static func parseClock(_ raw: String) -> Int? {
+        let t = raw.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return nil }
+        if t.contains(":") {
+            let parts = t.split(separator: ":", omittingEmptySubsequences: false).map { Double($0) }
+            guard parts.count <= 3, parts.allSatisfy({ ($0 ?? -1) >= 0 }) else { return nil }
+            let n = parts.map { $0! }
+            guard !n.dropFirst().contains(where: { $0 >= 60 }) else { return nil }
+            let sec = n.reduce(0) { $0 * 60 + $1 }
+            return sec > 0 ? Int(sec.rounded()) : nil
+        }
+        guard let min = Double(t.replacingOccurrences(of: ",", with: ".")), min > 0 else { return nil }
+        return Int((min * 60).rounded())
+    }
+
+    /// Seconds as a clock: 452 → "7:32", 3750 → "1:02:30".
+    static func formatClock(_ sec: Int) -> String {
+        let h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
     }
 
     /// The exercise's `movement_patterns`, kept in its extras.
@@ -81,7 +117,10 @@ enum SessionLogging {
             return "\(count) · \(pairs.joined(separator: ", "))\(unit)"
         }
         var parts: [String] = []
-        if let sec = perf.durationSec, sec > 0 { parts.append("\(Int((Double(sec) / 60).rounded())) min") }
+        let clock = slotType == "for_time" || slotType == "rounds_for_time"
+        if let sec = perf.durationSec, sec > 0 {
+            parts.append(clock ? formatClock(sec) : "\(Int((Double(sec) / 60).rounded())) min")
+        }
         if let km = perf.distanceKm, km > 0 { parts.append("\(LoadFormat.kilograms(km)) km") }
         if let rounds = perf.rounds, rounds > 0 { parts.append("\(rounds) round\(rounds == 1 ? "" : "s")") }
         if let reps = perf.sets.first?.repsActual, reps > 0 { parts.append("\(reps) reps") }

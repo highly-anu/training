@@ -9,11 +9,11 @@ final class SessionLoggingTests: XCTestCase {
     func testOutcomeFieldsMirrorTheWebsTable() {
         XCTAssertEqual(SessionLogging.outcomeFields(for: "time_domain"), [.minutes, .km])
         XCTAssertEqual(SessionLogging.outcomeFields(for: "skill_practice"), [.minutes])
-        XCTAssertEqual(SessionLogging.outcomeFields(for: "for_time"), [.minutes])
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "for_time"), [.time], "for time is scored to the second")
         XCTAssertEqual(SessionLogging.outcomeFields(for: "distance"), [.km, .minutes])
         XCTAssertEqual(SessionLogging.outcomeFields(for: "amrap"), [.rounds, .reps])
         XCTAssertEqual(SessionLogging.outcomeFields(for: "emom"), [.rounds])
-        XCTAssertEqual(SessionLogging.outcomeFields(for: "rounds_for_time"), [.minutes, .rounds])
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "rounds_for_time"), [.time, .rounds])
         XCTAssertEqual(SessionLogging.outcomeFields(for: "amrap_movement"), [.reps])
         XCTAssertEqual(SessionLogging.outcomeFields(for: "sets_reps"), [])
         XCTAssertEqual(SessionLogging.outcomeFields(for: nil), [])
@@ -35,6 +35,33 @@ final class SessionLoggingTests: XCTestCase {
         perf.sets = [WatchSetLog(setIndex: 0, repsActual: nil, weightKg: nil, rpe: nil, completed: true,
                                  durationSeconds: 35, startOffset: nil, endOffset: nil)]
         XCTAssertEqual(SessionLogging.summary(perf, slotType: "skill_practice"), "35 s hold")
+    }
+
+    /// The same cases as `lib/outcomeFields.test.ts`: a test's scored slot asks
+    /// first for the number its standard needs.
+    func testATestSlotAsksForItsStandardsNumber() {
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "time_domain", category: "bodyweight", standardResult: "reps"),
+                       [.reps, .minutes], "push-ups in three minutes: reps, not km")
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "for_time", standardResult: "duration"), [.time])
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "amrap", standardResult: "rounds"), [.rounds, .reps])
+        XCTAssertEqual(SessionLogging.outcomeFields(for: "time_domain", category: "kettlebell", standardResult: "reps"),
+                       [.reps, .minutes])
+    }
+
+    func testClocksReadAndPrintLikeTheWeb() {
+        XCTAssertEqual(SessionLogging.parseClock("7:32"), 452)
+        XCTAssertEqual(SessionLogging.parseClock("1:02:30"), 3750)
+        XCTAssertEqual(SessionLogging.parseClock("7.5"), 450)
+        XCTAssertEqual(SessionLogging.parseClock("7"), 420)
+        XCTAssertNil(SessionLogging.parseClock("7:75"))
+        XCTAssertNil(SessionLogging.parseClock(""))
+        XCTAssertNil(SessionLogging.parseClock("abc"))
+        XCTAssertEqual(SessionLogging.formatClock(452), "7:32")
+        XCTAssertEqual(SessionLogging.formatClock(3750), "1:02:30")
+        var perf = ExercisePerformanceLog()
+        perf.durationSec = 452
+        XCTAssertEqual(SessionLogging.summary(perf, slotType: "for_time"), "7:32")
+        XCTAssertEqual(SessionLogging.summary(perf, slotType: "time_domain"), "8 min")
     }
 
     func testCleanRoundTripsAndIsAbsentUntilTicked() throws {

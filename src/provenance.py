@@ -272,7 +272,8 @@ def uncovered_modalities(
     have: set = set()
     for arch in archetypes:
         mod = arch.get('modality')
-        if mod is None:
+        # A test is placed by its phase, never selected: it covers nothing.
+        if mod is None or (arch.get('test') is not None and not (arch.get('test') or {}).get('selectable')):
             continue
         if phases is None:
             have.add(mod)

@@ -187,7 +187,7 @@ def headline_summary(entry: dict) -> dict:
         out['text'] = f'{n} of {total} movements practised' if total else f'{n} movements practised'
         out['measurable'] = bool(cov.get('inScope'))
     elif prim == 'benchmark_level':
-        rows = [r for r in entry.get('benchmarks') or [] if r.get('latest') is not None]
+        rows = [r for r in entry.get('benchmarks') or [] if r.get('value', r.get('latest')) is not None]
         if rows:
             target = entry.get('targetLevel')
             met = sum(1 for r in rows if r.get('met'))

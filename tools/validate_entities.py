@@ -37,8 +37,8 @@ _PATH_TO_SCHEMA = {
     'archetypes':   'archetype.schema.json',
     'exercises':    'exercise.schema.json',
     'goals':        'goal_profile.schema.json',
-    # benchmarks: skipped — cell_standards.yaml uses a custom nested format
-    # that predates the benchmark.schema.json individual-entry format
+    # benchmarks: detected by path in _detect_schema — the list files against
+    # benchmark.schema.json; cell_standards.yaml keeps its nested format
 }
 
 # Schemas that wrap a list (exercises file has top-level `exercises:` list)
@@ -58,6 +58,10 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'analytics.schema.json', False
     if basename == 'watch.yaml':
         return 'watch.schema.json', False
+    # The standards' list files (benchmarks_data.BENCHMARK_FILES); The Cell's
+    # file keeps its own nested format and stays unvalidated.
+    if '/data/benchmarks/' in norm and basename.endswith('.yaml') and basename != 'cell_standards.yaml':
+        return 'benchmark.schema.json', True
     for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS
@@ -86,6 +90,51 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
         own = {os.path.splitext(os.path.basename(f))[0]
                for f in glob.glob(os.path.join(fw_dir, '*.yaml'))}
         errors.extend(phases.validate_philosophy_tracks(data, own))
+        # Each test a phase declares is one of this package's test archetypes.
+        own_tests = {}
+        for f in glob.glob(os.path.join(os.path.dirname(path), 'archetypes', '**', '*.yaml'), recursive=True):
+            with open(f, encoding='utf-8') as fh:
+                arch = yaml.safe_load(fh) or {}
+            own_tests[arch.get('id')] = 'test' in arch
+        for track in data.get('tracks') or []:
+            for ph in track.get('phases') or []:
+                for t in ph.get('tests') or []:
+                    for aid in t.get('archetypes') or ([t['archetype']] if t.get('archetype') else []):
+                        if aid not in own_tests:
+                            errors.append(f"{track.get('id')}/{ph.get('id')}: test '{aid}' is not an archetype of this package")
+                        elif not own_tests[aid]:
+                            errors.append(f"{track.get('id')}/{ph.get('id')}: '{aid}' is tested but declares no `test:`")
+
+    if schema_filename == 'archetype.schema.json':
+        # A standard slot points at a standard that exists, with a result its
+        # slot type and the standard's metric agree on, and an exercise it
+        # names; a test has at least one.
+        sys.path.insert(0, _ROOT)
+        from src import standard_tests
+        from src.analytics import benchmarks_data
+        known = benchmarks_data.by_id()
+        scored = 0
+        for slot in data.get('slots') or []:
+            if not slot.get('standard'):
+                continue
+            scored += 1
+            ref = standard_tests.standard_ref(slot)
+            b = known.get(ref['id'])
+            if b is None:
+                errors.append(f"slot '{slot.get('role')}': unknown standard '{ref['id']}'")
+                continue
+            kind = ref.get('result')
+            spec = standard_tests.RESULTS.get(kind or '')
+            if spec is None:
+                errors.append(f"slot '{slot.get('role')}': no result kind fits slot type "
+                              f"'{slot.get('slot_type')}' and metric '{b['metric_type']}' — say `result:`")
+            elif b['metric_type'] not in spec['metrics']:
+                errors.append(f"slot '{slot.get('role')}': result '{kind}' cannot be a {b['metric_type']} "
+                              f"({ref['id']})")
+            if not (slot.get('exercise_filter') or {}).get('exercise_ids'):
+                errors.append(f"slot '{slot.get('role')}' measures {ref['id']} but names no exercise_ids")
+        if 'test' in data and not scored:
+            errors.append("a test archetype with no slot that measures a standard")
 
     if schema_filename == 'framework.schema.json':
         # intensity_distribution must sum to 1.0
@@ -140,16 +189,17 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
 
     # For exercise files: validate each item in the list individually
     if is_list_file:
-        items = data.get('exercises') or []
+        # An exercises file may wrap its list; a standards file is the list.
+        items = data if isinstance(data, list) else (data.get('exercises') or [])
         if not isinstance(items, list):
             return [f"Expected top-level 'exercises:' list, got {type(items).__name__}"]
         for i, item in enumerate(items):
             try:
                 jsonschema.validate(instance=item, schema=schema)
             except jsonschema.ValidationError as e:
-                errors.append(f"exercises[{i}] ({item.get('id', '?')}): {e.message}")
+                errors.append(f"[{i}] ({item.get('id', '?')}): {e.message}")
             extra = _extra_checks(item, schema_filename)
-            errors.extend(f"exercises[{i}] ({item.get('id', '?')}): {e}" for e in extra)
+            errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in extra)
     else:
         try:
             jsonschema.validate(instance=data, schema=schema)
@@ -217,6 +267,9 @@ def main():
         commons_dir = os.path.join(_ROOT, 'data', 'commons')
         if os.path.isdir(commons_dir):
             targets.append(commons_dir)
+        benchmarks_dir = os.path.join(_ROOT, 'data', 'benchmarks')
+        if os.path.isdir(benchmarks_dir):
+            targets.append(benchmarks_dir)
 
     all_results: dict[str, list[str]] = {}
     for target in targets:

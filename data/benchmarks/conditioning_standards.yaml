@@ -3,6 +3,10 @@
   domain: aerobic_base
   metric_type: time_minutes
   lower_is_better: true
+  best_effort:
+    km: 4.828032
+    label: 3 miles
+    sports: [running]
   description: >
     Timed 3-mile run on flat ground at maximum sustainable pace. The primary
     aerobic conditioning test in Horsemen GPP and military/tactical fitness
@@ -168,6 +172,10 @@
   domain: anaerobic_intervals
   metric_type: time_minutes
   lower_is_better: true
+  best_effort:
+    km: 1.609344
+    label: 1 mile
+    sports: [running]
   description: >
     Timed 1-mile run at maximum sustainable effort. Tests aerobic power
     and anaerobic threshold capacity — sits at the overlap of aerobic

@@ -119,7 +119,12 @@ All prefixed `/api/`:
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
-| GET | `/benchmarks?sex=` | `BenchmarkStandard[]` (47; female or male tables) |
+| GET | `/standards?sex=` | `BenchmarkStandard[]` (48; female or male tables, each with `categoryName`, `standardsText`, `inputHint`); `/benchmarks` is the old name, kept for installed builds |
+| GET | `/standards/results` | the athlete's results: per standard `current` (latest) and `best`, each placed on its ladder with its text, and every entry with its day, source, note and block; `blocks`; bodyweight with its entries (`src/standards.py`) |
+| POST | `/standards/results` | one result: typed `text` ("4:58"), a `value`, or for a ×BW standard `kg` + `reps` (÷ the bodyweight that day; Epley past one rep); `loggedOn` (the athlete's day, today by default), `note`. 422 when it cannot be a result, 503 when the write fails. `/health/performance` is the old name |
+| PATCH / DELETE | `/standards/results/<id>` | correct one result (value, day, note — a load is re-read on its new day's bodyweight) or delete one; 404 when it is not the athlete's |
+| GET | `/standards/suggestions` | results logged sessions suggest, pending, each in the server's words — value, level, what it would follow, `isBest`, `replacesText`, the session's name (`src/standard_results.py`) |
+| POST | `/standards/suggestions/<id>/confirm\|dismiss\|reopen` | save one as a result (the body may correct it: `text`, `value`, `kg`), "Not a test", or undo that; 404 when it is not the athlete's or not in a state that allows it, 503 when the write fails |
 | GET | `/modalities` | `Modality[]` |
 | GET | `/archetypes` | `Archetype[]` |
 | GET | `/ontology` | Lightweight projection with counts |
@@ -216,6 +221,111 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
 7. **Validator** — pre-flight checks on equipment, days, session time, injury conflicts, phase validity
 8. **API** — transforms integer day keys → day names; wraps in `{ goal, constraints, validation, weeks, volume_summary }`
 
+## Standards
+
+**One name.** Everything a person reads says *standard* (the ladder), *result* (one dated
+value), *best* (the best result ever), *est.* (derived from training sets). Stored and
+wire identifiers keep *benchmark* — `performance_logs.benchmark_id`, `benchmarkId`, the
+`benchmark_level` primitive, `data/benchmarks/`, `/api/benchmarks` — because renaming them
+would break stored rows and installed builds. "Benchmark workouts" is only the CrossFit
+group's name.
+
+- **The server places every value.** `benchmarks_data.level_of` (the level; `None` is
+  below entry), `format_value` ("4:58", "3:20:00", "1.62×BW", "45 s") and `parse_input`
+  (its inverse, so a field takes what it shows) are the only copies; no client computes a
+  level or formats a result. Thresholds go out as `standardsText`, results as `valueText`.
+- **One ladder, coloured by modality.** Every standard's `domain` is a modality id, and
+  web `components/standards/StandardLadder.tsx` / iOS `Views/StandardLadder.swift` fill
+  the rungs in that modality's colour; a level has no colour of its own (frontend-design
+  §8.1, design-system §6.31). Traffic-light colours only for a declared target.
+- **Current is the latest, best the best.** `src/standards.summarise`; every result is kept,
+  and each can be corrected or deleted on its own (Standard detail on both clients: web
+  `components/standards/StandardDetailSheet.tsx` at `/profile?tab=standards&standard=<id>`,
+  iOS `Views/StandardDetailSheet.swift`, deep link `profile?section=standards&standard=<id>`).
+- **A result counts for the athlete's day** — `performance_logs.logged_on`
+  (`migrations/011_standard_results.sql`, lazily added by `src/standards_store.py`, which
+  raises on a failed write), never `logged_at::date`; a row from before 011 reads its
+  timestamp's day in the profile timezone (`standards.day_of`) until
+  `scripts/backfill_performance_logged_on.py` fills it. Run 011 and the backfill after
+  `scripts/backup_prod.sh`. Each result is placed in the block in force that day (its test
+  session's when it has a `session_uid`). `analytics.benchmarks.standing` is the one reading
+  of a standard (latest result, else the estimate from logged sets) the program ladder and
+  `benchmark_level` share.
+- **Only a program's own standards lead.** `analytics.benchmarks.program_standards(goal,
+  weeks, specs)` — declared by the package's `analytics.yaml` for the frameworks the program
+  runs, or measured by a test it schedules (a slot's or session's `standard`) — is the one
+  answer for Progress (`primary`), Profile ▸ Standards' *This program* (`programStandards`
+  on `/standards/results`) and Blocks (`inCurrentProgram`, sorted first). Same domain, cites
+  the philosophy or merely has a result: secondary ("More standards", *Your results*). A
+  result alone used to make a standard primary. Progress rows carry `atBlockStart`,
+  `levelChange` and `blockHistory` (the block's results, its starting standing first).
+- **The Cell maps by its own words:** II entry, III intermediate, IV advanced, V elite
+  (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
+- Cached analytics documents key on `api._ANALYTICS_SHAPE` and on every result's
+  value and date (`standards.digest_key`), not on how many there are.
+- **Programs test their standards** (`src/standard_tests.py`). A package marks an archetype
+  `test:` and points each scored slot at a commons standard (`standard: <id>` or
+  `{id, result}`); a phase's `tests:` says when (`week: first|last|<n>` or `every: <n>`, a
+  rotation of `archetypes:`, `in_place_of`, `on_deload`). The generator
+  (`_plan_week_tests`) puts the test in place of one session of the week — same day, same
+  count — when the athlete can do it as written (level, equipment, the time within 1.1×,
+  every movement of the scored piece fillable), else the week records `tests_skipped` with
+  why. The session it stands in for is still selected, so the rest of the program is exactly
+  what it would have been, and recorded as `test.instead_of` (archetype, minutes, intensity
+  minutes) so fidelity and the phase summary count the test as that session. A scored slot
+  is prescribed as written (`protocol_load`: no ramp, level, phase or deload scaling;
+  `load.test`); adjust and swap leave it alone; selection never picks a test-only
+  archetype. Sessions carry `test`, scored assignments `standard` (outside `slot`, so it
+  survives storage); the skeleton hash ignores both. Tests today: Wildman's pentathlon
+  (competition, last week), Gym Jones' 2 km row (first week of accumulation, last of
+  realization), Horsemen's PT test (start of strength, end of maintenance), CrossFit's
+  Cindy → Fran → Helen every fourth week. A standard's `derived_from` (its YAML) names the
+  lifts whose sets estimate it. Both clients badge a test session, list its standards with
+  the number to beat, and Today says "Test today".
+- **Sessions suggest results; the athlete confirms** (`src/standard_results.py`). Both
+  session-log PUTs store the log (`health_store.upsert_session_log` now returns the merged
+  row, and the route answers **503** when the write fails — it used to say "saved"), then
+  read it: a test slot's logged outcome (`read_result` per result kind — a for-time clock,
+  rounds with the partial round kept, reps summed over a timed slot, the longest hold) and
+  a completed single on a `derived_from` lift that beats the current result (÷ the
+  bodyweight that day) become rows in `standard_result_suggestions`
+  (`migrations/012_standard_suggestions.sql`, lazily created by `standards_store`). A
+  pending suggestion is **never a result** — the `workout_match_suggestions` lesson —
+  until `POST /standards/suggestions/<id>/confirm` writes it to `performance_logs` (source
+  `session`, or `garmin` / `apple_watch` for a watch-logged session; the test's
+  `session_uid`) in one transaction. A re-logged value reopens a confirmed suggestion
+  (`replacesText`; the confirm corrects that result); a dismissal sticks; deleting a
+  confirmed result dismisses its suggestion. The gate is cheap: only a log of a test
+  archetype (`planned_sessions.archetype_id`) or of a derived lift loads a snapshot. A
+  day-level web key ("3-Monday") finds the day's test through `planned_rows_for_key`;
+  Garmin's name-keyed logs are matched by id → name → case-folded name → slot role, never
+  a name two slots share. The PUT answers `standards: {pending, confirmed, skipped,
+  problems, error}`, and takes `standardResults: {id: {decision: save|dismiss, text?}}`
+  — honoured only for a standard that session tests, so the device-token route reaches no
+  further. UI: one row on both clients (web `components/standards/SuggestionRow.tsx`, iOS
+  `Views/StandardSuggestionRow.swift`, design-system §6.34) — Save result · Correct · Not a
+  test — on Profile ▸ Standards' *To confirm*, Today and under the test standard. A
+  for-time slot logs a clock (`time`, m:ss) on both clients, never prefilled from its cap,
+  and a test slot asks first for its standard's number (`outcomeFieldsFor(…, standard)`,
+  `SessionLogging.outcomeFields(…, standardResult:)`). Both watches show a test step's
+  best and next-level number and ask Save results / Not a test at the end (see *Watch
+  Screens*).
+- **Imported runs suggest run results** (`standard_results.after_workouts_import`, after
+  `upsert_workouts` on the FIT upload, `POST /health/workouts` and the Garmin worker). A
+  standard's YAML `best_effort` (`km`, `label`, `sports`) names its distance — the 1, 3
+  and 5-mile runs today. A workout whose track carries **recorded speed** (FIT: an upload
+  or Garmin Connect; never positions alone — GPS jitter would invent records) is read by
+  `workout_analysis.fastest_seconds`, which, unlike the workout screen's `best_efforts`
+  (windows may fall 5 % short), covers the whole distance. Suggested (`origin:
+  best_effort`, `source: workout`, keyed on the canonical workout) when the run is
+  matched to a session testing that standard — never overwriting what was logged for it
+  (`onlyNew`) — or when it beats the best on a standard the athlete tracks (has a result,
+  or is this program's: `current_program_standards`). Apple Health and live watch runs
+  carry no speed; the Standard detail says so on both clients.
+- `test_standards.py`, `test_standard_results_sql.py` (a production-shaped table in a scratch
+  database), `test_standard_tests.py`, `test_standard_suggestions.py` (pure, then the routes
+  on a scratch database); plan and later phases: `docs/roadmap.md` item 12.
+
 ## Key Engine Behaviors
 
 - **Injury flags**: excluded_movement_patterns blocks exercises by movement pattern; contraindicated_with blocks specific exercises. Slots whose required pattern is fully excluded show as `injury_skip` (not an error).
@@ -233,8 +343,9 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
   and a phase's optional `checks:` block in `philosophy.yaml` (the prose's numbers made
-  testable; the generator never reads it). Two phase keys the generator does read:
-  `exclude_exercises` (a lift the method has not reached) and `rotate_main_lifts`. Main-lift
+  testable; the generator never reads it). Three phase keys the generator does read:
+  `exclude_exercises` (a lift the method has not reached), `rotate_main_lifts`, and `tests`
+  (when the phase tests its standards — see *Standards*). Main-lift
   slots (`selector.is_main_lift_slot`) keep one exercise per phase unless a phase rotates;
   ties go to the least recently used, then first authored, archetype or exercise. An empty
   slot always says why (`injury_skip`, `equipment_gap`, `gap_reason`), and an injury flag's
@@ -295,7 +406,8 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
     `TrackPhaseList` / `StartPhasePicker` (design-system §3.2, §6.22;
     `PhaseTrackTests`).
   - `tools/check_styles.py` generates every phase of every track and fails if a week
-    runs another framework; `check_provenance.py --coverage` fails if a phase's
+    runs another framework, and generates a phase that tests at full length and fails
+    unless every declared test is placed; `check_provenance.py --coverage` fails if a phase's
     framework schedules a modality no package archetype applies to for its kind;
     `validate_entities.py` checks track/phase ids and framework ownership;
     `test_phases.py` covers the rest.
@@ -646,6 +758,22 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   a sets workout until its first set is done (the vocabulary's
   `last_then_next` line, the sets template's default), and under the Apple
   Watch's current exercise.
+- **Uploads speak the server's shape** (since 2026-10-17). The Garmin app keyed its
+  set logs by exercise *name* with `reps` and no `completed`, so the analytics read
+  none of them; `garmin/core/source/engine/Wire.mc` now sends them keyed by exercise
+  id with `setIndex`, `repsActual` (a hold's seconds as `durationSeconds`),
+  `completed`, plus a round step's `rounds`, a for-time step's `durationSec` and a
+  distance step's `distanceKm`. The Apple Watch kept the for-time clock, the AMRAP
+  rounds and the distance in its views and dropped them; `WorkoutSessionState.outcomes`
+  keeps them and `WatchUpload.sessionLog` sends them (`WatchUploadTests`).
+- **A test step shows its standard and asks for its result.** With `?spec=1` a test's
+  scored slot carries `standard` — `{id, name, result, best, target}`
+  (`standards.watch_standard`) — and its screen's lines become `standard_target`
+  (`watch_spec.with_lines`), whatever the package's spec says. The Garmin's Save
+  opens a Results menu (enter or correct each value, then Save results / Not a test);
+  the Apple Watch's completion screen has the same choice. The answer rides in the
+  session log as `standardResults` (src/standard_results.py), so it travels with a
+  buffered upload.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the
@@ -868,7 +996,7 @@ scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-coun
 Run these after touching engine code or package data:
 
 ```bash
-.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (125 files)
+.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (packages, commons, standards)
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
@@ -902,6 +1030,16 @@ Run this after touching anything under `ios/` (in addition to the simulator):
 
 ```bash
 ./ios/run_tests.sh                         # TrainingCompanionTests on the booted sim
+```
+
+Run these after touching standards or results (the SQL one makes and drops its own database;
+`TEST_ADMIN_DSN` points it at a server, and it skips without one):
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
+SUPABASE_URL='' .venv/bin/python test_standard_tests.py   # when a phase tests, what it replaces, skips, carry
+.venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
+SUPABASE_URL='' .venv/bin/python test_standard_suggestions.py  # a logged test → a suggestion → a result (SQL half on a scratch DB)
 ```
 
 Run these after touching program history, the matcher or the session-log path:

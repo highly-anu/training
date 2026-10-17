@@ -41,6 +41,13 @@ final class WorkoutSessionState: ObservableObject {
     // Session data
     @Published var completedExerciseIds: Set<String> = []
     @Published var setLogs: [String: [WatchSetLog]] = [:]
+    /// exerciseId → what a step produced that is not a set: a for-time
+    /// clock, an AMRAP's rounds, a distance. The views kept these in their
+    /// own state and dropped them when the step ended.
+    @Published var outcomes: [String: WatchOutcome] = [:]
+    /// The Results answer for a test session: "save" or "dismiss"; nil = left
+    /// for the phone and the web to decide.
+    @Published var resultDecision: String? = nil
     @Published var elapsedSeconds: Int = 0
     @Published var calories: Int = 0
 
@@ -88,6 +95,7 @@ final class WorkoutSessionState: ObservableObject {
         avgHRSamples = []
         hrOutOfZoneSeconds = 0; isHRAlertActive = false
         completedExerciseIds = []; setLogs = [:]
+        outcomes = [:]; resultDecision = nil
         elapsedSeconds = 0; calories = 0
         hrOutOfZoneCounter = 0; hrAlertCooldown = 0
         distanceMeters = 0; currentCadence = 0; currentSpeedMps = 0; floorsAscended = 0
@@ -141,6 +149,35 @@ final class WorkoutSessionState: ObservableObject {
     func extendRest(exerciseIndex: Int, completedSet: Int, current remaining: Int) {
         phase = .resting(exerciseIndex: exerciseIndex, completedSet: completedSet,
                          secondsRemaining: remaining + 30)
+    }
+
+    /// Keep what a step produced (only the values given are changed).
+    func recordOutcome(_ exerciseId: String, rounds: Int? = nil, durationSec: Int? = nil,
+                       distanceKm: Double? = nil) {
+        var o = outcomes[exerciseId] ?? WatchOutcome()
+        if let rounds { o.rounds = rounds }
+        if let durationSec { o.durationSec = durationSec }
+        if let distanceKm { o.distanceKm = distanceKm }
+        outcomes[exerciseId] = o
+    }
+
+    /// A test step's result entered or corrected on the Results screen: a
+    /// count goes in as the step's one set (where the server and the
+    /// analytics read reps and holds), a clock or rounds as its outcome.
+    func setResult(_ ex: WatchExercise, value: Double) {
+        switch ex.standard?.result {
+        case "duration": recordOutcome(ex.exerciseId, durationSec: Int(value.rounded()))
+        case "rounds":   recordOutcome(ex.exerciseId, rounds: Int(value.rounded()))
+        case "distance": recordOutcome(ex.exerciseId, distanceKm: value)
+        case "hold":
+            setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: nil, weightKg: ex.weightKg, rpe: nil,
+                                                  completed: true, durationSeconds: Int(value.rounded()),
+                                                  startOffset: nil, endOffset: nil)]
+        default:
+            setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: Int(value.rounded()), weightKg: ex.weightKg,
+                                                  rpe: nil, completed: true, durationSeconds: nil,
+                                                  startOffset: nil, endOffset: nil)]
+        }
     }
 
     func markExerciseComplete(id: String) {

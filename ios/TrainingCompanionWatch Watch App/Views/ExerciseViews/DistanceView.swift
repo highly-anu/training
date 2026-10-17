@@ -47,6 +47,8 @@ struct DistanceView: View {
 
                 Button("Done") {
                     isRunning = false
+                    sessionState.recordOutcome(exercise.exerciseId, durationSec: elapsedSeconds,
+                                               distanceKm: distanceCovered > 0 ? distanceCovered : nil)
                     sessionState.markExerciseComplete(id: exercise.exerciseId)
                     sessionState.advance(to: exerciseIndex + 1)
                 }
