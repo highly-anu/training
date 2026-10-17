@@ -127,6 +127,7 @@ class WorkoutController {
     hidden var _outcomes;   // name -> { durationSec, distanceKm }: what a step produced that is not a set
     hidden var _exStartDistM;   // _distanceM when the current exercise became active
     hidden var _resultDecision; // "save" | "dismiss" | null: the Results menu's answer
+    hidden var _entered;        // name -> true: a result the athlete typed, which the clock never overwrites
     hidden var _uploadOk;   // null until the upload resolves
     hidden var _lastError;  // first failure swallowed to keep the workout alive
     hidden var _paused;     // stop menu open: clock and recording held
@@ -168,6 +169,7 @@ class WorkoutController {
         _outcomes = {};
         _exStartDistM = 0;
         _resultDecision = null;
+        _entered = {};
         _uploadOk = null;
         _lastError = null;
         _paused = false;
@@ -974,7 +976,7 @@ class WorkoutController {
     // distance a distance step covered. Read when the step is left (its last
     // round, Skip, or Save mid-step) and kept by exercise for the upload.
     hidden function noteStepEnd(ex) {
-        if (ex == null) { return; }
+        if (ex == null || _entered.hasKey(ex.name())) { return; }
         var out = _outcomes.hasKey(ex.name()) ? _outcomes[ex.name()] : {};
         if (ex.isTemplate("for_time")) { out["durationSec"] = exerciseElapsedSec(); }
         var d = _distanceM - _exStartDistM;
@@ -983,6 +985,12 @@ class WorkoutController {
     }
 
     // ── test results (the standards a session tests) ─────────────────────────────
+
+    // Save pressed mid-step (a run finished without a LAP): the step's clock
+    // is read now, so the Results menu shows it instead of asking for it.
+    function closeStep() {
+        if (_state == ACTIVE || _state == RESTING) { noteStepEnd(currentExercise()); }
+    }
 
     // The session's scored test steps, in order; empty on any other day.
     function testSteps() {
@@ -1037,6 +1045,7 @@ class WorkoutController {
     function setResult(ex, v) {
         var kind = ex.standard()["result"];
         var name = ex.name();
+        _entered[name] = true;
         if (kind.equals("duration") || kind.equals("distance")) {
             var o = _outcomes.hasKey(name) ? _outcomes[name] : {};
             o[kind.equals("duration") ? "durationSec" : "distanceKm"] = v;

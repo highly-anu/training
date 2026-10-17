@@ -138,8 +138,10 @@ function WeekTab({
       <SuggestionsCard />
 
       {/* Results logged sessions suggest — today's test shows its own below */}
-      <ResultsToConfirmCard exclude={(program.weeks[weekIndex]?.schedule[format(new Date(), 'EEEE')] ?? [])
-        .flatMap((s) => s.test?.standards ?? [])} />
+      <ResultsToConfirmCard
+        testDayKey={program.weeks[weekIndex] ? `${program.weeks[weekIndex].week_number}-${format(new Date(), 'EEEE')}` : undefined}
+        testStandards={(program.weeks[weekIndex]?.schedule[format(new Date(), 'EEEE')] ?? [])
+          .flatMap((s) => s.test?.standards ?? [])} />
 
       {/* Today + Readiness + Adherence + Progress */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:items-stretch">

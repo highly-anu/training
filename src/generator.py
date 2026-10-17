@@ -225,7 +225,7 @@ def _plan_week_tests(entry: dict, resolved_by_day: dict, archetypes: list, const
     A test goes in only when the athlete can do it as written: their level,
     their equipment (a test is never equipment-scaled: the score would not
     compare), a session of the modality to replace, the time (a test past
-    1.25× the session limit needs a long day), and every scored slot filled
+    1.1× the session limit needs a long day), and every scored slot filled
     (an injury can rule a movement out). The rotation's next archetype is tried
     before the test is skipped; a skipped test leaves the week as scheduled.
     """
@@ -280,7 +280,9 @@ def _plan_week_tests(entry: dict, resolved_by_day: dict, archetypes: list, const
             piece = [ea for ea in eas if ea.get('slot_role') in scored_roles
                      or (ea.get('slot') or {}).get('parent_slot_role') in scored_roles]
             if not scored_roles or any(ea.get('exercise') is None and not ea.get('meta') for ea in piece):
-                reason = 'injury_skip' if any(ea.get('injury_skip') for ea in piece) else 'equipment_gap'
+                gap = next((ea for ea in piece if ea.get('exercise') is None and not ea.get('meta')), {})
+                reason = ('injury_skip' if any(ea.get('injury_skip') for ea in piece)
+                          else gap.get('gap_reason') or 'equipment_gap')
                 continue
             populated['test'] = {
                 'archetype': aid, 'standards': standard_tests.standards_of(arch),

@@ -497,6 +497,10 @@ def select_exercise(
             if set(ex.get('contraindicated_with', [])).intersection(
                     set(constraints.get('injury_flags', []))):
                 continue
+            # A test's own exercise (a "2000m Row Time Trial") is prescribed
+            # only by a slot that names it, never picked for a circuit's row.
+            if ex.get('test_only') and ex_id not in (ex_filter.get('exercise_ids') or []):
+                continue
             n_pool += 1
 
             # Philosophy package filter. Read _packages (every package that declares

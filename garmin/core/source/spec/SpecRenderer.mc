@@ -250,9 +250,13 @@ class SpecRenderer extends Renderer {
             ctl.logRound();
         } else if (ex.isTemplate("for_time")) {
             var t = ex.targetRounds();
-            // A test against the clock with no rounds to count (2 km, 3 miles):
-            // LAP stops the clock, which is the result.
-            if (t == null && ex.standard() != null) { ctl.skip(); return; }
+            // A test over a distance with no rounds to count (2 km, 3 miles):
+            // LAP stops the clock, which is the result. A for-time workout
+            // (Fran) keeps LAP for its rounds.
+            if (t == null && ex.standard() != null && (ex.distanceKm() != null || ex.distanceM() != null)) {
+                ctl.skip();
+                return;
+            }
             ctl.logRound();
             if (t != null && ctl.amrapRounds() >= t) { ctl.skip(); }
         } else if (ex.isTemplate("distance")) {

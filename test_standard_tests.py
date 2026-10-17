@@ -148,6 +148,27 @@ def test_skips_say_why_and_leave_the_week_as_scheduled():
     assert report['skipped_tests'][0]['reason'] == 'injury_skip' and report['placed_tests'] == []
 
 
+def test_a_test_exercise_stays_in_its_test():
+    raw = _gen('gym_jones', weeks=16, days_per_week=4)
+    outside = [(w['week_number'], s.get('archetype', {}).get('id')) for w in raw['weeks'] for _, _, s in _sessions(w)
+               if not s.get('test') and any((ea.get('exercise') or {}).get('id') == 'row_2km_test'
+                                            for ea in s.get('exercises', []))]
+    assert not outside, f'the time trial was picked for an ordinary session: {outside}'
+    lumbar = _gen('gym_jones', weeks=1, start_phase='accumulation', injury_flags=['lumbar_disc'])
+    assert [t['reason'] for t in lumbar['weeks'][0].get('tests_skipped') or []] == ['injury_skip'], \
+        'the row test is contraindicated with a lumbar disc (the flag id is lumbar_disc)'
+
+
+def test_a_test_that_can_never_fire_is_refused():
+    phil = {'id': 'p', 'tracks': [{'id': 't', 'phases': [
+        {'id': 'a', 'kind': 'base', 'weeks': 4, 'framework_id': 'f', 'tests': [{'archetype': 'x', 'every': 6}]},
+        {'id': 'b', 'kind': 'base', 'weeks': 4, 'framework_id': 'f', 'repeatable': True,
+         'tests': [{'archetype': 'x', 'every': 6}]}]}]}
+    errors = phases.validate_philosophy_tracks(phil)
+    assert any('never runs' in e and '/a:' in e for e in errors), errors
+    assert not any('/b:' in e for e in errors), 'a repeatable phase reaches week 6 on its second cycle'
+
+
 def test_a_tail_regenerate_tests_in_its_own_week():
     raw = _gen('wildman_kettlebell', 'pentathlon', weeks=1, start_phase='competition', periodization_week=2)
     assert len(_tests(raw['weeks'][0])) == 1, 'resuming at week 2 of the phase still tests in week 2'

@@ -194,16 +194,22 @@ def delete_result(user_id: str, entry_id: int) -> bool:
 
 def delete_series(user_id: str, benchmark_id: str) -> int:
     """Every result on one standard — the old `DELETE /health/performance/<id>`,
-    kept for installed builds; no screen offers it any more."""
-    if not _ensure_schema():
+    kept for installed builds; no screen offers it any more. The suggestions
+    those results were confirmed from are dismissed, as delete_result does."""
+    if not _ensure_suggestions():
         raise RuntimeError('no database')
     from src.db import new_conn
-    conn = new_conn(autocommit=True)
+    conn = new_conn()
     try:
-        with conn.cursor() as cur:
-            cur.execute('DELETE FROM performance_logs WHERE user_id = %s AND benchmark_id = %s',
+        with conn, conn.cursor() as cur:
+            cur.execute('DELETE FROM performance_logs WHERE user_id = %s AND benchmark_id = %s RETURNING id',
                         (user_id, benchmark_id))
-            return cur.rowcount
+            ids = [r[0] for r in cur.fetchall()]
+            if ids:
+                cur.execute("UPDATE standard_result_suggestions SET status = 'dismissed', "
+                            'performance_log_id = NULL, updated_at = NOW() '
+                            'WHERE user_id = %s AND performance_log_id = ANY(%s)', (user_id, ids))
+            return len(ids)
     finally:
         conn.close()
 

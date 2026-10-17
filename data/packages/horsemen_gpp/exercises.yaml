@@ -3272,7 +3272,7 @@ exercises:
   requires: []
   unlocks: []
   contraindicated_with:
-  - lumbar_disc_pathology
+  - lumbar_disc
   progressions:
     volume: increase_reps_per_set
   scaling_down: []

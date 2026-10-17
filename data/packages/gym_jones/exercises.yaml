@@ -2356,6 +2356,7 @@ exercises:
   equipment:
   - rower
   effort: max
+  test_only: true
   bilateral: true
   movement_patterns:
   - aerobic_monostructural
@@ -2363,7 +2364,7 @@ exercises:
   - row_interval
   unlocks: []
   contraindicated_with:
-  - lumbar_disc_pathology
+  - lumbar_disc
   progressions:
     volume: add_sets
   scaling_down:

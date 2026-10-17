@@ -800,7 +800,21 @@ suggest results the athlete confirms. Left:
    at Save, the session log arriving with `repsActual` and `standardResults`) and on the
    Apple Watch (the line under the exercise, Save Results / Not a test). Neither screen has
    been seen on a device or a simulator. Then a store release and a TestFlight build.
-4. **Not in scope, noted:** 400/800 m best efforts (no standard measures them); best efforts
+4. **A partial regenerate in a test week** can run the test twice or drop it when the days
+   per week change: the clients keep the days before the cut (`spliceRegenerated`,
+   `Regeneration.splice`) and the server places the week's test without knowing them (5 →
+   3 days moves Fran from Monday to Tuesday; a kept Monday Fran and a new Tuesday Fran).
+   Fix: send the kept weekdays and whether they hold the test; `_plan_week_tests` places
+   only on days at or after the cut and skips with `already_tested`. Found in the review of
+   #149.
+5. **`contraindicated_with: [lumbar_disc_pathology]`** names no flag (the id is
+   `lumbar_disc`) on 33 exercises, so it excludes nothing; `validate_entities.py` should
+   check contraindications against `injury_flags.yaml`. The two the standards added say
+   `lumbar_disc`.
+6. **A test tries one session of its modality** (`_test_slot`, the first or the last of the
+   week): if that day is too short the test is skipped even when another session of the
+   modality sits on a long day.
+7. **Not in scope, noted:** 400/800 m best efforts (no standard measures them); best efforts
    from Apple Health or live watch runs (no recorded speed — positions alone would invent
    records).
 

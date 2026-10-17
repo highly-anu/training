@@ -482,6 +482,12 @@ def after_session_log(user_id: str, log: dict, row: dict | None, *, session_uid:
                 'error': 'could not read this session for standards'}
 
 
+def _scored_seen(session: dict, exercises: dict) -> bool:
+    """Does this log hold an entry for any of the session's scored slots?"""
+    scored = [a for a in (session.get('exercises') or []) if isinstance(a, dict) and a.get('standard')]
+    return any(e is not None for e in entries_for(scored, exercises))
+
+
 def _after(user_id: str, log: dict, row: dict, session_uid: str | None,
            decisions: dict, problems: list) -> dict | None:
     import json as _json
@@ -503,6 +509,18 @@ def _after(user_id: str, log: dict, row: dict, session_uid: str | None,
     lifts = [k for k in exercises if k in derived or str(k).casefold() in names]
     if not tests and not lifts and not decisions:
         return None
+    own_uid = session_uid or (planned[0]['session_uid'] if len(planned) == 1 else None)
+
+    # Every Starting Strength set reaches here: with no single, no test and no
+    # decision there is nothing to suggest — unless a single suggested earlier
+    # has since become a triple, whose pending row must go. One small read.
+    if not tests and not decisions and not any(single_from_sets(exercises.get(k)) for k in lifts):
+        waiting = [s for s in standards_store.list_suggestions(user_id, statuses=('pending',))
+                   if s['origin'] == 'derived_single'
+                   and (s['sessionUid'] == own_uid if own_uid
+                        else (s['sessionKey'] or '').startswith(key + '@'))]
+        if not waiting:
+            return None
 
     sessions = []
     if tests:
@@ -521,27 +539,39 @@ def _after(user_id: str, log: dict, row: dict, session_uid: str | None,
                                 log_source=log_source, derived=derived, names=names)
 
     # Each suggestion keys on its own session: a test's on the test's uid
-    # (the log may name only the day), a single on the log's.
-    own_uid = session_uid or (planned[0]['session_uid'] if len(planned) == 1 else None)
+    # (the log may name only the day), a single on the log's. A legacy key
+    # repeats in every program ("3-Monday"), so a single without a uid keys
+    # on its day too — else one block's single would reopen, and on confirm
+    # overwrite, another block's result.
+    single_key = key if own_uid else f'{key}@{day}'
     rows, keep = [], {}
     for c in found:
-        uid = tests[c['sessionIndex']]['session_uid'] if c['sessionIndex'] is not None else own_uid
-        rows.append({**c, 'sessionUid': uid, 'sessionKey': key, 'source': result_source(log_source),
+        if c['sessionIndex'] is not None:
+            uid, skey = tests[c['sessionIndex']]['session_uid'], key
+        else:
+            uid, skey = own_uid, single_key
+        rows.append({**c, 'sessionUid': uid, 'sessionKey': skey, 'source': result_source(log_source),
                      'loggedOn': day})
-        keep.setdefault(standards_store.log_key(uid, key), set()).add(c['benchmarkId'])
-    for r in tests:
-        keep.setdefault(r['session_uid'], set())
+        keep.setdefault(standards_store.log_key(uid, skey), set()).add(c['benchmarkId'])
+    # A test's pending suggestion is pruned only by its own log, or by a log
+    # holding its scored exercise: a day-level web log of the day's other
+    # session must not delete what the watch logged for the test.
+    for r, sess in zip(tests, sessions):
+        if r['session_uid'] == session_uid or _scored_seen(sess, exercises):
+            keep.setdefault(r['session_uid'], set())
     if lifts:
-        keep.setdefault(standards_store.log_key(own_uid, key), set())
-    standards_store.upsert_suggestions(user_id, rows, prune_keys=keep)
+        keep.setdefault(standards_store.log_key(own_uid, single_key), set())
+    keys = list(keep)
+    stale = keys and any(p['benchmarkId'] not in keep.get(p['logKey'], set())
+                         for p in standards_store.list_suggestions(user_id, statuses=('pending',), log_keys=keys))
+    if rows or stale:
+        standards_store.upsert_suggestions(user_id, rows, prune_keys=keep)
 
     # Decisions the log carried (a watch's Save / Not a test): only for a
-    # standard this session tests or suggested, so a device token reaches no
-    # further than the session it logged.
+    # standard this session tests, so a device token reaches no further than
+    # the test it ran (a single on any lift is the phone's and the web's).
     allowed = {(a.get('standard') or {}).get('id') if isinstance(a.get('standard'), dict) else a.get('standard')
                for s in sessions for a in (s.get('exercises') or []) if isinstance(a, dict)} - {None}
-    allowed |= {c['benchmarkId'] for c in found}
-    keys = list(keep)
     if decisions:
         current = {s['benchmarkId']: s for s in standards_store.list_suggestions(
             user_id, statuses=STATUSES, log_keys=keys)}
@@ -549,7 +579,7 @@ def _after(user_id: str, log: dict, row: dict, session_uid: str | None,
         for sid, d in decisions.items():
             s = current.get(sid)
             if sid not in allowed or s is None:
-                problems.append(f'{sid}: not a standard this session suggests')
+                problems.append(f'{sid}: not a standard this session tests')
                 continue
             if d['decision'] == 'dismiss':
                 standards_store.set_suggestion_status(user_id, s['id'], 'dismissed', via=via,

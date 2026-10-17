@@ -21,6 +21,7 @@ slots:
   - role: fran
     slot_type: for_time
     time_cap_sec: 720
+    rounds: 3
     intensity: max_effort
     exercise_filter:
       exercise_ids: [thruster]

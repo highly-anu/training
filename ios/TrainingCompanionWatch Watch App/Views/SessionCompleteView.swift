@@ -56,7 +56,8 @@ struct SessionCompleteView: View {
                         .tint(.blue)
                     Button("Not a test") { save(decision: "dismiss") }
                         .buttonStyle(.bordered)
-
+                }
+                if !saved {
                     Button("Discard", role: .destructive) { onDiscard() }
                         .buttonStyle(.plain)
                         .foregroundStyle(.secondary)

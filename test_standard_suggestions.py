@@ -271,6 +271,8 @@ def _mobility() -> dict:
 def _envelope() -> dict:
     weeks = [{'week_number': n, 'phase': 'base', 'schedule': {
         'Monday': [SESSION], 'Wednesday': [_squat_session(), _mobility()]}} for n in (1, 2)]
+    # Week 3: the test and a second session on one day.
+    weeks.append({'week_number': 3, 'phase': 'base', 'schedule': {'Monday': [SESSION, _mobility()]}})
     return {'currentProgram': {'goal': {'id': 'gym_jones'}, 'weeks': weeks},
             'programStartDate': MONDAY.isoformat(), 'sourceGoalIds': ['gym_jones']}
 
@@ -372,6 +374,11 @@ def sql_checks(dsn: str) -> None:
     check('with one, a day-level key still finds it', [(s['benchmarkId'], s['valueText']) for s in pend]
           == [('back_squat_bw_ratio', '1.75×BW')], str(out['standards']))
     squat = pend[0]['id']
+    with c.cursor() as cur:
+        cur.execute("SELECT session_key FROM standard_result_suggestions WHERE origin = 'derived_single'")
+        skeys = [r[0] for r in cur.fetchall()]
+    check('a single without a session uid keys on its day too (a legacy key repeats in every program)',
+          skeys and all(k.startswith('1-Wednesday@') for k in skeys), str(skeys))
     code, out = post('standards_dismiss_suggestion', squat)
     check('"Not a test" dismisses it', code == 200 and out['suggestion']['status'] == 'dismissed', str(out))
     code, out = put('1-Wednesday', {'exercises': {'back_squat': {'sets': [{'setIndex': 0, 'weightKg': 140,
@@ -387,6 +394,28 @@ def sql_checks(dsn: str) -> None:
 
     code, out = put('1-Wednesday-1', {'exercises': {'hip_flow': {'durationSec': 900}}})
     check('a session with no standard in it reads nothing', code == 200 and 'standards' not in out, str(out))
+    code, out = put('1-Wednesday', {'exercises': {'back_squat': {'sets': [{'setIndex': 0, 'weightKg': 100,
+                                                                            'repsActual': 5}]}}})
+    check('sets of five with nothing waiting read nothing', code == 200 and 'standards' not in out, str(out))
+    code, out = put('1-Wednesday', {'exercises': {'back_squat': {'sets': [{'setIndex': 0, 'weightKg': 150,
+                                                                            'repsActual': 1}]}},
+                                    'standardResults': {'back_squat_bw_ratio': {'decision': 'save'}}})
+    st = out.get('standards') or {}
+    check('a decision in a log reaches only the standards that session tests',
+          any('back_squat_bw_ratio' in p for p in st.get('problems', []))
+          and not store.list_results(USER).get('back_squat_bw_ratio'), str(st))
+
+    print('\na day with a test and another session')
+    t3_uid = ph.session_uid(vid, 2, 'Monday', 0)
+    code, out = put('3-Monday-0', {'source': 'garmin', 'exercises': {'2000m Row Time Trial': {'durationSec': 470}}})
+    check('the watch\'s log of the test leaves a suggestion on its uid',
+          [s['sessionUid'] for s in out['standards']['pending']] == [t3_uid], str(out.get('standards')))
+    code, out = put('3-Monday', {'exercises': {'hip_flow': {'durationSec': 900}}})
+    with c.cursor() as cur:
+        cur.execute("SELECT count(*) FROM standard_result_suggestions WHERE session_uid = %s AND status = 'pending'",
+                    (t3_uid,))
+        left = cur.fetchone()[0]
+    check('a web log of the other session leaves it alone', left == 1, str(left))
 
     print('\nthe watch decides in the log')
     code, out = put('2-Monday-0', {'source': 'garmin', 'exercises': {'2000m Row Time Trial': {'durationSec': 455}},
@@ -451,6 +480,25 @@ def sql_checks(dsn: str) -> None:
         check('a slower mile the next day suggests nothing', out is None, str(out))
     finally:
         sr2.current_program_standards = real_cps
+
+    print('\nthe old series delete')
+    import api
+    from flask import g
+    real_del = store.delete_series
+    store.delete_series = lambda *a, **k: (_ for _ in ()).throw(RuntimeError('down'))
+    try:
+        with api.app.test_request_context(method='DELETE'):
+            g.user_id = USER
+            resp = api.app.make_response(api.health_delete_performance.__wrapped__('run_1mile_minutes'))
+    finally:
+        store.delete_series = real_del
+    check('a failed delete is a 503, not an HTML 500', resp.status_code == 503, str(resp.status_code))
+    n = store.delete_series(USER, 'run_1mile_minutes')
+    with c.cursor() as cur:
+        cur.execute("SELECT status FROM standard_result_suggestions WHERE benchmark_id = 'run_1mile_minutes'")
+        statuses = [r[0] for r in cur.fetchall()]
+    check('deleting a series dismisses the suggestions its results came from',
+          n == 1 and statuses and all(x == 'dismissed' for x in statuses), f'{n} {statuses}')
 
     print('\nfailures are said')
     store.delete_result(USER, rid)

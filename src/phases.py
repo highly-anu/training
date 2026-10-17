@@ -135,6 +135,11 @@ def validate_philosophy_tracks(phil: dict, framework_ids: set | None = None) -> 
                     errors.append(f"{pid}/{tid}/{phid}: a test in week {week} of a {ph.get('weeks')}-week phase")
                 if t.get('week') is not None and t.get('every') is not None:
                     errors.append(f"{pid}/{tid}/{phid}: a test gives both `week` and `every`")
+                weeks = int(ph.get('weeks') or 1)
+                first = t.get('start') or t.get('every')
+                if not ph.get('repeatable') and isinstance(first, int) and first > weeks:
+                    errors.append(f"{pid}/{tid}/{phid}: a test first due in week {first} "
+                                  f"of a {weeks}-week phase never runs")
             fid = ph.get('framework_id')
             if not fid:
                 errors.append(f"{pid}/{tid}/{phid}: no framework_id")

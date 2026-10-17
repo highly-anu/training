@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { CustomInjuryFlag, Day, DaySchedule, EquipmentId, HRConfig, InjuryFlagId, IntegrationSettings, TrainingLevel, Sex } from '@/api/types'
 import { fetchProfile, saveProfile } from '@/api/userdata'
+import { queryKeys } from '@/api/queryKeys'
+import { queryClient } from '@/lib/queryClient'
 
 /** Mirrors default_integrations() in api.py. Auto-import defaults on, but a
  *  source only imports once it is also connected, so this changes nothing
@@ -50,7 +52,7 @@ interface ProfileStore {
 }
 
 function _sync(state: Omit<ProfileStore, keyof { loadFromServer: unknown; setSessionLog: unknown } & Record<string, unknown>>) {
-  saveProfile({
+  return saveProfile({
     trainingLevel:      state.trainingLevel,
     equipment:          state.equipment,
     injuryFlags:        state.injuryFlags,
@@ -116,7 +118,15 @@ export const useProfileStore = create<ProfileStore>()((set, get) => ({
   },
   setSex: (sex) => {
     set({ sex })
-    _sync({ ...get(), sex })
+    // The server reads the sex from the profile to place results on the
+    // female or male tables: refresh them once it has the new one, or levels
+    // from the old tables stay cached beside the new thresholds.
+    void _sync({ ...get(), sex }).then(() => {
+      for (const key of [queryKeys.standards.results, queryKeys.standards.suggestions,
+                         queryKeys.analytics.program, queryKeys.analytics.development]) {
+        void queryClient.invalidateQueries({ queryKey: key })
+      }
+    })
   },
   setTimezone: (timezone) => {
     set({ timezone })

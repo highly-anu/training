@@ -4039,7 +4039,11 @@ def standards_reopen_suggestion(suggestion_id: int):
 @app.delete('/api/health/performance/<benchmark_id>')
 @require_auth
 def health_delete_performance(benchmark_id: str):
-    _health.delete_performance_log(g.user_id, benchmark_id)
+    try:
+        _health.delete_performance_log(g.user_id, benchmark_id)
+    except Exception as exc:  # noqa: BLE001 — said, as every standards write is
+        app.logger.warning('standards: delete series %s failed: %s', benchmark_id, exc)
+        return jsonify({'detail': 'could not delete the results'}), 503
     return jsonify({'deleted': benchmark_id})
 
 
