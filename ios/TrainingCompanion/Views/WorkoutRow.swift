@@ -80,7 +80,7 @@ struct WorkoutRow: View {
                 VStack(spacing: 1) {
                     Text("\(t)")
                         .font(.headline).fontWeight(.bold)
-                        .foregroundStyle(trimpColor(t))
+                        .foregroundStyle(TrimpStyle.color(t))
                     Text("load")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
@@ -99,7 +99,7 @@ struct WorkoutRow: View {
     /// Where the record came from, in the athlete's language rather than the
     /// database's.
     private func sourceChip(_ source: String) -> some View {
-        Text(sourceLabel(source))
+        Text(ImportedWorkout.sourceLabel(source))
             .font(.caption2).fontWeight(.medium)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Color(.systemGray5))
@@ -107,17 +107,6 @@ struct WorkoutRow: View {
             .foregroundStyle(.secondary)
     }
 
-    private func sourceLabel(_ source: String) -> String {
-        switch source {
-        case "garmin":           return "Garmin"
-        case "fit_file":         return "FIT file"
-        case "apple_watch_live": return "Apple Watch"
-        case "apple_health":     return "Apple Health"
-        case "strava":           return "Strava"
-        case "manual":           return "Manual"
-        default:                 return source.replacingOccurrences(of: "_", with: " ").capitalized
-        }
-    }
 
     /// The planned session this workout was matched to.
     ///
@@ -161,14 +150,6 @@ struct WorkoutRow: View {
             && workout.heartRate?.avg == nil
     }
 
-    private func trimpColor(_ trimp: Int) -> Color {
-        switch trimp {
-        case ..<40:  return .secondary
-        case 40..<70: return .blue
-        case 70..<100: return .orange
-        default:       return .red
-        }
-    }
 
     // MARK: - Helpers
 

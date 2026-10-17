@@ -342,11 +342,11 @@ struct WorkoutDetailView: View {
                 LabeledContent("Impulse Score") {
                     HStack(spacing: 6) {
                         Text("\(score)").fontWeight(.semibold)
-                        Text(trimpLabel(score))
+                        Text(TrimpStyle.label(score))
                             .font(.caption)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(trimpColor(score))
+                            .background(TrimpStyle.color(score))
                             .clipShape(Capsule())
                     }
                 }
@@ -366,23 +366,7 @@ struct WorkoutDetailView: View {
         }
     }
 
-    private func trimpLabel(_ trimp: Int) -> String {
-        switch trimp {
-        case ..<40:   return "Low"
-        case 40..<70: return "Moderate"
-        case 70..<100: return "High"
-        default:       return "Very High"
-        }
-    }
 
-    private func trimpColor(_ trimp: Int) -> Color {
-        switch trimp {
-        case ..<40:   return .secondary
-        case 40..<70: return .blue
-        case 70..<100: return .orange
-        default:       return .red
-        }
-    }
 
     private func hrZoneSection(_ zones: HRZoneDistribution) -> some View {
         Section("Heart Rate Zones") {

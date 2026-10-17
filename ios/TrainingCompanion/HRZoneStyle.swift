@@ -17,3 +17,26 @@ enum HRZoneStyle {
         color(Int(key.dropFirst()) ?? 5)
     }
 }
+
+/// A workout's TRIMP as a band: low, moderate, high, very high, each with its
+/// colour. The workout row's load badge, the workout detail's Training Load
+/// and the "Workout complete" sheet read it; the first two each had a copy.
+enum TrimpStyle {
+    static func label(_ trimp: Int) -> String {
+        switch trimp {
+        case ..<40:    return "Low"
+        case 40..<70:  return "Moderate"
+        case 70..<100: return "High"
+        default:       return "Very High"
+        }
+    }
+
+    static func color(_ trimp: Int) -> Color {
+        switch trimp {
+        case ..<40:    return .secondary
+        case 40..<70:  return .blue
+        case 70..<100: return .orange
+        default:       return .red
+        }
+    }
+}

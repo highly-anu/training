@@ -793,7 +793,7 @@ LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.
 LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
 ```
 
-Routes: `today`, `program?section=overview|calendar|history`,
+Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest workout if no id), `program?section=overview|calendar|history`,
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
 still alias Load and Blocks), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels

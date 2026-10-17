@@ -61,6 +61,9 @@ final class AppState: ObservableObject {
     @Published var linkingError: String? = nil
     /// Weak server-side matches still waiting for a decision (Today card).
     @Published var matchSuggestions: [MatchSuggestion] = []
+    /// The newly stored workout the "Workout complete" sheet is showing
+    /// (`WorkoutCompletion`, design-system §6.30); nil when none.
+    @Published var completedWorkout: ImportedWorkout? = nil
 
     // MARK: - Bio Logs (last 30 days)
 
@@ -158,6 +161,9 @@ final class AppState: ObservableObject {
             group.addTask { await self.loadProgressionReview() }
             group.addTask { await self.loadMatchSuggestions() }
         }
+        // Workouts, matches, suggestions and the program are all in: the
+        // moment to notice a workout the phone has not shown yet.
+        noticeCompletedWorkout()
     }
 
     /// What each section's load last ran against (`loadIfStale`).
@@ -218,6 +224,65 @@ final class AppState: ObservableObject {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
+    }
+
+    // MARK: - Workout complete
+
+    private static let seenWorkoutsKey = "workoutComplete.seen"
+
+    /// Workouts the phone has already celebrated (or that arrived together
+    /// with one it did, or that the athlete imported by hand).
+    private var seenWorkoutIds: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: Self.seenWorkoutsKey) ?? []) }
+        set { UserDefaults.standard.set(Array(newValue), forKey: Self.seenWorkoutsKey) }
+    }
+
+    /// Present the sheet for the newest workout not yet shown, if one ended
+    /// recently enough to be a moment rather than history.
+    func noticeCompletedWorkout(now: Date = Date()) {
+        guard completedWorkout == nil,
+              let workout = WorkoutCompletion.next(in: importedWorkouts, seen: seenWorkoutIds, now: now)
+        else { return }
+        completedWorkout = workout
+    }
+
+    /// Show the sheet for a given workout, or the newest, whether or not it
+    /// was seen — `trainingcompanion://workout-complete[?id=…]`, so the
+    /// simulator can be driven to the screen.
+    func presentCompletedWorkout(id: String?) {
+        let pick = id.flatMap { id in importedWorkouts.first { $0.id == id } }
+            ?? importedWorkouts.max { (WorkoutCompletion.endDate(of: $0) ?? .distantPast)
+                < (WorkoutCompletion.endDate(of: $1) ?? .distantPast) }
+        if let pick { completedWorkout = pick }
+    }
+
+    /// The sheet closed: everything listed now is seen, so an older workout
+    /// that arrived in the same sync does not pop up next.
+    func finishCompletedWorkout() {
+        // Only ids still listed need remembering — the list is the record —
+        // unless the list failed to load, when forgetting would re-show them.
+        var seen = importedWorkouts.isEmpty ? seenWorkoutIds : []
+        seen.formUnion(importedWorkouts.map(\.id))
+        if let id = completedWorkout?.id { seen.insert(id) }
+        seenWorkoutIds = seen
+        completedWorkout = nil
+    }
+
+    /// What the sheet offers to link the workout to.
+    func completionMatch(for workout: ImportedWorkout) -> WorkoutCompletion.Match {
+        let sameDay = sessionsForDate(workout.date).map {
+            WorkoutCompletion.Candidate(key: $0.key, session: $0.session)
+        }
+        let suggestion = pendingMatchSuggestions().first { $0.workout.id == workout.id }?.suggestion
+        // A match dated to an earlier block names a session of this program
+        // too ("4-Monday-0"); it is linked, but not to anything shown here.
+        let earlier = workoutMatches[workout.id]?.inCurrentProgram == false
+        return WorkoutCompletion.match(
+            matchedKey: matchedSessionKey(for: workout.id),
+            suggestionKey: suggestion?.sessionKey,
+            sameDay: sameDay,
+            isComplete: { self.isSessionComplete($0) },
+            session: { earlier ? nil : self.locateSession(key: $0)?.session })
     }
 
     // MARK: - Match suggestions
@@ -1141,7 +1206,10 @@ final class AppState: ObservableObject {
         }
         await loadWorkouts()
         await loadMatchSuggestions()
-        return canonicalWorkout(for: uploaded) ?? uploaded
+        let listed = canonicalWorkout(for: uploaded) ?? uploaded
+        // The import sheet is its own confirmation; don't celebrate it twice.
+        seenWorkoutIds.formUnion([uploaded.id, listed.id])
+        return listed
     }
 
     /// The listed row an upload became: the same id, or — when the server
