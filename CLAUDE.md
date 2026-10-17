@@ -38,6 +38,22 @@ A training logic system that algorithmically generates periodized training progr
   Log ▸ Linking took 17 s; keep `primary_region` with the database. Reads that may
   nest in a `with get_conn()` block take `db.read_conn()` (reused per thread), never
   a fresh `new_conn()` — that is for transactions.
+- **Accounts start on either client, by Apple.** The iOS app signs up and in
+  through supabase-swift's `Auth` module (the project's only Swift package;
+  session in the Keychain, refreshed by the SDK) with Sign in with Apple — a native
+  ID token, so no secret, no email sent and no domain — and with password for
+  web-made accounts. The web's "Continue with Apple" (`authStore.signInWithApple`)
+  is Supabase's OAuth redirect through the Services ID
+  `haerdsoft.TrainingCompanion.web`, whose domain and return URL are the Supabase
+  project's own, not the web host. It needs a **client secret Apple caps at six
+  months**: `scripts/apple_client_secret.py` signs one from the .p8 key (in
+  1Password) for Supabase ▸ Apple ▸ Secret Key; when it lapses only the web's
+  Apple sign-in stops. An emailed code waits for outgoing mail and passkeys for a
+  permanent web domain (`docs/roadmap.md` item 11). `DELETE /api/account`
+  (`src/account.py`) empties every `public` table with a `user_id` column,
+  children first, in one transaction, then deletes the Supabase user with
+  `SUPABASE_SERVICE_ROLE_KEY` (503 and nothing removed without it; 409 for
+  `local-dev-user`).
 - **npm 11.4.2 cannot rebuild this lockfile's ideal tree** (`npm update`, `npm audit fix`
   and plain `npm install <pkg>` die with `Cannot read properties of null (reading 'edgesOut')`
   in arborist's peer-set loader). `npm ci`, `npm ls` and `npm audit` are fine. To change
@@ -895,6 +911,15 @@ Run these after touching program history, the matcher or the session-log path:
 .venv/bin/python test_session_scope.py        # a match or log belongs to the active program by its dates (no DB)
 .venv/bin/python test_workout_matcher.py      # the cross-language parity contract
 SUPABASE_URL='' .venv/bin/python test_linking.py  # Log ▸ Linking's day cards, the same cases as lib/linking.test.ts
+```
+
+Run these after touching sign-in or account deletion (the SQL half makes and
+drops its own database; set `TEST_ADMIN_DSN` if Postgres has no `postgres` role):
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_account_delete.py   # deletion order, preconditions, the route, the rows
+.venv/bin/python test_apple_client_secret.py              # the web Apple client secret's claims and lifetime
+./ios/run_tests.sh AuthFlowTests                          # nonce, session migration, messages
 ```
 
 Run these after touching watch pairing, device tokens or wellness (the SQL half

@@ -1443,3 +1443,21 @@ Rules: the card owns the book's sheet; a screen passes facts, never draws
 its own copy. It replaced Overview's "About this methodology" row
 (`MethodologyRow`) and Analytics' private frame card on 2026-10-16.
 
+
+### 6.29 Sign-in, Sign-up and Account
+
+**One signed-out screen signs in and signs up.** `Views/Auth/AuthView.swift`:
+*Continue with Apple* creates the account when there is none, so the screen
+never asks which the athlete wants. The button is white in dark mode, black in
+light, a capsule at full width. Under it a footnote link reveals the password
+form (email, password, *Sign in* as `.borderedProminent`, `.controlSize(.large)`)
+for accounts made on the web.
+
+- A failure is one line in red with a warning mark, worded by
+  `SignInError.message(for:)`; a cancelled Apple sheet says nothing.
+- The Apple button carries `.id(colorScheme)`: the system button keeps the style
+  it was made with and would stay black on black after a scheme change.
+
+**Settings ▸ Account** (`AccountSection`): the email — "Hidden email (Apple)"
+for a relay address — with how the account signs in, *Sign Out*, and
+*Delete Account…*, a sheet confirmed by typing DELETE.

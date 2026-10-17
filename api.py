@@ -2251,6 +2251,30 @@ def update_profile():
         return jsonify({'saved': False, 'detail': str(e)}), 503
 
 
+@app.delete('/api/account')
+@require_auth
+def delete_account():
+    """Delete the signed-in account and every row it owns (`src/account.py`).
+
+    The phone can create accounts, so it must be able to delete them (App
+    Store 5.1.1(v)). Never for `local-dev-user`: that is the developer's own
+    local data, not an account.
+    """
+    from src import account as _account
+    if g.user_id == 'local-dev-user':
+        return jsonify({'detail': 'Local dev has no account to delete.'}), 409
+    try:
+        counts = _account.delete_account(g.user_id)
+    except _account.AccountDeletionError as e:
+        app.logger.warning('delete_account %s: %s', g.user_id, e)
+        return jsonify({'detail': str(e)}), e.status
+    except Exception as e:
+        app.logger.warning('delete_account %s failed: %s', g.user_id, e)
+        return jsonify({'detail': 'Could not delete the account. Try again.'}), 503
+    app.logger.info('deleted account %s: %s', g.user_id, counts)
+    return jsonify({'deleted': True, 'rows': counts})
+
+
 @app.get('/api/userdata/profile')
 @require_auth
 def get_userdata_profile():

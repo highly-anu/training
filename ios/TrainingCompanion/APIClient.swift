@@ -653,6 +653,19 @@ final class APIClient {
         return (try? JSONDecoder().decode([PairedDevice].self, from: data)) ?? []
     }
 
+    // MARK: - Account
+
+    /// Deletes the account and everything stored for it (App Store 5.1.1(v)).
+    /// The server removes the rows, then the Supabase user; the caller
+    /// forgets the session afterwards.
+    func deleteAccount() async throws {
+        do {
+            _ = try await deleteRaw("/account")
+        } catch APIError.serverError(503) {
+            throw APIError.serverErrorDetail(503, "Account deletion isn't available right now. Try again later.")
+        }
+    }
+
     // MARK: - Private
 
     private func multipartBody(data: Data, filename: String, mimeType: String, boundary: String) -> Data {

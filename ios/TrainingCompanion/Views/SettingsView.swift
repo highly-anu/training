@@ -127,16 +127,8 @@ struct SettingsView: View {
 
     // MARK: - Account
 
-    private var accountSection: some View {
-        Section("Account") {
-            if auth.isLocalTarget {
-                Text("Local API — no account. Switch back to production to sign in.")
-                    .font(.caption).foregroundStyle(.secondary)
-            } else {
-                Button("Sign Out", role: .destructive) { auth.signOut() }
-            }
-        }
-    }
+    /// Identity, sign out and account deletion (§6.29).
+    private var accountSection: some View { AccountSection() }
 
     // MARK: - API target (development)
 
