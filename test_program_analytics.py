@@ -785,6 +785,65 @@ def test_duration_and_zones() -> None:
     check('max_hr_for: default when nothing known', max_hr_for(_ctx(prog)) == 190.0)
 
 
+def test_heart_rate_follows_the_programming() -> None:
+    print('\nheart rate counts when the programming prescribes zones (src/analytics/hr_plan.py)')
+    from src.analytics import hr_plan
+    from src.analytics import intensity as intensity_mod
+
+    def session(modality, slots, exercises=None, **arch):
+        return {'modality': modality, 'archetype': {'id': 'a', 'slots': slots, **arch},
+                'exercises': exercises or []}
+    ballistic = session('power', [
+        {'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
+        {'role': 'skill', 'intensity': 'moderate', 'duration_minutes': 10},
+        {'role': 'main', 'intensity': 'high', 'duration_minutes': 20},
+        {'role': 'cooldown', 'intensity': 'low', 'duration_minutes': 5}])
+    p = hr_plan.plan(ballistic)
+    check('a kettlebell ballistic session prescribing zones throughout tracks heart rate, whatever its family',
+          p['track'] and p['source'] == 'slots' and p['plannedMinutes'] == [7.5, 12.5, 15.0, 10.0, 0.0], str(p))
+    heavy = session('max_strength', [{'role': 'primary_squat', 'intensity': 'heavy'},
+                                     {'role': 'upper_press', 'intensity': 'heavy'}])
+    p = hr_plan.plan(heavy)
+    check('a heavy lifting day prescribes load: not tracked, and says which slots',
+          not p['track'] and p['notZoned'] == ['primary_squat: heavy', 'upper_press: heavy'], str(p))
+    warm_then_heavy = session('max_strength', [{'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
+                                               {'role': 'main_lift', 'intensity': 'heavy'}])
+    check('a zoned warm-up does not make a strength block tracked', not hr_plan.tracks(warm_then_heavy))
+    check('an archetype can say so outright: track',
+          hr_plan.plan(session('max_strength', heavy['archetype']['slots'], heart_rate='track'))['source'] == 'declared'
+          and hr_plan.tracks(session('max_strength', heavy['archetype']['slots'], heart_rate='track')))
+    check('… or ignore', not hr_plan.tracks(session('aerobic_base', [{'role': 'z2', 'intensity': 'zone2'}],
+                                                     heart_rate='ignore')))
+    check('nothing prescribed either way: the modality family decides',
+          not hr_plan.tracks(session('max_strength', [{'role': 'x'}]))
+          and hr_plan.tracks(session('aerobic_base', [{'role': 'x'}])))
+    skipped = session('max_strength', warm_then_heavy['archetype']['slots'],
+                      [{'slot_role': 'main_lift', 'injury_skip': True}])
+    check('a heavy slot an injury removed prescribes nothing: the zoned work that remains is tracked',
+          hr_plan.tracks(skipped))
+
+    # The fixture's Monday made a zoned power session, matched to a workout
+    # with heart rate: it counts in the zones, not as max effort.
+    prog = fixture_program(weeks=3)
+    for wk in prog['weeks']:
+        mon = wk['schedule']['Monday'][0]
+        mon['modality'] = 'power'
+        mon['archetype'] = dict(mon.get('archetype') or {}, slots=ballistic['archetype']['slots'])
+    lift_with_hr = {'id': 'lift', 'date': '2026-03-02', 'durationMinutes': 45, 'activityType': 'strength',
+                    'heartRate': {'avg': 110, 'max': 150, 'samples': _hr_samples(110, 45, '2026-03-02T17:00:00+00:00')}}
+    ctx = _ctx(prog, {'1-Monday-0': _log('2026-03-02T18:00:00+00:00')}, [lift_with_hr],
+               [{'importedWorkoutId': 'lift', 'sessionKey': '1-Monday-0', 'matchConfidence': 'auto'}],
+               today=START + timedelta(days=7), profile={'dateOfBirth': '1990-06-15'})
+    r = run_primitive(E('split', 'zone_minutes', 'uphill_athlete', expected={'framework_field': 'intensity_distribution'}), ctx)
+    wk1 = r['weeks'][0]
+    check('the bucket split counts its heart rate, not max effort',
+          wk1['max_effort_pct'] == 0 and wk1['zone1_2_pct'] + wk1['zone3_pct'] + wk1['zone4_5_pct'] == 45, str(wk1))
+    zs = {z['zone']: z for z in intensity_mod.build(ctx)['zones']}
+    check('the zone rows carry its planned and recorded minutes',
+          sum(z['actualMinutes'] for z in zs.values()) == 45
+          and sum(z['plannedMinutes'] for z in zs.values()) == 45, str(zs))
+
+
 def test_unlocks_benchmarks_completion_and_errors() -> None:
     print('\nprimitives: unlocks / benchmark_level / session_completion / errors')
     prog = fixture_program(weeks=3)
@@ -1248,6 +1307,7 @@ if __name__ == '__main__':
     test_load_at_rpe()
     test_rounds_rate_hold_distance()
     test_duration_and_zones()
+    test_heart_rate_follows_the_programming()
     test_unlocks_benchmarks_completion_and_errors()
     test_sections()
     test_document()

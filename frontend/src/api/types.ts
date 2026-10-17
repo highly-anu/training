@@ -1035,6 +1035,23 @@ export interface WorkoutAnalysis {
   recoveryHours: number | null
   decoupling: { pct: number; label: 'efficient' | 'moderate' | 'high' } | null
   bestEfforts: { label: string; km: number; seconds: number; secPerKm: number }[]
+  /** What the matched session planned (src/analytics/hr_plan.py); null when
+   *  the workout is linked to no session. */
+  planned?: WorkoutPlanned | null
+}
+
+/** A session's heart-rate prescription, read from its programming. */
+export interface WorkoutPlanned {
+  /** Its programming prescribes heart-rate zones, so its heart rate counts. */
+  track: boolean
+  /** What decided: the archetype's `heart_rate`, its slots, or its modality. */
+  source: 'declared' | 'slots' | 'modality'
+  /** Z1–Z5, minutes. */
+  plannedMinutes: number[]
+  /** The slots that prescribe load or effort instead ("main: heavy"). */
+  notZoned: string[]
+  sessionName: string | null
+  modality: string | null
 }
 
 export interface SetPerformance {
@@ -1658,6 +1675,9 @@ export interface AnalyticsIntensity {
   byFramework: Array<{ frameworkId: string | null; classifiedMinutes: number; actualPct: Record<string, number | null>; plannedPct: Record<string, number> | null; deviationPts: Record<string, number> | null }>
   maxDeviationPts: number | null
   pct1rm?: { sessions: number; meanPct: number | null; rows: Array<{ week: number; exerciseId: string; pctOf1rm: number; targetPct: number | null }> }
+  /** Planned against recorded minutes per zone, over the completed sessions
+   *  whose programming prescribes heart-rate zones (src/analytics/hr_plan.py). */
+  zones?: Array<{ zone: string; label: string; plannedMinutes: number; actualMinutes: number }>
 }
 
 export interface AnalyticsMovement {

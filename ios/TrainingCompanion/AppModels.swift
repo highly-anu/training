@@ -569,6 +569,22 @@ struct WorkoutAnalysis: Codable, Equatable {
     let recoveryHours: Int?
     let decoupling: Decoupling?
     let bestEfforts: [Effort]
+    /// What the matched session planned (src/analytics/hr_plan.py): whether
+    /// its programming tracks heart rate, and the minutes it plans per zone.
+    /// Nil when the workout is linked to no session, or from an older server.
+    var planned: Planned? = nil
+
+    struct Planned: Codable, Equatable {
+        let track: Bool
+        /// declared | slots | modality — what decided.
+        let source: String?
+        /// Z1…Z5, minutes.
+        let plannedMinutes: [Double]
+        /// The slots that prescribe load or effort instead ("main: heavy").
+        let notZoned: [String]?
+        let sessionName: String?
+        let modality: String?
+    }
 
     /// The zone split as the charts take it.
     var distribution: HRZoneDistribution? {

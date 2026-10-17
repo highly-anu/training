@@ -1458,6 +1458,7 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `bio/PMCChart` | dual-axis line + bar (§12.7) | fixed 3-series |
 | `bio/SleepStageChart` | stacked bar (§12.6) | sleep-stage set |
 | `bio/HRZoneChart` | horizontal bar | zone ramp (§8.7) |
+| `bio/ZonePlanComparison` | planned outline + recorded fill per zone | zone ramp (§8.7) |
 | `bio/HRTrendChart`, `RHRTrendChart`, `HRVTrendChart` | sparkline-ish line (§12.4) | primary token |
 | `bio/WeeklyLoadChart`, `WeeklyZoneSummary` | bar / stacked bar | zone ramp |
 | `bio/ReadinessWidget` | radial + score (§8.8) | readiness set |
@@ -1478,6 +1479,14 @@ modality-coloured) and gone ones (struck through), and the loaded lifts' first
 is matched to its segment by position, because the calendar numbers weeks from
 1 while `week_number` may start later. iOS shows the same items
 (design-system §6.26).
+
+**Planned against recorded zones** (`bio/ZonePlanComparison.tsx`, no Recharts):
+the planned minutes are a zone-coloured outline, the recorded minutes a fill over
+it, "22/8 min" at the end of each row. The Analytics ▸ Program intensity split draws
+it from `intensity.zones` over the block; `PlannedZones` draws it on a workout's
+"Against the plan" section from `analysis.planned` (`src/analytics/hr_plan.py` — the
+session's programming decides whether its heart rate counts), or says in one line why
+the zones are for reference only. iOS draws the same (design-system §6.35).
 
 **Rule this inventory implies:** a chart's colors come from a *named system* (§8), not from the author's judgement at the call site. `WorkoutAnalytics` defines series colors inline and is the one place that breaks this — noted in the fix plan (FIX-6) as low priority, since the values it picks are correct today.
 

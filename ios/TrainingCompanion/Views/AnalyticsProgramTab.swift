@@ -313,7 +313,11 @@ private struct IntensityCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let coverage = intensity.coverage { CoverageNoticeView(coverage: coverage) }
                 if !intensity.zones.isEmpty {
-                    zoneComparison(intensity.zones)
+                    // Sessions whose programming prescribes zones; one that
+                    // prescribes load (a heavy day) counts as max effort.
+                    ZonePlanComparison(rows: intensity.zones.map {
+                        .init(zone: $0.zone, label: $0.label, planned: $0.plannedMinutes, recorded: $0.actualMinutes)
+                    })
                 } else if !intensity.weeks.isEmpty {
                     weeklyChart
                 }
@@ -323,58 +327,6 @@ private struct IntensityCard: View {
                         .accessibilityLabel("Working sets averaged \(AnalyticsProgramTab.number(mean)) percent of estimated 1RM across \(pct.sessions) logged lifts")
                 }
             }
-        }
-    }
-
-    /// One row per zone in minutes: what the completed sessions planned as an
-    /// outline, what their heart rate recorded filled over it, both against
-    /// the largest value so the longest bar spans the track.
-    private func zoneComparison(_ rows: [ProgramAnalytics.Intensity.Zone]) -> some View {
-        let top = max(rows.map { max($0.actualMinutes, $0.plannedMinutes) }.max() ?? 1, 1)
-        return VStack(alignment: .leading, spacing: 10) {
-            ForEach(rows) { row in
-                let color = HRZoneStyle.color(row.zone)
-                HStack(spacing: 8) {
-                    Text(row.label)
-                        .font(.caption).fontWeight(.medium)
-                        .frame(width: 64, alignment: .leading)
-                        .lineLimit(1)
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            if row.plannedMinutes > 0 {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(color, lineWidth: 1.5)
-                                    .frame(width: max(geo.size.width * row.plannedMinutes / top, 6))
-                            }
-                            if row.actualMinutes > 0 {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(color.opacity(0.85))
-                                    .frame(width: max(geo.size.width * row.actualMinutes / top, 4))
-                                    .padding(.vertical, 3)
-                            }
-                        }
-                    }
-                    .frame(height: 18)
-                    Text("\(AnalyticsProgramTab.number(row.actualMinutes))/\(AnalyticsProgramTab.number(row.plannedMinutes)) min")
-                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
-                        .frame(width: 72, alignment: .trailing)
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.label): \(AnalyticsProgramTab.number(row.actualMinutes)) minutes recorded, \(AnalyticsProgramTab.number(row.plannedMinutes)) planned")
-            }
-            HStack(spacing: 14) {
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 2).fill(Color.secondary).frame(width: 14, height: 8)
-                    Text("Recorded")
-                }
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 2).strokeBorder(Color.secondary, lineWidth: 1.5)
-                        .frame(width: 14, height: 10)
-                    Text("Planned")
-                }
-            }
-            .font(.caption2).foregroundStyle(.secondary)
-            .accessibilityHidden(true)
         }
     }
 

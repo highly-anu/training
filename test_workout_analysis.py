@@ -116,6 +116,41 @@ def test_route_attaches_analysis():
         api._health.get_workout, db.get_user_profile = orig
 
 
+def test_route_attaches_the_plan():
+    """The matched session's prescription rides beside the recorded zones:
+    planned minutes when its programming prescribes zones, why not when it
+    prescribes load; nothing when the workout is linked to no session."""
+    import api
+    import src.db as db
+    from src import program_history
+    stored = dict(FIXTURE['run'], id='w1', date='2026-10-17')
+    ballistic = {'modality': 'power', 'exercises': [], 'archetype': {'id': 'kb', 'slots': [
+        {'role': 'warmup', 'intensity': 'low', 'duration_minutes': 10},
+        {'role': 'main', 'intensity': 'high', 'duration_minutes': 20}]}}
+    heavy = {'modality': 'max_strength', 'exercises': [], 'archetype': {'id': 'ss', 'slots': [
+        {'role': 'primary_squat', 'intensity': 'heavy'}]}}
+    current = {'session': ballistic}
+    orig = (api._health.get_workout, db.get_user_profile, api._health.get_matches, program_history.session_lookup)
+    api._health.get_workout = lambda uid, wid: dict(stored) if wid == 'w1' else None
+    db.get_user_profile = lambda uid: _profile()
+    api._health.get_matches = lambda uid: [{'importedWorkoutId': 'w1', 'sessionUid': 'v:w0-Saturday-0',
+                                            'sessionKey': '1-Saturday-0', 'matchConfidence': 'manual'}]
+    program_history.session_lookup = lambda uid, uids: [{'session': current['session'],
+                                                         'archetype_name': 'KB Ballistic Power', 'date': '2026-10-17'}]
+    try:
+        client = api.app.test_client()
+        plan = client.get('/api/health/workouts/w1').get_json()['analysis']['planned']
+        assert plan['track'] and plan['plannedMinutes'] == [5.0, 5.0, 10.0, 10.0, 0.0], plan
+        assert plan['sessionName'] == 'KB Ballistic Power' and plan['sessionUid'] == 'v:w0-Saturday-0', plan
+        current['session'] = heavy
+        plan = client.get('/api/health/workouts/w1').get_json()['analysis']['planned']
+        assert not plan['track'] and plan['notZoned'] == ['primary_squat: heavy'], plan
+        api._health.get_matches = lambda uid: []
+        assert client.get('/api/health/workouts/w1').get_json()['analysis']['planned'] is None
+    finally:
+        api._health.get_workout, db.get_user_profile, api._health.get_matches, program_history.session_lookup = orig
+
+
 if __name__ == '__main__':
     test_matches_the_browser(); print('ok matches_the_browser')
     test_max_hr_and_edges_resolution(); print('ok max_hr_and_edges')
@@ -123,4 +158,5 @@ if __name__ == '__main__':
     test_best_efforts(); print('ok best_efforts')
     test_no_heart_rate(); print('ok no_heart_rate')
     test_route_attaches_analysis(); print('ok route')
+    test_route_attaches_the_plan(); print('ok route plan')
     print('all passed')

@@ -640,9 +640,23 @@ writes.
 - **The scorecard headline is a gate, not a weighted sum**: Σ priority ×
   completion is arithmetically plain compliance (priorities *are* the session
   shares). Committed-tier completion < 70% is `off_plan` regardless.
-- **A strength session contributes to `max_effort` whether or not it wore a
-  strap** — never to the HR buckets as well. Sessions with neither HR nor a
-  strength modality are `unclassified`, counted not dropped.
+- **The programming decides whether a session's heart rate counts**
+  (`src/analytics/hr_plan.py`, since 2026-10-17), never its modality family
+  alone. A session tracks HR when at least one slot's `intensity` names a zone
+  (`zone2`, `low`, `high` — `progression._INTENSITY_ZONES`) and none
+  prescribes load or effort (`heavy`, `max_effort`, `bodyweight`); an
+  archetype may say `heart_rate: track | ignore` outright; a session that
+  prescribes neither falls back to the family. A tracked session's minutes
+  go to the zone buckets and its zoned slots' minutes are what the intensity
+  split plans; an untracked one contributes to `max_effort` whether or not it
+  wore a strap — never to both. Under the family rule a Wildman ballistic
+  session (`power`, zones prescribed, a strap worn) vanished from the
+  per-zone minutes. Sessions with neither HR nor a strength modality are
+  `unclassified`, counted not dropped. `GET /health/workouts/<id>` adds
+  `analysis.planned` — the matched session's `hr_plan.plan` — and both
+  clients draw it against the recorded zones (web
+  `bio/ZonePlanComparison.tsx`, iOS `ZonePlanComparison.swift`). Fidelity's
+  planning-side split still uses the family rule (roadmap).
 - **Trend** is a least-squares slope over non-deload points (`trend.py`),
   ±1 %/point; stall for load is per *session*, over the package's declared
   window. A deload week — flagged, or a taper — is never a stall.

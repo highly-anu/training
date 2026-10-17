@@ -2,9 +2,10 @@
 
 `zone_minutes` is the intensity split — minutes in each framework bucket
 against the framework's declared `intensity_distribution`. A session
-contributes to the HR buckets **or**, when it is strength-family work with no
-strap, to `max_effort`; never both. Sessions with neither are `unclassified`
-and counted, not dropped.
+contributes to the HR buckets when its programming prescribes zones
+(src/analytics/hr_plan.py), **or**, when it prescribes load or effort (a
+heavy lifting day), to `max_effort`; never both. A session that tracks heart
+rate but recorded none is `unclassified` and counted, not dropped.
 
 `aerobic_efficiency` is the server twin of lib/hrZones.ts::computeAerobicDecoupling
 plus a metres-per-beat index, from GPS + HR of matched workouts, and only for
@@ -18,7 +19,7 @@ from datetime import datetime
 
 from src.analytics import trend as trend_mod
 from src.analytics import zones
-from src.analytics.families import is_strength
+from src.analytics import hr_plan
 from src.analytics.primitives import (coverage, max_hr_for, primitive, result, scoped_hits,
                                       series_point, trend_dict)
 
@@ -51,10 +52,12 @@ def zone_minutes(entry, ctx) -> dict:
         wk['sessions'] += 1
         minutes, _ = ctx.duration_minutes(h)
         w = h['workout']
-        # Strength-family work is max-effort by definition and is counted as
-        # such even when it wore a strap; otherwise a lifting session with HR
-        # would land in zone1_2 AND its minutes would be strength minutes.
-        if is_strength(h['session'].get('modality')):
+        # A session that prescribes load or effort rather than zones is
+        # max effort, even when it wore a strap; otherwise a lifting session
+        # with HR would land in zone1_2 AND its minutes would be strength
+        # minutes. One that prescribes zones counts its heart rate, whatever
+        # its modality family (a kettlebell ballistic session).
+        if not hr_plan.tracks(h['session']):
             wk['max_effort_pct'] += minutes
             measured += 1
             methods['strength_minutes'] = methods.get('strength_minutes', 0) + 1

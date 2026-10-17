@@ -1643,3 +1643,20 @@ the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
   Save off while it does not read; a test slot asks first for its standard's
   number. The web's `components/standards/SuggestionRow.tsx` is the same row.
 
+### 6.35 Zone Plan Comparison
+
+**Planned zone minutes are an outline, recorded ones fill over it.**
+`Views/ZonePlanComparison.swift`: `ZonePlanComparison(rows:)` draws one row per zone —
+label, a track with the planned minutes as a stroked outline and the recorded minutes as
+a fill in `HRZoneStyle.color` (§8), both against the largest value — and "22/8 min"
+(recorded/planned) at the trailing edge; a Recorded/Planned key under the rows. Zones
+with neither side are left out (`ZonePlanComparison.rows(planned:recorded:)` from the
+server's five-zone arrays). Analytics ▸ Program's intensity card draws it over the block
+(`intensity.zones`); `PlannedZonesView(analysis:)` draws it for one workout
+(`analysis.planned`, `src/analytics/hr_plan.py`) under "Planned for KB Ballistic Power"
+— on the workout screen's "Against the plan" section and in the Workout complete
+sheet's effort card (§6.30). When the session's programming prescribes load or effort
+instead of zones it says so in one line (the zones are shown for reference and not
+counted in the intensity split); a workout linked to no session shows nothing. The
+web's is `components/bio/ZonePlanComparison.tsx` (`lib/zonePlan.ts`).
+
