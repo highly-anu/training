@@ -20,7 +20,7 @@ struct SessionProgressView: View {
                                              ? .green : .secondary)
                             .font(.caption)
 
-                        Image(systemName: ModalityStyle.slotTypeIcon(for: ex.resolvedSlotType))
+                        Image(systemName: ModalityStyle.slotTypeIcon(for: ex.slotType))
                             .foregroundStyle(.secondary)
                             .font(.caption2)
 

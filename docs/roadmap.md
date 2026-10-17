@@ -868,10 +868,14 @@ branch:
    server, and keeps a known state while asking); Settings' watch row not redrawing.
    Seen on a paired simulator (No Program, no program in the dev database); the
    workout fixes not yet seen on a watch.
-2. **The phone relays the server's day (M).** `syncProgram` forwards
-   `today-session?date=&spec=1&week=1` as it is; the watch decodes it (a model in
-   `ios/Shared/`); the phone's own week/day maths, `inferSlotType` and load formatting go.
-   `not_started` / `program_expired` come from the server.
+2. **The phone relays the server's day (M) — done on `watch/relay-day`.** `syncProgram`
+   forwards `today-session?date=&spec=1&week=1` as it is (`WatchDayMessage`: compressed,
+   2.7 KB for a 20 KB day), the watch decodes `WatchDay` (in `WatchModels.swift`, which
+   both targets compile); the phone's week/day maths, slot-type guesses, load wording, its
+   own max HR and week list and its stored readiness copy are gone. The server adds
+   `maxHR` with `?spec=1`; meta blocks (a BJJ round) now reach the watch, logged by name
+   as on the Garmin; `not_started` says "Starts Mon 20 Oct". `data/watch_day_fixture.json`
+   is written by the route and decoded by `WatchDayTests`.
 3. **Spec rendering (M).** `gen_vocab.py` also writes `ios/Shared/WatchVocab.swift`; a
    Swift renderer switches exhaustively on it (a new id breaks the build until both watches
    draw it); the eight templates map onto today's views plus a round timer; behaviours

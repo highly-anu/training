@@ -51,9 +51,9 @@ struct SessionListView: View {
                             }
                         }
 
-                        // This Week section
-                        if !connectivity.weeklyOverview.isEmpty {
-                            thisWeekSection
+                        // The week: done of this week's sessions, and the days ahead
+                        if !connectivity.weekAhead.isEmpty {
+                            weekSection
                         }
                     }
                     .navigationTitle("Today")
@@ -77,57 +77,60 @@ struct SessionListView: View {
 
     // MARK: - Readiness Row
 
-    private func readinessRow(_ info: ReadinessInfo) -> some View {
+    private func readinessRow(_ info: WatchReadiness) -> some View {
         let color: Color
-        switch info.signal {
+        switch info.status {
         case "green":  color = .green
         case "yellow": color = .yellow
         default:       color = .red
         }
+        // The server's score, the one the phone's Today and the Garmin show.
         return HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text("Readiness")
+            Text("Readiness \(Int(info.score.rounded()))")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            if let hrv = info.hrv {
-                Text("HRV \(hrv)ms")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding(.vertical, 2)
     }
 
-    // MARK: - This Week Section
+    // MARK: - Week Section
 
-    private var thisWeekSection: some View {
-        let todayName: String = {
-            let names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-            return names[Calendar.current.component(.weekday, from: Date()) - 1]
-        }()
+    /// "Mon", or "Today" for the first day.
+    private func dayLabel(_ day: WatchDayAhead) -> String {
+        if day.offset == 0 { return "Today" }
+        let parse = DateFormatter(); parse.dateFormat = "yyyy-MM-dd"; parse.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = parse.date(from: day.date) else { return day.date }
+        let show = DateFormatter(); show.setLocalizedDateFormatFromTemplate("EEE")
+        return show.string(from: date)
+    }
 
-        return Section {
+    /// The server's week ahead (today and the six days after it, `days`),
+    /// under the count of this program week's sessions done. The phone used
+    /// to build a Monday-to-Sunday list of its own from the program.
+    private var weekSection: some View {
+        Section {
             if showThisWeek {
-                ForEach(connectivity.weeklyOverview, id: \.dayName) { day in
-                    let isToday = day.dayName == todayName
+                ForEach(connectivity.weekAhead) { day in
+                    let modalities = day.sessions.map(\.modalityId)
                     HStack(spacing: 8) {
-                        Text(String(day.dayName.prefix(3)))
+                        Text(dayLabel(day))
                             .font(.caption2)
-                            .fontWeight(isToday ? .bold : .regular)
-                            .foregroundStyle(isToday ? .blue : .secondary)
-                            .frame(width: 28, alignment: .leading)
-                        if day.sessionCount == 0 {
+                            .fontWeight(day.offset == 0 ? .bold : .regular)
+                            .foregroundStyle(day.offset == 0 ? .blue : .secondary)
+                            .frame(width: 40, alignment: .leading)
+                        if modalities.isEmpty {
                             Image(systemName: "battery.100.bolt")
                                 .font(.caption2)
                                 .foregroundStyle(.green)
                         } else {
                             HStack(spacing: 4) {
-                                ForEach(Array(day.modalityIds.prefix(2).enumerated()), id: \.element) { _, mod in
+                                ForEach(Array(modalities.prefix(2).enumerated()), id: \.offset) { _, mod in
                                     Circle()
                                         .fill(ModalityStyle.color(for: mod))
                                         .frame(width: 6, height: 6)
                                 }
-                                if let firstMod = day.modalityIds.first {
+                                if let firstMod = modalities.first {
                                     Image(systemName: ModalityStyle.icon(for: firstMod))
                                         .font(.caption2)
                                         .foregroundStyle(ModalityStyle.color(for: firstMod))
@@ -141,10 +144,10 @@ struct SessionListView: View {
         } header: {
             Button(action: { showThisWeek.toggle() }) {
                 HStack {
-                    Text("This Week")
+                    Text("Week")
                         .font(.caption)
                     Spacer()
-                    // Done of the week's sessions, any device — the server's count.
+                    // Done of this program week's sessions, any device — the server's count.
                     if let week = connectivity.weekDone {
                         Text("\(week.done)/\(week.sessions)")
                             .font(.caption2).monospacedDigit()

@@ -19,7 +19,8 @@ only exception.
 `GET /api/user/today-session?date=<watch's day>&spec=1&week=1` is what a watch reads
 (`api.today_session`, `encode_watch_session`, `_encode_watch_exercise`). The Garmin
 calls it with its `ciqdev_` token; the phone calls it for the Apple Watch and forwards
-it over WatchConnectivity.
+the body unchanged over WatchConnectivity (`WatchDayMessage`), and the watch decodes it
+(`WatchDay`). The phone keeps no day logic of its own.
 
 - A new feature starts as a payload key, pinned in `test_today_session.py` or
   `test_watch_spec.py`. `?spec=` only adds keys; a build that does not know one ignores it.
@@ -46,16 +47,18 @@ As of 2026-10-17. *Server* is the payload key; *—* means the server has no par
 
 | Feature | Server | Garmin | Apple Watch |
 |---|---|---|---|
-| Today's sessions | `sessions` | yes | built by the phone from `/user/program` — pending, 14.2 |
+| Today's sessions | `sessions` | yes | yes — the day relayed as it is |
 | Screens by template (package `watch.yaml`) | `screens`, `screen` | yes | by slot type — pending, 14.3 |
 | Done today, on any device | `completed` | yes | yes |
 | Last time per exercise | `last` | yes | yes |
 | Test step: best and the next level, Save results / Not a test | `standard` | yes | yes |
 | Week progress | `progress.week` | glance, Progress page | This Week count, complication ring |
 | Programme %, headline, trend | `progress.program`, `.headline` | Progress page | pending, 14.4 |
-| Week ahead | `days` (`week=1`) | Week menu | the phone's own week list — pending, 14.4 |
+| Week ahead | `days` (`week=1`) | Week menu | Week list on Today; its own screen — pending, 14.4 |
 | Tomorrow on a rest day | `tomorrow` | yes | pending, 14.4 |
-| Readiness | `readiness` | ring | dot with HRV (the phone's stored score) |
+| Readiness | `readiness` | ring | dot and score |
+| Program not started yet | `status`, `startsOn` | not checked | "Starts Mon 20 Oct" |
+| Max HR for the zone alerts | `maxHR` | — (the watch's own zones) | yes |
 | Sync failure in words | — | yes | unreachable vs. couldn't sync; the reason — pending, 14.4 |
 | Edit set before, next and after; pace | — | yes | reps/weight/RPE logger only — pending, 14.4 |
 | Metronome | `targetRpm` | yes | pending, 14.4 |
@@ -67,7 +70,7 @@ As of 2026-10-17. *Server* is the payload key; *—* means the server has no par
 
 | What | Server | Garmin | Apple Watch |
 |---|---|---|---|
-| Payload | `test_today_session.py`, `test_watch_spec.py`, `test_last_time.py` | — | — |
+| Payload | `test_today_session.py`, `test_watch_spec.py`, `test_last_time.py` | — | `WatchDayTests` on `data/watch_day_fixture.json` (route-written) and the demo sessions |
 | Generated files current | `test_watch_spec.py` (`gen_vocab --check`, `check_core_neutral`) | — | — |
 | Rendering | — | `garmin/core/test/*.mc` (`build.sh --test`, simulator open) | pending, 14.3 |
 | Upload shape | — | `WireTests.mc` | `WatchUploadTests` |

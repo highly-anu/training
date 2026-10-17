@@ -1,0 +1,627 @@
+{
+  "absoluteWeekNumber": 3,
+  "date": "2026-10-12",
+  "dayName": "Monday",
+  "days": [
+    {
+      "date": "2026-10-12",
+      "offset": 0,
+      "sessions": [
+        {
+          "archetypeCategory": null,
+          "archetypeId": "ss_a",
+          "archetypeName": "Strength A",
+          "completed": true,
+          "estimatedMinutes": 60,
+          "exercises": [
+            {
+              "bilateral": null,
+              "category": "barbell",
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": null,
+              "durationMinutes": null,
+              "emomFormat": null,
+              "exerciseId": "back_squat",
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": false,
+              "loadDescription": "3×5 @ 102.5 kg",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Back Squat",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": null,
+              "prescribedZoneUpper": null,
+              "reps": "5",
+              "repsPerRound": null,
+              "restSeconds": 180,
+              "rir": null,
+              "sets": 3,
+              "slotRole": "primary_squat",
+              "slotType": "sets_reps",
+              "targetRounds": null,
+              "targetRpe": 7.5,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": 102.5,
+              "workSec": null,
+              "zoneTarget": null
+            }
+          ],
+          "isDeload": false,
+          "modalityId": "max_strength",
+          "sessionId": "3-Monday-0"
+        },
+        {
+          "archetypeCategory": null,
+          "archetypeId": "bjj_class",
+          "archetypeName": "BJJ Class",
+          "completed": false,
+          "estimatedMinutes": 75,
+          "exercises": [
+            {
+              "bilateral": null,
+              "category": null,
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": null,
+              "durationMinutes": 5,
+              "emomFormat": null,
+              "exerciseId": null,
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": true,
+              "loadDescription": "5 min",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Positional Sparring",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": null,
+              "prescribedZoneUpper": null,
+              "reps": null,
+              "repsPerRound": null,
+              "restSeconds": 0,
+              "rir": null,
+              "sets": null,
+              "slotRole": "positional_sparring",
+              "slotType": "time_domain",
+              "targetRounds": 4,
+              "targetRpe": null,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": null,
+              "workSec": null,
+              "zoneTarget": null
+            },
+            {
+              "bilateral": null,
+              "category": "barbell",
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": null,
+              "durationMinutes": 22.5,
+              "emomFormat": null,
+              "exerciseId": "bike_easy",
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": false,
+              "loadDescription": "22.5 min — Zone 1–2 (conversational pace)",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Easy Bike",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": 1,
+              "prescribedZoneUpper": 2,
+              "reps": null,
+              "repsPerRound": null,
+              "restSeconds": 0,
+              "rir": null,
+              "sets": null,
+              "slotRole": "flush",
+              "slotType": "time_domain",
+              "targetRounds": null,
+              "targetRpe": null,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": null,
+              "workSec": null,
+              "zoneTarget": "Zone 1–2 (conversational pace)"
+            }
+          ],
+          "isDeload": false,
+          "modalityId": "combat_sport",
+          "sessionId": "3-Monday-1"
+        },
+        {
+          "archetypeCategory": null,
+          "archetypeId": "gj_row_test",
+          "archetypeName": "2 km Row Test",
+          "completed": false,
+          "estimatedMinutes": 30,
+          "exercises": [
+            {
+              "bilateral": null,
+              "category": "barbell",
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": 2000,
+              "durationMinutes": null,
+              "emomFormat": null,
+              "exerciseId": "rower",
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": false,
+              "loadDescription": "For time",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Rowing",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": null,
+              "prescribedZoneUpper": null,
+              "reps": null,
+              "repsPerRound": null,
+              "restSeconds": 0,
+              "rir": null,
+              "sets": null,
+              "slotRole": "test",
+              "slotType": "for_time",
+              "targetRounds": null,
+              "targetRpe": null,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": null,
+              "workSec": null,
+              "zoneTarget": null
+            }
+          ],
+          "isDeload": false,
+          "modalityId": "aerobic_base",
+          "sessionId": "3-Monday-2"
+        }
+      ],
+      "title": "Strength A +2"
+    },
+    {
+      "date": "2026-10-13",
+      "offset": 1,
+      "sessions": [],
+      "title": "Rest"
+    },
+    {
+      "date": "2026-10-14",
+      "offset": 2,
+      "sessions": [
+        {
+          "archetypeCategory": null,
+          "archetypeId": "easy_run",
+          "archetypeName": "Easy Run",
+          "completed": false,
+          "estimatedMinutes": 40,
+          "exercises": [
+            {
+              "bilateral": null,
+              "category": "barbell",
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": null,
+              "durationMinutes": 40,
+              "emomFormat": null,
+              "exerciseId": "run",
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": false,
+              "loadDescription": "40 min",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Run",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": 2,
+              "prescribedZoneUpper": 2,
+              "reps": null,
+              "repsPerRound": null,
+              "restSeconds": 0,
+              "rir": null,
+              "sets": null,
+              "slotRole": "main",
+              "slotType": "time_domain",
+              "targetRounds": null,
+              "targetRpe": null,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": null,
+              "workSec": null,
+              "zoneTarget": null
+            }
+          ],
+          "isDeload": false,
+          "modalityId": "aerobic_base",
+          "sessionId": "3-Wednesday-0"
+        }
+      ],
+      "title": "Easy Run"
+    },
+    {
+      "date": "2026-10-15",
+      "offset": 3,
+      "sessions": [],
+      "title": "Rest"
+    },
+    {
+      "date": "2026-10-16",
+      "offset": 4,
+      "sessions": [],
+      "title": "Rest"
+    },
+    {
+      "date": "2026-10-17",
+      "offset": 5,
+      "sessions": [],
+      "title": "Rest"
+    },
+    {
+      "date": "2026-10-18",
+      "offset": 6,
+      "sessions": [],
+      "title": "Rest"
+    }
+  ],
+  "isRestDay": false,
+  "maxHR": 186,
+  "phase": "build",
+  "progress": {
+    "headline": {
+      "label": "Load on the bar",
+      "status": "on_track",
+      "text": "Back squat 102.5kg",
+      "trendText": null
+    },
+    "program": {
+      "done": 1,
+      "due": 3,
+      "pct": 33
+    },
+    "week": {
+      "done": 1,
+      "due": 3,
+      "number": 1,
+      "of": 1,
+      "sessions": 4
+    }
+  },
+  "readiness": {
+    "components": {
+      "fatigue": 6,
+      "hrv": 22,
+      "rhr": 30,
+      "sleep": 8,
+      "tsb": 6
+    },
+    "flags": [],
+    "score": 72,
+    "status": "green"
+  },
+  "sessions": [
+    {
+      "archetypeCategory": null,
+      "archetypeId": "ss_a",
+      "archetypeName": "Strength A",
+      "completed": true,
+      "estimatedMinutes": 60,
+      "exercises": [
+        {
+          "bilateral": null,
+          "category": "barbell",
+          "coachingCue": null,
+          "distanceKm": null,
+          "distanceM": null,
+          "durationMinutes": null,
+          "emomFormat": null,
+          "exerciseId": "back_squat",
+          "focus": null,
+          "holdSeconds": null,
+          "intervalRestSec": null,
+          "isMeta": false,
+          "last": "100kg × 5",
+          "loadDescription": "3×5 @ 102.5 kg",
+          "loadNote": null,
+          "movementPattern": null,
+          "name": "Back Squat",
+          "packLoadKg": null,
+          "parentSlotRole": null,
+          "prescribedZoneLower": null,
+          "prescribedZoneUpper": null,
+          "reps": "5",
+          "repsPerRound": null,
+          "restSeconds": 180,
+          "rir": null,
+          "screen": "s0",
+          "sets": 3,
+          "slotRole": "primary_squat",
+          "slotType": "sets_reps",
+          "targetRounds": null,
+          "targetRpe": 7.5,
+          "targetRpm": null,
+          "timeMinutes": null,
+          "weightKg": 102.5,
+          "workSec": null,
+          "zoneTarget": null
+        }
+      ],
+      "isDeload": false,
+      "modalityId": "max_strength",
+      "packageId": null,
+      "screens": {
+        "s0": {
+          "a": "reps",
+          "b": "rpe_or_set",
+          "gauge": "set",
+          "lap": "complete_set",
+          "lines": "last_then_next",
+          "template": "sets",
+          "title": [
+            "name",
+            "side",
+            "load"
+          ]
+        }
+      },
+      "sessionId": "3-Monday-0",
+      "watch": {
+        "accent": null,
+        "edit": {
+          "weight_step_by_category": {
+            "kettlebell": 4.0
+          },
+          "weight_step_kg": 2.5
+        },
+        "label": null,
+        "summary": {
+          "pages": [
+            "summary",
+            "heart_rate",
+            "training_effect",
+            "exercises"
+          ]
+        }
+      }
+    },
+    {
+      "archetypeCategory": null,
+      "archetypeId": "bjj_class",
+      "archetypeName": "BJJ Class",
+      "completed": false,
+      "estimatedMinutes": 75,
+      "exercises": [
+        {
+          "bilateral": null,
+          "category": null,
+          "coachingCue": null,
+          "distanceKm": null,
+          "distanceM": null,
+          "durationMinutes": 5,
+          "emomFormat": null,
+          "exerciseId": null,
+          "focus": null,
+          "holdSeconds": null,
+          "intervalRestSec": null,
+          "isMeta": true,
+          "loadDescription": "5 min",
+          "loadNote": null,
+          "movementPattern": null,
+          "name": "Positional Sparring",
+          "packLoadKg": null,
+          "parentSlotRole": null,
+          "prescribedZoneLower": null,
+          "prescribedZoneUpper": null,
+          "reps": null,
+          "repsPerRound": null,
+          "restSeconds": 0,
+          "rir": null,
+          "screen": "s0",
+          "sets": null,
+          "slotRole": "positional_sparring",
+          "slotType": "time_domain",
+          "targetRounds": 4,
+          "targetRpe": null,
+          "targetRpm": null,
+          "timeMinutes": null,
+          "weightKg": null,
+          "workSec": null,
+          "zoneTarget": null
+        },
+        {
+          "bilateral": null,
+          "category": "barbell",
+          "coachingCue": null,
+          "distanceKm": null,
+          "distanceM": null,
+          "durationMinutes": 22.5,
+          "emomFormat": null,
+          "exerciseId": "bike_easy",
+          "focus": null,
+          "holdSeconds": null,
+          "intervalRestSec": null,
+          "isMeta": false,
+          "loadDescription": "22.5 min — Zone 1–2 (conversational pace)",
+          "loadNote": null,
+          "movementPattern": null,
+          "name": "Easy Bike",
+          "packLoadKg": null,
+          "parentSlotRole": null,
+          "prescribedZoneLower": 1,
+          "prescribedZoneUpper": 2,
+          "reps": null,
+          "repsPerRound": null,
+          "restSeconds": 0,
+          "rir": null,
+          "screen": "s0",
+          "sets": null,
+          "slotRole": "flush",
+          "slotType": "time_domain",
+          "targetRounds": null,
+          "targetRpe": null,
+          "targetRpm": null,
+          "timeMinutes": null,
+          "weightKg": null,
+          "workSec": null,
+          "zoneTarget": "Zone 1–2 (conversational pace)"
+        }
+      ],
+      "isDeload": false,
+      "modalityId": "combat_sport",
+      "packageId": "bjj",
+      "screens": {
+        "s0": {
+          "a": "block_left",
+          "b": "rounds",
+          "gauge": "block_left",
+          "lap": "log_round",
+          "lines": "next_step",
+          "template": "round_timer",
+          "title": [
+            "name"
+          ]
+        }
+      },
+      "sessionId": "3-Monday-1",
+      "watch": {
+        "accent": null,
+        "edit": {
+          "weight_step_by_category": {
+            "kettlebell": 4.0
+          },
+          "weight_step_kg": 2.5
+        },
+        "label": "BJJ / Brazilian Jiu-Jitsu (Combat Sport Modality)",
+        "summary": {
+          "pages": [
+            "summary",
+            "heart_rate",
+            "training_effect",
+            "exercises"
+          ]
+        }
+      }
+    },
+    {
+      "archetypeCategory": null,
+      "archetypeId": "gj_row_test",
+      "archetypeName": "2 km Row Test",
+      "completed": false,
+      "estimatedMinutes": 30,
+      "exercises": [
+        {
+          "bilateral": null,
+          "category": "barbell",
+          "coachingCue": null,
+          "distanceKm": null,
+          "distanceM": 2000,
+          "durationMinutes": null,
+          "emomFormat": null,
+          "exerciseId": "rower",
+          "focus": null,
+          "holdSeconds": null,
+          "intervalRestSec": null,
+          "isMeta": false,
+          "loadDescription": "For time",
+          "loadNote": null,
+          "movementPattern": null,
+          "name": "Rowing",
+          "packLoadKg": null,
+          "parentSlotRole": null,
+          "prescribedZoneLower": null,
+          "prescribedZoneUpper": null,
+          "reps": null,
+          "repsPerRound": null,
+          "restSeconds": 0,
+          "rir": null,
+          "screen": "s1",
+          "sets": null,
+          "slotRole": "test",
+          "slotType": "for_time",
+          "standard": {
+            "best": "7:48",
+            "id": "row_2km_minutes",
+            "name": "2km Row",
+            "result": "duration",
+            "target": "7:00 for advanced"
+          },
+          "targetRounds": null,
+          "targetRpe": null,
+          "targetRpm": null,
+          "timeMinutes": null,
+          "weightKg": null,
+          "workSec": null,
+          "zoneTarget": null
+        }
+      ],
+      "isDeload": false,
+      "modalityId": "aerobic_base",
+      "packageId": null,
+      "screens": {
+        "s0": {
+          "a": "rounds_of_target",
+          "b": "elapsed",
+          "gauge": "rounds_of_target",
+          "lap": "log_round",
+          "lines": "next_step",
+          "template": "for_time",
+          "title": [
+            "name",
+            "load"
+          ]
+        },
+        "s1": {
+          "a": "rounds_of_target",
+          "b": "elapsed",
+          "gauge": "rounds_of_target",
+          "lap": "log_round",
+          "lines": "standard_target",
+          "template": "for_time",
+          "title": [
+            "name",
+            "load"
+          ]
+        }
+      },
+      "sessionId": "3-Monday-2",
+      "watch": {
+        "accent": null,
+        "edit": {
+          "weight_step_by_category": {
+            "kettlebell": 4.0
+          },
+          "weight_step_kg": 2.5
+        },
+        "label": null,
+        "summary": {
+          "pages": [
+            "summary",
+            "heart_rate",
+            "training_effect",
+            "exercises"
+          ]
+        }
+      }
+    }
+  ],
+  "specVersion": 1,
+  "status": "ok",
+  "tomorrow": {
+    "dayName": "Tuesday",
+    "sessionCount": 0
+  },
+  "totalWeeks": 1,
+  "weekNumber": 1
+}

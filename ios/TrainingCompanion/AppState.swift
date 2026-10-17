@@ -828,7 +828,6 @@ final class AppState: ObservableObject {
         do {
             let result = try await api.fetchReadiness()
             readinessResult = result
-            ReadinessInfo.storeForWatch(result)
             writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
