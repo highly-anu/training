@@ -387,6 +387,7 @@ private struct SeriesBlocksView: View {
                     Label(number(row.best), systemImage: "trophy")
                     Label("\(row.sessions)", systemImage: "list.bullet")
                 }
+                .labelStyle(.inline)
                 .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
             }
             .padding(.vertical, 2)

@@ -93,7 +93,7 @@ private struct ProgramHistoryRow: View {
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
-            .labelStyle(.titleAndIcon)
+            .labelStyle(.inline)
         }
         .padding(.vertical, 2)
     }
