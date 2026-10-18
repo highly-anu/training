@@ -72,7 +72,7 @@ struct ReadinessDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Readiness")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["readiness"]) }
     }
 
     /// A part: its name, points of its maximum, and a bar of the share.
@@ -84,7 +84,9 @@ struct ReadinessDetailView: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color(.systemFill))
-                    Capsule().fill(result.statusColor)
+                    // One colour for every part: the score's status colour
+                    // made "Session fatigue 1/10" a green bar.
+                    Capsule().fill(Color.accentColor)
                         .frame(width: geo.size.width * CGFloat(part.points) / CGFloat(max(part.max, 1)))
                 }
             }

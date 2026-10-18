@@ -900,9 +900,13 @@ final class AppState: ObservableObject {
         benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
     }
 
-    func loadAnalyticsTermsIfNeeded() async {
-        guard let api, analyticsTerms.isEmpty else { return }
-        analyticsTerms = (try? await api.fetchAnalyticsTerms()) ?? [:]
+    /// Fetched once, and again when a screen asks for a term this copy lacks
+    /// — one the server added after the first fetch (a deploy while the app
+    /// was open) would otherwise stay missing until a relaunch. A failed
+    /// fetch keeps what there was.
+    func loadAnalyticsTermsIfNeeded(_ ids: [String] = []) async {
+        guard let api, analyticsTerms.isEmpty || ids.contains(where: { analyticsTerms[$0] == nil }) else { return }
+        if let terms = try? await api.fetchAnalyticsTerms(), !terms.isEmpty { analyticsTerms = terms }
     }
 
     func loadPhilosophiesIfNeeded() async {
