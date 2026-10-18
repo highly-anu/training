@@ -821,6 +821,16 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   the Apple Watch's completion screen has the same choice. The answer rides in the
   session log as `standardResults` (src/standard_results.py), so it travels with a
   buffered upload.
+- **Cues come from the package, in the load** (since 2026-10-18). A slot's
+  `switch_at_sec` (a hand switch so many seconds into the work) and an interval
+  slot's `rest_until_hr_pct` (its rest ends once HR is under that share of max HR;
+  `rest_sec` is the cap) are copied into the load by `progression.watch_cues`, since
+  the slot does not survive storage; an exercise's `bells: 2` marks a double.
+  `_encode_watch_exercise` sends `switchAtSec`, `restUntilHr` in bpm (the athlete's
+  `_get_user_max_hr`) and `bells`, each only where it applies. Both watches switch
+  hands in a timed block and in an interval's work, and end a gated rest after 5 s
+  under the target (Garmin `WorkoutController.updateIntervalTiming`, Apple Watch
+  `WatchCues`); neither guesses bells from an exercise id.
 - **The watch asks for its own day.** It sends `date=` (its local date) with
   `week=1`; the server's own date is UTC. `week=1` adds `days` (today and the
   six after it, inside the program, no screen specs) for the Week menu; the

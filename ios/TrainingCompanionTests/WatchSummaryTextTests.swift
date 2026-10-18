@@ -29,7 +29,7 @@ final class WatchSummaryTextTests: XCTestCase {
 
     func testSetsVolumeAndWhatEachStepLogged() throws {
         let squat = try ex(#"{"exerciseId": "back_squat", "name": "Back Squat", "slotType": "sets_reps", "weightKg": 100}"#)
-        let press = try ex(#"{"exerciseId": "double_kb_press", "name": "Double KB Press", "slotType": "sets_reps", "category": "kettlebell", "weightKg": 24}"#)
+        let press = try ex(#"{"exerciseId": "double_kb_press", "name": "Double KB Press", "slotType": "sets_reps", "category": "kettlebell", "bells": 2, "weightKg": 24}"#)
         let plank = try ex(#"{"exerciseId": "plank", "name": "Plank", "slotType": "static_hold"}"#)
         let cindy = try ex(#"{"exerciseId": "cindy", "name": "Cindy", "slotType": "amrap", "slotRole": "metcon", "timeMinutes": 20}"#)
         let pull = try ex(#"{"exerciseId": "pull_up", "name": "Pull-up", "slotType": "amrap_movement", "parentSlotRole": "metcon"}"#)

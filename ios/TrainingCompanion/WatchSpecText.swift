@@ -431,13 +431,10 @@ enum WatchSpecText {
         ex.targetRpm ?? screen.behaviours.metronomeRpm
     }
 
-    /// Bells held at once: the payload's, else 2 for a kettlebell id that
-    /// says double (kb_press_double, double_kb_press).
+    /// Bells held at once: 2 for a double (the exercise's `bells`, sent by
+    /// the server), else 1.
     static func bells(_ ex: WatchExercise) -> Int {
-        if let b = ex.bells { return b }
-        guard ex.category == "kettlebell" else { return 1 }
-        let id = ex.exerciseId
-        return (id.hasPrefix("double_") || id.hasSuffix("_double")) ? 2 : 1
+        ex.bells ?? 1
     }
 
     /// "2x24" for a double, else "24": weights are per bell.

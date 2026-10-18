@@ -15,9 +15,15 @@ slots:
     intensity: zone1
     exercise_filter:
       category: aerobic
+  # Each repeat starts once the heart rate is back to ~125 bpm (66 % of a 190
+  # max; the server sends the athlete's own number), the walk down capped at
+  # 1:1.5: at most 30 minutes.
   - role: main_intervals
-    slot_type: time_domain
-    duration_minutes: 30
+    slot_type: emom
+    sets: 6
+    work_sec: 120
+    rest_sec: 180
+    rest_until_hr_pct: 66
     intensity: zone4_5
     exercise_filter:
       category: aerobic

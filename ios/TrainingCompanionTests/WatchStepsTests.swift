@@ -70,7 +70,7 @@ final class WatchStepsTests: XCTestCase {
             let e = try ex(json)
             return WatchSteps.preview(e, s.screen(for: e))
         }
-        XCTAssertEqual(try preview(#"{"exerciseId": "double_kb_press", "name": "Press", "slotType": "sets_reps", "category": "kettlebell", "reps": "5", "weightKg": 24}"#),
+        XCTAssertEqual(try preview(#"{"exerciseId": "double_kb_press", "name": "Press", "slotType": "sets_reps", "category": "kettlebell", "bells": 2, "reps": "5", "weightKg": 24}"#),
                        "5 Reps @ 48 kg", "a double reads as the total in the Next line")
         XCTAssertEqual(try preview(#"{"exerciseId": "plank", "name": "Plank", "slotType": "static_hold", "holdSeconds": 45}"#), "Hold :45")
         XCTAssertEqual(try preview(#"{"exerciseId": "swing", "name": "Swing", "slotType": "emom", "targetRounds": 8, "workSec": 20, "intervalRestSec": 10}"#),
@@ -80,5 +80,31 @@ final class WatchStepsTests: XCTestCase {
         XCTAssertEqual(try preview(#"{"exerciseId": "ruck", "name": "Ruck", "slotType": "distance", "distanceKm": 8, "packLoadKg": 20}"#), "8 km  pack 20 kg")
         XCTAssertEqual(try preview(#"{"exerciseId": "carry", "name": "Carry", "slotType": "distance", "distanceM": 40, "weightKg": 32}"#), "40 m @ 32 kg")
         XCTAssertEqual(try preview(#"{"exerciseId": "bike", "name": "Bike", "slotType": "time_domain", "durationMinutes": 30, "prescribedZoneLower": 2}"#), "30:00  Z2")
+    }
+
+    /// The cues the clocks fire (WatchCues), as the Garmin's
+    /// updateIntervalTiming: the hand switch at its second of the work, and a
+    /// rest that ends once the heart rate has stayed under its target for 5 s.
+    func testTheHandSwitchAndTheHeartRateGate() throws {
+        let event = try ex(#"{"exerciseId": "wk_kb_half_snatch", "name": "Half Snatch", "slotType": "time_domain", "durationMinutes": 6, "switchAtSec": 180}"#)
+        XCTAssertEqual((1...360).filter { WatchCues.switchDue(event, workSecond: $0) }, [180],
+                       "one switch, at 3:00 of the work")
+        XCTAssertFalse(WatchCues.switchDue(try squat(), workSecond: 180), "no switch without switchAtSec")
+
+        var gate = WatchCues.RestGate()
+        let readings: [Int?] = [140, 128, 127, nil, 126, 125, 124, 123, 122]
+        let over = readings.map { gate.tick(heartRate: $0, target: 129) }
+        XCTAssertEqual(over, [false, false, false, false, false, false, false, false, true],
+                       "five seconds under in a row; a lost reading starts the count again")
+        var noStrap = WatchCues.RestGate()
+        XCTAssertFalse((0..<120).contains { _ in noStrap.tick(heartRate: 0, target: 129) },
+                       "without a heart rate the rest runs to its cap")
+    }
+
+    func testAnHRGatedIntervalIsPreviewedWithItsZone() throws {
+        let swing = try ex(#"{"exerciseId": "wk_kb_half_snatch", "name": "Half Snatch", "slotType": "emom", "targetRounds": 20, "workSec": 15, "intervalRestSec": 90, "restUntilHr": 126, "prescribedZoneLower": 1, "prescribedZoneUpper": 2}"#)
+        let s = session([swing])
+        XCTAssertEqual(WatchSteps.preview(swing, s.screen(for: swing)), "20 x 0:15  Z1-2",
+                       "as the Garmin's Steps list: the work and its zone")
     }
 }

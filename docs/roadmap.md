@@ -592,10 +592,9 @@ products and `test_watch_spec.py` passes. Still to do:
    untyped `{}`). First run 2026-10-18 on `watch/spec-render`: 13 tests, all passed, among
    them `specFixturesDrawEveryCase` (the 28 cases the Apple Watch's `WatchSpecTests` run).
    `monkeydo -t` exits 1 even when all pass; read its RESULTS table.
-3. **Server fields still demo-only (M).** `targetRpm`, `switchAtSec`,
-   `restUntilHr` and `bells` exist only in the demo JSON (and `bells` as an id
-   heuristic on the watch). They belong on archetype slots and in
-   `_encode_watch_exercise`.
+3. **Server fields — done 2026-10-18 (item 14.5).** `targetRpm` came from the
+   exercise's IKMF cap (#102); `switchAtSec`, `restUntilHr` and `bells` now do
+   too — from archetype slots and exercises.yaml, through `_encode_watch_exercise`.
 4. **Split `WorkoutController` (M).** Still 1,300 lines; the plan was
    Recorder / HrStore / GpsTrack / StepClock / SetLog / Upload behind the same
    facade. Not needed for packages to own their screens, so it was left for
@@ -919,12 +918,24 @@ branch:
      time per zone), exercises ("3x5 @ 100"); training effect stays the Garmin's
      (`WatchSummaryText`, shared, tested). Not yet: editing the plan before the start, pace
      edit.
-5. **Server fields both use (M; 6.3).** `switchAtSec`, `restUntilHr` and `bells` onto
-   archetype slots and `_encode_watch_exercise`; the Apple Watch's "still recovering"
-   becomes `restUntilHr`.
+5. **Server fields both use (M; 6.3) — done on `watch/server-fields`.** A slot's
+   `switch_at_sec` and an interval slot's `rest_until_hr_pct` ride in the load
+   (`progression.watch_cues`, also for a test's as-written load); an exercise's `bells: 2`
+   marks a double. `_encode_watch_exercise` sends `switchAtSec`, `restUntilHr` — the share
+   of the athlete's max HR in bpm — and `bells`, each only where it applies (the library's
+   `bells` for a program stored before the field). The packages that prescribe them now
+   use them: Wildman's anti-glycolytic practice is 20 × 15 s with each rest ending under
+   68 % of max HR (~130 at 190; 90 s cap), Uphill's VO2max hill repeats 6 × 2 min with the
+   walk down ending under 66 % (3 min cap) — both planning the minutes their timed blocks
+   did, and an HR-gated interval's load carries its zone — and the pentathlon test's five
+   events cue a hand switch at 3:00. Both watches switch hands in a timed block as well as
+   an interval's work (the Garmin from 1.7.0; the timed title shows Left/Right), end the
+   rest 5 s under the target (the Apple Watch through `WatchCues`), and read `bells` only
+   from the payload, the id guess gone. The Apple Watch's "still recovering" guess on a
+   set's rest is gone: neither watch gates a set's rest.
 
-Also: `garmin/VERSION` read by `build.sh --release`, with a `ciq-v<VERSION>` tag, so both
-watches' releases can be compared.
+   `garmin/VERSION` (1.7.0) is read by `build.sh --release` and `--demo`, which print the
+   version for the store form and the `ciq-v<VERSION>` tag.
 
 ## Later
 

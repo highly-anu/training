@@ -47,9 +47,9 @@
       "defaults": { "title": ["name", "load", "pack"], "a": "distance", "b": "distance_target", "lines": "next_step", "lap": "log_round" }
     },
     "timed": {
-      "doc": "A block held for a time, often in a zone; counts down and ends itself.",
+      "doc": "A block held for a time, often in a zone; counts down and ends itself, switching hands at switchAtSec.",
       "actions": ["skip", "next_side"],
-      "defaults": { "title": ["name", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
+      "defaults": { "title": ["name", "switch_side", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
     },
     "round_timer": {
       "doc": "A named block with no exercise content (a class): LAP counts rounds.",
@@ -85,7 +85,7 @@
     "name": "The exercise (or block) name.",
     "load": "The working weight, per bell on a double.",
     "side": "Left or Right while the step is side-tracked (the side_tracked behaviour or a unilateral exercise).",
-    "switch_side": "Left or Right on a set with a hand switch (switchAtSec).",
+    "switch_side": "Left or Right on a block with a hand switch (switchAtSec): a timed block's or each interval's work.",
     "wave_pct": "The round's % of the load_wave behaviour.",
     "zone_or_load": "The HR zone, else the load.",
     "pack": "The pack load on a ruck."

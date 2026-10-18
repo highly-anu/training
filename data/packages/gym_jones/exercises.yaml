@@ -2275,6 +2275,7 @@ exercises:
 - id: kb_farmer_carry_double
   name: Kettlebell Farmer Carry (Double)
   category: kettlebell
+  bells: 2
   modality:
   - durability
   - strength_endurance

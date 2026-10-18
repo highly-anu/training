@@ -3008,8 +3008,14 @@ def _parse_zone_range(zone_target):
     return lower, upper
 
 
-def _fmt_watch_load(slot_type: str, load: dict) -> str:
+def _watch_mmss(sec) -> str:
+    return f'{int(sec) // 60}:{int(sec) % 60:02d}'
+
+
+def _fmt_watch_load(slot_type: str, load: dict, rest_until_hr: int | None = None) -> str:
     sets = _pick(load, 'sets')
+    sw = _pick(load, 'switch_at_sec', 'switchAtSec')
+    switch = f', switch at {_watch_mmss(sw)}' if sw else ''
     reps = _pick(load, 'reps')
     reps_s = str(reps) if reps is not None else '?'
     if slot_type == 'sets_reps':
@@ -3025,7 +3031,7 @@ def _fmt_watch_load(slot_type: str, load: dict) -> str:
         mins = _pick(load, 'duration_minutes', 'durationMinutes')
         zt = _pick(load, 'zone_target', 'zoneTarget')
         if mins is not None:
-            return f'{mins} min' + (f' — {zt}' if zt else '')
+            return f'{mins} min{switch}' + (f' — {zt}' if zt else '')
         return 'Duration TBD'
     if slot_type == 'emom':
         mins = _pick(load, 'time_minutes', 'timeMinutes')
@@ -3033,9 +3039,12 @@ def _fmt_watch_load(slot_type: str, load: dict) -> str:
         work = _pick(load, 'work_sec', 'workSec')
         rest = _pick(load, 'rest_sec', 'restSec')
         if rounds is not None and work:
-            # e.g. "8 x 20s/10s" (Tabata) or "10 x 60s" (EMOM strength)
+            # e.g. "8 x 20s/10s" (Tabata), "10 x 60s" (EMOM strength) or
+            # "20 x 15s, rest to HR 129" (a rest that ends on heart rate)
+            if rest and rest_until_hr:
+                return f'{rounds} x {work}s, rest to HR {rest_until_hr}{switch}'
             span = f'{work}s/{rest}s' if rest else f'{work}s'
-            return f'{rounds} x {span}'
+            return f'{rounds} x {span}{switch}'
         if mins is not None and rounds is not None:
             return f'{mins} min / {rounds} rounds'
         return _pick(load, 'format') or 'EMOM'
@@ -3070,13 +3079,43 @@ def _humanize_role(role: str) -> str:
     return (role or 'Block').replace('_', ' ').title()
 
 
-def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
+_EXERCISE_BELLS: dict | None = None
+
+
+def _exercise_bells() -> dict:
+    """{exercise id: bells} for the double-bell exercises (exercises.yaml
+    `bells`), read once. A program stored before the field keeps its own copy
+    of each exercise, so the watch reads the library's."""
+    global _EXERCISE_BELLS
+    if _EXERCISE_BELLS is None:
+        index, _ = loader.load_all_exercises()
+        _EXERCISE_BELLS = {i: e['bells'] for i, e in index.items() if e.get('bells')}
+    return _EXERCISE_BELLS
+
+
+def _rest_until_hr(load: dict, max_hr: int | None) -> int | None:
+    """An HR-gated rest's heart rate in bpm: the slot's share of the athlete's
+    max HR (`rest_until_hr_pct`, progression.watch_cues), the shared default
+    max HR when the athlete's is not known."""
+    pct = _pick(load, 'rest_until_hr_pct', 'restUntilHrPct')
+    if not pct:
+        return None
+    if not max_hr:
+        from src.analytics import zones as _zones
+        max_hr = _zones.default_max_hr()
+    return int(round(max_hr * float(pct) / 100))
+
+
+def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -> dict | None:
     """Project one exercise assignment into the compact watch shape.
 
     Slots flagged `skip_exercise` (BJJ drilling/rolling rounds, circuit round
     wrappers) resolve to no exercise at all. Returning None for those meant a
     whole bjj_class session arrived at the watch as an empty exercise list, so
     they are projected as named meta blocks instead.
+
+    `bells`, `switchAtSec` and `restUntilHr` are sent only when they apply —
+    the Garmin parses the whole day in a small heap.
     """
     ex = ea.get('exercise')
     if ea.get('injury_skip') or ea.get('injurySkip'):
@@ -3101,14 +3140,15 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
     reps = _pick(load, 'reps')
     slot_role = _pick(ea, 'slot_role', 'slotRole') or ''
     patterns = ex.get('movement_patterns') or []
+    gate = _rest_until_hr(load, max_hr)
 
-    return {
+    out = {
         'exerciseId': ex.get('id'),
         'name': ex.get('name') or _humanize_role(slot_role),
         'slotType': slot_type,
         'slotRole': slot_role,
         'isMeta': is_meta,
-        'loadDescription': _fmt_watch_load(slot_type, load),
+        'loadDescription': _fmt_watch_load(slot_type, load, rest_until_hr=gate),
         'loadNote': _pick(ea, 'load_note', 'loadNote'),
         'coachingCue': _pick(ea, 'notes') or ex.get('notes'),
         # Identity — drives the movement-pattern icon and side alternation.
@@ -3145,11 +3185,24 @@ def _encode_watch_exercise(ea: dict, modality: str) -> dict | None:
         # into the compact `standard` with `?spec=1` and drops it otherwise.
         '_standard': ea.get('standard'),
     }
+    # Bells held at once (2 for a double; the weight is one bell's), a hand
+    # switch so many seconds into the work, and an interval rest that ends
+    # once heart rate is under this bpm (rest_sec is then its cap).
+    bells = ex.get('bells') or (_exercise_bells().get(ex.get('id')) if ex.get('id') else None)
+    if bells and bells != 1:
+        out['bells'] = bells
+    sw = _pick(load, 'switch_at_sec', 'switchAtSec')
+    if sw:
+        out['switchAtSec'] = sw
+    if gate:
+        out['restUntilHr'] = gate
+    return out
 
 
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
                          spec_level: int = 0, last: dict | None = None,
-                         results: dict | None = None, sex: str = 'male') -> dict:
+                         results: dict | None = None, sex: str = 'male',
+                         max_hr: int | None = None) -> dict:
     """One stored session in the watch's shape.
 
     With spec_level >= 1 the session also says which package owns it and
@@ -3167,7 +3220,7 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     """
     modality = s.get('modality') or ''
     archetype = s.get('archetype') or {}
-    exercises = [e for e in (_encode_watch_exercise(ea, modality)
+    exercises = [e for e in (_encode_watch_exercise(ea, modality, max_hr)
                              for ea in (s.get('exercises') or [])) if e is not None]
     refs = [e.pop('_standard', None) for e in exercises]
     out = {
@@ -3378,6 +3431,14 @@ def get_today_session():
         except Exception as e:
             app.logger.warning('today-session: standards failed: %s', e)
 
+    # The athlete's max HR (hrConfig, else 220 − age): an HR-gated rest's bpm
+    # on both watches, and with ?spec=1 the Apple Watch's zone alerts.
+    try:
+        max_hr = _get_user_max_hr(g.user_id)
+    except Exception as e:
+        app.logger.warning('today-session: max HR failed: %s', e)
+        max_hr = None
+
     def encode_day(w_index: int, d_name: str, level: int) -> list[dict]:
         w = weeks[w_index]
         out = []
@@ -3386,6 +3447,7 @@ def get_today_session():
             out.append(encode_watch_session(
                 s, session_key, completed=is_done(w_index, d_name, i), spec_level=level,
                 last=last if level >= 1 else None, results=std_results, sex=std_sex,
+                max_hr=max_hr,
             ))
         return out
 
@@ -3439,14 +3501,12 @@ def get_today_session():
     }
     if spec_level >= 1:
         body['specVersion'] = _watch_spec.spec_version()
-        # The athlete's max HR (hrConfig, else 220 − age), for the zone alerts
-        # of a watch that cannot read zones off the device: the Apple Watch,
-        # whose phone used to work it out from a date of birth of its own.
-        # The Garmin reads its zones from the watch (UserProfile).
-        try:
-            body['maxHR'] = _get_user_max_hr(g.user_id)
-        except Exception as e:
-            app.logger.warning('today-session: max HR failed: %s', e)
+        # For the zone alerts of a watch that cannot read zones off the
+        # device: the Apple Watch, whose phone used to work it out from a date
+        # of birth of its own. The Garmin reads its zones from the watch
+        # (UserProfile).
+        if max_hr is not None:
+            body['maxHR'] = max_hr
     if request.args.get('week') == '1':
         # The demo's day shape ({offset, title, sessions}). No screen specs: the
         # Week menu lists sessions and their steps, it never runs them.

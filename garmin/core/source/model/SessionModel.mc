@@ -74,17 +74,12 @@ class WorkoutExercise {
     function sets()            { return g("sets"); }
     function reps()            { return g("reps"); }
     function weightKg()        { return g("weightKg"); }   // one bell of a double, as the server prescribes
-    // Bells held at once: 2 for double-kettlebell work, else 1. The server sends no
-    // such field yet; the exercise id says so (kb_press_double, double_kb_press).
+    // Bells held at once: 2 for double-kettlebell work (the exercise's `bells`,
+    // sent by the server), else 1.
     function bells() {
         var b = g("bells");
-        if (b != null) { return b; }
-        var id = g("exerciseId");
-        if (id == null || !isKettlebell()) { return 1; }
-        var n = id.length();
-        return (id.find("double_") == 0 || (n > 7 && id.substring(n - 7, n).equals("_double"))) ? 2 : 1;
+        return (b != null) ? b : 1;
     }
-    function isKettlebell()    { var c = g("category"); return c != null && c.equals("kettlebell"); }
     function targetRpe()       { return g("targetRpe"); }
     function durationMinutes() { return g("durationMinutes"); }
     function zoneTarget()      { return g("zoneTarget"); }

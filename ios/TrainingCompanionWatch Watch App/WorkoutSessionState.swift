@@ -109,6 +109,8 @@ final class WorkoutSessionState: ObservableObject {
     @Published var workingSets: [String: WorkingSet] = [:]
     /// The metronome on a paced step; the commands page switches it.
     @Published var metronomeOn = true
+    /// An interval rest that ends on heart rate: seconds under its target so far.
+    var restGate = WatchCues.RestGate()
 
     struct WorkingSet: Equatable {
         var reps: Int
@@ -280,9 +282,10 @@ final class WorkoutSessionState: ObservableObject {
         WKInterfaceDevice.current().play(.start)
     }
 
-    func tickTimedWork() {
+    func tickTimedWork(exercise: WatchExercise? = nil) {
         guard case let .timedWork(ei, elapsed) = phase else { return }
         phase = .timedWork(exerciseIndex: ei, secondsElapsed: elapsed + 1)
+        if let ex = exercise, WatchCues.switchDue(ex, workSecond: elapsed + 1) { switchHands() }
     }
 
     func completeTimedWork(exerciseIndex: Int, exerciseId: String) {
@@ -309,13 +312,22 @@ final class WorkoutSessionState: ObservableObject {
     }
 
     func tickEMOM(workSec: Int, restSec: Int, totalRounds: Int,
-                  exerciseIndex: Int, exerciseId: String) {
+                  exerciseIndex: Int, exerciseId: String, exercise: WatchExercise? = nil) {
         guard case let .emomInterval(ei, round, isWork, remaining) = phase else { return }
+        // A rest that ends on heart rate is over once HR has stayed under its
+        // target for five seconds; its time is then only the cap.
+        if !isWork, let target = exercise?.restUntilHr,
+           restGate.tick(heartRate: currentHR, target: target) {
+            advanceEMOMRound(ei: ei, round: round, workSec: workSec,
+                             totalRounds: totalRounds, exerciseId: exerciseId)
+            return
+        }
         if remaining <= 1 {
             if isWork {
                 if restSec > 0 {
                     phase = .emomInterval(exerciseIndex: ei, round: round,
                                          isWork: false, remaining: restSec)
+                    restGate = WatchCues.RestGate()
                     WKInterfaceDevice.current().play(.stop)
                 } else {
                     advanceEMOMRound(ei: ei, round: round, workSec: workSec,
@@ -328,7 +340,17 @@ final class WorkoutSessionState: ObservableObject {
         } else {
             phase = .emomInterval(exerciseIndex: ei, round: round,
                                   isWork: isWork, remaining: remaining - 1)
+            if isWork, let ex = exercise, WatchCues.switchDue(ex, workSecond: workSec - remaining + 1) {
+                switchHands()
+            }
         }
+    }
+
+    /// The hand switch of a one-arm block (`switchAtSec`): the other side,
+    /// with the turn haptic for that hand.
+    func switchHands() {
+        sideIsLeft.toggle()
+        WKInterfaceDevice.current().play(sideIsLeft ? .navigationLeftTurn : .navigationRightTurn)
     }
 
     private func advanceEMOMRound(ei: Int, round: Int, workSec: Int,

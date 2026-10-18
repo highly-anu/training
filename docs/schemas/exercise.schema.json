@@ -94,6 +94,12 @@
       ],
       "description": "Typical effort level when performed as written. Used for session load management. low = recovery work; max = 1RM attempts, max-effort sprints."
     },
+    "bells": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2,
+      "description": "Kettlebells held at once: 2 for double-bell work. The prescribed weight is one bell's; the watches show it as 2x24 and count both bells in the volume. Absent means one."
+    },
     "bilateral": {
       "type": "boolean",
       "description": "True if the exercise loads both sides symmetrically. False for unilateral exercises (single-leg, single-arm). Used for injury substitution logic.",

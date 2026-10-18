@@ -234,6 +234,7 @@ exercises:
   - id: kb_clean_double
     name: "Kettlebell Clean (Double)"
     category: kettlebell
+    bells: 2
     modality:
       - power
       - strength_endurance
@@ -328,6 +329,7 @@ exercises:
   - id: kb_press_double
     name: "Kettlebell Press (Double)"
     category: kettlebell
+    bells: 2
     modality:
       - max_strength
       - relative_strength
@@ -478,6 +480,7 @@ exercises:
   - id: kb_jerk_double
     name: "Kettlebell Jerk (Double)"
     category: kettlebell
+    bells: 2
     modality:
       - power
       - max_strength
@@ -721,6 +724,7 @@ exercises:
   - id: kb_squat_double
     name: "Kettlebell Double Front Squat"
     category: kettlebell
+    bells: 2
     modality:
       - max_strength
       - strength_endurance

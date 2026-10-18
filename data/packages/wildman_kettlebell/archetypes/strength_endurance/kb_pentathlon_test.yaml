@@ -26,6 +26,7 @@ slots:
   - role: clean
     slot_type: time_domain
     duration_minutes: 6
+    switch_at_sec: 180
     rest_sec: 300
     intensity: high
     paced: true
@@ -37,6 +38,7 @@ slots:
   - role: long_cycle_press
     slot_type: time_domain
     duration_minutes: 6
+    switch_at_sec: 180
     rest_sec: 300
     intensity: high
     paced: true
@@ -48,6 +50,7 @@ slots:
   - role: jerk
     slot_type: time_domain
     duration_minutes: 6
+    switch_at_sec: 180
     rest_sec: 300
     intensity: high
     paced: true
@@ -59,6 +62,7 @@ slots:
   - role: half_snatch
     slot_type: time_domain
     duration_minutes: 6
+    switch_at_sec: 180
     rest_sec: 300
     intensity: high
     paced: true
@@ -70,6 +74,7 @@ slots:
   - role: push_press
     slot_type: time_domain
     duration_minutes: 6
+    switch_at_sec: 180
     intensity: high
     paced: true
     exercise_filter:
@@ -88,4 +93,5 @@ notes: >
   half snatch, strict push press — six minutes each, five minutes rest after
   each of the first four, one bell, hand changes free, the bell may not be set
   down. Log each event's reps: each is a result on its own standard. The pace
-  shown is the scoring cap, a ceiling rather than a target.
+  shown is the scoring cap, a ceiling rather than a target. The watch cues a hand
+  switch at 3:00 (`switch_at_sec`), a pacing aid: hands may change any time.

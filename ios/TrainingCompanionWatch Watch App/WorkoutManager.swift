@@ -323,7 +323,9 @@ final class WorkoutManager: NSObject, ObservableObject {
 
         case let .timedWork(ei, elapsed):
             guard !sessionState.isTimerPaused else { return }
-            sessionState.tickTimedWork()
+            sessionState.tickTimedWork(exercise: activeSession.flatMap {
+                ei < $0.exercises.count ? $0.exercises[ei] : nil
+            })
             guard let session = activeSession,
                   ei < session.exercises.count,
                   let durationMin = session.exercises[ei].durationMinutes else { return }
@@ -362,7 +364,7 @@ final class WorkoutManager: NSObject, ObservableObject {
             let ex = session.exercises[ei]
             let plan = ex.emomPlan
             sessionState.tickEMOM(workSec: plan.workSec, restSec: plan.restSec, totalRounds: plan.rounds,
-                                  exerciseIndex: ei, exerciseId: ex.exerciseId)
+                                  exerciseIndex: ei, exerciseId: ex.exerciseId, exercise: ex)
 
         case let .amrapRunning(ei, _):
             guard let session = activeSession, ei < session.exercises.count else { return }

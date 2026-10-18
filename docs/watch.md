@@ -49,7 +49,7 @@ draws every step with it (design-system §9.6).
 
 ## Where they stand
 
-As of 2026-10-17. *Server* is the payload key; *—* means the server has no part.
+As of 2026-10-18. *Server* is the payload key; *—* means the server has no part.
 
 | Feature | Server | Garmin | Apple Watch |
 |---|---|---|---|
@@ -69,7 +69,9 @@ As of 2026-10-17. *Server* is the payload key; *—* means the server has no par
 | Edit set before, next and after; pace | — | yes | Set Next and Edit Set (commands page, carried forward); pace edit and the pre-start plan pending |
 | Metronome | `targetRpm`, `metronome_rpm` | yes | yes: a haptic beat while paced, switched on the commands page |
 | Summary pages | `watch.summary.pages` | yes | summary, heart rate (zones), exercises; training effect is the Garmin's own |
-| Side switch, HR-gated rest, double bells | demo only | demo only | side-tracked sets and double bells drawn; the hand switch and HR-gated rest pending, 14.5 |
+| Hand switch | `switchAtSec` (slot `switch_at_sec`: the pentathlon test's five events at 3:00) | in a timed block (1.7.0) and an interval's work: Left/Right, a Switch hands alert | the same, with the turn haptic for the new hand |
+| Rest that ends on heart rate | `restUntilHr` in bpm (slot `rest_until_hr_pct` × max HR: Wildman's anti-glycolytic sets, Uphill's hill repeats) | the interval's rest ends 5 s under it; HR TO and the time so far | the same (`WatchCues.RestGate`); the rest screen's "still recovering" guess is gone |
+| Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
 | **Native, not shared** | | glance (64 KB), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
 
@@ -108,5 +110,8 @@ upload carries all four. On the tester's devices:
 - Up to 1.18.0 the watch listed the app as "TrainingCompanionWatch" (its display name),
   easy to miss when looking for Training Companion.
 
-The Garmin app's store version is typed into the upload form; it has no version file
-yet. A feature counts as shipped when both watches' releases carry it.
+The Garmin app's version is `garmin/VERSION` (MAJOR.MINOR.PATCH, as `ios/VERSION`). The
+manifest has none: it is typed into the store's upload form, which `build.sh --release`
+(and `--demo`: the demo shares the app id and the sequence) prints with its tag,
+`ciq-v<VERSION>`. A feature counts as shipped when both watches' releases carry it —
+`ios-v…` and `ciq-v…`.

@@ -223,6 +223,17 @@
             "type": "boolean",
             "description": "The slot is worked at a target RPM taken from the chosen exercise's competition_pace (max_reps / minutes); the load carries it as target_rpm and the watch paces the set."
           },
+          "switch_at_sec": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "A one-arm block's hand switch, in seconds into the work (a timed block's or each interval's): the load carries it as switch_at_sec, and both watches cue Switch hands and show Left or Right."
+          },
+          "rest_until_hr_pct": {
+            "type": "number",
+            "minimum": 50,
+            "maximum": 90,
+            "description": "An interval (emom) slot's rest ends once heart rate falls below this share of the athlete's max HR, and rest_sec becomes its cap. The load carries it, with the slot's zone; the server sends it to the watches in bpm (restUntilHr)."
+          },
           "standard": {
             "description": "The standard (data/benchmarks id) this slot measures, and which logged field is the result. A string is the id, the result kind following from the slot type. Packages point at commons standards, never the reverse.",
             "oneOf": [
