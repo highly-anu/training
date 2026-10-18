@@ -70,6 +70,19 @@ final class AppRouter: ObservableObject {
         programSection = nil
     }
 
+    /// A screen Program ▸ Overview should push (a deep link): a phase's index
+    /// as a string, or "compare"; cleared once pushed.
+    @Published var pendingProgramPhase: String? = nil
+
+    func openProgramPhase(_ phase: String) {
+        pendingProgramPhase = phase
+        showProgram(.overview)
+    }
+
+    func clearPendingProgramPhase() {
+        pendingProgramPhase = nil
+    }
+
     /// A Profile section asked for from outside, cleared once applied.
     @Published var profileSection: ProfileTab? = nil
 

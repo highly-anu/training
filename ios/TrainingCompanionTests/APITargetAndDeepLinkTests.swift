@@ -51,6 +51,12 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://analytics?section=program"), .analytics(.program))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=Recovery"), .analytics(.recovery))
         XCTAssertEqual(parse("trainingcompanion://program?section=overview"), .program(.overview))
+        XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=2"), .programPhase("2"),
+                       "Overview pushes the third phase's screen")
+        XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=Compare"), .programPhase("compare"))
+        XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=-1"), .program(.overview),
+                       "a phase that names nothing lands on the section")
+        XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=base"), .program(.overview))
         XCTAssertEqual(parse("trainingcompanion://program"), .tab(.program))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=load"), .analytics(.load))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=blocks"), .analytics(.blocks))
@@ -76,5 +82,9 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(router.analyticsSection, .program)
         router.open(.tab(.profile))
         XCTAssertEqual(router.tab, .profile)
+        router.open(.programPhase("compare"))
+        XCTAssertEqual(router.tab, .program)
+        XCTAssertEqual(router.programSection, .overview)
+        XCTAssertEqual(router.pendingProgramPhase, "compare")
     }
 }

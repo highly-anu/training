@@ -308,6 +308,14 @@ System font throughout. No web fonts. Dynamic Type supported on all text element
 | Micro | `.caption2` | `.semibold` | Badges, pills |
 | Mono (load specs) | `.caption.monospaced()` | — | "5×5 @ 85%" load strings |
 
+**What a row is about is never a caption.** A row's subject — a lift, a modality, a
+phase, a change line — is `.subheadline` (or the system's `.body` inside a `List`);
+`.caption` is for what qualifies it. Nothing scales below `.caption2`, 11 pt at the
+default size and Apple's minimum: no `minimumScaleFactor` that takes it lower (truncate
+instead) and no `.system(size:)` for text or the glyphs beside it. `.tertiary` is for
+chevrons and placeholders, never text someone has to read — on dark it is too faint
+for 11–12 pt. Program ▸ Overview had all four until 2026-10-17 (§6.26).
+
 ### 4.2 Color Hierarchy
 
 Three levels of prominence via color, not weight alone:
@@ -1387,22 +1395,31 @@ says why under "Not enough data yet".
 
 ### 6.26 Phase Changes
 
-**Each phase says what is different about it.** Program ▸ Overview reads the
-server's `phase_summary` (`PhaseSummaryModels.swift`, from
-`src/phase_summary.py`), the same document the web lays out; the phone counts
-nothing.
+**Overview summarises the phases; each phase is its own screen.** Program ▸ Overview
+reads the server's `phase_summary` (`PhaseSummaryModels.swift`, from
+`src/phase_summary.py`), the same document the web lays out; the phone counts nothing.
 
-- **A phase row expands** (`PhaseChangesView` in `Views/ProgramOverviewTab.swift`)
-  to its weekly shape (a dot per session, the average beside it), the server's
-  "What changes" lines, new sessions (`+`, modality colour) and gone ones (struck
-  through), and the loaded lifts' first → last weight. Rows only show the
-  chevron when a summary exists; an older server leaves the list as it was.
-- **"How the phases change"** (`PhaseMatrixSection`) is every session — or,
-  with the segmented control, every exercise — against every phase as times
-  per week, grouped by modality, scrolling sideways when a track has more
-  phases than the screen is wide.
-- **Summaries match segments by order**, and only when the counts agree, so a
-  mismatch shows nothing rather than another phase's changes.
+- **The Phases card** (`ProgramOverviewTab`, an `AnalyticsCard`, §6.15) is one row per
+  phase, divided: the kind's dot, the methodology's name for it, "Now" (`TintCapsule`)
+  on the current one, and "Wk 5–20 · <focus>" under it. A row with a summary has a
+  chevron and pushes `PhaseDetailView`; without one (an older server) it is a plain row.
+- **`PhaseDetailView`** is an inset-grouped `List`: the weeks and the focus line, the
+  methodology's description as the section's footer, then *Each week* (a row per
+  modality with its symbol, a dot per session and "2×/wk", and the week's minutes),
+  *What changes* (the server's lines), *Sessions* (new in the modality's colour, gone
+  struck through) and *Lifts* (every loaded lift, first → last weight).
+- **Compare phases** closes the card when there is more than one phase and pushes
+  `PhaseMatrixView`: every session — or, with its segmented control, every exercise —
+  against every phase as times per week, grouped by modality, scrolling sideways when a
+  track has more phases than the screen is wide.
+- **Summaries match segments by order**, and only when the counts agree, so a mismatch
+  shows nothing rather than another phase's changes.
+- `program?section=overview&phase=<n>|compare` opens a phase (from 0) or Compare from
+  the launch environment, so the pushed screens can be screenshotted (`AppRouter.openProgramPhase`).
+
+Until 2026-10-17 a phase row expanded in place into four caption-sized blocks and the
+matrix sat on Overview itself: a four-phase track was a page of them, and the screen had
+no summary state (§1.4).
 
 ---
 
@@ -1442,12 +1459,20 @@ progresses, intensity model, framework), and a footer the screen supplies.
 optional mark.
 
 - *Program ▸ Overview* (first card): the track when the methodology has more
-  than one, and the plan's settings — days a week, session minutes, weeks,
-  the date span and the event — with no verdict. Program information only;
-  the framework's name comes from the analytics document's frame when it is
-  loaded, since the phone has no framework catalog.
-- *Analytics ▸ Program* (first card): plan fidelity — each field actual /
-  ideal with a check or a warning mark.
+  than one, and nothing else as a tag — how it trains is the book's (§6.18),
+  and the framework is Analytics' to name. The footer: the weeks as one bar
+  (`PhaseProgressBar`, §6.36, without labels) with the first and last day under
+  its ends, days a week and session minutes (`ProgramHeaderStat`), the event,
+  then the priority mix as one bar split by modality with a wrapping legend
+  (`PriorityMixBar`, the shares from `ProgramPriorities`). No verdict, and no
+  fact twice: the number of weeks is the pill's "1/12". Until 2026-10-17 it also
+  listed progression, intensity model and framework, a weeks cell, and the
+  priority mix as a card of its own — "linear progression" four times over for
+  Starting Strength.
+- *Analytics ▸ Program* (first card): every tag — how it progresses,
+  intensity model, framework (the name from the analytics document's frame,
+  since the phone has no framework catalog) — and plan fidelity as its footer,
+  each field actual / ideal with a check or a warning mark.
 
 Rules: the card owns the book's sheet; a screen passes facts, never draws
 its own copy. It replaced Overview's "About this methodology" row
@@ -1665,3 +1690,17 @@ screen's "Against the plan" section and in the Workout complete sheet's effort c
 (§6.30); nothing when the workout is linked to no session. `ZonePlan` holds the words,
 the phone's copy of the web's `lib/zonePlan.ts` (`ZonePlanTests`, `zonePlan.test.ts`).
 
+
+### 6.36 Phase Progress Bar
+
+**Where the athlete is in the program, as one bar.** `Views/PhaseProgressBar.swift`:
+a segment per phase as wide as its weeks, in its kind's colour (§3.2) — past phases
+dimmed, the current one filled to this week with a marker, later ones faint — on a
+`systemFill` track. Program ▸ Calendar shows it with each phase's name under its
+segment; Program ▸ Overview's header (§6.28) without (`showsLabels: false`), since the
+pill names the current phase and the Phases card lists them all. One accessibility
+label for the whole bar: "Week 3 of 12, Base".
+
+Rules: segments come from `PhaseSegment.segments(of:)`, never a list of kinds; a label
+too long for its segment truncates at `.caption2` — it used to scale to 60 %, about
+6.6 pt (§4.1). Calendar drew it privately until Overview became the second user.

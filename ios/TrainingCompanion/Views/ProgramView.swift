@@ -108,7 +108,7 @@ struct ProgramView: View {
                         .padding(.bottom, 12)
                 }
 
-                phaseProgressBar
+                PhaseProgressBar(weeks: appState.allWeeks, currentIndex: appState.currentWeekIndex)
                     .padding(.horizontal)
                     .padding(.top, 4)
                     .padding(.bottom, 12)
@@ -153,79 +153,6 @@ struct ProgramView: View {
         .background(Color.orange.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
-    }
-
-    // MARK: - Phase Progress Bar
-
-    private var phaseProgressBar: some View {
-        let weeks = appState.allWeeks
-        let total = weeks.count
-        let currentIdx = appState.currentWeekIndex ?? -1
-        let segments = phaseSegments(from: weeks)
-
-        return VStack(alignment: .leading, spacing: 5) {
-            // Coloured bar
-            GeometryReader { geo in
-                let barWidth = geo.size.width
-                HStack(spacing: 0) {
-                    ForEach(segments) { seg in
-                        let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
-                        let segWidth = barWidth * segFrac
-                        let isCurrent = seg.weekIndices.contains(currentIdx)
-                        let isPast = (seg.weekIndices.last ?? -1) < currentIdx
-                        let color = PhaseStyle.color(for: seg.kind)
-
-                        ZStack(alignment: .leading) {
-                            if isPast {
-                                Rectangle().fill(color.opacity(0.45))
-                            } else if isCurrent, let firstIdx = seg.weekIndices.first {
-                                let progress = CGFloat(currentIdx - firstIdx + 1)
-                                    / CGFloat(seg.weekIndices.count)
-                                let doneWidth = segWidth * progress
-                                // Dim fill for whole segment
-                                Rectangle().fill(color.opacity(0.18))
-                                // Bright fill for completed portion
-                                Rectangle().fill(color.opacity(0.65))
-                                    .frame(width: doneWidth)
-                                // Bright vertical marker at current week
-                                Rectangle().fill(color)
-                                    .frame(width: 3)
-                                    .offset(x: max(0, doneWidth - 1.5))
-                            } else {
-                                Rectangle().fill(color.opacity(0.15))
-                            }
-                        }
-                        .frame(width: segWidth, height: 10)
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 5))
-                // Subtle track behind
-                .background(
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color(.systemFill))
-                )
-            }
-            .frame(height: 10)
-
-            // Phase labels
-            GeometryReader { geo in
-                HStack(spacing: 0) {
-                    ForEach(segments) { seg in
-                        let segFrac = CGFloat(seg.weekIndices.count) / CGFloat(max(total, 1))
-                        let isCurrent = seg.weekIndices.contains(currentIdx)
-                        let color = PhaseStyle.color(for: seg.kind)
-                        Text(seg.label)
-                            .font(.caption2)
-                            .fontWeight(isCurrent ? .semibold : .regular)
-                            .foregroundStyle(isCurrent ? color : .secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                            .frame(width: geo.size.width * segFrac, alignment: .center)
-                    }
-                }
-            }
-            .frame(height: 14)
-        }
     }
 
     // MARK: - Swipeable Section
@@ -429,12 +356,6 @@ struct ProgramView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    // MARK: - Helpers
-
-    private func phaseSegments(from weeks: [ProgramWeek]) -> [PhaseSegment] {
-        PhaseSegment.segments(of: weeks)
     }
 }
 

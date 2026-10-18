@@ -26,6 +26,10 @@ enum DeepLink: Equatable {
     case log(LogTab)
     /// `program?section=overview|calendar|history`.
     case program(ProgramTab)
+    /// `program?section=overview&phase=<n>|compare` — Overview pushes the n-th
+    /// phase's screen (from 0, the order the Phases card lists them) or
+    /// Compare phases.
+    case programPhase(String)
     /// `workout-complete[?id=<workout id>]` — the "Workout complete" sheet for
     /// that workout, or the newest, seen or not (design-system §6.30);
     /// `?demo=1` lines up the newest eight, one after another.
@@ -54,6 +58,10 @@ enum DeepLink: Equatable {
             }
             return .tab(.dashboard)
         case "program":
+            if let phase = query.first(where: { $0.name == "phase" })?.value?.lowercased(),
+               phase == "compare" || (Int(phase).map { $0 >= 0 } ?? false) {
+                return .programPhase(phase)
+            }
             if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased(),
                let section = ProgramTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
                 return .program(section)
@@ -109,6 +117,7 @@ extension AppRouter {
         case .standard(let id): openStandard(id)
         case .log(let section): showLog(section)
         case .program(let section): showProgram(section)
+        case .programPhase(let phase): openProgramPhase(phase)
         case .workoutComplete(let id): showWorkoutComplete(id)
         case .workoutCompleteDemo: showWorkoutComplete(AppRouter.workoutCompleteDemo)
         }

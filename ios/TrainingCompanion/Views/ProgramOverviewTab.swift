@@ -1,14 +1,24 @@
 import SwiftUI
 
 /// Program ▸ Overview: what the plan is, as the web's Program ▸ Overview
-/// shows it — the methodology it comes from, its phases in the methodology's
-/// own words, and the modality weights the schedule was allocated from. The
-/// weeks themselves are on Calendar; this section describes the program's
-/// shape (information-architecture.md §2).
+/// shows it — the methodology it comes from, where the athlete is in it, its
+/// phases in the methodology's own words, and the modality weights the
+/// schedule was allocated from. A summary of two cards: each phase opens its
+/// own screen (`PhaseDetailView`), and the phases side by side open Compare
+/// phases (`PhaseMatrixView`) — design-system §6.26. The weeks themselves are
+/// on Calendar (information-architecture.md §2).
 struct ProgramOverviewTab: View {
     @EnvironmentObject var appState: AppState
-    @State private var expandedPhases: Set<Int> = []
-    @State private var matrixByExercise = false
+    @EnvironmentObject var router: AppRouter
+    @State private var route: OverviewRoute?
+    /// The leading column of a Phases row: the phase's dot, Compare's symbol.
+    @ScaledMetric(relativeTo: .subheadline) private var markWidth: CGFloat = 16
+
+    /// A screen the Phases card pushes: the n-th phase segment, or Compare phases.
+    enum OverviewRoute: Hashable {
+        case phase(Int)
+        case compare
+    }
 
     /// The server's per-phase summary (`phase_summary`); empty for an older server.
     private var summaries: [PhaseSummary] {
@@ -25,11 +35,9 @@ struct ProgramOverviewTab: View {
                 )
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 16) {
                         headerCard
-                        phasesSection
-                        PhaseMatrixSection(summaries: summaries, byExercise: $matrixByExercise)
-                        prioritySection
+                        phasesCard
                         Spacer(minLength: 40)
                     }
                     .padding(.horizontal)
@@ -37,21 +45,25 @@ struct ProgramOverviewTab: View {
                 }
             }
         }
+        .navigationDestination(item: $route) { destination($0) }
         .task { await appState.loadPhilosophiesIfNeeded() }
+        .task { applyPendingPhase() }
+        .onChange(of: router.pendingProgramPhase) { applyPendingPhase() }
+        .onChange(of: appState.allWeeks.count) { applyPendingPhase() }
     }
 
     // MARK: - Header
 
     /// The shared program header (§6.28), as on Analytics ▸ Program, with
-    /// what the plan is rather than how it is going: the track, how the
-    /// methodology trains, and the settings it was built for.
+    /// what the plan is rather than how it is going: where the athlete is in
+    /// it, the settings it was built for, and the priority mix.
     private var headerCard: some View {
         let cards = appState.programMethodologies()
         let weeks = appState.allWeeks
         // No phase row before the start or after the end, as on Analytics ▸
         // Program (the server's current week is None there too); `?? 0` read
-        // a finished block as "Week 1/16". The tags take the current week's
-        // track, else the first week's.
+        // a finished block as "Week 1/16". The track is the current week's,
+        // else the first week's.
         let current = appState.currentWeekIndex.flatMap { weeks.indices.contains($0) ? $0 : nil }
         let week = current.map { weeks[$0] } ?? weeks.first
         return ProgramHeaderCard(
@@ -61,62 +73,65 @@ struct ProgramOverviewTab: View {
                                             totalWeeks: weeks.count, isDeload: weeks[i].isDeload) },
             tags: headerTags(cards: cards, week: week)
         ) {
-            planSettings(weekCount: weeks.count)
+            planFooter(weeks: weeks, current: current)
         }
     }
 
+    /// Only the track, when the methodology offers more than one. How it
+    /// trains — progression and intensity model — is the methodology sheet's
+    /// (§6.18, the book), and Analytics ▸ Program's header names the framework;
+    /// on Overview the three rows repeated the phase's own name.
     private func headerTags(cards: [PhilosophyCard], week: ProgramWeek?) -> [ProgramHeader.Tag] {
-        var tags: [ProgramHeader.Tag] = []
         // The methodology whose track this week runs; a blend's heaviest otherwise.
         let lead = cards.first { card in card.tracks?.contains { $0.id == week?.trackId } ?? false } ?? cards.first
-        if let track = lead?.track(week?.trackId), (lead?.tracks?.count ?? 0) > 1 {
-            tags.append(.init(icon: "arrow.triangle.branch", text: track.name))
-        }
-        if let how = lead?.progressionPhilosophy {
-            tags.append(.init(icon: "chart.line.uptrend.xyaxis", text: ProgramHeader.words(how)))
-        }
-        if let model = lead?.intensityModel {
-            tags.append(.init(icon: "gauge.with.dots.needle.33percent", text: ProgramHeader.words(model)))
-        }
-        // The framework's name is the analytics document's; the phone has no
-        // framework catalog. Program information, not a tracked number.
-        if let framework = appState.programAnalytics?.frame?.framework?.name {
-            tags.append(.init(icon: "square.grid.2x2", text: framework))
-        }
-        return tags
+        guard let track = lead?.track(week?.trackId), (lead?.tracks?.count ?? 0) > 1 else { return [] }
+        return [.init(icon: "arrow.triangle.branch", text: track.name)]
     }
 
-    /// What the program was built for — days, session length, length, dates —
-    /// with no verdict beside them; Analytics ▸ Program holds those.
-    private func planSettings(weekCount: Int) -> some View {
+    /// The weeks as one bar from the first day to the last, what the program
+    /// was built for — days and session length, the event — and the priority
+    /// mix, with no verdict beside them; Analytics ▸ Program holds those. The
+    /// number of weeks is the phase row's "1/12" and the bar's length.
+    private func planFooter(weeks: [ProgramWeek], current: Int?) -> some View {
         let constraints = appState.programConstraints
         let days = ProgramConstraintsDiff.int(constraints["days_per_week"])
         let minutes = ProgramConstraintsDiff.int(constraints["session_time_minutes"])
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 0) {
-                if let days {
-                    ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
-                                      accessibility: "\(days) days a week")
-                    Spacer(minLength: 8)
-                }
-                if let minutes {
-                    ProgramHeaderStat(icon: "clock", value: "\(minutes)", unit: "min",
-                                      accessibility: "\(minutes) minute sessions")
-                    Spacer(minLength: 8)
-                }
-                ProgramHeaderStat(icon: "calendar.badge.clock", value: "\(weekCount)", unit: "wk",
-                                  accessibility: "\(weekCount) weeks")
-            }
-            HStack(spacing: 12) {
-                if let span = dateSpan(weekCount: weekCount) {
-                    Label(span, systemImage: "calendar.day.timeline.left")
-                }
-                if let event = shortDate(appState.serverProgram?.eventDate) {
-                    Label(event, systemImage: "flag.checkered")
-                        .accessibilityLabel("Event \(event)")
+        let event = shortDate(appState.serverProgram?.eventDate)
+        let shares = ProgramPriorities.shares(from: appState.serverProgram?.currentProgram?.extra)
+        return VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                PhaseProgressBar(weeks: weeks, currentIndex: current, showsLabels: false)
+                if let span = dateSpan(weekCount: weeks.count) {
+                    HStack {
+                        Text(span.start)
+                        Spacer()
+                        Text(span.end)
+                    }
+                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(span.start) to \(span.end)")
                 }
             }
-            .font(.caption).foregroundStyle(.secondary)
+            if days != nil || minutes != nil || event != nil {
+                HStack(alignment: .top, spacing: 32) {
+                    if let days {
+                        ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
+                                          accessibility: "\(days) days a week")
+                    }
+                    if let minutes {
+                        ProgramHeaderStat(icon: "clock", value: "\(minutes)", unit: "min",
+                                          accessibility: "\(minutes) minute sessions")
+                    }
+                    if let event {
+                        ProgramHeaderStat(icon: "flag.checkered", value: event, unit: "event",
+                                          accessibility: "Event \(event)")
+                    }
+                }
+            }
+            if !shares.isEmpty {
+                Divider()
+                PriorityMixBar(shares: shares)
+            }
         }
         .padding(.top, 2)
     }
@@ -133,348 +148,266 @@ struct ProgramOverviewTab: View {
         iso.flatMap(Self.isoDay.date(from:)).map { $0.formatted(.dateTime.day().month(.abbreviated)) }
     }
 
-    /// "5 Oct – 24 Jan": the start date to the last day of the last week.
-    private func dateSpan(weekCount: Int) -> String? {
+    /// "5 Oct" and "24 Jan": the start date and the last day of the last week.
+    private func dateSpan(weekCount: Int) -> (start: String, end: String)? {
         guard let start = appState.serverProgram?.programStartDate.flatMap(Self.isoDay.date(from:)),
               weekCount > 0,
               let end = Calendar.current.date(byAdding: .day, value: weekCount * 7 - 1, to: start) else { return nil }
         let fmt = Date.FormatStyle.dateTime.day().month(.abbreviated)
-        return "\(start.formatted(fmt)) – \(end.formatted(fmt))"
+        return (start.formatted(fmt), end.formatted(fmt))
     }
 
     // MARK: - Phases
 
-    private var phasesSection: some View {
+    /// One row per phase, in order; a row with the server's summary opens the
+    /// phase's screen. Compare phases closes the card when there is more than
+    /// one phase to compare.
+    private var phasesCard: some View {
         let weeks = appState.allWeeks
         let segments = PhaseSegment.segments(of: weeks)
         let current = appState.currentWeekIndex ?? -1
         let summaries = self.summaries
-        return VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Training phases")
+        return AnalyticsCard(header: "Phases") {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(segments.enumerated()), id: \.element.id) { index, seg in
-                    let summary = PhaseSummary.forSegment(index, of: summaries, segmentCount: segments.count)
-                    phaseRow(seg, weeks: weeks, isCurrent: seg.weekIndices.contains(current), summary: summary)
-                    if seg.id != segments.last?.id { Divider().padding(.leading, 24) }
+                    if index > 0 { Divider() }
+                    phaseRow(seg, index: index, weeks: weeks, isCurrent: seg.weekIndices.contains(current),
+                             opens: PhaseSummary.forSegment(index, of: summaries, segmentCount: segments.count) != nil)
                 }
-            }
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
-    }
-
-    private func phaseRow(_ seg: PhaseSegment, weeks: [ProgramWeek], isCurrent: Bool,
-                          summary: PhaseSummary?) -> some View {
-        let expanded = expandedPhases.contains(seg.id)
-        return VStack(alignment: .leading, spacing: 0) {
-            Button {
-                guard summary != nil else { return }
-                AppHaptics.light()
-                withAnimation(AppAnimation.springSnappy) {
-                    if expanded { expandedPhases.remove(seg.id) } else { expandedPhases.insert(seg.id) }
+                if summaries.count > 1 {
+                    Divider()
+                    compareRow
                 }
-            } label: {
-                phaseHeader(seg, weeks: weeks, isCurrent: isCurrent, expandable: summary != nil, expanded: expanded)
-            }
-            .buttonStyle(.plain)
-            if expanded, let summary {
-                PhaseChangesView(summary: summary)
-                    .padding(.leading, 30)
-                    .padding([.trailing, .bottom], 12)
-                    .transition(.opacity)
             }
         }
     }
 
-    private func phaseHeader(_ seg: PhaseSegment, weeks: [ProgramWeek], isCurrent: Bool,
-                             expandable: Bool, expanded: Bool) -> some View {
-        let first = seg.weekIndices.first.map { weeks[$0].weekNumber } ?? 0
-        let last = seg.weekIndices.last.map { weeks[$0].weekNumber } ?? first
-        let range = first == last ? "Week \(first)" : "Weeks \(first)–\(last)"
-        return HStack(alignment: .top, spacing: 10) {
-            Circle()
-                .fill(PhaseStyle.color(for: seg.kind))
-                .frame(width: 8, height: 8)
-                .padding(.top, 5)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(seg.label).font(.subheadline).fontWeight(.medium)
-                    if isCurrent {
-                        Text("Now")
-                            .font(.caption2).fontWeight(.semibold)
-                            .padding(.horizontal, 6).padding(.vertical, 1)
-                            .background(PhaseStyle.color(for: seg.kind).opacity(0.18))
-                            .clipShape(Capsule())
+    private func phaseRow(_ seg: PhaseSegment, index: Int, weeks: [ProgramWeek], isCurrent: Bool,
+                          opens: Bool) -> some View {
+        let color = PhaseStyle.color(for: seg.kind)
+        let focus = philosophyPhase(for: seg, weeks: weeks)?.focus.flatMap { $0.isEmpty ? nil : $0 }
+        return Button {
+            guard opens else { return }
+            route = .phase(index)
+        } label: {
+            HStack(spacing: 12) {
+                Circle().fill(color)
+                    .frame(width: 8, height: 8)
+                    .frame(width: markWidth)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(seg.label)
+                            .font(.subheadline).fontWeight(.semibold)
+                            .lineLimit(2)
+                        if isCurrent {
+                            TintCapsule(text: "Now", color: color)
+                        }
                     }
+                    Text([seg.shortRange(in: weeks), focus].compactMap { $0 }.joined(separator: " · "))
+                        .font(.footnote).foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
-                Text("\(range) · \(seg.weekIndices.count) wk")
-                    .font(.caption).monospacedDigit()
-                    .foregroundStyle(.secondary)
-                if let focus = phaseFocus(seg, weeks: weeks) {
-                    Text(focus)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                if opens {
+                    Image(systemName: "chevron.right")
+                        .font(.caption).foregroundStyle(.tertiary)
                 }
             }
-            Spacer(minLength: 0)
-            if expandable {
-                Image(systemName: "chevron.down")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .rotationEffect(.degrees(expanded ? 180 : 0))
-                    .padding(.top, 5)
-            }
+            .padding(.vertical, 10)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .padding(12)
-        .contentShape(Rectangle())
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityHint(expandable ? (expanded ? "Hides what changes" : "Shows what changes") : "")
+        .accessibilityRemoveTraits(opens ? [] : .isButton)
+        .accessibilityHint(opens ? "Opens the phase" : "")
     }
 
-    /// The phase's focus line in its methodology's own words — the program's
-    /// track first, then any methodology of the blend that declares the phase.
-    private func phaseFocus(_ seg: PhaseSegment, weeks: [ProgramWeek]) -> String? {
-        guard let i = seg.weekIndices.first else { return nil }
-        let week = weeks[i]
-        guard let phaseId = week.phaseId else { return nil }
-        for card in appState.programMethodologies() {
-            let track = card.track(week.trackId)
-            let phases = (track?.phases ?? []) + (card.tracks ?? []).flatMap(\.phases)
-            if let focus = phases.first(where: { $0.id == phaseId })?.focus, !focus.isEmpty {
-                return focus
+    private var compareRow: some View {
+        Button { route = .compare } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "tablecells")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .frame(width: markWidth)
+                Text("Compare phases").font(.subheadline)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.tertiary)
             }
+            .padding(.vertical, 10)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        return nil
+        .buttonStyle(.plain)
+        .accessibilityHint("Every session against every phase")
     }
 
-    // MARK: - Priority mix
+    @ViewBuilder
+    private func destination(_ route: OverviewRoute) -> some View {
+        let weeks = appState.allWeeks
+        let segments = PhaseSegment.segments(of: weeks)
+        switch route {
+        case .phase(let i):
+            if segments.indices.contains(i),
+               let summary = PhaseSummary.forSegment(i, of: summaries, segmentCount: segments.count) {
+                PhaseDetailView(segment: segments[i], summary: summary,
+                                phase: philosophyPhase(for: segments[i], weeks: weeks), weeks: weeks,
+                                isCurrent: segments[i].weekIndices.contains(appState.currentWeekIndex ?? -1))
+            }
+        case .compare:
+            PhaseMatrixView(summaries: summaries)
+        }
+    }
 
-    /// `goal.priorities`, the modality weights the scheduler allocated sessions
-    /// from — the web's Priority Mix.
-    private var priorities: [(id: String, weight: Double)] {
-        guard case .object(let goal)? = appState.serverProgram?.currentProgram?.extra["goal"],
+    /// Push the screen a deep link asked for (`program?section=overview&phase=`),
+    /// once the program is loaded; one that names no phase is dropped.
+    private func applyPendingPhase() {
+        guard let raw = router.pendingProgramPhase, !appState.allWeeks.isEmpty else { return }
+        let segmentCount = PhaseSegment.segments(of: appState.allWeeks).count
+        if raw == "compare", summaries.count > 1 {
+            route = .compare
+        } else if let i = Int(raw), PhaseSummary.forSegment(i, of: summaries, segmentCount: segmentCount) != nil {
+            route = .phase(i)
+        }
+        router.clearPendingProgramPhase()
+    }
+
+    /// The methodology's own phase for a segment — the program's track first,
+    /// then any methodology of the blend that declares it; one that has a
+    /// focus line wins over one that does not.
+    private func philosophyPhase(for seg: PhaseSegment, weeks: [ProgramWeek]) -> PhilosophyPhase? {
+        guard let i = seg.weekIndices.first, weeks.indices.contains(i), let phaseId = weeks[i].phaseId else {
+            return nil
+        }
+        let week = weeks[i]
+        let matches = appState.programMethodologies().flatMap { card in
+            ((card.track(week.trackId)?.phases ?? []) + (card.tracks ?? []).flatMap(\.phases))
+                .filter { $0.id == phaseId }
+        }
+        return matches.first { !($0.focus ?? "").isEmpty } ?? matches.first
+    }
+}
+
+// MARK: - Priority mix
+
+/// `goal.priorities`, the modality weights the scheduler allocated sessions
+/// from — the web's Priority Mix — as shares of their sum.
+enum ProgramPriorities {
+    struct Share: Identifiable, Equatable {
+        let id: String
+        let share: Double
+
+        var percent: Int { Int((share * 100).rounded()) }
+    }
+
+    /// Heaviest first (ties by id), zero weights left out; empty without a goal.
+    static func shares(from extra: [String: JSONValue]?) -> [Share] {
+        guard case .object(let goal)? = extra?["goal"],
               case .object(let raw)? = goal["priorities"] else { return [] }
-        let pairs: [(id: String, weight: Double)] = raw.compactMap { key, value in
+        let weights: [(id: String, weight: Double)] = raw.compactMap { key, value in
             switch value {
             case .double(let d): return (key, d)
             case .int(let i): return (key, Double(i))
             default: return nil
             }
-        }
-        return pairs.filter { $0.weight > 0 }.sorted { $0.weight > $1.weight }
-    }
-
-    @ViewBuilder
-    private var prioritySection: some View {
-        let rows = priorities
-        if !rows.isEmpty {
-            let total = max(rows.reduce(0) { $0 + $1.weight }, 0.0001)
-            VStack(alignment: .leading, spacing: 10) {
-                sectionHeader("Priority mix")
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(rows, id: \.id) { row in
-                        let share = row.weight / total
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack {
-                                Text(ModalityStyle.label(for: row.id)).font(.caption)
-                                Spacer()
-                                Text("\(Int((share * 100).rounded()))%")
-                                    .font(.caption).monospacedDigit()
-                                    .foregroundStyle(.secondary)
-                            }
-                            GeometryReader { geo in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(ModalityStyle.color(for: row.id))
-                                    .frame(width: max(geo.size.width * share, 3))
-                            }
-                            .frame(height: 6)
-                        }
-                        .accessibilityElement(children: .combine)
-                    }
-                }
-                .padding(12)
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-        }
-    }
-
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title).font(.headline)
+        }.filter { $0.weight > 0 }
+        let total = weights.reduce(0) { $0 + $1.weight }
+        guard total > 0 else { return [] }
+        return weights
+            .sorted { $0.weight != $1.weight ? $0.weight > $1.weight : $0.id < $1.id }
+            .map { Share(id: $0.id, share: $0.weight / total) }
     }
 }
 
-/// One phase's changes from the server's summary: its weekly shape, what is
-/// different from the phase before, new and gone sessions, and the loaded
-/// lifts' first and last weight. The web shows the same lines in each phase's
-/// "Your program" card.
-struct PhaseChangesView: View {
-    let summary: PhaseSummary
+/// The priority mix as one bar, a segment per modality in its colour (§3.1)
+/// as wide as its share, and a legend naming each with its percentage.
+/// It was a card of its own, a bar per modality, until 2026-10-17.
+struct PriorityMixBar: View {
+    let shares: [ProgramPriorities.Share]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            block("Weekly shape") {
-                ForEach(summary.shape, id: \.modality) { row in
-                    HStack(spacing: 6) {
-                        Text(ModalityStyle.label(for: row.modality))
-                            .font(.caption).foregroundStyle(.secondary)
-                            .frame(width: 130, alignment: .leading)
-                            .lineLimit(1)
-                        HStack(spacing: 2) {
-                            ForEach(0..<max(Int(row.perWeek.rounded()), 1), id: \.self) { _ in
-                                Circle().fill(ModalityStyle.color(for: row.modality).opacity(0.75))
-                                    .frame(width: 7, height: 7)
-                            }
-                        }
-                        Text(Self.times(row.perWeek))
-                            .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            if !summary.changes.isEmpty {
-                block("What changes") {
-                    ForEach(summary.changes, id: \.self) { line in
-                        Label {
-                            Text(line).font(.caption).fixedSize(horizontal: false, vertical: true)
-                        } icon: {
-                            Image(systemName: "chevron.right").font(.system(size: 8)).foregroundStyle(.tertiary)
-                        }
-                        .labelStyle(.titleAndIcon)
+        VStack(alignment: .leading, spacing: 8) {
+            GeometryReader { geo in
+                let gaps = CGFloat(max(shares.count - 1, 0)) * 2
+                HStack(spacing: 2) {
+                    ForEach(shares) { share in
+                        Rectangle()
+                            .fill(ModalityStyle.color(for: share.id))
+                            .frame(width: max((geo.size.width - gaps) * share.share, 2))
                     }
                 }
             }
-            if !summary.newArchetypes.isEmpty || !summary.dropped.archetypes.isEmpty {
-                block("Sessions") {
-                    ForEach(summary.newArchetypes) { item in
-                        Text("+ \(item.name)")
-                            .font(.caption)
-                            .foregroundStyle(ModalityStyle.color(for: item.modality))
-                    }
-                    ForEach(summary.dropped.archetypes) { item in
-                        Text(item.name)
-                            .font(.caption)
-                            .strikethrough()
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("\(item.name), gone")
-                    }
-                }
-            }
-            if !summary.lifts.isEmpty {
-                block("Lifts") {
-                    ForEach(summary.lifts.prefix(5)) { lift in
-                        HStack {
-                            Text(lift.name).font(.caption).lineLimit(1)
-                            Spacer()
-                            Text(lift.firstKg == lift.lastKg
-                                 ? Self.kg(lift.lastKg)
-                                 : "\(Self.kg(lift.firstKg)) → \(Self.kg(lift.lastKg))")
-                                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
+            .frame(height: 6)
+            .clipShape(Capsule())
+            LegendFlow(spacing: 14, lineSpacing: 4) { legend }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Priority mix: " + shares.map {
+            "\(ModalityStyle.label(for: $0.id)) \($0.percent) percent"
+        }.joined(separator: ", "))
     }
 
-    private func block<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title.uppercased())
-                .font(.caption2).fontWeight(.semibold)
-                .foregroundStyle(.tertiary)
-            content()
+    private var legend: some View {
+        ForEach(shares) { share in
+            HStack(spacing: 5) {
+                Circle().fill(ModalityStyle.color(for: share.id)).frame(width: 8, height: 8)
+                Text(ModalityStyle.label(for: share.id))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Text("\(share.percent)%").monospacedDigit()
+            }
+            .font(.footnote).foregroundStyle(.secondary)
         }
-    }
-
-    static func times(_ n: Double) -> String {
-        n == n.rounded() ? "\(Int(n))×/wk" : String(format: "%.1f×/wk", n)
-    }
-
-    static func kg(_ n: Double) -> String {
-        n == n.rounded() ? "\(Int(n)) kg" : String(format: "%.1f kg", n)
     }
 }
 
-/// Every session (or exercise) against every phase: how often it appears per
-/// week. The web's "How the phases change" table; it scrolls sideways when a
-/// track has more phases than the screen is wide.
-struct PhaseMatrixSection: View {
-    let summaries: [PhaseSummary]
-    @Binding var byExercise: Bool
+/// The priority legend's entries left to right, wrapping onto a new line
+/// when the next one does not fit — five modalities used to stack as five rows.
+private struct LegendFlow: Layout {
+    let spacing: CGFloat
+    let lineSpacing: CGFloat
 
-    private struct Row: Identifiable {
-        let id: String
-        let name: String
-        let modality: String
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        let rows = arrange(subviews, width: width)
+        let height = rows.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
     }
 
-    private var rows: [Row] {
-        var seen: [String: Row] = [:]
-        var order: [String] = []
-        for summary in summaries {
-            for item in byExercise ? summary.exercises : summary.archetypes where seen[item.id] == nil {
-                seen[item.id] = Row(id: item.id, name: item.name, modality: item.modality)
-                order.append(item.id)
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(subviews, width: bounds.width) {
+            var x = bounds.minX
+            for index in row.indices {
+                let size = fitted(subviews[index], width: bounds.width)
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+                x += size.width + spacing
             }
-        }
-        let modalities = order.compactMap { seen[$0]?.modality }.reduce(into: [String]()) {
-            if !$0.contains($1) { $0.append($1) }
-        }
-        return order.compactMap { seen[$0] }.sorted {
-            (modalities.firstIndex(of: $0.modality) ?? 0) < (modalities.firstIndex(of: $1.modality) ?? 0)
+            y += row.height + lineSpacing
         }
     }
 
-    var body: some View {
-        if summaries.count > 1 {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("How the phases change").font(.headline)
-                Picker("Show", selection: $byExercise) {
-                    Text("Sessions").tag(false)
-                    Text("Exercises").tag(true)
-                }
-                .pickerStyle(.segmented)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 8) {
-                        GridRow {
-                            // The cells are times per week.
-                            Text("×/wk").font(.caption2).foregroundStyle(.tertiary)
-                            ForEach(summaries) { s in
-                                Text(s.name)
-                                    .font(.caption2).fontWeight(.semibold)
-                                    .foregroundStyle(PhaseStyle.color(for: s.kind))
-                                    .lineLimit(1)
-                                    .gridColumnAlignment(.center)
-                            }
-                        }
-                        ForEach(rows) { row in
-                            GridRow {
-                                HStack(spacing: 5) {
-                                    Circle().fill(ModalityStyle.color(for: row.modality)).frame(width: 6, height: 6)
-                                    Text(row.name).font(.caption).lineLimit(1)
-                                }
-                                .frame(maxWidth: 190, alignment: .leading)
-                                ForEach(summaries) { s in
-                                    if let n = s.perWeek(row.id, exercises: byExercise) {
-                                        Text(n == n.rounded() ? "\(Int(n))" : String(format: "%.1f", n))
-                                            .font(.caption2).monospacedDigit().fontWeight(.medium)
-                                            .padding(.horizontal, 6).padding(.vertical, 2)
-                                            .background(ModalityStyle.color(for: row.modality).opacity(0.25))
-                                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                                    } else {
-                                        Text("·").font(.caption2).foregroundStyle(.quaternary)
-                                    }
-                                }
-                            }
-                            .accessibilityElement(children: .combine)
-                        }
-                    }
-                    .padding(12)
-                }
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+    /// An entry's own size, never wider than a line (it truncates instead).
+    private func fitted(_ subview: LayoutSubview, width: CGFloat) -> CGSize {
+        let size = subview.sizeThatFits(.unspecified)
+        return CGSize(width: min(size.width, width), height: size.height)
+    }
+
+    private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
+
+    private func arrange(_ subviews: Subviews, width: CGFloat) -> [Row] {
+        var rows: [Row] = [Row()]
+        for index in subviews.indices {
+            let size = fitted(subviews[index], width: width)
+            let needed = rows[rows.count - 1].indices.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
+            if needed > width, !rows[rows.count - 1].indices.isEmpty {
+                rows.append(Row(indices: [index], width: size.width, height: size.height))
+            } else {
+                rows[rows.count - 1].indices.append(index)
+                rows[rows.count - 1].width = needed
+                rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
             }
         }
+        return rows
     }
 }
