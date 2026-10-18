@@ -326,7 +326,9 @@ struct WeeklyDetailView: View {
             }
             Section("Weeks") {
                 ForEach(consistency.reversed()) { week in
-                    let trimp = bars.first { Calendar.current.isDate($0.weekStart, inSameDayAs: week.weekStart) }?.trimp
+                    // Within half a week: the server starts weeks on Monday, the
+                    // on-device fallback on the locale's first day.
+                    let trimp = bars.first { abs($0.weekStart.timeIntervalSince(week.weekStart)) < 3.5 * 86_400 }?.trimp
                     LabeledContent {
                         HStack(spacing: 12) {
                             Label("\(week.sessionCount)", systemImage: "figure.run").labelStyle(.inline)

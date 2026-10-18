@@ -26,7 +26,9 @@ struct ProgressionView: View {
         .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
         .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
         .onChange(of: appState.exerciseHistory?.exercises.count) { applyPendingDetail() }
-        .onChange(of: appState.progressionReview?.overallScore) { applyPendingDetail() }
+        // The review's arrival, not its score: a review with no score yet
+        // (collecting) left a score link waiting for good.
+        .onChange(of: appState.progressionReview != nil) { applyPendingDetail() }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadProgressionReview()

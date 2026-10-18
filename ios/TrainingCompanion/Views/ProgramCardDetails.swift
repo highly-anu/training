@@ -36,8 +36,10 @@ struct ScorecardDetailView: View {
             }
             if !scorecard.weeks.isEmpty {
                 Section("By week") {
+                    // By array index: an old program repeats week numbers
+                    // (1, 1, 2, 3), which stacked two weeks in one bar.
                     Chart(scorecard.weeks, id: \.weekIndex) { w in
-                        BarMark(x: .value("Week", "W\(w.weekNumber)"), y: .value("Done", w.pct ?? 0))
+                        BarMark(x: .value("Week", String(w.weekIndex)), y: .value("Done", w.pct ?? 0))
                             .foregroundStyle(Color.accentColor)
                             .cornerRadius(3)
                             .annotation(position: .top) {
@@ -46,6 +48,16 @@ struct ScorecardDetailView: View {
                             }
                     }
                     .chartYScale(domain: 0...110)
+                    .chartXAxis {
+                        AxisMarks { value in
+                            AxisValueLabel {
+                                if let s = value.as(String.self), let i = Int(s),
+                                   let w = scorecard.weeks.first(where: { $0.weekIndex == i }) {
+                                    Text("W\(w.weekNumber)").font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
                     .chartYAxis {
                         AxisMarks(position: .leading, values: [0, 50, 100]) { value in
                             AxisGridLine()
@@ -111,7 +123,7 @@ struct IntensityDetailView: View {
                     LabeledContent {
                         Text("\(coverage.measured) of \(coverage.inScope)").monospacedDigit()
                     } label: {
-                        Label("Sessions with heart rate", systemImage: "ruler").labelStyle(.inline)
+                        Label("Sessions measured", systemImage: "ruler").labelStyle(.inline)
                     }
                 } footer: {
                     if coverage.measured < coverage.inScope, let reason = coverage.reason {

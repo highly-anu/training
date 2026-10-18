@@ -277,10 +277,12 @@ def _load(inputs: DevelopmentInputs, timeline: _Timeline, blocks: list[dict]) ->
 
 def _load_by_block(inputs: DevelopmentInputs, timeline: _Timeline, blocks: list[dict],
                    weekly: list[dict]) -> list[dict]:
-    """Each block's weekly TRIMP in brief — its weeks in the window (a week is
-    the block's whose Thursday it holds, as `weekly` assigns them), the total,
-    the average over those weeks, weeks without a workout included, and the
-    peak — for the Blocks detail on both clients."""
+    """Each block's weekly TRIMP in brief — its weeks (a week is the block's
+    whose Thursday it holds, as `weekly` assigns them, from the week the
+    window or the block starts in), the total, the average over those weeks,
+    weeks without a workout included, and the peak — for the Blocks detail on
+    both clients. A week the window cuts counts whole while only its
+    in-window workouts add to the total."""
     out = []
     for b in blocks:
         start = max(_as_date(b['from']), inputs.window_from)

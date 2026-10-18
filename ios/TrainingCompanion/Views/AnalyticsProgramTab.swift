@@ -361,26 +361,37 @@ struct IntensityWeeksChart: View {
     let weeks: [ProgramAnalytics.Intensity.Week]
     var height: CGFloat = 160
 
+    /// Keyed by position: an old program repeats week numbers, which stacked
+    /// two weeks in one bar; the axis still names each by its number.
     private struct Slice: Identifiable {
-        let week: Int
+        let position: Int
         let zone: String
         let minutes: Double
-        var id: String { "\(week)-\(zone)" }
+        var id: String { "\(position)-\(zone)" }
     }
 
     private var slices: [Slice] {
-        weeks.flatMap { w in
-            [Slice(week: w.week, zone: "Z1–2", minutes: w.zone12Pct),
-             Slice(week: w.week, zone: "Z3", minutes: w.zone3Pct),
-             Slice(week: w.week, zone: "Z4–5", minutes: w.zone45Pct),
-             Slice(week: w.week, zone: "Max effort", minutes: w.maxEffortPct)]
+        weeks.enumerated().flatMap { i, w in
+            [Slice(position: i, zone: "Z1–2", minutes: w.zone12Pct),
+             Slice(position: i, zone: "Z3", minutes: w.zone3Pct),
+             Slice(position: i, zone: "Z4–5", minutes: w.zone45Pct),
+             Slice(position: i, zone: "Max effort", minutes: w.maxEffortPct)]
         }
     }
 
     var body: some View {
         Chart(slices) { slice in
-            BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
+            BarMark(x: .value("Week", String(slice.position)), y: .value("Minutes", slice.minutes))
                 .foregroundStyle(by: .value("Zone", slice.zone))
+        }
+        .chartXAxis {
+            AxisMarks { value in
+                AxisValueLabel {
+                    if let s = value.as(String.self), let i = Int(s), weeks.indices.contains(i) {
+                        Text("W\(weeks[i].week)").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
                                     "Z4–5": Color.orange, "Max effort": Color.red])
@@ -658,8 +669,11 @@ private struct MovementBars: View {
             }
             Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
                 ForEach(rows, id: \.pattern) { row in
+                    // VoiceOver reads the row once, from its first cell (a
+                    // GridRow hands its modifiers to every cell).
                     GridRow {
                         Text(Self.name(row.pattern)).font(.subheadline).lineLimit(1)
+                            .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color(.systemGray4))
@@ -670,13 +684,13 @@ private struct MovementBars: View {
                             .frame(maxHeight: .infinity)
                         }
                         .frame(height: 6)
+                        .accessibilityHidden(true)
                         Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
                             .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                             .fixedSize()
                             .gridColumnAlignment(.trailing)
+                            .accessibilityHidden(true)
                     }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
                 }
             }
         }

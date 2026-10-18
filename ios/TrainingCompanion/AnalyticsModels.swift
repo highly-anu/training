@@ -311,11 +311,15 @@ struct LoadSummary: Decodable, Equatable {
         }
     }
 
-    var activityEntries: [ActivityTypeEntry] {
+    /// Each activity in its modality's colour, as the modality ring beside it
+    /// draws it — "Traditional Strength Training" was blue beside a red Max
+    /// Strength; a palette only for an activity the server could not place.
+    @MainActor var activityEntries: [ActivityTypeEntry] {
         let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
         return activities.enumerated().map { i, a in
             ActivityTypeEntry(name: ImportedWorkout.activityLabel(a.activityType),
-                              hours: a.minutes / 60, sessions: Double(a.sessions), color: colors[i % colors.count])
+                              hours: a.minutes / 60, sessions: Double(a.sessions),
+                              color: a.modalityId.map { ModalityStyle.color(for: $0) } ?? colors[i % colors.count])
         }
     }
 
