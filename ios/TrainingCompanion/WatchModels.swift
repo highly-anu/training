@@ -994,6 +994,8 @@ struct WatchDay: Codable {
     var startsOn: String? = nil
     var weekNumber: Int? = nil
     var totalWeeks: Int? = nil
+    /// The week's phase kind ("build", "taper"), for the Week title.
+    var phase: String? = nil
     var dayName: String? = nil
     var sessions: [WatchSession]? = nil
     var readiness: WatchReadiness? = nil
@@ -1005,7 +1007,7 @@ struct WatchDay: Codable {
     var maxHR: Int? = nil
 
     enum CodingKeys: String, CodingKey {
-        case status, date, startsOn, weekNumber, totalWeeks, dayName, sessions
+        case status, date, startsOn, weekNumber, totalWeeks, phase, dayName, sessions
         case readiness, tomorrow, progress, days, maxHR
     }
 }
@@ -1020,6 +1022,7 @@ extension WatchDay {
         startsOn = try? c.decodeIfPresent(String.self, forKey: .startsOn)
         weekNumber = c.lenientInt(.weekNumber)
         totalWeeks = c.lenientInt(.totalWeeks)
+        phase = try? c.decodeIfPresent(String.self, forKey: .phase)
         dayName = try? c.decodeIfPresent(String.self, forKey: .dayName)
         sessions = try c.decodeIfPresent([WatchSession].self, forKey: .sessions)
         readiness = try? c.decodeIfPresent(WatchReadiness.self, forKey: .readiness)

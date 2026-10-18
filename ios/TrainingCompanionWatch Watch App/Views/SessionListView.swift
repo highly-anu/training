@@ -1,10 +1,16 @@
 import SwiftUI
 
+/// Today: readiness, the day's sessions, and the Garmin's menu rows — Week
+/// (the days ahead, each to its sessions and steps), Progress (the week, the
+/// programme, the methodology's measure) and Sync (the last sync, in words).
+/// A rest day, or a day whose sessions are all done, says what tomorrow
+/// holds. The words are WatchListText's, the Garmin's.
 struct SessionListView: View {
     @EnvironmentObject var connectivity: WatchConnectivityManager
 
-    @State private var showThisWeek = false
     @State private var deepLinkSession: WatchSession? = nil
+    /// A page opened by the TC_PAGE launch switch (debug builds only).
+    @State private var debugPage: String? = nil
 
     private var openSessions: [WatchSession] {
         connectivity.todaySessions.filter {
@@ -20,48 +26,70 @@ struct SessionListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            List {
+                if let readiness = connectivity.readiness {
+                    readinessRow(readiness)
+                        .listRowBackground(Color.clear)
+                }
+
                 if connectivity.todaySessions.isEmpty {
-                    restDayView
-                        .navigationTitle("Today")
-                } else {
-                    List {
-                        // Readiness indicator (if available)
-                        if let readiness = connectivity.readiness {
-                            readinessRow(readiness)
-                                .listRowBackground(Color.clear)
-                        }
-
-                        if !openSessions.isEmpty {
-                            Section {
-                                ForEach(openSessions, id: \.sessionId) { session in
-                                    NavigationLink(destination: ActiveWorkoutView(session: session)) {
-                                        sessionRow(session, done: false)
-                                    }
-                                }
+                    restDayRow
+                        .listRowBackground(Color.clear)
+                }
+                if !openSessions.isEmpty {
+                    Section {
+                        ForEach(openSessions, id: \.sessionId) { session in
+                            NavigationLink(destination: ActiveWorkoutView(session: session)) {
+                                sessionRow(session, done: false)
                             }
-                        }
-                        if !doneSessions.isEmpty {
-                            Section("Completed") {
-                                ForEach(doneSessions, id: \.sessionId) { session in
-                                    NavigationLink(destination: ActiveWorkoutView(session: session)) {
-                                        sessionRow(session, done: true)
-                                    }
-                                }
-                            }
-                        }
-
-                        // The week: done of this week's sessions, and the days ahead
-                        if !connectivity.weekAhead.isEmpty {
-                            weekSection
                         }
                     }
-                    .navigationTitle("Today")
+                }
+                if !doneSessions.isEmpty {
+                    Section("Completed") {
+                        ForEach(doneSessions, id: \.sessionId) { session in
+                            NavigationLink(destination: ActiveWorkoutView(session: session)) {
+                                sessionRow(session, done: true)
+                            }
+                        }
+                    }
+                }
+                // Nothing left to do today: what tomorrow holds.
+                if openSessions.isEmpty, let line = WatchListText.tomorrowLine(connectivity.tomorrow) {
+                    menuRow("Tomorrow", line, icon: "sunrise")
+                }
+
+                Section {
+                    if !connectivity.weekAhead.isEmpty {
+                        NavigationLink(destination: WeekAheadView()) {
+                            menuRow("Week", connectivity.weekTitle, icon: "calendar")
+                        }
+                    }
+                    if let progress = connectivity.progress {
+                        NavigationLink(destination: ProgressPageView(progress: progress)) {
+                            menuRow("Progress", WatchListText.progressLine(progress), icon: "checkmark.circle")
+                        }
+                    }
+                    Button { connectivity.requestSync() } label: {
+                        menuRow("Sync", connectivity.lastSync?.line ?? "today's session",
+                                icon: "arrow.triangle.2.circlepath",
+                                tint: connectivity.lastSync?.ok == false ? .orange : .secondary)
+                    }
                 }
             }
+            .navigationTitle("Today")
             .navigationDestination(item: $deepLinkSession) { session in
                 ActiveWorkoutView(session: session)
             }
+            .navigationDestination(isPresented: Binding(get: { debugPage != nil },
+                                                        set: { if !$0 { debugPage = nil } })) {
+                switch debugPage {
+                case "progress": if let p = connectivity.progress { ProgressPageView(progress: p) }
+                case "day": if let d = connectivity.weekAhead.first(where: { !$0.sessions.isEmpty }) { DayAheadView(day: d) }
+                default: WeekAheadView()
+                }
+            }
+            .onAppear { if debugPage == nil, let p = WatchDebugLaunch.page { debugPage = p } }
         }
         .onChange(of: connectivity.pendingDeepLinkSessionId) { _, _ in resolveDeepLink() }
         .onChange(of: connectivity.todaySessions) { _, _ in resolveDeepLink() }
@@ -75,7 +103,7 @@ struct SessionListView: View {
         connectivity.pendingDeepLinkSessionId = nil
     }
 
-    // MARK: - Readiness Row
+    // MARK: - Rows
 
     private func readinessRow(_ info: WatchReadiness) -> some View {
         let color: Color
@@ -94,74 +122,19 @@ struct SessionListView: View {
         .padding(.vertical, 2)
     }
 
-    // MARK: - Week Section
-
-    /// "Mon", or "Today" for the first day.
-    private func dayLabel(_ day: WatchDayAhead) -> String {
-        if day.offset == 0 { return "Today" }
-        let parse = DateFormatter(); parse.dateFormat = "yyyy-MM-dd"; parse.locale = Locale(identifier: "en_US_POSIX")
-        guard let date = parse.date(from: day.date) else { return day.date }
-        let show = DateFormatter(); show.setLocalizedDateFormatFromTemplate("EEE")
-        return show.string(from: date)
-    }
-
-    /// The server's week ahead (today and the six days after it, `days`),
-    /// under the count of this program week's sessions done. The phone used
-    /// to build a Monday-to-Sunday list of its own from the program.
-    private var weekSection: some View {
-        Section {
-            if showThisWeek {
-                ForEach(connectivity.weekAhead) { day in
-                    let modalities = day.sessions.map(\.modalityId)
-                    HStack(spacing: 8) {
-                        Text(dayLabel(day))
-                            .font(.caption2)
-                            .fontWeight(day.offset == 0 ? .bold : .regular)
-                            .foregroundStyle(day.offset == 0 ? .blue : .secondary)
-                            .frame(width: 40, alignment: .leading)
-                        if modalities.isEmpty {
-                            Image(systemName: "battery.100.bolt")
-                                .font(.caption2)
-                                .foregroundStyle(.green)
-                        } else {
-                            HStack(spacing: 4) {
-                                ForEach(Array(modalities.prefix(2).enumerated()), id: \.offset) { _, mod in
-                                    Circle()
-                                        .fill(ModalityStyle.color(for: mod))
-                                        .frame(width: 6, height: 6)
-                                }
-                                if let firstMod = modalities.first {
-                                    Image(systemName: ModalityStyle.icon(for: firstMod))
-                                        .font(.caption2)
-                                        .foregroundStyle(ModalityStyle.color(for: firstMod))
-                                }
-                            }
-                        }
-                    }
-                    .padding(.vertical, 1)
-                }
-            }
-        } header: {
-            Button(action: { showThisWeek.toggle() }) {
-                HStack {
-                    Text("Week")
-                        .font(.caption)
-                    Spacer()
-                    // Done of this program week's sessions, any device — the server's count.
-                    if let week = connectivity.weekDone {
-                        Text("\(week.done)/\(week.sessions)")
-                            .font(.caption2).monospacedDigit()
-                    }
-                    Image(systemName: showThisWeek ? "chevron.up" : "chevron.down")
-                        .font(.caption2)
-                }
+    /// A label over its line, as the Garmin's menu items read.
+    private func menuRow(_ title: String, _ line: String, icon: String,
+                         tint: Color = .secondary) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
                 .foregroundStyle(.secondary)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.body)
+                Text(line).font(.caption2).foregroundStyle(tint).lineLimit(2)
             }
-            .buttonStyle(.plain)
         }
     }
-
-    // MARK: - Session Row
 
     @ViewBuilder
     private func sessionRow(_ session: WatchSession, done: Bool) -> some View {
@@ -183,16 +156,99 @@ struct SessionListView: View {
         }
     }
 
-    private var restDayView: some View {
-        VStack(spacing: 8) {
+    private var restDayRow: some View {
+        HStack(spacing: 10) {
             Image(systemName: "battery.100.bolt")
-                .font(.largeTitle)
+                .font(.title3)
                 .foregroundStyle(.green)
-            Text("Rest")
-                .font(.headline)
-            Text("Recovery is training.")
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Rest day").font(.headline)
+                Text("Recovery is training.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+// MARK: - Week
+
+/// The days ahead, from the server's week (`days`): each one's sessions,
+/// and each session's steps — read only, as the Garmin's Week menu.
+struct WeekAheadView: View {
+    @EnvironmentObject var connectivity: WatchConnectivityManager
+
+    var body: some View {
+        List(connectivity.weekAhead) { day in
+            if day.sessions.isEmpty {
+                dayRow(day)
+            } else {
+                NavigationLink(destination: DayAheadView(day: day)) { dayRow(day) }
+            }
+        }
+        .navigationTitle(connectivity.weekTitle)
+    }
+
+    private func dayRow(_ day: WatchDayAhead) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(WatchListText.dayName(day)).font(.body)
+            Text(WatchListText.dayLine(day))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(2)
         }
+    }
+}
+
+struct DayAheadView: View {
+    let day: WatchDayAhead
+
+    var body: some View {
+        List(day.sessions) { session in
+            NavigationLink(destination: StepsListView(session: session)) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(session.archetypeName).font(.body).lineLimit(2)
+                    Text(WatchListText.sessionLine(session))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationTitle(WatchListText.dayName(day))
+    }
+}
+
+/// A session's steps and what each asks: "5 Reps @ 100 kg", "Hold :45".
+struct StepsListView: View {
+    let session: WatchSession
+
+    var body: some View {
+        List(Array(session.exercises.enumerated()), id: \.offset) { _, ex in
+            VStack(alignment: .leading, spacing: 1) {
+                Text(ex.name).font(.footnote).lineLimit(2)
+                Text(WatchSteps.preview(ex, session.screen(for: ex)))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle(session.archetypeName)
+    }
+}
+
+// MARK: - Progress
+
+/// The week, the programme and the methodology's measure, in the server's
+/// words — the sentence the phone's and the web's Today show.
+struct ProgressPageView: View {
+    let progress: WatchProgress
+
+    var body: some View {
+        List(Array(WatchListText.progressRows(progress).enumerated()), id: \.offset) { _, row in
+            VStack(alignment: .leading, spacing: 1) {
+                Text(row.label).font(.caption2).foregroundStyle(.secondary)
+                Text(row.value).font(.footnote)
+            }
+        }
+        .navigationTitle("Progress")
     }
 }

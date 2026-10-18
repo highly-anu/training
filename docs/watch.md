@@ -59,13 +59,13 @@ As of 2026-10-17. *Server* is the payload key; *—* means the server has no par
 | Last time per exercise | `last` | yes | yes |
 | Test step: best and the next level, Save results / Not a test | `standard` | yes | yes |
 | Week progress | `progress.week` | glance, Progress page | This Week count, complication ring |
-| Programme %, headline, trend | `progress.program`, `.headline` | Progress page | pending, 14.4 |
-| Week ahead | `days` (`week=1`) | Week menu | Week list on Today; its own screen — pending, 14.4 |
-| Tomorrow on a rest day | `tomorrow` | yes | pending, 14.4 |
+| Programme %, headline, trend | `progress.program`, `.headline` | Progress page | Progress page (Today ▸ Progress) |
+| Week ahead | `days` (`week=1`) | Week menu | Week page: days → sessions → steps |
+| Tomorrow on a rest day | `tomorrow` | yes | yes, and once the day's sessions are done |
 | Readiness | `readiness` | ring | dot and score |
 | Program not started yet | `status`, `startsOn` | not checked | "Starts Mon 20 Oct" |
 | Max HR for the zone alerts | `maxHR` | — (the watch's own zones) | yes |
-| Sync failure in words | — | yes | unreachable vs. couldn't sync; the reason — pending, 14.4 |
+| Sync failure in words | — | yes | Sync row: "ok 07:41" / "failed 07:41 · No phone" (`WatchListText`) |
 | Edit set before, next and after; pace | — | yes | reps/weight/RPE logger only — pending, 14.4 |
 | Metronome | `targetRpm` | yes | pending, 14.4 |
 | Side switch, HR-gated rest, double bells | demo only | demo only | side-tracked sets and double bells drawn; the hand switch and HR-gated rest pending, 14.5 |

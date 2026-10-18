@@ -744,7 +744,8 @@ watch's request and queued with `transferUserInfo`); the watch decodes
 `WatchDay`. Every step is drawn as the Garmin draws it: `Views/StepPageView.swift`
 (design-system §9.6), from `WatchSpecText`. On the simulator, the watch's debug builds
 take `SIMCTL_CHILD_TC_SESSION=<id>`, `TC_STEP`, `TC_RUN=1`, `TC_LAPS=<k>` and
-`TC_SKIP_HEALTH=1` (`WatchDebugLaunch`) to reach any step's page without a tap.
+`TC_SKIP_HEALTH=1` (`WatchDebugLaunch`) to reach any step's page without a tap, and
+`TC_PAGE=week|progress|day` for the Today list's pages.
 `data/watch_day_fixture.json` is that body, written by the route
 (`test_today_session.py --write`, which fails when they part) and decoded by
 `WatchDayTests`.
