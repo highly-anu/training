@@ -995,6 +995,10 @@ session `SessionCompleteView` lists each standard with what the watch captured
 answer travels in the summary (`standardResults`); the phone's §6.34 row is where an
 unanswered one is decided.
 
+### 9.5 Motion on Watch
+
+No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
+
 ### 9.6 The step page (one page for every step)
 
 A step is drawn as the Garmin draws it, from its package's screen spec
@@ -1009,10 +1013,6 @@ Start/End Hold, + Round / + Lap, Last Round / Last Lap, Switch Side, Next, Finis
 plain **Skip** beside it — still two buttons (§9.2). `DataPageView` and `StepControlsView`
 (`Views/StepPageView.swift`) replaced the eight views the watch chose by slot type; a new
 template is drawn there, never in a view of its own.
-
-### 9.5 Motion on Watch
-
-No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
 
 ---
 
