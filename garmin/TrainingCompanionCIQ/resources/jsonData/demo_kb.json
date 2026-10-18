@@ -101,6 +101,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -163,7 +164,8 @@
        "weightKg": 24.0,
        "restSeconds": 120,
        "targetRpe": 8,
-       "screen": "s1"
+       "screen": "s1",
+       "bells": 2
       },
       {
        "exerciseId": "double_kb_front_squat",
@@ -179,7 +181,8 @@
        "reps": "5",
        "weightKg": 24.0,
        "restSeconds": 120,
-       "screen": "s1"
+       "screen": "s1",
+       "bells": 2
       },
       {
        "exerciseId": "renegade_row",
@@ -222,6 +225,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -403,6 +407,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -517,6 +522,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -647,6 +653,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -729,6 +736,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",

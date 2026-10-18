@@ -16,14 +16,6 @@ struct HRZoneCalculator {
         }
     }
 
-    static func bpmBounds(zone: Int, maxHR: Int) -> (lower: Int, upper: Int) {
-        let pcts: [(Double, Double)] = [
-            (0.00, 0.60), (0.60, 0.70), (0.70, 0.80), (0.80, 0.90), (0.90, 1.00)
-        ]
-        let idx = max(0, min(4, zone - 1))
-        return (Int(pcts[idx].0 * Double(maxHR)), Int(pcts[idx].1 * Double(maxHR)))
-    }
-
     /// "Zone 1–2 (conversational pace)" → (lower: 1, upper: 2)
     static func parseZoneRange(_ target: String?) -> (lower: Int, upper: Int)? {
         guard let s = target else { return nil }

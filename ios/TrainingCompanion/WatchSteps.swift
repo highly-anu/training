@@ -127,3 +127,27 @@ enum WatchSteps {
         return stepOf(upcoming)
     }
 }
+
+/// The cues a step's clock fires, as the Garmin's updateIntervalTiming does:
+/// the hand switch `switchAtSec` into the work (a timed block's, or each
+/// interval's), and an interval rest that ends on heart rate.
+enum WatchCues {
+    /// The work second at which the hands switch.
+    static func switchDue(_ ex: WatchExercise, workSecond: Int) -> Bool {
+        guard let at = ex.switchAtSec, at > 0 else { return false }
+        return workSecond == at
+    }
+
+    /// A rest with `restUntilHr`: over once the heart rate has stayed under
+    /// it for five seconds; the rest's own time is then only its cap.
+    struct RestGate: Equatable {
+        static let holdSec = 5
+        var below = 0
+
+        /// One second of the rest; true once it is over.
+        mutating func tick(heartRate: Int?, target: Int) -> Bool {
+            if let hr = heartRate, hr > 0, hr < target { below += 1 } else { below = 0 }
+            return below >= Self.holdSec
+        }
+    }
+}

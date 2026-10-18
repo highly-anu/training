@@ -405,6 +405,7 @@
       "s4": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -693,6 +694,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",
@@ -839,6 +841,7 @@
       "s0": {
        "title": [
         "name",
+        "switch_side",
         "load"
        ],
        "a": "time_left",

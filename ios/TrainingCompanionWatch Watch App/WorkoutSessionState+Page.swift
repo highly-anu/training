@@ -99,6 +99,10 @@ extension WorkoutSessionState {
             s.intervalWorking = isWork
             s.intervalRound = round
             s.intervalLeftSec = left
+            // A rest that ends on heart rate shows its time so far and the HR
+            // to reach, not a countdown.
+            s.gateRest = !isWork && ex.restUntilHr != nil
+            if !isWork { s.restPhaseElapsedSec = max(0, plan.restSec - left) }
         } else {
             s.intervalLeftSec = plan.workSec
         }

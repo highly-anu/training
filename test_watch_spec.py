@@ -287,6 +287,124 @@ def test_pentathlon_pace():
           spec.get('b') == 'rpm' and 'metronome_rpm' not in (spec.get('behaviours') or {}), str(spec))
 
 
+def test_server_fields_both_watches_use():
+    print('\na hand switch, a rest that ends on heart rate and double bells reach both watches')
+    import api
+    from src import progression
+    from src.standard_tests import protocol_load
+    exercises, _ = loader.load_all_exercises()
+    archetypes = {a['id']: a for a in loader.load_all_archetypes()}
+
+    # The data: where each field may stand.
+    for arch in archetypes.values():
+        for slot in arch.get('slots') or []:
+            where = f"{arch['id']}.{slot.get('role')}"
+            if slot.get('rest_until_hr_pct'):
+                check(f'{where}: an HR-gated rest is an interval with a cap',
+                      slot.get('slot_type') == 'emom' and slot.get('work_sec') and slot.get('rest_sec'),
+                      str(slot))
+            if slot.get('switch_at_sec'):
+                work = slot.get('work_sec') or (slot.get('duration_minutes') or 0) * 60
+                check(f'{where}: the hand switch falls inside the work',
+                      0 < slot['switch_at_sec'] < work, f"{slot['switch_at_sec']} of {work}")
+    doubles = [i for i, e in exercises.items()
+               if e.get('category') == 'kettlebell' and ('double' in i.split('_'))]
+    check('every double-kettlebell exercise says it holds two bells',
+          doubles and all(exercises[i].get('bells') == 2 for i in doubles),
+          str({i: exercises[i].get('bells') for i in doubles}))
+
+    # The load: carried there, because the slot does not survive storage.
+    ag = archetypes['kb_antiglycolic_session']['slots'][0]
+    swing = exercises['wk_kb_half_snatch']
+    load = progression.calculate_load(swing, ag, 'time_to_task', 1, 'base', 'intermediate', False, 60)
+    check('an HR-gated interval carries its share of max HR and its zone',
+          load.get('rest_until_hr_pct') == 68 and load.get('zone_lower') == 1 and load.get('zone_upper') == 2
+          and load.get('target_rounds') == 20 and load.get('work_sec') == 15 and load.get('rest_sec') == 90,
+          str(load))
+    check('and plans the minutes it did as a timed block', load.get('time_minutes') == 35, str(load))
+    tabata = progression.calculate_load(swing, {'slot_type': 'emom', 'sets': 8, 'work_sec': 20,
+                                                'rest_sec': 10, 'intensity': 'max'},
+                                        'time_to_task', 1, 'base', 'intermediate', False, 60)
+    check('an interval on the clock is as it was',
+          'rest_until_hr_pct' not in tabata and 'zone_lower' not in tabata, str(tabata))
+    def rounds(phase, week=1, cap=60, slot=ag):
+        return progression.calculate_load(swing, slot, 'time_to_task', week, phase, 'intermediate',
+                                          False, cap).get('target_rounds')
+    check('its rounds are a volume: they come down in a taper and build in a peak, as minutes do',
+          (rounds('taper'), rounds('peak'), rounds('peak', week=4)) == (12, 20, 26),
+          str((rounds('taper'), rounds('peak'), rounds('peak', week=4))))
+    check('within the session limit', rounds('peak', week=4, cap=30) == 17, str(rounds('peak', week=4, cap=30)))
+    tabata_slot = {'slot_type': 'emom', 'sets': 8, 'work_sec': 20, 'rest_sec': 10, 'intensity': 'max'}
+    check('a protocol keeps its rounds', rounds('taper', slot=tabata_slot) == 8, str(rounds('taper', slot=tabata_slot)))
+    gated_sets = progression.calculate_load(swing, {'slot_type': 'sets_reps', 'sets': 3, 'reps': 5,
+                                                    'rest_sec': 90, 'rest_until_hr_pct': 68},
+                                            'linear_load', 1, 'base', 'intermediate', False, 60)
+    check('only an interval rest is gated', 'rest_until_hr_pct' not in gated_sets, str(gated_sets))
+    test = archetypes['kb_pentathlon_test']
+    event = next(s for s in test['slots'] if s['role'] == 'half_snatch')
+    tload = protocol_load(swing, event)
+    check('a test event carries its hand switch, as written',
+          tload.get('switch_at_sec') == 180 and tload.get('duration_minutes') == 6 and tload.get('test'),
+          str(tload))
+
+    # The payload: bpm on the athlete's max HR, keys only where they apply.
+    def encode(ea, max_hr=None, arch='kb_antiglycolic_session'):
+        return api.encode_watch_session({'modality': 'aerobic_base', 'archetype': {'id': arch},
+                                         'exercises': [ea]}, '1-Monday-0', spec_level=1,
+                                        max_hr=max_hr)['exercises'][0]
+    ex = encode({'slot_role': 'main', 'slot_type': 'emom', 'exercise': swing, 'load': load}, max_hr=185)
+    check('restUntilHr is the share of the athlete\'s max HR', ex.get('restUntilHr') == 126, str(ex.get('restUntilHr')))
+    check('the load says it', ex.get('loadDescription') == '20 x 15s, rest to HR 126', str(ex.get('loadDescription')))
+    check('the work shows its zone', (ex.get('prescribedZoneLower'), ex.get('prescribedZoneUpper')) == (1, 2))
+    ex = encode({'slot_role': 'main', 'slot_type': 'emom', 'exercise': swing, 'load': load})
+    check('without a max HR, the shared default\'s', ex.get('restUntilHr') == 129, str(ex.get('restUntilHr')))
+    ex = encode({'slot_role': 'half_snatch', 'slot_type': 'time_domain', 'exercise': swing, 'load': tload},
+                arch='kb_pentathlon_test')
+    check('switchAtSec reaches the watch', ex.get('switchAtSec') == 180, str(ex))
+    check('and the load says it', (ex.get('loadDescription') or '').startswith('6 min, switch at 3:00'),
+          str(ex.get('loadDescription')))
+    out = api.encode_watch_session({'modality': 'strength_endurance', 'archetype': {'id': 'kb_pentathlon_test'},
+                                    'exercises': [{'slot_role': 'half_snatch', 'slot_type': 'time_domain',
+                                                   'exercise': swing, 'load': tload}]},
+                                   '1-Monday-0', spec_level=1)
+    spec = out['screens'][out['exercises'][0]['screen']]
+    check('a timed block\'s title shows the hand', 'switch_side' in (spec.get('title') or []), str(spec))
+    press = dict(exercises['kb_press_double'])
+    check('a double sends bells', encode({'slot_role': 'main', 'slot_type': 'sets_reps', 'exercise': press,
+                                          'load': {'sets': 5, 'reps': 5, 'weight_kg': 16}}).get('bells') == 2)
+    press.pop('bells')
+    check('even from a program stored before the field (the library\'s)',
+          encode({'slot_role': 'main', 'slot_type': 'sets_reps', 'exercise': press,
+                  'load': {'sets': 5, 'reps': 5, 'weight_kg': 16}}).get('bells') == 2)
+    plain = encode({'slot_role': 'main', 'slot_type': 'sets_reps', 'exercise': exercises['kb_press_single']
+                    if 'kb_press_single' in exercises else swing, 'load': {'sets': 5, 'reps': 5}})
+    check('and nothing is sent where nothing applies',
+          not ({'bells', 'switchAtSec', 'restUntilHr'} & set(plain)), str(sorted(plain)))
+
+    # A generated program: the sessions the packages now write this way.
+    from src import goals
+    from src.generator import generate
+    frameworks = list(loader.load_all_frameworks().values())
+    goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id='pentathlon')
+    prog = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=24, output_format='dict', constraints={
+        'days_per_week': 5, 'session_time_minutes': 75, 'training_level': 'advanced',
+        'equipment': ['kettlebell', 'open_space'], 'injury_flags': [], 'periodization_week': 1,
+        'fatigue_state': 'normal'})
+    sessions = [s for w in prog['weeks'] for ss in w['schedule'].values() for s in ss]
+    by_arch = {}
+    for s in sessions:
+        by_arch.setdefault((s.get('archetype') or {}).get('id'), s)
+    ag_s, test_s = by_arch.get('kb_antiglycolic_session'), by_arch.get('kb_pentathlon_test')
+    check('Pentathlon Prep schedules both', ag_s is not None and test_s is not None, str(sorted(k for k in by_arch if k)))
+    if ag_s and test_s:
+        main_ex = [e for e in api.encode_watch_session(ag_s, 'k', max_hr=180)['exercises'] if e['slotRole'] == 'main']
+        check('its anti-glycolytic rest waits for the heart rate',
+              main_ex and main_ex[0].get('restUntilHr') == 122, str(main_ex))
+        events = [e for e in api.encode_watch_session(test_s, 'k')['exercises'] if e.get('switchAtSec')]
+        check('its test switches hands at 3:00 in all five events',
+              len(events) == 5 and all(e['switchAtSec'] == 180 for e in events), str(len(events)))
+
+
 def main() -> int:
     test_defaults()
     test_every_slot_resolves()
@@ -294,6 +412,7 @@ def main() -> int:
     test_throwaway_package_reaches_the_payload()
     test_borrowed_session_shows_its_owner()
     test_pentathlon_pace()
+    test_server_fields_both_watches_use()
     test_a_test_step_says_its_standard()
     test_watch_side_is_current()
     print()

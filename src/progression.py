@@ -231,7 +231,25 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
     return out
 
 
-def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | None = None) -> dict:
+def _gated_rounds(rounds: int, cycle: int, week: int, phase: str | None, is_deload: bool,
+                  max_minutes: int | None, deload_keep: float | None) -> int:
+    """An interval whose rest ends on heart rate is a volume of work, not a
+    protocol on the clock (Tabata's 8 x 20s/10s keeps its rounds): its rounds
+    follow the phase kind, the weekly ramp, a deload and the session limit as
+    the minutes of the timed block it stands for do (_time_to_task), so a
+    competition phase still comes down."""
+    target = rounds * phases.volume_multiplier(phase)
+    current = min(rounds * (1 + (week - 1) * 0.10), target)
+    if is_deload:
+        current *= _kind_adjusted_keep(phase, deload_keep, 0.60)
+    n = max(1, round(current))
+    if max_minutes:
+        n = max(1, min(n, (max_minutes * 60) // max(1, cycle)))
+    return n
+
+
+def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | None = None,
+                  phase: str | None = None, max_minutes: int | None = None) -> dict:
     keep = deload_keep if deload_keep is not None else 0.70
     duration_sec = slot.get('duration_sec', slot.get('time_cap_sec', 1200))
     slot_type = slot.get('slot_type', 'amrap')
@@ -247,16 +265,25 @@ def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | N
 
     if work_sec:
         rounds = slot.get('sets') or max(1, round(duration_sec / max(1, work_sec)))
-        if is_deload:
-            rounds = max(1, round(rounds * keep))
         cycle = work_sec + (rest_sec or 0)
-        return {
+        gated = bool(slot.get('rest_until_hr_pct') and rest_sec)
+        if gated:
+            rounds = _gated_rounds(rounds, cycle, week, phase, is_deload, max_minutes, deload_keep)
+        elif is_deload:
+            rounds = max(1, round(rounds * keep))
+        out = {
             'time_minutes': max(1, round((rounds * cycle) / 60)),
             'target_rounds': rounds,
             'work_sec': work_sec,
             'rest_sec': rest_sec or 0,
             'format': slot_type.upper(),
         }
+        # A rest that ends on heart rate makes the interval a heart-rate
+        # prescription: the work carries its zone, as a timed block does.
+        lo, hi, label = zone_band(slot.get('intensity'))
+        if gated and lo is not None:
+            out.update({'zone_target': label, 'zone_lower': lo, 'zone_upper': hi})
+        return out
 
     base_rounds = max(1, round(duration_sec / 180))
     rounds = base_rounds + max(0, week - 1)
@@ -323,6 +350,8 @@ def calculate_load(
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm
+    if isinstance(load, dict):
+        load.update(watch_cues(slot))
     return load
 
 
@@ -334,6 +363,19 @@ def paced_rpm(exercise: dict, slot: dict) -> int | None:
     if not pace or not pace.get('max_reps') or not pace.get('minutes'):
         return None
     return round(pace['max_reps'] / pace['minutes'])
+
+
+def watch_cues(slot: dict) -> dict:
+    """What a slot asks of the athlete's watch beyond the load, carried in the
+    load because the slot does not survive storage: a hand switch so many
+    seconds into the work, and an interval rest that ends on heart rate
+    (a share of max HR; api._encode_watch_exercise turns it into bpm)."""
+    out = {}
+    if slot.get('switch_at_sec'):
+        out['switch_at_sec'] = int(slot['switch_at_sec'])
+    if slot.get('rest_until_hr_pct') and slot.get('slot_type') == 'emom' and slot.get('rest_sec'):
+        out['rest_until_hr_pct'] = slot['rest_until_hr_pct']
+    return out
 
 
 def _calculate_load(
@@ -366,7 +408,7 @@ def _calculate_load(
         return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep)
 
     elif slot_type in ('amrap', 'emom'):
-        return _density_slot(slot, week_number, is_deload, deload_keep)
+        return _density_slot(slot, week_number, is_deload, deload_keep, phase, session_time_minutes)
 
     elif slot_type == 'amrap_movement':
         # Component movement within an AMRAP — show reps per round only

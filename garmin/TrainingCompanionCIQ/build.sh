@@ -11,6 +11,10 @@
 #                              (store test upload, all devices) and the sideload .prg for $DEVICE.
 #                              The real app's sources are untouched; demoProgrammes stays false there.
 #
+# The version is garmin/VERSION (MAJOR.MINOR.PATCH, as ios/VERSION). The manifest has none:
+# it is typed into the store's upload form, which --release and --demo print with the tag
+# for it (ciq-v<VERSION>). Demo and real builds share the app id, so they share the sequence.
+#
 # Requires: the Connect IQ SDK and a developer key.
 set -euo pipefail
 
@@ -40,6 +44,9 @@ else
   MONKEYC="$SDK/bin/monkeyc.bat"
 fi
 
+VERSION="$(tr -d '[:space:]' < "$(dirname "$HERE")/VERSION")"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "ERROR: garmin/VERSION must be MAJOR.MINOR.PATCH, not '$VERSION'"; exit 1; }
+
 # --- preflight ---------------------------------------------------------------
 [ -f "$MONKEYC" ] || { echo "ERROR: monkeyc not found at $MONKEYC (set CIQ_SDK)."; exit 1; }
 [ -f "$KEY" ]     || { echo "ERROR: developer key not found at $KEY (set CIQ_KEY)."; exit 1; }
@@ -60,6 +67,7 @@ if [ "${1:-}" == "--demo" ]; then
   "$MONKEYC" -o "$OUT/TrainingCompanionDemo-$DEVICE.prg" -f "$STAGE/monkey.jungle;$STAGE/packages.jungle" -y "$KEY" -d "$DEVICE" -r
   rm -rf "$STAGE"
   echo "Built: $OUT/TrainingCompanionDemo.iq  and  $OUT/TrainingCompanionDemo-$DEVICE.prg"
+  echo "Version $VERSION: type it in the store's upload form, then: git tag ciq-v$VERSION && git push origin ciq-v$VERSION"
   exit 0
 fi
 
@@ -81,6 +89,7 @@ if [ "${1:-}" == "--release" ]; then
   echo "Building release .iq (all devices) ..."
   "$MONKEYC" -e -o "$OUT/TrainingCompanion.iq" -f "$HERE/monkey.jungle;$HERE/packages.jungle" -y "$KEY" -r
   echo "Built: $OUT/TrainingCompanion.iq  (store upload)"
+  echo "Version $VERSION: type it in the store's upload form, then: git tag ciq-v$VERSION && git push origin ciq-v$VERSION"
   exit 0
 fi
 

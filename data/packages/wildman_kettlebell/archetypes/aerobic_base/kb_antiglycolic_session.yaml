@@ -15,9 +15,15 @@ applicable_phases:
 - build
 - peak
 slots:
+# Short sets, each rest ending once the heart rate is back under ~130 bpm (68 %
+# of a 190 max; the server sends the athlete's own number), capped at 90 s:
+# at most 35 minutes, as the notes have it.
 - role: main
-  slot_type: time_domain
-  duration_minutes: 35
+  slot_type: emom
+  sets: 20
+  work_sec: 15
+  rest_sec: 90
+  rest_until_hr_pct: 68
   intensity: zone2
   exercise_filter:
     category: kettlebell

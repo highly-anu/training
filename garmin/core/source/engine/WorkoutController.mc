@@ -817,7 +817,8 @@ class WorkoutController {
     //                 round, as Garmin's repeat steps do.
     //   rounds        ends itself when the cap runs out
     //   timed         with a duration: ends itself at 0:00 (a round_timer block
-    //                 does not: LAP counts its rounds and leaves it)
+    //                 does not: LAP counts its rounds and leaves it); a hand
+    //                 switch fires at its second, as in an interval's work
     //
     // LAP still ends any of them early.
     hidden function updateIntervalTiming() {
@@ -875,6 +876,11 @@ class WorkoutController {
                 nextExercise();
             }
         } else if (ex.isTemplate("timed")) {
+            var sw = ex.switchAtSec();
+            if (sw != null && since == sw) {
+                toggleSide();
+                queueAlert("Switch hands", (_side == SIDE_LEFT) ? "Left hand" : "Right hand");
+            }
             var mins = ex.durationMinutes();
             if (mins != null && mins > 0 && since >= mins * 60) {
                 Haptics.restOver();

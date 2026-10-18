@@ -29,7 +29,7 @@ module Vocab {
         } else if ("distance".equals(t)) {
             return { "title" => ["name", "load", "pack"], "a" => "distance", "b" => "distance_target", "lines" => "next_step", "lap" => "log_round", "template" => "distance", "gauge" => "distance" };
         } else if ("timed".equals(t)) {
-            return { "title" => ["name", "load"], "a" => "time_left", "b" => "zone_or_time", "lines" => "focus", "lap" => "skip", "template" => "timed", "gauge" => "time_left" };
+            return { "title" => ["name", "switch_side", "load"], "a" => "time_left", "b" => "zone_or_time", "lines" => "focus", "lap" => "skip", "template" => "timed", "gauge" => "time_left" };
         } else if ("round_timer".equals(t)) {
             return { "title" => ["name"], "a" => "block_left", "b" => "rounds", "lines" => "next_step", "lap" => "log_round", "template" => "round_timer", "gauge" => "block_left" };
         }

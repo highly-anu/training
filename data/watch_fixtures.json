@@ -19,7 +19,7 @@
     },
     {
       "name": "a double kettlebell is loaded per bell, resting",
-      "exercise": {"exerciseId": "double_kb_front_squat", "name": "Double KB Front Squat", "slotType": "sets_reps", "category": "kettlebell", "sets": 3, "reps": "5", "weightKg": 24},
+      "exercise": {"exerciseId": "double_kb_front_squat", "name": "Double KB Front Squat", "slotType": "sets_reps", "category": "kettlebell", "bells": 2, "sets": 3, "reps": "5", "weightKg": 24},
       "state": {"reps": 5, "weightKg": 24, "setsDone": 0, "resting": true, "nextTitle": "Double KB Front Squat", "nextValue": "Set 2/3  5 Reps @ 2x24 kg"},
       "expect": {"title": "Double KB Front Squat  2x24 kg", "a": ["REPS", "5"], "b": ["SET", "1/3"], "gauge": ["SET", "1/3"],
                  "lines": ["Next: Double KB Front Squat", "Set 2/3  5 Reps @ 2x24 kg"], "lap": "complete_set", "outcome": "complete_set"}
@@ -162,6 +162,13 @@
       "state": {"elapsedSec": 600},
       "expect": {"title": "Easy Bike", "a": ["TIME LEFT", "20:00"], "b": ["ZONE", "2"], "gauge": ["TIME LEFT", "20:00"],
                  "lines": ["nasal breathing", "Next: Finish"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "a timed event after its hand switch",
+      "exercise": {"exerciseId": "wk_kb_half_snatch", "name": "Half Snatch", "slotType": "time_domain", "category": "kettlebell", "durationMinutes": 6, "switchAtSec": 180, "prescribedZoneLower": 3, "prescribedZoneUpper": 4},
+      "state": {"elapsedSec": 200, "sideIsLeft": false, "nextTitle": "Rest", "nextValue": "5:00"},
+      "expect": {"title": "Half Snatch  Right", "a": ["TIME LEFT", "2:40"], "b": ["ZONE", "3-4"], "gauge": ["TIME LEFT", "2:40"],
+                 "lines": ["Next: Rest", "5:00"], "lap": "skip", "outcome": "next"}
     },
     {
       "name": "an open practice block counts up",

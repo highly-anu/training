@@ -13,7 +13,7 @@ Pure: no Flask, no DB.
 """
 from __future__ import annotations
 
-from src.progression import paced_rpm, zone_band
+from src.progression import paced_rpm, watch_cues, zone_band
 
 # What a logged result can be, which standard metrics it fits, and the slot
 # types it is the natural reading of. The validator, the protocol and (phase 5)
@@ -169,6 +169,7 @@ def protocol_load(exercise: dict, slot: dict) -> dict:
     rpm = paced_rpm(exercise, slot)
     if rpm is not None:
         out['target_rpm'] = rpm
+    out.update(watch_cues(slot))
     out['test'] = True
     out['effort'] = 'max'
     return out

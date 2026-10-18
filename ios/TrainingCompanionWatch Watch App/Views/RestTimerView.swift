@@ -1,9 +1,12 @@
 import SwiftUI
 
+/// The rest between sets: a countdown, Skip and +30s. A rest that ends on
+/// heart rate (`restUntilHr`) is an interval's, drawn on the step page like
+/// the Garmin's; the "still recovering" guess this view made from a zone
+/// prescription is gone with it.
 struct RestTimerView: View {
     let session: WatchSession
 
-    @EnvironmentObject var connectivity: WatchConnectivityManager
     @EnvironmentObject var sessionState: WorkoutSessionState
 
     var body: some View {
@@ -11,9 +14,6 @@ struct RestTimerView: View {
             return AnyView(EmptyView())
         }
         let ex = ei < session.exercises.count ? session.exercises[ei] : nil
-        let isSmartHold = shouldHoldForHR(exercise: ex,
-                                          maxHR: connectivity.maxHR,
-                                          remaining: remaining)
 
         return AnyView(
             VStack(spacing: 8) {
@@ -27,7 +27,7 @@ struct RestTimerView: View {
                     Circle()
                         .trim(from: 0, to: progressFraction(remaining: remaining,
                                                             exercise: ex))
-                        .stroke(isSmartHold ? Color.orange : Color.green,
+                        .stroke(Color.green,
                                 style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                     Text(timeString(remaining))
@@ -36,15 +36,8 @@ struct RestTimerView: View {
                 }
                 .frame(width: 80, height: 80)
 
-                if isSmartHold {
-                    Label("Still recovering", systemImage: "heart.fill")
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
-                    Text("\(sessionState.currentHR) bpm")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                } else if ex != nil {
-                    Text(ex!.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                if let ex {
+                    Text(ex.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
 
                 HStack(spacing: 12) {
@@ -65,14 +58,6 @@ struct RestTimerView: View {
                 }
             }
         )
-    }
-
-    private func shouldHoldForHR(exercise: WatchExercise?, maxHR: Int, remaining: Int) -> Bool {
-        guard remaining == 0,
-              let upper = exercise?.prescribedZoneUpper,
-              sessionState.currentHR > 0, maxHR > 0 else { return false }
-        let upperBPM = HRZoneCalculator.bpmBounds(zone: upper, maxHR: maxHR).upper
-        return sessionState.currentHR > upperBPM + 5
     }
 
     private func progressFraction(remaining: Int, exercise: WatchExercise?) -> Double {
