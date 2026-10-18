@@ -26,6 +26,11 @@ from src.analytics.primitives import (coverage, primitive, result, scoped_hits, 
                                       trend_dict)
 from src.progression import _DEFAULT_INCREMENT_KG
 
+# The per-exercise statuses in words for the evidence lines both clients show
+# as they are; "Front Squat: insufficient_data" was the engine's own code.
+_STATUS_WORDS = {'insufficient_data': 'not enough data yet', 'on_track': 'on track',
+                 'stable_by_design': 'holding'}
+
 DEFAULT_STALL_SESSIONS = 3
 EPLEY = 0.0333
 
@@ -192,7 +197,8 @@ def set_load(entry, ctx) -> dict:
         status=lead['status'] if lead else 'insufficient_data',
         trend=lead['trend'] if lead else None,
         coverage_=coverage(in_scope, measured, reason),
-        evidence=[f"{e['name']}: {e['status']}" for e in exercises if e['series']],
+        evidence=[f"{e['name']}: {_STATUS_WORDS.get(e['status'], e['status'].replace('_', ' '))}"
+                  for e in exercises if e['series']],
         exercises=exercises, leadExerciseId=lead['exerciseId'] if lead else None,
         stallRule={'sessions': stall_sessions, 'source': 'declared' if entry.stall else 'default'},
     )

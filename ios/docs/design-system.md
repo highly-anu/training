@@ -1085,21 +1085,31 @@ intensity footer until 2026-10-16.
 document for what it measures progress by, after the review's score (§6.25)
 and measures — the web's Progress tab:
 
-- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, then a `ProgressEntryCard` per metric that applies —
-  status badge, `CoverageNoticeView` ("not measurable yet, and why"), the
-  exercise picker, the actual-against-expected chart (actual green, expected
-  indigo dashed, deload points hollow), the stall line, the evidence. Unlocks
-  and benchmark-level entries render their own bodies; entries the program
-  does not schedule fold behind one "N not in this program" row.
+- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, then a `ProgressEntryCard` per metric that applies — a
+  summary that opens `MeasureDetailView` (§6.37): the status badge, where the
+  measure stands in its own currency (the lead lift's latest value and its
+  name; movements practised of the program's and `lock.open` the ones opened;
+  standards met of those with a target), the trend, the headline pill, a
+  `Sparkline`, and the `CoverageNoticeView` when nothing measures it yet.
+  The detail has the exercise picker (a menu), the actual-against-expected
+  chart (actual green, expected indigo dashed, deload points hollow), the
+  stall line, every movement and standard (each opens its sheet), every line
+  of evidence and the About section. Entries the program does not schedule
+  fold behind one "N not in this program" row.
 - *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
   rest behind "More standards"; per standard the modality's symbol and the
-  name, the value as the server prints it, the level badge and the gap on a
-  second line, and the `StandardLadder` (§6.31).
+  name, the value as the server prints it, a chevron, the level badge and the
+  gap on a second line, and the block's `Sparkline`. A row presents
+  `StandardDetailSheet` in place (§6.32), which draws the ladder; rows drew
+  one each, and jumped to Profile, until 2026-10-17.
 - *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
-  a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a card
+  a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a row
   per exercise — latest value, this week's prescription as the target, a
   sparkline, HR from a linked workout, the finding's change line. "No trend
-  yet" when logged but unmeasured, "Not tracked" when nothing is logged.
+  yet" when logged but unmeasured, "Not tracked" when nothing is logged. A
+  row pushes `ExerciseHistoryView`: the standing, every logged session as a
+  chart (the target as a dashed rule) and as rows, "How to do it"
+  (`ExerciseDetailSheet`, §6.14) and the finding's words as About.
 
 Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.
@@ -1604,17 +1614,17 @@ entry) in the colour of the modality the standard measures (`domain` →
 as the server prints it (`standardsText`: "4:30", "1.5×BW"). `StandardLevelBadge`
 names the level ("Advanced", "Below entry") in a capsule of the same colour.
 
-- Used by Profile ▸ Standards (rows and the *Log a result* sheet), Analytics ▸
-  Progress (`ProgramStandardsCard` and the target-level entries, which were
-  text only) and Blocks (the badge; a gain is said as "+1 level", never in a
+- Used by Profile ▸ Standards (rows and the *Log a result* sheet), the
+  standard's own sheet (§6.32), a target-level measure's detail screen
+  (§6.37) and Blocks (the badge; a gain is said as "+1 level", never in a
   status green).
 - Where: Profile ▸ Standards is *This program* (the server's `programStandards`)
   · *Your results* · the other standards behind *Show all*; Progress shows the
-  program's own and says how far each moved this block with a
-  `StandardSparkline` (56 × 16, the modality's colour, no axis) from the block's
-  start; Blocks draws each as a compact `StandardHistoryChart`, the current
-  program's first. A row on Progress or Blocks opens its sheet through
-  `AppRouter.openStandard`.
+  program's own and says how far each moved this block with a `Sparkline`
+  (56 × 16, the modality's colour, no axis) from the block's start, and opens
+  the standard's sheet in place; Blocks draws each as a compact
+  `StandardHistoryChart`, the current program's first, and opens its sheet
+  through `AppRouter.openStandard`.
 - A level has no colour of its own: position and word carry it, so it cannot
   be mistaken for a status. The traffic light (§6.15) is only for a declared
   target (met · partly · below).
@@ -1728,3 +1738,55 @@ label for the whole bar: "Week 3 of 12, Base".
 Rules: segments come from `PhaseSegment.segments(of:)`, never a list of kinds; a label
 too long for its segment truncates at `.caption2` — it used to scale to 60 %, about
 6.6 pt (§4.1). Calendar drew it privately until Overview became the second user.
+
+
+### 6.37 Card and Detail
+
+**A card is the summary; the detail is a level down.** Apple's iOS guidelines
+have no "back of the card": the flip-to-the-back info button is gone, and
+detail is reached the way Lists and tables describe it — "a disclosure
+indicator reveals the next level in a hierarchy". Charting data says the same
+for charts ("keep a chart simple, letting people choose when they want
+additional details"; a small chart previews "a larger version… in a different
+view" with the same style), and Apple Health is the model: a summary card, then
+a screen with the full chart, the numbers and, at the end, *About*.
+
+- **`AnalyticsDetailCard`** (`AppCard.swift`) is an `AnalyticsCard` that is
+  one `NavigationLink`: the whole card is the target, `chevron.right` follows
+  the header's badge, `accessibilityHint` names the destination. Its content
+  is the summary state only — the current value in its own currency, a status,
+  a trend, a `Sparkline`, at most one line of words (a coverage reason) — and
+  holds nothing interactive, since the card itself is the button.
+- **A row that opens something** inside a card (an exercise, a standard) is
+  its own `NavigationLink` or button with a trailing chevron, not the card.
+- **The detail screen** is an inset-grouped `List` with an inline title (the
+  card's name): the standing first, then the chart (200 pt, with a menu
+  picker when it has several series — a display mode, §6.8), then every row
+  the card left out, then **About**.
+- **`AboutSection(about:)`** (`Views/DetailParts.swift`) ends the screen:
+  *About* (what the number measures, the package's note) and *What to log*
+  (each capture requirement and where it is logged). The words are the
+  server's — `src/analytics/vocabulary.about`, carried as `about` on each
+  progress entry — so the cards keep to numbers and symbols (§1.4) and the
+  explanation is written once, for both clients. An info button
+  (`info.circle`) only where there is nothing to navigate to: Apple's info
+  button "reveals more information about a row's content" and does not
+  navigate.
+- **`Sparkline`** (`Views/DetailParts.swift`) is the one small line: the
+  standards' block line and the Exercises card's chart were two.
+- **A label inside a row is `.labelStyle(.inline)`** (`InlineLabelStyle`,
+  `AppCard.swift`): symbol and words 4 pt apart. A `List` gives every
+  `Label` an icon column — the symbol in a fixed-width slot, the words far
+  from it ("◎     120kg") — which `.titleAndIcon` does not undo. A label that
+  *is* the row (a "How to do it" button) keeps the column; one that is part
+  of the row's content — a target, a trend, a reading, a badge — does not.
+  `TintCapsule`, `MeasureTrendLabel` and `CoverageNoticeView` carry it
+  themselves.
+- A detail a deep link can open, for screenshots and other screens:
+  `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`
+  (`AppRouter.openProgressDetail`).
+
+Users: Analytics ▸ Progress's measure cards (`MeasureDetailView`), its
+Exercises rows (`ExerciseHistoryView`), its Standards rows (the standard's
+sheet, §6.32), and Program ▸ Overview's phases (§6.26, before this section
+was written).

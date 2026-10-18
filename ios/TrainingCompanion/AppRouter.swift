@@ -46,6 +46,24 @@ final class AppRouter: ObservableObject {
         analyticsSection = nil
     }
 
+    /// A screen Analytics ▸ Progress pushes: one measure's, or one exercise's.
+    enum ProgressDetail: Hashable {
+        case measure(String)
+        case exercise(String)
+    }
+
+    /// Asked for by a deep link; Progress pushes it once its data is loaded.
+    @Published var pendingProgressDetail: ProgressDetail? = nil
+
+    func openProgressDetail(_ detail: ProgressDetail) {
+        pendingProgressDetail = detail
+        showAnalytics(.progress)
+    }
+
+    func clearPendingProgressDetail() {
+        pendingProgressDetail = nil
+    }
+
     /// A Log section asked for from outside, cleared once applied.
     @Published var logSection: LogTab? = nil
 

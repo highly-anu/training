@@ -233,7 +233,7 @@ def _injury_flags() -> list[dict]:
 # Bumped when a cached analytics document's *shape* changes, so a snapshot
 # written by the previous code (missing the new keys) is recomputed once
 # instead of being served until its inputs happen to change.
-_ANALYTICS_SHAPE = 'standards-block-1'
+_ANALYTICS_SHAPE = 'measure-about-1'
 
 
 def _standards_digest_key(performance: dict) -> list:

@@ -59,6 +59,12 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=base"), .program(.overview))
         XCTAssertEqual(parse("trainingcompanion://program"), .tab(.program))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=load"), .analytics(.load))
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure=bar_load"),
+                       .progressDetail(.measure("bar_load")), "Progress pushes that measure's screen")
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&exercise=back_squat"),
+                       .progressDetail(.exercise("back_squat")))
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure="), .analytics(.progress),
+                       "an empty id lands on the section")
         XCTAssertEqual(parse("trainingcompanion://analytics?section=blocks"), .analytics(.blocks))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=overview"), .analytics(.load), "the old name of Load")
         XCTAssertEqual(parse("trainingcompanion://analytics?section=development"), .analytics(.blocks), "the web's old name of Blocks")
@@ -82,6 +88,10 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(router.analyticsSection, .program)
         router.open(.tab(.profile))
         XCTAssertEqual(router.tab, .profile)
+        router.open(.progressDetail(.exercise("back_squat")))
+        XCTAssertEqual(router.tab, .analytics)
+        XCTAssertEqual(router.analyticsSection, .progress)
+        XCTAssertEqual(router.pendingProgressDetail, .exercise("back_squat"))
         router.open(.programPhase("compare"))
         XCTAssertEqual(router.tab, .program)
         XCTAssertEqual(router.programSection, .overview)
