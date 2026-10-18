@@ -1257,8 +1257,10 @@ Four cards, each an `AnalyticsCard` (§6.15):
   VoiceOver's), "never reached" for the rest (`forward.end`), and a `current`
   `TintCapsule` on the active one. A row pushes `ProgramVersionDetailView`,
   the block week by week — the screen Program ▸ History opens (§6.37).
-- *Lifts across blocks*: the series by name with a menu picker of every lift
-  and currency — rounds, minutes, km — with points in the window; the chart
+- *Lifts across blocks*: the series' name is the menu (`chevron.up.chevron.down`)
+  of every lift and currency — rounds, minutes, km — with points in the window,
+  each item with its block count; a name beside a menu showing the same name
+  said it twice and wrapped (2026-10-18). The chart
   plots the heaviest completed set's est-1RM per session over real dates with
   the blocks as `RectangleMark` bands, deload points hollow, and a touch reads
   that session's set (`ChartPoint.detail`, "57.5 kg × 5"). Under it the trend

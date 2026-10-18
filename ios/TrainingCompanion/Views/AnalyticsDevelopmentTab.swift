@@ -237,17 +237,26 @@ private struct SeriesCard: View {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
                     if options.count > 1 {
-                        // A display choice inside the card, so a menu (§6.8).
-                        LabeledContent {
+                        // A display choice inside the card, so a menu (§6.8)
+                        // — and the menu is the title: a name beside a menu
+                        // showing "Back Squat · 3 blocks" said it twice and
+                        // wrapped at 393 pt (2026-10-18).
+                        Menu {
                             Picker("Series", selection: Binding(get: { current?.id }, set: { id in
                                 withAnimation(AppAnimation.springStandard) { selected = id; touched = nil }
                             })) {
                                 ForEach(options) { o in Text(o.label).tag(Optional(o.id)) }
                             }
-                            .pickerStyle(.menu)
                         } label: {
-                            Text(option.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                            HStack(spacing: 4) {
+                                Text(option.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                                Image(systemName: "chevron.up.chevron.down").font(.caption).fontWeight(.semibold)
+                            }
+                            .frame(minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                         }
+                        .accessibilityLabel("Series, \(option.name)")
+                        .accessibilityHint("Picks the lift or measure on the chart")
                     } else {
                         Text(option.name).font(.subheadline).fontWeight(.semibold)
                     }
