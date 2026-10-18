@@ -1076,7 +1076,15 @@ SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-ses
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
+SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 ```
+
+The Dev Lab's panels render a recorded `generate?trace=1` answer
+(`frontend/src/mocks/fixtures/traced-programs.json`) in
+`components/devlab/DevLabPanels.test.tsx`; `test_devlab_trace.py` fails when the
+server's trace keys drift from it. Re-record, then run the panels' test: the
+Schedule step once crashed for every program because tracks changed the trace
+under it.
 
 A fix that clears fidelity findings ends with `tools/check_fidelity.py --update-baseline
 --report docs/fidelity-report.md`; the baseline only shrinks. A new finding fails the

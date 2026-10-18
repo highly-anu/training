@@ -97,12 +97,18 @@ export function SchedulerPanel({ weeks }: Props) {
                   Framework selection details
                 </summary>
                 <div className="mt-2 space-y-1 pl-3 border-l border-border">
-                  {fw.forced_override ? (
+                  {fw.selection_reason === 'phase_framework_override' ? (
+                    <p>
+                      Named by the week's phase:{' '}
+                      <code className="bg-muted px-1 rounded">{fw.phase_framework_id ?? fw.selected_id}</code>
+                      <span className="text-muted-foreground"> — the goal's default and alternatives are not consulted.</span>
+                    </p>
+                  ) : fw.forced_override ? (
                     <p>Forced override: <code className="bg-muted px-1 rounded">{fw.forced_override}</code></p>
                   ) : (
                     <>
                       <p>Default: <code className="bg-muted px-1 rounded">{fw.default_id}</code></p>
-                      {fw.alternatives_checked.map((alt, i) => (
+                      {(fw.alternatives_checked ?? []).map((alt, i) => (
                         <p key={i} className={alt.matched ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}>
                           {alt.matched ? '✓' : '○'}{' '}
                           <code className="bg-muted px-1 rounded">{alt.condition}</code>{' '}

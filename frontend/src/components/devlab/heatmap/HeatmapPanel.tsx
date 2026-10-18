@@ -10,7 +10,7 @@ import type { HeatNode, HeatmapGraphData } from './useHeatmapData'
 import { useOntology } from '@/api/ontology'
 // Goals deprecated
 import { useGenerateWithTrace } from '@/api/programs'
-import type { TracedProgram, EquipmentId, TrainingLevel, TrainingPhase, ModalityId, GoalProfile } from '@/api/types'
+import type { TracedProgram, EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, ModalityId, GoalProfile } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { belongsToPackage } from '@/lib/provenance'
 import {
@@ -272,7 +272,8 @@ interface HeatmapPanelProps {
     days_per_week: number
     session_time_minutes: number
     training_level: TrainingLevel
-    training_phase: TrainingPhase
+    injury_flags: InjuryFlagId[]
+    fatigue_state: FatigueState
     numWeeks: number
   }
   initialLockedNode?: string | null
@@ -402,10 +403,9 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
           days_per_week: constraints.days_per_week,
           session_time_minutes: constraints.session_time_minutes,
           training_level: constraints.training_level,
-          training_phase: constraints.training_phase,
           periodization_week: 1,
-          fatigue_state: 'normal',
-          injury_flags: [],
+          fatigue_state: constraints.fatigue_state,
+          injury_flags: constraints.injury_flags,
           avoid_movements: [],
         },
         numWeeks: constraints.numWeeks,
