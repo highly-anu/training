@@ -58,20 +58,13 @@ struct AnalyticsProgramTab: View {
 
     private func emptyState(icon: String, title: String, message: String,
                             actionLabel: String, action: @escaping () -> Void) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(title).font(.headline)
+        ContentUnavailableView {
+            Label(title, systemImage: icon)
+        } description: {
             Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button(actionLabel, action: action)
-                .buttonStyle(.bordered)
+        } actions: {
+            Button(actionLabel, action: action).buttonStyle(.bordered)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Frame
@@ -159,10 +152,13 @@ struct AnalyticsProgramTab: View {
 
     private func sectionErrorsCard(_ errors: [String: String]) -> some View {
         AnalyticsCard(header: "Not computed") {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
+                // The section's name and a mark; the engine's own message
+                // (an exception's text, at worst) is for VoiceOver (§1.4).
                 ForEach(errors.keys.sorted(), id: \.self) { key in
-                    Text("\(key.capitalized): \(errors[key] ?? "")")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Label(key.capitalized, systemImage: "exclamationmark.triangle")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .accessibilityLabel("\(key.capitalized) not computed: \(errors[key] ?? "")")
                 }
             }
         }
@@ -178,22 +174,22 @@ private struct ScorecardCard: View {
 
     var body: some View {
         AnalyticsCard(header: "Scorecard") {
+            AnalyticsStatusBadge(status: scorecard.headline)
+        } content: {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .center, spacing: 12) {
-                    Label("\(scorecard.elapsedWeeks) wk", systemImage: "calendar")
-                        .accessibilityLabel("\(scorecard.elapsedWeeks) weeks elapsed")
-                    if let committed = scorecard.tiers["committed"] {
-                        Label("\(committed.completed)/\(committed.planned)", systemImage: "pin.fill")
-                            .accessibilityLabel("Committed work \(committed.completed) of \(committed.planned)")
-                    }
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
                     if let overall = scorecard.overallPct {
                         Label("\(Int(overall.rounded()))%", systemImage: "checkmark.circle")
+                            .font(.title3).fontWeight(.semibold)
                             .accessibilityLabel("\(Int(overall.rounded())) percent overall")
                     }
-                    Spacer()
-                    AnalyticsStatusBadge(status: scorecard.headline)
+                    if let committed = scorecard.tiers["committed"] {
+                        Label("\(committed.completed)/\(committed.planned)", systemImage: "pin.fill")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                            .accessibilityLabel("Committed work \(committed.completed) of \(committed.planned)")
+                    }
                 }
-                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                .monospacedDigit()
                 ForEach(scorecard.modalities) { row in
                     ScorecardRowView(row: row)
                 }
@@ -212,25 +208,26 @@ private struct ScorecardRowView: View {
         let colour = ModalityStyle.color(for: row.modality)
         let pct = min(100, max(0, row.completionPct ?? 0))
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 5) {
-                Image(systemName: ModalityStyle.icon(for: row.modality))
-                    .font(.caption2).foregroundStyle(colour)
+            HStack(spacing: 6) {
+                Image(symbol: ModalityStyle.icon(for: row.modality))
+                    .foregroundStyle(colour)
                 Text(ModalityStyle.label(for: row.modality))
-                    .font(.caption).fontWeight(.semibold)
+                    .fontWeight(.semibold)
                     .foregroundStyle(colour)
                     .lineLimit(1)
                 if let icon = Self.tierIcon(row.tier) {
-                    Image(systemName: icon).font(.caption2).foregroundStyle(.secondary)
+                    Image(systemName: icon).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Text("\(row.completedSessions)/\(row.plannedSessions)")
-                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    .monospacedDigit().foregroundStyle(.secondary)
                 if let p = row.completionPct {
                     Text("\(Int(p.rounded()))%")
-                        .font(.caption).fontWeight(.semibold).monospacedDigit()
-                        .frame(minWidth: 36, alignment: .trailing)
+                        .fontWeight(.semibold).monospacedDigit()
+                        .frame(minWidth: 40, alignment: .trailing)
                 }
             }
+            .font(.subheadline)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.secondary.opacity(0.15))
@@ -247,7 +244,7 @@ private struct ScorecardRowView: View {
                     Text("\(Int(minMin))–\(Int(maxMin))")
                 }
             }
-            .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ModalityStyle.label(for: row.modality)), \(row.tier): \(row.completedSessions) of \(row.plannedSessions) sessions, \(Int((row.weeklyActualMinutes ?? 0).rounded())) of \(Int((row.weeklyPlannedMinutes ?? 0).rounded())) minutes a week\(doseWords)")
@@ -323,7 +320,7 @@ private struct IntensityCard: View {
                 }
                 if let pct = intensity.pct1rm, let mean = pct.meanPct {
                     Label("\(AnalyticsProgramTab.number(mean))% 1RM · \(pct.sessions) lifts", systemImage: "scalemass")
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondary)
                         .accessibilityLabel("Working sets averaged \(AnalyticsProgramTab.number(mean)) percent of estimated 1RM across \(pct.sessions) logged lifts")
                 }
             }
@@ -378,19 +375,17 @@ struct ProgressEntryCard: View {
         } content: {
             if entry.headline || (trend.map { $0.direction != "insufficient_data" } ?? false) {
                 HStack(spacing: 10) {
-                    if entry.headline {
-                        Label("Headline", systemImage: "star.fill")
-                            .foregroundStyle(Color.accentColor)
-                    }
                     if let t = trend, t.direction != "insufficient_data" {
                         Label("\(t.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(t.slopePct))%/pt",
                               systemImage: t.direction == "improving" ? "arrow.up.right"
                                 : t.direction == "declining" ? "arrow.down.right" : "arrow.right")
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                             .accessibilityLabel("\(t.direction), \(AnalyticsProgramTab.number(t.slopePct)) percent per point")
                     }
+                    if entry.headline {
+                        TintCapsule(text: "Headline", symbol: "star.fill", color: .accentColor)
+                    }
                 }
-                .font(.caption2)
             }
             if let coverage = entry.coverage { CoverageNoticeView(coverage: coverage) }
 
@@ -409,7 +404,7 @@ struct ProgressEntryCard: View {
             if !entry.evidence.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(entry.evidence.prefix(4), id: \.self) { line in
-                        Text(line).font(.caption2).foregroundStyle(.secondary)
+                        Text(line).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -428,13 +423,16 @@ struct ProgressEntryCard: View {
                         withAnimation(AppAnimation.springStandard) { selectedExerciseId = ex.exerciseId }
                     } label: {
                         Text(ex.series.isEmpty ? ex.name : "\(ex.name) · \(ex.series.count)")
-                            .font(.caption2)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .font(.footnote)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
                             .background(selected ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1))
                             .foregroundStyle(selected ? Color.accentColor : Color.secondary)
                             .clipShape(Capsule())
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }
         }
@@ -482,23 +480,31 @@ struct ProgressEntryCard: View {
 
     private var unlocksBody: some View {
         HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.programTotal.flatMap { $0 > 0 ? "Practised (\(entry.practised.count) of \($0) in this program)" : nil }
-                     ?? "Practised (\(entry.practised.count))").font(.caption).fontWeight(.semibold)
+            VStack(alignment: .leading, spacing: 4) {
+                Label(entry.programTotal.flatMap { $0 > 0 ? "\(entry.practised.count)/\($0)" : nil }
+                      ?? "\(entry.practised.count)", systemImage: "checkmark.circle")
+                    .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                    .accessibilityLabel(entry.programTotal.flatMap { $0 > 0 ? "Practised \(entry.practised.count) of \($0) in this program" : nil }
+                                        ?? "Practised \(entry.practised.count)")
                 ForEach(entry.practised.prefix(6)) { p in
-                    Text(p.sessions.map { "\(p.name) · \($0)×" } ?? p.name)
-                        .font(.caption2).foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(p.name)
+                        if let n = p.sessions { Text("\(n)×").foregroundStyle(.secondary).monospacedDigit() }
+                    }
+                    .font(.subheadline)
                 }
             }
             Spacer()
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Now available (\(entry.available.count))").font(.caption).fontWeight(.semibold)
+            VStack(alignment: .leading, spacing: 4) {
+                Label("\(entry.available.count)", systemImage: "lock.open")
+                    .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                    .accessibilityLabel("Now available \(entry.available.count)")
                 if entry.levelOpensAll {
-                    Label("All open at your level", systemImage: "lock.open")
-                        .font(.caption2).foregroundStyle(.secondary)
+                    Text("All").font(.subheadline).foregroundStyle(.secondary)
+                        .accessibilityLabel("All open at your level")
                 } else {
                     ForEach(entry.available.prefix(6)) { a in
-                        Text(a.name).font(.caption2).foregroundStyle(.secondary)
+                        Text(a.name).font(.subheadline)
                     }
                 }
             }
@@ -510,10 +516,21 @@ struct ProgressEntryCard: View {
             ForEach(entry.benchmarks.filter { !$0.missing }) { row in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Text(row.name ?? row.benchmarkId).font(.caption)
+                        Text(row.name ?? row.benchmarkId).font(.subheadline)
                         Spacer()
                         if row.latest != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
-                        Text(benchmarkSummary(row)).font(.caption).foregroundStyle(.secondary)
+                        Text(row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "—")
+                            .font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    if let target = row.target {
+                        HStack(spacing: 4) {
+                            Label(target, systemImage: "target")
+                            if let met = row.met {
+                                Image(systemName: met ? "checkmark.circle.fill" : "xmark.circle")
+                                    .foregroundStyle(met ? Color.green : Color.secondary)
+                            }
+                        }
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                     // The same ladder as everywhere else; it used to be text only here.
                     if !row.standardsText.isEmpty {
@@ -521,15 +538,19 @@ struct ProgressEntryCard: View {
                                        levelIndex: row.latest == nil ? nil : row.levelIndex, domain: row.domain)
                     }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(benchmarkSummary(row))
             }
         }
     }
 
+    /// The row in words, for VoiceOver.
     private func benchmarkSummary(_ row: ProgramAnalytics.BenchmarkRow) -> String {
-        var s = row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "No result yet"
+        var s = "\(row.name ?? row.benchmarkId): "
+        s += row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "no result yet"
         if let target = row.target {
-            s += " · target \(target)"
-            if let met = row.met { s += met ? " ✓" : " ✗" }
+            s += ", target \(target)"
+            if let met = row.met { s += met ? ", met" : ", not met" }
         }
         return s
     }
@@ -545,24 +566,23 @@ struct CoverageNoticeView: View {
             Label("No sessions yet", systemImage: "hourglass")
                 .font(.caption).foregroundStyle(.secondary)
         } else if coverage.measured == 0 {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "info.circle").font(.caption).foregroundStyle(.secondary)
+            // One line of what to log, no box: a bordered panel inside the
+            // card was a card inside a card (§6.15).
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "info.circle").foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Not measurable yet").font(.caption).fontWeight(.semibold)
+                    Text("Not measurable yet").fontWeight(.semibold)
                     Text(AnalyticsStatusStyle.coverageReason(coverage.reason))
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(10)
+            .font(.footnote)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .foregroundStyle(Color.secondary.opacity(0.4))
-            )
+            .accessibilityElement(children: .combine)
         } else if coverage.pct < 100 {
-            Label("\(coverage.measured)/\(coverage.inScope) sessions measured", systemImage: "ruler")
-                .font(.caption2).foregroundStyle(.secondary)
+            Label("\(coverage.measured)/\(coverage.inScope)", systemImage: "ruler")
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                .accessibilityLabel("\(coverage.measured) of \(coverage.inScope) sessions measured")
         }
     }
 }
@@ -571,50 +591,61 @@ struct CoverageNoticeView: View {
 
 private struct MovementCard: View {
     let movement: ProgramAnalytics.Movement
+    /// The pattern column, as wide as "Squat"/"Hinge" at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var patternWidth: CGFloat = 80
 
     var body: some View {
         AnalyticsCard(header: "Movement") {
             VStack(alignment: .leading, spacing: 12) {
                 if let sets = movement.sets, !sets.rollups.isEmpty { bars("Sets", sets) }
-                if let minutes = movement.minutes, !minutes.rollups.isEmpty { bars("Minutes", minutes) }
+                if let minutes = movement.minutes, !minutes.rollups.isEmpty {
+                    bars("Minutes", minutes, assumed: minutes.assumed)
+                }
                 ForEach(movement.balance) { pair in
-                    HStack {
+                    HStack(spacing: 6) {
                         Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
-                            .font(.caption)
                         if pair.declared {
-                            Image(systemName: "checkmark.seal").font(.caption2).foregroundStyle(.secondary)
+                            Image(systemName: "checkmark.seal").font(.caption).foregroundStyle(.secondary)
                                 .accessibilityLabel("declared")
                         }
                         Spacer()
+                        // Out of range is a mark as well as a colour (§1.6).
+                        if pair.outside {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
+                                .accessibilityLabel("out of range")
+                        }
                         Text(pair.ratio.map { "\(AnalyticsProgramTab.number($0)) (\(AnalyticsProgramTab.number(pair.min))–\(AnalyticsProgramTab.number(pair.max)))" }
                              ?? "—")
-                            .font(.caption)
+                            .monospacedDigit()
                             .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
                     }
+                    .font(.subheadline)
                 }
                 if let unilateral = movement.unilateralShare?.done {
                     Label("Unilateral \(AnalyticsProgramTab.number(unilateral))%", systemImage: "figure.step.training")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                if let assumed = movement.minutes?.assumed, assumed > 0 {
-                    Label("\(AnalyticsProgramTab.number(assumed)) min assumed", systemImage: "questionmark.circle")
-                        .font(.caption2).foregroundStyle(.secondary)
-                        .accessibilityLabel("\(AnalyticsProgramTab.number(assumed)) minutes assumed from completed sessions without a recorded workout")
+                        .font(.subheadline).foregroundStyle(.secondary)
                 }
             }
         }
     }
 
     /// Planned as the grey track, done over it, both against the largest row.
-    private func bars(_ title: String, _ table: ProgramAnalytics.Movement.Table) -> some View {
+    /// Minutes assumed from sessions without a recorded workout are said to
+    /// VoiceOver on the table's title, not as a footnote (§1.4).
+    private func bars(_ title: String, _ table: ProgramAnalytics.Movement.Table, assumed: Double? = nil) -> some View {
         let rows = table.rows
         let top = max(rows.map { max($0.value.planned, $0.value.done) }.max() ?? 1, 1)
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(title.uppercased())
+                .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+                .accessibilityLabel(assumed.map { $0 > 0 ? "\(title), \(AnalyticsProgramTab.number($0)) minutes assumed from completed sessions without a recorded workout" : title } ?? title)
             ForEach(rows, id: \.pattern) { row in
                 HStack(spacing: 8) {
-                    Text(row.pattern.capitalized).font(.caption2).foregroundStyle(.secondary)
-                        .frame(width: 70, alignment: .leading)
+                    Text(row.pattern.capitalized).font(.subheadline)
+                        .lineLimit(1)
+                        .frame(width: patternWidth, alignment: .leading)
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color(.systemFill)).frame(height: 6)
@@ -626,7 +657,7 @@ private struct MovementCard: View {
                     }
                     .frame(height: 6)
                     Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
-                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned)) \(title.lowercased())")
@@ -641,23 +672,20 @@ private struct LoadCard: View {
     let load: ProgramAnalytics.Load
 
     var body: some View {
+        // The reading beside the header; the phase is the program card's pill.
         AnalyticsCard(header: "Load") {
+            if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
+        } content: {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    if let tsb = load.tsb {
-                        Text("TSB \(AnalyticsProgramTab.number(tsb))")
-                            .font(.subheadline).fontWeight(.semibold)
-                    }
-                    if let phase = load.phase {
-                        Text("· \(phase.capitalized)\(load.isDeload ? " (deload)" : "")")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
+                if let tsb = load.tsb {
+                    Text("TSB \(AnalyticsProgramTab.number(tsb))")
+                        .font(.title3).fontWeight(.semibold).monospacedDigit()
                 }
                 if let readiness = load.readiness {
-                    Label("Readiness \(readiness.score) · \(readiness.status)", systemImage: "heart.circle")
-                        .font(.caption2).foregroundStyle(.secondary)
+                    // Readiness's own words, as Recovery and Today say them.
+                    Label("\(readiness.score) · \(ReadinessResult.statusLabel(readiness.status))", systemImage: "heart.circle")
+                        .font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                        .accessibilityLabel("Readiness \(readiness.score), \(ReadinessResult.statusLabel(readiness.status))")
                 }
             }
         }

@@ -44,7 +44,7 @@ struct ExerciseProgressSection: View {
             .pickerStyle(.segmented)
             if visible.isEmpty {
                 Text(active == .data ? "No data yet" : "None yet")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             } else {
                 ForEach(visible) { item in
@@ -72,17 +72,16 @@ struct ExerciseProgressCardView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(item.name).font(.subheadline).fontWeight(.medium).lineLimit(1)
                 if !item.history.isEmpty, item.history.allSatisfy({ $0.source == "matched_workout" }) {
-                    Text("GPS").font(.system(size: 9)).foregroundStyle(.secondary)
-                        .padding(.horizontal, 3).overlay(RoundedRectangle(cornerRadius: 3).stroke(.quaternary))
+                    // Every point from a recorded workout: a symbol, not a
+                    // boxed 9 pt word (§4.1).
+                    Image(systemName: "location.fill")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .accessibilityLabel("From recorded workouts")
                 }
                 Spacer()
-                Text(status != "insufficient_data" ? AnalyticsStatusStyle.label(status)
-                     : item.history.isEmpty ? "Not tracked" : "No trend yet")
-                    .font(.caption2).fontWeight(.semibold)
-                    .foregroundStyle(AnalyticsStatusStyle.color(status))
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(AnalyticsStatusStyle.color(status).opacity(0.12))
-                    .clipShape(Capsule())
+                TintCapsule(text: status != "insufficient_data" ? AnalyticsStatusStyle.label(status)
+                            : item.history.isEmpty ? "Not tracked" : "No trend yet",
+                            color: AnalyticsStatusStyle.color(status))
             }
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -91,14 +90,14 @@ struct ExerciseProgressCardView: View {
                             .font(.title3).fontWeight(.bold).monospacedDigit()
                         if let target {
                             Label(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit), systemImage: "target")
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondary)
                                 .accessibilityLabel("Target \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
                         }
                     } else {
-                        Text("Log \(unit) to track").font(.caption).italic().foregroundStyle(.secondary)
+                        Text("Log \(unit) to track").font(.footnote).foregroundStyle(.secondary)
                         if let target {
                             Label(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit), systemImage: "target")
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondary)
                                 .accessibilityLabel("Prescribed \(ProgressionView.withUnit(AnalyticsProgramTab.number(target), unit))")
                         }
                     }
@@ -118,13 +117,14 @@ struct ExerciseProgressCardView: View {
             if let last = item.history.last, last.hrAvg != nil || last.hrMax != nil {
                 Label([last.hrAvg.map { "\($0) avg" }, last.hrMax.map { "\($0) max" }]
                         .compactMap { $0 }.joined(separator: " · ") + " bpm", systemImage: "heart.fill")
-                    .font(.caption2).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondary)
             }
             if let change = finding?.changeSummary, status != "insufficient_data" {
-                Text(change).font(.caption2).foregroundStyle(.secondary)
+                Text(change).font(.caption).foregroundStyle(.secondary)
             }
         }
+        // No dimming of the whole row: its badge already says "No trend yet",
+        // and dimmed secondary text is too faint to read (§4.1).
         .frame(maxWidth: .infinity, alignment: .leading)
-        .opacity(status == "insufficient_data" ? 0.75 : 1)
     }
 }

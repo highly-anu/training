@@ -22,7 +22,12 @@ extension ReadinessResult {
         default:       return "heart.slash.fill"
         }
     }
-    var statusLabel: String {
+    var statusLabel: String { Self.statusLabel(status) }
+
+    /// The server's green / yellow / red in words — for this result and for
+    /// the readiness the program analytics document carries (Program ▸ Load
+    /// printed the colour, "84 · green").
+    static func statusLabel(_ status: String) -> String {
         switch status {
         case "green":  return "Ready"
         case "yellow": return "Moderate"
@@ -83,12 +88,7 @@ struct ReadinessFlagChips: View {
                 HStack(spacing: 6) {
                     ForEach(shown, id: \.self) { key in
                         let chip = Self.chip(key)
-                        Label(chip.label, systemImage: chip.icon)
-                            .font(.caption2).fontWeight(.medium)
-                            .foregroundStyle(.orange)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Color.orange.opacity(0.12))
-                            .clipShape(Capsule())
+                        TintCapsule(text: chip.label, symbol: chip.icon, color: .orange)
                     }
                 }
             }
@@ -104,7 +104,7 @@ struct ReadinessSourceNote: View {
     var body: some View {
         if let note = result.sourceNote {
             Text(note)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }

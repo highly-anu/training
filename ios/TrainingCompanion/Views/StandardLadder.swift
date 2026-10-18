@@ -26,11 +26,14 @@ struct StandardLadder: View {
                     RoundedRectangle(cornerRadius: 2)
                         .fill(i < reached ? fill : Color(.systemFill))
                         .frame(height: 5)
+                    // caption2, Apple's 11 pt minimum, not a fixed 9 pt (§4.1).
                     Text(level)
-                        .font(.system(size: 9)).foregroundStyle(.tertiary)
+                        .font(.caption2).foregroundStyle(.secondary)
+                        .lineLimit(1)
                     Text(thresholds[level] ?? "—")
-                        .font(.system(size: 9)).monospacedDigit()
+                        .font(.caption2).monospacedDigit()
                         .foregroundStyle(i < reached ? .primary : .secondary)
+                        .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: frameAlignment(i))
             }
@@ -45,19 +48,15 @@ struct StandardLadder: View {
     private func frameAlignment(_ i: Int) -> Alignment { i == 0 ? .leading : i == 3 ? .trailing : .center }
 }
 
-/// The level reached, as a small capsule in the standard's modality colour.
+/// The level reached, as a small capsule in the standard's modality colour —
+/// the app's one capsule (`TintCapsule`, §3.1).
 struct StandardLevelBadge: View {
     let level: String?
     let domain: String?
 
     var body: some View {
         let tint = level == nil ? Color.secondary : (domain.map { ModalityStyle.color(for: $0) } ?? Color.accentColor)
-        Text(StandardLevel.name(level))
-            .font(.caption2).fontWeight(.semibold)
-            .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(tint.opacity(0.15))
-            .foregroundStyle(tint)
-            .clipShape(Capsule())
+        TintCapsule(text: StandardLevel.name(level), color: tint)
     }
 }
 
