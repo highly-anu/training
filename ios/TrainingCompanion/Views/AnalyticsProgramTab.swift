@@ -682,9 +682,10 @@ private struct LoadCard: View {
                         .font(.title3).fontWeight(.semibold).monospacedDigit()
                 }
                 if let readiness = load.readiness {
-                    Label("\(readiness.score) · \(AnalyticsStatusStyle.label(readiness.status))", systemImage: "heart.circle")
+                    // Readiness's own words, as Recovery and Today say them.
+                    Label("\(readiness.score) · \(ReadinessResult.statusLabel(readiness.status))", systemImage: "heart.circle")
                         .font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
-                        .accessibilityLabel("Readiness \(readiness.score), \(AnalyticsStatusStyle.label(readiness.status))")
+                        .accessibilityLabel("Readiness \(readiness.score), \(ReadinessResult.statusLabel(readiness.status))")
                 }
             }
         }

@@ -16,9 +16,6 @@ struct ZonePlanComparison: View {
     }
 
     let rows: [Row]
-    /// The zone and minutes columns, at the reader's text size.
-    @ScaledMetric(relativeTo: .subheadline) private var labelWidth: CGFloat = 44
-    @ScaledMetric(relativeTo: .caption) private var valueWidth: CGFloat = 76
 
     /// Rows from the five-zone arrays the server sends, only the zones with
     /// either side.
@@ -36,35 +33,13 @@ struct ZonePlanComparison: View {
     var body: some View {
         let top = max(rows.map { max($0.recorded, $0.planned) }.max() ?? 1, 1)
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(rows) { row in
-                let color = HRZoneStyle.color(row.zone)
-                HStack(spacing: 8) {
-                    Text(row.label)
-                        .font(.subheadline).fontWeight(.medium)
-                        .frame(width: labelWidth, alignment: .leading)
-                        .lineLimit(1)
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            if row.planned > 0 {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(color, lineWidth: 1.5)
-                                    .frame(width: max(geo.size.width * row.planned / top, 6))
-                            }
-                            if row.recorded > 0 {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(color.opacity(0.85))
-                                    .frame(width: max(geo.size.width * row.recorded / top, 4))
-                                    .padding(.vertical, 3)
-                            }
-                        }
-                    }
-                    .frame(height: 18)
-                    Text("\(Self.minutes(row.recorded))/\(Self.minutes(row.planned)) min")
-                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                        .frame(width: valueWidth, alignment: .trailing)
+            // A grid, so every bar's track is as long as the others: the
+            // widest minutes set their column — four digits widen it rather
+            // than wrap, as a fixed 76 pt did — and the bars share the rest.
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 10) {
+                ForEach(rows) { row in
+                    gridRow(row, top: top)
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.label): \(Self.minutes(row.recorded)) minutes recorded, \(Self.minutes(row.planned)) planned")
             }
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
@@ -80,6 +55,39 @@ struct ZonePlanComparison: View {
             .font(.caption2).foregroundStyle(.secondary)
             .accessibilityHidden(true)
         }
+    }
+
+    /// A zone: its name, planned as an outline with recorded filled over it,
+    /// and the minutes.
+    private func gridRow(_ row: Row, top: Double) -> some View {
+        let color = HRZoneStyle.color(row.zone)
+        return GridRow {
+            Text(row.label)
+                .font(.subheadline).fontWeight(.medium)
+                .lineLimit(1)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    if row.planned > 0 {
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder(color, lineWidth: 1.5)
+                            .frame(width: max(geo.size.width * row.planned / top, 6))
+                    }
+                    if row.recorded > 0 {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(color.opacity(0.85))
+                            .frame(width: max(geo.size.width * row.recorded / top, 4))
+                            .padding(.vertical, 3)
+                    }
+                }
+            }
+            .frame(height: 18)
+            Text("\(Self.minutes(row.recorded))/\(Self.minutes(row.planned)) min")
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                .fixedSize()
+                .gridColumnAlignment(.trailing)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(row.label): \(Self.minutes(row.recorded)) minutes recorded, \(Self.minutes(row.planned)) planned")
     }
 }
 

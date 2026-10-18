@@ -60,4 +60,10 @@ final class ReadinessSourceTests: XCTestCase {
         let reading = WellnessReading(date: "2026-10-08", recoveryTimeH: 0)
         XCTAssertEqual(reading.summary(timeZone: TimeZone(identifier: "UTC")!), "8 Oct · recovery\u{00A0}0\u{00A0}h")
     }
+
+    func testTheStatusIsWordsNotTheColour() {
+        // Program ▸ Load read "84 · green": the analytics document's readiness
+        // carries only the code, and now says it as Recovery does.
+        XCTAssertEqual(["green", "yellow", "red"].map(ReadinessResult.statusLabel), ["Ready", "Moderate", "Low"])
+    }
 }

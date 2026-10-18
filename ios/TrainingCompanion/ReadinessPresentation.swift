@@ -73,7 +73,12 @@ extension ReadinessResult {
         default:       return "heart.slash.fill"
         }
     }
-    var statusLabel: String {
+    var statusLabel: String { Self.statusLabel(status) }
+
+    /// The server's green / yellow / red in words — for this result and for
+    /// the readiness the program analytics document carries (Program ▸ Load
+    /// printed the colour, "84 · green").
+    static func statusLabel(_ status: String) -> String {
         switch status {
         case "green":  return "Ready"
         case "yellow": return "Moderate"
