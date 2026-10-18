@@ -119,6 +119,7 @@
 		E09E7CB82F80F06500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanionWatch Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				WatchListText.swift,
 				WatchModels.swift,
 				WatchSpecText.swift,
 				WatchSteps.swift,

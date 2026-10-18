@@ -904,9 +904,14 @@ branch:
      movements are its round (`WatchSteps`: folded, "Next:" skips them). Seen on the
      simulator for all eight templates through `WatchDebugLaunch` (`TC_SESSION`, `TC_STEP`,
      `TC_RUN`, `TC_LAPS`, `TC_SKIP_HEALTH`, debug builds only).
-4. **What the Garmin has (M).** Week view from `days`, tomorrow on a rest day, the
-   Progress page (programme %, headline, trend), sync failure in words, Set Next / Edit
-   Set, metronome, the package's summary pages.
+4. **What the Garmin has (M), in two PRs.**
+   - **4a, the list — done on `watch/garmin-features`.** Today ends in the Garmin's menu
+     rows: Week (`WeekAheadView`: the server's days → sessions → steps), Progress (this
+     week, the programme, the methodology's measure and trend) and Sync (the last sync in
+     words, "ok 07:41" / "failed 07:41 · No phone"; a tap syncs). A rest day, or a day whose
+     sessions are done, says tomorrow. The words are `WatchListText` (shared, tested), the
+     Garmin's ActivityMenu.mc and SyncManager.mc.
+   - **4b, the workout.** Set Next / Edit Set, the metronome, the package's summary pages.
 5. **Server fields both use (M; 6.3).** `switchAtSec`, `restUntilHr` and `bells` onto
    archetype slots and `_encode_watch_exercise`; the Apple Watch's "still recovering"
    becomes `restUntilHr`.

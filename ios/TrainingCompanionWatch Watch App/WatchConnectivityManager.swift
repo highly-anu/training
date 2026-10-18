@@ -25,6 +25,20 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     @Published var weekDone: (done: Int, sessions: Int)? = nil
     /// The first day of a program that has not started ("2026-10-20").
     @Published var startsOn: String? = nil
+    /// The day's progress (the Progress page), tomorrow (under a rest day)
+    /// and the week's title ("Week 3  Build"), from the server's day.
+    @Published var progress: WatchProgress? = nil
+    @Published var tomorrow: WatchTomorrow? = nil
+    @Published var weekTitle = "Week"
+    /// The last sync and how it went — the Sync row says it in words.
+    @Published var lastSync: SyncRecord? = nil
+
+    struct SyncRecord: Codable, Equatable {
+        let ok: Bool
+        let at: Date
+        var reason: String? = nil
+        var line: String? { WatchListText.syncLine(ok: ok, at: at, reason: reason) }
+    }
     /// Set by deep link (watch widget tap) to navigate directly to a specific session.
     @Published var pendingDeepLinkSessionId: String? = nil
 
@@ -68,11 +82,17 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 if WatchDayMessage.day(from: reply) != nil { self.apply(reply) }
-                else if self.programState == .loading { self.programState = .syncFailed }
+                else {
+                    self.recordSync(ok: false, reason: "No server")
+                    if self.programState == .loading { self.programState = .syncFailed }
+                }
             }
-        }, errorHandler: { _ in
+        }, errorHandler: { error in
+            let reason = Self.reason(for: error)
             Task { @MainActor [weak self] in
-                guard let self, self.programState == .loading else { return }
+                guard let self else { return }
+                self.recordSync(ok: false, reason: reason)
+                guard self.programState == .loading else { return }
                 self.programState = WCSession.default.isReachable ? .syncFailed : .unavailable
             }
         })
@@ -84,8 +104,28 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(10))
             guard let self, self.programState == .loading, !WCSession.default.isReachable else { return }
+            self.recordSync(ok: false, reason: "No phone")
             self.programState = .unavailable
         }
+    }
+
+    /// A failed request in a word or two, as the Garmin's Sync row says it.
+    nonisolated static func reason(for error: Error) -> String {
+        switch (error as? WCError)?.code {
+        case .notReachable?: return "No phone"
+        case .messageReplyTimedOut?: return "Timed out"
+        case .watchAppNotInstalled?, .companionAppNotInstalled?: return "App not installed"
+        case .payloadTooLarge?: return "Too large"
+        default: return "Watch error"
+        }
+    }
+
+    private let lastSyncKey = "watchLastSync"
+
+    func recordSync(ok: Bool, reason: String? = nil) {
+        let record = SyncRecord(ok: ok, at: Date(), reason: ok ? nil : reason)
+        lastSync = record
+        if let data = try? JSONEncoder().encode(record) { UserDefaults.standard.set(data, forKey: lastSyncKey) }
     }
 
     /// The session to the phone, which stores it on the server. Live while
@@ -158,10 +198,6 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         return (min(week.done + pending, week.sessions), week.sessions)
     }
 
-    /// The day's progress as last received, for recounting after a session
-    /// is finished here.
-    private var progress: WatchProgress? = nil
-
     func markSessionComplete(_ sessionId: String) {
         completedSessionIds.insert(sessionId)
         let ids = Array(completedSessionIds)
@@ -195,6 +231,9 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
         let savedMaxHR = defaults.integer(forKey: maxHRKey)
         if savedMaxHR > 0 { maxHR = savedMaxHR }
+        if let data = defaults.data(forKey: lastSyncKey) {
+            lastSync = try? JSONDecoder().decode(SyncRecord.self, from: data)
+        }
         // What this watch recorded, for today only. The stamp is the
         // yyyy-MM-dd; comparing it to a localized short date never matched,
         // so every relaunch forgot what was done.
@@ -224,6 +263,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         if let m = day.maxHR, m > 0 { maxHR = m }
         readiness = day.readiness
         progress = day.progress
+        tomorrow = day.tomorrow
+        weekTitle = WatchListText.weekTitle(day)
         weekDone = Self.weekDone(from: day.progress)
         weekAhead = day.days ?? []
         startsOn = day.startsOn
@@ -292,6 +333,7 @@ extension WatchConnectivityManager {
         }
         show(day, date: today)
         UserDefaults.standard.set(Array(completedSessionIds), forKey: completedKey)
+        recordSync(ok: true)
     }
 }
 
