@@ -40,6 +40,7 @@ struct ActiveWorkoutView: View {
                 workoutTabView
             }
         }
+        .onAppear(perform: debugLaunch)
         .navigationTitle(session.archetypeName)
         .navigationBarBackButtonHidden(isStarted)
         .toolbar {
@@ -141,7 +142,7 @@ struct ActiveWorkoutView: View {
             let target = (exercise.durationMinutes ?? 0) * 60
             let overTime = elapsed >= target
             let fraction = target > 0 ? min(1.0, Double(elapsed) / Double(target)) : 0
-            let nextIndex = ei + 1
+            let nextIndex = sessionState.indexAfter(ei)
             let isLast = nextIndex >= session.exercises.count
 
             VStack(spacing: 12) {
@@ -255,6 +256,41 @@ struct ActiveWorkoutView: View {
                 dismiss()
             }
             Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    // MARK: - Debug launch (WatchDebugLaunch)
+
+    /// Begins the workout, goes to a step, starts it and presses its button,
+    /// as the launch switches ask — a debug build on the simulator only.
+    private func debugLaunch() {
+        guard !isStarted, WatchDebugLaunch.session == session.sessionId else { return }
+        workoutStartDate = Date()
+        isStarted = true
+        Task {
+            await workoutManager.startWorkout(session: session, maxHR: connectivity.maxHR)
+            if let n = WatchDebugLaunch.step, n < session.exercises.count { sessionState.advance(to: n) }
+            let i = currentExerciseIndex
+            guard i < session.exercises.count else { return }
+            let ex = session.exercises[i], screen = session.screen(for: ex)
+            if WatchDebugLaunch.run { sessionState.start(i, ex, screen) }
+            for _ in 0..<WatchDebugLaunch.laps {
+                let outcome = WatchSpecText.lap(ex, screen, sessionState.stepState(ex, index: i, screen: screen))
+                if outcome == .completeSet {
+                    let reps = Int(ex.reps?.prefix { $0.isNumber } ?? "") ?? 5
+                    sessionState.completeSet(WatchSetLog(setIndex: sessionState.setLogs[ex.exerciseId]?.count ?? 0,
+                                                         repsActual: reps, weightKg: ex.weightKg, rpe: 7,
+                                                         completed: true, durationSeconds: 40,
+                                                         startOffset: nil, endOffset: nil),
+                                             for: ex.exerciseId)
+                    sessionState.finishSet(i, ex, screen)
+                    if sessionState.isResting, case let .resting(ei, cs, _) = sessionState.phase {
+                        sessionState.skipRest(exerciseIndex: ei, completedSet: cs)
+                    }
+                } else {
+                    sessionState.perform(outcome, i, ex, screen)
+                }
+            }
         }
     }
 

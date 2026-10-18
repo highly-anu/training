@@ -66,7 +66,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         gpsPoints = []
         hrTimestampedSamples = []
         lastAutoAdvancedExerciseIndex = -1
-        sessionState.startSession()
+        sessionState.startSession(session)
         startElapsedTimer()
         isWorkoutActive = true
 
@@ -277,7 +277,7 @@ final class WorkoutManager: NSObject, ObservableObject {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 WKInterfaceDevice.current().play(.notification)
                 try? await Task.sleep(nanoseconds: 800_000_000)
-                let nextIndex = ei + 1
+                let nextIndex = self.sessionState.indexAfter(ei)
                 if nextIndex < session.exercises.count {
                     if session.exercises[nextIndex].durationMinutes != nil {
                         self.sessionState.autoAdvanceToNextTimedWork(
