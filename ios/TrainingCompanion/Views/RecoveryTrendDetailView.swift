@@ -42,7 +42,7 @@ struct RecoveryTrendDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle(metric.name)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded([metric == .hrv ? "hrv" : "resting_hr"]) }
     }
 
     private func value(_ v: Double) -> String { "\(Int(v.rounded())) \(metric.unit)" }

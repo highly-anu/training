@@ -64,4 +64,14 @@ final class RecoveryModelTests: XCTestCase {
         """.utf8))
         XCTAssertNil(older.parts, "an older server sends none; the screen shows no Score section")
     }
+
+    func testTheTermsAreReadOneByOne() throws {
+        let terms = try APIClient.analyticsTerms(from: Data("""
+        {"primitives": {}, "terms": {"tsb": {"label": "TSB · form", "text": "Fitness minus fatigue."},
+                                     "future": {"label": "No text yet"}}}
+        """.utf8))
+        XCTAssertEqual(Array(terms.keys), ["tsb"], "a term the phone cannot read is left out, not every term")
+        XCTAssertEqual(try APIClient.analyticsTerms(from: Data(#"{"primitives": {}}"#.utf8)), [:],
+                       "an older server sends no terms")
+    }
 }
