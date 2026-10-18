@@ -100,6 +100,24 @@ extension AnalyticsDetailCard where Trailing == EmptyView {
     }
 }
 
+/// A symbol and its words side by side at the system's small spacing,
+/// wherever the label sits. Inside a `List`, a `Label` gets an icon column —
+/// the symbol in a fixed-width slot, the words far from it — and
+/// `.titleAndIcon` does not undo it ("◎     120kg"). For a label that is
+/// part of a row's content: a badge, a target, a trend, a reading.
+struct InlineLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            configuration.icon
+            configuration.title
+        }
+    }
+}
+
+extension LabelStyle where Self == InlineLabelStyle {
+    static var inline: InlineLabelStyle { InlineLabelStyle() }
+}
+
 /// A small capsule in one colour: a 15 % fill, the colour's text and symbol,
 /// and — `bordered` — a 35 % ring (design-system §3.1's badge). The modality
 /// badge, a linked session's chip, a status and a training effect are all
@@ -113,7 +131,7 @@ struct TintCapsule: View {
     var body: some View {
         Group {
             if let symbol {
-                Label(text, systemImage: symbol)
+                Label(text, systemImage: symbol).labelStyle(.inline)
             } else {
                 Text(text)
             }
