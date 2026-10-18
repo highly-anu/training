@@ -1290,30 +1290,33 @@ enum case is still `.development`; the deep link is
 `trainingcompanion://analytics?section=blocks`; `router.showAnalytics(.development)`
 from anywhere else (§6.9).
 
-### 6.21 Readiness Source Note
+### 6.21 Readiness and Its Sources
 
-`ReadinessSourceNote(result:)` (`ReadinessPresentation.swift`) is the one line
-under the readiness score that says where resting HR, HRV and sleep came from
-— in Analytics ▸ Recovery only, under `ReadinessFlagChips` (the server's
-flags as icon chips: "RHR up 3d", "Recovery capped"). Today's card shows the
-score and the readings and nothing else (2026-10-16, §1.4). `.caption`,
-`.secondary`, wrapping; it renders nothing when the server did not report
-`sources` (an older server), so neither screen needs a guard. It is the one
-sentence §1.4 tolerates on the card, and only until the readiness card opens a
-detail screen, where it moves under *Sources*.
+**The card says the score; the screen says what it is made of.** Analytics ▸
+Recovery's readiness card (an `AnalyticsDetailCard`, §6.37): the score in large
+rounded type in its status colour, the status once as a `TintCapsule` beside
+the header, the morning's readings as symbols and numbers
+(`waveform.path.ecg 52 ms`, `heart.fill 48 bpm`, `moon.fill 7h 20m`), and the
+server's flags as chips (`ReadinessFlagChips`: "RHR up 3d", "Recovery capped").
+A coloured circle, the coloured score and a status word under it had said the
+status three times.
 
-The readiness card itself (2026-10-17): the score in large rounded type in its
-status colour, the status once as a `TintCapsule` beside the header, and the
-readings as symbols and numbers (`waveform.path.ecg 52 ms`, `heart.fill 48 bpm`,
-`moon.fill 7h 20m`). A coloured circle with an icon, the coloured score and a
-status word under it had said the status three times.
+`ReadinessDetailView` holds the rest: the score's **parts** against their
+maxima as the server words them (`parts` on `GET /health/readiness`: resting
+heart rate 35, HRV — or "Body Battery and recovery" when the watch stood in —
+35, sleep, session fatigue and training load 10 each), "Capped by recovery time
+left" when `cappedAt` says the watch's recovery hours lowered it, the watch's
+Body Battery and recovery left, the readings, **Sources**, and About.
 
-The words come from `ReadinessResult.sourceNote`, the phone's copy of the
-web's `lib/readiness.readinessSourceNote`: components grouped by source,
-"Resting HR from your Garmin watch's heart-rate low; HRV and sleep from Apple
-Health and check-ins." Resting HR is scored from one series only
-(`src/wellness.merge_for_scoring`), so the note is what explains a score that
-moved because its source changed. `ReadinessSourceTests` pins the text.
+**Sources** is the one sentence that says where resting HR, HRV and sleep came
+from — `ReadinessResult.sourceNote`, the phone's copy of the web's
+`lib/readiness.readinessSourceNote`: components grouped by source, "Resting HR
+from your Garmin watch's heart-rate low; HRV and sleep from Apple Health and
+check-ins." Resting HR is scored from one series only
+(`src/wellness.merge_for_scoring`), so the sentence is what explains a score
+that moved because its source changed (`ReadinessSourceTests`). It sat under
+the score on the card until 2026-10-17 — the one sentence §1.4 had tolerated
+there. Today's card shows the score and the readings and nothing else.
 
 Settings ▸ Devices shows the paired Connect IQ watch's last wellness reading
 under the device rows (`WellnessReading.summary()`, the web Devices card's
@@ -1783,10 +1786,20 @@ a screen with the full chart, the numbers and, at the end, *About*.
   `TintCapsule`, `MeasureTrendLabel` and `CoverageNoticeView` carry it
   themselves.
 - A detail a deep link can open, for screenshots and other screens:
-  `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`
-  (`AppRouter.openProgressDetail`).
+  `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`,
+  `analytics?open=readiness|sleep|hrv|resting-hr|checkins`
+  (`AppRouter.openAnalyticsDetail`; each section pushes its own).
 
 Users: Analytics ▸ Progress's measure cards (`MeasureDetailView`), its
 Exercises rows (`ExerciseHistoryView`), its Standards rows (the standard's
-sheet, §6.32), and Program ▸ Overview's phases (§6.26, before this section
-was written).
+sheet, §6.32); Analytics ▸ Recovery's readiness (`ReadinessDetailView`, §6.21),
+sleep (`SleepDetailView` — Sleep Debt, Last Night and Sleep Stages were three
+cards), HRV and resting heart rate (`RecoveryTrendDetailView`, one view for
+both, like `RecoveryTrendChartView`) and "All check-ins" (`CheckInHistoryView`;
+the card keeps the last seven `CheckInRow`s); and Program ▸ Overview's phases
+(§6.26, before this section was written).
+
+Terms that are not a measure — TRIMP, CTL, ATL, TSB, readiness, HRV, resting
+HR, sleep debt — take their About from `vocabulary.TERMS`, served by the
+static `GET /api/analytics/vocabulary` and cached in
+`AppState.analyticsTerms` (`AboutText(terms:from:)`).

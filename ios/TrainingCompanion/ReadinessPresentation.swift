@@ -96,21 +96,6 @@ struct ReadinessFlagChips: View {
     }
 }
 
-/// The readiness source footnote in Analytics ▸ Recovery (design-system
-/// §6.21). Renders nothing when the server did not say. Today shows none.
-struct ReadinessSourceNote: View {
-    let result: ReadinessResult
-
-    var body: some View {
-        if let note = result.sourceNote {
-            Text(note)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
 extension WellnessReading {
     /// "8 Oct, 07:20 · HR low 47 · 7-day resting HR 47 · Body Battery 75 ·
     /// recovery 82 h" — the web's `lib/wellness.wellnessSummary`, word for word.

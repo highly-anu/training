@@ -129,6 +129,40 @@ PRIMITIVES: dict[str, dict] = {
 }
 
 
+# The load and recovery readings in words: what each number on Analytics ▸
+# Load and ▸ Recovery is, for the About section of its detail screen on either
+# client (GET /api/analytics/vocabulary). One or two sentences each; the
+# numbers are the server's, so are the words that explain them.
+TERMS: dict[str, dict] = {
+    'readiness': {'label': 'Readiness',
+                  'text': 'A morning score out of 100 from resting heart rate, heart-rate variability '
+                          '(or the watch\'s Body Battery and recovery time when there is none), last '
+                          'night\'s sleep, how hard recent sessions felt and training load. 70 and above '
+                          'is green, 45 to 69 yellow, under 45 red; recovery time still left caps it.'},
+    'hrv': {'label': 'Heart-rate variability',
+            'text': 'The variation between heartbeats at rest, in milliseconds. Above your own usual '
+                    'means better rested; the line is the 7-day average.'},
+    'resting_hr': {'label': 'Resting heart rate',
+                   'text': 'Your heart rate at rest — the watch\'s overnight low, or Apple Health\'s '
+                           'resting heart rate. Below your own usual means better recovered; the line '
+                           'is the 7-day average.'},
+    'sleep_debt': {'label': 'Sleep debt',
+                   'text': 'The hours short of 8 a night over the last 7 nights with sleep recorded.'},
+    'trimp': {'label': 'TRIMP',
+              'text': 'Training impulse: each minute of a workout weighted by how hard the heart worked '
+                      'in it, so a long easy session and a short hard one can score the same.'},
+    'ctl': {'label': 'CTL · fitness',
+            'text': 'Chronic training load: daily TRIMP averaged over about six weeks (42-day '
+                    'exponential). It rises slowly with consistent training.'},
+    'atl': {'label': 'ATL · fatigue',
+            'text': 'Acute training load: daily TRIMP averaged over about a week (7-day exponential). '
+                    'It rises fast after hard days and falls fast with rest.'},
+    'tsb': {'label': 'TSB · form',
+            'text': 'Training stress balance: yesterday\'s fitness minus fatigue. Negative while a block '
+                    'is loading, which is expected; it should climb toward zero and above in a taper.'},
+}
+
+
 def about(primitive: str, notes: str = '') -> dict:
     """One measure in words, for the About section of its detail screen on
     either client: what it measures, what has to be logged for it and where,
@@ -144,4 +178,4 @@ def about(primitive: str, notes: str = '') -> dict:
 
 
 def to_client() -> dict:
-    return {'primitives': PRIMITIVES, 'needs': NEEDS}
+    return {'primitives': PRIMITIVES, 'needs': NEEDS, 'terms': TERMS}

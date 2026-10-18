@@ -1291,6 +1291,13 @@ def test_describe() -> None:
           str(set(vocabulary.PRIMITIVES) ^ set(spec.PRIMITIVES)))
     check('every need a primitive names is defined',
           all(n in vocabulary.NEEDS for p in vocabulary.PRIMITIVES.values() for n in p['needs']))
+    check('the load and recovery terms are words, one or two sentences each',
+          {'readiness', 'hrv', 'resting_hr', 'sleep_debt', 'trimp', 'ctl', 'atl', 'tsb'} <= set(vocabulary.TERMS)
+          and all(t['label'] and 0 < t['text'].count('.') <= 3 for t in vocabulary.TERMS.values()))
+    import api
+    body = api.app.test_client().get('/api/analytics/vocabulary').get_json()
+    check('the vocabulary route serves the terms with no sign-in',
+          body and body['terms']['tsb']['label'] == 'TSB · form' and 'set_load' in body['primitives'])
     doc = describe.describe_all()
     from src import loader
     check('every package is described', set(doc['philosophies']) == {p['id'] for p in loader.load_philosophies()})

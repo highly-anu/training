@@ -116,6 +116,7 @@ All prefixed `/api/`:
 |--------|------|---------|
 | GET | `/philosophies` | `Philosophy[]` |
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
+| GET | `/analytics/vocabulary` | the analytics words: primitives, what each needs logged, and the load and recovery `terms` (`vocabulary.TERMS`) for the phone's About sections; static, no sign-in |
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
@@ -545,7 +546,9 @@ training data; only sign-in goes to Supabase.
   Greenwich. The program analytics digest keys on these readings
   (`api._watch_digest`). Production read 67 against Garmin's 17
   with 68 h of recovery left; it now reads 32. The response carries `watch`
-  and `sources.recovery` (`test_wellness.py`). The watch's series is its
+  and `sources.recovery` (`test_wellness.py`), and `parts` — each component's
+  label, points and maximum — with `cappedAt` when recovery left capped it, for
+  the phone's readiness screen. The watch's series is its
   heart-rate low `hr_min`, **never** `resting_hr`: the SDK's
   `UserProfile.restingHeartRate` is the zone setting (46 on three mornings
   while the watch showed 46, 45, 49). Garmin's exact daily resting HR reaches
@@ -967,7 +970,8 @@ LOCAL_API=0 ./ios/run_sim.sh                                                    
 Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest workout if no id), `program?section=overview|calendar|history`
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
-still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail,
+`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

@@ -87,6 +87,9 @@ final class AppState: ObservableObject {
     // MARK: - Catalog (lazy-loaded)
 
     @Published var benchmarks: [AppBenchmark] = []
+    /// The load and recovery terms, by id (`trimp`, `tsb`, `hrv`…), for the
+    /// About sections of Analytics' detail screens; empty until fetched.
+    @Published var analyticsTerms: [String: AnalyticsTerm] = [:]
     /// The athlete's results on the standards (`GET /standards/results`).
     @Published var standardResults: StandardResults? = nil
     /// Results logged sessions suggest, waiting for the athlete (not results yet).
@@ -916,6 +919,15 @@ final class AppState: ObservableObject {
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
         benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
+    }
+
+    /// Fetched once, and again when a screen asks for a term this copy lacks
+    /// — one the server added after the first fetch (a deploy while the app
+    /// was open) would otherwise stay missing until a relaunch. A failed
+    /// fetch keeps what there was.
+    func loadAnalyticsTermsIfNeeded(_ ids: [String] = []) async {
+        guard let api, analyticsTerms.isEmpty || ids.contains(where: { analyticsTerms[$0] == nil }) else { return }
+        if let terms = try? await api.fetchAnalyticsTerms(), !terms.isEmpty { analyticsTerms = terms }
     }
 
     func loadPhilosophiesIfNeeded() async {

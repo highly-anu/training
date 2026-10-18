@@ -88,12 +88,15 @@ struct RecoveryTrendChartView: View {
                 AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisValueLabel {
                         if let d = value.as(Date.self) {
+                            // fixedSize: the last label truncated to "1…".
                             Text(d, format: .dateTime.month(.abbreviated).day())
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption2).foregroundStyle(.secondary).fixedSize()
                         }
                     }
                 }
             }
+            // From the readings' own range: from 0, 49–70 ms filled a fifth.
+            .chartYScale(domain: .automatic(includesZero: false))
             .chartYAxis {
                 AxisMarks(position: .leading) { value in
                     AxisValueLabel {
@@ -120,6 +123,8 @@ struct RecoveryTrendBadge: View {
         let rounded = Int(trend.delta.rounded())
         Label("\(rounded > 0 ? "+" : rounded < 0 ? "−" : "±")\(abs(rounded)) \(metric.unit)",
               systemImage: rounded > 0 ? "arrow.up.right" : rounded < 0 ? "arrow.down.right" : "arrow.right")
+            // Compact everywhere: a List gives a Label an icon column otherwise.
+            .labelStyle(.titleAndIcon)
             .font(.caption).fontWeight(.semibold).monospacedDigit()
             .foregroundStyle(rounded == 0 ? Color.secondary : trend.isBetter ? Color.green : Color.orange)
             .accessibilityLabel("7-day average \(rounded >= 0 ? "up" : "down") \(abs(rounded)) \(metric.unit)\(rounded == 0 ? "" : trend.isBetter ? ", better" : ", worse")")

@@ -4284,7 +4284,19 @@ def _compute_readiness(bio_list: list[dict], session_dict: dict, user_id: str | 
         'status':     status,
         'flags':      flags,
         'components': {'rhr': rhr, 'hrv': hrv, 'sleep': sleep, 'fatigue': fatigue, 'tsb': tsb},
+        # The score's parts in words with their maxima, for the readiness
+        # detail on either client; the maxima live in the scoring above only.
+        'parts': [
+            {'id': 'rhr', 'label': 'Resting heart rate', 'points': rhr, 'max': 35},
+            {'id': 'hrv', 'label': ('Body Battery and recovery' if not has_hrv and watch
+                                    else 'Heart-rate variability'), 'points': hrv, 'max': 35},
+            {'id': 'sleep', 'label': 'Sleep', 'points': sleep, 'max': 10},
+            {'id': 'fatigue', 'label': 'Session fatigue', 'points': fatigue, 'max': 10},
+            {'id': 'tsb', 'label': 'Training load', 'points': tsb, 'max': 10},
+        ],
     }
+    if 'recovery_pending' in flags:
+        out['cappedAt'] = score
     if watch:
         out['watch'] = {'bodyBattery': watch['body_battery'],
                         'recoveryLeftH': None if watch['recovery_left_h'] is None
@@ -4688,6 +4700,15 @@ def analytics_specs():
     and measures, resolved to names. Static data — no user, no program."""
     from src.analytics.describe import describe_all
     return jsonify(describe_all())
+
+
+@app.get('/api/analytics/vocabulary')
+def analytics_vocabulary():
+    """The analytics words: the twelve primitives, what each needs logged,
+    and the load and recovery terms (src/analytics/vocabulary.py) — the About
+    sections of the phone's detail screens. Static data — no user."""
+    from src.analytics import vocabulary
+    return jsonify(vocabulary.to_client())
 
 
 @app.get('/api/analytics/development')

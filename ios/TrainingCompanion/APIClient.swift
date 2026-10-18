@@ -271,6 +271,18 @@ final class APIClient {
         return try JSONDecoder().decode([Lossy<AppBenchmark>].self, from: data).compactMap(\.value)
     }
 
+    /// The load and recovery terms in words (`GET /analytics/vocabulary`),
+    /// for the About sections of Analytics' detail screens. Static.
+    func fetchAnalyticsTerms() async throws -> [String: AnalyticsTerm] {
+        try Self.analyticsTerms(from: try await get("/analytics/vocabulary"))
+    }
+
+    /// Term by term: one the phone cannot read is left out, not every one.
+    static func analyticsTerms(from data: Data) throws -> [String: AnalyticsTerm] {
+        struct Body: Decodable { let terms: [String: Lossy<AnalyticsTerm>]? }
+        return (try JSONDecoder().decode(Body.self, from: data).terms ?? [:]).compactMapValues(\.value)
+    }
+
     func fetchPhilosophies() async throws -> [PhilosophyCard] {
         let data = try await get("/philosophies")
         return (try? JSONDecoder().decode([PhilosophyCard].self, from: data)) ?? []
