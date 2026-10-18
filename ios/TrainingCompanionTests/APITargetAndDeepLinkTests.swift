@@ -67,6 +67,7 @@ final class APITargetAndDeepLinkTests: XCTestCase {
                        .analyticsDetail(.restingHR), "Recovery pushes the resting-HR screen")
         XCTAssertEqual(parse("trainingcompanion://analytics?open=readiness"), .analyticsDetail(.readiness))
         XCTAssertEqual(parse("trainingcompanion://analytics?open=pmc"), .analyticsDetail(.pmc))
+        XCTAssertEqual(parse("trainingcompanion://analytics?open=shapes"), .analyticsDetail(.sessionShapes))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=recovery&open=nope"), .analytics(.recovery))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure="), .analytics(.progress),
                        "an empty id lands on the section")

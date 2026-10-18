@@ -9,6 +9,8 @@ import Charts
 struct AnalyticsProgramTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
+    /// A detail pushed from outside (a deep link); the cards push their own.
+    @State private var route: AppRouter.AnalyticsDetail?
 
     var body: some View {
         Group {
@@ -35,6 +37,32 @@ struct AnalyticsProgramTab: View {
         .refreshable {
             await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
         }
+        .navigationDestination(item: $route) { detail($0) }
+        .task { applyPendingDetail() }
+        .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
+        .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
+    }
+
+    @ViewBuilder
+    private func detail(_ detail: AppRouter.AnalyticsDetail) -> some View {
+        switch detail {
+        case .movement:
+            if let movement = appState.programAnalytics?.movement { MovementDetailView(movement: movement) }
+        case .sessionShapes:
+            if let rows = appState.programAnalytics?.archetypes { SessionShapesDetailView(rows: rows) }
+        default:
+            EmptyView()
+        }
+    }
+
+    /// Push what a deep link asked for once the document has loaded.
+    private func applyPendingDetail() {
+        guard let pending = router.pendingAnalyticsDetail, pending.section == .program,
+              let doc = appState.programAnalytics else { return }
+        if (pending == .movement && doc.movement != nil) || (pending == .sessionShapes && doc.archetypes != nil) {
+            route = pending
+        }
+        router.clearPendingAnalyticsDetail()
     }
 
     // MARK: - Layout
@@ -340,7 +368,8 @@ private struct IntensityCard: View {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
-                        Text("\(Int(v)) min").font(.caption2).foregroundStyle(.secondary)
+                        // Up to two decimals: a first week's minutes read 0, 0, 1.
+                        Text("\(AnalyticsProgramTab.number(v)) min").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -495,58 +524,107 @@ struct CoverageNoticeView: View {
 
 // MARK: - Movement
 
+/// Movement as a summary (§6.37): the three patterns the program plans most,
+/// done against planned, and any balance out of its range — the detail has
+/// both tables in full, every pair, the unilateral share and the minutes
+/// assumed. The card carried all of it inline until 2026-10-17.
 private struct MovementCard: View {
     let movement: ProgramAnalytics.Movement
-    /// The pattern column, as wide as "Squat"/"Hinge" at the reader's text size.
-    @ScaledMetric(relativeTo: .subheadline) private var patternWidth: CGFloat = 80
+
+    private var table: (title: String, table: ProgramAnalytics.Movement.Table)? {
+        if let sets = movement.sets, !sets.rollups.isEmpty { return ("Sets", sets) }
+        if let minutes = movement.minutes, !minutes.rollups.isEmpty { return ("Minutes", minutes) }
+        return nil
+    }
+    private var outside: [ProgramAnalytics.Movement.Balance] { movement.balance.filter(\.outside) }
 
     var body: some View {
-        AnalyticsCard(header: "Movement") {
+        AnalyticsDetailCard(header: "Movement", hint: "Opens movement") {
+            if !outside.isEmpty {
+                TintCapsule(text: "\(outside.count) out of range", symbol: "exclamationmark.triangle.fill",
+                            color: outside.contains { $0.level == "warning" } ? .red : .yellow)
+            }
+        } destination: {
+            MovementDetailView(movement: movement)
+        } content: {
             VStack(alignment: .leading, spacing: 12) {
-                if let sets = movement.sets, !sets.rollups.isEmpty { bars("Sets", sets) }
-                if let minutes = movement.minutes, !minutes.rollups.isEmpty {
-                    bars("Minutes", minutes, assumed: minutes.assumed)
+                if let table {
+                    MovementBars(title: table.title, rows: Array(table.table.rows.prefix(3)),
+                                 top: table.table.rows.first.map { max($0.value.planned, $0.value.done) } ?? 1)
                 }
-                ForEach(movement.balance) { pair in
-                    HStack(spacing: 6) {
-                        Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
-                        if pair.declared {
-                            Image(systemName: "checkmark.seal").font(.caption).foregroundStyle(.secondary)
-                                .accessibilityLabel("declared")
-                        }
-                        Spacer()
-                        // Out of range is a mark as well as a colour (§1.6).
-                        if pair.outside {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.caption)
-                                .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
-                                .accessibilityLabel("out of range")
-                        }
-                        Text(pair.ratio.map { "\(AnalyticsProgramTab.number($0)) (\(AnalyticsProgramTab.number(pair.min))–\(AnalyticsProgramTab.number(pair.max)))" }
-                             ?? "—")
-                            .monospacedDigit()
-                            .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
-                    }
-                    .font(.subheadline)
-                }
-                if let unilateral = movement.unilateralShare?.done {
-                    Label("Unilateral \(AnalyticsProgramTab.number(unilateral))%", systemImage: "figure.step.training")
+                ForEach(outside) { pair in BalanceRow(pair: pair) }
+                if outside.isEmpty && !movement.balance.isEmpty {
+                    Label("Balance in range", systemImage: "checkmark.circle")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
             }
         }
     }
+}
 
-    /// Planned as the grey track, done over it, both against the largest row.
-    /// Minutes assumed from sessions without a recorded workout are said to
-    /// VoiceOver on the table's title, not as a footnote (§1.4).
-    private func bars(_ title: String, _ table: ProgramAnalytics.Movement.Table, assumed: Double? = nil) -> some View {
-        let rows = table.rows
-        let top = max(rows.map { max($0.value.planned, $0.value.done) }.max() ?? 1, 1)
-        return VStack(alignment: .leading, spacing: 6) {
-            Text(title.uppercased())
-                .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
-                .accessibilityLabel(assumed.map { $0 > 0 ? "\(title), \(AnalyticsProgramTab.number($0)) minutes assumed from completed sessions without a recorded workout" : title } ?? title)
+/// Movement in full, pushed from its card: sets and minutes by pattern, done
+/// over planned; every balance pair against its range; the unilateral share;
+/// the minutes assumed from sessions without a recorded workout.
+struct MovementDetailView: View {
+    let movement: ProgramAnalytics.Movement
+
+    var body: some View {
+        List {
+            if let sets = movement.sets, !sets.rollups.isEmpty {
+                Section("Sets") { MovementBars(title: nil, rows: sets.rows, top: Self.top(sets)).padding(.vertical, 4) }
+            }
+            if let minutes = movement.minutes, !minutes.rollups.isEmpty {
+                Section {
+                    MovementBars(title: nil, rows: minutes.rows, top: Self.top(minutes)).padding(.vertical, 4)
+                } header: {
+                    Text("Minutes")
+                } footer: {
+                    if let assumed = minutes.assumed, assumed > 0 {
+                        Text("\(AnalyticsProgramTab.number(assumed)) min assumed from completed sessions without a recorded workout.")
+                    }
+                }
+            }
+            if !movement.balance.isEmpty {
+                Section("Balance") {
+                    ForEach(movement.balance) { pair in BalanceRow(pair: pair) }
+                }
+            }
+            if let unilateral = movement.unilateralShare?.done {
+                Section {
+                    LabeledContent("Unilateral") {
+                        Text("\(AnalyticsProgramTab.number(unilateral))%"
+                             + (movement.unilateralShare?.planned.map { " of \(AnalyticsProgramTab.number($0))% planned" } ?? ""))
+                            .monospacedDigit()
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Movement")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private static func top(_ table: ProgramAnalytics.Movement.Table) -> Double {
+        max(table.rows.map { max($0.value.planned, $0.value.done) }.max() ?? 1, 1)
+    }
+}
+
+/// Patterns as bars — planned the grey track, done over it, both against
+/// `top` so a summary of three keeps the scale of the whole table.
+private struct MovementBars: View {
+    let title: String?
+    let rows: [(pattern: String, value: ProgramAnalytics.Movement.Rollup)]
+    let top: Double
+    /// The pattern column, as wide as "Squat"/"Hinge" at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var patternWidth: CGFloat = 80
+
+    var body: some View {
+        let scale = max(top, 1)
+        VStack(alignment: .leading, spacing: 6) {
+            if let title {
+                Text(title.uppercased())
+                    .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+            }
             ForEach(rows, id: \.pattern) { row in
                 HStack(spacing: 8) {
                     Text(row.pattern.capitalized).font(.subheadline)
@@ -556,9 +634,9 @@ private struct MovementCard: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color(.systemFill)).frame(height: 6)
                             Capsule().fill(Color(.systemGray3))
-                                .frame(width: geo.size.width * row.value.planned / top, height: 6)
+                                .frame(width: geo.size.width * min(row.value.planned, scale) / scale, height: 6)
                             Capsule().fill(Color.accentColor)
-                                .frame(width: geo.size.width * min(row.value.done, top) / top, height: 6)
+                                .frame(width: geo.size.width * min(row.value.done, scale) / scale, height: 6)
                         }
                     }
                     .frame(height: 6)
@@ -566,9 +644,37 @@ private struct MovementCard: View {
                         .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned)) \(title.lowercased())")
+                .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
             }
         }
+    }
+}
+
+/// A balance pair, its ratio against the range, and a mark when it is out.
+private struct BalanceRow: View {
+    let pair: ProgramAnalytics.Movement.Balance
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
+            if pair.declared {
+                Image(systemName: "checkmark.seal").font(.caption).foregroundStyle(.secondary)
+                    .accessibilityLabel("declared")
+            }
+            Spacer()
+            // Out of range is a mark as well as a colour (§1.6).
+            if pair.outside {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
+                    .accessibilityLabel("out of range")
+            }
+            Text(pair.ratio.map { "\(AnalyticsProgramTab.number($0)) (\(AnalyticsProgramTab.number(pair.min))–\(AnalyticsProgramTab.number(pair.max)))" }
+                 ?? "—")
+                .monospacedDigit()
+                .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
+        }
+        .font(.subheadline)
     }
 }
 
