@@ -86,7 +86,7 @@ struct SleepDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Sleep")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["sleep_debt"]) }
     }
 
     static func stages(_ log: DailyBioLog) -> [(name: String, minutes: Int)] {
