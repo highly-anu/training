@@ -911,7 +911,14 @@ branch:
      words, "ok 07:41" / "failed 07:41 · No phone"; a tap syncs). A rest day, or a day whose
      sessions are done, says tomorrow. The words are `WatchListText` (shared, tested), the
      Garmin's ActivityMenu.mc and SyncManager.mc.
-   - **4b, the workout.** Set Next / Edit Set, the metronome, the package's summary pages.
+   - **4b, the workout — done on `watch/workout-tools`.** The commands page has Set Next (the
+     coming sets' reps, weight, RPE) and Edit Set (corrects the last set and carries it
+     forward), and switches the metronome — a haptic beat at 60/RPM s while an interval works
+     or a timed step runs. The end of a session shows the package's `watch.summary.pages`
+     in its order: summary (time, sets, volume kg else kcal), heart rate (average, maximum,
+     time per zone), exercises ("3x5 @ 100"); training effect stays the Garmin's
+     (`WatchSummaryText`, shared, tested). Not yet: editing the plan before the start, pace
+     edit.
 5. **Server fields both use (M; 6.3).** `switchAtSec`, `restUntilHr` and `bells` onto
    archetype slots and `_encode_watch_exercise`; the Apple Watch's "still recovering"
    becomes `restUntilHr`.

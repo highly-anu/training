@@ -123,6 +123,7 @@
 				WatchModels.swift,
 				WatchSpecText.swift,
 				WatchSteps.swift,
+				WatchSummaryText.swift,
 				WatchVocab.swift,
 			);
 			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;

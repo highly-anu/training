@@ -21,16 +21,26 @@ struct SetLoggerSheetView: View {
     private var repsActual: Int { Int(repsDouble) }
     private var rpe: Int { Int(rpeDouble) }
 
+    /// "Set Next" or "Edit Set" in place of "Set n — Reps".
+    var title: String? = nil
+
+    /// Starts from the working set (`WorkoutSessionState.workingSet`): Set
+    /// Next's values carry into every log after them, and Edit Set opens on
+    /// the set it corrects.
     init(exercise: WatchExercise, setIndex: Int, exerciseIndex: Int,
-         startOffset: Int,
+         startOffset: Int, title: String? = nil,
+         initial: WorkoutSessionState.WorkingSet? = nil,
          onDone: @escaping (WatchSetLog) -> Void) {
         self.exercise = exercise
         self.setIndex = setIndex
         self.exerciseIndex = exerciseIndex
         self.startOffset = startOffset
+        self.title = title
         self.onDone = onDone
-        _repsDouble = State(initialValue: Double(exercise.reps.flatMap(Int.init) ?? 5))
-        _weightKg   = State(initialValue: exercise.weightKg ?? 0)
+        let reps = initial?.reps ?? exercise.reps.flatMap(Int.init) ?? 5
+        _repsDouble = State(initialValue: Double(max(1, reps)))
+        _weightKg   = State(initialValue: initial?.weightKg ?? exercise.weightKg ?? 0)
+        _rpeDouble  = State(initialValue: Double(initial?.rpe ?? 7))
     }
 
     var body: some View {
@@ -52,7 +62,7 @@ struct SetLoggerSheetView: View {
 
     private var repsPage: some View {
         VStack(spacing: 6) {
-            Text("Set \(setIndex + 1) — Reps")
+            Text(title ?? "Set \(setIndex + 1) — Reps")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text("\(repsActual)")

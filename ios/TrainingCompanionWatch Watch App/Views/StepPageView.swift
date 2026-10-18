@@ -113,9 +113,12 @@ struct StepControlsView: View {
                 exercise: exercise,
                 setIndex: st.setsDone,
                 exerciseIndex: index,
-                startOffset: sessionState.currentSetStartOffset ?? sessionState.elapsedSeconds
+                startOffset: sessionState.currentSetStartOffset ?? sessionState.elapsedSeconds,
+                initial: sessionState.workingSet(exercise)
             ) { log in
                 sessionState.completeSet(log, for: exercise.exerciseId)
+                // What was done is where the next set starts.
+                sessionState.setNext(exercise, .init(reps: log.repsActual ?? 0, weightKg: log.weightKg, rpe: log.rpe))
                 sessionState.finishSet(index, exercise, screen)
             }
         }

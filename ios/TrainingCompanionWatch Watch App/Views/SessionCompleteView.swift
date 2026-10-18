@@ -7,6 +7,7 @@ struct SessionCompleteView: View {
     let onDiscard: () -> Void
 
     @EnvironmentObject var sessionState: WorkoutSessionState
+    @EnvironmentObject var workoutManager: WorkoutManager
 
     @State private var entering: EntryTarget? = nil
 
@@ -33,7 +34,16 @@ struct SessionCompleteView: View {
                 Text("Session Complete")
                     .font(.headline)
 
-                statsGrid
+                // The package's summary pages, in its order (the Garmin's
+                // SummaryView): what the session was, its heart rate, and
+                // what each step logged.
+                ForEach(WatchSummaryText.pages(session), id: \.self) { page in
+                    switch page {
+                    case "heart_rate": heartRatePage
+                    case "exercises": exercisesPage
+                    default: summaryPage
+                    }
+                }
 
                 if !testSteps.isEmpty { resultsSection }
 
@@ -91,27 +101,75 @@ struct SessionCompleteView: View {
         }
     }
 
-    private var statsGrid: some View {
-        Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
-            GridRow {
-                statCell(value: durationString, label: "Duration")
-                statCell(value: sessionState.avgHR > 0 ? "\(sessionState.avgHR)" : "—",
-                         label: "Avg HR")
+    private func pageTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.caption2.bold())
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
+    }
+
+    /// Time, sets, and the volume lifted — or the calories where nothing was.
+    private var summaryPage: some View {
+        let volume = WatchSummaryText.volumeKg(session, sessionState.setLogs)
+        return VStack(spacing: 4) {
+            pageTitle("SUMMARY")
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
+                GridRow {
+                    statCell(value: durationString, label: "Time")
+                    statCell(value: "\(WatchSummaryText.totalSets(sessionState.setLogs))", label: "Sets")
+                }
+                GridRow {
+                    if volume > 0 {
+                        statCell(value: "\(Int(volume.rounded()))", label: "Volume kg")
+                    } else {
+                        statCell(value: "\(sessionState.calories)", label: "kcal")
+                    }
+                    statCell(value: "\(sessionState.completedExerciseIds.count)", label: "Exercises")
+                }
             }
-            GridRow {
-                statCell(value: sessionState.peakHR > 0 ? "\(sessionState.peakHR)" : "—",
-                         label: "Peak HR")
-                statCell(value: "\(sessionState.calories)",
-                         label: "kcal")
+            .font(.caption)
+        }
+    }
+
+    /// Average and maximum, and the minutes in each zone.
+    private var heartRatePage: some View {
+        let zones = workoutManager.zoneSeconds()
+        let longest = max(zones.max() ?? 0, 1)
+        return VStack(alignment: .leading, spacing: 4) {
+            pageTitle("HEART RATE")
+            HStack {
+                statCell(value: sessionState.avgHR > 0 ? "\(sessionState.avgHR)" : "--", label: "Avg.")
+                Spacer()
+                statCell(value: sessionState.peakHR > 0 ? "\(sessionState.peakHR)" : "--", label: "Max.")
             }
-            GridRow {
-                statCell(value: "\(sessionState.completedExerciseIds.count)",
-                         label: "Exercises")
-                statCell(value: "\(sessionState.setLogs.values.flatMap { $0 }.count)",
-                         label: "Sets")
+            ForEach(Array(zones.enumerated()).reversed(), id: \.offset) { i, secs in
+                if secs > 0 {
+                    HStack(spacing: 6) {
+                        Text("Z\(i + 1)").font(.caption2).foregroundStyle(.secondary).frame(width: 20, alignment: .leading)
+                        Capsule().fill(HRZoneCalculator.color(for: i + 1))
+                            .frame(width: max(4, 90 * CGFloat(secs) / CGFloat(longest)), height: 6)
+                        Text(WatchSpecText.mmss(secs)).font(.caption2.monospacedDigit())
+                    }
+                }
             }
         }
-        .font(.caption)
+    }
+
+    /// Each step and what it logged ("3x5 @ 100"), dim where nothing was.
+    private var exercisesPage: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            pageTitle("EXERCISES")
+            ForEach(Array(WatchSummaryText.exerciseLines(session, logs: sessionState.setLogs,
+                                                         outcomes: sessionState.outcomes).enumerated()),
+                    id: \.offset) { _, line in
+                Text(line.name + (line.logged.map { "  \($0)" } ?? ""))
+                    .font(.caption2)
+                    .foregroundStyle(line.logged == nil ? .secondary : .primary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     @ViewBuilder
@@ -122,11 +180,13 @@ struct SessionCompleteView: View {
         }
     }
 
+    /// The workout's own time, as the Garmin's summary shows it — the
+    /// engine's elapsed seconds, which stop when the workout ends; the wall
+    /// clock since the start only if the engine never ticked.
     private var durationString: String {
-        let secs = Int(Date().timeIntervalSince(startedAt))
-        let m = secs / 60
-        let s = secs % 60
-        return String(format: "%d:%02d", m, s)
+        let secs = sessionState.elapsedSeconds > 0
+            ? sessionState.elapsedSeconds : Int(Date().timeIntervalSince(startedAt))
+        return WatchSpecText.mmss(secs)
     }
 }
 

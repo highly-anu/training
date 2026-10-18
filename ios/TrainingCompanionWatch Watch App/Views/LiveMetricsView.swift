@@ -59,13 +59,7 @@ struct LiveMetricsView: View {
 
     private var zoneColor: Color {
         guard sessionState.currentHR > 0 else { return .secondary }
-        switch HRZoneCalculator.zone(for: sessionState.currentHR, maxHR: connectivity.maxHR) {
-        case 1:  return .gray
-        case 2:  return .blue
-        case 3:  return .green
-        case 4:  return .orange
-        default: return .red
-        }
+        return HRZoneCalculator.color(for: HRZoneCalculator.zone(for: sessionState.currentHR, maxHR: connectivity.maxHR))
     }
 
     private var elapsedString: String {

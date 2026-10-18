@@ -104,6 +104,17 @@ final class WorkoutSessionState: ObservableObject {
     /// The rest running now follows a step's last set: when it ends, the
     /// next step comes up (the Garmin's advanceAfterRest).
     var restAdvances = false
+    /// The coming sets' reps, weight and RPE, as Set Next or Edit Set left
+    /// them (exercise id → set); the next log starts from them.
+    @Published var workingSets: [String: WorkingSet] = [:]
+    /// The metronome on a paced step; the commands page switches it.
+    @Published var metronomeOn = true
+
+    struct WorkingSet: Equatable {
+        var reps: Int
+        var weightKg: Double?
+        var rpe: Int?
+    }
 
     private(set) var avgHRSamples: [Int] = []
     private var hrOutOfZoneCounter = 0
@@ -154,6 +165,7 @@ final class WorkoutSessionState: ObservableObject {
         showOvertimePrompt = false
         stepWindows = [:]; currentStep = nil
         sideIsLeft = true; holdStartedAt = nil; clockStarts = [:]; restAdvances = false
+        workingSets = [:]; metronomeOn = true
     }
 
     /// The step after `index`, past the movements folded into an AMRAP.

@@ -66,8 +66,9 @@ As of 2026-10-17. *Server* is the payload key; *—* means the server has no par
 | Program not started yet | `status`, `startsOn` | not checked | "Starts Mon 20 Oct" |
 | Max HR for the zone alerts | `maxHR` | — (the watch's own zones) | yes |
 | Sync failure in words | — | yes | Sync row: "ok 07:41" / "failed 07:41 · No phone" (`WatchListText`) |
-| Edit set before, next and after; pace | — | yes | reps/weight/RPE logger only — pending, 14.4 |
-| Metronome | `targetRpm` | yes | pending, 14.4 |
+| Edit set before, next and after; pace | — | yes | Set Next and Edit Set (commands page, carried forward); pace edit and the pre-start plan pending |
+| Metronome | `targetRpm`, `metronome_rpm` | yes | yes: a haptic beat while paced, switched on the commands page |
+| Summary pages | `watch.summary.pages` | yes | summary, heart rate (zones), exercises; training effect is the Garmin's own |
 | Side switch, HR-gated rest, double bells | demo only | demo only | side-tracked sets and double bells drawn; the hand switch and HR-gated rest pending, 14.5 |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
 | **Native, not shared** | | glance (64 KB), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |

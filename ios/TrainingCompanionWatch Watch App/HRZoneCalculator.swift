@@ -46,3 +46,18 @@ struct HRZoneCalculator {
         return (rounds, workSec, restSec)
     }
 }
+
+import SwiftUI
+
+extension HRZoneCalculator {
+    /// A zone's colour, the live heart-rate page's and the summary's.
+    static func color(for zone: Int) -> Color {
+        switch zone {
+        case 1:  return .gray
+        case 2:  return .blue
+        case 3:  return .green
+        case 4:  return .orange
+        default: return .red
+        }
+    }
+}
