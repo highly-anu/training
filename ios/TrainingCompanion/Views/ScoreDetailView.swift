@@ -33,7 +33,7 @@ struct ScoreDetailView: View {
                     Text("\(review.compliancePct)%").monospacedDigit()
                 } label: {
                     Label(review.scopeLabel ?? "Sessions done", systemImage: "checkmark.circle")
-                        .labelStyle(.titleAndIcon)
+                        .labelStyle(.inline)
                 }
             }
             if !counted.isEmpty {
@@ -67,7 +67,7 @@ struct ScoreDetailView: View {
                             Text("\(method.measurable) of \(applicable)").monospacedDigit()
                         } label: {
                             Label(Self.name(method, in: doc), systemImage: "ruler")
-                                .labelStyle(.titleAndIcon)
+                                .labelStyle(.inline)
                         }
                         .accessibilityLabel("\(Self.name(method, in: doc)): \(method.measurable) of \(applicable) measures have data")
                     }
@@ -141,7 +141,7 @@ struct ScoreCounts: View {
                     Image(systemName: AnalyticsStatusStyle.symbol(c.status))
                         .foregroundStyle(AnalyticsStatusStyle.color(c.status))
                 }
-                .labelStyle(.titleAndIcon)
+                .labelStyle(.inline)
                 .font(.subheadline)
             }
         }

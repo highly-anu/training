@@ -17,7 +17,7 @@ struct ScorecardDetailView: View {
                 HStack(alignment: .firstTextBaseline) {
                     if let overall = scorecard.overallPct {
                         Label("\(Int(overall.rounded()))%", systemImage: "checkmark.circle")
-                            .labelStyle(.titleAndIcon)
+                            .labelStyle(.inline)
                             .font(.title2).fontWeight(.bold).monospacedDigit()
                             .accessibilityLabel("\(Int(overall.rounded())) percent of the sessions due are done")
                     }
@@ -72,7 +72,7 @@ struct ScorecardDetailView: View {
                                 .monospacedDigit()
                         } label: {
                             Label(id.capitalized, systemImage: ScorecardRowView.tierIcon(id) ?? "circle")
-                                .labelStyle(.titleAndIcon)
+                                .labelStyle(.inline)
                         }
                     }
                 }
@@ -111,7 +111,7 @@ struct IntensityDetailView: View {
                     LabeledContent {
                         Text("\(coverage.measured) of \(coverage.inScope)").monospacedDigit()
                     } label: {
-                        Label("Sessions with heart rate", systemImage: "ruler").labelStyle(.titleAndIcon)
+                        Label("Sessions with heart rate", systemImage: "ruler").labelStyle(.inline)
                     }
                 } footer: {
                     if coverage.measured < coverage.inScope, let reason = coverage.reason {
@@ -152,7 +152,7 @@ struct IntensityDetailView: View {
                     LabeledContent {
                         Text("\(AnalyticsProgramTab.number(mean))% of 1RM").monospacedDigit()
                     } label: {
-                        Label("Working sets", systemImage: "scalemass").labelStyle(.titleAndIcon)
+                        Label("Working sets", systemImage: "scalemass").labelStyle(.inline)
                     }
                 } footer: {
                     Text("\(pct.sessions) logged lifts")

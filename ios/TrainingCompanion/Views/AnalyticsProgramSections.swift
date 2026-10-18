@@ -39,7 +39,7 @@ struct MethodologySectionView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
-                                .labelStyle(.titleAndIcon)
+                                .labelStyle(.inline)
                                 .font(.subheadline)
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right")
@@ -92,7 +92,7 @@ struct MeasuresElsewhereView: View {
                         Text(e.label)
                         if !tracks.isEmpty {
                             Label(tracks.joined(separator: ", "), systemImage: "arrow.triangle.branch")
-                                .labelStyle(.titleAndIcon)
+                                .labelStyle(.inline)
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                         if let measures = e.about?.measures, !measures.isEmpty {
@@ -319,7 +319,7 @@ private struct SessionShapeRow: View {
             if showsDetail { detail }
         }
         // Compact labels in a List too, which otherwise gives each an icon column.
-        .labelStyle(.titleAndIcon)
+        .labelStyle(.inline)
     }
 
     private var detail: some View {

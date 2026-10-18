@@ -1830,11 +1830,6 @@ share of 1RM) — `Views/ProgramCardDetails.swift` — Movement and Session shap
 phases (§6.26, before this section was written). Program's Load card is a
 summary of the PMC that Load's own card opens.
 
-**A `Label` inside a `List` gets an icon column** — the icon in a fixed-width
-leading slot, the title far from it. A row that carries labels as inline
-symbols (a trend badge, a shape's duration and HR) sets
-`.labelStyle(.titleAndIcon)`; the badge and the shape row do it themselves.
-
 Where two cards were the same data two ways they became one card: Load's
 **Mix** (the modality ring on the card; activity hours on its detail) and
 **Weekly** (sessions a week on the card; TRIMP a week on its detail, with

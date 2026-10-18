@@ -329,9 +329,9 @@ struct WeeklyDetailView: View {
                     let trimp = bars.first { Calendar.current.isDate($0.weekStart, inSameDayAs: week.weekStart) }?.trimp
                     LabeledContent {
                         HStack(spacing: 12) {
-                            Label("\(week.sessionCount)", systemImage: "figure.run").labelStyle(.titleAndIcon)
+                            Label("\(week.sessionCount)", systemImage: "figure.run").labelStyle(.inline)
                             if let trimp {
-                                Label("\(Int(trimp.rounded()))", systemImage: "flame").labelStyle(.titleAndIcon)
+                                Label("\(Int(trimp.rounded()))", systemImage: "flame").labelStyle(.inline)
                             }
                         }
                         .monospacedDigit()
