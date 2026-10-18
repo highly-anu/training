@@ -15,6 +15,10 @@ struct AboutText: Decodable, Equatable {
     let measures: String?
     let needs: [Need]
     let notes: String?
+    /// Terms explained one per row — a screen of several readings (CTL,
+    /// ATL, TSB) rather than one measure; never decoded, built on the phone
+    /// from the server's `TERMS`.
+    var terms: [AnalyticsTerm] = []
 
     init(measures: String?, needs: [Need] = [], notes: String? = nil) {
         self.measures = measures
@@ -30,7 +34,7 @@ struct AboutText: Decodable, Equatable {
         notes = try? c.decodeIfPresent(String.self, forKey: .notes)
     }
 
-    var isEmpty: Bool { (measures ?? "").isEmpty && needs.isEmpty && (notes ?? "").isEmpty }
+    var isEmpty: Bool { (measures ?? "").isEmpty && needs.isEmpty && (notes ?? "").isEmpty && terms.isEmpty }
 }
 
 /// One load or recovery term in words (`vocabulary.TERMS`): "TSB · form" and
@@ -41,12 +45,17 @@ struct AnalyticsTerm: Decodable, Equatable {
 }
 
 extension AboutText {
-    /// The About for a screen that explains terms rather than a measure: each
-    /// term's sentence, in the order given, skipping any the server lacks.
+    /// The About for a screen that explains terms rather than a measure: one
+    /// term is its sentence; several are a row each, named, in the order
+    /// given. A term the server lacks is skipped.
     init(terms ids: [String], from terms: [String: AnalyticsTerm]) {
         let found = ids.compactMap { terms[$0] }
-        self.init(measures: found.isEmpty ? nil
-                  : found.map { found.count > 1 ? "\($0.label): \($0.text)" : $0.text }.joined(separator: "\n\n"))
+        if found.count == 1 {
+            self.init(measures: found[0].text)
+        } else {
+            self.init(measures: nil)
+            self.terms = found
+        }
     }
 }
 
@@ -58,9 +67,17 @@ struct AboutSection: View {
     let about: AboutText
 
     var body: some View {
-        if !(about.measures ?? "").isEmpty || !(about.notes ?? "").isEmpty {
+        if !(about.measures ?? "").isEmpty || !(about.notes ?? "").isEmpty || !about.terms.isEmpty {
             Section("About") {
                 if let measures = about.measures, !measures.isEmpty { Text(measures) }
+                ForEach(about.terms, id: \.label) { term in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(term.label).font(.subheadline).fontWeight(.semibold)
+                        Text(term.text)
+                    }
+                    .padding(.vertical, 2)
+                    .accessibilityElement(children: .combine)
+                }
                 if let notes = about.notes, !notes.isEmpty {
                     Text(notes).foregroundStyle(.secondary)
                 }

@@ -47,17 +47,20 @@ final class AppRouter: ObservableObject {
     }
 
     /// A detail screen an Analytics section pushes (§6.37): Progress's
-    /// measures and exercises, Recovery's readiness, sleep, trends and check-ins.
+    /// measures and exercises, Recovery's readiness, sleep, trends and
+    /// check-ins, Load's fitness, fatigue and form.
     enum AnalyticsDetail: Hashable {
         case measure(String)
         case exercise(String)
         case readiness, sleep, hrv, restingHR, checkIns
+        case pmc
 
         /// The section that pushes it.
         var section: AnalyticsTab {
             switch self {
             case .measure, .exercise: return .progress
             case .readiness, .sleep, .hrv, .restingHR, .checkIns: return .recovery
+            case .pmc: return .load
             }
         }
     }

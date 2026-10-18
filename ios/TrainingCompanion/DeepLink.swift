@@ -16,7 +16,8 @@ enum DeepLink: Equatable {
     case analytics(AnalyticsTab)
     /// `analytics?section=progress&measure=<entry id>` or `&exercise=<exercise id>` —
     /// Progress pushes that measure's or exercise's screen (§6.37);
-    /// `analytics?open=readiness|sleep|hrv|resting-hr|checkins` one of Recovery's.
+    /// `analytics?open=readiness|sleep|hrv|resting-hr|checkins` one of Recovery's,
+    /// `open=pmc` Load's fitness, fatigue and form.
     case analyticsDetail(AppRouter.AnalyticsDetail)
     /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
     case session(String)
@@ -100,7 +101,8 @@ enum DeepLink: Equatable {
                 return .analyticsDetail(.exercise(id))
             }
             let recovery: [String: AppRouter.AnalyticsDetail] = [
-                "readiness": .readiness, "sleep": .sleep, "hrv": .hrv, "resting-hr": .restingHR, "checkins": .checkIns]
+                "readiness": .readiness, "sleep": .sleep, "hrv": .hrv, "resting-hr": .restingHR, "checkins": .checkIns,
+                "pmc": .pmc]
             if let open = query.first(where: { $0.name == "open" })?.value?.lowercased(), let detail = recovery[open] {
                 return .analyticsDetail(detail)
             }
