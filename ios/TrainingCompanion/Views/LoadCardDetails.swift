@@ -60,7 +60,7 @@ struct LoadFocusDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Load Focus")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["load_focus", "hr_zones"]) }
     }
 }
 
@@ -193,7 +193,7 @@ struct MixDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Mix")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["mix"]) }
     }
 }
 
@@ -348,7 +348,7 @@ struct WeeklyDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Weekly")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["consistency", "trimp"]) }
     }
 }
 

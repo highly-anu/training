@@ -522,7 +522,7 @@ struct BlockLoadDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Load by block")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["block_load", "trimp"]) }
     }
 }
 

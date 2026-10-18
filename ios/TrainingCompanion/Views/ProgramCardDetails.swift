@@ -89,7 +89,7 @@ struct ScorecardDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Scorecard")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["completion", "weekly_dose"]) }
     }
 }
 
@@ -163,7 +163,7 @@ struct IntensityDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Intensity split")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["intensity", "hr_zones"]) }
     }
 
     /// One framework's share per bucket: done, then planned, in a grid.
