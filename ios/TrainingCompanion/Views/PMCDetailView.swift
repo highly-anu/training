@@ -95,7 +95,10 @@ struct PMCChart: View {
         .chartXSelection(value: compact ? .constant(nil) : $selected)
         .chartXAxis {
             if !compact {
-                AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                // About four dates, the chart's choice: one every 14 days
+                // was seven at 90 days, and the last two ran together
+                // ("29 Sep13 Oct") once each took its full width.
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
                     AxisValueLabel {
                         if let d = value.as(Date.self) {
                             // fixedSize: the last label would truncate to "1…".
