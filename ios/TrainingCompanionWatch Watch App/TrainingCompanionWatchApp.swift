@@ -11,7 +11,10 @@ struct TrainingCompanionWatchApp: App {
                 .environmentObject(connectivity)
                 .environmentObject(workoutManager)
                 .environmentObject(workoutManager.sessionState)
-                .task { await workoutManager.requestAuthorization() }
+                .task {
+                    if !WatchDebugLaunch.skipHealth { await workoutManager.requestAuthorization() }
+                    if let id = WatchDebugLaunch.session { connectivity.pendingDeepLinkSessionId = id }
+                }
                 .onOpenURL { url in
                     // Handle deep links from the watch widget.
                     // trainingcompanion://start?session=<sessionId>  → navigate to that session
