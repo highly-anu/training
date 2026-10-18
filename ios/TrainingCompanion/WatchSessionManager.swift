@@ -4,27 +4,10 @@ import Foundation
 import HealthKit
 import WatchConnectivity
 
-// MARK: - Default rest seconds by modality (fallback when slot rest_sec is nil)
-
-private let modalityRestDefaults: [String: Int] = [
-    "max_strength":             240,
-    "relative_strength":        180,
-    "strength_endurance":       90,
-    "power":                    240,
-    "aerobic_base":             0,
-    "anaerobic_intervals":      120,
-    "mixed_modal_conditioning": 60,
-    "mobility":                 30,
-    "movement_skill":           30,
-    "durability":               0,
-    "combat_sport":             0,
-    "rehab":                    30,
-]
-
 // MARK: - WatchSessionManager
 
-/// Fetches the current training program from the API, computes today's sessions,
-/// encodes them for the Watch, and relays post-workout summaries back to the API.
+/// Relays the server's day to the Watch (`GET /user/today-session`, the
+/// payload the Garmin reads) and the Watch's workouts back to the API.
 @MainActor
 final class WatchSessionManager: NSObject, ObservableObject {
 
@@ -36,7 +19,9 @@ final class WatchSessionManager: NSObject, ObservableObject {
         return f
     }()
 
-    // Cached from the most recent syncProgram() call, keyed by sessionId.
+    /// Name and modality of every session a sync has sent, by sessionId, to
+    /// label the workouts the Watch sends back — kept across days, so a
+    /// workout that arrives after midnight still finds its session.
     private var sessionCache: [String: (modality: String, name: String)] = [:]
 
     init(api: APIClient) {
@@ -50,81 +35,32 @@ final class WatchSessionManager: NSObject, ObservableObject {
 
     // MARK: - Program sync
 
-    /// Fetches today's program from the API and sends sessions to the Watch.
-    /// Returns what it sent, so a watch that asked can have it in the reply:
-    /// a queued transfer can take minutes to arrive, and the watch used to
-    /// give up after ten seconds and say the phone was unreachable.
+    /// Sends the Watch the server's day, as the server wrote it. Returns what
+    /// it sent, so a watch that asked can have it in the reply: a queued
+    /// transfer can take minutes to arrive.
+    ///
+    /// The phone used to build the day itself from `/user/program` — its
+    /// own week and day maths (which crashed on a program starting a week
+    /// ahead), slot-type guesses, load wording, a max HR from a date of
+    /// birth of its own and a week list — and borrowed only the done flags,
+    /// last times and standards from this payload.
     @discardableResult
     func syncProgram() async -> [String: Any]? {
-        let todayStr = dayFormatter.string(from: Date())
+        let today = dayFormatter.string(from: Date())
         do {
-            guard let server = try await api.fetchProgram() else {
-                return send(["type": "no_program"])
+            let json = try await api.fetchWatchDay(date: today)
+            let day = try JSONDecoder().decode(WatchDay.self, from: json)
+            for s in (day.sessions ?? []) + (day.days ?? []).flatMap(\.sessions) {
+                sessionCache[s.sessionId] = (modality: s.modalityId, name: s.archetypeName)
             }
-            guard let program = server.currentProgram,
-                  let startDateStr = server.programStartDate,
-                  let startDate = dayFormatter.date(from: startDateStr) else {
-                return send(["type": "no_program"])
+            guard let payload = WatchDayMessage.payload(json: json) else {
+                AppLogger.logFromBackground("WCSession: could not pack the day for the Watch")
+                return nil
             }
-
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            let start = calendar.startOfDay(for: startDate)
-            let daysSince = calendar.dateComponents([.day], from: start, to: today).day ?? 0
-            let weekIndex = daysSince / 7
-            let dayName = weekdayName(for: Date())
-
-            // A program that starts next week or later has nothing today.
-            // Rounding toward zero hid six days of it; from the seventh,
-            // weeks[-1] crashed the app.
-            guard daysSince >= 0 else {
-                return send(["type": "today_sessions", "date": todayStr, "sessions": [Any](),
-                             "profile": buildProfilePayload()])
-            }
-            guard weekIndex < program.weeks.count else {
-                return send(["type": "program_expired"])
-            }
-
-            let week = program.weeks[weekIndex]
-            let sessions = week.schedule[dayName] ?? []
-            // The server's word on today: what is done on any device, the
-            // week's progress, and each exercise's last time.
-            let day = try? await api.fetchWatchDay(date: todayStr)
-            let watchSessions = sessions.enumerated().map { (i, s) in
-                encodeSession(s, weekNumber: week.weekNumber, dayName: dayName, index: i, modality: s.modality,
-                              last: day?.last ?? [:], standards: day?.standards ?? [:])
-            }
-
-            // Cache session metadata so handleWorkoutComplete can label uploads correctly.
-            sessionCache = Dictionary(uniqueKeysWithValues: watchSessions.map {
-                ($0.sessionId, (modality: $0.modalityId, name: $0.archetypeName))
-            })
-
-            let profile = buildProfilePayload()
-            let weeklyOverview = buildWeeklyOverview(week: week)
-            let readiness = buildReadinessPayload()
-
-            var payload: [String: Any] = [
-                "type":          "today_sessions",
-                "date":          todayStr,
-                "weekNumber":    week.weekNumber,
-                "dayName":       dayName,
-                "sessions":      encodedJSON(watchSessions),
-                "profile":       profile,
-                "weeklyOverview": encodedJSON(weeklyOverview),
-            ]
-            if let readiness { payload["readiness"] = encodedJSON(readiness) }
-            // The server's word on what is done today — a session logged on the
-            // web or matched to another device's workout — and the week's
-            // progress. The watch tracked completion only for what it recorded
-            // itself, so a session done elsewhere still read as to do.
-            if let day {
-                payload["completedIds"] = day.completedIds
-                if let progress = day.progress { payload["progress"] = progress }
-            }
-
             UserDefaults.standard.set(Date(), forKey: "lastProgramSyncDate")
-            AppLogger.logFromBackground("WCSession: sent today_sessions to Watch (\(watchSessions.count) sessions)")
+            let size = (payload["day"] as? Data)?.count ?? 0
+            AppLogger.logFromBackground("WCSession: sent the day to Watch — \(day.status), "
+                                        + "\(day.sessions?.count ?? 0) sessions, \(size) bytes")
             return send(payload)
         } catch {
             // Was a bare silent catch: a failed fetch left the Watch on cached
@@ -134,191 +70,15 @@ final class WatchSessionManager: NSObject, ObservableObject {
         }
     }
 
-    // MARK: - Encoding
-
-    private func encodeSession(
-        _ s: ProgramSession,
-        weekNumber: Int,
-        dayName: String,
-        index: Int,
-        modality: String,
-        last: [String: String] = [:],
-        standards: [String: WatchStandard] = [:]
-    ) -> WatchSession {
-        let exercises = s.exercises
-            .filter { !$0.injurySkip && $0.exercise != nil }
-            .map { ea -> WatchExercise in
-                var e = encodeExercise(ea, modality: modality)
-                e.lastTime = last[e.exerciseId]
-                // Only on the test's scored slot: the same exercise as a
-                // warm-up elsewhere in the day carries no standard.
-                if ea.standardId != nil { e.standard = standards[e.exerciseId] }
-                return e
-            }
-
-        return WatchSession(
-            sessionId:        "\(weekNumber)-\(dayName)-\(index)",
-            modalityId:       modality,
-            archetypeName:    s.archetype?.name ?? modality,
-            estimatedMinutes: s.archetype?.durationEstimateMinutes ?? 45,
-            isDeload:         s.isDeload,
-            exercises:        exercises
-        )
-    }
-
-    private func encodeExercise(_ ea: ProgramExerciseAssignment, modality: String) -> WatchExercise {
-        let ex = ea.exercise!
-        let load = ea.load
-        let slotType = inferSlotType(from: ea.load, explicit: ea.slotType)
-
-        let cue = ea.notes ?? ex.notes
-
-        // Parse zone bounds from zoneTarget string (e.g. "Zone 1–2 (conversational pace)")
-        let (zoneLower, zoneUpper) = parseZoneRange(load.zoneTarget)
-
-        // Rest seconds: slot value or modality default
-        let restSec = ea.restSec ?? modalityRestDefaults[modality]
-
-        return WatchExercise(
-            exerciseId:         ex.id,
-            name:               ex.name,
-            slotType:           slotType,
-            slotRole:           ea.slotRole ?? "",
-            isMeta:             ea.meta,
-            loadDescription:    formatLoad(ea),
-            loadNote:           ea.loadNote,
-            coachingCue:        cue,
-            sets:               load.sets,
-            reps:               load.reps?.displayString,
-            weightKg:           load.weightKg,
-            targetRpe:          load.targetRpe,
-            durationMinutes:    load.durationMinutes,
-            zoneTarget:         load.zoneTarget,
-            timeMinutes:        load.timeMinutes,
-            targetRounds:       load.targetRounds,
-            emomFormat:         load.format,
-            holdSeconds:        load.holdSeconds,
-            distanceKm:         load.distanceKm,
-            restSeconds:        restSec,
-            prescribedZoneLower: zoneLower,
-            prescribedZoneUpper: zoneUpper
-        )
-    }
-
-    /// Infers slot type from load fields when the explicit slot_type is nil (legacy stored programs).
-    private func inferSlotType(from load: ProgramLoad, explicit: String?) -> String {
-        if let e = explicit, !e.isEmpty { return e }
-        if load.distanceKm    != nil { return "distance" }
-        if load.holdSeconds   != nil { return "static_hold" }
-        if load.format        != nil { return "emom" }
-        if load.durationMinutes != nil { return "time_domain" }
-        if load.timeMinutes != nil && load.targetRounds != nil { return "amrap" }
-        if load.targetRounds  != nil { return "for_time" }
-        return "sets_reps"
-    }
-
-    private func formatLoad(_ ea: ProgramExerciseAssignment) -> String {
-        let load = ea.load
-        switch inferSlotType(from: ea.load, explicit: ea.slotType) {
-        case "sets_reps":
-            let sets = load.sets.map { "\($0)" } ?? "?"
-            let reps = load.reps?.displayString ?? "?"
-            if let kg = load.weightKg {
-                return "\(sets)×\(reps) @ \(kg) kg"
-            } else if let rpe = load.targetRpe {
-                return "\(sets)×\(reps) @ RPE \(rpe)"
-            } else {
-                return "\(sets)×\(reps)"
-            }
-        case "time_domain", "skill_practice":
-            if let min = load.durationMinutes {
-                return "\(min) min\(load.zoneTarget.map { " — \($0)" } ?? "")"
-            }
-            return "Duration TBD"
-        case "emom":
-            if let min = load.timeMinutes, let rounds = load.targetRounds {
-                return "\(min) min / \(rounds) rounds"
-            }
-            return load.format ?? "EMOM"
-        case "amrap":
-            if let min = load.timeMinutes {
-                return "AMRAP \(min) min"
-            }
-            return "AMRAP"
-        case "for_time":
-            if let rounds = load.targetRounds {
-                return "\(rounds) rounds for time"
-            }
-            return "For time"
-        case "distance":
-            if let km = load.distanceKm {
-                return "\(km) km"
-            }
-            return "Distance"
-        case "static_hold":
-            let sets = load.sets.map { "\($0)×" } ?? ""
-            let secs = load.holdSeconds.map { "\($0)s" } ?? "?"
-            return "\(sets)\(secs) hold"
-        default:
-            return ""
-        }
-    }
-
-    /// Parses "Zone 1–2 (conversational pace)" → (lower: 1, upper: 2).
-    /// Returns (nil, nil) if not parseable.
-    private func parseZoneRange(_ zoneTarget: String?) -> (Int?, Int?) {
-        guard let s = zoneTarget else { return (nil, nil) }
-        let pattern = /[Zz]one\s*(\d)(?:\s*[-–]\s*(\d))?/
-        guard let m = try? pattern.firstMatch(in: s),
-              let lower = Int(m.output.1) else { return (nil, nil) }
-        let upper = m.output.2.flatMap { Int($0) } ?? lower
-        return (lower, upper)
-    }
-
-    private func weekdayName(for date: Date) -> String {
-        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        let index = Calendar.current.component(.weekday, from: date) - 1
-        return names[index]
-    }
-
-    private func buildProfilePayload() -> [String: Any] {
-        var p: [String: Any] = [:]
-        // dateOfBirth from profileStore is persisted in UserDefaults by the web app
-        // (and may be set by the user in the iOS app's settings in the future).
-        // For now we pass what we have.
-        if let dob = UserDefaults.standard.string(forKey: "dateOfBirth") {
-            p["dateOfBirth"] = dob
-            let age = Calendar.current.dateComponents([.year], from: {
-                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                return f.date(from: dob) ?? Date()
-            }(), to: Date()).year ?? 30
-            p["maxHR"] = 220 - age
-        }
-        return p
-    }
-
-    private func buildWeeklyOverview(week: ProgramWeek) -> [WeeklyOverviewDay] {
-        let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-        return dayOrder.map { day in
-            let sessions = week.schedule[day] ?? []
-            return WeeklyOverviewDay(
-                dayName: day,
-                sessionCount: sessions.count,
-                modalityIds: sessions.map { $0.modality }
-            )
-        }
-    }
-
-    /// Today's server readiness, the same score the phone's Today and
-    /// Recovery show (`AppState.loadReadiness` stores it).
-    private func buildReadinessPayload() -> ReadinessInfo? {
-        ReadinessInfo.fromStoredServerScore()
-    }
-
     /// Queue a day for the watch. `transferUserInfo` reaches it even when
     /// it is not reachable now; "no program" used to go only to a reachable
-    /// watch, so one that asked while out of range never heard it.
+    /// watch, so one that asked while out of range never heard it. A day
+    /// still in the queue is replaced, not delivered after it.
     private func send(_ payload: [String: Any]) -> [String: Any] {
+        for queued in WCSession.default.outstandingUserInfoTransfers
+        where queued.userInfo["type"] as? String == WatchDayMessage.type {
+            queued.cancel()
+        }
         WCSession.default.transferUserInfo(payload)
         return payload
     }
@@ -361,21 +121,19 @@ extension WatchSessionManager: WCSessionDelegate {
         let type = userInfo["type"] as? String ?? "(no type)"
         AppLogger.logFromBackground("WCSession: received userInfo type=\(type)")
 
-        if type == "session_marked_complete" {
+        if type == WatchUploadMessage.sessionDone {
             guard let sessionId = userInfo["sessionId"] as? String,
                   let markedAt = userInfo["markedAt"] as? String else { return }
             Task { await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt) }
             return
         }
 
-        guard type == "workout_complete" else { return }
-        guard let data = try? JSONSerialization.data(withJSONObject: userInfo),
-              let summary = try? JSONDecoder().decode(WatchWorkoutSummary.self, from: data) else {
+        guard type == WatchUploadMessage.workout else { return }
+        guard let summary = WatchUploadMessage.summary(from: userInfo) else {
             AppLogger.logFromBackground("WCSession: failed to decode WatchWorkoutSummary")
             return
         }
-        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
-        Task { await handleWorkoutComplete(summary) }
+        Task { await receive(summary) }
     }
 
     /// Large workout payloads arrive via transferFile when > 50 KB.
@@ -386,11 +144,25 @@ extension WatchSessionManager: WCSessionDelegate {
             AppLogger.logFromBackground("WCSession: failed to decode large workout file")
             return
         }
-        WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
-        Task { await handleWorkoutComplete(summary) }
+        Task { await receive(summary) }
     }
 
-    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async {
+    /// Keep the summary on the phone until the server has it, then store it;
+    /// true when the server has the workout and its log.
+    @discardableResult
+    private func receive(_ summary: WatchWorkoutSummary) async -> Bool {
+        if let data = try? JSONEncoder().encode(summary) {
+            WatchSessionManager.bufferSummary(data, id: summary.sessionId + "_" + summary.startedAt)
+        }
+        let stored = await handleWorkoutComplete(summary)
+        if stored { NotificationCenter.default.post(name: .watchWorkoutStored, object: summary.sessionId) }
+        return stored
+    }
+
+    /// Stores a session from the watch: its log, the workout, the match.
+    /// True when the server has the log and the workout — what the watch's
+    /// live send waits for before it lets the queued copy go.
+    private func handleWorkoutComplete(_ summary: WatchWorkoutSummary) async -> Bool {
         // Track upload for SyncStatusView
         let now = Date()
         UserDefaults.standard.set(now, forKey: "lastWatchUploadDate")
@@ -408,8 +180,10 @@ extension WatchSessionManager: WCSessionDelegate {
         if let timeline = summary.exerciseTimeline { log["exerciseTimeline"] = encodedJSON(timeline) }
 
         AppLogger.logFromBackground("API: saving workout log for \(sessionKey)…")
+        var logSaved = false
         do {
             try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            logSaved = true
             AppLogger.logFromBackground("API: saved workout log for \(sessionKey) ✓")
         } catch {
             AppLogger.logFromBackground("API: saveWorkoutLog FAILED — \(error.localizedDescription)")
@@ -422,7 +196,7 @@ extension WatchSessionManager: WCSessionDelegate {
         //    to do could offer (see WatchUpload).
         guard let startDate = WatchUpload.parseStart(summary.startedAt) else {
             AppLogger.logFromBackground("API: saveWatchWorkout SKIPPED — could not parse startedAt: \(summary.startedAt)")
-            return
+            return false
         }
         let workoutId = WatchUpload.workoutId(sessionKey: sessionKey, startedAt: summary.startedAt)
         let workout = WatchUpload.workoutPayload(summary: summary, workoutId: workoutId, startDate: startDate,
@@ -434,7 +208,7 @@ extension WatchSessionManager: WCSessionDelegate {
             WatchSessionManager.clearBuffer(id: sessionKey + "_" + summary.startedAt)
         } catch {
             AppLogger.logFromBackground("API: saveWatchWorkout FAILED — \(error.localizedDescription)")
-            return
+            return false
         }
 
         // 3. Link the workout to the session. The server resolves the
@@ -459,15 +233,22 @@ extension WatchSessionManager: WCSessionDelegate {
             await enrichWorkoutWithHKRoute(workout: workout, startDate: startDate,
                                            existingGPSCount: existingGPSCount)
         }
+        // A match that failed is not worth a second delivery: the workout and
+        // its log are stored, and the matcher can still link them.
+        return logSaved
     }
 
-    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async {
+    @discardableResult
+    private func handleSessionMarkedComplete(sessionId: String, markedAt: String) async -> Bool {
         AppLogger.logFromBackground("WCSession: session_marked_complete — \(sessionId) at \(markedAt)")
         do {
-            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt)
+            try await api.saveSessionComplete(sessionKey: sessionId, completedAt: markedAt, source: "apple_watch_live")
             AppLogger.logFromBackground("API: marked session complete \(sessionId) ✓")
+            NotificationCenter.default.post(name: .watchWorkoutStored, object: sessionId)
+            return true
         } catch {
             AppLogger.logFromBackground("API: saveSessionComplete FAILED — \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -513,6 +294,21 @@ extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession,
                              didReceiveMessage message: [String: Any],
                              replyHandler: @escaping ([String: Any]) -> Void) {
+        // A session sent live: stored on the server before the reply, which
+        // tells the watch whether it still needs to queue its copy.
+        if let summary = WatchUploadMessage.summary(from: message) {
+            AppLogger.logFromBackground("WCSession: received workout live — \(summary.sessionId)")
+            Task { replyHandler(WatchUploadMessage.reply(stored: await receive(summary))) }
+            return
+        }
+        if message["type"] as? String == WatchUploadMessage.sessionDone,
+           let sessionId = message["sessionId"] as? String, let markedAt = message["markedAt"] as? String {
+            Task {
+                let stored = await handleSessionMarkedComplete(sessionId: sessionId, markedAt: markedAt)
+                replyHandler(WatchUploadMessage.reply(stored: stored))
+            }
+            return
+        }
         guard let type = message["type"] as? String, type == "request_sync" else {
             replyHandler([:])
             return
@@ -553,4 +349,6 @@ extension WatchSessionManager: WCSessionDelegate {
 extension Notification.Name {
     /// The Apple Watch was paired, installed, removed or came in range.
     static let watchStateDidChange = Notification.Name("watchStateDidChange")
+    /// The server has a session the Apple Watch recorded (object: its key).
+    static let watchWorkoutStored = Notification.Name("watchWorkoutStored")
 }

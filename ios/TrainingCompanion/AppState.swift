@@ -229,10 +229,27 @@ final class AppState: ObservableObject {
             let snapshot = try await api.fetchHealthSnapshot()
             importedWorkouts = snapshot.workouts
             workoutMatches = APIClient.matchesByWorkout(snapshot.matches)
+            workoutsLoaded = true
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
             print("⚠️ loadWorkouts failed: \(error)")
         }
+    }
+
+    /// The phone has just stored a session the Apple Watch recorded
+    /// (`.watchWorkoutStored`): the workout list, the logs, the scorecard and
+    /// the suggestions change, and the workout is news — the Workout complete
+    /// sheet. Nothing reloaded before, so with the app open Today kept the
+    /// session to do and the sheet never came, until a launch or a refresh
+    /// five minutes on.
+    func refreshAfterWatchWorkout() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.loadWorkouts() }
+            group.addTask { await self.loadRecentSessionLogs() }
+            group.addTask { await self.loadProgramAnalytics() }
+            group.addTask { await self.loadMatchSuggestions() }
+        }
+        noticeCompletedWorkout()
     }
 
     // MARK: - Workout complete
@@ -255,14 +272,19 @@ final class AppState: ObservableObject {
     /// lines up the newest eight so each can be looked at in turn.
     private var completedWorkoutQueue: [ImportedWorkout] = []
 
+    /// The workout list has loaded at least once (it may hold nothing).
+    var workoutsLoaded = false
+
     /// Present the sheet for the newest workout not yet shown, if one ended
     /// recently enough to be a moment rather than history.
     ///
     /// The first load on an install (or on the build that brings the sheet)
     /// only records what is there: a workout from yesterday, long since
-    /// linked on the web, is not news.
+    /// linked on the web, is not news. An empty list counts as that first
+    /// load: it used to wait for a list with something in it, so the very
+    /// first workout an athlete ever recorded was taken for history.
     func noticeCompletedWorkout(now: Date = Date()) {
-        guard completedWorkout == nil, !importedWorkouts.isEmpty else { return }
+        guard completedWorkout == nil, workoutsLoaded else { return }
         guard let seen = seenWorkoutIds else {
             seenWorkoutIds = Set(importedWorkouts.map(\.id))
             return
@@ -831,7 +853,6 @@ final class AppState: ObservableObject {
         do {
             let result = try await api.fetchReadiness()
             readinessResult = result
-            ReadinessInfo.storeForWatch(result)
             writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }

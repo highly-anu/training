@@ -18,7 +18,7 @@ struct ContentView: View {
         case .syncFailed:
             syncProblem(icon: "exclamationmark.icloud", title: "Couldn't sync",
                         detail: "The iPhone couldn't reach the server.")
-        case .noProgram, .programExpired:
+        case .noProgram, .programExpired, .notStarted:
             NoProgramView()
         case .ready:
             SessionListView()

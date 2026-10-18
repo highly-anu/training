@@ -160,12 +160,32 @@ final class WorkoutCompletionTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "workoutComplete.seen")
         defer { UserDefaults.standard.removeObject(forKey: "workoutComplete.seen") }
         let state = AppState()
+        state.workoutsLoaded = true
         state.importedWorkouts = [workout("old", end: "2026-10-17T07:00:00Z")]
         state.noticeCompletedWorkout(now: now)
         XCTAssertNil(state.completedWorkout)
         state.importedWorkouts.append(workout("new", end: "2026-10-17T17:30:00Z"))
         state.noticeCompletedWorkout(now: now)
         XCTAssertEqual(state.completedWorkout?.id, "new")
+    }
+
+    /// An athlete with no workouts yet: the empty first load is the one that
+    /// records history, so their very first workout — from the watch, say —
+    /// is news. It used to wait for a non-empty list and swallow that one.
+    func testTheFirstWorkoutEverIsNews() async {
+        let saved = UserDefaults.standard.stringArray(forKey: "workoutComplete.seen")
+        UserDefaults.standard.removeObject(forKey: "workoutComplete.seen")
+        defer { UserDefaults.standard.set(saved, forKey: "workoutComplete.seen") }
+        let state = AppState()
+        state.noticeCompletedWorkout(now: now)
+        XCTAssertNil(UserDefaults.standard.stringArray(forKey: "workoutComplete.seen"),
+                     "nothing is recorded before the list has loaded")
+        state.workoutsLoaded = true
+        state.noticeCompletedWorkout(now: now)
+        XCTAssertEqual(UserDefaults.standard.stringArray(forKey: "workoutComplete.seen"), [])
+        state.importedWorkouts = [workout("watch_live_1-Saturday-0", end: "2026-10-17T17:43:20Z")]
+        state.noticeCompletedWorkout(now: now)
+        XCTAssertEqual(state.completedWorkout?.id, "watch_live_1-Saturday-0")
     }
 
     func testUnknownIdShowsNothing() async {
@@ -187,6 +207,7 @@ final class WorkoutCompletionTests: XCTestCase {
         UserDefaults.standard.set([String](), forKey: "workoutComplete.seen")
         defer { UserDefaults.standard.removeObject(forKey: "workoutComplete.seen") }
         let state = AppState()
+        state.workoutsLoaded = true
         state.importedWorkouts = [workout("a", end: "2026-10-17T07:00:00Z"),
                                   workout("b", end: "2026-10-17T17:30:00Z")]
         state.noticeCompletedWorkout(now: now)

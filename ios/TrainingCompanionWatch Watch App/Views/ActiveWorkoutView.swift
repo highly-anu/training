@@ -12,6 +12,21 @@ struct ActiveWorkoutView: View {
     @State private var isStarted = false
     @State private var workoutStartDate = Date()
     @State private var showStopConfirm = false
+    /// Set Next or Edit Set, open over the commands page.
+    @State private var setEditor: SetEditor? = nil
+
+    private enum SetEditor: String, Identifiable {
+        case next = "Set Next", last = "Edit Set"
+        var id: String { rawValue }
+    }
+
+    /// The step the commands act on, and its screen.
+    private var currentStep: (index: Int, exercise: WatchExercise, screen: WatchScreen)? {
+        let i = currentExerciseIndex
+        guard i < session.exercises.count else { return nil }
+        let ex = session.exercises[i]
+        return (i, ex, session.screen(for: ex))
+    }
 
     private var overtimeInfo: (index: Int, name: String, targetSeconds: Int)? {
         guard case let .timedWork(ei, _) = sessionState.phase,
@@ -40,6 +55,7 @@ struct ActiveWorkoutView: View {
                 workoutTabView
             }
         }
+        .onAppear(perform: debugLaunch)
         .navigationTitle(session.archetypeName)
         .navigationBarBackButtonHidden(isStarted)
         .toolbar {
@@ -85,7 +101,7 @@ struct ActiveWorkoutView: View {
                 ForEach(session.exercises, id: \.exerciseId) { ex in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
-                            Image(systemName: ModalityStyle.slotTypeIcon(for: ex.resolvedSlotType))
+                            Image(systemName: ModalityStyle.slotTypeIcon(for: ex.slotType))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                             Text(ex.name).font(.caption).lineLimit(1)
@@ -141,7 +157,7 @@ struct ActiveWorkoutView: View {
             let target = (exercise.durationMinutes ?? 0) * 60
             let overTime = elapsed >= target
             let fraction = target > 0 ? min(1.0, Double(elapsed) / Double(target)) : 0
-            let nextIndex = ei + 1
+            let nextIndex = sessionState.indexAfter(ei)
             let isLast = nextIndex >= session.exercises.count
 
             VStack(spacing: 12) {
@@ -222,7 +238,28 @@ struct ActiveWorkoutView: View {
 
     @ViewBuilder
     private var commandsTabView: some View {
-        VStack(spacing: 14) {
+        ScrollView {
+        VStack(spacing: 10) {
+            // The Garmin's hold-UP menu: Set Next and Edit Set on a set,
+            // the metronome on a paced step.
+            if let step = currentStep, step.screen.template == .sets {
+                Button { setEditor = .next } label: {
+                    Label("Set Next", systemImage: "slider.horizontal.3").frame(maxWidth: .infinity)
+                }
+                if sessionState.setLogs[step.exercise.exerciseId]?.isEmpty == false {
+                    Button { setEditor = .last } label: {
+                        Label("Edit Set", systemImage: "pencil").frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            if let step = currentStep, WatchSpecText.rpm(step.exercise, step.screen) != nil {
+                Button { sessionState.metronomeOn.toggle() } label: {
+                    Label(sessionState.metronomeOn ? "Metronome Off" : "Metronome On",
+                          systemImage: sessionState.metronomeOn ? "metronome.fill" : "metronome")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
             if case .timedWork = sessionState.phase {
                 Button {
                     if sessionState.isTimerPaused { sessionState.resumeTimer() }
@@ -246,7 +283,23 @@ struct ActiveWorkoutView: View {
             .tint(.red.opacity(0.8))
         }
         .padding()
+        }
         .navigationTitle("Commands")
+        .sheet(item: $setEditor) { editor in
+            if let step = currentStep {
+                let logs = sessionState.setLogs[step.exercise.exerciseId] ?? []
+                let start: WorkoutSessionState.WorkingSet? = editor == .last
+                    ? logs.last.map { .init(reps: $0.repsActual ?? 0, weightKg: $0.weightKg, rpe: $0.rpe) }
+                    : sessionState.workingSet(step.exercise)
+                SetLoggerSheetView(exercise: step.exercise, setIndex: max(0, logs.count - 1),
+                                   exerciseIndex: step.index, startOffset: sessionState.elapsedSeconds,
+                                   title: editor.rawValue, initial: start) { log in
+                    let set = WorkoutSessionState.WorkingSet(reps: log.repsActual ?? 0, weightKg: log.weightKg, rpe: log.rpe)
+                    if editor == .last { sessionState.editLastSet(step.exercise, set) }
+                    else { sessionState.setNext(step.exercise, set) }
+                }
+            }
+        }
         .confirmationDialog("End session?", isPresented: $showStopConfirm) {
             Button("Save & End") { saveAndClose() }
             Button("Discard", role: .destructive) {
@@ -255,6 +308,45 @@ struct ActiveWorkoutView: View {
                 dismiss()
             }
             Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    // MARK: - Debug launch (WatchDebugLaunch)
+
+    /// Begins the workout, goes to a step, starts it and presses its button,
+    /// as the launch switches ask — a debug build on the simulator only.
+    private func debugLaunch() {
+        guard !isStarted, WatchDebugLaunch.session == session.sessionId else { return }
+        workoutStartDate = Date()
+        isStarted = true
+        Task {
+            await workoutManager.startWorkout(session: session, maxHR: connectivity.maxHR)
+            if let n = WatchDebugLaunch.step, n < session.exercises.count { sessionState.advance(to: n) }
+            let i = currentExerciseIndex
+            guard i < session.exercises.count else { return }
+            let ex = session.exercises[i], screen = session.screen(for: ex)
+            if WatchDebugLaunch.run { sessionState.start(i, ex, screen) }
+            for _ in 0..<WatchDebugLaunch.laps {
+                let outcome = WatchSpecText.lap(ex, screen, sessionState.stepState(ex, index: i, screen: screen))
+                if outcome == .completeSet {
+                    let reps = Int(ex.reps?.prefix { $0.isNumber } ?? "") ?? 5
+                    sessionState.completeSet(WatchSetLog(setIndex: sessionState.setLogs[ex.exerciseId]?.count ?? 0,
+                                                         repsActual: reps, weightKg: ex.weightKg, rpe: 7,
+                                                         completed: true, durationSeconds: 40,
+                                                         startOffset: nil, endOffset: nil),
+                                             for: ex.exerciseId)
+                    sessionState.finishSet(i, ex, screen)
+                    if sessionState.isResting, case let .resting(ei, cs, _) = sessionState.phase {
+                        sessionState.skipRest(exerciseIndex: ei, completedSet: cs)
+                    }
+                } else {
+                    sessionState.perform(outcome, i, ex, screen)
+                }
+            }
+            if WatchDebugLaunch.end {
+                sessionState.completeSession()
+                await workoutManager.endWorkout()
+            }
         }
     }
 

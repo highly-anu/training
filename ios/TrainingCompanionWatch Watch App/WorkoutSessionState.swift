@@ -88,6 +88,34 @@ final class WorkoutSessionState: ObservableObject {
     /// so it can be stamped onto WatchSetLog.startOffset.
     private(set) var currentSetStartOffset: Int? = nil
 
+    /// The session being run: what the page reads its steps, specs and
+    /// "Next:" line from (WatchSteps), and how the engine moves on past the
+    /// movements folded into an AMRAP.
+    private(set) var session: WatchSession? = nil
+
+    /// The side being worked on a side-tracked step (the side_tracked
+    /// behaviour or a unilateral movement): it switches after each set.
+    @Published var sideIsLeft = true
+    /// A hold that is running, and since when.
+    @Published var holdStartedAt: Date? = nil
+    /// When a clocked step (for time, a distance) was started with its
+    /// Start; the timed, interval and AMRAP steps run on their phases.
+    @Published var clockStarts: [Int: Date] = [:]
+    /// The rest running now follows a step's last set: when it ends, the
+    /// next step comes up (the Garmin's advanceAfterRest).
+    var restAdvances = false
+    /// The coming sets' reps, weight and RPE, as Set Next or Edit Set left
+    /// them (exercise id → set); the next log starts from them.
+    @Published var workingSets: [String: WorkingSet] = [:]
+    /// The metronome on a paced step; the commands page switches it.
+    @Published var metronomeOn = true
+
+    struct WorkingSet: Equatable {
+        var reps: Int
+        var weightKg: Double?
+        var rpe: Int?
+    }
+
     private(set) var avgHRSamples: [Int] = []
     private var hrOutOfZoneCounter = 0
     private var hrAlertCooldown = 0
@@ -103,8 +131,9 @@ final class WorkoutSessionState: ObservableObject {
 
     // MARK: - Session lifecycle
 
-    func startSession() {
+    func startSession(_ session: WatchSession) {
         reset()
+        self.session = session
         currentSetStartOffset = 0
         phase = .active(exerciseIndex: 0, setIndex: 0)
         WKInterfaceDevice.current().play(.start)
@@ -135,6 +164,13 @@ final class WorkoutSessionState: ObservableObject {
         currentSetStartOffset = nil
         showOvertimePrompt = false
         stepWindows = [:]; currentStep = nil
+        sideIsLeft = true; holdStartedAt = nil; clockStarts = [:]; restAdvances = false
+        workingSets = [:]; metronomeOn = true
+    }
+
+    /// The step after `index`, past the movements folded into an AMRAP.
+    func indexAfter(_ index: Int) -> Int {
+        session.map { WatchSteps.indexAfter($0, index) } ?? index + 1
     }
 
     // MARK: - Sets / reps
@@ -166,17 +202,25 @@ final class WorkoutSessionState: ObservableObject {
         default: break
         }
         if remaining <= 1 {
-            currentSetStartOffset = elapsedSeconds
-            phase = .active(exerciseIndex: ei, setIndex: cs + 1)
-            WKInterfaceDevice.current().play(.start)
+            endRest(exerciseIndex: ei, completedSet: cs)
         } else {
             phase = .resting(exerciseIndex: ei, completedSet: cs, secondsRemaining: remaining - 1)
         }
     }
 
     func skipRest(exerciseIndex: Int, completedSet: Int) {
-        currentSetStartOffset = elapsedSeconds
-        phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
+        endRest(exerciseIndex: exerciseIndex, completedSet: completedSet)
+    }
+
+    /// The next set — or, after a step's last set, the next step.
+    private func endRest(exerciseIndex: Int, completedSet: Int) {
+        if restAdvances {
+            restAdvances = false
+            advance(to: indexAfter(exerciseIndex))
+        } else {
+            currentSetStartOffset = elapsedSeconds
+            phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
+        }
         WKInterfaceDevice.current().play(.start)
     }
 
@@ -224,6 +268,8 @@ final class WorkoutSessionState: ObservableObject {
     /// `durationSeconds` is start → logger open).
     func advance(to exerciseIndex: Int) {
         currentSetStartOffset = elapsedSeconds
+        sideIsLeft = true
+        holdStartedAt = nil
         phase = .active(exerciseIndex: exerciseIndex, setIndex: 0)
     }
 
@@ -241,8 +287,7 @@ final class WorkoutSessionState: ObservableObject {
 
     func completeTimedWork(exerciseIndex: Int, exerciseId: String) {
         markExerciseComplete(id: exerciseId)
-        currentSetStartOffset = elapsedSeconds
-        phase = .active(exerciseIndex: exerciseIndex + 1, setIndex: 0)
+        advance(to: indexAfter(exerciseIndex))
         WKInterfaceDevice.current().play(.success)
     }
 
@@ -291,8 +336,7 @@ final class WorkoutSessionState: ObservableObject {
         let next = round + 1
         if next > totalRounds {
             markExerciseComplete(id: exerciseId)
-            currentSetStartOffset = elapsedSeconds
-            phase = .active(exerciseIndex: ei + 1, setIndex: 0)
+            advance(to: indexAfter(ei))
             WKInterfaceDevice.current().play(.success)
         } else {
             phase = .emomInterval(exerciseIndex: ei, round: next,
@@ -314,8 +358,7 @@ final class WorkoutSessionState: ObservableObject {
         if remaining == 31 { WKInterfaceDevice.current().play(.notification) }
         if remaining <= 1 {
             markExerciseComplete(id: exerciseId)
-            currentSetStartOffset = elapsedSeconds
-            phase = .active(exerciseIndex: ei + 1, setIndex: 0)
+            advance(to: indexAfter(ei))
             WKInterfaceDevice.current().play(.success)
         } else {
             phase = .amrapRunning(exerciseIndex: ei, secondsRemaining: remaining - 1)

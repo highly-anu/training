@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// Page 1 of the workout: the step's data page (its package's screen) and
+/// its buttons. The views it used to pick by slot type are gone; the
+/// template in the spec runs the step, as on the Garmin.
 struct CurrentExerciseView: View {
     let exercise: WatchExercise
     let exerciseIndex: Int
@@ -15,72 +18,27 @@ struct CurrentExerciseView: View {
                 .frame(height: 3)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 6) {
-                    // Header
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(exercise.name)
-                            .font(.headline)
-                            .lineLimit(2)
-                        Text(exercise.loadDescription)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        // Last time, to beat: "Last: 24kg × 10".
-                        if let last = exercise.lastTime {
-                            Text("Last: \(last)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        // A test step: the best to beat and the number for the next level.
-                        if let st = exercise.standard {
-                            Text([st.best.map { "Best \($0)" } ?? "First result", st.target]
-                                    .compactMap { $0 }.joined(separator: " · "))
-                                .font(.caption2)
-                                .foregroundStyle(.yellow)
-                        }
-                        if let note = exercise.loadNote {
-                            Text(note)
-                                .font(.caption2)
-                                .foregroundStyle(.orange)
-                        }
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    DataPageView(exercise: exercise, index: exerciseIndex, session: session)
 
-                    // HR alert banner
                     if sessionState.isHRAlertActive {
                         Label("Check HR zone", systemImage: "heart.circle.fill")
                             .font(.caption2)
                             .foregroundStyle(.red)
                     }
 
-                    // Slot-type specific content
-                    slotView
+                    StepControlsView(exercise: exercise, index: exerciseIndex, session: session)
+                        .frame(maxWidth: .infinity)
+
+                    if let note = exercise.loadNote {
+                        Text(note)
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
             }
-        }
-    }
-
-    @ViewBuilder
-    private var slotView: some View {
-        switch exercise.resolvedSlotType {
-        case "sets_reps":
-            SetsRepsView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "time_domain", "skill_practice":
-            TimeDomainView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "emom":
-            EMOMView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "amrap":
-            AMRAPView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "amrap_movement":
-            AMRAPMovementView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "for_time":
-            ForTimeView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "distance":
-            DistanceView(exercise: exercise, exerciseIndex: exerciseIndex)
-        case "static_hold":
-            StaticHoldView(exercise: exercise, exerciseIndex: exerciseIndex)
-        default:
-            SetsRepsView(exercise: exercise, exerciseIndex: exerciseIndex)
         }
     }
 }

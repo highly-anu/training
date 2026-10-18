@@ -1,60 +1,9 @@
 import SwiftUI
 
-/// Colour and label helpers for the two readiness shapes: the Apple Watch's
-/// payload (`ReadinessInfo`) and the API-computed score (`ReadinessResult`).
-/// Lived in the dead LogView until it was removed.
-
-// MARK: - ReadinessInfo (the Apple Watch's copy of the server score)
-
-extension ReadinessInfo {
-    static let storageKey = "lastServerReadiness"
-
-    /// The server's score in the shape the watch decodes. The phone used to
-    /// send its own HRV rule (≥ 50 ms green) here and show it on Recovery,
-    /// beside — and often against — the score Today showed.
-    init(server result: ReadinessResult, restingHR: Int?, hrv: Int?) {
-        self.init(score: min(1, max(0, Double(result.score) / 100)),
-                  signal: result.status, restingHR: restingHR, hrv: hrv)
-    }
-
-    /// Keep the last server score for `WatchSessionManager`, which has no
-    /// `AppState` and may run from a background sync.
-    static func storeForWatch(_ result: ReadinessResult) {
-        let payload: [String: Any] = ["score": result.score, "status": result.status,
-                                      "date": ISO8601DateFormatter().string(from: Date())]
-        UserDefaults.standard.set(payload, forKey: storageKey)
-    }
-
-    /// The last server score with the latest raw readings, or nil when the
-    /// phone has none from today — a stale score is worse than none.
-    static func fromStoredServerScore(defaults: UserDefaults = .standard, now: Date = Date()) -> ReadinessInfo? {
-        guard let stored = defaults.dictionary(forKey: storageKey),
-              let score = stored["score"] as? Int,
-              let status = stored["status"] as? String,
-              let dateStr = stored["date"] as? String,
-              let date = ISO8601DateFormatter().date(from: dateStr),
-              Calendar.current.isDate(date, inSameDayAs: now) else { return nil }
-        let hrv = (defaults.object(forKey: "lastHRV") as? Double).map { Int($0) }
-        let rhr = (defaults.object(forKey: "lastRestingHR") as? Double).map { Int($0) }
-        return ReadinessInfo(score: min(1, max(0, Double(score) / 100)),
-                             signal: status, restingHR: rhr, hrv: hrv)
-    }
-
-    var signalColor: Color {
-        switch signal {
-        case "green":  return .green
-        case "yellow": return .yellow
-        default:       return .red
-        }
-    }
-    var signalIcon: String {
-        switch signal {
-        case "green":  return "bolt.heart.fill"
-        case "yellow": return "exclamationmark.heart.fill"
-        default:       return "heart.slash.fill"
-        }
-    }
-}
+/// Colour and label helpers for the API-computed readiness (`ReadinessResult`).
+/// Lived in the dead LogView until it was removed. The Apple Watch reads the
+/// server's readiness from its day (`WatchDay.readiness`); the phone no
+/// longer keeps a copy for it.
 
 // MARK: - ReadinessResult display helpers (API-computed score)
 
@@ -73,7 +22,12 @@ extension ReadinessResult {
         default:       return "heart.slash.fill"
         }
     }
-    var statusLabel: String {
+    var statusLabel: String { Self.statusLabel(status) }
+
+    /// The server's green / yellow / red in words — for this result and for
+    /// the readiness the program analytics document carries (Program ▸ Load
+    /// printed the colour, "84 · green").
+    static func statusLabel(_ status: String) -> String {
         switch status {
         case "green":  return "Ready"
         case "yellow": return "Moderate"

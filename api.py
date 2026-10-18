@@ -3439,6 +3439,14 @@ def get_today_session():
     }
     if spec_level >= 1:
         body['specVersion'] = _watch_spec.spec_version()
+        # The athlete's max HR (hrConfig, else 220 − age), for the zone alerts
+        # of a watch that cannot read zones off the device: the Apple Watch,
+        # whose phone used to work it out from a date of birth of its own.
+        # The Garmin reads its zones from the watch (UserProfile).
+        try:
+            body['maxHR'] = _get_user_max_hr(g.user_id)
+        except Exception as e:
+            app.logger.warning('today-session: max HR failed: %s', e)
     if request.args.get('week') == '1':
         # The demo's day shape ({offset, title, sessions}). No screen specs: the
         # Week menu lists sessions and their steps, it never runs them.

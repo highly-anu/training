@@ -23,6 +23,34 @@ final class WatchUploadTests: XCTestCase {
             cadenceAvg: nil, paceSecsPerKm: nil, exerciseTimeline: nil)
     }
 
+    /// The watch's summary crosses the link in one shape, live or queued: a
+    /// property list (a message's only allowed contents) that the phone reads
+    /// back whole, and the phone's answer is what lets the watch skip the
+    /// queued copy.
+    func testTheSummaryCrossesTheLinkWhole() throws {
+        var s = summary()
+        s.outcomes = ["row": WatchOutcome(durationSec: 452)]
+        s.standardResults = ["row_2km_minutes": "save"]
+        let message = try XCTUnwrap(WatchUploadMessage.message(s))
+        XCTAssertEqual(message["type"] as? String, "workout_complete", "the phone's queued path keys on it")
+        XCTAssertTrue(PropertyListSerialization.propertyList(message, isValidFor: .binary))
+        let back = try XCTUnwrap(WatchUploadMessage.summary(from: message))
+        XCTAssertEqual(back.sessionId, "3-Tuesday-0")
+        XCTAssertEqual(back.setLogs, s.setLogs)
+        XCTAssertEqual(back.outcomes, s.outcomes)
+        XCTAssertEqual(back.standardResults, s.standardResults)
+        XCTAssertEqual(back.gpsTrack?.count, 2)
+        XCTAssertNil(WatchUploadMessage.summary(from: ["type": "request_sync"]))
+
+        let done = WatchUploadMessage.sessionDone("3-Tuesday-0")
+        XCTAssertEqual(done["type"] as? String, "session_marked_complete")
+        XCTAssertTrue(PropertyListSerialization.propertyList(done, isValidFor: .binary))
+
+        XCTAssertTrue(WatchUploadMessage.stored(WatchUploadMessage.reply(stored: true)))
+        XCTAssertFalse(WatchUploadMessage.stored(WatchUploadMessage.reply(stored: false)))
+        XCTAssertFalse(WatchUploadMessage.stored([:]), "an empty answer (an older phone) queues the copy")
+    }
+
     func testWorkoutIdIsTheHistoricFormula() {
         // workout_matches.imported_workout_id references ids minted this way —
         // colons percent-encoded, as every stored watch id has them.

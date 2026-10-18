@@ -65,41 +65,12 @@ final class APIClient {
         _ = try await put("/health/bio/\(date)", body: payload)
     }
 
-    /// What the server knows about today for the Apple Watch: the ids of the
-    /// sessions already done (a log or a matched workout from any device) and
-    /// the `progress` block. Nulls are dropped — `transferUserInfo` takes
-    /// property-list types only.
-    func fetchWatchDay(date: String) async throws
-        -> (completedIds: [String], progress: [String: Any]?, last: [String: String],
-            standards: [String: WatchStandard]) {
-        // spec=1: the payload that carries each exercise's `last`, and a test
-        // step's `standard`.
-        let data = try await get("/user/today-session?date=\(date)&spec=1")
-        let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
-        let sessions = json["sessions"] as? [[String: Any]] ?? []
-        let done = sessions.compactMap { ($0["completed"] as? Bool) == true ? $0["sessionId"] as? String : nil }
-        var last: [String: String] = [:]
-        var standards: [String: WatchStandard] = [:]
-        for s in sessions {
-            for e in s["exercises"] as? [[String: Any]] ?? [] {
-                guard let id = e["exerciseId"] as? String else { continue }
-                if let line = e["last"] as? String { last[id] = line }
-                if let st = e["standard"] as? [String: Any], let sid = st["id"] as? String {
-                    standards[id] = WatchStandard(id: sid, name: st["name"] as? String ?? sid,
-                                                  result: st["result"] as? String, best: st["best"] as? String,
-                                                  target: st["target"] as? String)
-                }
-            }
-        }
-        return (done, (json["progress"] as? [String: Any]).map(Self.dropNulls), last, standards)
-    }
-
-    static func dropNulls(_ dict: [String: Any]) -> [String: Any] {
-        dict.compactMapValues { value -> Any? in
-            if value is NSNull { return nil }
-            if let nested = value as? [String: Any] { return dropNulls(nested) }
-            return value
-        }
+    /// The athlete's day as the server words it for both watches — today's
+    /// sessions with their screens, done flags, last times and test
+    /// standards, the week ahead, tomorrow, readiness, progress, max HR
+    /// (docs/watch.md). Raw: the phone forwards it to the Apple Watch as it is.
+    func fetchWatchDay(date: String) async throws -> Data {
+        try await get("/user/today-session?date=\(date)&spec=1&week=1")
     }
 
     func fetchTodaySessionStatus() async throws -> String {
@@ -334,14 +305,17 @@ final class APIClient {
         return (try? JSONDecoder().decode([SessionLogEntry].self, from: data)) ?? []
     }
 
-    func saveSessionComplete(sessionKey: String, completedAt: String) async throws {
+    /// `source` is the log's: a session ticked on the phone is `manual`; the
+    /// Apple Watch's done mark keeps its log `apple_watch_live` (it used to
+    /// overwrite it with `manual`, after the workout's log had just said it).
+    func saveSessionComplete(sessionKey: String, completedAt: String, source: String = "manual") async throws {
         struct Body: Encodable {
             let completedAt: String
             let source: String
         }
         _ = try await put(
             "/health/sessions/\(sessionKey)",
-            body: Body(completedAt: completedAt, source: "manual")
+            body: Body(completedAt: completedAt, source: source)
         )
     }
 

@@ -18,6 +18,9 @@ final class WorkoutManager: NSObject, ObservableObject {
     private var maxHR: Int = 190
 
     private var elapsedTimer: Timer?
+    /// The metronome's own beat: the 1 Hz tick is too slow for 70 RPM.
+    private var metronomeTimer: Timer?
+    private var metronomeInterval: TimeInterval = 0
     private var lastAutoAdvancedExerciseIndex = -1
 
     // GPS
@@ -66,7 +69,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         gpsPoints = []
         hrTimestampedSamples = []
         lastAutoAdvancedExerciseIndex = -1
-        sessionState.startSession()
+        sessionState.startSession(session)
         startElapsedTimer()
         isWorkoutActive = true
 
@@ -102,6 +105,7 @@ final class WorkoutManager: NSObject, ObservableObject {
 
     func endWorkout() async {
         stopElapsedTimer()
+        setMetronome(0)
         workoutSession?.end()
         var completedWorkout: HKWorkout?
         if let builder = workoutBuilder {
@@ -237,6 +241,59 @@ final class WorkoutManager: NSObject, ObservableObject {
         return entries.isEmpty ? nil : entries
     }
 
+    // MARK: - Metronome
+
+    /// A haptic beat at the step's pace (its targetRpm, else the package's
+    /// metronome_rpm) while it is paced — an interval's work phase, or a
+    /// timed step — the metronome is on and the clock is not paused: the
+    /// Garmin's syncMetronome.
+    private func syncMetronome() {
+        var interval: TimeInterval = 0
+        if let session = activeSession, sessionState.metronomeOn, !sessionState.isTimerPaused,
+           let i = sessionState.phase.exerciseIndex, i < session.exercises.count {
+            let ex = session.exercises[i]
+            let screen = session.screen(for: ex)
+            if let rpm = WatchSpecText.rpm(ex, screen), rpm > 0 {
+                let paced: Bool
+                switch sessionState.phase {
+                case let .emomInterval(_, _, isWork, _): paced = isWork
+                case .timedWork: paced = screen.template == .timed
+                default: paced = false
+                }
+                if paced { interval = 60.0 / Double(rpm) }
+            }
+        }
+        setMetronome(interval)
+    }
+
+    private func setMetronome(_ interval: TimeInterval) {
+        guard interval != metronomeInterval else { return }
+        metronomeTimer?.invalidate()
+        metronomeTimer = nil
+        metronomeInterval = interval
+        guard interval > 0 else { return }
+        let timer = Timer(timeInterval: interval, repeats: true) { _ in
+            WKInterfaceDevice.current().play(.click)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        metronomeTimer = timer
+    }
+
+    // MARK: - Heart rate by zone
+
+    /// Seconds spent in each of the five zones (the summary's heart-rate
+    /// page), from the timestamped samples and the athlete's max HR.
+    func zoneSeconds() -> [Int] {
+        var out = [Int](repeating: 0, count: 5)
+        let samples = hrTimestampedSamples
+        guard samples.count > 1 else { return out }
+        for (a, b) in zip(samples, samples.dropFirst()) {
+            let z = HRZoneCalculator.zone(for: a.b, maxHR: maxHR)
+            out[max(1, min(5, z)) - 1] += max(0, min(b.t - a.t, 60))
+        }
+        return out
+    }
+
     // MARK: - Helpers
 
     private func startElapsedTimer() {
@@ -246,6 +303,7 @@ final class WorkoutManager: NSObject, ObservableObject {
                 guard let self else { return }
                 self.sessionState.tickElapsed()
                 self.tickCurrentPhase()
+                self.syncMetronome()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -277,7 +335,7 @@ final class WorkoutManager: NSObject, ObservableObject {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 WKInterfaceDevice.current().play(.notification)
                 try? await Task.sleep(nanoseconds: 800_000_000)
-                let nextIndex = ei + 1
+                let nextIndex = self.sessionState.indexAfter(ei)
                 if nextIndex < session.exercises.count {
                     if session.exercises[nextIndex].durationMinutes != nil {
                         self.sessionState.autoAdvanceToNextTimedWork(

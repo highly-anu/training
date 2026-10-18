@@ -177,6 +177,9 @@ def test_decisions_and_words() -> None:
           and out['isBest'] and out['bestText'] == '7:45', str(out))
     worse = sr.describe([{**rows[0], 'value': 8.0}], by, logs)[0]
     check('a slower row is not a best', not worse['isBest'])
+    check("a result from the Apple Watch's log is the watch's",
+          sr.result_source('apple_watch_live') == 'apple_watch' and sr.result_source('garmin') == 'garmin'
+          and sr.result_source('manual') == 'session', sr.result_source('apple_watch_live'))
 
 
 def run(wid: str = 'fit_file-run1', mps: float = 4.0, km: float = 5.2, sport: str = 'running',
