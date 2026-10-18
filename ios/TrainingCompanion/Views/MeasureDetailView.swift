@@ -104,10 +104,16 @@ struct MeasureDetailView: View {
                     LineMark(x: .value("Point", p.x), y: .value("Actual", v), series: .value("Series", "Actual"))
                         .foregroundStyle(by: .value("Series", "Actual"))
                         .interpolationMethod(.monotone)
+                    // An easy week's point hollow, as on Blocks; it was drawn
+                    // in clear and vanished where the line dips.
                     PointMark(x: .value("Point", p.x), y: .value("Actual", v))
-                        .foregroundStyle(p.isDeload ? Color.clear : Color.green)
-                        .symbol(.circle)
-                        .symbolSize(p.isDeload ? 50 : 36)
+                        .symbol {
+                            if p.isDeload {
+                                Circle().strokeBorder(Color.green, lineWidth: 2).frame(width: 9, height: 9)
+                            } else {
+                                Circle().fill(Color.green).frame(width: 7, height: 7)
+                            }
+                        }
                 }
             }
             ForEach(expected) { e in
@@ -120,6 +126,9 @@ struct MeasureDetailView: View {
             }
         }
         .chartForegroundStyleScale(["Actual": Color.green, "Expected": Color.indigo])
+        // From the lightest value, not from 0 kg, which flattened 55 → 90 kg
+        // into the top third (the exercise history's chart does the same).
+        .chartYScale(domain: .automatic(includesZero: false))
         .chartLegend(expected.contains { $0.value != nil } ? .visible : .hidden)
         .chartYAxis {
             AxisMarks(position: .leading) { value in
@@ -192,7 +201,7 @@ struct MeasureDetailView: View {
             }
             if let target = row.target {
                 HStack(spacing: 4) {
-                    Label(target, systemImage: "target")
+                    Label(target, systemImage: "target").labelStyle(.inline)
                     if let met = row.met {
                         Image(systemName: met ? "checkmark.circle.fill" : "xmark.circle")
                             .foregroundStyle(met ? Color.green : Color.secondary)
