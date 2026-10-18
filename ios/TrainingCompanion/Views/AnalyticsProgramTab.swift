@@ -506,6 +506,7 @@ struct MeasureTrendLabel: View {
         Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/pt",
               systemImage: trend.direction == "improving" ? "arrow.up.right"
                 : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
+            .labelStyle(.inline)
             .font(.subheadline).fontWeight(.semibold).monospacedDigit()
             .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per point")
     }
@@ -518,7 +519,7 @@ struct CoverageNoticeView: View {
 
     var body: some View {
         if coverage.inScope == 0 {
-            Label("No sessions yet", systemImage: "hourglass")
+            Label("No sessions yet", systemImage: "hourglass").labelStyle(.inline)
                 .font(.caption).foregroundStyle(.secondary)
         } else if coverage.measured == 0 {
             // One line of what to log, no box: a bordered panel inside the
@@ -535,7 +536,7 @@ struct CoverageNoticeView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
         } else if coverage.pct < 100 {
-            Label("\(coverage.measured)/\(coverage.inScope)", systemImage: "ruler")
+            Label("\(coverage.measured)/\(coverage.inScope)", systemImage: "ruler").labelStyle(.inline)
                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .accessibilityLabel("\(coverage.measured) of \(coverage.inScope) sessions measured")
         }

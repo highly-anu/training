@@ -1793,6 +1793,14 @@ a screen with the full chart, the numbers and, at the end, *About*.
   cards ("STARTING STRENGTH", "· 70%" in a blend), styled as an inset list's
   section header and aligned with the cards' text. A card that only named
   what followed said nothing of its own.
+- **A label inside a row is `.labelStyle(.inline)`** (`InlineLabelStyle`,
+  `AppCard.swift`): symbol and words 4 pt apart. A `List` gives every
+  `Label` an icon column — the symbol in a fixed-width slot, the words far
+  from it ("◎     120kg") — which `.titleAndIcon` does not undo. A label that
+  *is* the row (a "How to do it" button) keeps the column; one that is part
+  of the row's content — a target, a trend, a reading, a badge — does not.
+  `TintCapsule`, `MeasureTrendLabel` and `CoverageNoticeView` carry it
+  themselves.
 - A detail a deep link can open, for screenshots and other screens:
   `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`,
   `analytics?open=score|scorecard|intensity|movement|shapes|readiness|sleep|hrv|resting-hr|checkins|pmc|load-focus|mix|weekly|block-load`
