@@ -661,10 +661,13 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// screens, keyed as each exercise's `screen` names them (`?spec=1`).
     var packageId: String? = nil
     var screens: [String: WatchScreenSpec]? = nil
+    /// The package's watch settings (`watch_spec.session_identity`): its
+    /// summary pages, the order the end of a session shows them in.
+    var watch: WatchIdentity? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens
+        case packageId, screens, watch
     }
 }
 
@@ -682,12 +685,22 @@ extension WatchSession {
         // An odd spec costs the screens (each step falls back to its slot
         // type's), never the session.
         screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
+        watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
     func screen(for exercise: WatchExercise) -> WatchScreen {
         WatchScreen.forExercise(slotType: exercise.slotType, key: exercise.screen, screens: screens)
     }
+}
+
+/// A package's settings for the watches: what it is called and the summary
+/// pages its sessions end on.
+struct WatchIdentity: Codable, Hashable {
+    struct Summary: Codable, Hashable { var pages: [String]? = nil }
+    var label: String? = nil
+    var accent: String? = nil
+    var summary: Summary? = nil
 }
 
 extension KeyedDecodingContainer {

@@ -72,10 +72,12 @@ extension WorkoutSessionState {
     func stepState(_ ex: WatchExercise, index: Int, screen: WatchScreen, now: Date = Date()) -> WatchStepState {
         var s = WatchStepState()
         let logs = setLogs[ex.exerciseId] ?? []
-        // The working set: what the logger last took, else the prescription.
-        s.reps = logs.last?.repsActual ?? Int(ex.reps?.prefix { $0.isNumber } ?? "") ?? 0
-        s.weightKg = logs.last?.weightKg ?? ex.weightKg
-        s.rpe = Double(logs.last?.rpe ?? ex.targetRpe ?? 0)
+        // The working set: Set Next's or Edit Set's, else what the logger
+        // last took, else the prescription.
+        let working = workingSet(ex)
+        s.reps = working.reps
+        s.weightKg = working.weightKg
+        s.rpe = Double(working.rpe ?? 0)
         s.setsDone = logs.count
         if case let .resting(ei, _, _) = phase, ei == index { s.resting = true }
         s.sideIsLeft = sideIsLeft
@@ -109,6 +111,35 @@ extension WorkoutSessionState {
                 .map { .init(name: $0.name, repsPerRound: $0.repsPerRound) }
         }
         return s
+    }
+
+    // MARK: - Set Next and Edit Set
+
+    /// The set the next log starts from: Set Next's or Edit Set's values,
+    /// else the last logged set's, else the prescription's.
+    func workingSet(_ ex: WatchExercise) -> WorkingSet {
+        if let w = workingSets[ex.exerciseId] { return w }
+        if let last = setLogs[ex.exerciseId]?.last {
+            return WorkingSet(reps: last.repsActual ?? 0, weightKg: last.weightKg, rpe: last.rpe ?? ex.targetRpe)
+        }
+        return WorkingSet(reps: Int(ex.reps?.prefix { $0.isNumber } ?? "") ?? 0,
+                          weightKg: ex.weightKg, rpe: ex.targetRpe)
+    }
+
+    /// Set Next: the coming sets' reps, weight and RPE.
+    func setNext(_ ex: WatchExercise, _ set: WorkingSet) {
+        workingSets[ex.exerciseId] = set
+    }
+
+    /// Edit Set: corrects the last logged set and carries the values forward
+    /// to the sets after it, as the Garmin's Strength does.
+    func editLastSet(_ ex: WatchExercise, _ set: WorkingSet) {
+        guard var logs = setLogs[ex.exerciseId], let last = logs.popLast() else { return }
+        logs.append(WatchSetLog(setIndex: last.setIndex, repsActual: set.reps, weightKg: set.weightKg, rpe: set.rpe,
+                                completed: last.completed, durationSeconds: last.durationSeconds,
+                                startOffset: last.startOffset, endOffset: last.endOffset))
+        setLogs[ex.exerciseId] = logs
+        workingSets[ex.exerciseId] = set
     }
 
     // MARK: - The primary button
