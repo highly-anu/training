@@ -47,6 +47,7 @@ struct ExerciseHistoryView: View {
                     }
                     if let target {
                         Label(Self.text(target, unit), systemImage: "target")
+                            .labelStyle(.inline)
                             .font(.subheadline).foregroundStyle(.secondary)
                             .accessibilityLabel("This week's target \(Self.text(target, unit))")
                     }
@@ -143,6 +144,7 @@ struct ExerciseHistoryView: View {
             if point.hrAvg != nil || point.hrMax != nil {
                 Label([point.hrAvg.map { "\($0) avg" }, point.hrMax.map { "\($0) max" }]
                         .compactMap { $0 }.joined(separator: " · ") + " bpm", systemImage: "heart.fill")
+                    .labelStyle(.inline)
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
