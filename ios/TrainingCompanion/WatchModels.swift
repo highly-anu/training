@@ -657,9 +657,14 @@ struct WatchSession: Codable, Identifiable, Hashable {
     let exercises: [WatchExercise]
     /// Done on any device: a log with a completion time or a matched workout.
     var completed: Bool = false
+    /// The package whose screens draw it (the archetype's owner), and those
+    /// screens, keyed as each exercise's `screen` names them (`?spec=1`).
+    var packageId: String? = nil
+    var screens: [String: WatchScreenSpec]? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
+        case packageId, screens
     }
 }
 
@@ -673,6 +678,15 @@ extension WatchSession {
         isDeload = try c.decodeIfPresent(Bool.self, forKey: .isDeload) ?? false
         exercises = try c.decodeIfPresent([WatchExercise].self, forKey: .exercises) ?? []
         completed = try c.decodeIfPresent(Bool.self, forKey: .completed) ?? false
+        packageId = try? c.decodeIfPresent(String.self, forKey: .packageId)
+        // An odd spec costs the screens (each step falls back to its slot
+        // type's), never the session.
+        screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
+    }
+
+    /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
+    func screen(for exercise: WatchExercise) -> WatchScreen {
+        WatchScreen.forExercise(slotType: exercise.slotType, key: exercise.screen, screens: screens)
     }
 }
 
@@ -727,11 +741,36 @@ struct WatchExercise: Codable, Hashable {
     /// every other step.
     var standard: WatchStandard? = nil
 
+    // The rest of the server's exercise (`api._encode_watch_exercise`), for
+    // the package's screens (WatchSpecText) — what the Garmin reads too.
+    var category: String? = nil
+    var movementPattern: String? = nil
+    /// false: a unilateral movement, counted per side.
+    var bilateral: Bool? = nil
+    var targetRpm: Int? = nil
+    var workSec: Int? = nil
+    var intervalRestSec: Int? = nil
+    var distanceM: Int? = nil
+    var repsPerRound: Int? = nil
+    var packLoadKg: Double? = nil
+    var focus: String? = nil
+    var parentSlotRole: String? = nil
+    /// Bells held at once; the server does not send it yet (demo data does).
+    var bells: Int? = nil
+    /// A hand switch inside a work period; demo data only for now.
+    var switchAtSec: Int? = nil
+    /// A rest that ends when HR drops below this; demo data only for now.
+    var restUntilHr: Int? = nil
+    /// The key of its screen in the session's `screens`.
+    var screen: String? = nil
+
     enum CodingKeys: String, CodingKey {
         case exerciseId, name, slotType, slotRole, isMeta, loadDescription, loadNote, coachingCue
         case sets, reps, weightKg, targetRpe, durationMinutes, zoneTarget, timeMinutes, targetRounds
         case emomFormat, holdSeconds, distanceKm, restSeconds, prescribedZoneLower, prescribedZoneUpper
         case lastTime = "last", standard
+        case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
+        case repsPerRound, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
     }
 }
 
@@ -767,6 +806,21 @@ extension WatchExercise {
         prescribedZoneUpper = c.lenientInt(.prescribedZoneUpper)
         lastTime = try c.decodeIfPresent(String.self, forKey: .lastTime)
         standard = try c.decodeIfPresent(WatchStandard.self, forKey: .standard)
+        category = try? c.decodeIfPresent(String.self, forKey: .category)
+        movementPattern = try? c.decodeIfPresent(String.self, forKey: .movementPattern)
+        bilateral = try? c.decodeIfPresent(Bool.self, forKey: .bilateral)
+        targetRpm = c.lenientInt(.targetRpm)
+        workSec = c.lenientInt(.workSec)
+        intervalRestSec = c.lenientInt(.intervalRestSec)
+        distanceM = c.lenientInt(.distanceM)
+        repsPerRound = c.lenientInt(.repsPerRound)
+        packLoadKg = try? c.decodeIfPresent(Double.self, forKey: .packLoadKg)
+        focus = try? c.decodeIfPresent(String.self, forKey: .focus)
+        parentSlotRole = try? c.decodeIfPresent(String.self, forKey: .parentSlotRole)
+        bells = c.lenientInt(.bells)
+        switchAtSec = c.lenientInt(.switchAtSec)
+        restUntilHr = c.lenientInt(.restUntilHr)
+        screen = try? c.decodeIfPresent(String.self, forKey: .screen)
     }
 }
 

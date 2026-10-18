@@ -1,0 +1,225 @@
+{
+  "_comment": "What each watch draws for a step: the server's exercise, its screen spec (none = the slot type's default), the engine's state, and the page it must show — title, the two fields and the gauge field as [label, value], the two lines under the rule, the spec's LAP action and what LAP then does. Both renderers run these: ios/TrainingCompanionTests/WatchSpecTests.swift (WatchSpecText) and garmin/core/test/SpecFixtures.mc, generated from this file by garmin/tools/gen_spec_fixtures.py (SpecRenderer). Change a screen here, never in one renderer; every vocabulary id must appear in some case (WatchSpecTests checks).",
+  "cases": [
+    {
+      "name": "a working set, last time to beat",
+      "exercise": {"exerciseId": "back_squat", "name": "Back Squat", "slotType": "sets_reps", "sets": 5, "reps": "5", "weightKg": 100, "last": "97.5kg × 5"},
+      "state": {"reps": 5, "weightKg": 100, "setsDone": 0, "nextTitle": "Rest", "nextValue": "3:00"},
+      "expect": {"title": "Back Squat  100 kg", "a": ["REPS", "5"], "b": ["SET", "1/5"], "gauge": ["SET", "1/5"],
+                 "lines": ["Last time", "97.5kg × 5"], "lap": "complete_set", "outcome": "complete_set"}
+    },
+    {
+      "name": "an unloaded set with a target RPE, side-tracked, after its first set",
+      "exercise": {"exerciseId": "pistol_squat", "name": "Pistol Squat", "slotType": "sets_reps", "sets": 3, "reps": "5", "targetRpe": 8, "last": "5 reps"},
+      "screen": {"template": "sets", "title": ["name", "side", "load"], "a": "reps", "b": "rpe_or_set", "gauge": "set",
+                 "lines": "last_then_next", "lap": "complete_set", "behaviours": {"side_tracked": true}},
+      "state": {"reps": 5, "rpe": 7.5, "setsDone": 1, "sideIsLeft": false, "nextTitle": "Rest", "nextValue": "1:30"},
+      "expect": {"title": "Pistol Squat  Right", "a": ["REPS", "5"], "b": ["RPE", "7.5"], "gauge": ["SET", "2/3"],
+                 "lines": ["Next: Rest", "1:30"], "lap": "complete_set", "outcome": "complete_set"}
+    },
+    {
+      "name": "a double kettlebell is loaded per bell, resting",
+      "exercise": {"exerciseId": "double_kb_front_squat", "name": "Double KB Front Squat", "slotType": "sets_reps", "category": "kettlebell", "sets": 3, "reps": "5", "weightKg": 24},
+      "state": {"reps": 5, "weightKg": 24, "setsDone": 0, "resting": true, "nextTitle": "Double KB Front Squat", "nextValue": "Set 2/3  5 Reps @ 2x24 kg"},
+      "expect": {"title": "Double KB Front Squat  2x24 kg", "a": ["REPS", "5"], "b": ["SET", "1/3"], "gauge": ["SET", "1/3"],
+                 "lines": ["Next: Double KB Front Squat", "Set 2/3  5 Reps @ 2x24 kg"], "lap": "complete_set", "outcome": "complete_set"}
+    },
+    {
+      "name": "get-ups toward a session total, with their phases",
+      "exercise": {"exerciseId": "tgu", "name": "Turkish Get-Up", "slotType": "sets_reps", "category": "kettlebell", "sets": 10, "reps": "1", "weightKg": 16},
+      "screen": {"template": "sets", "title": ["name", "side"], "a": "cumulative", "b": "set", "gauge": "set", "lines": "phases",
+                 "lap": "complete_set", "phases": ["Roll", "Post", "Bridge", "Sweep", "Stand"],
+                 "behaviours": {"side_tracked": true, "cumulative_target": 100}},
+      "state": {"reps": 1, "weightKg": 16, "setsDone": 3, "repsDone": 3, "sideIsLeft": true, "nextTitle": "Rest", "nextValue": "0:45"},
+      "expect": {"title": "Turkish Get-Up  Left", "a": ["TOTAL", "3/100"], "b": ["SET", "4/10"], "gauge": ["SET", "4/10"],
+                 "lines": ["Roll > Post > Bridge > Sweep > Stand", "Next: Rest"], "lap": "complete_set", "outcome": "complete_set"}
+    },
+    {
+      "name": "a hold before it starts",
+      "exercise": {"exerciseId": "plank", "name": "Plank", "slotType": "static_hold", "sets": 3, "holdSeconds": 45},
+      "state": {"setsDone": 1, "nextTitle": "Rest", "nextValue": "1:00"},
+      "expect": {"title": "Plank", "a": ["HOLD", ":45"], "b": ["SET", "2/3"], "gauge": ["HOLD", ":45"],
+                 "lines": ["Press LAP", "to start the hold"], "lap": "toggle_hold", "outcome": "start_hold"}
+    },
+    {
+      "name": "a hold running",
+      "exercise": {"exerciseId": "dead_hang", "name": "Dead Hang", "slotType": "static_hold", "sets": 2, "holdSeconds": 90},
+      "state": {"holdRunning": true, "holdLeftSec": 62, "setsDone": 0},
+      "expect": {"title": "Dead Hang", "a": ["HOLD", "1:02"], "b": ["SET", "1/2"], "gauge": ["HOLD", "1:02"],
+                 "lines": ["Holding", "LAP ends early"], "lap": "toggle_hold", "outcome": "stop_hold"}
+    },
+    {
+      "name": "an EMOM's work phase on a load wave",
+      "exercise": {"exerciseId": "kb_swing", "name": "Swing", "slotType": "emom", "category": "kettlebell", "weightKg": 24, "targetRounds": 10, "workSec": 40, "intervalRestSec": 20},
+      "screen": {"template": "interval", "title": ["name", "wave_pct", "switch_side", "zone_or_load"], "a": "interval",
+                 "b": "interval_left", "gauge": "interval_round", "lines": "interval_next", "lap": "skip",
+                 "behaviours": {"load_wave": [70, 80, 90]}},
+      "state": {"intervalWorking": true, "intervalRound": 2, "intervalTotal": 10, "intervalLeftSec": 31, "intervalWorkSec": 40, "intervalRestSec": 20},
+      "expect": {"title": "Swing  80%  24 kg", "a": ["ROUND", "2/10"], "b": ["TIME LEFT", ":31"], "gauge": ["ROUND", "2/10"],
+                 "lines": ["Next: Rest", "0:20"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "run intervals recovering in a zone",
+      "exercise": {"exerciseId": "run_intervals", "name": "Run", "slotType": "emom", "category": "aerobic", "prescribedZoneLower": 4, "prescribedZoneUpper": 5, "targetRounds": 6, "workSec": 180, "intervalRestSec": 120},
+      "state": {"intervalWorking": false, "intervalRound": 3, "intervalTotal": 6, "intervalLeftSec": 75, "intervalWorkSec": 180, "intervalRestSec": 120},
+      "expect": {"title": "Run  Z4-5", "a": ["RECOVER", "3/6"], "b": ["TIME LEFT", "1:15"], "gauge": ["INTERVAL", "3/6"],
+                 "lines": ["Next: Run", "3:00  Zone 4-5"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "a rest that waits for the heart rate, with a hand switch",
+      "exercise": {"exerciseId": "kb_snatch", "name": "Snatch", "slotType": "emom", "category": "kettlebell", "weightKg": 16, "restUntilHr": 120, "switchAtSec": 30, "targetRounds": 5, "workSec": 60, "intervalRestSec": 90},
+      "screen": {"template": "interval", "title": ["name", "switch_side"], "a": "interval", "b": "interval_left",
+                 "gauge": "interval_round", "lines": "interval_next", "lap": "skip"},
+      "state": {"intervalWorking": false, "gateRest": true, "intervalRound": 2, "intervalTotal": 5, "intervalRestSec": 90, "restPhaseElapsedSec": 38, "heartRate": 134, "sideIsLeft": false, "intervalWorkSec": 60},
+      "expect": {"title": "Snatch  Right", "a": ["REST", "0:38"], "b": ["HR TO 120", "134"], "gauge": ["ROUND", "2/5"],
+                 "lines": ["Next: Work", "1:00"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "a paced interval from the package's metronome",
+      "exercise": {"exerciseId": "wk_kb_long_cycle", "name": "Long Cycle", "slotType": "emom", "category": "kettlebell", "weightKg": 24, "targetRounds": 10, "workSec": 60, "intervalRestSec": 0},
+      "screen": {"template": "interval", "title": ["name", "load"], "a": "rpm", "b": "interval", "gauge": "interval_round",
+                 "lines": "interval_next", "lap": "skip", "behaviours": {"metronome_rpm": 12}},
+      "state": {"intervalWorking": true, "intervalRound": 4, "intervalTotal": 10, "intervalLeftSec": 22, "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Long Cycle  24 kg", "a": ["RPM", "12"], "b": ["RPM", "12"], "gauge": ["ROUND", "4/10"],
+                 "lines": ["Next: Work", "1:00  12 RPM"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "an AMRAP shows one round's movements",
+      "exercise": {"exerciseId": "cindy", "name": "Cindy", "slotType": "amrap", "timeMinutes": 20},
+      "state": {"rounds": 7, "capLeftSec": 534, "components": [{"name": "Pull-up", "repsPerRound": 5}, {"name": "Push-up", "repsPerRound": 10}, {"name": "Air Squat", "repsPerRound": 15}]},
+      "expect": {"title": "Cindy", "a": ["ROUNDS", "7"], "b": ["LEFT", "8:54"], "gauge": ["ROUNDS", "7"],
+                 "lines": ["5 Pull-up  10 Push-up  15 Air Squat", "Next: Finish"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
+      "name": "an AMRAP past its cap moves on",
+      "exercise": {"exerciseId": "cindy", "name": "Cindy", "slotType": "amrap", "timeMinutes": 20},
+      "state": {"rounds": 12, "capLeftSec": 0},
+      "expect": {"title": "Cindy", "a": ["ROUNDS", "12"], "b": ["LEFT", "0:00"], "gauge": ["ROUNDS", "12"],
+                 "lines": ["Next: Finish", null], "lap": "log_round", "outcome": "next"}
+    },
+    {
+      "name": "a ladder climbs and comes down",
+      "exercise": {"exerciseId": "kb_swing_ladder", "name": "Breathing Ladder", "slotType": "amrap"},
+      "screen": {"template": "rounds", "title": ["name"], "a": "rung", "b": "elapsed", "gauge": "rung", "lines": "ladder_total",
+                 "lap": "log_round", "behaviours": {"ladder": {"peak": 10}}},
+      "state": {"rounds": 12, "elapsedSec": 425, "nextTitle": "Rest"},
+      "expect": {"title": "Breathing Ladder", "a": ["RUNG", "7"], "b": ["TIME", "7:05"], "gauge": ["RUNG", "7"],
+                 "lines": ["72 reps total", "Next: Rest"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
+      "name": "for time: the last round moves on",
+      "exercise": {"exerciseId": "fran", "name": "Fran", "slotType": "for_time", "targetRounds": 3},
+      "state": {"rounds": 2, "elapsedSec": 251},
+      "expect": {"title": "Fran", "a": ["ROUNDS", "2/3"], "b": ["TIME", "4:11"], "gauge": ["ROUNDS", "2/3"],
+                 "lines": ["Next: Finish", null], "lap": "log_round", "outcome": "log_round_and_next"}
+    },
+    {
+      "name": "a row test: the best to beat, and LAP stops the clock",
+      "exercise": {"exerciseId": "rower", "name": "Rowing", "slotType": "for_time", "distanceM": 2000,
+                   "standard": {"id": "row_2km_minutes", "name": "2km Row", "result": "duration", "best": "7:48", "target": "7:00 for advanced"}},
+      "screen": {"template": "for_time", "title": ["name"], "a": "rounds_of_target", "b": "elapsed", "gauge": "elapsed",
+                 "lines": "standard_target", "lap": "log_round"},
+      "state": {"elapsedSec": 301},
+      "expect": {"title": "Rowing", "a": ["ROUNDS", "0"], "b": ["TIME", "5:01"], "gauge": ["TIME", "5:01"],
+                 "lines": ["Best 7:48", "7:00 for advanced"], "lap": "log_round", "outcome": "next"}
+    },
+    {
+      "name": "a test with no result yet",
+      "exercise": {"exerciseId": "cindy", "name": "Cindy", "slotType": "amrap", "timeMinutes": 20,
+                   "standard": {"id": "wod_cindy_rounds", "name": "Cindy", "result": "rounds", "target": "15 for entry"}},
+      "screen": {"template": "rounds", "title": ["name"], "a": "rounds", "b": "cap_left", "gauge": "rounds",
+                 "lines": "standard_target", "lap": "log_round"},
+      "state": {"rounds": 3, "capLeftSec": 900},
+      "expect": {"title": "Cindy", "a": ["ROUNDS", "3"], "b": ["LEFT", "15:00"], "gauge": ["ROUNDS", "3"],
+                 "lines": ["First result", "15 for entry"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
+      "name": "a ruck in km with its pack",
+      "exercise": {"exerciseId": "ruck", "name": "Ruck", "slotType": "distance", "category": "aerobic", "distanceKm": 8, "packLoadKg": 20},
+      "state": {"distanceKm": 3.4, "elapsedSec": 2700},
+      "expect": {"title": "Ruck  pack 20 kg", "a": ["KM", "3.4"], "b": ["OF KM", "8"], "gauge": ["KM", "3.4"],
+                 "lines": ["Next: Finish", null], "lap": "log_round", "outcome": "next"}
+    },
+    {
+      "name": "a short carry counted in laps",
+      "exercise": {"exerciseId": "farmer_carry", "name": "Farmer Carry", "slotType": "distance", "distanceM": 40, "sets": 4, "weightKg": 32},
+      "state": {"rounds": 3, "nextTitle": "Rest", "nextValue": "2:00"},
+      "expect": {"title": "Farmer Carry  32 kg", "a": ["LAPS", "3/4"], "b": ["METRES", "40"], "gauge": ["LAPS", "3/4"],
+                 "lines": ["Next: Rest", "2:00"], "lap": "log_round", "outcome": "log_round_and_next"}
+    },
+    {
+      "name": "km, pack load and heart rate as fields",
+      "exercise": {"exerciseId": "ruck", "name": "Ruck", "slotType": "distance", "distanceKm": 10, "packLoadKg": 22.5},
+      "screen": {"template": "distance", "title": ["name"], "a": "distance_km", "b": "pack_kg", "gauge": "hr",
+                 "lines": "next_step", "lap": "skip"},
+      "state": {"distanceKm": 6.5, "heartRate": 128},
+      "expect": {"title": "Ruck", "a": ["KM", "6.5"], "b": ["PACK KG", "22.5"], "gauge": ["HR", "128"],
+                 "lines": ["Next: Finish", null], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "a timed block in a zone, with its focus",
+      "exercise": {"exerciseId": "bike_easy", "name": "Easy Bike", "slotType": "time_domain", "durationMinutes": 30, "prescribedZoneLower": 2, "prescribedZoneUpper": 2, "focus": "nasal breathing"},
+      "state": {"elapsedSec": 600},
+      "expect": {"title": "Easy Bike", "a": ["TIME LEFT", "20:00"], "b": ["ZONE", "2"], "gauge": ["TIME LEFT", "20:00"],
+                 "lines": ["nasal breathing", "Next: Finish"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "an open practice block counts up",
+      "exercise": {"exerciseId": "mobility", "name": "Mobility", "slotType": "skill_practice"},
+      "state": {"elapsedSec": 95},
+      "expect": {"title": "Mobility", "a": ["TIME", "1:35"], "b": null, "gauge": ["TIME", "1:35"],
+                 "lines": ["Next: Finish", null], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "a practice block worked one side at a time",
+      "exercise": {"exerciseId": "kb_tgu_flow", "name": "Get-up Flow", "slotType": "skill_practice", "durationMinutes": 10},
+      "screen": {"template": "timed", "title": ["name", "side"], "a": "time_left", "b": "hr", "gauge": "time_left",
+                 "lines": "next_step", "lap": "next_side", "behaviours": {"side_tracked": true}},
+      "state": {"elapsedSec": 130, "sideIsLeft": true},
+      "expect": {"title": "Get-up Flow  Left", "a": ["TIME LEFT", "7:50"], "b": ["HR", "--"], "gauge": ["TIME LEFT", "7:50"],
+                 "lines": ["Next: Finish", null], "lap": "next_side", "outcome": "next_side"}
+    },
+    {
+      "name": "a class block counts its rounds",
+      "exercise": {"name": "Positional Sparring", "slotType": "time_domain", "isMeta": true, "durationMinutes": 5, "targetRounds": 4},
+      "screen": {"template": "round_timer", "title": ["name"], "a": "block_left", "b": "rounds", "gauge": "block_left",
+                 "lines": "next_step", "lap": "log_round"},
+      "state": {"elapsedSec": 200, "rounds": 2, "nextTitle": "Easy Bike", "nextValue": "30:00"},
+      "expect": {"title": "Positional Sparring", "a": ["LEFT", "1:40"], "b": ["ROUNDS", "2"], "gauge": ["LEFT", "1:40"],
+                 "lines": ["Next: Easy Bike", "30:00"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
+      "name": "a class block that is over moves on",
+      "exercise": {"name": "Positional Sparring", "slotType": "time_domain", "isMeta": true, "durationMinutes": 5, "targetRounds": 4},
+      "screen": {"template": "round_timer", "title": ["name"], "a": "block_left", "b": "rounds", "gauge": "block_left",
+                 "lines": "next_step", "lap": "log_round"},
+      "state": {"elapsedSec": 300, "rounds": 4, "nextTitle": "Easy Bike", "nextValue": "30:00"},
+      "expect": {"title": "Positional Sparring", "a": ["LEFT", "0:00"], "b": ["ROUNDS", "4"], "gauge": ["LEFT", "0:00"],
+                 "lines": ["Next: Easy Bike", "30:00"], "lap": "log_round", "outcome": "next"}
+    },
+    {
+      "name": "ids from a newer vocabulary fall back to the template's",
+      "exercise": {"exerciseId": "pushup", "name": "Push-up", "slotType": "sets_reps", "sets": 5, "reps": "10"},
+      "screen": {"template": "sets", "title": ["name", "halo"], "a": "cumulative", "b": "from_the_future", "gauge": "warp",
+                 "lines": "poetry", "lap": "teleport", "behaviours": {"cumulative_target": 50}},
+      "state": {"reps": 10, "setsDone": 2, "repsDone": 20, "nextTitle": "Rest", "nextValue": "1:00"},
+      "expect": {"title": "Push-up", "a": ["TOTAL", "20/50"], "b": ["SET", "3/5"], "gauge": ["SET", "3/5"],
+                 "lines": ["Next: Rest", "1:00"], "lap": "complete_set", "outcome": "complete_set"}
+    },
+    {
+      "name": "an unknown template draws the slot type's screen",
+      "exercise": {"exerciseId": "wall_sit", "name": "Wall Sit", "slotType": "static_hold", "sets": 2, "holdSeconds": 60},
+      "screen": {"template": "warp", "a": "reps"},
+      "state": {},
+      "expect": {"title": "Wall Sit", "a": ["HOLD", "1:00"], "b": ["SET", "1/2"], "gauge": ["HOLD", "1:00"],
+                 "lines": ["Press LAP", "to start the hold"], "lap": "toggle_hold", "outcome": "start_hold"}
+    },
+    {
+      "name": "an unknown slot type without a spec is a timed block",
+      "exercise": {"exerciseId": "breathwork", "name": "Breathwork", "slotType": "no_such_slot", "durationMinutes": 5},
+      "state": {"elapsedSec": 60},
+      "expect": {"title": "Breathwork", "a": ["TIME LEFT", "4:00"], "b": ["TIME", "1:00"], "gauge": ["TIME LEFT", "4:00"],
+                 "lines": ["Next: Finish", null], "lap": "skip", "outcome": "next"}
+    }
+  ]
+}
