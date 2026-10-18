@@ -24,7 +24,8 @@ final class ProgressionScoreTests: XCTestCase {
      "score_status": {"id": "on_track", "label": "On Track",
        "reason": "Every session due so far is done; no lift or skill trend yet.",
        "bands": [{"id": "on_track", "label": "On Track", "min": 70}, {"id": "mixed", "label": "Mixed", "min": 45},
-                 {"id": "off_track", "label": "Off Track", "min": 0}]},
+                 {"id": "off_track", "label": "Off Track", "min": 0}],
+       "counts": [{"status": "stalled", "count": 3, "label": "stalled"}, {"status": "on_track", "count": 1, "label": "on track"}]},
      "scope_label": "2 of 2 sessions so far · week 1",
      "pending_measures": [{"id": "ballistic_load", "label": "Ballistic load", "description": "Best working set",
        "reason": "None of the sessions it measures has come up yet — the next is Mon 19 Oct.",
@@ -57,6 +58,14 @@ final class ProgressionScoreTests: XCTestCase {
         XCTAssertEqual(measures.map(\.name), ["Movements earned"])
         XCTAssertNil(measures.first?.points, "a measure still collecting adds no points")
         XCTAssertEqual(measures.first?.detail, "1 of 2 sessions logged — the trend starts at 2.")
+    }
+
+    func testTheCardCountsEachStatus() throws {
+        let counts = try XCTUnwrap(try decode(explained).scoreStatus?.counts)
+        XCTAssertEqual(counts.map(\.status), ["stalled", "on_track"], "worst first, as the server orders them")
+        XCTAssertEqual(counts.map(\.count), [3, 1])
+        XCTAssertEqual(AnalyticsStatusStyle.symbol("behind"), "tortoise")
+        XCTAssertEqual(AnalyticsStatusStyle.symbol("stalled"), "pause.circle")
     }
 
     func testOlderServerStillReads() throws {

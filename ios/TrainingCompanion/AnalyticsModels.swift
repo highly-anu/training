@@ -120,6 +120,8 @@ struct ModalityShare: Identifiable {
     var label: String
     var pct: Int
     var color: Color
+    /// The server's minutes; the on-device fallback leaves it out.
+    var minutes: Double? = nil
 }
 
 struct ActivityTypeEntry: Identifiable {
@@ -305,7 +307,7 @@ struct LoadSummary: Decodable, Equatable {
         modalities.prefix(8).map { m in
             let id = m.id ?? "unknown"
             return ModalityShare(modalityId: id, label: m.id == nil ? "Unclassified" : ModalityStyle.label(for: id),
-                                 pct: m.pct, color: ModalityStyle.color(for: id))
+                                 pct: m.pct, color: ModalityStyle.color(for: id), minutes: m.minutes)
         }
     }
 

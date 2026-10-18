@@ -1153,6 +1153,16 @@ struct ScoreStatus: Codable, Equatable {
     let label: String
     let reason: String
     let bands: [ScoreBand]
+    /// The measures per status, worst first — the Score card's symbols and
+    /// numbers; `reason` says the same in words. Nil from an older server.
+    let counts: [ScoreCount]?
+}
+
+struct ScoreCount: Codable, Equatable, Identifiable {
+    let status: String    // "stalled" | "behind" | "on_track" | "ahead"
+    let count: Int
+    let label: String     // "stalled", "on track"
+    var id: String { status }
 }
 
 struct ScoreBand: Codable, Equatable, Identifiable {

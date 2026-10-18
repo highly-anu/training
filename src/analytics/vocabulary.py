@@ -160,6 +160,38 @@ TERMS: dict[str, dict] = {
     'tsb': {'label': 'TSB · form',
             'text': 'Training stress balance: yesterday\'s fitness minus fatigue. Negative while a block '
                     'is loading, which is expected; it should climb toward zero and above in a taper.'},
+    # Analytics ▸ Program's Scorecard and Intensity split (src/analytics/scorecard.py,
+    # intensity.py, hr_plan.py).
+    'completion': {'label': 'Completion',
+                   'text': 'Sessions done of those due so far, per modality; one counts as done when it is '
+                           'logged or a workout is matched to it. The framework ranks each modality '
+                           'committed, core or supplementary, and the headline is a gate, not an average: '
+                           'under 70 % of the committed sessions is off plan, however the rest went.'},
+    'weekly_dose': {'label': 'Minutes a week',
+                    'text': 'Minutes done per elapsed week against the plan\'s, and against the modality\'s '
+                            'own weekly range: under, in range or over.'},
+    'intensity': {'label': 'Intensity split',
+                  'text': 'How the completed sessions\' minutes fall across heart-rate zones, against what '
+                          'their programming planned. Heart rate counts only where an exercise prescribes a '
+                          'zone, such as an easy run or a zoned warm-up; work that prescribes a load or an '
+                          'effort counts as max effort, strap or not.'},
+    'hr_zones': {'label': 'Heart-rate zones',
+                 'text': 'Shares of your maximum heart rate: zone 1 under 65 %, zone 2 to 78 % (near the '
+                         'aerobic threshold), zone 3 to 87 %, zone 4 to 93 %, zone 5 above.'},
+    # Analytics ▸ Load (src/analytics/load_summary.py) and ▸ Blocks (development.py).
+    'load_focus': {'label': 'Load focus',
+                   'text': 'The last 28 days of recorded heart rate in three bands: base is zones 1–2, '
+                           'threshold zone 3, anaerobic zones 4–5. Workouts without heart rate are left out.'},
+    'mix': {'label': 'Mix',
+            'text': 'The period\'s recorded minutes by modality, the kind of training a workout was filed '
+                    'as, and by activity, as the watch or app named it.'},
+    'consistency': {'label': 'Sessions a week',
+                    'text': 'Workouts recorded in each of the last 12 weeks, Monday to Sunday, of any kind, '
+                            'planned or not.'},
+    'block_load': {'label': 'Load by block',
+                   'text': 'Each week\'s TRIMP in the colour of the block in force that week. A block\'s '
+                           'average is its TRIMP over its weeks in the window, weeks without a workout '
+                           'included.'},
 }
 
 

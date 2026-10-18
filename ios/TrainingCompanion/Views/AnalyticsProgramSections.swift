@@ -8,10 +8,12 @@ import SwiftUI
 
 // MARK: - Methodology
 
-/// One philosophy's section: measurable of applicable, a
-/// `ProgressEntryCard` per measure that applies, headline first, and the
-/// measures this program does not schedule, folded. Its description opens
-/// from the book on Analytics ▸ Program's Program card.
+/// One philosophy's measures: its name as the label above them (with its
+/// share in a blend), a `ProgressEntryCard` per measure that applies,
+/// headline first, and — when there are any — a row to the measures this
+/// program does not schedule. The name was a card of its own with
+/// "measurable / applicable" until 2026-10-18; that count is the Score
+/// detail's now, and each measure's card says itself when it cannot be read.
 /// Lives on Progress (it was on Program until 2026-10-16).
 struct MethodologySectionView: View {
     let method: ProgramAnalytics.Methodology
@@ -22,51 +24,90 @@ struct MethodologySectionView: View {
         let mine = doc.progress.filter { $0.philosophy == method.philosophy }
         let entries = mine.filter(\.applies).sorted { $0.headline && !$1.headline }
         let elsewhere = mine.filter { !$0.applies }
-        // A card for the methodology — what is measurable, what the program
-        // does not schedule — then a card per measure, as the other
-        // Analytics sections lay out theirs (§6.15).
-        return VStack(alignment: .leading, spacing: 16) {
-            AnalyticsCard(header: name) {
-                HStack(spacing: 12) {
-                    Label("\(method.measurable)/\(method.applicable ?? method.total)", systemImage: "ruler")
-                        .fontWeight(.semibold)
-                        .accessibilityLabel("\(method.measurable) of \(method.applicable ?? method.total) measures measurable")
-                    if method.weight < 1 {
-                        Label("\(Int((method.weight * 100).rounded()))%", systemImage: "chart.pie")
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("\(Int((method.weight * 100).rounded())) percent of the blend")
-                    }
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: method.weight < 1 ? "\(name) · \(Int((method.weight * 100).rounded()))%" : name)
+                .accessibilityLabel(method.weight < 1
+                                    ? "\(name), \(Int((method.weight * 100).rounded())) percent of the blend" : name)
+                .padding(.top, 8)
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(entries) { entry in
+                    ProgressEntryCard(entry: entry)
                 }
-                .font(.subheadline).monospacedDigit()
                 if !elsewhere.isEmpty {
-                    // Folded: the measures this program does not schedule,
-                    // each with the tracks that do.
-                    DisclosureGroup {
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(elsewhere) { e in
-                                let tracks = e.appliesIn.map(\.track)
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(e.label).font(.subheadline)
-                                    if !tracks.isEmpty {
-                                        Text(tracks.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 4)
+                    NavigationLink {
+                        MeasuresElsewhereView(name: name, entries: elsewhere)
                     } label: {
-                        Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
-                            .font(.footnote).foregroundStyle(.secondary)
-                            .frame(minHeight: 44, alignment: .leading)
-                            .contentShape(Rectangle())
+                        HStack(spacing: 8) {
+                            Label("\(elsewhere.count) not in this program", systemImage: "minus.circle")
+                                .labelStyle(.titleAndIcon)
+                                .font(.subheadline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 44)
+                        .padding(.horizontal, AppMetrics.cardPadding)
+                        .background(.background.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the measures this program does not schedule")
                 }
-            }
-            ForEach(entries) { entry in
-                ProgressEntryCard(entry: entry)
             }
         }
+    }
+}
+
+/// A group's name above its cards, styled as an inset list's section header
+/// and aligned with the cards' text — not a card: it says what follows,
+/// nothing of its own.
+struct SectionLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.footnote).fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .textCase(.uppercase)
+            .tracking(0.5)
+            .padding(.horizontal, AppMetrics.cardPadding)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// The measures a methodology declares that no session of this program is in
+/// scope for, each with the tracks that schedule it.
+struct MeasuresElsewhereView: View {
+    let name: String
+    let entries: [ProgramAnalytics.ProgressEntry]
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(entries) { e in
+                    let tracks = e.appliesIn.map(\.track)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(e.label)
+                        if !tracks.isEmpty {
+                            Label(tracks.joined(separator: ", "), systemImage: "arrow.triangle.branch")
+                                .labelStyle(.titleAndIcon)
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                        if let measures = e.about?.measures, !measures.isEmpty {
+                            Text(measures).font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            } header: {
+                Text(name)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Not in this program")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

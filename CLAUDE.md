@@ -116,7 +116,7 @@ All prefixed `/api/`:
 |--------|------|---------|
 | GET | `/philosophies` | `Philosophy[]` |
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
-| GET | `/analytics/vocabulary` | the analytics words: primitives, what each needs logged, and the load and recovery `terms` (`vocabulary.TERMS`) for the phone's About sections; static, no sign-in |
+| GET | `/analytics/vocabulary` | the analytics words: primitives, what each needs logged, and the `terms` (`vocabulary.TERMS`: load, recovery, completion, intensity, mix…) for the phone's About sections; static, no sign-in |
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
 | GET | `/exercises` | `Exercise[]` (198 total) |
@@ -680,7 +680,7 @@ writes.
   and completed sessions), `lifts` and `currencies` (every logged series over
   the whole span, keyed to its block through `session_uid`, with per-block
   first / last / best / Δ and a trend), `load` (weekly TRIMP with the week's
-  block) and `benchmarks` (the level ladder per PR date). Pure over its
+  block, and each block's weeks, average a week and peak — `byBlock`) and `benchmarks` (the level ladder per PR date). Pure over its
   inputs — `test_development_analytics.py` runs it on a throwaway two-block
   history — and cached in `progression_snapshots` on a digest of everything
   it read. The web's Analytics ▸ Development and the phone's Analytics ▸
@@ -959,7 +959,7 @@ Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
 `analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
 still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail,
-`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc` Load's, `movement|shapes` Program's), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `scorecard|intensity|movement|shapes` Program's, `score` Progress's, `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

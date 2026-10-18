@@ -68,6 +68,15 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://analytics?open=readiness"), .analyticsDetail(.readiness))
         XCTAssertEqual(parse("trainingcompanion://analytics?open=pmc"), .analyticsDetail(.pmc))
         XCTAssertEqual(parse("trainingcompanion://analytics?open=shapes"), .analyticsDetail(.sessionShapes))
+        // Every card's detail (design-system §6.37), and the section each belongs to.
+        let cards: [(String, AppRouter.AnalyticsDetail, AnalyticsTab)] = [
+            ("score", .score, .progress), ("scorecard", .scorecard, .program), ("intensity", .intensity, .program),
+            ("load-focus", .loadFocus, .load), ("mix", .mix, .load), ("weekly", .weekly, .load),
+            ("block-load", .blockLoad, .blocks)]
+        for (open, detail, section) in cards {
+            XCTAssertEqual(parse("trainingcompanion://analytics?open=\(open)"), .analyticsDetail(detail), open)
+            XCTAssertEqual(detail.section, section, open)
+        }
         XCTAssertEqual(parse("trainingcompanion://analytics?section=recovery&open=nope"), .analytics(.recovery))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=progress&measure="), .analytics(.progress),
                        "an empty id lands on the section")

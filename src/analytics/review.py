@@ -124,23 +124,31 @@ def _status(score, compliance, completed, scheduled, measured) -> dict:
         sessions = 'every session due so far is done'
     else:
         sessions = f'{completed} of {scheduled} sessions due so far are done'
+    words = {'ahead': 'ahead', 'on_track': 'on track', 'behind': 'behind', 'stalled': 'stalled'}
+    by_status: dict[str, list[str]] = {}
+    for f in measured:
+        by_status.setdefault(f['status'], []).append(f.get('name') or '')
+    # The measures per status, worst first: the clients' Score card shows these
+    # as symbols and numbers, and the sentence below says them in words.
+    counts = [{'status': st, 'count': len(by_status[st]), 'label': words[st]}
+              for st in ('stalled', 'behind', 'on_track', 'ahead') if by_status.get(st)]
     if not measured:
         trends = 'no measure has a trend yet'
     else:
-        counts: dict[str, list[str]] = {}
-        for f in measured:
-            counts.setdefault(f['status'], []).append(f.get('name') or '')
-        words = {'ahead': 'ahead', 'on_track': 'on track', 'behind': 'behind', 'stalled': 'stalled'}
         bits = []
-        for st in ('stalled', 'behind', 'on_track', 'ahead'):
-            names = counts.get(st)
-            if not names:
-                continue
-            named = f' ({", ".join(names[:2])})' if st in ('stalled', 'behind') else ''
-            bits.append(f'{len(names)} {words[st]}{named}')
+        for c in counts:
+            names = by_status[c['status']]
+            named = ''
+            if c['status'] in ('stalled', 'behind'):
+                # Two names, then how many more: "3 stalled (A, B)" read as if
+                # the third had no name.
+                more = f' and {len(names) - 2} more' if len(names) > 2 else ''
+                named = f' ({", ".join(names[:2])}{more})'
+            bits.append(f'{c["count"]} {c["label"]}{named}')
         trends = ', '.join(bits)
     reason = f'{trends}; {sessions}.'
-    return {'id': b['id'], 'label': b['label'], 'reason': reason[0].upper() + reason[1:], 'bands': BANDS}
+    return {'id': b['id'], 'label': b['label'], 'reason': reason[0].upper() + reason[1:], 'bands': BANDS,
+            'counts': counts}
 
 
 def _entry_words(pr: dict) -> dict:

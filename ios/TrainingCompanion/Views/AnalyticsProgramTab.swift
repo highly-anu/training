@@ -50,6 +50,10 @@ struct AnalyticsProgramTab: View {
             if let movement = appState.programAnalytics?.movement { MovementDetailView(movement: movement) }
         case .sessionShapes:
             if let rows = appState.programAnalytics?.archetypes { SessionShapesDetailView(rows: rows) }
+        case .scorecard:
+            if let scorecard = appState.programAnalytics?.scorecard { ScorecardDetailView(scorecard: scorecard) }
+        case .intensity:
+            if let intensity = appState.programAnalytics?.intensity { IntensityDetailView(intensity: intensity) }
         default:
             EmptyView()
         }
@@ -59,8 +63,12 @@ struct AnalyticsProgramTab: View {
     private func applyPendingDetail() {
         guard let pending = router.pendingAnalyticsDetail, pending.section == .program,
               let doc = appState.programAnalytics else { return }
-        if (pending == .movement && doc.movement != nil) || (pending == .sessionShapes && doc.archetypes != nil) {
+        switch pending {
+        case .movement where doc.movement != nil, .sessionShapes where doc.archetypes != nil,
+             .scorecard where doc.scorecard != nil, .intensity where doc.intensity != nil:
             route = pending
+        default:
+            break
         }
         router.clearPendingAnalyticsDetail()
     }
@@ -197,12 +205,17 @@ struct AnalyticsProgramTab: View {
 
 /// Did you train what this program is for. The headline is a gate, not a
 /// weighted sum: under 70 % of the committed work is off plan regardless.
+/// The summary is the completion and each modality's sessions; the weeks,
+/// the tiers, the minutes against each modality's range and what it all
+/// means are `ScorecardDetailView`'s (§6.37).
 private struct ScorecardCard: View {
     let scorecard: ProgramAnalytics.Scorecard
 
     var body: some View {
-        AnalyticsCard(header: "Scorecard") {
+        AnalyticsDetailCard(header: "Scorecard", hint: "Opens the scorecard") {
             AnalyticsStatusBadge(status: scorecard.headline)
+        } destination: {
+            ScorecardDetailView(scorecard: scorecard)
         } content: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -219,7 +232,7 @@ private struct ScorecardCard: View {
                 }
                 .monospacedDigit()
                 ForEach(scorecard.modalities) { row in
-                    ScorecardRowView(row: row)
+                    ScorecardRowView(row: row, showsDose: false)
                 }
             }
         }
@@ -228,9 +241,11 @@ private struct ScorecardCard: View {
 
 /// A modality's completion and weekly dose, in symbols: its tier, sessions
 /// done of planned, minutes per week against planned, and an arrow or a
-/// check for the dose against the framework's range.
-private struct ScorecardRowView: View {
+/// check for the dose against the framework's range. The card leaves the
+/// minutes out (`showsDose`); the detail shows them.
+struct ScorecardRowView: View {
     let row: ProgramAnalytics.Scorecard.Row
+    var showsDose = true
 
     var body: some View {
         let colour = ModalityStyle.color(for: row.modality)
@@ -263,16 +278,18 @@ private struct ScorecardRowView: View {
                 }
             }
             .frame(height: 6)
-            HStack(spacing: 6) {
-                Label("\(Int((row.weeklyActualMinutes ?? 0).rounded()))/\(Int((row.weeklyPlannedMinutes ?? 0).rounded())) min/wk",
-                      systemImage: "clock")
-                Spacer()
-                if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes, let dose = doseIcon {
-                    Image(systemName: dose.icon).foregroundStyle(dose.color)
-                    Text("\(Int(minMin))–\(Int(maxMin))")
+            if showsDose {
+                HStack(spacing: 6) {
+                    Label("\(Int((row.weeklyActualMinutes ?? 0).rounded()))/\(Int((row.weeklyPlannedMinutes ?? 0).rounded())) min/wk",
+                          systemImage: "clock")
+                    Spacer()
+                    if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes, let dose = doseIcon {
+                        Image(systemName: dose.icon).foregroundStyle(dose.color)
+                        Text("\(Int(minMin))–\(Int(maxMin))")
+                    }
                 }
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
             }
-            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ModalityStyle.label(for: row.modality)), \(row.tier): \(row.completedSessions) of \(row.plannedSessions) sessions, \(Int((row.weeklyActualMinutes ?? 0).rounded())) of \(Int((row.weeklyPlannedMinutes ?? 0).rounded())) minutes a week\(doseWords)")
@@ -309,31 +326,17 @@ private struct ScorecardRowView: View {
 
 // MARK: - Intensity
 
+/// Planned against recorded minutes per heart-rate zone, over the completed
+/// sessions; the weeks, each framework's split, the share of 1RM and what
+/// counts as zone time are `IntensityDetailView`'s (§6.37).
 private struct IntensityCard: View {
     let intensity: ProgramAnalytics.Intensity
 
-    private struct Slice: Identifiable {
-        let week: Int
-        let zone: String
-        let minutes: Double
-        var id: String { "\(week)-\(zone)" }
-    }
-
-    /// Minutes per bucket per week. The week fields carry `_pct` in their
-    /// keys but hold minutes; this chart called them "Share" and drew them
-    /// against a % axis until 2026-10-16.
-    private var slices: [Slice] {
-        intensity.weeks.flatMap { w in
-            [Slice(week: w.week, zone: "Z1–2", minutes: w.zone12Pct),
-             Slice(week: w.week, zone: "Z3", minutes: w.zone3Pct),
-             Slice(week: w.week, zone: "Z4–5", minutes: w.zone45Pct),
-             Slice(week: w.week, zone: "Max effort", minutes: w.maxEffortPct)]
-        }
-    }
-
     var body: some View {
-        AnalyticsCard(header: "Intensity split") {
+        AnalyticsDetailCard(header: "Intensity split", hint: "Opens the intensity split") {
             AnalyticsStatusBadge(status: intensity.status)
+        } destination: {
+            IntensityDetailView(intensity: intensity)
         } content: {
             VStack(alignment: .leading, spacing: 10) {
                 if let coverage = intensity.coverage { CoverageNoticeView(coverage: coverage) }
@@ -344,20 +347,37 @@ private struct IntensityCard: View {
                         .init(zone: $0.zone, label: $0.label, planned: $0.plannedMinutes, recorded: $0.actualMinutes)
                     })
                 } else if !intensity.weeks.isEmpty {
-                    weeklyChart
-                }
-                if let pct = intensity.pct1rm, let mean = pct.meanPct {
-                    Label("\(AnalyticsProgramTab.number(mean))% 1RM · \(pct.sessions) lifts", systemImage: "scalemass")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .accessibilityLabel("Working sets averaged \(AnalyticsProgramTab.number(mean)) percent of estimated 1RM across \(pct.sessions) logged lifts")
+                    IntensityWeeksChart(weeks: intensity.weeks)
                 }
             }
         }
     }
+}
 
-    /// Minutes per bucket per week — only from an older server, which sends
-    /// no per-zone planned and recorded minutes.
-    private var weeklyChart: some View {
+/// Minutes per bucket per week, stacked. The week fields carry `_pct` in
+/// their keys but hold minutes; this chart called them "Share" and drew them
+/// against a % axis until 2026-10-16.
+struct IntensityWeeksChart: View {
+    let weeks: [ProgramAnalytics.Intensity.Week]
+    var height: CGFloat = 160
+
+    private struct Slice: Identifiable {
+        let week: Int
+        let zone: String
+        let minutes: Double
+        var id: String { "\(week)-\(zone)" }
+    }
+
+    private var slices: [Slice] {
+        weeks.flatMap { w in
+            [Slice(week: w.week, zone: "Z1–2", minutes: w.zone12Pct),
+             Slice(week: w.week, zone: "Z3", minutes: w.zone3Pct),
+             Slice(week: w.week, zone: "Z4–5", minutes: w.zone45Pct),
+             Slice(week: w.week, zone: "Max effort", minutes: w.maxEffortPct)]
+        }
+    }
+
+    var body: some View {
         Chart(slices) { slice in
             BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
                 .foregroundStyle(by: .value("Zone", slice.zone))
@@ -375,7 +395,8 @@ private struct IntensityCard: View {
             }
         }
         .chartLegend(position: .bottom, spacing: 6)
-        .frame(height: 160)
+        .frame(height: height)
+        .accessibilityLabel("Minutes per zone in each of \(weeks.count) weeks")
     }
 }
 

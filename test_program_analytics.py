@@ -1292,7 +1292,8 @@ def test_describe() -> None:
     check('every need a primitive names is defined',
           all(n in vocabulary.NEEDS for p in vocabulary.PRIMITIVES.values() for n in p['needs']))
     check('the load and recovery terms are words, one or two sentences each',
-          {'readiness', 'hrv', 'resting_hr', 'sleep_debt', 'trimp', 'ctl', 'atl', 'tsb'} <= set(vocabulary.TERMS)
+          {'readiness', 'hrv', 'resting_hr', 'sleep_debt', 'trimp', 'ctl', 'atl', 'tsb', 'completion', 'weekly_dose',
+           'intensity', 'hr_zones', 'load_focus', 'mix', 'consistency', 'block_load'} <= set(vocabulary.TERMS)
           and all(t['label'] and 0 < t['text'].count('.') <= 3 for t in vocabulary.TERMS.values()))
     import api
     body = api.app.test_client().get('/api/analytics/vocabulary').get_json()

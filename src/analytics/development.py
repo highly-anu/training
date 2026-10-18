@@ -15,7 +15,8 @@ throwaway history. Shapes:
     lifts       — per exercise, best completed sets across the span with
                   per-block first / last / best est-1RM and a trend
     currencies  — the same for rounds, minutes and kilometres
-    load        — weekly TRIMP and the PMC, each week and day with its block
+    load        — weekly TRIMP and the PMC, each week and day with its block, and
+                  each block's weeks, total, weekly average and peak (`byBlock`)
     benchmarks  — each standard's PR history with the level reached per date
 """
 from __future__ import annotations
@@ -251,7 +252,7 @@ def _currencies(inputs: DevelopmentInputs, currencies: dict, blocks: list[dict])
 
 # ── load ─────────────────────────────────────────────────────────────────────
 
-def _load(inputs: DevelopmentInputs, timeline: _Timeline) -> dict:
+def _load(inputs: DevelopmentInputs, timeline: _Timeline, blocks: list[dict]) -> dict:
     weeks: dict[str, dict] = {}
     for w in inputs.workouts:
         day = _as_date(w.get('date'))
@@ -271,7 +272,35 @@ def _load(inputs: DevelopmentInputs, timeline: _Timeline) -> dict:
         if day is None or day < inputs.window_from or day > inputs.window_to:
             continue
         pmc.append({**p, 'blockId': timeline.block_on(day)})
-    return {'weekly': weekly, 'pmc': pmc}
+    return {'weekly': weekly, 'pmc': pmc, 'byBlock': _load_by_block(inputs, timeline, blocks, weekly)}
+
+
+def _load_by_block(inputs: DevelopmentInputs, timeline: _Timeline, blocks: list[dict],
+                   weekly: list[dict]) -> list[dict]:
+    """Each block's weekly TRIMP in brief — its weeks in the window (a week is
+    the block's whose Thursday it holds, as `weekly` assigns them), the total,
+    the average over those weeks, weeks without a workout included, and the
+    peak — for the Blocks detail on both clients."""
+    out = []
+    for b in blocks:
+        start = max(_as_date(b['from']), inputs.window_from)
+        end = min(_as_date(b['to']) or inputs.today, inputs.window_to, inputs.today)
+        if start is None or end < start:
+            continue
+        weeks = 0
+        monday = start - timedelta(days=start.weekday())
+        while monday <= end:
+            thursday = monday + timedelta(days=3)
+            if timeline.block_on(thursday) == b['id']:
+                weeks += 1
+            monday += timedelta(weeks=1)
+        mine = [w for w in weekly if w['blockId'] == b['id']]
+        total = sum(w['trimp'] for w in mine)
+        out.append({'blockId': b['id'], 'weeks': weeks, 'trimp': total,
+                    'sessions': sum(w['sessions'] for w in mine),
+                    'meanWeekly': round(total / weeks) if weeks else None,
+                    'peakWeekly': max((w['trimp'] for w in mine), default=None)})
+    return out
 
 
 # ── benchmarks ───────────────────────────────────────────────────────────────
@@ -326,6 +355,6 @@ def compute_development(inputs: DevelopmentInputs) -> dict:
         'blocks': blocks,
         'lifts': _lifts(inputs, lifts_raw, blocks),
         'currencies': _currencies(inputs, currencies_raw, blocks),
-        'load': _load(inputs, timeline),
+        'load': _load(inputs, timeline, blocks),
         'benchmarks': _benchmarks(inputs, timeline),
     }
