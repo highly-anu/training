@@ -1061,11 +1061,14 @@ intensity footer until 2026-10-16.
   has either. An older server sends no `zones`; the card then draws minutes per
   bucket per week. % of 1RM for max-effort frameworks.
 - *Movement* (a summary, §6.37): the three patterns the program plans most,
-  done against planned (planned the grey track, done over it, on the whole
-  table's scale), the balance pairs out of range with a mark, or "Balance in
-  range"; an "N out of range" badge beside the header. `MovementDetailView`
-  has both tables in full, every pair, the unilateral share and the minutes
-  assumed (the footer under Minutes).
+  done against planned (planned in grey, done over it, on the whole table's
+  scale, in a `Grid` so every track is as long — a full-width background in
+  the same dark grey hid where planned ended, until 2026-10-18), the balance
+  pairs out of range with a mark, or "Balance in range"; an "N out of range"
+  badge beside the header. `MovementDetailView` has both tables in full,
+  every pair (named as the bars are, "Push : Pull"), the unilateral share
+  when the program has any, and the minutes assumed (the footer under
+  Minutes).
 - *Session shapes* (`SessionShapesCard`, a summary): done of scheduled across
   every shape, how many ran past ±25 % of their estimate, and the first three
   shapes. `SessionShapesDetailView` lists every shape with its duration against

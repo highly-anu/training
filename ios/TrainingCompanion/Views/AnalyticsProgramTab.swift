@@ -610,7 +610,10 @@ struct MovementDetailView: View {
                     ForEach(movement.balance) { pair in BalanceRow(pair: pair) }
                 }
             }
-            if let unilateral = movement.unilateralShare?.done {
+            // Not for a program with no single-leg or single-arm work, where
+            // it read "0% of 0% planned".
+            if let unilateral = movement.unilateralShare?.done,
+               unilateral > 0 || (movement.unilateralShare?.planned ?? 0) > 0 {
                 Section {
                     LabeledContent("Unilateral") {
                         Text("\(AnalyticsProgramTab.number(unilateral))%"
@@ -630,14 +633,21 @@ struct MovementDetailView: View {
     }
 }
 
-/// Patterns as bars — planned the grey track, done over it, both against
-/// `top` so a summary of three keeps the scale of the whole table.
+/// Patterns as bars — planned in grey, done over it, both against `top` so
+/// a summary of three keeps the scale of the whole table. A grid, so every
+/// row's track is as long as the others: the widest numbers set their
+/// column. Planned sat on a full-width grey track that dark mode drew in the
+/// same grey, so 27 of 27 sets read as a fifth done, and each row's numbers
+/// shortened its own track (until 2026-10-18).
 private struct MovementBars: View {
     let title: String?
     let rows: [(pattern: String, value: ProgramAnalytics.Movement.Rollup)]
     let top: Double
-    /// The pattern column, as wide as "Squat"/"Hinge" at the reader's text size.
-    @ScaledMetric(relativeTo: .subheadline) private var patternWidth: CGFloat = 80
+
+    /// "hip_hinge" → "Hip Hinge", for the bars and the balance pairs alike.
+    static func name(_ pattern: String) -> String {
+        pattern.replacingOccurrences(of: "_", with: " ").capitalized
+    }
 
     var body: some View {
         let scale = max(top, 1)
@@ -646,26 +656,28 @@ private struct MovementBars: View {
                 Text(title.uppercased())
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
             }
-            ForEach(rows, id: \.pattern) { row in
-                HStack(spacing: 8) {
-                    Text(row.pattern.capitalized).font(.subheadline)
-                        .lineLimit(1)
-                        .frame(width: patternWidth, alignment: .leading)
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color(.systemFill)).frame(height: 6)
-                            Capsule().fill(Color(.systemGray3))
-                                .frame(width: geo.size.width * min(row.value.planned, scale) / scale, height: 6)
-                            Capsule().fill(Color.accentColor)
-                                .frame(width: geo.size.width * min(row.value.done, scale) / scale, height: 6)
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
+                ForEach(rows, id: \.pattern) { row in
+                    GridRow {
+                        Text(Self.name(row.pattern)).font(.subheadline).lineLimit(1)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color(.systemGray4))
+                                    .frame(width: geo.size.width * min(row.value.planned, scale) / scale, height: 6)
+                                Capsule().fill(Color.accentColor)
+                                    .frame(width: geo.size.width * min(row.value.done, scale) / scale, height: 6)
+                            }
+                            .frame(maxHeight: .infinity)
                         }
+                        .frame(height: 6)
+                        Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
+                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                            .fixedSize()
+                            .gridColumnAlignment(.trailing)
                     }
-                    .frame(height: 6)
-                    Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
-                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
             }
         }
     }
@@ -677,7 +689,8 @@ private struct BalanceRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
+            // Named as the bars name them ("Push : Pull", not "push : pull").
+            Text("\(MovementBars.name(pair.a)) : \(MovementBars.name(pair.b))")
             if pair.declared {
                 Image(systemName: "checkmark.seal").font(.caption).foregroundStyle(.secondary)
                     .accessibilityLabel("declared")
