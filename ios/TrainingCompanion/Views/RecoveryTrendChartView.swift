@@ -88,12 +88,15 @@ struct RecoveryTrendChartView: View {
                 AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisValueLabel {
                         if let d = value.as(Date.self) {
+                            // fixedSize: the last label truncated to "1…".
                             Text(d, format: .dateTime.month(.abbreviated).day())
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption2).foregroundStyle(.secondary).fixedSize()
                         }
                     }
                 }
             }
+            // From the readings' own range: from 0, 49–70 ms filled a fifth.
+            .chartYScale(domain: .automatic(includesZero: false))
             .chartYAxis {
                 AxisMarks(position: .leading) { value in
                     AxisValueLabel {
