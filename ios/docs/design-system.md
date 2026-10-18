@@ -1076,11 +1076,14 @@ intensity footer until 2026-10-16.
   has either. An older server sends no `zones`; the card then draws minutes per
   bucket per week. % of 1RM for max-effort frameworks.
 - *Movement* (a summary, §6.37): the three patterns the program plans most,
-  done against planned (planned the grey track, done over it, on the whole
-  table's scale), the balance pairs out of range with a mark, or "Balance in
-  range"; an "N out of range" badge beside the header. `MovementDetailView`
-  has both tables in full, every pair, the unilateral share and the minutes
-  assumed (the footer under Minutes).
+  done against planned (planned in grey, done over it, on the whole table's
+  scale, in a `Grid` so every track is as long — a full-width background in
+  the same dark grey hid where planned ended, until 2026-10-18), the balance
+  pairs out of range with a mark, or "Balance in range"; an "N out of range"
+  badge beside the header. `MovementDetailView` has both tables in full,
+  every pair (named as the bars are, "Push : Pull"), the unilateral share
+  when the program has any, and the minutes assumed (the footer under
+  Minutes).
 - *Session shapes* (`SessionShapesCard`, a summary): done of scheduled across
   every shape, how many ran past ±25 % of their estimate, and the first three
   shapes. `SessionShapesDetailView` lists every shape with its duration against
@@ -1091,7 +1094,7 @@ intensity footer until 2026-10-16.
 document for what it measures progress by, after the review's score (§6.25)
 and measures — the web's Progress tab:
 
-- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): measurable of applicable, then a `ProgressEntryCard` per metric that applies — a
+- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): its name as a `SectionLabel` (§6.37), then a `ProgressEntryCard` per metric that applies — a
   summary that opens `MeasureDetailView` (§6.37): the status badge, where the
   measure stands in its own currency (the lead lift's latest value and its
   name; movements practised of the program's and `lock.open` the ones opened;
@@ -1272,8 +1275,10 @@ Four cards, each an `AnalyticsCard` (§6.15):
   VoiceOver's), "never reached" for the rest (`forward.end`), and a `current`
   `TintCapsule` on the active one. A row pushes `ProgramVersionDetailView`,
   the block week by week — the screen Program ▸ History opens (§6.37).
-- *Lifts across blocks*: the series by name with a menu picker of every lift
-  and currency — rounds, minutes, km — with points in the window; the chart
+- *Lifts across blocks*: the series' name is the menu (`chevron.up.chevron.down`)
+  of every lift and currency — rounds, minutes, km — with points in the window,
+  each item with its block count; a name beside a menu showing the same name
+  said it twice and wrapped (2026-10-18). The chart
   plots the heaviest completed set's est-1RM per session over real dates with
   the blocks as `RectangleMark` bands, deload points hollow, and a touch reads
   that session's set (`ChartPoint.detail`, "57.5 kg × 5"). Under it the trend
@@ -1410,7 +1415,8 @@ one `line.3.horizontal.decrease.circle` button.
 ### 6.25 Score Explanation
 
 **A score says what it is made of and which band it is in.**
-`ScoreExplanation` in `Views/ProgressionView.swift`, with the band from
+The Score card on Analytics ▸ Progress (`Views/ProgressionView.swift`) opens
+`ScoreDetailView` (§6.37), with the band from
 `ProgressionScore` (`ProgressionScore.swift`). Today's Progress card no longer
 shows the score (2026-10-16): it shows the methodology's headline measure, worded
 by the server (`headlineSummary`), and Adherence beside it carries completion. Analytics ▸ Progress read 70 "On Track" in week 1 for an athlete who
@@ -1420,15 +1426,20 @@ the measures' trends alone; before any has one there is no score, and the card
 says why under "Not enough data yet".
 
 - **The words are the server's** (`score_breakdown`, `score_status`,
-  `scope_label`, `pending_measures` from `src/analytics/review.py`; the phone
-  leaves out `purpose`, the intro sentence, since 2026-10-16),
+  `scope_label`, `pending_measures`, `purpose` from `src/analytics/review.py`),
   so the web says the same; the phone only lays them out. Older servers send
   none of them and the card falls back to the thresholds alone.
-- **The reason is always shown; the sum is folded.** One line under the band
-  ("Every session due so far is done; no lift or skill trend yet") answers the
-  common question; "How is this scored?" opens the parts and the three bands,
-  the current one bold. A single part (sessions only) is the summary already
-  and gets no sum row.
+- **The card counts; the detail explains.** The card is the score, its band,
+  the completion and `score_status.counts` — "⏸ 3 stalled · 🐢 3 behind", each
+  status's symbol (`AnalyticsStatusStyle.symbol`) and number, worst first,
+  wrapping in a `LegendFlow`. `ScoreDetailView` has the server's sentence
+  (which names two measures per status, then "and N more"), each measure with
+  its symbol and points and the sum beneath, those still collecting data,
+  how many of each method's measures can be read ("Measurable" — the
+  methodology card's "📏 2/2" until 2026-10-18), the bands with the current
+  one ticked, and `purpose` as its About. "How is this scored?" folded most
+  of that inside the card until 2026-10-18; an older server's card shows the
+  sentence instead of the counts.
 - **What the percentage covers is said to VoiceOver** ("2 of 2 sessions so
   far · week 1", the server's `scope_label`) — it used to say "Weekly", which
   it never was, and then sat beside the percentage in words, the same fact
@@ -1788,6 +1799,18 @@ a screen with the full chart, the numbers and, at the end, *About*.
   navigate.
 - **`Sparkline`** (`Views/DetailParts.swift`) is the one small line: the
   standards' block line and the Exercises card's chart were two.
+- **No fold, no picker on a card.** Extra information is never an inline
+  "How is this…?" fold or a segmented picker inside the card: the card holds
+  one reading and the detail holds the rest, alternatives included (Mix's
+  activities, Weekly's TRIMP). Every card with more to say than its summary
+  is an `AnalyticsDetailCard`; one whose rows open their own screens
+  (Standards, Exercises, Blocks, Check-ins) keeps them, and Totals is all
+  there is to say.
+- **A group's name is a `SectionLabel`, not a card**
+  (`Views/AnalyticsProgramSections.swift`): the methodology above its measure
+  cards ("STARTING STRENGTH", "· 70%" in a blend), styled as an inset list's
+  section header and aligned with the cards' text. A card that only named
+  what followed said nothing of its own.
 - **A label inside a row is `.labelStyle(.inline)`** (`InlineLabelStyle`,
   `AppCard.swift`): symbol and words 4 pt apart. A `List` gives every
   `Label` an icon column — the symbol in a fixed-width slot, the words far
@@ -1798,37 +1821,42 @@ a screen with the full chart, the numbers and, at the end, *About*.
   themselves.
 - A detail a deep link can open, for screenshots and other screens:
   `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`,
-  `analytics?open=readiness|sleep|hrv|resting-hr|checkins|pmc|movement|shapes`
+  `analytics?open=score|scorecard|intensity|movement|shapes|readiness|sleep|hrv|resting-hr|checkins|pmc|load-focus|mix|weekly|block-load`
   (`AppRouter.openAnalyticsDetail`; each section pushes its own).
 
-Users: Analytics ▸ Progress's measure cards (`MeasureDetailView`), its
-Exercises rows (`ExerciseHistoryView`), its Standards rows (the standard's
-sheet, §6.32); Analytics ▸ Recovery's readiness (`ReadinessDetailView`, §6.21),
+Users: Analytics ▸ Progress's Score (`ScoreDetailView`, §6.25), its measure
+cards (`MeasureDetailView`), "N not in this program" under them
+(`MeasuresElsewhereView`), its Exercises rows (`ExerciseHistoryView`), its
+Standards rows (the standard's sheet, §6.32); Analytics ▸ Recovery's readiness (`ReadinessDetailView`, §6.21),
 sleep (`SleepDetailView` — Sleep Debt, Last Night and Sleep Stages were three
 cards), HRV and resting heart rate (`RecoveryTrendDetailView`, one view for
 both, like `RecoveryTrendChartView`) and "All check-ins" (`CheckInHistoryView`;
 the card keeps the last seven `CheckInRow`s); Analytics ▸ Load's Performance
 Management (`PMCDetailView`: today's CTL, ATL and TSB — whole numbers, one
 decimal under ten — over a compact `PMCChart` on the card, the full chart with
-a drag-to-read rule on the screen); Analytics ▸ Blocks' block rows
-(`ProgramVersionDetailView`), "By block" (`SeriesBlocksView`) and standards
-(the sheet); Analytics ▸ Program's Movement and Session shapes
-(`MovementDetailView`, `SessionShapesDetailView`; Scorecard, Intensity and
-Load were summaries already); and Program ▸ Overview's phases (§6.26, before
-this section was written).
+a drag-to-read rule on the screen), Load Focus (`LoadFocusDetailView`: each
+band's zones and minutes), Mix (`MixDetailView`: by modality and by activity)
+and Weekly (`WeeklyDetailView`: sessions and TRIMP a week, each week's two
+numbers) — `Views/LoadCardDetails.swift`; Analytics ▸ Blocks' block rows
+(`ProgramVersionDetailView`), "By block" (`SeriesBlocksView`), TRIMP by block
+(`BlockLoadDetailView`: each block's weeks, average a week, peak and total —
+the server's `load.byBlock`) and standards (the sheet); Analytics ▸ Program's
+Scorecard (`ScorecardDetailView`: weeks, tiers, each modality's minutes),
+Intensity split (`IntensityDetailView`: zones, weeks, each framework's split,
+share of 1RM) — `Views/ProgramCardDetails.swift` — Movement and Session shapes
+(`MovementDetailView`, `SessionShapesDetailView`); and Program ▸ Overview's
+phases (§6.26, before this section was written). Program's Load card is a
+summary of the PMC that Load's own card opens.
 
-**A `Label` inside a `List` gets an icon column** — the icon in a fixed-width
-leading slot, the title far from it. A row that carries labels as inline
-symbols (a trend badge, a shape's duration and HR) sets
-`.labelStyle(.titleAndIcon)`; the badge and the shape row do it themselves.
-
-Where two cards were the same data two ways they became one card with a
-segmented display picker (§6.8's "mode inside content"): Load's **Mix**
-(modality share of minutes · activity hours, the period's) and **Weekly**
-(sessions · TRIMP, twelve weeks; "On device" beside the header only for TRIMP,
-whose request is its own).
+Where two cards were the same data two ways they became one card: Load's
+**Mix** (the modality ring on the card; activity hours on its detail) and
+**Weekly** (sessions a week on the card; TRIMP a week on its detail, with
+"On device" under that chart only, whose request is its own). Each had a
+segmented picker inside the card from 2026-10-17 to 2026-10-18.
 
 Terms that are not a measure — TRIMP, CTL, ATL, TSB, readiness, HRV, resting
-HR, sleep debt — take their About from `vocabulary.TERMS`, served by the
+HR, sleep debt, completion and minutes a week, the intensity split and the
+heart-rate zones, load focus, the mix, sessions a week, load by block — take
+their About from `vocabulary.TERMS`, served by the
 static `GET /api/analytics/vocabulary` and cached in
 `AppState.analyticsTerms` (`AboutText(terms:from:)`).

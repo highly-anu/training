@@ -233,7 +233,7 @@ def _injury_flags() -> list[dict]:
 # Bumped when a cached analytics document's *shape* changes, so a snapshot
 # written by the previous code (missing the new keys) is recomputed once
 # instead of being served until its inputs happen to change.
-_ANALYTICS_SHAPE = 'measure-about-1'
+_ANALYTICS_SHAPE = 'card-details-1'
 
 
 def _standards_digest_key(performance: dict) -> list:
@@ -4886,7 +4886,7 @@ def progression_review():
         base = _program_analytics_hash(analytics_in[0], analytics_in[1], get_program_revision(g.user_id))
     else:
         base = _pt.compute_session_hash(session_logs)
-    session_hash = f'{base}:{period}:review-7'
+    session_hash = f'{base}:{period}:review-8'
     cached = _health.get_progression_snapshot(g.user_id, period_key, period)
     if cached and cached.get('session_hash') == session_hash:
         return jsonify(cached['data'])

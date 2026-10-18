@@ -165,7 +165,7 @@ struct PMCDetailView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Performance Management")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await appState.loadAnalyticsTermsIfNeeded() }
+        .task { await appState.loadAnalyticsTermsIfNeeded(["ctl", "atl", "tsb", "trimp"]) }
     }
 
     private func key<Mark: View>(_ mark: Mark, _ term: String) -> some View {

@@ -19,6 +19,9 @@ struct DevelopmentAnalytics: Decodable {
     let lifts: [Lift]
     let currencies: [Currency]
     let weeklyLoad: [WeeklyLoad]
+    /// Each block's weeks, total, weekly average and peak TRIMP; empty from
+    /// an older server.
+    let blockLoad: [BlockLoad]
     let benchmarks: [Benchmark]
 
     var hasHistory: Bool { status != "no_history" && !blocks.isEmpty }
@@ -27,7 +30,7 @@ struct DevelopmentAnalytics: Decodable {
         case status, generatedAt, window, blocks, lifts, currencies, load, benchmarks
     }
     private struct Window: Decodable { let from: String?; let to: String? }
-    private struct Load: Decodable { let weekly: [Lossy<WeeklyLoad>]? }
+    private struct Load: Decodable { let weekly: [Lossy<WeeklyLoad>]?; let byBlock: [Lossy<BlockLoad>]? }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -39,7 +42,9 @@ struct DevelopmentAnalytics: Decodable {
         blocks = ((try? c.decodeIfPresent([Lossy<Block>].self, forKey: .blocks)) ?? [])?.compactMap(\.value) ?? []
         lifts = ((try? c.decodeIfPresent([Lossy<Lift>].self, forKey: .lifts)) ?? [])?.compactMap(\.value) ?? []
         currencies = ((try? c.decodeIfPresent([Lossy<Currency>].self, forKey: .currencies)) ?? [])?.compactMap(\.value) ?? []
-        weeklyLoad = ((try? c.decodeIfPresent(Load.self, forKey: .load))??.weekly ?? []).compactMap(\.value)
+        let load = try? c.decodeIfPresent(Load.self, forKey: .load)
+        weeklyLoad = (load?.weekly ?? []).compactMap(\.value)
+        blockLoad = (load?.byBlock ?? []).compactMap(\.value)
         benchmarks = ((try? c.decodeIfPresent([Lossy<Benchmark>].self, forKey: .benchmarks)) ?? [])?.compactMap(\.value) ?? []
     }
 
@@ -210,6 +215,19 @@ struct DevelopmentAnalytics: Decodable {
     }
 
     // MARK: Load — weekly TRIMP with the block each week fell in
+
+    /// One block's weekly TRIMP in brief (`development._load_by_block`): its
+    /// weeks in the window, weeks without a workout included, the total, the
+    /// average a week and the peak week.
+    struct BlockLoad: Decodable, Identifiable {
+        let blockId: Int
+        let weeks: Int
+        let trimp: Double
+        let sessions: Int
+        let meanWeekly: Double?
+        let peakWeekly: Double?
+        var id: Int { blockId }
+    }
 
     struct WeeklyLoad: Decodable, Identifiable {
         let week: String               // ISO week, "2026-W38"

@@ -26,6 +26,9 @@ struct ProgressionView: View {
         .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
         .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
         .onChange(of: appState.exerciseHistory?.exercises.count) { applyPendingDetail() }
+        // The review's arrival, not its score: a review with no score yet
+        // (collecting) left a score link waiting for good.
+        .onChange(of: appState.progressionReview != nil) { applyPendingDetail() }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadProgressionReview()
@@ -49,6 +52,10 @@ struct ProgressionView: View {
                 ExerciseHistoryView(item: item,
                                     finding: appState.progressionReview?.exerciseFindings.first { $0.exerciseId == id })
             }
+        case .score:
+            if let review = appState.progressionReview {
+                ScoreDetailView(review: review, doc: appState.programAnalytics)
+            }
         default:
             EmptyView()
         }
@@ -65,6 +72,9 @@ struct ProgressionView: View {
         case .exercise(let id):
             guard let items = appState.exerciseHistory?.exercises else { return }
             if items.contains(where: { $0.exerciseId == id }) { route = pending }
+        case .score:
+            guard appState.progressionReview != nil else { return }
+            route = pending
         default:
             break
         }
@@ -115,32 +125,23 @@ struct ProgressionView: View {
 
     // MARK: - Overview card
 
+    /// The score, its band and the completion beside it, and how many
+    /// measures are stalled, behind, on track or ahead (§6.37). Why, each
+    /// measure's points, the bands and what the score is for are
+    /// `ScoreDetailView`'s; "How is this scored?" folded them in here.
     private func overviewCard(review: ProgressionReview) -> some View {
-        let score = review.overallScore
         let band = ProgressionScore.band(review)
-        let color = ProgressionScore.color(band?.id)
 
-        return AnalyticsCard(header: "Score") {
-            if score != nil, let band {
-                TintCapsule(text: band.label, color: color)
+        return AnalyticsDetailCard(header: "Score", hint: "Opens how the score is made") {
+            if review.overallScore != nil, let band {
+                TintCapsule(text: band.label, color: ProgressionScore.color(band.id))
             }
+        } destination: {
+            ScoreDetailView(review: review, doc: appState.programAnalytics)
         } content: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
-                    if let s = score {
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text("\(s)")
-                                .font(.largeTitle.bold()).fontDesign(.rounded)
-                                .foregroundStyle(color)
-                            Text("/ 100")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        Label("Not enough data", systemImage: "hourglass")
-                            .font(.subheadline).fontWeight(.semibold)
-                            .foregroundStyle(.secondary)
-                    }
+                    ScoreHeadline(review: review)
                     Spacer()
                     // What the percentage covers is said to VoiceOver; on
                     // screen it repeated the percentage in words (§1.4).
@@ -149,13 +150,11 @@ struct ProgressionView: View {
                         .accessibilityLabel("\(review.compliancePct) percent of sessions done"
                                             + (review.scopeLabel.map { ", \($0)" } ?? ""))
                 }
-                if let status = review.scoreStatus {
-                    Text(status.reason)
-                        .font(.subheadline)
-                }
-                if review.scoreBreakdown != nil || review.scoreStatus != nil {
-                    ScoreExplanation(breakdown: review.scoreBreakdown, status: review.scoreStatus,
-                                     pending: review.pendingMeasures ?? [])
+                if let counts = review.scoreStatus?.counts, !counts.isEmpty {
+                    ScoreCounts(counts: counts)
+                } else if let status = review.scoreStatus {
+                    // An older server sends the sentence only.
+                    Text(status.reason).font(.subheadline)
                 }
             }
         }
@@ -216,93 +215,6 @@ struct ProgressionView: View {
     /// change line (`progression_findings`), so the two lines agree.
     static func withUnit(_ value: String, _ unit: String) -> String {
         ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
-    }
-}
-
-/// "How is this scored?": the sum behind the number, each measure it counts
-/// or is still collecting, the measures waiting for data, and the three bands,
-/// the current one marked. Folded by default — the reason line above it says
-/// what matters. The measures had sections of their own until 2026-10-16,
-/// beside the methodology cards that show them in full.
-struct ScoreExplanation: View {
-    let breakdown: ScoreBreakdown?
-    let status: ScoreStatus?
-    var pending: [PendingMeasure] = []
-    @State private var open = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button {
-                AppHaptics.selection()
-                withAnimation(AppAnimation.springStandard) { open.toggle() }
-            } label: {
-                HStack(spacing: 4) {
-                    Text("How is this scored?")
-                    Image(systemName: "chevron.down")
-                        .rotationEffect(.degrees(open ? 180 : 0))
-                }
-                .font(.footnote.weight(.medium))
-                .frame(minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(Color.accentColor)
-            .accessibilityValue(open ? "Expanded" : "Collapsed")
-
-            if open {
-                if let b = breakdown {
-                    Text(b.summary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    // One part (sessions only) is the summary already; two are a sum.
-                    ForEach(b.parts.count > 1 ? b.parts : []) { part in
-                        HStack {
-                            Text(part.label)
-                            Spacer()
-                            Text("\(part.value) × \(part.weight.formatted(.number.precision(.fractionLength(0...1)))) = \(part.points)")
-                                .monospacedDigit()
-                        }
-                        .font(.subheadline)
-                    }
-                }
-                if let measures = breakdown?.measures, !measures.isEmpty {
-                    Divider()
-                    ForEach(measures) { m in
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(m.name).font(.subheadline)
-                                + Text(m.detail.map { " · \($0)" } ?? "").font(.footnote).foregroundColor(.secondary)
-                            Spacer()
-                            Text(m.points.map { "\($0) pts" } ?? "collecting")
-                                .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                if !pending.isEmpty {
-                    Divider()
-                    ForEach(pending) { m in
-                        (Text(m.label).font(.subheadline)
-                            + Text(" · \(m.reason)").font(.footnote).foregroundColor(.secondary))
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                if let s = status {
-                    Divider()
-                    ForEach(Array(s.bands.enumerated()), id: \.element.id) { i, band in
-                        HStack {
-                            Circle()
-                                .fill(ProgressionScore.color(band.id))
-                                .frame(width: 8, height: 8)
-                            Text(band.label)
-                                .fontWeight(band.id == s.id ? .semibold : .regular)
-                            Spacer()
-                            Text(ProgressionScore.range(s.bands, at: i))
-                                .monospacedDigit().foregroundStyle(.secondary)
-                        }
-                        .font(.subheadline)
-                    }
-                }
-            }
-        }
     }
 }
 

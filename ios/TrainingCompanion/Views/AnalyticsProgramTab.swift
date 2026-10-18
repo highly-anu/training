@@ -50,6 +50,10 @@ struct AnalyticsProgramTab: View {
             if let movement = appState.programAnalytics?.movement { MovementDetailView(movement: movement) }
         case .sessionShapes:
             if let rows = appState.programAnalytics?.archetypes { SessionShapesDetailView(rows: rows) }
+        case .scorecard:
+            if let scorecard = appState.programAnalytics?.scorecard { ScorecardDetailView(scorecard: scorecard) }
+        case .intensity:
+            if let intensity = appState.programAnalytics?.intensity { IntensityDetailView(intensity: intensity) }
         default:
             EmptyView()
         }
@@ -59,8 +63,12 @@ struct AnalyticsProgramTab: View {
     private func applyPendingDetail() {
         guard let pending = router.pendingAnalyticsDetail, pending.section == .program,
               let doc = appState.programAnalytics else { return }
-        if (pending == .movement && doc.movement != nil) || (pending == .sessionShapes && doc.archetypes != nil) {
+        switch pending {
+        case .movement where doc.movement != nil, .sessionShapes where doc.archetypes != nil,
+             .scorecard where doc.scorecard != nil, .intensity where doc.intensity != nil:
             route = pending
+        default:
+            break
         }
         router.clearPendingAnalyticsDetail()
     }
@@ -197,12 +205,17 @@ struct AnalyticsProgramTab: View {
 
 /// Did you train what this program is for. The headline is a gate, not a
 /// weighted sum: under 70 % of the committed work is off plan regardless.
+/// The summary is the completion and each modality's sessions; the weeks,
+/// the tiers, the minutes against each modality's range and what it all
+/// means are `ScorecardDetailView`'s (§6.37).
 private struct ScorecardCard: View {
     let scorecard: ProgramAnalytics.Scorecard
 
     var body: some View {
-        AnalyticsCard(header: "Scorecard") {
+        AnalyticsDetailCard(header: "Scorecard", hint: "Opens the scorecard") {
             AnalyticsStatusBadge(status: scorecard.headline)
+        } destination: {
+            ScorecardDetailView(scorecard: scorecard)
         } content: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -219,7 +232,7 @@ private struct ScorecardCard: View {
                 }
                 .monospacedDigit()
                 ForEach(scorecard.modalities) { row in
-                    ScorecardRowView(row: row)
+                    ScorecardRowView(row: row, showsDose: false)
                 }
             }
         }
@@ -228,9 +241,11 @@ private struct ScorecardCard: View {
 
 /// A modality's completion and weekly dose, in symbols: its tier, sessions
 /// done of planned, minutes per week against planned, and an arrow or a
-/// check for the dose against the framework's range.
-private struct ScorecardRowView: View {
+/// check for the dose against the framework's range. The card leaves the
+/// minutes out (`showsDose`); the detail shows them.
+struct ScorecardRowView: View {
     let row: ProgramAnalytics.Scorecard.Row
+    var showsDose = true
 
     var body: some View {
         let colour = ModalityStyle.color(for: row.modality)
@@ -263,16 +278,18 @@ private struct ScorecardRowView: View {
                 }
             }
             .frame(height: 6)
-            HStack(spacing: 6) {
-                Label("\(Int((row.weeklyActualMinutes ?? 0).rounded()))/\(Int((row.weeklyPlannedMinutes ?? 0).rounded())) min/wk",
-                      systemImage: "clock")
-                Spacer()
-                if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes, let dose = doseIcon {
-                    Image(systemName: dose.icon).foregroundStyle(dose.color)
-                    Text("\(Int(minMin))–\(Int(maxMin))")
+            if showsDose {
+                HStack(spacing: 6) {
+                    Label("\(Int((row.weeklyActualMinutes ?? 0).rounded()))/\(Int((row.weeklyPlannedMinutes ?? 0).rounded())) min/wk",
+                          systemImage: "clock")
+                    Spacer()
+                    if let minMin = row.minWeeklyMinutes, let maxMin = row.maxWeeklyMinutes, let dose = doseIcon {
+                        Image(systemName: dose.icon).foregroundStyle(dose.color)
+                        Text("\(Int(minMin))–\(Int(maxMin))")
+                    }
                 }
+                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
             }
-            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(ModalityStyle.label(for: row.modality)), \(row.tier): \(row.completedSessions) of \(row.plannedSessions) sessions, \(Int((row.weeklyActualMinutes ?? 0).rounded())) of \(Int((row.weeklyPlannedMinutes ?? 0).rounded())) minutes a week\(doseWords)")
@@ -309,31 +326,17 @@ private struct ScorecardRowView: View {
 
 // MARK: - Intensity
 
+/// Planned against recorded minutes per heart-rate zone, over the completed
+/// sessions; the weeks, each framework's split, the share of 1RM and what
+/// counts as zone time are `IntensityDetailView`'s (§6.37).
 private struct IntensityCard: View {
     let intensity: ProgramAnalytics.Intensity
 
-    private struct Slice: Identifiable {
-        let week: Int
-        let zone: String
-        let minutes: Double
-        var id: String { "\(week)-\(zone)" }
-    }
-
-    /// Minutes per bucket per week. The week fields carry `_pct` in their
-    /// keys but hold minutes; this chart called them "Share" and drew them
-    /// against a % axis until 2026-10-16.
-    private var slices: [Slice] {
-        intensity.weeks.flatMap { w in
-            [Slice(week: w.week, zone: "Z1–2", minutes: w.zone12Pct),
-             Slice(week: w.week, zone: "Z3", minutes: w.zone3Pct),
-             Slice(week: w.week, zone: "Z4–5", minutes: w.zone45Pct),
-             Slice(week: w.week, zone: "Max effort", minutes: w.maxEffortPct)]
-        }
-    }
-
     var body: some View {
-        AnalyticsCard(header: "Intensity split") {
+        AnalyticsDetailCard(header: "Intensity split", hint: "Opens the intensity split") {
             AnalyticsStatusBadge(status: intensity.status)
+        } destination: {
+            IntensityDetailView(intensity: intensity)
         } content: {
             VStack(alignment: .leading, spacing: 10) {
                 if let coverage = intensity.coverage { CoverageNoticeView(coverage: coverage) }
@@ -344,23 +347,51 @@ private struct IntensityCard: View {
                         .init(zone: $0.zone, label: $0.label, planned: $0.plannedMinutes, recorded: $0.actualMinutes)
                     })
                 } else if !intensity.weeks.isEmpty {
-                    weeklyChart
-                }
-                if let pct = intensity.pct1rm, let mean = pct.meanPct {
-                    Label("\(AnalyticsProgramTab.number(mean))% 1RM · \(pct.sessions) lifts", systemImage: "scalemass")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .accessibilityLabel("Working sets averaged \(AnalyticsProgramTab.number(mean)) percent of estimated 1RM across \(pct.sessions) logged lifts")
+                    IntensityWeeksChart(weeks: intensity.weeks)
                 }
             }
         }
     }
+}
 
-    /// Minutes per bucket per week — only from an older server, which sends
-    /// no per-zone planned and recorded minutes.
-    private var weeklyChart: some View {
+/// Minutes per bucket per week, stacked. The week fields carry `_pct` in
+/// their keys but hold minutes; this chart called them "Share" and drew them
+/// against a % axis until 2026-10-16.
+struct IntensityWeeksChart: View {
+    let weeks: [ProgramAnalytics.Intensity.Week]
+    var height: CGFloat = 160
+
+    /// Keyed by position: an old program repeats week numbers, which stacked
+    /// two weeks in one bar; the axis still names each by its number.
+    private struct Slice: Identifiable {
+        let position: Int
+        let zone: String
+        let minutes: Double
+        var id: String { "\(position)-\(zone)" }
+    }
+
+    private var slices: [Slice] {
+        weeks.enumerated().flatMap { i, w in
+            [Slice(position: i, zone: "Z1–2", minutes: w.zone12Pct),
+             Slice(position: i, zone: "Z3", minutes: w.zone3Pct),
+             Slice(position: i, zone: "Z4–5", minutes: w.zone45Pct),
+             Slice(position: i, zone: "Max effort", minutes: w.maxEffortPct)]
+        }
+    }
+
+    var body: some View {
         Chart(slices) { slice in
-            BarMark(x: .value("Week", "W\(slice.week)"), y: .value("Minutes", slice.minutes))
+            BarMark(x: .value("Week", String(slice.position)), y: .value("Minutes", slice.minutes))
                 .foregroundStyle(by: .value("Zone", slice.zone))
+        }
+        .chartXAxis {
+            AxisMarks { value in
+                AxisValueLabel {
+                    if let s = value.as(String.self), let i = Int(s), weeks.indices.contains(i) {
+                        Text("W\(weeks[i].week)").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
                                     "Z4–5": Color.orange, "Max effort": Color.red])
@@ -375,7 +406,8 @@ private struct IntensityCard: View {
             }
         }
         .chartLegend(position: .bottom, spacing: 6)
-        .frame(height: 160)
+        .frame(height: height)
+        .accessibilityLabel("Minutes per zone in each of \(weeks.count) weeks")
     }
 }
 
@@ -589,7 +621,10 @@ struct MovementDetailView: View {
                     ForEach(movement.balance) { pair in BalanceRow(pair: pair) }
                 }
             }
-            if let unilateral = movement.unilateralShare?.done {
+            // Not for a program with no single-leg or single-arm work, where
+            // it read "0% of 0% planned".
+            if let unilateral = movement.unilateralShare?.done,
+               unilateral > 0 || (movement.unilateralShare?.planned ?? 0) > 0 {
                 Section {
                     LabeledContent("Unilateral") {
                         Text("\(AnalyticsProgramTab.number(unilateral))%"
@@ -609,14 +644,21 @@ struct MovementDetailView: View {
     }
 }
 
-/// Patterns as bars — planned the grey track, done over it, both against
-/// `top` so a summary of three keeps the scale of the whole table.
+/// Patterns as bars — planned in grey, done over it, both against `top` so
+/// a summary of three keeps the scale of the whole table. A grid, so every
+/// row's track is as long as the others: the widest numbers set their
+/// column. Planned sat on a full-width grey track that dark mode drew in the
+/// same grey, so 27 of 27 sets read as a fifth done, and each row's numbers
+/// shortened its own track (until 2026-10-18).
 private struct MovementBars: View {
     let title: String?
     let rows: [(pattern: String, value: ProgramAnalytics.Movement.Rollup)]
     let top: Double
-    /// The pattern column, as wide as "Squat"/"Hinge" at the reader's text size.
-    @ScaledMetric(relativeTo: .subheadline) private var patternWidth: CGFloat = 80
+
+    /// "hip_hinge" → "Hip Hinge", for the bars and the balance pairs alike.
+    static func name(_ pattern: String) -> String {
+        pattern.replacingOccurrences(of: "_", with: " ").capitalized
+    }
 
     var body: some View {
         let scale = max(top, 1)
@@ -625,26 +667,31 @@ private struct MovementBars: View {
                 Text(title.uppercased())
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
             }
-            ForEach(rows, id: \.pattern) { row in
-                HStack(spacing: 8) {
-                    Text(row.pattern.capitalized).font(.subheadline)
-                        .lineLimit(1)
-                        .frame(width: patternWidth, alignment: .leading)
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color(.systemFill)).frame(height: 6)
-                            Capsule().fill(Color(.systemGray3))
-                                .frame(width: geo.size.width * min(row.value.planned, scale) / scale, height: 6)
-                            Capsule().fill(Color.accentColor)
-                                .frame(width: geo.size.width * min(row.value.done, scale) / scale, height: 6)
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
+                ForEach(rows, id: \.pattern) { row in
+                    // VoiceOver reads the row once, from its first cell (a
+                    // GridRow hands its modifiers to every cell).
+                    GridRow {
+                        Text(Self.name(row.pattern)).font(.subheadline).lineLimit(1)
+                            .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color(.systemGray4))
+                                    .frame(width: geo.size.width * min(row.value.planned, scale) / scale, height: 6)
+                                Capsule().fill(Color.accentColor)
+                                    .frame(width: geo.size.width * min(row.value.done, scale) / scale, height: 6)
+                            }
+                            .frame(maxHeight: .infinity)
                         }
+                        .frame(height: 6)
+                        .accessibilityHidden(true)
+                        Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
+                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                            .fixedSize()
+                            .gridColumnAlignment(.trailing)
+                            .accessibilityHidden(true)
                     }
-                    .frame(height: 6)
-                    Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
-                        .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.pattern): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
             }
         }
     }
@@ -656,7 +703,8 @@ private struct BalanceRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("\(pair.a) : \(pair.b)".replacingOccurrences(of: "_", with: " "))
+            // Named as the bars name them ("Push : Pull", not "push : pull").
+            Text("\(MovementBars.name(pair.a)) : \(MovementBars.name(pair.b))")
             if pair.declared {
                 Image(systemName: "checkmark.seal").font(.caption).foregroundStyle(.secondary)
                     .accessibilityLabel("declared")

@@ -17,7 +17,8 @@ enum DeepLink: Equatable {
     /// `analytics?section=progress&measure=<entry id>` or `&exercise=<exercise id>` —
     /// Progress pushes that measure's or exercise's screen (§6.37);
     /// `analytics?open=readiness|sleep|hrv|resting-hr|checkins` one of Recovery's,
-    /// `open=pmc` Load's fitness, fatigue and form, `open=movement|shapes` Program's.
+    /// `open=pmc|load-focus|mix|weekly` Load's, `open=scorecard|intensity|movement|shapes`
+    /// Program's, `open=score` Progress's, `open=block-load` Blocks'.
     case analyticsDetail(AppRouter.AnalyticsDetail)
     /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
     case session(String)
@@ -100,10 +101,13 @@ enum DeepLink: Equatable {
             if let id = query.first(where: { $0.name == "exercise" })?.value, !id.isEmpty {
                 return .analyticsDetail(.exercise(id))
             }
-            let recovery: [String: AppRouter.AnalyticsDetail] = [
+            let details: [String: AppRouter.AnalyticsDetail] = [
+                "score": .score,
                 "readiness": .readiness, "sleep": .sleep, "hrv": .hrv, "resting-hr": .restingHR, "checkins": .checkIns,
-                "pmc": .pmc, "movement": .movement, "shapes": .sessionShapes]
-            if let open = query.first(where: { $0.name == "open" })?.value?.lowercased(), let detail = recovery[open] {
+                "pmc": .pmc, "load-focus": .loadFocus, "mix": .mix, "weekly": .weekly,
+                "scorecard": .scorecard, "intensity": .intensity, "movement": .movement, "shapes": .sessionShapes,
+                "block-load": .blockLoad]
+            if let open = query.first(where: { $0.name == "open" })?.value?.lowercased(), let detail = details[open] {
                 return .analyticsDetail(detail)
             }
             if let raw = query.first(where: { $0.name == "section" })?.value?.lowercased() {

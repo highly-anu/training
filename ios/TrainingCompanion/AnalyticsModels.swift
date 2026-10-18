@@ -120,6 +120,8 @@ struct ModalityShare: Identifiable {
     var label: String
     var pct: Int
     var color: Color
+    /// The server's minutes; the on-device fallback leaves it out.
+    var minutes: Double? = nil
 }
 
 struct ActivityTypeEntry: Identifiable {
@@ -305,15 +307,19 @@ struct LoadSummary: Decodable, Equatable {
         modalities.prefix(8).map { m in
             let id = m.id ?? "unknown"
             return ModalityShare(modalityId: id, label: m.id == nil ? "Unclassified" : ModalityStyle.label(for: id),
-                                 pct: m.pct, color: ModalityStyle.color(for: id))
+                                 pct: m.pct, color: ModalityStyle.color(for: id), minutes: m.minutes)
         }
     }
 
-    var activityEntries: [ActivityTypeEntry] {
+    /// Each activity in its modality's colour, as the modality ring beside it
+    /// draws it — "Traditional Strength Training" was blue beside a red Max
+    /// Strength; a palette only for an activity the server could not place.
+    @MainActor var activityEntries: [ActivityTypeEntry] {
         let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
         return activities.enumerated().map { i, a in
             ActivityTypeEntry(name: ImportedWorkout.activityLabel(a.activityType),
-                              hours: a.minutes / 60, sessions: Double(a.sessions), color: colors[i % colors.count])
+                              hours: a.minutes / 60, sessions: Double(a.sessions),
+                              color: a.modalityId.map { ModalityStyle.color(for: $0) } ?? colors[i % colors.count])
         }
     }
 

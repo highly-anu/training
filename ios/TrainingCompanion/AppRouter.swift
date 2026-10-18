@@ -52,17 +52,20 @@ final class AppRouter: ObservableObject {
     enum AnalyticsDetail: Hashable {
         case measure(String)
         case exercise(String)
+        case score
         case readiness, sleep, hrv, restingHR, checkIns
-        case pmc
-        case movement, sessionShapes
+        case pmc, loadFocus, mix, weekly
+        case scorecard, intensity, movement, sessionShapes
+        case blockLoad
 
         /// The section that pushes it.
         var section: AnalyticsTab {
             switch self {
-            case .measure, .exercise: return .progress
+            case .measure, .exercise, .score: return .progress
             case .readiness, .sleep, .hrv, .restingHR, .checkIns: return .recovery
-            case .pmc: return .load
-            case .movement, .sessionShapes: return .program
+            case .pmc, .loadFocus, .mix, .weekly: return .load
+            case .scorecard, .intensity, .movement, .sessionShapes: return .program
+            case .blockLoad: return .blocks
             }
         }
     }

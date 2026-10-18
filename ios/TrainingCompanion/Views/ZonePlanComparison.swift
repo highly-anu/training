@@ -61,10 +61,13 @@ struct ZonePlanComparison: View {
     /// and the minutes.
     private func gridRow(_ row: Row, top: Double) -> some View {
         let color = HRZoneStyle.color(row.zone)
+        // VoiceOver reads the row once, from its first cell: a GridRow hands
+        // its modifiers to every cell, so one on the row made three elements.
         return GridRow {
             Text(row.label)
                 .font(.subheadline).fontWeight(.medium)
                 .lineLimit(1)
+                .accessibilityLabel("\(row.label): \(Self.minutes(row.recorded)) minutes recorded, \(Self.minutes(row.planned)) planned")
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     if row.planned > 0 {
@@ -81,13 +84,13 @@ struct ZonePlanComparison: View {
                 }
             }
             .frame(height: 18)
+            .accessibilityHidden(true)
             Text("\(Self.minutes(row.recorded))/\(Self.minutes(row.planned)) min")
                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .fixedSize()
                 .gridColumnAlignment(.trailing)
+                .accessibilityHidden(true)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.label): \(Self.minutes(row.recorded)) minutes recorded, \(Self.minutes(row.planned)) planned")
     }
 }
 

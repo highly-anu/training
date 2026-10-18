@@ -105,6 +105,11 @@ def test_currencies_load_and_benchmarks():
     assert [w['week'] for w in weekly] == ['2026-W33', '2026-W39'], 'a workout outside the window is dropped'
     assert weekly[0]['blockId'] == 1 and weekly[1]['blockId'] == 2 and weekly[1]['trimp'] == 40
     assert [p['date'] for p in doc['load']['pmc']] == ['2026-09-21'] and doc['load']['pmc'][0]['blockId'] == 2
+    # A block's weeks are those whose Thursday it holds, empty ones included,
+    # so one 40-TRIMP week in four averages 10; the open block runs to today.
+    assert doc['load']['byBlock'] == [
+        {'blockId': 1, 'weeks': 4, 'trimp': 40, 'sessions': 1, 'meanWeekly': 10, 'peakWeekly': 40},
+        {'blockId': 2, 'weeks': 4, 'trimp': 40, 'sessions': 1, 'meanWeekly': 10, 'peakWeekly': 40}]
 
     bench = doc['benchmarks']
     assert [b['benchmarkId'] for b in bench] == ['back_squat_1rm'], 'a PR for an unknown standard is skipped'

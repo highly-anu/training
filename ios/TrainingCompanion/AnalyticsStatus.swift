@@ -46,6 +46,18 @@ enum AnalyticsStatusStyle {
         }
     }
 
+    /// A measure's status as a symbol beside its count (the Score card):
+    /// paused, slow, on course, fast.
+    static func symbol(_ status: String) -> String {
+        switch status {
+        case "stalled": return "pause.circle"
+        case "behind": return "tortoise"
+        case "on_track": return "checkmark.circle"
+        case "ahead": return "hare"
+        default: return "circle.dashed"
+        }
+    }
+
     /// Why a primitive could not measure — the engine's reason codes, in words.
     static func coverageReason(_ code: String?) -> String {
         switch code {

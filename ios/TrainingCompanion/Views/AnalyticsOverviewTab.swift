@@ -5,8 +5,8 @@ struct AnalyticsOverviewTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
     @Binding var period: AnalyticsPeriod
-    /// Fitness, fatigue and form pushed from outside (a deep link).
-    @State private var showPMC = false
+    /// A detail pushed from outside (a deep link); the cards push their own.
+    @State private var route: AppRouter.AnalyticsDetail?
 
     @State private var pmcEntries: [PMCEntry] = []
     @State private var isLoadingPMC = false
@@ -14,22 +14,11 @@ struct AnalyticsOverviewTab: View {
     /// the web reads the same endpoints — and the on-device engine is the
     /// fallback when it cannot be reached, so the chart says which it was.
     @State private var loadSource: LoadSource = .server
-    /// The Mix card's breakdown and the Weekly card's measure: display
-    /// choices inside a card (§6.8), not sections of the screen.
-    @State private var mixByActivity = false
-    @State private var weeklyTRIMP = false
     /// Load Focus's label and share columns, at the reader's text size.
     @ScaledMetric(relativeTo: .subheadline) private var focusLabelWidth: CGFloat = 84
     @ScaledMetric(relativeTo: .subheadline) private var focusShareWidth: CGFloat = 48
 
     private enum LoadSource { case server, device }
-
-    private struct WeeklyLoadBar: Identifiable {
-        let id: String
-        let weekStart: Date
-        let trimp: Double
-        let sessions: Int
-    }
 
     private var weeklyLoadBars: [WeeklyLoadBar] {
         if let server = appState.serverWeeklyLoad, !server.isEmpty {
@@ -101,10 +90,9 @@ struct AnalyticsOverviewTab: View {
             await recomputePMC()
             applyPendingDetail()
         }
-        .navigationDestination(isPresented: $showPMC) {
-            PMCDetailView(entries: pmcEntries, onDevice: loadSource == .device)
-        }
+        .navigationDestination(item: $route) { detail($0) }
         .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
+        .onChange(of: summary?.totals.sessions) { applyPendingDetail() }
         .task(id: period) {
             await appState.loadIfStale("loadSummary-\(period.rawValue)") { await appState.loadLoadSummary(period) }
         }
@@ -215,18 +203,15 @@ struct AnalyticsOverviewTab: View {
 
     // MARK: - Training Load Focus (Garmin-style)
 
+    /// The last 28 days' heart-rate minutes in three bands, as shares; the
+    /// minutes and which zones each band is are `LoadFocusDetailView`'s.
     private var loadFocusCard: some View {
-        AnalyticsCard(header: "Load Focus · 28 days") {
+        AnalyticsDetailCard(header: "Load Focus · 28 days", hint: "Opens load focus") {
+            LoadFocusDetailView(focus: loadFocus)
+        } content: {
             VStack(spacing: 10) {
                 let total = loadFocus.total
-                // The heart-rate zones' colours (§3.5): base is Z1–2, threshold
-                // Z3–4, anaerobic Z5. They were system blue, orange and red.
-                let rows: [(label: String, minutes: Double, color: Color)] = [
-                    ("Base", loadFocus.baseMinutes, HRZoneStyle.color("z2")),
-                    ("Threshold", loadFocus.thresholdMinutes, HRZoneStyle.color("z4")),
-                    ("Anaerobic", loadFocus.anaerobicMinutes, HRZoneStyle.color("z5"))
-                ]
-                ForEach(rows, id: \.label) { row in
+                ForEach(LoadFocusBand.all(loadFocus)) { row in
                     HStack(spacing: 10) {
                         Text(row.label).font(.subheadline).lineLimit(1)
                             .frame(width: focusLabelWidth, alignment: .leading)
@@ -252,226 +237,40 @@ struct AnalyticsOverviewTab: View {
 
     // MARK: - Mix
 
-    /// The period's training split two ways — by modality (share of
-    /// minutes) or by activity (hours) — in one card. By Modality and By
-    /// Activity were two cards over the same minutes until 2026-10-17.
+    /// The period's minutes by modality, as a ring; by activity too, and the
+    /// minutes and hours behind each share, are `MixDetailView`'s. The card
+    /// had a Modality/Activity picker until 2026-10-18 — a summary card holds
+    /// no controls (§6.37).
     private var mixCard: some View {
-        AnalyticsCard(header: "Mix") {
-            VStack(alignment: .leading, spacing: 12) {
-                Picker("Mix", selection: $mixByActivity) {
-                    Text("Modality").tag(false)
-                    Text("Activity").tag(true)
-                }
-                .pickerStyle(.segmented)
-                if mixByActivity {
-                    if activities.isEmpty {
-                        Text("No activities in this period").font(.footnote).foregroundStyle(.secondary)
-                    } else {
-                        activityChart
-                    }
-                } else if modalities.isEmpty {
-                    Text("No modalities in this period").font(.footnote).foregroundStyle(.secondary)
-                } else {
-                    modalityDonut
-                }
+        AnalyticsDetailCard(header: "Mix", hint: "Opens the mix by modality and activity") {
+            MixDetailView(modalities: modalities, activities: activities, period: period)
+        } content: {
+            if modalities.isEmpty {
+                ActivityBars(entries: activities)
+            } else {
+                ModalityDonut(shares: modalities)
             }
         }
-    }
-
-    @ViewBuilder
-    private var modalityDonut: some View {
-        ZStack {
-            Chart(modalities) { share in
-                SectorMark(
-                    angle: .value("Pct", share.pct),
-                    innerRadius: .ratio(0.55),
-                    angularInset: 1.5
-                )
-                .foregroundStyle(share.color)
-                .cornerRadius(3)
-            }
-            if let top = modalities.first {
-                VStack(spacing: 2) {
-                    Text("\(top.pct)%").font(.title3).fontWeight(.bold).monospacedDigit()
-                    Text(top.label).font(.caption).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center).lineLimit(2)
-                }
-                // Inside the hole of the ring, however large the text.
-                .frame(maxWidth: 96)
-            }
-        }
-        .frame(height: 180)
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("By modality: " + modalities.map { "\($0.label) \($0.pct) percent" }.joined(separator: ", "))
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                // Every segment named: the ring draws them all, so the
-                // legend does too (colour is never the only label).
-                ForEach(modalities) { share in
-                    HStack(spacing: 4) {
-                        Circle().fill(share.color).frame(width: 8, height: 8)
-                        Text("\(share.label) \(share.pct)%")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .accessibilityHidden(true)
-    }
-
-    private var activityChart: some View {
-        Chart(activities) { entry in
-            BarMark(
-                x: .value("Hours", entry.hours),
-                y: .value("Activity", entry.name)
-            )
-            .foregroundStyle(entry.color)
-            .cornerRadius(4)
-            .annotation(position: .trailing, alignment: .leading) {
-                Text(String(format: "%.1fh", entry.hours))
-                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                    .fixedSize()
-            }
-        }
-        .chartXAxis(.hidden)
-        .chartYAxis {
-            AxisMarks(preset: .aligned) { value in
-                AxisValueLabel {
-                    if let s = value.as(String.self) {
-                        Text(s).font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .frame(height: CGFloat(activities.count) * 32 + 16)
     }
 
     // MARK: - Weekly
 
-    /// Twelve weeks as sessions a week or TRIMP a week, in one card —
-    /// Weekly Volume and Weekly TRIMP were two time series back to back.
-    /// "On device" applies to the TRIMP bars only, which come from their own
-    /// request (`serverWeeklyLoad`).
+    /// Twelve weeks of sessions a week; TRIMP a week and each week's numbers
+    /// are `WeeklyDetailView`'s. Weekly Volume and Weekly TRIMP were two
+    /// cards, then one with a picker, until 2026-10-18.
     private var weeklyCard: some View {
-        AnalyticsCard(header: "Weekly · 12 weeks") {
-            if weeklyTRIMP && (appState.serverWeeklyLoad ?? []).isEmpty { onDeviceMark }
+        AnalyticsDetailCard(header: "Weekly · 12 weeks", hint: "Opens sessions and TRIMP per week") {
+            WeeklyDetailView(consistency: consistency, bars: weeklyLoadBars,
+                             onDevice: (appState.serverWeeklyLoad ?? []).isEmpty)
         } content: {
-            VStack(alignment: .leading, spacing: 12) {
-                Picker("Weekly", selection: $weeklyTRIMP) {
-                    Text("Sessions").tag(false)
-                    Text("TRIMP").tag(true)
-                }
-                .pickerStyle(.segmented)
-                if weeklyTRIMP {
-                    if weeklyLoadBars.contains(where: { $0.trimp > 0 }) {
-                        trimpChart
-                    } else {
-                        Text("No heart-rate load in these weeks").font(.footnote).foregroundStyle(.secondary)
-                    }
-                } else {
-                    sessionsChart
-                }
-            }
+            WeeklySessionsChart(entries: consistency)
         }
-    }
-
-    private var sessionsChart: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Chart(consistency) { entry in
-                BarMark(
-                    x: .value("Week", entry.weekStart, unit: .weekOfYear),
-                    y: .value("Sessions", entry.sessionCount)
-                )
-                .foregroundStyle(consistencyColor(entry.sessionCount))
-                .cornerRadius(4)
-            }
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .month, count: 1)) { value in
-                    AxisValueLabel {
-                        if let d = value.as(Date.self) {
-                            Text(d, format: .dateTime.month(.abbreviated))
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisValueLabel {
-                        if let v = value.as(Int.self) {
-                            Text("\(v)").font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .frame(height: 130)
-            HStack(spacing: 12) {
-                legendDot(color: .gray.opacity(0.3), label: "0")
-                legendDot(color: .green,      label: "1–2")
-                legendDot(color: .blue,       label: "3–4")
-                legendDot(color: .orange,     label: "5–6")
-                legendDot(color: .red,        label: "7+")
-            }
-            .font(.caption2)
-            .accessibilityHidden(true)
-        }
-    }
-
-    private func legendDot(color: Color, label: String) -> some View {
-        HStack(spacing: 3) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(label).foregroundStyle(.secondary)
-        }
-    }
-
-    private func consistencyColor(_ count: Int) -> Color {
-        switch count {
-        case 0:       return Color.gray.opacity(0.25)
-        case 1...2:   return .green
-        case 3...4:   return .blue
-        case 5...6:   return .orange
-        default:      return .red
-        }
-    }
-
-    private var trimpChart: some View {
-        Chart(weeklyLoadBars) { bar in
-            BarMark(
-                x: .value("Week", bar.weekStart, unit: .weekOfYear),
-                y: .value("TRIMP", bar.trimp)
-            )
-            .foregroundStyle(Color.orange)
-            .cornerRadius(4)
-        }
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .month, count: 1)) { value in
-                AxisValueLabel {
-                    if let d = value.as(Date.self) {
-                        Text(d, format: .dateTime.month(.abbreviated))
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text("\(Int(v))").font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .frame(height: 130)
     }
 
     /// Shown only when a number was computed on this phone because the
     /// server could not answer; the server's numbers carry no mark.
     private var onDeviceMark: some View {
-        Label("On device", systemImage: "iphone")
-            .font(.caption).foregroundStyle(.secondary)
-            .accessibilityLabel("Computed on this phone; the server could not be reached")
+        OnDeviceMark()
     }
 
     // MARK: - PMC
@@ -500,10 +299,27 @@ struct AnalyticsOverviewTab: View {
         }
     }
 
-    /// Push what a deep link asked for once the chart has its days.
+    @ViewBuilder
+    private func detail(_ detail: AppRouter.AnalyticsDetail) -> some View {
+        switch detail {
+        case .pmc: PMCDetailView(entries: pmcEntries, onDevice: loadSource == .device)
+        case .loadFocus: LoadFocusDetailView(focus: loadFocus)
+        case .mix: MixDetailView(modalities: modalities, activities: activities, period: period)
+        case .weekly:
+            WeeklyDetailView(consistency: consistency, bars: weeklyLoadBars,
+                             onDevice: (appState.serverWeeklyLoad ?? []).isEmpty)
+        default: EmptyView()
+        }
+    }
+
+    /// Push what a deep link asked for once there is something to show.
     private func applyPendingDetail() {
-        guard router.pendingAnalyticsDetail == .pmc, !pmcEntries.isEmpty else { return }
-        showPMC = true
+        guard let pending = router.pendingAnalyticsDetail, pending.section == .load else { return }
+        switch pending {
+        case .pmc: guard !pmcEntries.isEmpty else { return }
+        default: guard summary != nil || !appState.importedWorkouts.isEmpty else { return }
+        }
+        route = pending
         router.clearPendingAnalyticsDetail()
     }
 

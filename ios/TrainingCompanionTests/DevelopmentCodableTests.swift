@@ -39,7 +39,9 @@ final class DevelopmentCodableTests: XCTestCase {
       ],
       "load": {"weekly": [{"week": "2026-W37", "trimp": 120.5, "sessions": 3, "blockId": 6},
                           {"week": "2026-W40", "trimp": 40, "sessions": 1, "blockId": null}],
-               "pmc": []},
+               "pmc": [],
+               "byBlock": [{"blockId": 6, "weeks": 4, "trimp": 120.5, "sessions": 3, "meanWeekly": 30, "peakWeekly": 120.5},
+                           {"blockId": 8, "weeks": 2, "trimp": 0, "sessions": 0, "meanWeekly": 0, "peakWeekly": null}]},
       "benchmarks": [
         {"benchmarkId": "back_squat_bw_ratio", "name": "Back Squat (bodyweight ratio)", "unit": "×BW", "lowerIsBetter": false,
          "history": [{"date": "2026-09-08", "value": 0.9, "level": null, "levelIndex": -1},
@@ -59,6 +61,8 @@ final class DevelopmentCodableTests: XCTestCase {
         XCTAssertEqual(doc.windowTo, "2026-10-01")
 
         XCTAssertEqual(doc.blocks.map(\.id), [6, 8], "oldest first, as the server orders them")
+        XCTAssertEqual(doc.blockLoad.map(\.meanWeekly), [30, 0], "each block's average a week")
+        XCTAssertNil(doc.blockLoad[1].peakWeekly, "a block with no workout has no peak week")
         XCTAssertEqual(doc.blocks[1].name, "Wildman + SS", "named by its methodologies")
         XCTAssertNil(doc.blocks[1].completionPct)
         XCTAssertEqual(doc.blocks[0].completionPct, 73)
@@ -102,6 +106,7 @@ final class DevelopmentCodableTests: XCTestCase {
          "blocks": [], "lifts": [], "currencies": [], "load": {"weekly": [], "pmc": []}, "benchmarks": []}
         """)
         XCTAssertFalse(empty.hasHistory)
+        XCTAssertTrue(empty.blockLoad.isEmpty, "an older server sends no byBlock")
         XCTAssertEqual(empty.color(of: nil), Color.secondary)
 
         // A field the engine adds later, a section that fails, a block with only the essentials.

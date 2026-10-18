@@ -14,6 +14,8 @@ struct AnalyticsDevelopmentTab: View {
 
     /// The lift or currency on the chart; nil means the first one.
     @State private var selectedSeries: String? = nil
+    /// A detail pushed from outside (a deep link); the cards push their own.
+    @State private var route: AppRouter.AnalyticsDetail?
 
     var body: some View {
         Group {
@@ -39,6 +41,20 @@ struct AnalyticsDevelopmentTab: View {
         .refreshable {
             await AppRefresh.perform { await appState.loadDevelopmentAnalytics(fresh: true) }
         }
+        .navigationDestination(item: $route) { detail in
+            if detail == .blockLoad, let doc = appState.developmentAnalytics { BlockLoadDetailView(doc: doc) }
+        }
+        .task { applyPendingDetail() }
+        .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
+        .onChange(of: appState.developmentAnalytics?.blocks.count) { applyPendingDetail() }
+    }
+
+    /// Push what a deep link asked for once the document has loaded.
+    private func applyPendingDetail() {
+        guard let pending = router.pendingAnalyticsDetail, pending.section == .blocks,
+              let doc = appState.developmentAnalytics else { return }
+        if pending == .blockLoad, !doc.weeklyLoad.isEmpty { route = pending }
+        router.clearPendingAnalyticsDetail()
     }
 
     // MARK: - Layout
@@ -221,17 +237,26 @@ private struct SeriesCard: View {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
                     if options.count > 1 {
-                        // A display choice inside the card, so a menu (§6.8).
-                        LabeledContent {
+                        // A display choice inside the card, so a menu (§6.8)
+                        // — and the menu is the title: a name beside a menu
+                        // showing "Back Squat · 3 blocks" said it twice and
+                        // wrapped at 393 pt (2026-10-18).
+                        Menu {
                             Picker("Series", selection: Binding(get: { current?.id }, set: { id in
                                 withAnimation(AppAnimation.springStandard) { selected = id; touched = nil }
                             })) {
                                 ForEach(options) { o in Text(o.label).tag(Optional(o.id)) }
                             }
-                            .pickerStyle(.menu)
                         } label: {
-                            Text(option.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                            HStack(spacing: 4) {
+                                Text(option.name).font(.subheadline).fontWeight(.semibold).lineLimit(1)
+                                Image(systemName: "chevron.up.chevron.down").font(.caption).fontWeight(.semibold)
+                            }
+                            .frame(minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                         }
+                        .accessibilityLabel("Series, \(option.name)")
+                        .accessibilityHint("Picks the lift or measure on the chart")
                     } else {
                         Text(option.name).font(.subheadline).fontWeight(.semibold)
                     }
@@ -406,8 +431,25 @@ private struct TrendText: View {
 
 // MARK: - Load across blocks
 
+/// Weekly TRIMP across the whole history, each bar in its block's colour;
+/// each block's weeks, average, peak and total are `BlockLoadDetailView`'s.
 private struct LoadByBlockCard: View {
     let doc: DevelopmentAnalytics
+
+    var body: some View {
+        AnalyticsDetailCard(header: "TRIMP per week by block", hint: "Opens load by block") {
+            BlockLoadDetailView(doc: doc)
+        } content: {
+            BlockLoadChart(doc: doc)
+        }
+    }
+}
+
+/// The weekly TRIMP bars in their blocks' colours, and the blocks named
+/// beneath (colour is never the only label).
+struct BlockLoadChart: View {
+    let doc: DevelopmentAnalytics
+    var height: CGFloat = 130
 
     private struct Bar: Identifiable {
         let id: String
@@ -423,23 +465,14 @@ private struct LoadByBlockCard: View {
     }
 
     var body: some View {
-        AnalyticsCard(header: "TRIMP per week by block") {
+        VStack(alignment: .leading, spacing: 8) {
             Chart(bars) { bar in
                 BarMark(x: .value("Week", bar.weekStart, unit: .weekOfYear),
                         y: .value("TRIMP", bar.trimp))
                     .foregroundStyle(doc.color(of: bar.blockId).opacity(bar.blockId == nil ? 0.4 : 0.85))
                     .cornerRadius(3)
             }
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .month, count: 1)) { value in
-                    AxisValueLabel {
-                        if let d = value.as(Date.self) {
-                            Text(d, format: .dateTime.month(.abbreviated))
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
+            .chartXAxis { WeeklyAxis.months }
             .chartYAxis {
                 AxisMarks(position: .leading) { value in
                     AxisValueLabel {
@@ -449,19 +482,91 @@ private struct LoadByBlockCard: View {
                     }
                 }
             }
-            .frame(height: 130)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(doc.blocks) { block in
-                        HStack(spacing: 4) {
-                            Circle().fill(doc.color(of: block.id)).frame(width: 8, height: 8)
-                            Text(block.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                        }
+            .frame(height: height)
+            .accessibilityLabel("TRIMP in each of \(bars.count) weeks, by block")
+            LegendFlow(spacing: 12, lineSpacing: 4) {
+                ForEach(doc.blocks) { block in
+                    HStack(spacing: 4) {
+                        Circle().fill(doc.color(of: block.id)).frame(width: 8, height: 8)
+                        Text(block.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
             }
             .accessibilityHidden(true)
         }
+    }
+}
+
+/// Load by block in full (design-system §6.37): the chart, then each block
+/// with its average TRIMP a week, its peak week, its total and its workouts,
+/// newest first — and what the numbers are.
+struct BlockLoadDetailView: View {
+    let doc: DevelopmentAnalytics
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        List {
+            Section {
+                BlockLoadChart(doc: doc, height: 200).padding(.vertical, 6)
+            }
+            if !doc.blockLoad.isEmpty {
+                Section("Blocks") {
+                    ForEach(doc.blockLoad.reversed()) { load in
+                        if let block = doc.block(load.blockId) {
+                            BlockLoadRow(block: block, load: load, color: doc.color(of: block.id))
+                        }
+                    }
+                }
+            }
+            AboutSection(about: AboutText(terms: ["block_load", "trimp"], from: appState.analyticsTerms))
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Load by block")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await appState.loadAnalyticsTermsIfNeeded(["block_load", "trimp"]) }
+    }
+}
+
+/// One block's load: its name and weeks, its average a week; its peak week,
+/// total and workouts beneath.
+private struct BlockLoadRow: View {
+    let block: DevelopmentAnalytics.Block
+    let load: DevelopmentAnalytics.BlockLoad
+    let color: Color
+
+    /// "6 wk · peak 273 · 1175 in all · 16 workouts".
+    private var facts: String {
+        var parts = ["\(load.weeks) wk"]
+        if let peak = load.peakWeekly { parts.append("peak \(Int(peak.rounded()))") }
+        parts.append("\(Int(load.trimp.rounded())) in all")
+        parts.append("\(load.sessions) workouts")
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Circle().fill(color).frame(width: 10, height: 10)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(block.name)
+                // Words on a detail screen (§6.37): a row of symbols wrapped
+                // inside its numbers at this width.
+                Text(facts)
+                    .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            if let mean = load.meanWeekly {
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(Int(mean.rounded()))").font(.title3).fontWeight(.semibold).monospacedDigit()
+                    Text("a week").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(block.name): \(load.weeks) weeks"
+                            + (load.meanWeekly.map { ", \(Int($0.rounded())) TRIMP a week" } ?? "")
+                            + (load.peakWeekly.map { ", peak week \(Int($0.rounded()))" } ?? "")
+                            + ", \(Int(load.trimp.rounded())) in all, \(load.sessions) workouts")
     }
 }
 

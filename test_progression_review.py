@@ -132,6 +132,16 @@ def test_status_names_what_is_stalled():
     assert out['score_status']['id'] == 'mixed'
     assert out['score_status']['reason'] == '1 stalled (Two-hand swing), 1 on track; 2 of 4 sessions due so far are done.'
     assert [b['min'] for b in out['score_status']['bands']] == [70, 45, 0]
+    assert out['score_status']['counts'] == [{'status': 'stalled', 'count': 1, 'label': 'stalled'},
+                                             {'status': 'on_track', 'count': 1, 'label': 'on track'}]
+
+
+def test_status_says_how_many_it_did_not_name():
+    out = rv.explain({'compliance_pct': 90, 'exercise_findings': [
+        _finding('a', 'stalled', 'Press'), _finding('b', 'stalled', 'Bench'), _finding('c', 'stalled', 'Deadlift'),
+        _finding('d', 'behind', 'Squat')]}, _doc(4, 4, weeks=2))
+    assert out['score_status']['reason'].startswith('3 stalled (Press, Bench and 1 more), 1 behind (Squat);')
+    assert [(c['status'], c['count']) for c in out['score_status']['counts']] == [('stalled', 3), ('behind', 1)]
 
 
 def test_nothing_due_has_no_score():
