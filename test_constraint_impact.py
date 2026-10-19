@@ -224,15 +224,103 @@ def test_route():
 
     infeasible = client.post('/api/dev/constraint-impact', json={
         'philosophy_id': 'gym_jones', 'num_weeks': 1, 'constraints': {**athlete, 'days_per_week': 1}}).get_json()
-    check('an infeasible request says so', infeasible.get('feasible') is False and infeasible.get('validation'))
+    check('an infeasible schedule is refused, and the framework\'s days would generate',
+          infeasible.get('feasible') is False and 'days/week' in infeasible['refused']['detail']
+          and [u['cause'] for u in infeasible['unblocked_by']] == ['schedule']
+          and not infeasible['reference_generates'], infeasible)
     missing = client.post('/api/dev/constraint-impact', json={'constraints': athlete})
     check('generate\'s own errors pass through', missing.status_code == 400)
+
+
+def test_contract_rules():
+    print('a training contract: proficiency, and what unblocks a refusal')
+    goal = {'training_contract': {
+        'modules': [{'requires_mastery': ['kb_clean', 'kb_jerk']}, {'requires_mastery': ['kb_press']}],
+        'requires_kettlebell_pair': True,
+        'level_seeds': {'intermediate': ['kb_press']}}}
+    check('every movement a module needs confirmed',
+          ci.contract_requirements(goal) == {'mastered_exercises': ['kb_clean', 'kb_jerk', 'kb_press'],
+                                             'kettlebell_count': 2})
+    check('less what the level already seeds',
+          ci.contract_requirements(goal, 'intermediate')['mastered_exercises'] == ['kb_clean', 'kb_jerk'])
+    check('no contract, nothing to confirm', ci.contract_requirements({}) == {})
+
+    athlete = {'equipment': ['kettlebell'], 'injury_flags': [], 'training_level': 'intermediate',
+               'mastered_exercises': ['kb_clean'], 'kettlebell_weights_kg': [16]}
+    lib = {'exercises': EXERCISES, 'archetypes': []}
+    ref = ci.reference_constraints(athlete, lib, None, None, ci.contract_requirements(goal, 'intermediate'))
+    check('the reference confirms what the contract asks', ref['mastered_exercises'] == ['kb_clean', 'kb_jerk']
+          and ref['kettlebell_count'] == 2 and 'kettlebell_weights_kg' not in ref, ref)
+    runs = ci.relaxations(athlete, ref)
+    check('proficiency is a constraint of its own', runs['proficiency']['mastered_exercises'] == ['kb_clean', 'kb_jerk']
+          and runs['proficiency']['kettlebell_count'] == 2 and runs['proficiency']['equipment'] == ['kettlebell'])
+    check('a bell inventory is equipment', 'kettlebell_weights_kg' not in runs['equipment'])
+    names = {**EXERCISES, 'kb_jerk': {'name': 'Jerk'}}
+    lifts = ci.describe_lifts(athlete, {**runs, 'schedule': {**athlete, 'days_per_week': 3, 'session_time_minutes': 60}},
+                              names, FLAGS)
+    check('each lift in words', lifts == {
+        'equipment': 'add barbell, rack; any bell weight', 'proficiency': 'confirm mastery of Jerk; 2 matching bells',
+        'schedule': '3 days, 60 min'}, lifts)
+    check('the schedule is tried only at the framework\'s ideal',
+          ci.schedule_probe({'days_per_week': 2, 'session_time_minutes': 90},
+                            {'expectations': {'ideal_days_per_week': 3, 'ideal_session_minutes': 60}})
+          == {'days_per_week': 3, 'session_time_minutes': 90}
+          and ci.schedule_probe({'days_per_week': 3, 'session_time_minutes': 60},
+                                {'expectations': {'ideal_days_per_week': 3}}) is None)
+
+    refused = {'detail': 'confirm mastery', 'validation': {'errors': []}}
+    one = ci.explain_refusal(refused, {'reference': True, 'proficiency': True, 'level': False}, lifts, ref)
+    check('the one constraint that unblocks it', one['unblocked_by'] == [
+        {'cause': 'proficiency', 'text': 'confirm mastery of Jerk; 2 matching bells'}] and one['feasible'] is False)
+    both = ci.explain_refusal(refused, {'reference': True, 'proficiency': False, 'equipment': False}, lifts, ref)
+    check('none alone, all together: combined', both['unblocked_by'] == [
+        {'cause': 'combined', 'text': 'add barbell, rack; any bell weight; confirm mastery of Jerk; 2 matching bells'}],
+        both['unblocked_by'])
+    check('a reference that cannot run either says so',
+          ci.explain_refusal(refused, {'reference': False}, {}, ref)['unblocked_by'] == [])
+
+    athlete_ex = ci._Explainer(athlete, ref, {'kb_jerk': {'id': 'kb_jerk', 'name': 'Jerk', 'equipment': ['kettlebell']}},
+                               {}, FLAGS, None)
+    check('an exercise not yet confirmed says so',
+          athlete_ex.blockers({'exercise': {'id': 'kb_jerk', 'name': 'Jerk'}}) == [
+              {'cause': 'proficiency', 'needs': [], 'text': 'Jerk needs confirmed mastery'}])
+
+
+def test_contract_route():
+    print('the route on Wildman\'s training contract')
+    import api
+    client = api.app.test_client()
+    athlete = {'equipment': ['kettlebell', 'open_space'], 'days_per_week': 4, 'session_time_minutes': 60,
+               'training_level': 'intermediate', 'injury_flags': [], 'avoid_movements': [],
+               'periodization_week': 1, 'fatigue_state': 'normal'}
+
+    def impact(track, **extra):
+        return client.post('/api/dev/constraint-impact', json={
+            'philosophy_id': 'wildman_kettlebell', 'track_id': track, 'num_weeks': 2,
+            'constraints': {**athlete, **extra}}).get_json()
+
+    pent = impact('pentathlon')
+    check('Pentathlon without the events confirmed is refused',
+          pent['feasible'] is False and 'confirm mastery' in pent['refused']['detail'])
+    check('confirming them alone unblocks it', [u['cause'] for u in pent['unblocked_by']] == ['proficiency']
+          and 'Kettlebell Jerk (Single-Arm)' in pent['unblocked_by'][0]['text'], pent['unblocked_by'])
+    double = impact('double_bell_practice', training_level='novice')
+    check('a novice with one bell needs the level and the pair together',
+          [u['cause'] for u in double['unblocked_by']] == ['combined']
+          and 'at intermediate' in double['unblocked_by'][0]['text']
+          and '2 matching bells' in double['unblocked_by'][0]['text'], double['unblocked_by'])
+    knee = impact('general_practice', injury_flags=['knee_meniscus_post_op'])
+    check('an essential movement an injury rules out refuses, and names the flag',
+          [u['cause'] for u in knee['unblocked_by']] == ['injury'], knee.get('unblocked_by'))
+    gp = impact('general_practice')
+    check('what the level seeds is not asked for', gp['feasible'] and 'proficiency' not in gp['lifted']
+          and gp['sessions']['changed'] == 0, (gp.get('lifted'), gp.get('sessions')))
 
 
 def main() -> int:
     for fn in (test_runs, test_slot_emptied_by_equipment, test_archetype_by_level_and_equipment,
                test_combined_and_alternatives, test_order_and_added_sessions,
-               test_knock_on_and_level_locked, test_route):
+               test_knock_on_and_level_locked, test_route, test_contract_rules, test_contract_route):
         fn()
     if FAILURES:
         print(f'{len(FAILURES)} failed')

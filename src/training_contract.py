@@ -545,15 +545,49 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             raise ContractError('The required test could not be placed in its module.')
     verify(program, contract, constraints)
     if include_trace:
-        names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        program['generation_trace'] = {'primary_sources': [contract['package']], 'philosophy_mode': 'training_contract',
-            'weeks': [{'week_number': w['week_number'], 'week_in_phase': w['week_in_phase'], 'phase': w['phase'],
-                       'is_deload': w['is_deload'], 'scheduler': {'contract': program['training_contract']['id']},
-                       'sessions': {names[d - 1]: [{'modality': s['modality'], 'archetype': {'selected_id': s['archetype']['id']},
-                           'slots': [], 'progression': [{'exercise_id': (ea.get('exercise') or {}).get('id'), 'slot_role': ea['slot_role'],
-                               'model': ea['load']['progression_model'], 'output': ea['load']} for ea in s['exercises']]} for s in ss]
-                           for d, ss in w['schedule'].items()}} for w in program['weeks']]}
+        program['generation_trace'] = _trace(program, contract, constraints)
     return program
+
+
+def _trace(program: dict, contract: dict, constraints: dict) -> dict:
+    """The generation trace in the shape the selector's has (the Dev Lab reads
+    one shape; test_devlab_trace.py keeps it): the framework is the phase's,
+    nothing was chosen among candidates, and every slot and progression entry
+    names the module that placed it."""
+    names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    contract_id = program['training_contract']['id']
+    level = constraints.get('training_level', 'intermediate')
+
+    def session(s: dict, w: dict) -> dict:
+        exercises = s['exercises']
+        return {
+            'modality': s['modality'],
+            'archetype': {'selected_id': s['archetype']['id'], 'filter_counts': {}, 'candidates': []},
+            'modules': [m['id'] for m in s.get('modules') or []],
+            'slots': [{'slot_index': i, 'slot_role': ea['slot_role'], 'slot_type': ea.get('slot_type'),
+                       'meta': bool(ea.get('meta')), 'movement_pattern': None,
+                       'selected_id': (ea.get('exercise') or {}).get('id'),
+                       'injury_blocked': bool(ea.get('injury_skip')), 'filter_counts': {}, 'candidates': [],
+                       'module_id': (ea.get('load') or {}).get('module_id')}
+                      for i, ea in enumerate(exercises)],
+            'progression': [{'exercise_id': (ea.get('exercise') or {}).get('id'),
+                             'exercise_name': (ea.get('exercise') or {}).get('name'),
+                             'slot_role': ea['slot_role'], 'slot_type': ea.get('slot_type'),
+                             'model': ea['load']['progression_model'], 'week': w['week_number'],
+                             'phase': w['phase'], 'level': level, 'is_deload': w['is_deload'],
+                             'output': ea['load']}
+                            for ea in exercises if ea.get('load', {}).get('progression_model')],
+        }
+
+    return {'primary_sources': [contract['package']], 'philosophy_mode': 'training_contract',
+            'weeks': [{'week_number': w['week_number'], 'week_in_phase': w['week_in_phase'],
+                       'phase': w['phase'], 'is_deload': w['is_deload'],
+                       'scheduler': {'contract': contract_id, 'is_deload': w['is_deload'],
+                                     'framework_selection': {'selected_id': w['framework'],
+                                                             'selection_reason': 'training_contract'}},
+                       'sessions': {names[d - 1]: [session(s, w) for s in ss]
+                                    for d, ss in w['schedule'].items()}}
+                      for w in program['weeks']]}
 
 
 def verify(program: dict, contract: dict, constraints: dict) -> None:

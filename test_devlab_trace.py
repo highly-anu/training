@@ -48,6 +48,13 @@ SCENARIOS: dict[str, dict] = {
                         'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'open_space'],
                         'injury_flags': ['shoulder_impingement', 'lumbar_disc']},
     },
+    # A training contract places fixed modules (src/training_contract.py): its
+    # trace has no framework selection, allocation or candidates.
+    'wildman_general_practice_contract': {
+        'philosophy_id': 'wildman_kettlebell', 'track_id': 'general_practice', 'num_weeks': 1,
+        'constraints': {**_ATHLETE, 'days_per_week': 4, 'training_level': 'intermediate',
+                        'equipment': ['kettlebell', 'open_space']},
+    },
 }
 
 # Maps keyed by data (day names, modality ids, a progression model's outputs):

@@ -133,7 +133,7 @@ All prefixed `/api/`:
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
-| POST | `/dev/constraint-impact` | Dev Lab ▸ Impact: generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level) and once per constraint lifted alone; every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier change moved the rotation, and the equipment that would restore most (`src/constraint_impact.py`). ≤ 12 weeks, up to five generations; local dev or `AUTHORING_ENABLED` only |
+| POST | `/dev/constraint-impact` | Dev Lab ▸ Impact: generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair confirmed) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier change moved the rotation, and the equipment that would restore most (`src/constraint_impact.py`). A refused request (422) answers `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`. ≤ 12 weeks, up to six generations; local dev or `AUTHORING_ENABLED` only |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
 | GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
@@ -1086,7 +1086,10 @@ The Dev Lab's panels render a recorded `generate?trace=1` answer
 `components/devlab/DevLabPanels.test.tsx`; `test_devlab_trace.py` fails when the
 server's trace keys drift from it. Re-record, then run the panels' test: the
 Schedule step once crashed for every program because tracks changed the trace
-under it.
+under it. A training contract's trace (`training_contract._trace`) has the same
+skeleton — framework selection `training_contract`, empty candidate lists, each
+slot's `module_id` — and the Schedule step shows its placed modules instead of
+an allocation.
 
 A fix that clears fidelity findings ends with `tools/check_fidelity.py --update-baseline
 --report docs/fidelity-report.md`; the baseline only shrinks. A new finding fails the

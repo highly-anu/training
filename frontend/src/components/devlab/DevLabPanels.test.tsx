@@ -57,8 +57,12 @@ describe.each(scenarios)('%s', (_name, program) => {
     )
   })
 
-  it("says the week's phase named the framework", () => {
+  it('says what placed each week', () => {
     mount(<SchedulerPanel weeks={weeks} />)
-    expect(screen.getAllByText("Named by the week's phase:")).toHaveLength(weeks.length)
+    if (program.generation_trace!.philosophy_mode === 'training_contract') {
+      expect(screen.getAllByText(/Placed by the training contract/)).toHaveLength(weeks.length)
+    } else {
+      expect(screen.getAllByText("Named by the week's phase:")).toHaveLength(weeks.length)
+    }
   })
 })

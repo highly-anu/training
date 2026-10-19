@@ -14,6 +14,13 @@ Starting Strength run with no equipment warned "will use equipment-limited
 scaling" while every slot came out empty, and an intermediate on the novice
 phase ran HLM and 5×5 instead of the 3×5 sessions with nothing to show it.
 
+A training contract (src/training_contract.py) refuses what it cannot run as
+written instead of degrading it, and asks the athlete to confirm mastery or a
+pair of matching bells; that is the fourth constraint, `proficiency`. A
+refused request is answered with the single constraint that, lifted alone,
+lets it generate (`explain_refusal`), tried alongside the framework's ideal
+days and minutes.
+
 Generation is deterministic, so the runs differ only by what was lifted —
 but one change moves the exercise rotation (recency) for every week after
 it. A change whose reference session or exercise is itself open to the
@@ -28,7 +35,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-DIMENSIONS = ('equipment', 'injury', 'level')
+DIMENSIONS = ('equipment', 'injury', 'level', 'proficiency')
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
 DAY_ORDER = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
 _NOT_EQUIPMENT = {'none', 'open_space'}
@@ -49,16 +56,33 @@ def reference_level(level: str, written_for: list | None) -> str:
     return min(written_for, key=distance)
 
 
+def contract_requirements(goal: dict, level: str | None = None) -> dict:
+    """What a training contract asks an athlete at `level` to confirm: every
+    movement a module requires mastery of that the contract does not already
+    seed for the level (General Practice counts an intermediate's clean and
+    press as known), and a pair of matching bells."""
+    contract = (goal or {}).get('training_contract')
+    if not contract:
+        return {}
+    seeded = set((contract.get('level_seeds') or {}).get(level) or [])
+    out: dict = {'mastered_exercises': sorted({e for m in contract.get('modules') or []
+                                               for e in m.get('requires_mastery') or []} - seeded)}
+    if contract.get('requires_kettlebell_pair'):
+        out['kettlebell_count'] = 2
+    return out
+
+
 def reference_constraints(constraints: dict, lib: dict, framework: dict | None,
-                          override: dict | None = None) -> dict:
+                          override: dict | None = None, requirements: dict | None = None) -> dict:
     """The athlete's constraints with nothing in the way.
 
     Equipment is everything the allowed packages' exercises and archetypes ask
-    for, on top of what the athlete has; days, minutes, fatigue, track and
-    start phase stay the athlete's, since they decide the schedule rather than
-    what fills it. `override` may pin `equipment` or `training_level`.
+    for, on top of what the athlete has, with no bell inventory to pick from;
+    a contract's `requirements` are confirmed. Days, minutes, fatigue, track
+    and start phase stay the athlete's, since they decide the schedule rather
+    than what fills it. `override` may pin `equipment` or `training_level`.
     """
-    override = override or {}
+    override, requirements = override or {}, requirements or {}
     equipment = set(constraints.get('equipment') or [])
     for ex in (lib.get('exercises') or {}).values():
         equipment.update(ex.get('equipment') or [])
@@ -66,26 +90,110 @@ def reference_constraints(constraints: dict, lib: dict, framework: dict | None,
         equipment.update(arch.get('required_equipment') or [])
     equipment.discard('none')
     written_for = ((framework or {}).get('applicable_when') or {}).get('training_level')
-    return {
+    out = {
         **constraints,
         'equipment': sorted(override.get('equipment') or equipment),
         'injury_flags': [],
         'training_level': override.get('training_level')
         or reference_level(constraints.get('training_level', 'intermediate'), written_for),
     }
+    out.pop('kettlebell_weights_kg', None)
+    if requirements.get('mastered_exercises'):
+        out['mastered_exercises'] = sorted(set(constraints.get('mastered_exercises') or [])
+                                           | set(requirements['mastered_exercises']))
+    if requirements.get('kettlebell_count'):
+        out['kettlebell_count'] = max(constraints.get('kettlebell_count') or 1, requirements['kettlebell_count'])
+    return out
+
+
+def _proficiency_short(constraints: dict, reference: dict) -> bool:
+    return bool(set(reference.get('mastered_exercises') or []) - set(constraints.get('mastered_exercises') or [])
+                or (reference.get('kettlebell_count') or 1) > (constraints.get('kettlebell_count') or 1))
 
 
 def relaxations(constraints: dict, reference: dict) -> dict[str, dict]:
     """One run per constraint the athlete has: their constraints with only that
     one as the reference has it. A constraint that changes nothing is not run."""
     out: dict[str, dict] = {}
-    if set(reference['equipment']) - set(constraints.get('equipment') or []):
-        out['equipment'] = {**constraints, 'equipment': reference['equipment']}
+    if (set(reference['equipment']) - set(constraints.get('equipment') or [])
+            or constraints.get('kettlebell_weights_kg')):
+        lifted = {**constraints, 'equipment': reference['equipment']}
+        lifted.pop('kettlebell_weights_kg', None)
+        out['equipment'] = lifted
     if constraints.get('injury_flags'):
         out['injury'] = {**constraints, 'injury_flags': []}
     if constraints.get('training_level') != reference['training_level']:
         out['level'] = {**constraints, 'training_level': reference['training_level']}
+    if _proficiency_short(constraints, reference):
+        out['proficiency'] = {**constraints,
+                              **{k: reference[k] for k in ('mastered_exercises', 'kettlebell_count') if k in reference}}
     return out
+
+
+def schedule_probe(constraints: dict, framework: dict | None) -> dict | None:
+    """The athlete's constraints at the framework's ideal days and minutes, if
+    they ask for fewer — tried only for a refused request."""
+    exp = (framework or {}).get('expectations') or {}
+    days = max(constraints.get('days_per_week') or 0, exp.get('ideal_days_per_week') or 0)
+    minutes = max(constraints.get('session_time_minutes') or 0, exp.get('ideal_session_minutes') or 0)
+    if (days, minutes) == (constraints.get('days_per_week'), constraints.get('session_time_minutes')):
+        return None
+    return {**constraints, 'days_per_week': days, 'session_time_minutes': minutes}
+
+
+def describe_lifts(constraints: dict, runs: dict[str, dict], exercises: dict, injury_flags: dict) -> dict[str, str]:
+    """What each run changed, in words: "add barbell, rack", "confirm mastery
+    of Jerk", "4 days, 60 min"."""
+    def name(eid):
+        return (exercises.get(eid) or {}).get('name', eid)
+    out = {}
+    for dim, c in runs.items():
+        if dim == 'equipment':
+            added = sorted(set(c['equipment']) - set(constraints.get('equipment') or []) - _NOT_EQUIPMENT)
+            parts = [f"add {', '.join(added)}"] if added else []
+            if constraints.get('kettlebell_weights_kg'):
+                parts.append('any bell weight')
+            out[dim] = '; '.join(parts) or 'all equipment'
+        elif dim == 'injury':
+            out[dim] = 'without ' + ', '.join((injury_flags.get(f) or {}).get('name', f)
+                                              for f in constraints.get('injury_flags') or [])
+        elif dim == 'level':
+            out[dim] = f"at {c['training_level']}"
+        elif dim == 'proficiency':
+            missing = sorted(set(c.get('mastered_exercises') or []) - set(constraints.get('mastered_exercises') or []))
+            parts = [f"confirm mastery of {', '.join(name(e) for e in missing)}"] if missing else []
+            if (c.get('kettlebell_count') or 1) > (constraints.get('kettlebell_count') or 1):
+                parts.append(f"{c['kettlebell_count']} matching bells")
+            out[dim] = '; '.join(parts)
+        elif dim == 'schedule':
+            out[dim] = f"{c['days_per_week']} days, {c['session_time_minutes']} min"
+    return out
+
+
+def explain_refusal(refused: dict, generated: dict[str, bool], lifts: dict[str, str],
+                    reference: dict) -> dict:
+    """A request the generator refused, and what alone would let it generate.
+
+    `generated` says, per run tried ('reference', each dimension, 'schedule'),
+    whether it produced weeks.
+    """
+    unblocked = [{'cause': dim, 'text': lifts.get(dim, dim)}
+                 for dim in (*DIMENSIONS, 'schedule') if generated.get(dim)]
+    if not unblocked and generated.get('reference'):
+        # A novice with one bell on the double-bell track needs the level and
+        # the pair: no one of them alone, all of them together.
+        unblocked = [{'cause': 'combined',
+                      'text': '; '.join(lifts[d] for d in DIMENSIONS if d in lifts)}]
+    return {
+        'feasible': False,
+        'refused': {'detail': refused.get('detail'), 'validation': refused.get('validation')},
+        'reference': {k: reference.get(k) for k in ('equipment', 'training_level', 'injury_flags',
+                                                     'mastered_exercises', 'kettlebell_count') if k in reference},
+        'lifted': [dim for dim in (*DIMENSIONS, 'schedule') if dim in generated],
+        'lifts': lifts,
+        'unblocked_by': unblocked,
+        'reference_generates': bool(generated.get('reference')),
+    }
 
 
 # ── Lining sessions up ────────────────────────────────────────────────────────
@@ -229,6 +337,9 @@ class _Explainer:
         hit = _blocking_flags(ex, self.c.get('injury_flags') or [], self.flags)
         if hit:
             out.append({'cause': 'injury', 'text': f"{name} is blocked by {', '.join(hit)}", 'needs': []})
+        if (ex.get('id') in (self.ref.get('mastered_exercises') or [])
+                and ex.get('id') not in (self.c.get('mastered_exercises') or [])):
+            out.append({'cause': 'proficiency', 'needs': [], 'text': f"{name} needs confirmed mastery"})
         if self.unlocked is not None and ex.get('id') not in self.unlocked:
             out.append({'cause': 'level', 'needs': [],
                         'text': f"{name} is not unlocked at {self.c.get('training_level')}"})
@@ -372,7 +483,8 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
                 need = sorted({e for n in per_slot for e in n})
                 what = {'equipment': f"need {', '.join(need)}",
                         'injury': 'are blocked by an injury flag',
-                        'level': f"are not unlocked at {constraints.get('training_level')}"}[cause]
+                        'level': f"are not unlocked at {constraints.get('training_level')}",
+                        'proficiency': 'need confirmed mastery'}[cause]
                 why.append({'cause': cause, 'text': f"{len(per_slot)} of {filled} of its exercises {what}"})
                 if cause == 'equipment':
                     needs += [e for n in per_slot for e in n]
@@ -427,11 +539,9 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
             changes.append(entry)
 
     return {
-        'reference': {
-            'equipment': reference_constraints['equipment'],
-            'training_level': reference_constraints['training_level'],
-            'injury_flags': [],
-        },
+        'reference': {k: reference_constraints.get(k) for k in (
+            'equipment', 'training_level', 'injury_flags', 'mastered_exercises', 'kettlebell_count')
+            if k in reference_constraints},
         'lifted': [dim for dim in DIMENSIONS if dim in relaxed],
         'sessions': {'total': len(act), 'changed': len(changes),
                      'direct': sum(1 for c in changes if not c['knock_on'])},

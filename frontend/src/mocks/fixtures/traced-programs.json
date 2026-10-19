@@ -43,7 +43,17 @@
         "Technique under progressively heavier loads"
        ],
        "intensity": "Heavy sets of five, every session",
-       "repeatable": true
+       "repeatable": true,
+       "checks": {
+        "archetypes_required": [
+         "3x5_linear",
+         "3x5_linear_b"
+        ],
+        "archetypes_forbidden": [
+         "hlm",
+         "5x5"
+        ]
+       }
       }
      ],
      "framework_selection": {
@@ -86,19 +96,19 @@
      "info": [
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Heavy/Light/Medium (HLM)' will use equipment-limited scaling (missing: {'plates', 'rack', 'barbell'})."
+       "message": "'Heavy/Light/Medium (HLM)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session B' will use equipment-limited scaling (missing: {'plates', 'rack', 'barbell'})."
+       "message": "'3×5 Linear Strength — Session B' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session A' will use equipment-limited scaling (missing: {'plates', 'rack', 'barbell'})."
+       "message": "'3×5 Linear Strength — Session A' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'5×5 Classic Strength Volume' will use equipment-limited scaling (missing: {'plates', 'rack', 'barbell'})."
+       "message": "'5×5 Classic Strength Volume' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       }
      ]
     },
@@ -4612,6 +4622,2662 @@
       "horsemen_gpp"
      ],
      "philosophy_mode": "explicit_goal"
+    }
+   }
+  },
+  "wildman_general_practice_contract": {
+   "request": {
+    "philosophy_id": "wildman_kettlebell",
+    "track_id": "general_practice",
+    "num_weeks": 1,
+    "constraints": {
+     "days_per_week": 4,
+     "session_time_minutes": 60,
+     "avoid_movements": [],
+     "periodization_week": 1,
+     "fatigue_state": "normal",
+     "injury_flags": [],
+     "training_level": "intermediate",
+     "equipment": [
+      "kettlebell",
+      "open_space"
+     ]
+    }
+   },
+   "response": {
+    "goal": {
+     "id": "_phil_wildman_kettlebell",
+     "name": "Mark Wildman Kettlebell",
+     "priorities": {
+      "power": 0.5,
+      "movement_skill": 0.5
+     },
+     "track": {
+      "id": "general_practice",
+      "name": "General Practice",
+      "description": "Stable swing and complementary practice modules, twice weekly each on nonconsecutive days. Progression is per successful module exposure, independent of phase names.",
+      "philosophy_id": "wildman_kettlebell"
+     },
+     "phase_sequence": [
+      {
+       "phase_id": "foundations",
+       "phase": "base",
+       "weeks": 6,
+       "framework_id": "kb_general_practice",
+       "name": "Foundations",
+       "focus": "Learn and repeat the fundamentals",
+       "description": "Practice the same movements at a controllable bell. Novices use unloaded get-up positions. Do not progress through movements merely because weeks have elapsed.",
+       "adaptations": [
+        "Repeated skill practice",
+        "Capacity at a stable bell",
+        "Density and volume progression"
+       ],
+       "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
+       "exclude_exercises": [
+        "wk_kb_snatch",
+        "wk_kb_half_snatch",
+        "kb_jerk_single",
+        "kb_jerk_double",
+        "wk_kb_long_cycle_press"
+       ],
+       "checks": {
+        "archetypes_forbidden": [
+         "kb_pentathlon_training",
+         "kb_double_strength",
+         "kb_pentathlon_test"
+        ]
+       }
+      },
+      {
+       "phase_id": "ladder",
+       "phase": "build",
+       "weeks": 6,
+       "framework_id": "kb_general_practice",
+       "name": "Density and Volume",
+       "focus": "Advance repetitions, then volume",
+       "description": "Continue each module cycle without resetting it. Forecasts assume clean completion; recorded outcomes decide the next earned prescription. A higher density or volume does not authorize a heavier bell.",
+       "adaptations": [
+        "Repeated skill practice",
+        "Capacity at a stable bell",
+        "Density and volume progression"
+       ],
+       "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
+       "checks": {
+        "archetypes_forbidden": [
+         "kb_pentathlon_training",
+         "kb_double_strength",
+         "kb_pentathlon_test"
+        ]
+       }
+      },
+      {
+       "phase_id": "practice",
+       "phase": "maintenance",
+       "weeks": 4,
+       "framework_id": "kb_general_practice",
+       "name": "Repeatable Practice",
+       "focus": "Repeat or explicitly choose the next cycle",
+       "description": "Retain movement identity. Repeat at the same bell or explicitly start a new cycle after confirming technique and available equipment. Snatches and jerks require a separate proficiency decision.",
+       "adaptations": [
+        "Repeated skill practice",
+        "Capacity at a stable bell",
+        "Density and volume progression"
+       ],
+       "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
+       "repeatable": true,
+       "checks": {
+        "archetypes_forbidden": [
+         "kb_pentathlon_training",
+         "kb_double_strength",
+         "kb_pentathlon_test"
+        ]
+       }
+      }
+     ],
+     "framework_selection": {
+      "default_framework": "kb_general_practice",
+      "alternatives": [
+       {
+        "framework_id": "kb_pentathlon",
+        "condition": ""
+       },
+       {
+        "framework_id": "kb_squat_practice",
+        "condition": ""
+       },
+       {
+        "framework_id": "kb_snatch_practice",
+        "condition": ""
+       },
+       {
+        "framework_id": "kb_getup_mobility",
+        "condition": ""
+       },
+       {
+        "framework_id": "kb_double_bell_practice",
+        "condition": ""
+       }
+      ]
+     },
+     "primary_sources": [
+      "wildman_kettlebell"
+     ],
+     "minimum_prerequisites": {},
+     "training_contract": {
+      "training_levels": [
+       "novice",
+       "intermediate",
+       "advanced",
+       "elite"
+      ],
+      "level_seeds": {
+       "intermediate": [
+        "wk_kb_clean_single",
+        "wk_kb_press_single"
+       ],
+       "advanced": [
+        "wk_kb_clean_single",
+        "wk_kb_press_single"
+       ],
+       "elite": [
+        "wk_kb_clean_single",
+        "wk_kb_press_single"
+       ]
+      },
+      "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+      "modules": [
+       {
+        "id": "swing",
+        "name": "Nerd Math Two-Hand Swing",
+        "archetype_id": "kb_ballistic_session",
+        "modality": "power",
+        "training_levels": [
+         "novice",
+         "intermediate",
+         "advanced",
+         "elite"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "density_cycle",
+         "reps_start": 6,
+         "reps_step": 2,
+         "reps_max": 20,
+         "rounds": [
+          10,
+          20
+         ]
+        },
+        "blocks": [
+         {
+          "role": "prep",
+          "exercise_id": "kb_deadlift",
+          "slot_type": "skill_practice",
+          "duration_sec": 180,
+          "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test."
+         },
+         {
+          "role": "main",
+          "exercise_id": "wk_kb_swing_two_hand",
+          "slot_type": "emom",
+          "loaded": true,
+          "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates."
+         },
+         {
+          "role": "recovery",
+          "exercise_id": "wk_kb_halo",
+          "slot_type": "skill_practice",
+          "duration_sec": 120,
+          "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued."
+         }
+        ]
+       },
+       {
+        "id": "technique",
+        "name": "Hinge and Get-Up Technique",
+        "archetype_id": "kb_movement_skill_session",
+        "modality": "movement_skill",
+        "training_levels": [
+         "novice"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "skill_hold"
+        },
+        "blocks": [
+         {
+          "role": "prep",
+          "exercise_id": "wk_kb_halo",
+          "slot_type": "skill_practice",
+          "duration_sec": 180
+         },
+         {
+          "role": "hinge",
+          "exercise_id": "kb_deadlift",
+          "slot_type": "skill_practice",
+          "duration_sec": 300,
+          "notes": "Low-fatigue hinge practice. No automatic weight increases."
+         },
+         {
+          "role": "getup",
+          "exercise_id": "wk_kb_tgu",
+          "slot_type": "skill_practice",
+          "duration_sec": 360,
+          "notes": "Unloaded get-up positions, one side at a time. Use a shoe or no load until positions are controlled; calendar time never authorizes adding a bell."
+         }
+        ]
+       },
+       {
+        "id": "clean_press",
+        "name": "Single-Bell Clean and Press Practice",
+        "archetype_id": "kb_clean_press_practice",
+        "modality": "movement_skill",
+        "training_levels": [
+         "intermediate",
+         "advanced",
+         "elite"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "requires_mastery": [
+         "wk_kb_clean_single",
+         "wk_kb_press_single"
+        ],
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "density_cycle",
+         "reps_start": 1,
+         "reps_step": 1,
+         "reps_max": 5,
+         "rounds": [
+          5,
+          10
+         ]
+        },
+        "blocks": [
+         {
+          "role": "prep",
+          "exercise_id": "wk_kb_halo",
+          "slot_type": "skill_practice",
+          "duration_sec": 180
+         },
+         {
+          "role": "clean",
+          "exercise_id": "wk_kb_clean_single",
+          "slot_type": "emom",
+          "loaded": true,
+          "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean."
+         },
+         {
+          "role": "press",
+          "exercise_id": "wk_kb_press_single",
+          "slot_type": "emom",
+          "loaded": true,
+          "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle."
+         },
+         {
+          "role": "getup",
+          "exercise_id": "wk_kb_tgu",
+          "slot_type": "skill_practice",
+          "duration_sec": 120,
+          "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up."
+         }
+        ]
+       }
+      ],
+      "version": 1,
+      "package": "wildman_kettlebell",
+      "track_id": "general_practice"
+     },
+     "incompatible_with": [],
+     "notes": "Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules; density and volume advance after clean successful exposures. The calendar never earns a harder movement. Forecasts are conditional. Complementary technique and clean/press cycles are app adaptations of public principles, not a purchased Wildman plan. Pentathlon is a separate sport-specific track requiring demonstrated event proficiency."
+    },
+    "constraints": {
+     "days_per_week": 4,
+     "session_time_minutes": 60,
+     "avoid_movements": [],
+     "periodization_week": 1,
+     "fatigue_state": "normal",
+     "injury_flags": [],
+     "training_level": "intermediate",
+     "equipment": [
+      "kettlebell",
+      "open_space"
+     ],
+     "track_id": "general_practice"
+    },
+    "validation": {
+     "feasible": true,
+     "errors": [],
+     "warnings": [],
+     "info": []
+    },
+    "weeks": [
+     {
+      "week_number": 1,
+      "week_in_phase": 1,
+      "phase": "base",
+      "is_deload": false,
+      "framework": "kb_general_practice",
+      "schedule": {
+       "Monday": [
+        {
+         "modality": "power",
+         "archetype": {
+          "id": "kb_ballistic_session",
+          "name": "Nerd Math Two-Hand Swing",
+          "_package": "wildman_kettlebell",
+          "modality": "power",
+          "duration_estimate_minutes": 15,
+          "slots": [
+           {
+            "role": "swing_prep",
+            "slot_type": "skill_practice",
+            "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "kb_deadlift"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_main",
+            "slot_type": "emom",
+            "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_swing_two_hand"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_halo"
+             ]
+            },
+            "rest_sec": 0
+           }
+          ],
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ]
+         },
+         "is_deload": false,
+         "modules": [
+          {
+           "id": "swing",
+           "forecast_step": 0,
+           "archetype_id": "kb_ballistic_session",
+           "exercise_ids": [
+            "wk_kb_swing_two_hand"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_swing_two_hand": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          }
+         ],
+         "provenance": {
+          "package": "wildman_kettlebell",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "kb_deadlift",
+            "name": "Kettlebell Deadlift",
+            "category": "kettlebell",
+            "modality": [
+             "max_strength",
+             "durability"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "wk_kb_swing_two_hand",
+             "wk_kb_swing_single_arm"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "wk_kb_swing_two_hand"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Hip-hinge pattern with kettlebell between feet, pulled to standing. No prerequisites beyond basic motor control; the first movement taught in Wildman's complexity ladder. Direct gateway to swings; teaches the hip hinge without ballistic demand.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 48
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 3,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 0,
+            "advances_module": false,
+            "conditional": false,
+            "elapsed_sec": 180
+           },
+           "slot_role": "swing_prep",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_swing_two_hand",
+            "name": "Kettlebell Swing (Two-Hand)",
+            "category": "kettlebell",
+            "modality": [
+             "power",
+             "aerobic_base",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge",
+             "ballistic"
+            ],
+            "requires": [
+             "hip_hinge",
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_swing_single_arm",
+             "kb_deadlift"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_duration_or_reps",
+             "complexity": "wk_kb_swing_single_arm"
+            },
+            "scaling_down": [
+             "kb_deadlift"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 20
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen",
+             "Gym Jones"
+            ],
+            "notes": "Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder height on the hip-snap. Horsemen warm-up complex: 1 min two-hand swings. Gym Jones breathing ladder uses swings 1–20 at 53 lb. Wildman complexity progression begins here. Two hands on the bell; posterior-chain power driver.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 40
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 6,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 0,
+            "advances_module": true,
+            "conditional": false,
+            "elapsed_sec": 600
+           },
+           "slot_role": "swing_main",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_halo",
+            "name": "Kettlebell Halo",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": false,
+            "movement_patterns": [
+             "rotation"
+            ],
+            "requires": [],
+            "unlocks": [
+             "wk_kb_tgu",
+             "kb_windmill"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "neck_strain",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side",
+             "complexity": "wk_kb_tgu"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 2,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 20
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 2,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 0,
+            "advances_module": false,
+            "conditional": false,
+            "elapsed_sec": 120
+           },
+           "slot_role": "swing_recovery",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ],
+       "Wednesday": [
+        {
+         "modality": "power",
+         "archetype": {
+          "id": "kb_ballistic_session",
+          "name": "Nerd Math Two-Hand Swing",
+          "_package": "wildman_kettlebell",
+          "modality": "power",
+          "duration_estimate_minutes": 15,
+          "slots": [
+           {
+            "role": "swing_prep",
+            "slot_type": "skill_practice",
+            "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "kb_deadlift"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_main",
+            "slot_type": "emom",
+            "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_swing_two_hand"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_halo"
+             ]
+            },
+            "rest_sec": 0
+           }
+          ],
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ]
+         },
+         "is_deload": false,
+         "modules": [
+          {
+           "id": "swing",
+           "forecast_step": 1,
+           "archetype_id": "kb_ballistic_session",
+           "exercise_ids": [
+            "wk_kb_swing_two_hand"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_swing_two_hand": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          }
+         ],
+         "provenance": {
+          "package": "wildman_kettlebell",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "kb_deadlift",
+            "name": "Kettlebell Deadlift",
+            "category": "kettlebell",
+            "modality": [
+             "max_strength",
+             "durability"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "wk_kb_swing_two_hand",
+             "wk_kb_swing_single_arm"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "wk_kb_swing_two_hand"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Hip-hinge pattern with kettlebell between feet, pulled to standing. No prerequisites beyond basic motor control; the first movement taught in Wildman's complexity ladder. Direct gateway to swings; teaches the hip hinge without ballistic demand.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 48
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 3,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 180
+           },
+           "slot_role": "swing_prep",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_swing_two_hand",
+            "name": "Kettlebell Swing (Two-Hand)",
+            "category": "kettlebell",
+            "modality": [
+             "power",
+             "aerobic_base",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge",
+             "ballistic"
+            ],
+            "requires": [
+             "hip_hinge",
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_swing_single_arm",
+             "kb_deadlift"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_duration_or_reps",
+             "complexity": "wk_kb_swing_single_arm"
+            },
+            "scaling_down": [
+             "kb_deadlift"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 20
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen",
+             "Gym Jones"
+            ],
+            "notes": "Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder height on the hip-snap. Horsemen warm-up complex: 1 min two-hand swings. Gym Jones breathing ladder uses swings 1–20 at 53 lb. Wildman complexity progression begins here. Two hands on the bell; posterior-chain power driver.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 40
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 8,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 600
+           },
+           "slot_role": "swing_main",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_halo",
+            "name": "Kettlebell Halo",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": false,
+            "movement_patterns": [
+             "rotation"
+            ],
+            "requires": [],
+            "unlocks": [
+             "wk_kb_tgu",
+             "kb_windmill"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "neck_strain",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side",
+             "complexity": "wk_kb_tgu"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 2,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 20
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 2,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 120
+           },
+           "slot_role": "swing_recovery",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ],
+       "Friday": [
+        {
+         "modality": "movement_skill",
+         "archetype": {
+          "id": "kb_clean_press_practice",
+          "name": "Single-Bell Clean and Press Practice",
+          "_package": "wildman_kettlebell",
+          "modality": "movement_skill",
+          "duration_estimate_minutes": 15,
+          "slots": [
+           {
+            "role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "notes": "",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_halo"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_clean",
+            "slot_type": "emom",
+            "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_clean_single"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_press",
+            "slot_type": "emom",
+            "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_press_single"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_tgu"
+             ]
+            },
+            "rest_sec": 0
+           }
+          ],
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ]
+         },
+         "is_deload": false,
+         "modules": [
+          {
+           "id": "clean_press",
+           "forecast_step": 0,
+           "archetype_id": "kb_clean_press_practice",
+           "exercise_ids": [
+            "wk_kb_clean_single",
+            "wk_kb_press_single"
+           ],
+           "rounds": 5,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_clean_single": {
+             "rounds": 5,
+             "duration_sec": 0
+            },
+            "wk_kb_press_single": {
+             "rounds": 5,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          }
+         ],
+         "provenance": {
+          "package": "wildman_kettlebell",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "wk_kb_halo",
+            "name": "Kettlebell Halo",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": false,
+            "movement_patterns": [
+             "rotation"
+            ],
+            "requires": [],
+            "unlocks": [
+             "wk_kb_tgu",
+             "kb_windmill"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "neck_strain",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side",
+             "complexity": "wk_kb_tgu"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 2,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 20
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 3,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 0,
+            "advances_module": false,
+            "conditional": false,
+            "elapsed_sec": 180
+           },
+           "slot_role": "clean_press_prep",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_clean_single",
+            "name": "Kettlebell Clean (Single-Arm)",
+            "category": "kettlebell",
+            "modality": [
+             "power",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "hip_hinge",
+             "olympic_lift",
+             "ballistic"
+            ],
+            "requires": [
+             "wk_kb_swing_single_arm"
+            ],
+            "unlocks": [
+             "kb_clean_double",
+             "wk_kb_press_single",
+             "wk_kb_push_press_single",
+             "kb_jerk_single",
+             "wk_kb_snatch"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "wrist_injury",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_duration_or_reps",
+             "complexity": "kb_clean_double"
+            },
+            "scaling_down": [
+             "wk_kb_swing_single_arm"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen"
+            ],
+            "notes": "Bell pulled from swing arc into rack position at shoulder. Elbow nestled against body; bell resting on forearm. Horsemen 12-min KB complex: 1 min clean & press each arm. Wildman complexity ladder: swing → clean → press → snatch. The IKMF pentathlon's first event: 120 cleans in 6 min score at most (20 RPM).\n",
+            "competition_pace": {
+             "competition": "ikmf_pentathlon",
+             "event": "clean",
+             "max_reps": 120,
+             "minutes": 6
+            },
+            "starting_load_kg": {
+             "novice": 12,
+             "intermediate": 16,
+             "advanced": 24,
+             "elite": 32
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 5,
+            "reps_per_round": 1,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 5,
+            "format": "EMOM",
+            "duration_minutes": 5,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 0,
+            "advances_module": true,
+            "conditional": false,
+            "elapsed_sec": 300
+           },
+           "slot_role": "clean_press_clean",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_press_single",
+            "name": "Kettlebell Press (Single-Arm)",
+            "category": "kettlebell",
+            "modality": [
+             "max_strength",
+             "relative_strength"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "vertical_push"
+            ],
+            "requires": [
+             "push_pattern",
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_long_cycle_press",
+             "kb_press_double",
+             "wk_kb_push_press_single",
+             "wk_kb_overhead_carry"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "shoulder_instability",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_press_double"
+            },
+            "scaling_down": [
+             "wk_kb_clean_single"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen"
+            ],
+            "notes": "Strict shoulder press from rack position. No leg drive. Horsemen 12-min warm-up complex: clean & press 1 min each arm. Requires tight lat engagement at lockout. Wildman cues: keep the shoulder packed, press in an arc not straight up.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 24
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 5,
+            "reps_per_round": 1,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 5,
+            "format": "EMOM",
+            "duration_minutes": 5,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 0,
+            "advances_module": true,
+            "conditional": false,
+            "elapsed_sec": 300
+           },
+           "slot_role": "clean_press_press",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_tgu",
+            "name": "Kettlebell Turkish Get-Up",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill",
+             "durability",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "vertical_push",
+             "rotation",
+             "isometric"
+            ],
+            "requires": [
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_overhead_carry",
+             "wk_kb_rack_carry"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "shoulder_instability",
+             "wrist_injury",
+             "neck_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side"
+            },
+            "scaling_down": [
+             "wk_kb_halo"
+            ],
+            "typical_volume": {
+             "sets": 5,
+             "reps": 2
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen",
+             "Wildman"
+            ],
+            "notes": "From lying to standing with bell locked overhead throughout; reverse to return. Foundational Wildman movement — practiced in nearly every session. Gym Jones: 100 TGUs at 15 lb (recovery) and 5–6 reps at 25 lb (strength). Horsemen SMMF: 100 get-ups at 35 lb (15–20 min). Tests shoulder stability, hip mobility, and whole-body integration. Wildman: move slowly through every position; there are no shortcuts.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 24
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 2,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 0,
+            "advances_module": false,
+            "conditional": false,
+            "elapsed_sec": 120
+           },
+           "slot_role": "clean_press_getup",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ],
+       "Sunday": [
+        {
+         "modality": "movement_skill",
+         "archetype": {
+          "id": "kb_clean_press_practice",
+          "name": "Single-Bell Clean and Press Practice",
+          "_package": "wildman_kettlebell",
+          "modality": "movement_skill",
+          "duration_estimate_minutes": 15,
+          "slots": [
+           {
+            "role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "notes": "",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_halo"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_clean",
+            "slot_type": "emom",
+            "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_clean_single"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_press",
+            "slot_type": "emom",
+            "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_press_single"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_tgu"
+             ]
+            },
+            "rest_sec": 0
+           }
+          ],
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ]
+         },
+         "is_deload": false,
+         "modules": [
+          {
+           "id": "clean_press",
+           "forecast_step": 1,
+           "archetype_id": "kb_clean_press_practice",
+           "exercise_ids": [
+            "wk_kb_clean_single",
+            "wk_kb_press_single"
+           ],
+           "rounds": 5,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_clean_single": {
+             "rounds": 5,
+             "duration_sec": 0
+            },
+            "wk_kb_press_single": {
+             "rounds": 5,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          }
+         ],
+         "provenance": {
+          "package": "wildman_kettlebell",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "wk_kb_halo",
+            "name": "Kettlebell Halo",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": false,
+            "movement_patterns": [
+             "rotation"
+            ],
+            "requires": [],
+            "unlocks": [
+             "wk_kb_tgu",
+             "kb_windmill"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "neck_strain",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side",
+             "complexity": "wk_kb_tgu"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 2,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 20
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 3,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 180
+           },
+           "slot_role": "clean_press_prep",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_clean_single",
+            "name": "Kettlebell Clean (Single-Arm)",
+            "category": "kettlebell",
+            "modality": [
+             "power",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "hip_hinge",
+             "olympic_lift",
+             "ballistic"
+            ],
+            "requires": [
+             "wk_kb_swing_single_arm"
+            ],
+            "unlocks": [
+             "kb_clean_double",
+             "wk_kb_press_single",
+             "wk_kb_push_press_single",
+             "kb_jerk_single",
+             "wk_kb_snatch"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "wrist_injury",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_duration_or_reps",
+             "complexity": "kb_clean_double"
+            },
+            "scaling_down": [
+             "wk_kb_swing_single_arm"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen"
+            ],
+            "notes": "Bell pulled from swing arc into rack position at shoulder. Elbow nestled against body; bell resting on forearm. Horsemen 12-min KB complex: 1 min clean & press each arm. Wildman complexity ladder: swing → clean → press → snatch. The IKMF pentathlon's first event: 120 cleans in 6 min score at most (20 RPM).\n",
+            "competition_pace": {
+             "competition": "ikmf_pentathlon",
+             "event": "clean",
+             "max_reps": 120,
+             "minutes": 6
+            },
+            "starting_load_kg": {
+             "novice": 12,
+             "intermediate": 16,
+             "advanced": 24,
+             "elite": 32
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 5,
+            "reps_per_round": 2,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 5,
+            "format": "EMOM",
+            "duration_minutes": 5,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 300
+           },
+           "slot_role": "clean_press_clean",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_press_single",
+            "name": "Kettlebell Press (Single-Arm)",
+            "category": "kettlebell",
+            "modality": [
+             "max_strength",
+             "relative_strength"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "vertical_push"
+            ],
+            "requires": [
+             "push_pattern",
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_long_cycle_press",
+             "kb_press_double",
+             "wk_kb_push_press_single",
+             "wk_kb_overhead_carry"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "shoulder_instability",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_press_double"
+            },
+            "scaling_down": [
+             "wk_kb_clean_single"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen"
+            ],
+            "notes": "Strict shoulder press from rack position. No leg drive. Horsemen 12-min warm-up complex: clean & press 1 min each arm. Requires tight lat engagement at lockout. Wildman cues: keep the shoulder packed, press in an arc not straight up.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 24
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 5,
+            "reps_per_round": 2,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 5,
+            "format": "EMOM",
+            "duration_minutes": 5,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 300
+           },
+           "slot_role": "clean_press_press",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_tgu",
+            "name": "Kettlebell Turkish Get-Up",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill",
+             "durability",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "vertical_push",
+             "rotation",
+             "isometric"
+            ],
+            "requires": [
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_overhead_carry",
+             "wk_kb_rack_carry"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "shoulder_instability",
+             "wrist_injury",
+             "neck_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side"
+            },
+            "scaling_down": [
+             "wk_kb_halo"
+            ],
+            "typical_volume": {
+             "sets": 5,
+             "reps": 2
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen",
+             "Wildman"
+            ],
+            "notes": "From lying to standing with bell locked overhead throughout; reverse to return. Foundational Wildman movement — practiced in nearly every session. Gym Jones: 100 TGUs at 15 lb (recovery) and 5–6 reps at 25 lb (strength). Horsemen SMMF: 100 get-ups at 35 lb (15–20 min). Tests shoulder stability, hip mobility, and whole-body integration. Wildman: move slowly through every position; there are no shortcuts.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 24
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 2,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "clean_press",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 120
+           },
+           "slot_role": "clean_press_getup",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ]
+      },
+      "phase_id": "foundations",
+      "phase_name": "Foundations",
+      "track_id": "general_practice"
+     }
+    ],
+    "volume_summary": [
+     {
+      "week_number": 1,
+      "strength_sets": 0,
+      "strength_minutes": 30,
+      "cond_minutes": 0,
+      "dur_minutes": 0,
+      "mob_minutes": 30,
+      "total_minutes": 60
+     }
+    ],
+    "phase_summary": [
+     {
+      "phase_id": "foundations",
+      "name": "Foundations",
+      "kind": "base",
+      "framework_id": "kb_general_practice",
+      "week_start": 1,
+      "week_end": 1,
+      "weeks": 1,
+      "deload_weeks": 0,
+      "sessions_per_week": {
+       "power": 2.0,
+       "movement_skill": 2.0
+      },
+      "minutes_per_week": {
+       "first": 60,
+       "last": 60,
+       "mean": 60
+      },
+      "intensity": {
+       "zone1_2": 0.0,
+       "zone3": 0.5,
+       "zone4_5": 0.0,
+       "max_effort": 0.5
+      },
+      "archetypes": [
+       {
+        "id": "kb_ballistic_session",
+        "name": "Nerd Math Two-Hand Swing",
+        "modality": "power",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
+       {
+        "id": "kb_clean_press_practice",
+        "name": "Single-Bell Clean and Press Practice",
+        "modality": "movement_skill",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       }
+      ],
+      "exercises": [
+       {
+        "id": "wk_kb_halo",
+        "name": "Kettlebell Halo",
+        "modality": "power",
+        "sessions": 4,
+        "per_week": 4.0,
+        "status": null
+       },
+       {
+        "id": "wk_kb_clean_single",
+        "name": "Kettlebell Clean (Single-Arm)",
+        "modality": "movement_skill",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
+       {
+        "id": "kb_deadlift",
+        "name": "Kettlebell Deadlift",
+        "modality": "power",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
+       {
+        "id": "wk_kb_press_single",
+        "name": "Kettlebell Press (Single-Arm)",
+        "modality": "movement_skill",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
+       {
+        "id": "wk_kb_swing_two_hand",
+        "name": "Kettlebell Swing (Two-Hand)",
+        "modality": "power",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
+       {
+        "id": "wk_kb_tgu",
+        "name": "Kettlebell Turkish Get-Up",
+        "modality": "movement_skill",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       }
+      ],
+      "lifts": [],
+      "tests": [],
+      "dropped": {
+       "archetypes": [],
+       "exercises": []
+      },
+      "changes": []
+     }
+    ],
+    "compromises": [],
+    "coverage_report": {
+     "philosophy": "wildman_kettlebell",
+     "strict": true,
+     "unfilled_sessions": [],
+     "unfilled_slots": [],
+     "borrowed_sessions": [],
+     "substituted_sessions": [],
+     "placed_tests": [],
+     "skipped_tests": []
+    },
+    "training_contract": {
+     "id": "wildman_kettlebell/general_practice@1",
+     "version": 1,
+     "status": "fulfilled",
+     "forecast": "Future exposures assume successful clean completion; regenerate after logging outcomes."
+    },
+    "module_state": {
+     "swing": {
+      "completed": 0
+     },
+     "clean_press": {
+      "completed": 0
+     }
+    },
+    "generation_trace": {
+     "primary_sources": [
+      "wildman_kettlebell"
+     ],
+     "philosophy_mode": "training_contract",
+     "weeks": [
+      {
+       "week_number": 1,
+       "week_in_phase": 1,
+       "phase": "base",
+       "is_deload": false,
+       "scheduler": {
+        "contract": "wildman_kettlebell/general_practice@1",
+        "is_deload": false,
+        "framework_selection": {
+         "selected_id": "kb_general_practice",
+         "selection_reason": "training_contract"
+        }
+       },
+       "sessions": {
+        "Monday": [
+         {
+          "modality": "power",
+          "archetype": {
+           "selected_id": "kb_ballistic_session",
+           "filter_counts": {},
+           "candidates": []
+          },
+          "modules": [
+           "swing"
+          ],
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_deadlift",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_swing_two_hand",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_halo",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "kb_deadlift",
+            "exercise_name": "Kettlebell Deadlift",
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 3,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 0,
+             "advances_module": false,
+             "conditional": false,
+             "elapsed_sec": 180
+            }
+           },
+           {
+            "exercise_id": "wk_kb_swing_two_hand",
+            "exercise_name": "Kettlebell Swing (Two-Hand)",
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 6,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 0,
+             "advances_module": true,
+             "conditional": false,
+             "elapsed_sec": 600
+            }
+           },
+           {
+            "exercise_id": "wk_kb_halo",
+            "exercise_name": "Kettlebell Halo",
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 2,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 0,
+             "advances_module": false,
+             "conditional": false,
+             "elapsed_sec": 120
+            }
+           }
+          ]
+         }
+        ],
+        "Wednesday": [
+         {
+          "modality": "power",
+          "archetype": {
+           "selected_id": "kb_ballistic_session",
+           "filter_counts": {},
+           "candidates": []
+          },
+          "modules": [
+           "swing"
+          ],
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_deadlift",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_swing_two_hand",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_halo",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "kb_deadlift",
+            "exercise_name": "Kettlebell Deadlift",
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 3,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 180
+            }
+           },
+           {
+            "exercise_id": "wk_kb_swing_two_hand",
+            "exercise_name": "Kettlebell Swing (Two-Hand)",
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 8,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 600
+            }
+           },
+           {
+            "exercise_id": "wk_kb_halo",
+            "exercise_name": "Kettlebell Halo",
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 2,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 120
+            }
+           }
+          ]
+         }
+        ],
+        "Friday": [
+         {
+          "modality": "movement_skill",
+          "archetype": {
+           "selected_id": "kb_clean_press_practice",
+           "filter_counts": {},
+           "candidates": []
+          },
+          "modules": [
+           "clean_press"
+          ],
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_halo",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "clean_press_clean",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_clean_single",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "clean_press_press",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_press_single",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_tgu",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "wk_kb_halo",
+            "exercise_name": "Kettlebell Halo",
+            "slot_role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 3,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 0,
+             "advances_module": false,
+             "conditional": false,
+             "elapsed_sec": 180
+            }
+           },
+           {
+            "exercise_id": "wk_kb_clean_single",
+            "exercise_name": "Kettlebell Clean (Single-Arm)",
+            "slot_role": "clean_press_clean",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 5,
+             "reps_per_round": 1,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 5,
+             "format": "EMOM",
+             "duration_minutes": 5,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 0,
+             "advances_module": true,
+             "conditional": false,
+             "elapsed_sec": 300
+            }
+           },
+           {
+            "exercise_id": "wk_kb_press_single",
+            "exercise_name": "Kettlebell Press (Single-Arm)",
+            "slot_role": "clean_press_press",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 5,
+             "reps_per_round": 1,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 5,
+             "format": "EMOM",
+             "duration_minutes": 5,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 0,
+             "advances_module": true,
+             "conditional": false,
+             "elapsed_sec": 300
+            }
+           },
+           {
+            "exercise_id": "wk_kb_tgu",
+            "exercise_name": "Kettlebell Turkish Get-Up",
+            "slot_role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 2,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 0,
+             "advances_module": false,
+             "conditional": false,
+             "elapsed_sec": 120
+            }
+           }
+          ]
+         }
+        ],
+        "Sunday": [
+         {
+          "modality": "movement_skill",
+          "archetype": {
+           "selected_id": "kb_clean_press_practice",
+           "filter_counts": {},
+           "candidates": []
+          },
+          "modules": [
+           "clean_press"
+          ],
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_halo",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "clean_press_clean",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_clean_single",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "clean_press_press",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_press_single",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_tgu",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "clean_press"
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "wk_kb_halo",
+            "exercise_name": "Kettlebell Halo",
+            "slot_role": "clean_press_prep",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 3,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 180
+            }
+           },
+           {
+            "exercise_id": "wk_kb_clean_single",
+            "exercise_name": "Kettlebell Clean (Single-Arm)",
+            "slot_role": "clean_press_clean",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 5,
+             "reps_per_round": 2,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 5,
+             "format": "EMOM",
+             "duration_minutes": 5,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 300
+            }
+           },
+           {
+            "exercise_id": "wk_kb_press_single",
+            "exercise_name": "Kettlebell Press (Single-Arm)",
+            "slot_role": "clean_press_press",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 5,
+             "reps_per_round": 2,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 5,
+             "format": "EMOM",
+             "duration_minutes": 5,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 300
+            }
+           },
+           {
+            "exercise_id": "wk_kb_tgu",
+            "exercise_name": "Kettlebell Turkish Get-Up",
+            "slot_role": "clean_press_getup",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 2,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "clean_press",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 120
+            }
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
     }
    }
   }
