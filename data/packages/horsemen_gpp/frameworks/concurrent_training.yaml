@@ -369,6 +369,7 @@ categories:
   job_specific_long:
     name: "Job specific (long)"
     modality: durability
+    long_day: true
     fallback: [job_specific_short, job_specific_hard]
     archetypes:
       - hm_angry_girlfriend
@@ -385,6 +386,7 @@ categories:
   job_specific_hard:
     name: "Job specific (hard)"
     modality: durability
+    long_day: true
     fallback: [job_specific_long, job_specific_short]
     archetypes:
       - hm_face_off
@@ -410,6 +412,7 @@ categories:
   endurance_long:
     name: "Endurance (60+ min)"
     modality: aerobic_base
+    long_day: true
     fallback: [endurance, recovery]
     archetypes:
       - hm_speedball

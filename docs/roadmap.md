@@ -754,11 +754,13 @@ badly the default misrepresents the method and whether its policies exist:
    (`week_templates`), every named workout of the source (and its API section) an archetype in
    its category's pool, prescribed as written, the athlete's missing equipment passing a
    workout over (`src/week_template.py`, CLAUDE.md). Names with profanity or the slur are
-   cleaned; the PT test takes the first and last hard job-specific days. Left: single-session
-   regenerate and swap still pick by modality (they should take the next workout of the
-   day's category); elliptical, stair master, climbing, paddling and skiing have no equipment
-   id; "400 m Rob Shauls" is undefined in the source; GPP Circuits remains an app track on
-   its own archetypes.
+   cleaned; the PT test takes the first and last hard job-specific days. Left: the clients do
+   not send a templated day's `category` on a single-session regenerate yet (the server
+   infers it from the modality); a session that prescribes one lift twice (the 1RM work-up,
+   then sets at a percentage of it) shares one log entry per exercise on every client — logs
+   need a slot-scoped key; elliptical, stair master, climbing, paddling and skiing have no
+   equipment id; "400 m Rob Shauls" is undefined in the source; GPP Circuits remains an app
+   track on its own archetypes.
 6. *CrossFit* — after the variation policy.
 7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their

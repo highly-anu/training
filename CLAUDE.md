@@ -378,8 +378,12 @@ group's name.
   deload scaling. A slot's `exercise_filter.ordered` takes the written movement first and the
   source's declared substitutes after it; a workout's movements are `named_only` exercises,
   so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
-  first week stands (`prior_rotation`); a test may take a templated day nothing fitted; a
-  program in which nothing fits is `TEMPLATE_UNFILLED`. Fidelity reads a templated phase
+  first week stands (the elapsed template weeks are replayed, `prior_entries`); a test may
+  take a templated day nothing fitted; a program in which nothing fits is `TEMPLATE_UNFILLED`.
+  Long-day categories (`long_day`) take the athlete's longest days. A composed slot's role
+  names its source (`warm_up__<id>__<role>`, `<id>__<role>`; `source_slot`) so a swap finds
+  it; `POST /sessions/generate` on a templated framework picks another workout of the day's
+  category (`category`, else inferred from the modality; `regenerate_day`). Fidelity reads a templated phase
   against its template (`_check_template`), not `sessions_per_week`. Horsemen's 4-Month Macro
   is the one user: ~190 named workouts, the PT test on the first and last hard job-specific
   days (`test_week_template.py`).

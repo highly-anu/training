@@ -54,24 +54,39 @@ def training_days(template: list, days_per_week: int, drop_order: list,
     return kept, dropped
 
 
-def place_days(kept: list[tuple[int, dict]], preferred: list[int], forced_rest: list[int]) -> list[tuple[int, dict]]:
-    """Weekdays for the kept days: the athlete's preferred days when they name
-    as many, else each day's template position, moved off a forced rest day to
-    the nearest free one."""
+def place_days(kept: list[tuple[int, dict]], preferred: list[int], forced_rest: list[int],
+               minutes: dict | None = None, is_long=lambda spec: False) -> list[tuple[int, dict]]:
+    """Weekdays for the kept days, in the template's order: the athlete's
+    preferred days when they name as many, else each day's template position,
+    moved off a forced rest day (or another day) to the nearest free one.
+    With days of different lengths (`minutes`), the days `is_long` says need
+    time take the longest ones."""
     if preferred and len(preferred) >= len(kept):
-        return [(d, spec) for d, (_, spec) in zip(sorted(preferred)[:len(kept)], kept)]
-    taken: set[int] = set()
-    out = []
-    for position, spec in kept:
-        day = position
-        if day in forced_rest or day in taken:
-            free = [d for d in range(1, 8) if d not in forced_rest and d not in taken
-                    and d not in {p for p, _ in kept if p != position}]
-            if free:
+        days = sorted(preferred)[:len(kept)]
+    else:
+        days, taken = [], set()
+        positions = {p for p, _ in kept}
+        for position, _ in kept:
+            day = position
+            if day in forced_rest or day in taken:
+                free = [d for d in range(1, 8) if d not in forced_rest and d not in taken
+                        and d not in positions - {position}] or \
+                    [d for d in range(1, 8) if d not in forced_rest and d not in taken]
+                if not free:
+                    continue  # more days than the week allows: the last ones go
                 day = min(free, key=lambda d: (abs(d - position), d))
-        taken.add(day)
-        out.append((day, spec))
-    return sorted(out, key=lambda x: x[0])
+            taken.add(day)
+            days.append(day)
+        days.sort()
+    specs = [spec for _, spec in kept][:len(days)]
+    if minutes and len({minutes.get(d) for d in days}) > 1:
+        longs = [s for s in specs if is_long(s)]
+        if longs:
+            longest = sorted(sorted(days, key=lambda d: (-(minutes.get(d) or 0), d))[:len(longs)])
+            others = [d for d in days if d not in longest]
+            out = list(zip(longest, longs)) + list(zip(others, [s for s in specs if not is_long(s)]))
+            return sorted(out, key=lambda x: x[0])
+    return list(zip(days, specs))
 
 
 def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False) -> list[dict]:
@@ -97,10 +112,12 @@ def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, cate
     analytics read the day's named workout."""
     main = pieces[0][1]
     slots = []
+    # A borrowed slot's role names where it came from (`source_slot` reads it
+    # back), so a swap finds the slot in its own archetype.
     if warm:
-        slots += _prefixed(warm, 'warm_up_', f"Warm-up ({warm['name']}). ")
+        slots += _prefixed(warm, f"warm_up__{warm['id']}__", f"Warm-up ({warm['name']}). ")
     for k, (_, arch) in enumerate(pieces):
-        slots += _prefixed(arch, '' if k == 0 else f"{arch['id']}_",
+        slots += _prefixed(arch, '' if k == 0 else f"{arch['id']}__",
                            f"{arch['name']}: " if len(pieces) > 1 else '', light)
     minutes = sum(a.get('duration_estimate_minutes') or 0 for _, a in pieces) + \
         ((warm or {}).get('duration_estimate_minutes') or 0)
@@ -135,18 +152,21 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
     if days > total:
         notes.append(f"The source trains {total} days a week and rests the others; "
                      f"{days - total} of your days stay rest days.")
-    placed = place_days(kept, sorted(constraints.get('preferred_days') or []),
-                        sorted(constraints.get('forced_rest_days') or []))
     cap = constraints.get('session_time_minutes', 60)
     day_configs = constraints.get('day_configs') or {}
+    day_minutes = {d: min(cap, (day_configs.get(d) or {}).get('minutes', cap)) for d in range(1, 8)}
+    placed = place_days(kept, sorted(constraints.get('preferred_days') or []),
+                        sorted(constraints.get('forced_rest_days') or []), day_minutes,
+                        lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
     warm_cat = framework.get('warm_up_category')
     schedule: dict = {}
 
-    def pick(cat: str, minutes: float, seen: set) -> tuple[str, dict] | None:
+    def own(cat: str, minutes: float) -> dict | None:
+        """The next workout of the category's own pool that fits, a fresh one
+        (not picked in the last week) first."""
         spec = categories.get(cat)
-        if spec is None or cat in seen:
+        if spec is None:
             return None
-        seen.add(cat)
         pool = [aid for aid in spec['archetypes'] if aid in archetypes]
         start = rotation.get(cat, 0)
         for fresh_only in (True, False):
@@ -157,37 +177,53 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
                 if fits(archetypes[aid], minutes):
                     rotation[cat] = (start + k + 1) % len(pool)
                     recent.append(aid)
-                    return cat, archetypes[aid]
-        for other in spec.get('fallback') or []:
-            found = pick(other, minutes, seen)
+                    return archetypes[aid]
+        return None
+
+    def fallback(cat: str, minutes: float) -> tuple[str, dict] | None:
+        """The category's declared fallbacks, breadth first; the week says so once."""
+        queue, seen = list((categories.get(cat) or {}).get('fallback') or []), {cat}
+        while queue:
+            other = queue.pop(0)
+            if other in seen or other not in categories:
+                continue
+            seen.add(other)
+            found = own(other, minutes)
             if found:
-                notes.append(f"No {spec['name']} workout fits as written (equipment, injuries or "
-                             f"{minutes:g} minutes); {categories[found[0]]['name']} in its place.")
-                return found
+                notes.append(f"No {categories[cat]['name']} workout fits as written (equipment, injuries or "
+                             f"{minutes:g} minutes); {categories[other]['name']} in its place.")
+                return other, found
+            queue += categories[other].get('fallback') or []
         return None
 
     for day, spec in placed:
-        limit = min(cap, (day_configs.get(day) or {}).get('minutes', cap))
+        limit = day_minutes[day]
         warm_spec = categories.get(warm_cat) if warm_cat else None
-        wants_warm = spec['warm_up'] if spec['warm_up'] is not None else \
-            all(categories.get(c, {}).get('warm_up', True) for c in spec['categories'][:1])
+        wants_warm = bool(warm_spec) and (spec['warm_up'] if spec['warm_up'] is not None else
+                                          categories.get(spec['categories'][0], {}).get('warm_up', True))
+        # The shortest warm-up this athlete can do is what the day keeps free.
         warm_min = min((archetypes[a].get('duration_estimate_minutes') or 0
-                        for a in (warm_spec or {}).get('archetypes', []) if a in archetypes), default=0)
+                        for a in (warm_spec or {}).get('archetypes', [])
+                        if a in archetypes and fits(archetypes[a], limit)), default=None)
+        if warm_min is None:
+            wants_warm = False
         pieces = []
-        left = limit - (warm_min if wants_warm and warm_spec else 0)
+        left = limit - (warm_min or 0 if wants_warm else 0)
         for cat in spec['categories']:
-            found = pick(cat, left, set())
-            if found is None and wants_warm and warm_spec and not pieces:
-                # The day's workout before its warm-up: without room for both,
-                # the athlete warms up on their own.
-                found = pick(cat, limit, set())
-                if found is not None:
-                    wants_warm = False
-                    left = limit
-                    notes.append(f"{found[1]['name']} fills {limit:g} minutes; its day has no "
+            name = categories.get(cat, {}).get('name', cat)
+            arch = own(cat, left)
+            found = (cat, arch) if arch is not None else None
+            if found is None and wants_warm and not pieces:
+                # The written workout before its warm-up: without room for
+                # both, the athlete warms up on their own.
+                arch = own(cat, limit)
+                if arch is not None:
+                    found, wants_warm, left = (cat, arch), False, limit
+                    notes.append(f"{arch['name']} fills {limit:g} minutes; its day has no "
                                  'warm-up from the list — warm up on your own.')
             if found is None:
-                name = categories.get(cat, {}).get('name', cat)
+                found = fallback(cat, left)
+            if found is None:
                 notes.append(f"No {name} workout fits as written (equipment, injuries or {left:g} minutes); "
                              + (f"the day does {pieces[0][1]['name']} alone." if pieces else 'the day is left out.'))
                 continue
@@ -198,9 +234,8 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
                 left_out[day] = spec['categories'][0]
             continue
         warm = None
-        if wants_warm and warm_spec:
-            found = pick(warm_cat, limit - sum(a.get('duration_estimate_minutes') or 0 for _, a in pieces), set())
-            warm = found[1] if found else None
+        if wants_warm:
+            warm = own(warm_cat, limit - sum(a.get('duration_estimate_minutes') or 0 for _, a in pieces))
             if warm is None:
                 notes.append(f"No warm-up fits in {limit:g} minutes beside the day's workout; warm up on your own.")
         cat = pieces[0][0]
@@ -216,30 +251,66 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
     return schedule, list(dict.fromkeys(notes))
 
 
-def prior_rotation(phase_sequence: list, first_entry: dict, frameworks: dict) -> dict:
-    """Where each category's rotation stands at the first generated week: the
-    days of every template week the track ran before it, counted as written.
-    A regenerate from tomorrow then carries on through the pools instead of
-    starting each one over at its first workout."""
-    counts: dict = {}
+def prior_entries(phase_sequence: list, first_entry: dict) -> list[dict]:
+    """The templated week entries a track ran before `first_entry`, from its
+    first phase: what a regenerate replays to resume each pool's rotation."""
+    from .phases import week_entry
+    out, n = [], 1
     target = first_entry.get('phase_id')
     for ph in phase_sequence or []:
-        templates = ph.get('week_templates') or []
-        weeks = (first_entry.get('week_in_phase', 1) - 1) if ph.get('phase_id') == target else int(ph.get('weeks') or 1)
-        fw = frameworks.get(ph.get('framework_id')) or {}
-        categories = fw.get('categories') or {}
-        for k in range(weeks if templates else 0):
-            for day in templates[k % len(templates)]:
-                spec = day_spec(day)
-                if not spec:
-                    continue
-                for cat in spec['categories']:
-                    counts[cat] = counts.get(cat, 0) + 1
-                warm = spec['warm_up'] if spec['warm_up'] is not None else \
-                    categories.get(spec['categories'][0], {}).get('warm_up', True)
-                if warm and fw.get('warm_up_category'):
-                    counts[fw['warm_up_category']] = counts.get(fw['warm_up_category'], 0) + 1
-        if ph.get('phase_id') == target:
+        last = ph.get('phase_id') == target
+        weeks = (first_entry.get('week_in_phase', 1) - 1) if last else int(ph.get('weeks') or 1)
+        for wip in range(1, weeks + 1):
+            entry = week_entry(ph, wip, n)
+            n += 1
+            if entry.get('week_template'):
+                out.append(entry)
+        if last:
             break
-    pools = {cid: len(c['archetypes']) for fw in frameworks.values() for cid, c in (fw.get('categories') or {}).items()}
-    return {cat: n % pools[cat] for cat, n in counts.items() if pools.get(cat)}
+    else:
+        return []  # the first week's phase is not in this track
+    return out
+
+
+def regenerate_day(framework: dict, category: str | None, modality: str, constraints: dict,
+                   archetypes: dict, fits, choose, exclude: set = frozenset()) -> dict | None:
+    """One templated day picked afresh (a single-session regenerate): another
+    workout of the day's category the athlete can do as written — the
+    category the client names, else the first whose modality matches — opened
+    by a warm-up that fits beside it. `choose` picks among the candidates (the
+    route passes random.choice, so a regenerate gives something new)."""
+    categories = framework.get('categories') or {}
+    warm_cat = framework.get('warm_up_category')
+    if category not in categories:
+        category = next((c for c, spec in categories.items()
+                         if c != warm_cat and spec['modality'] == modality), None)
+    if category is None:
+        return None
+    spec = categories[category]
+    limit = constraints.get('session_time_minutes', 60)
+    pool = [archetypes[a] for a in spec['archetypes'] if a in archetypes and a not in exclude]
+    found = [a for a in pool if fits(a, limit)] or \
+        [archetypes[a] for a in spec['archetypes'] if a in archetypes and fits(archetypes[a], limit)]
+    if not found:
+        return None
+    main = choose(found)
+    warm = None
+    if spec.get('warm_up', True) and warm_cat in categories:
+        left = limit - (main.get('duration_estimate_minutes') or 0)
+        warms = [archetypes[a] for a in categories[warm_cat]['archetypes'] if a in archetypes and fits(archetypes[a], left)]
+        warm = choose(warms) if warms else None
+    return {'modality': spec['modality'], 'category': category, 'category_name': spec['name'],
+            'pieces': [{'category': category, 'archetype_id': main['id'], 'name': main['name']}],
+            **({'warm_up': {'archetype_id': warm['id'], 'name': warm['name']}} if warm else {}),
+            '_forced_archetype': compose([(category, main)], warm, False, categories)}
+
+
+def source_slot(archetype_id: str, role: str) -> tuple[str, str]:
+    """(archetype id, role) of a composed session's slot: a warm-up's
+    `warm_up__<id>__<role>`, a second piece's `<id>__<role>`, else as given."""
+    parts = role.split('__')
+    if len(parts) == 3 and parts[0] == 'warm_up':
+        return parts[1], parts[2]
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return archetype_id, role

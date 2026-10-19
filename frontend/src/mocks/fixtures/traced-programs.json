@@ -1629,22 +1629,22 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'cable_machine', 'resistance_band', 'tire', 'sandbag', 'medicine_ball', 'jump_rope', 'hurdles', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'sandbag', 'box', 'cable_machine', 'tire', 'medicine_ball', 'jump_rope', 'resistance_band', 'hurdles'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'tire', 'cable_machine', 'hurdles'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'hurdles', 'tire', 'cable_machine'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'dumbbell', 'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'rope', 'tire', 'jump_rope', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'box', 'tire', 'jump_rope', 'rope'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1654,7 +1654,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Mirror' requires {'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Mirror' requires {'sandbag', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1669,12 +1669,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'ghd', 'dumbbell', 'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'box', 'ghd', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'rope', 'sandbag', 'cable_machine', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'medicine_ball', 'sandbag', 'cable_machine', 'rope'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1684,7 +1684,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'ghd', 'box', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1724,7 +1724,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Appeal to God' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1754,12 +1754,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'The Cog' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'The Cog' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Twister' requires {'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Twister' requires {'medicine_ball', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1879,7 +1879,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Girl Farts' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Girl Farts' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1889,7 +1889,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'parallettes', 'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1904,7 +1904,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Start Your Face' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1939,7 +1939,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'rower', 'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'ghd', 'rower', 'box', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1954,7 +1954,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'tire', 'ghd', 'medicine_ball', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'ghd', 'medicine_ball', 'tire', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1979,27 +1979,27 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'ghd', 'dumbbell', 'tire', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'box', 'tire', 'ghd', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'ghd', 'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bloody Nose' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'dumbbell', 'rings', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'tire', 'sandbag', 'rings', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'tire', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2009,7 +2009,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'dumbbell', 'sandbag', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'ghd', 'sandbag', 'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2029,12 +2029,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Russian Aggression' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Soviet Capitalists' requires {'parallettes', 'sandbag', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Soviet Capitalists' requires {'ghd', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2044,7 +2044,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Wasted Love' requires {'sandbag', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Wasted Love' requires {'medicine_ball', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2059,7 +2059,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2094,7 +2094,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-Minute Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2450,9 +2450,8 @@
     ],
     "compromises": [
      "With 5 training days the week leaves out: Recovery (the source trains 6 days).",
-     "No Strength workout fits as written (equipment, injuries or 52 minutes); the day is left out.",
-     "No Job specific (long) workout fits as written (equipment, injuries or 52 minutes); the day is left out.",
-     "No warm-up fits in 60 minutes beside the day's workout; warm up on your own."
+     "No Strength workout fits as written (equipment, injuries or 60 minutes); the day is left out.",
+     "No Job specific (long) workout fits as written (equipment, injuries or 60 minutes); the day is left out."
     ],
     "coverage_report": {
      "philosophy": "horsemen_gpp",
@@ -2472,69 +2471,20 @@
        "phase": "base",
        "is_deload": false,
        "scheduler": {
+        "week_template": [
+         "strength",
+         "job_specific_long",
+         "power_endurance",
+         "smmf",
+         "strength",
+         "recovery",
+         "rest"
+        ],
+        "is_deload": false,
         "framework_selection": {
          "selected_id": "concurrent_training",
-         "selection_reason": "phase_framework_override",
-         "phase_framework_id": "concurrent_training"
-        },
-        "allocation": {
-         "phase_priorities": {
-          "max_strength": 0.2857142857142857,
-          "aerobic_base": 0.2857142857142857,
-          "mixed_modal_conditioning": 0.14285714285714285,
-          "durability": 0.14285714285714285,
-          "strength_endurance": 0.14285714285714285
-         },
-         "raw": {
-          "max_strength": 1.429,
-          "aerobic_base": 1.429,
-          "mixed_modal_conditioning": 0.714,
-          "durability": 0.714,
-          "strength_endurance": 0.714
-         },
-         "final": {
-          "max_strength": 1,
-          "aerobic_base": 1,
-          "mixed_modal_conditioning": 1,
-          "durability": 1,
-          "strength_endurance": 1
-         }
-        },
-        "day_assignment": {
-         "modality_order": [
-          "max_strength",
-          "mixed_modal_conditioning",
-          "strength_endurance",
-          "durability",
-          "aerobic_base"
-         ],
-         "day_pool": [
-          1,
-          2,
-          4,
-          6,
-          7
-         ],
-         "assignments": {
-          "Mon": [
-           "max_strength"
-          ],
-          "Tue": [
-           "durability"
-          ],
-          "Thu": [
-           "mixed_modal_conditioning"
-          ],
-          "Sat": [
-           "strength_endurance"
-          ],
-          "Sun": [
-           "aerobic_base"
-          ]
-         }
-        },
-        "is_deload": false,
-        "deload_freq_weeks": null
+         "selection_reason": "week_template"
+        }
        },
        "sessions": {
         "Wednesday": [

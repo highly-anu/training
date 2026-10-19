@@ -330,7 +330,8 @@ def _as_written(slot: dict) -> dict:
     minutes = (slot['duration_minutes'] if 'duration_minutes' in slot
                else max(1, round(slot['duration_sec'] / 60)) if slot.get('duration_sec') else None)
     if slot_type == 'sets_reps':
-        out: dict = {'sets': slot.get('sets', 1), 'reps': slot.get('reps', 1)}
+        # No reps written (a stretch "5 rounds") shows the sets alone.
+        out: dict = {'sets': slot.get('sets', 1), **({'reps': slot['reps']} if slot.get('reps') else {})}
     elif slot_type == 'static_hold':
         out = {'sets': slot.get('sets', 1),
                'hold_seconds': slot.get('hold_seconds', slot.get('duration_sec', 30))}
@@ -340,8 +341,11 @@ def _as_written(slot: dict) -> dict:
         # "1 min": its seconds, rounds and the rest between them.
         out = {'target_rounds': slot.get('sets') or 1, 'work_sec': slot['duration_sec'],
                'rest_sec': slot.get('rest_sec') or 0}
+    elif slot_type in ('time_domain', 'skill_practice') and not minutes:
+        # The source leaves the length to the athlete; never invent one.
+        out = {'focus': 'length as you choose'}
     elif slot_type in ('time_domain', 'skill_practice'):
-        out = {'duration_minutes': minutes or 10}
+        out = {'duration_minutes': minutes}
         if (slot.get('sets') or 1) > 1:
             out['sets'] = slot['sets']
     elif slot_type == 'distance':
@@ -367,7 +371,8 @@ def _as_written(slot: dict) -> dict:
             out['distance_km'] = round(slot['distance_m'] / 1000, 2)
     elif slot_type == 'amrap_movement' and slot.get('distance_m'):
         # A chipper's row or run is metres, not reps (Till U Collapse's 250 m).
-        out = {'distance_m': slot['distance_m']}
+        out = {'distance_m': slot['distance_m'],
+               **({'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {})}
     elif slot_type == 'amrap_movement' and slot.get('duration_sec') and not slot.get('reps_per_round'):
         out = ({'duration_minutes': round(slot['duration_sec'] / 60)} if slot['duration_sec'] >= 60
                else {'work_sec': slot['duration_sec'], 'target_rounds': 1})

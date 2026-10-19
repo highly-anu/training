@@ -518,11 +518,44 @@ def generate(
     program = {'weeks': []}
     # A templated phase's rotation through each category's workouts, and
     # whether each workout fits the athlete as written (per phase).
-    template_rotation: dict = week_template.prior_rotation(
-        goal.get('phase_sequence') or [], entries[0], loader.load_all_frameworks()
-    ) if entries and entries[0].get('week_template') else {}
+    template_rotation: dict = {}
     template_fits: dict = {}
     template_recent: list = []
+    archetypes_by_id = {a['id']: a for a in archetypes}
+
+    def _template_fits(entry: dict):
+        """Whether the athlete can do a named workout as written in this
+        week's phase, in so many minutes (cached per phase)."""
+        _phase, _week = entry['phase'], entry['week_in_phase']
+        _excluded = frozenset(entry.get('exclude_exercises') or ())
+        _key = entry.get('phase_id') or _phase
+
+        def fits(arch: dict, minutes: float) -> bool:
+            if (arch.get('duration_estimate_minutes') or 0) > minutes:
+                return False
+            key = (arch['id'], _key)
+            if key not in template_fits:
+                template_fits[key] = _fits_as_written(
+                    arch, constraints, _phase,
+                    lambda a: populate_session(
+                        {'modality': a.get('modality')}, goal, constraints, exercises, archetypes,
+                        injury_flags_data, _phase, _week, [], [], forced_archetype=a,
+                        exercises_by_package=lib.get('exercises_by_package'), policy=policy,
+                        level_seeds=lib.get('level_seeds'), exclude_exercise_ids=_excluded,
+                        pinned_lifts=None, unfilled_cache={}))
+            return template_fits[key]
+        return fits
+
+    if entries and entries[0].get('week_template'):
+        # A regenerate from mid-track carries on where the track stands: the
+        # weeks before it are planned again (cheaply: fits are cached) so each
+        # pool's rotation and the last week's picks are what they were.
+        all_frameworks = loader.load_all_frameworks()
+        for prior in week_template.prior_entries(goal.get('phase_sequence') or [], entries[0]):
+            fw = all_frameworks.get(prior.get('framework_id')) or {}
+            if fw.get('categories'):
+                week_template.plan_week(prior, fw, constraints, archetypes_by_id, template_rotation,
+                                        _template_fits(prior), template_recent)
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
     # Each phase's main lifts, (archetype id, slot index) -> exercise id; reset
@@ -570,24 +603,9 @@ def generate(
         if entry.get('week_template') and framework.get('categories'):
             # The source's own week, day by day: each day the next named
             # workout of its category the athlete can do as written.
-            def _fits(arch: dict, minutes: float, _phase=phase, _excluded=phase_excluded,
-                      _week=week_in_phase, _key=phase_key) -> bool:
-                if (arch.get('duration_estimate_minutes') or 0) > minutes:
-                    return False
-                key = (arch['id'], _key)
-                if key not in template_fits:
-                    template_fits[key] = _fits_as_written(
-                        arch, constraints, _phase,
-                        lambda a: populate_session(
-                            {'modality': a.get('modality')}, goal, constraints, exercises, archetypes,
-                            injury_flags_data, _phase, _week, [], [], forced_archetype=a,
-                            exercises_by_package=lib.get('exercises_by_package'), policy=policy,
-                            level_seeds=lib.get('level_seeds'), exclude_exercise_ids=_excluded,
-                            pinned_lifts=None, unfilled_cache={}))
-                return template_fits[key]
             week_schedule, week_compromises = week_template.plan_week(
-                entry, framework, constraints, {a['id']: a for a in archetypes}, template_rotation, _fits,
-                template_recent, template_left_out)
+                entry, framework, constraints, archetypes_by_id, template_rotation,
+                _template_fits(entry), template_recent, template_left_out)
         for compromise in week_compromises:
             if compromise not in all_compromises:
                 all_compromises.append(compromise)
@@ -602,6 +620,12 @@ def generate(
                 'scheduler': sched_result.get('scheduler_trace', {}),
                 'sessions': {},
             }
+            if entry.get('week_template') and framework.get('categories'):
+                # The source's week decided the days, not the modality schedule.
+                week_trace['scheduler'] = {
+                    'week_template': entry['week_template'], 'is_deload': is_deload,
+                    'framework_selection': {'selected_id': framework['id'],
+                                            'selection_reason': 'week_template'}}
 
         # 2. Populate each session with archetype + exercises + loads
         populated_schedule: dict[int, list] = {}

@@ -123,6 +123,7 @@
           "archetypes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
                          "description": "The pool, in the rotation's order."},
           "warm_up": {"type": "boolean", "default": true, "description": "Prefix the day's session with a workout from `warm_up_category`."},
+          "long_day": {"type": "boolean", "default": false, "description": "Its workouts need time: when the athlete's days differ in length, these days take the longest."},
           "fallback": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
                        "description": "Categories tried in order when no workout of this one fits the athlete; the week says so."},
           "notes": {"type": "string"}

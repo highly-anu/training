@@ -1467,6 +1467,30 @@ def _generate_session_inner(body):
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
     phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
+    framework = loader.load_all_frameworks().get(body.get('framework_id')) or {}
+    if forced_arch is None and framework.get('categories'):
+        # A templated day (Horsemen's): another named workout of its category,
+        # as written, never a generic session of the modality.
+        import random
+        from src import week_template
+        from src.generator import _fits_as_written
+        def _probe(a):
+            return populate_session({'modality': a.get('modality')}, goal, constraints, lib['exercises'],
+                                    archetypes_filtered, merged_injury_flags, phase, week_in_phase,
+                                    forced_archetype=a, exercises_by_package=lib.get('exercises_by_package'),
+                                    policy=policy, level_seeds=lib.get('level_seeds'),
+                                    exclude_exercise_ids=phase_excluded, pinned_lifts=None, unfilled_cache={})
+        day = week_template.regenerate_day(
+            framework, body.get('category'), modality, constraints,
+            {a['id']: a for a in archetypes_filtered},
+            lambda a, minutes: (a.get('duration_estimate_minutes') or 0) <= minutes
+                and _fits_as_written(a, constraints, phase, _probe),
+            random.choice, exclude={body.get('current_archetype_id')} - {None})
+        if day is None:
+            return jsonify({'detail': 'No workout of this day fits as written (equipment, injuries, time).'}), 422
+        forced_arch = day.pop('_forced_archetype')
+        session_stub.update(day)
+        modality = day['modality']
     populated = populate_session(
         session_stub, goal, constraints,
         lib['exercises'], archetypes_filtered,
@@ -1484,6 +1508,10 @@ def _generate_session_inner(body):
 
     # Apply progression loads
     prog_model = _prog_model_for(modality, body, data)
+    if prog_model == 'as_written' and not (populated.get('archetype') or {}).get('pool_only'):
+        # As written means the source's own workouts; any other archetype
+        # keeps its modality's model (it has no load text to show).
+        prog_model = (data['modalities'].get(modality) or {}).get('progression_model', 'linear_load')
     for ea in populated.get('exercises', []):
         if ea.get('exercise') is None:
             continue
@@ -1504,6 +1532,7 @@ def _generate_session_inner(body):
         'modality':  modality,
         'archetype': arch,
         'is_deload': is_deload,
+        **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
         'exercises': [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])],
     })
@@ -1541,6 +1570,11 @@ def substitute_exercise():
     policy = provenance.resolve_source_policy(goal)
     lib = provenance.scope(data, policy)
 
+    # A templated day's warm-up or second workout: its slot lives in its own
+    # archetype (src/week_template.compose names it in the role).
+    from src.week_template import source_slot
+    session_role = slot_role
+    archetype_id, slot_role = source_slot(archetype_id, slot_role)
     arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
     if arch is None:
         return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
@@ -1583,7 +1617,7 @@ def substitute_exercise():
         load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
                               session_time_minutes=constraints.get('session_time_minutes', 75),
                               deload_keep=deload_keep)
-        ea = {'slot_index': slot_index, 'slot_role': slot_role,
+        ea = {'slot_index': slot_index, 'slot_role': session_role,
               'slot_type': slot.get('slot_type', 'sets_reps'),
               'exercise': ex, 'slot': slot, 'load': load}
         breakdown = cand.get('breakdown') or {}
