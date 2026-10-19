@@ -50,6 +50,9 @@ const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
   { id: 'sandbag', label: 'Sandbag' },
   { id: 'jump_rope', label: 'Jump Rope' },
   { id: 'resistance_band', label: 'Band' },
+  { id: 'sled', label: 'Sled' },
+  { id: 'tire', label: 'Tire' },
+  { id: 'dip_belt', label: 'Dip Belt' },
   { id: 'open_space', label: 'Open Space' },
 ]
 

@@ -65,7 +65,11 @@ def contract_requirements(goal: dict, level: str | None = None) -> dict:
     if not contract:
         return {}
     seeded = set((contract.get('level_seeds') or {}).get(level) or [])
-    out: dict = {'mastered_exercises': sorted({e for m in contract.get('modules') or []
+    # Only the modules this level runs: a novice on General Practice is never
+    # asked for the intermediate clean-and-press module's skills.
+    modules = [m for m in contract.get('modules') or []
+               if level is None or level in (m.get('training_levels') or [level])]
+    out: dict = {'mastered_exercises': sorted({e for m in modules
                                                for e in m.get('requires_mastery') or []} - seeded)}
     if contract.get('requires_kettlebell_pair'):
         out['kettlebell_count'] = 2
@@ -138,7 +142,11 @@ def schedule_probe(constraints: dict, framework: dict | None) -> dict | None:
     minutes = max(constraints.get('session_time_minutes') or 0, exp.get('ideal_session_minutes') or 0)
     if (days, minutes) == (constraints.get('days_per_week'), constraints.get('session_time_minutes')):
         return None
-    return {**constraints, 'days_per_week': days, 'session_time_minutes': minutes}
+    # A weekly schedule would be turned back into the athlete's days by the
+    # generator, so the probe drops it and what it derives.
+    probe = {k: v for k, v in constraints.items()
+             if k not in ('weekly_schedule', 'day_configs', 'preferred_days', 'forced_rest_days')}
+    return {**probe, 'days_per_week': days, 'session_time_minutes': minutes}
 
 
 def describe_lifts(constraints: dict, runs: dict[str, dict], exercises: dict, injury_flags: dict) -> dict[str, str]:
@@ -340,7 +348,9 @@ class _Explainer:
         if (ex.get('id') in (self.ref.get('mastered_exercises') or [])
                 and ex.get('id') not in (self.c.get('mastered_exercises') or [])):
             out.append({'cause': 'proficiency', 'needs': [], 'text': f"{name} needs confirmed mastery"})
-        if self.unlocked is not None and ex.get('id') not in self.unlocked:
+        unlocked = (self.unlocked.get(ex.get('_package'), set().union(*self.unlocked.values()))
+                    if isinstance(self.unlocked, dict) else self.unlocked)
+        if unlocked is not None and ex.get('id') not in unlocked:
             out.append({'cause': 'level', 'needs': [],
                         'text': f"{name} is not unlocked at {self.c.get('training_level')}"})
         return out
@@ -425,7 +435,8 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
     `causes` — the constraints that, lifted alone, restore it — or
     `['combined']`, and `knock_on` when the reference's own session or
     exercise was open to the athlete. `unlocked` (the exercise ids open at the
-    athlete's level) lets an exercise say it is level-locked.
+    athlete's level, or a dict of them per package, as the selector unlocks per
+    archetype package) lets an exercise say it is level-locked.
     """
     explain = _Explainer(constraints, reference_constraints, exercises, archetypes, injury_flags,
                          unlocked)
@@ -441,8 +452,11 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
         for cause in causes:
             totals.setdefault(cause, Counter())[what] += 1
         if 'equipment' in causes:
-            restore.update(needs)
+            restore.update(list(dict.fromkeys(needs)))  # once per change, however many slots need it
 
+    # A change counts as a knock-on only after a direct one: before the first,
+    # nothing has moved the rotation yet, so a difference is the constraint's own.
+    direct_seen = False
     for key in sorted(set(act) | set(ref), key=_order):
         a, r = act.get(key), ref.get(key)
         wi, day, si = key
@@ -489,7 +503,7 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
                 if cause == 'equipment':
                     needs += [e for n in per_slot for e in n]
             causes = (shape or ['combined']) + [c for c in DIMENSIONS if c in blocked and c not in shape]
-            knock_on = kind == 'archetype' and explain.archetype_open(r)
+            knock_on = direct_seen and kind == 'archetype' and explain.archetype_open(r)
             if knock_on:
                 why = [{'cause': 'knock_on', 'text': f"{_arch(r).get('name')} is open to the athlete: "
                                                      'an earlier change moved the rotation'}]
@@ -497,6 +511,7 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
                          alternatives=_session_alternatives(lifted, key, r, a),
                          reference_slots=ref_slots, actual_slots=_slot_list(a))
             count(causes, 'knock_on' if knock_on else 'sessions', needs)
+            direct_seen = direct_seen or not knock_on
             changes.append(entry)
             continue
 
@@ -507,7 +522,7 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
             was, now = _exercise_view(r_ea), _exercise_view(a_ea)
             causes = _restores_slot(lifted, key, r, i) or ['combined']
             found = explain.blockers(r_ea) if was is not None else []
-            knock_on = was is not None and not found
+            knock_on = direct_seen and was is not None and not found
             why, needs = [], []
             for cause in causes:
                 if cause != 'combined' and was is not None:
@@ -533,6 +548,7 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
                 'alternatives': _slot_alternatives(lifted, key, r, i, was, now),
             })
             count(causes, 'knock_on' if knock_on else 'slots', needs)
+            direct_seen = direct_seen or not knock_on
         if slot_changes:
             entry.update(change='slots', slots=slot_changes,
                          knock_on=all(sc['knock_on'] for sc in slot_changes))

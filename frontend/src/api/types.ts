@@ -64,6 +64,7 @@ export type EquipmentId =
   | 'jump_rope'
   | 'open_space'
   | 'pool'
+  | 'dip_belt'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'

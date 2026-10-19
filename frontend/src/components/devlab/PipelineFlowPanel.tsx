@@ -360,11 +360,10 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
           <div className="space-y-2">
             {/* Mini 7-day grid */}
             <div className="grid grid-cols-7 gap-1">
-              {DAY_NAMES.map((name, i) => {
-                const dayNum = i + 1
-                const dayStr = dayNum.toString()
-                const dayMods = dayAssignment.assignments[dayStr] ?? []
-                const isActive = activeDay === dayStr
+              {DAY_NAMES.map(name => {
+                // The trace keys assignments 'Mon'..'Sun' and sessions by the full day name.
+                const dayMods = dayAssignment.assignments[name] ?? []
+                const isActive = !!activeDay && activeDay.startsWith(name)
                 return (
                   <div
                     key={name}

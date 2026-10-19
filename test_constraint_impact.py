@@ -180,19 +180,24 @@ def test_order_and_added_sessions():
 def test_knock_on_and_level_locked():
     print('a rotation moved by an earlier change, and a level-locked exercise')
     athlete = {'equipment': ['kettlebell'], 'injury_flags': [], 'training_level': 'novice'}
-    ref = program({'Monday': [sess('kb_day', ea('kb_swing'), ea('goblet_squat', role='squat'))]})
-    act = program({'Monday': [sess('kb_day', ea('goblet_squat'), ea(role='squat', gap='LEVEL_LOCKED'))]})
-    level_lifted = program({'Monday': [sess('kb_day', ea('kb_swing'), ea('goblet_squat', role='squat'))]})
-    out = analyse(act, ref, {'level': level_lifted}, athlete, unlocked={'kb_swing'})
-    swing, squat = out['changes'][0]['slots']
+    # Monday's goblet squat is level-locked: a direct change. Wednesday's swing
+    # is open to a novice, so its change can only be that rotation moving.
+    ref = program({'Monday': [sess('kb_day', ea('goblet_squat'))],
+                   'Wednesday': [sess('kb_day', ea('kb_swing'), ea('goblet_squat', role='squat'))]})
+    act = program({'Monday': [sess('kb_day', ea(gap='LEVEL_LOCKED'))],
+                   'Wednesday': [sess('kb_day', ea('goblet_squat'), ea(role='squat', gap='LEVEL_LOCKED'))]})
+    out = analyse(act, ref, {'level': ref}, athlete, unlocked={'kb_swing'})
+    first = out['changes'][0]['slots'][0]
+    check('the first change of a program is direct, never a knock-on', first['knock_on'] is False)
+    swing, squat = out['changes'][1]['slots']
     check('the swing is open to a novice: knock-on', swing['knock_on'] is True
           and swing['why'] == [{'cause': 'knock_on',
                                 'text': 'KB Swing is open to the athlete: an earlier change moved the rotation'}],
           swing['why'])
     check('the goblet squat is not unlocked: direct', squat['knock_on'] is False and squat['causes'] == ['level'])
-    check('knock-ons are counted apart', out['totals'] == {'level': {'knock_on': 1, 'slots': 1}}, out['totals'])
-    check('a session is direct if any slot is', out['changes'][0]['knock_on'] is False
-          and out['sessions']['direct'] == 1)
+    check('knock-ons are counted apart', out['totals'] == {'level': {'knock_on': 1, 'slots': 2}}, out['totals'])
+    check('a session is direct if any slot is', out['changes'][1]['knock_on'] is False
+          and out['sessions']['direct'] == 2)
     locked = ci._Explainer(athlete, {}, EXERCISES, ARCHETYPES, FLAGS, {'kb_swing'}).blockers(ea('goblet_squat'))
     check('the level says so', locked == [{'cause': 'level', 'needs': [],
                                           'text': 'Goblet Squat is not unlocked at novice'}], locked)
@@ -317,10 +322,53 @@ def test_contract_route():
           and gp['sessions']['changed'] == 0, (gp.get('lifted'), gp.get('sessions')))
 
 
+def test_review_fixes():
+    print('what the review of #173 found')
+    goal = {'training_contract': {'modules': [
+        {'training_levels': ['novice', 'intermediate'], 'requires_mastery': []},
+        {'training_levels': ['intermediate'], 'requires_mastery': ['kb_clean']}]}}
+    check('a novice is not asked for an intermediate module\'s skills',
+          ci.contract_requirements(goal, 'novice') == {'mastered_exercises': []}
+          and ci.contract_requirements(goal, 'intermediate') == {'mastered_exercises': ['kb_clean']})
+    probe = ci.schedule_probe({'days_per_week': 1, 'session_time_minutes': 60, 'weekly_schedule': {'Monday': {}},
+                               'day_configs': {1: {}}, 'preferred_days': [1]},
+                              {'expectations': {'ideal_days_per_week': 5, 'ideal_session_minutes': 90}})
+    check('the schedule probe drops the weekly schedule the generator would restore',
+          probe == {'days_per_week': 5, 'session_time_minutes': 90}, probe)
+    athlete = {'equipment': [], 'injury_flags': ['wrist'], 'training_level': 'intermediate'}
+    custom = {**FLAGS, 'wrist': {'name': 'Wrist', 'excluded_movement_patterns': ['squat']}}
+    found = ci._Explainer(athlete, {}, EXERCISES, ARCHETYPES, custom, None).blockers(ea('goblet_squat'))
+    check('a custom flag names itself', any(b['cause'] == 'injury' and 'Wrist (squat)' in b['text'] for b in found), found)
+    ref = program({'Monday': [sess('novice_a', ea('back_squat'), ea('deadlift'))]})
+    act = program({'Monday': [sess('hlm', ea(gap='EQUIPMENT_UNAVAILABLE'), ea(gap='EQUIPMENT_UNAVAILABLE'))]})
+    out = analyse(act, ref, {'equipment': act}, {'equipment': [], 'injury_flags': [], 'training_level': 'intermediate'})
+    check('equipment counts once per change, not once per slot',
+          {r['id']: r['changes'] for r in out['restore']['equipment']} == {'barbell': 1, 'rack': 1}, out['restore'])
+
+    import api
+    client = api.app.test_client()
+    base = {'equipment': ['kettlebell', 'open_space'], 'days_per_week': 4, 'session_time_minutes': 60,
+            'training_level': 'novice', 'injury_flags': [], 'avoid_movements': [], 'periodization_week': 1,
+            'fatigue_state': 'normal'}
+    gp = client.post('/api/dev/constraint-impact', json={
+        'philosophy_id': 'wildman_kettlebell', 'track_id': 'general_practice', 'num_weeks': 1,
+        'constraints': base}).get_json()
+    check('novice General Practice lifts no proficiency', gp['feasible'] and 'proficiency' not in gp['lifted'], gp.get('lifted'))
+    weekly = {d: {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'}
+              for d in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')}
+    weekly['Monday']['session1'] = 'long'
+    gj = client.post('/api/dev/constraint-impact', json={
+        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+        'constraints': {**base, 'training_level': 'intermediate', 'weekly_schedule': weekly}}).get_json()
+    check('a weekly schedule does not hide what would unblock it',
+          [u['cause'] for u in gj.get('unblocked_by', [])] == ['schedule'], gj.get('unblocked_by'))
+
+
 def main() -> int:
     for fn in (test_runs, test_slot_emptied_by_equipment, test_archetype_by_level_and_equipment,
                test_combined_and_alternatives, test_order_and_added_sessions,
-               test_knock_on_and_level_locked, test_route, test_contract_rules, test_contract_route):
+               test_knock_on_and_level_locked, test_route, test_contract_rules, test_contract_route,
+               test_review_fixes):
         fn()
     if FAILURES:
         print(f'{len(FAILURES)} failed')
