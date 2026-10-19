@@ -315,6 +315,58 @@ def test_restoring_a_rewritten_past_repairs_the_block() -> None:
           m['inCurrentProgram'] is True and m['sessionUid'].startswith(vid_r + ':'), str(m))
 
 
+
+def test_a_regenerate_keeps_the_day_already_trained() -> None:
+    print('\na whole-program regenerate keeps the past, and today once it is trained')
+    reset()
+    from src.program_keys import DAY_NAMES
+
+    def every_day(name: str) -> dict:
+        prog = program('power', 'kb_ballistic_session', 30)
+        for w in prog['currentProgram']['weeks']:
+            w['schedule'] = {d: [session('power', 'kb_ballistic_session', 30)] for d in DAY_NAMES}
+            for ss in w['schedule'].values():
+                # Its own name and movements; the archetype id is the same.
+                ss[0]['archetype']['name'] = name
+                ss[0]['exercises'][0]['exercise']['id'] = name.lower().replace(' ', '_')
+        return prog
+
+    old = every_day('KB Ballistic Power Session')
+    ph.record_version(U, old, source='heal')
+    vid_old = ph.version_id(U, old)
+    wi, offset = divmod((TODAY - START_A).days, 7)
+    today_uid = ph.session_uid(vid_old, wi, DAY_NAMES[offset], 0)
+    check('nothing trained today yet', ph.trained_on(U, TODAY) is False)
+    with conn.cursor() as c:
+        c.execute("INSERT INTO workout_matches (imported_workout_id, user_id, session_key, "
+                  "match_confidence, matched_at, session_uid) VALUES ('w-today', %s, 'k', 'manual', NOW(), %s)",
+                  (U, today_uid))
+    check('a matched workout makes today trained', ph.trained_on(U, TODAY) is True)
+
+    # A contract module shares the archetype id; only the name says it is a
+    # different session (Wildman's swing module, 2026-10-19).
+    new = every_day('Nerd Math Two-Hand Swing')
+    check('a different name is a different day',
+          ph.divergence_date(ph.flatten_program('a', old), ph.flatten_program('b', new), START_A) == START_A)
+    kept, changed = ph.restore_elapsed(U, new, TODAY + timedelta(days=1))
+    days = {d for d, *_ in changed}
+    check('every elapsed day and today are given back', days == {START_A + timedelta(days=n)
+          for n in range((TODAY - START_A).days + 1)}, str(sorted(days))[:120])
+    week = kept['currentProgram']['weeks'][wi]['schedule']
+    tomorrow = TODAY + timedelta(days=1)
+    tw, toff = divmod((tomorrow - START_A).days, 7)
+    check("today keeps the session that was trained",
+          week[DAY_NAMES[offset]][0]['archetype']['name'] == 'KB Ballistic Power Session')
+    check('tomorrow is the new plan',
+          kept['currentProgram']['weeks'][tw]['schedule'][DAY_NAMES[toff]][0]['archetype']['name']
+          == 'Nerd Math Two-Hand Swing')
+    out = ph.record_version(U, kept, source='generate')
+    check('the block continues', out['reason'] == 'continued', out['reason'])
+    m = health_store.get_matches(U)[0]
+    check("today's match is on the current program",
+          m['inCurrentProgram'] is True and m['sessionUid'].startswith(out['versionId'] + ':'), str(m))
+
+
 def test_intervals_are_disjoint() -> None:
     print('\nno date resolves to two plans')
     days = [(START_A + timedelta(days=i)).isoformat() for i in range(0, 60)]
@@ -916,6 +968,7 @@ if __name__ == '__main__':
     test_intervals_are_disjoint()
     test_rebuilding_ahead_continues_the_block()
     test_restoring_a_rewritten_past_repairs_the_block()
+    test_a_regenerate_keeps_the_day_already_trained()
     test_a_new_start_date_starts_a_new_lineage()
     test_same_day_squash()
     test_no_start_date_is_a_clean_skip()

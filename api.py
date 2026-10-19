@@ -897,8 +897,9 @@ def generate_program():
             import json as _json
             resp_data = _json.loads(resp.get_data(as_text=True))
             if isinstance(resp_data, dict) and resp_data.get('weeks') is not None:
-                envelope = _wrap_generated_program(resp_data, body,
-                                                   get_user_program(g.user_id))
+                existing = get_user_program(g.user_id)
+                envelope = _wrap_generated_program(resp_data, body, existing)
+                envelope = _keep_days_behind(g.user_id, existing, envelope)
                 save_user_program(g.user_id, envelope)
                 # Archive what we just made the active plan. This is the richest
                 # copy that will ever exist — iOS strips `goal` and every `slot`
@@ -4096,6 +4097,31 @@ def health_match_suggestions():
 def health_dismiss_suggestion(workout_id: str):
     _health.delete_match_suggestion(g.user_id, workout_id)
     return jsonify({'dismissed': workout_id})
+
+
+def _keep_days_behind(user_id: str, existing: dict | None, envelope: dict) -> dict:
+    """A regenerate of the same block (same start date) keeps the days behind
+    the athlete: every date before today as it was planned, and today too once
+    it is trained (a matched workout or a completed log). The clients splice
+    "from tomorrow" themselves; the whole-program regenerate saved here did
+    not, and rewrote a session trained that morning (2026-10-19). With the past
+    kept, record_version sees the block continue and carries its matches."""
+    from src import program_history as ph
+    try:
+        start = ph.start_date_of(envelope)
+        if not existing or not start or ph.start_date_of(existing) != start:
+            return envelope
+        today = _today_for(_standards_context(user_id)[1])
+        cutoff = today + _timedelta(days=1) if ph.trained_on(user_id, today) else today
+        if _date.fromisoformat(start) >= cutoff:
+            return envelope
+        restored, changed = ph.restore_elapsed(user_id, envelope, cutoff)
+        if changed:
+            app.logger.info('generate: kept %d elapsed day(s) of %s', len(changed), user_id)
+        return restored
+    except Exception as err:  # noqa: BLE001 — keeping the past must never fail the save
+        app.logger.warning('generate: could not keep the elapsed days: %s', err)
+        return envelope
 
 
 def _standards_context(user_id: str) -> tuple[str, str | None]:
