@@ -256,3 +256,100 @@ For Wildman, I recommend a narrow engine-first sequence.
 5. Then revise the package data to use the supported contract.
 The acceptance standard should be concrete: every essential rule must either be fulfilled in the generated prescription or produce an explicit unresolved requirement. A familiar session title, filled exercise slots, and a passing warning baseline are insufficient.
 Before applying this to your ongoing program, we should audit its exact saved prescription and preserve your completed week-one work. Any implementation edits should begin on a new Git branch.
+
+## Re-measured and extended, 2026-10-19
+
+Added after the contract work was committed (`wildman-contract`) and the Dev Lab's
+constraint-impact route existed (`dev_lab`). The plan that follows from it is
+`docs/roadmap.md` item 9; this section is its evidence.
+
+### The sample, re-run
+
+The same 22 programs (each package's primary track, novice and intermediate, 12
+weeks, the first framework's ideal days and minutes, all equipment, no injuries),
+generated on the current code:
+
+| Package | Novice | Intermediate |
+| --- | --- | --- |
+| Wildman | contract: fixed modules, 0 substitutions | contract |
+| Gym Jones | 28 of 60 substituted, 40 aerobic recovery | as written |
+| Horsemen GPP | 24 substituted, 6 empty slots, 36 of 60 aerobic base | as written |
+| Marcus Filly | 36 substituted, 48 of 60 positional mobility | as written |
+| Uphill Athlete | 16 substituted, 44 of 60 recovery jogs | 20 of 60 recovery jogs |
+| CrossFit | 36 of 48 the same AMRAP template | 33 of 48 |
+| BJJ | 12 of 60 are mat classes | the same |
+| Starting Strength | 3×5 A/B, as written | HLM and 5×5 inside the novice LP track |
+| ATG, Ido Portal, Kelly Starrett | as before: no substitutions, the depth findings stand | |
+
+Every non-contract number is the audit's own: nothing outside Wildman has moved.
+The fidelity gate does not see these failures. Of its 228 baselined findings, 184
+are `intensity_split`; none says that a novice program is two-thirds recovery
+jogs, that CrossFit repeats one template, or that BJJ trains the mat once a week
+in five. "0 errors" is not evidence of fidelity yet.
+
+### The root causes, for the ten packages on the old generator
+
+| Audit cause (matrix letter) | Contract (Wildman) | Old generator (ten packages) |
+| --- | --- | --- |
+| No executable contract, no output gate (1, A) | `verify` + phase rules; 422 before saving | No acceptance gate: `fidelity` is a separate tool |
+| Progression ownership (2, B) | explicit policy per module | No framework sets `prescription_policy`; `linear_load`, `volume_block` and `density` still share one calculation |
+| Calendar progression (3, F) | confirmed state from clean logged work | `starting load + weeks × increment` |
+| Eligibility vs mastery (4, G) | `requires_mastery`, level seeds | prerequisite closure only |
+| Track identity (5, D) | fixed modules per track | selection by modality, phase kind and level; no track scope |
+| Module scheduling (6, H) | placement with spacing; optional modules | modality ratios; fallback substitutes another modality |
+| Workload (7, E) | budget of actual blocks and rests | labels capped apart from contents; deloads keep 60–85 % (roadmap 9.4 before this) |
+| Schema vs runtime (8, C) | contract schema = capabilities | `intensity_pct_1rm` sets no load; 44 archetypes declare `scaling.equipment_limited` that nothing executes |
+| Output reinterpretation (10, I) | resolved metadata through clients and watches | as before |
+
+Two data findings the audit did not have, both from the Dev Lab work:
+
+- **Injury data is mostly inert.** 55 of the 63 `modified_exercises` pairs in
+  `injury_flags.yaml` name an exercise no package declares, so no substitute is ever
+  given (Uphill with a knee flag empties its running slots instead of biking); 94 of
+  the 143 `excluded_exercises` name nothing either, so protection rests on movement
+  patterns alone.
+- **Constraints degrade silently.** Starting Strength with no equipment returns
+  sessions whose every slot is empty, under a warning that "equipment-limited
+  scaling" will be used; an intermediate on its novice track gets other sessions
+  with only a `LEVEL_MISMATCH` warning. The constraint-impact route now shows both;
+  the generator should not produce them.
+
+### What the methods prescribe for the open questions (web research)
+
+The audit's per-package fixes left two kinds of decision open: whether a package
+should serve novices at all, and what structure its contract must express.
+
+| Package | Finding | Consequence |
+| --- | --- | --- |
+| Uphill Athlete | Publishes an 8-week *Beginner Mountain Fitness* plan for people with no prior experience: hikes or walks plus beginner strength ([plan](https://uphillathlete.com/training-plans/8-week-beginner-mountaineering-training-plan/)) | Write a novice track; do not refuse |
+| Marcus Filly | *Base Camp* is his beginner program: 8 weeks, three 60-minute sessions, each warm-up + strength by movement pattern + conditioning, in barbell, dumbbell or kettlebell versions ([Rogue listing](https://www.roguefitness.com/apo/functional-bodybuilding-base-camp)) | Write a novice track on that shape |
+| Gym Jones | *Foundation* is for people with a training background; true beginners are sent to the coached *Basecamp* class ([Gym Jones HQ](https://gymjones.com/headquarters/), [Foundation listing](https://marketplace.trainheroic.com/workout-plan/program/williams-program-1638632182)) | Refuse novices with that explanation |
+| Starting Strength | Novice LP until session-to-session progress stops; intermediates move to weekly progression — Texas Method (volume, light, intensity day) or Heavy-Light-Medium ([Barbell Logic](https://barbell-logic.com/?p=4520), [Texas Method](https://fitnessvolt.com/strength-gains-texas-method/)) | Add an intermediate track; stop serving intermediates HLM inside novice LP |
+| CrossFit | The template: three days on, one off; metabolic, gymnastic and weightlifting elements as singlets, couplets and triplets; time domains rotated ([CrossFit Journal template](https://library.crossfit.com/free/pdf/06_03_CF_Template.pdf)) | Needs a contract policy for *variation within declared families*, not fixed movements |
+| BJJ | Mat time first; two or three strength sessions of 30–60 minutes on lighter mat days, scaled to how often the athlete rolls ([StrengthLog](https://www.strengthlog.com/strength-training-for-bjj/), [BJJEE](https://www.bjjee.com/articles/your-training-mix-how-to-find-your-optimum-bjj-training-strength-conditioning-weekly-ratio/)) | Protected mat sessions, S&C counted from them |
+| ATG | Zero → Dense Strength → Standards, advancing by performance markers; the official markers are not public ([overview](https://exercisewithstyle.com/knees-over-toes-program/)) | Tracks with gates once markers are sourced |
+| Kelly Starrett | 10–15 minutes of daily maintenance; a self-assessment of trunk, shoulders, hips and ankles drives the work ([Outside](https://www.outsideonline.com/health/training-performance/how-can-i-increase-my-training-and-stay-injury-free/)) | Assessment-driven selection; needs athlete input |
+| Horsemen GPP | The audit's source errors stand (`data/horsemen/horsemen.pdf`) | Re-extract the source before deciding anything else |
+| Wildman | Pentathlon rebuilt from kettlebell-sport practice (handoff, 2026-10-19) | Done; the handoff's review items remain |
+
+Most of these are vendor or practitioner pages, not primary texts; where a primary
+program is paid (Base Camp, ATG, Texas Method's book), only its public structure is
+used and the track says it is an adaptation.
+
+### The contract has to grow before it fits every package
+
+Fixed modules fit Wildman, Starting Strength, Horsemen's named workouts and
+Uphill's strength. The other methods need policies the compiler does not have yet:
+
+| Policy | Needed by | Exists |
+| --- | --- | --- |
+| Fixed modules, spacing, refusal, verification | all | yes |
+| Optional modules on free days | Pentathlon runs; BJJ open mats | yes (2026-10-19) |
+| Load per confirmed exposure (add weight after a completed session) | Starting Strength novice, Horsemen strength | no — confirmed state exists, the model does not |
+| Weekly ramp that restarts after a deload | Uphill base, Gym Jones | no |
+| Protected external sessions (attendance, not exercises) | BJJ classes | no |
+| Variation within declared families and time domains | CrossFit, Gym Jones, Filly conditioning | no |
+| Assessment-gated selection and advancement | Kelly Starrett, ATG | no |
+
+So "move every package to a contract" is right as a direction, but each package
+waits for the policies it needs; the shared fixes below help all of them now.

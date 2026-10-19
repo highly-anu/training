@@ -214,6 +214,9 @@ Sources: [IKMF rules](https://ikmf-world.com/disciplines/ikmf-pentathlon),
 [Wildman programs](https://www.wildmanathletica.com/all-programs). No official
 IKMF or Fedorenko training program is public; RazeBells' full program is paid.
 
+What comes next for every package — re-measured, researched and ranked — is
+`docs/roadmap.md` item 9; its evidence is the 2026-10-19 section of the audit.
+
 ## Research and confidence
 
 Sources used during the discussion, with narrower claims than marketing promises:
