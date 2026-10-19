@@ -380,6 +380,19 @@ def test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go():
     lumbar, _, _ = _bjj(weeks=1, injury_flags=['lumbar_disc'])
     assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
 
+
+def test_review_fixes_of_pr_175():
+    # The module record names what was prescribed (an alternative, not the
+    # authored lift), so confirmed_state reads the logs the athlete wrote.
+    p, _, _ = plan(weeks=2)
+    for s in sessions(p):
+        prescribed = {e['exercise']['id'] for e in s['exercises'] if e.get('exercise')}
+        for r in s['modules']:
+            assert r['exercise_ids'] and set(r['exercise_ids']) <= prescribed, (r, prescribed)
+    # Fewer days than the smallest exposures_by_days key refuses.
+    short, _, _ = _bjj(weeks=1, days_per_week=2)
+    assert not short['weeks'] and short['validation_errors']
+
 if __name__ == '__main__':
     suite = unittest.TestSuite(unittest.FunctionTestCase(f) for name, f in list(globals().items())
                                if name.startswith('test_'))

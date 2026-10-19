@@ -70,6 +70,6 @@ expectations:
   ideal_weeks: 14
   min_days_per_week: 3
   ideal_days_per_week: 5
-  min_session_minutes: 45
+  min_session_minutes: 60
   ideal_session_minutes: 60
   supports_split_days: true
