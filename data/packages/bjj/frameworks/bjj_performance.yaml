@@ -7,15 +7,16 @@ goals_served:
   - strength_endurance
   - combat_sport
 
+# At five training days; the contract scales classes with the week
+# (training_contract.yaml exposures_by_days). Joint maintenance sits inside the
+# strength sessions; live rolling is the conditioning.
 sessions_per_week:
   combat_sport: 3
   strength_endurance: 2
-  anaerobic_intervals: 1
-  mobility: 1
 modality_priority:
   committed: [combat_sport]
-  core: [strength_endurance, anaerobic_intervals]
-  supplementary: [mobility]
+  core: [strength_endurance]
+  supplementary: []
 
 intensity_distribution:
   zone1_2_pct: 0.25
@@ -31,7 +32,7 @@ applicable_when:
     - intermediate
     - advanced
     - elite
-  days_per_week_min: 4
+  days_per_week_min: 3
   days_per_week_max: 7
   goal_priority_min:
     combat_sport: 0.3
@@ -67,7 +68,7 @@ notes: >
 expectations:
   min_weeks: 10
   ideal_weeks: 14
-  min_days_per_week: 4
+  min_days_per_week: 3
   ideal_days_per_week: 5
   min_session_minutes: 45
   ideal_session_minutes: 60

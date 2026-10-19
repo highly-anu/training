@@ -324,8 +324,9 @@ exercises:
   modality:
   - relative_strength
   - strength_endurance
-  equipment:
-  - pull_up_bar
+  # A low bar, rings or the edge of a sturdy table: the substitute the
+  # grappling S&C session names for an athlete without a pull-up bar.
+  equipment: []
   effort: medium
   bilateral: true
   movement_patterns:
@@ -342,8 +343,9 @@ exercises:
     reps: 10
   sources:
   - BJJ
-  notes: 'Body straight, bar to sternum. The horizontal pull that balances the
-    heavy vertical pulling volume grappling already supplies.'
+  notes: 'Body straight, bar (or table edge) to sternum. The horizontal pull that
+    balances the heavy vertical pulling volume grappling already supplies, and the
+    pull for an athlete without a pull-up bar.'
 
 - id: dead_hang
   name: Dead Hang

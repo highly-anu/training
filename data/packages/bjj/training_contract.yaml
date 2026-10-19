@@ -1,0 +1,206 @@
+version: 1
+sources:
+- https://www.strengthlog.com/strength-training-for-bjj/
+- https://www.bjjee.com/articles/your-training-mix-how-to-find-your-optimum-bjj-training-strength-conditioning-weekly-ratio/
+- https://marketplace.trainheroic.com/workout-plan/team/relentless-grappler-team
+tracks:
+  mat_support:
+    training_levels:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+    notes: 'Mat time first. Classes take most of the week and grow with it — two at three training days,
+      three at four or five, four at six, five at seven — and strength and conditioning support them:
+      one short session up to four days, two from five, never more than the mat. The class is your
+      gym''s; its minutes here are the shape of a typical class, not instructions to the coach. Strength
+      work is prescribed by effort: choose the load you finish at the target RPE and let a hard week
+      on the mat lower it. Deload weeks drop live rolling and keep the drilling.
+
+      '
+    modules:
+    - id: mat_class
+      name: BJJ Class
+      archetype_id: bjj_class
+      modality: combat_sport
+      training_levels:
+      - novice
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 3
+      exposures_by_days:
+        3: 2
+        4: 3
+        5: 3
+        6: 4
+        7: 5
+      min_spacing_days: 1
+      max_rpe: 9
+      progression:
+        model: skill_hold
+      blocks:
+      - role: warm_up
+        exercise_id: bjj_shrimp_drill
+        slot_type: skill_practice
+        duration_sec: 600
+        notes: Shrimping, technical stand-ups, bridges and hip escapes; wrists and neck.
+      - role: drilling
+        exercise_id: bjj_drilling
+        slot_type: skill_practice
+        duration_sec: 1200
+        notes: The technique of the day with a partner, as the coach directs. Where skill accumulates.
+      - role: positional
+        exercise_id: bjj_positional_sparring
+        slot_type: time_domain
+        duration_sec: 600
+        deload_keep: 0.5
+        notes: Live from a set position, reset after each finish or escape.
+      - role: rolling
+        exercise_id: bjj_live_rolling
+        slot_type: time_domain
+        duration_sec: 1200
+        deload_keep: 0
+        alternatives:
+        - bjj_positional_sparring
+        - bjj_drilling
+        notes: Live rounds of five to six minutes with a minute between. Tap early. Where an injury
+          rules rolling out, positional work or drilling takes its place.
+    - id: grappling_strength
+      name: Grappling Strength
+      archetype_id: grappling_sc
+      modality: strength_endurance
+      training_levels:
+      - novice
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 1
+      min_spacing_days: 2
+      max_rpe: 8
+      deload_keep: 0.6
+      progression:
+        model: skill_hold
+      blocks:
+      - role: prep
+        exercise_id: bjj_shoulder_dislocate
+        slot_type: skill_practice
+        optional: true
+        duration_sec: 300
+        alternatives:
+        - bjj_thoracic_extension
+      - role: pull
+        exercise_id: pull_up
+        slot_type: sets_reps
+        sets: 5
+        reps: 5
+        rest_sec: 150
+        rpe_target: 8
+        duration_sec: 900
+        alternatives:
+        - bjj_inverted_row
+        notes: Full dead hang at the bottom; add load when five clean reps stay below RPE 8.
+      - role: hinge
+        exercise_id: bjj_kb_swing
+        slot_type: sets_reps
+        sets: 5
+        reps: 10
+        rest_sec: 90
+        rpe_target: 7
+        duration_sec: 600
+        alternatives:
+        - bjj_romanian_deadlift
+        - bjj_glute_bridge
+        notes: Hip drive for bridging, sweeps and escapes; speed is the quality, not grinding.
+      - role: hang
+        exercise_id: dead_hang
+        slot_type: static_hold
+        optional: true
+        sets: 3
+        hold_sec: 45
+        rest_sec: 60
+      - role: trunk
+        exercise_id: bjj_hollow_hold
+        slot_type: static_hold
+        sets: 3
+        hold_sec: 30
+        rest_sec: 45
+        alternatives:
+        - bjj_plank_hold
+      - role: neck
+        exercise_id: bjj_neck_isometric
+        slot_type: static_hold
+        optional: true
+        sets: 4
+        hold_sec: 20
+        rest_sec: 30
+        deload_keep: 1
+        notes: Gently, four directions; stop at any radiating symptom.
+    - id: grip_endurance
+      name: Grip and Isometric Endurance
+      archetype_id: bjj_grip_isometric
+      modality: strength_endurance
+      training_levels:
+      - novice
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 1
+      exposures_by_days:
+        3: 0
+        5: 1
+      min_spacing_days: 2
+      max_rpe: 8
+      deload_keep: 0.6
+      progression:
+        model: skill_hold
+      blocks:
+      - role: prep
+        exercise_id: bjj_hip_90_90
+        slot_type: skill_practice
+        optional: true
+        duration_sec: 300
+        alternatives:
+        - bjj_couch_stretch
+      - role: towel_pull
+        exercise_id: bjj_towel_pull_up
+        slot_type: sets_reps
+        sets: 4
+        reps: 6
+        rest_sec: 120
+        rpe_target: 8
+        duration_sec: 600
+        alternatives:
+        - pull_up
+        - bjj_inverted_row
+        notes: A towel over the bar is a lapel; stop the set when the grip goes.
+      - role: hang
+        exercise_id: dead_hang
+        slot_type: static_hold
+        optional: true
+        sets: 4
+        hold_sec: 45
+        rest_sec: 60
+      - role: frame
+        exercise_id: bjj_side_plank
+        slot_type: static_hold
+        sets: 4
+        hold_sec: 40
+        rest_sec: 45
+        alternatives:
+        - bjj_plank_hold
+        - bjj_glute_bridge
+      - role: anti_rotation
+        exercise_id: bjj_pallof_press
+        slot_type: static_hold
+        sets: 3
+        hold_sec: 30
+        rest_sec: 45
+        alternatives:
+        - bjj_hollow_hold
+        notes: Hold the press out and refuse to be turned, each side.
+      - role: wrists
+        exercise_id: bjj_wrist_prep
+        slot_type: skill_practice
+        duration_sec: 180
+        deload_keep: 1

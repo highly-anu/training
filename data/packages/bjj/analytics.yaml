@@ -12,11 +12,6 @@ progress:
     scope: {archetypes: [bjj_class]}
     expected: {load_field: duration_minutes}
 
-  - id: round_conditioning
-    label: Conditioning rounds
-    primitive: rounds
-    scope: {archetypes: [bjj_round_conditioning], slot_types: [emom]}
-
   - id: grip_holds
     label: Grip and trunk holds
     primitive: hold_seconds
@@ -28,5 +23,5 @@ progress:
     primitive: set_load
     scope:
       archetypes: [grappling_sc, bjj_grip_isometric]
-      slot_roles: ["grip_pulling*"]
+      slot_roles: ["*_pull"]
     expected: prescribed

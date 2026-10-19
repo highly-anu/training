@@ -22,6 +22,8 @@ intensity_model: hard_easy_alternation
 progression_philosophy: time_based
 sources:
   - "plan.md section 1 (BJJ)"
+  - "StrengthLog, Strength training for BJJ (2–3 short sessions on lighter mat days)"
+  - "BJJEE, finding your BJJ / strength and conditioning ratio"
 notes: >
   BJJ as a philosophy entry governs how the system allocates and protects mat time.
   Required equipment is empty — the sport itself requires only a mat and partner;
@@ -48,7 +50,11 @@ tracks:
     name: "BJJ Performance"
     description: >
       Strength and conditioning around the mat: class is the anchor, and
-      everything else supports it without competing for recovery.
+      everything else supports it without competing for recovery. Classes
+      take most of the week — two at three training days, three at four or
+      five, four at six, five at seven — with one short strength session up
+      to four days and two from five, never more than the mat
+      (training_contract.yaml).
     phases:
       - id: mat_support
         name: "Mat-Time Support"
@@ -58,12 +64,14 @@ tracks:
         framework_id: bjj_performance
         focus: "Support the mat without stealing recovery"
         description: >
-          Mat time is non-negotiable; S&C fits around it. Hard rolling days
-          are followed by drilling or lighter work. The targets are the sport's
-          demands — isometric endurance for frames and grips, hip
-          explosiveness, grip endurance through six-minute rounds — and the
-          shoulders, knees and neck are protected with mandatory grappling
-          mobility.
+          Mat time is non-negotiable; S&C fits around it, on the days between
+          classes where the week allows. Strength is prescribed by effort —
+          the load you finish at the target RPE, lowered by a hard week on the
+          mat. The targets are the sport's demands — isometric endurance for
+          frames and grips, hip explosiveness, grip endurance through
+          six-minute rounds — and the neck, shoulders, hips and wrists are
+          maintained inside every strength session. Deload weeks drop live
+          rolling and keep the drilling.
         adaptations:
           - "Isometric and grip endurance"
           - "Hip explosiveness"

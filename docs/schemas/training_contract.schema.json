@@ -31,8 +31,9 @@
         "id": {"type": "string"}, "name": {"type": "string"},
         "archetype_id": {"type": "string"}, "modality": {"type": "string"},
         "training_levels": {"$ref": "#/definitions/levels"},
-        "exposures_per_week": {"type": "integer", "minimum": 1, "maximum": 3},
-        "min_spacing_days": {"type": "integer", "minimum": 2, "maximum": 7},
+        "exposures_per_week": {"type": "integer", "minimum": 1, "maximum": 6},
+        "exposures_by_days": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 6}, "description": "Weekly exposures by the days the athlete trains (the nearest listed count at or below theirs); 0 leaves the module out. Overrides exposures_per_week."},
+        "min_spacing_days": {"type": "integer", "minimum": 1, "maximum": 7},
         "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
@@ -59,7 +60,15 @@
           "required": ["role", "exercise_id", "slot_type"],
           "properties": {
             "role": {"type": "string"}, "exercise_id": {"type": "string"},
-            "slot_type": {"enum": ["emom", "time_domain", "skill_practice"]},
+            "slot_type": {"enum": ["emom", "time_domain", "skill_practice", "sets_reps", "static_hold"]},
+            "alternatives": {"type": "array", "items": {"type": "string"}, "description": "Substitutes the method accepts, in order: the first the athlete's equipment and injuries allow is prescribed."},
+            "sets": {"type": "integer", "minimum": 1},
+            "reps": {"type": "integer", "minimum": 1},
+            "hold_sec": {"type": "integer", "minimum": 5},
+            "rest_sec": {"type": "integer", "minimum": 0},
+            "rpe_target": {"type": "number", "minimum": 1, "maximum": 10},
+            "deload_keep": {"type": "number", "minimum": 0, "maximum": 1, "description": "The share a deload keeps of this block; 0 drops it."},
+            "optional": {"type": "boolean", "description": "A supporting block left out, and said so, when none of its options fits the equipment or injuries; an essential block refuses instead."},
             "duration_sec": {"type": "integer", "minimum": 60},
             "rest_after_sec": {"type": "integer", "minimum": 0},
             "target_rpm": {"type": "number", "exclusiveMinimum": 0},
@@ -68,7 +77,9 @@
             "progresses": {"type": "boolean", "description": "Carries the module's progression without a bell (an easy run's minutes); a loaded block always does."},
             "intensity": {"enum": ["zone1", "zone2", "low", "moderate", "high"], "description": "A prescribed intensity; a zone counts the block's heart rate in the analytics."}
           },
-          "allOf": [{"if": {"properties": {"slot_type": {"enum": ["time_domain", "skill_practice"]}}}, "then": {"required": ["duration_sec"]}}]
+          "allOf": [{"if": {"properties": {"slot_type": {"enum": ["time_domain", "skill_practice"]}}}, "then": {"required": ["duration_sec"]}},
+                    {"if": {"properties": {"slot_type": {"const": "sets_reps"}}}, "then": {"required": ["sets", "reps", "duration_sec"]}},
+                    {"if": {"properties": {"slot_type": {"const": "static_hold"}}}, "then": {"required": ["sets", "hold_sec"]}}]
         }}
       }
     }
