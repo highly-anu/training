@@ -11,6 +11,8 @@ on:
       - 'migrations/**'
       - 'requirements.txt'
       - 'Dockerfile'
+      - '.dockerignore'
+      - 'docs/schemas/**'
       - 'fly.toml'
 
 jobs:
