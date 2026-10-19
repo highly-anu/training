@@ -1,7 +1,7 @@
 # Wildman generation fidelity — branch handoff
 
-Recorded: 2026-10-18. Branch: `codex/wildman-generation-contract`.
-Repository: `/Users/cesarhaerdfeldt/programming/training`.
+Recorded: 2026-10-18. Branch: `codex/wildman-generation-contract`, committed and rebased onto master as `wildman-contract` on 2026-10-19.
+Repository: this one (the branch was first built in the main checkout).
 
 This is a conversation and implementation handoff, not a second project backlog.
 `docs/roadmap.md` remains the central backlog. The implementation is local and

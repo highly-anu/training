@@ -104,7 +104,7 @@ Packages with equal scores are tied.
 
 
 
-Horsemen’s comparison used the repository’s original source document, particularly its introduction and named-workout definitions: /Users/cesarhaerdfeldt/programming/training/data/horsemen/horsemen.pdf
+Horsemen’s comparison used the repository’s original source document, particularly its introduction and named-workout definitions: data/horsemen/horsemen.pdf
 
 ## Original package improvement matrix
 
@@ -172,7 +172,7 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
    Important rules exist in prose: “increase only after clean repetitions,” “practice this movement twice weekly,” “six-minute sets,” or “double-bell work.” Some have structured equivalents; others do not.
    The engine does not interpret those sentences, and there is no capability check telling the author which promises it can actually execute. A package can therefore describe a richer methodology than the engine supports.
    Fix: Give every essential methodological rule a supported structured representation, an implementation owner, and an output check. If a required capability is unsupported, generation should report that explicitly. Descriptive text should explain the executable prescription.
-   This separation is explicit in [phase handling (line 158)](/Users/cesarhaerdfeldt/programming/training/src/phases.py:158): phase text is carried for display, while a limited set of structured fields drives behavior.
+   This separation is explicit in [phase handling (line 158)](../src/phases.py#L158): phase text is carried for display, while a limited set of structured fields drives behavior.
 2. Progression ownership is ambiguous, and several model names do not implement distinct progression.
    Generation chooses:
    framework modality override → shared modality model → linear-load fallback
@@ -182,7 +182,7 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
    - linear_load, density, and volume_block invoke the same linear-loading calculation.
    - Several other accepted models return plain sets and reps.
    - Timed slots use generic duration logic irrespective of the named progression model.
-   Thus a valid model name is not proof that the advertised progression exists. [Model selection (line 634)](/Users/cesarhaerdfeldt/programming/training/src/generator.py:634), [prescription dispatcher (line 342)](/Users/cesarhaerdfeldt/programming/training/src/progression.py:342)
+   Thus a valid model name is not proof that the advertised progression exists. [Model selection (line 634)](../src/generator.py#L634), [prescription dispatcher (line 342)](../src/progression.py#L342)
    Fix: Define one explicit resolution order, record the resolved policy on each prescription, and validate supported model × slot-type combinations. Unsupported combinations must produce an explicit failure instead of a generic prescription.
    Simply making every framework model override every slot would introduce a different class of errors; progression needs an explicit scope.
 3. Progression is primarily calendar arithmetic, without the athlete state needed to apply conditional advancement.
@@ -190,11 +190,11 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
    starting load + (week − 1) × assumed weekly exposures × increment
    The generator receives no completed-session history, successful exposure count, current bell inventory, or demonstrated movement mastery. Phase transitions reset the week counter used by that calculation.
    Wildman’s “advance when the current work is owned” cannot be implemented from a week number alone.
-   There are progression-review and manually applied adjustment features elsewhere. They do not form an automatic, methodology-specific advancement loop inside generation. [Loading calculation (line 42)](/Users/cesarhaerdfeldt/programming/training/src/progression.py:42), [generation inputs (line 383)](/Users/cesarhaerdfeldt/programming/training/src/generator.py:383), [existing adjustment mechanisms (line 2512)](/Users/cesarhaerdfeldt/programming/training/api.py:2512)
+   There are progression-review and manually applied adjustment features elsewhere. They do not form an automatic, methodology-specific advancement loop inside generation. [Loading calculation (line 42)](../src/progression.py#L42), [generation inputs (line 383)](../src/generator.py#L383), [existing adjustment mechanisms (line 2512)](../api.py#L2512)
    Fix: Maintain progression state per training module: current bell/load, cycle position, successful exposures, quality criteria, and hold/advance/reset decisions. Future weeks can remain conditional forecasts until results justify advancement.
 4. Prerequisite resolution confuses “can be selected” with “has been mastered.”
    The prerequisite resolver repeatedly unlocks exercises whose prerequisites are already unlocked. This correctly finds reachable movements, but does not establish that an athlete has learned them.
-   For Wildman, that process made 20/20 movements eligible for a novice. Phase exclusions temporarily remove some; their expiry then opens them without a mastery decision. [Prerequisite resolver (line 76)](/Users/cesarhaerdfeldt/programming/training/src/selector.py:76)
+   For Wildman, that process made 20/20 movements eligible for a novice. Phase exclusions temporarily remove some; their expiry then opens them without a mastery decision. [Prerequisite resolver (line 76)](../src/selector.py#L76)
    Fix: Separate:
    - eligibility to begin learning;
    - permission to practice a regression;
@@ -207,12 +207,12 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
    - General Practice can select the package’s pentathlon template.
    - A double-bell session can select a single-arm exercise.
    - Variety can win over repeated practice of a deliberately stable movement.
-   Some declared filters are also unimplemented: my direct tests showed that bilateral: true and equipment_required did not constrain _matches_slot_filter. [Archetype selection (line 246)](/Users/cesarhaerdfeldt/programming/training/src/selector.py:246), [exercise filters (line 124)](/Users/cesarhaerdfeldt/programming/training/src/selector.py:124), [recency scoring (line 451)](/Users/cesarhaerdfeldt/programming/training/src/selector.py:451)
+   Some declared filters are also unimplemented: my direct tests showed that bilateral: true and equipment_required did not constrain _matches_slot_filter. [Archetype selection (line 246)](../src/selector.py#L246), [exercise filters (line 124)](../src/selector.py#L124), [recency scoring (line 451)](../src/selector.py#L451)
    Fix: Add explicit track/session-family membership, movement continuity rules, and equipment quantity/loading semantics. Repetition versus variation must be a methodology policy.
 6. The scheduler reduces methodologies to modality proportions, losing module identity.
    The scheduler largely turns weekly ratios into whole-session allocations across available days. Its split-session support mainly adds secondary mobility/skill work; it is not a general system for composing independently progressing training modules.
    That is insufficient for Wildman’s Tetris approach, where modules have their own identity, runtime, exposure frequency, and spacing rules.
-   Separately, missing session types can be replaced with another modality through generic fallback logic. The replacement is reported, but generation continues even when the defining training stimulus has changed. [Allocation (line 240)](/Users/cesarhaerdfeldt/programming/training/src/scheduler.py:240), [split sessions (line 678)](/Users/cesarhaerdfeldt/programming/training/src/scheduler.py:678), [fallback substitutions (line 133)](/Users/cesarhaerdfeldt/programming/training/src/generator.py:133)
+   Separately, missing session types can be replaced with another modality through generic fallback logic. The replacement is reported, but generation continues even when the defining training stimulus has changed. [Allocation (line 240)](../src/scheduler.py#L240), [split sessions (line 678)](../src/scheduler.py#L678), [fallback substitutions (line 133)](../src/generator.py#L133)
    Fix: Schedule identifiable modules with minimum exposure and spacing requirements. Let the package declare which substitutions preserve intent and which make the requested program unsupported.
 7. Workload adaptation operates on disconnected representations.
    Session headers, timed blocks, sets/reps, deload flags, and generic phase multipliers are calculated separately.
@@ -221,7 +221,7 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
    - Capping individual timed blocks rather than the session total.
    - Leaving skill-practice duration unchanged on a deload.
    - Applying shared phase multipliers to timed work without a package-specific progression decision.
-   The result can be internally contradictory even before presentation. [Duration rewriting (line 1017)](/Users/cesarhaerdfeldt/programming/training/src/selector.py:1017), [timed prescriptions (line 163)](/Users/cesarhaerdfeldt/programming/training/src/progression.py:163)
+   The result can be internally contradictory even before presentation. [Duration rewriting (line 1017)](../src/selector.py#L1017), [timed prescriptions (line 163)](../src/progression.py#L163)
    Fix: Build one executable session structure, then calculate its full workload—including work, rest, repeated blocks, and transitions. Adapt that structure according to declared rules and derive the displayed duration afterward.
 8. Schema validity is stronger than runtime support in some places, and weaker in others.
    Examples I verified:
@@ -233,11 +233,11 @@ Below are the root causes, ordered roughly by how directly they undermine trust 
 9. Fidelity checks are detached from the production success decision.
    The existing checker is useful, but generation does not invoke it as a final acceptance gate. The API performs feasibility validation and adds some coverage warnings; that is narrower than validating the completed prescription.
    The current Wildman checker profiles also use intermediate athletes only, so the novice substitution problem is outside that matrix. Baselines permit existing warnings, and the checked-in deployment workflows do not run the backend fidelity gate. Some checks reuse selector helpers, so they can inherit the selector’s blind spots.
-   Fix: Run independent post-generation invariants before accepting or saving a program. Test every supported level and full track. Keep legacy baselines for migration tracking, while making essential contract violations blocking. [Fidelity checker (line 243)](/Users/cesarhaerdfeldt/programming/training/src/fidelity.py:243), [profile selection (line 72)](/Users/cesarhaerdfeldt/programming/training/tools/check_fidelity.py:72), [API generation flow (line 1120)](/Users/cesarhaerdfeldt/programming/training/api.py:1120)
+   Fix: Run independent post-generation invariants before accepting or saving a program. Test every supported level and full track. Keep legacy baselines for migration tracking, while making essential contract violations blocking. [Fidelity checker (line 243)](../src/fidelity.py#L243), [profile selection (line 72)](../tools/check_fidelity.py#L72), [API generation flow (line 1120)](../api.py#L1120)
 10. Output and analytics can reinterpret the prescription again.
     This is not a blanket loss of all notes: the API and interactive clients preserve meaningful coaching text, and the watch receives structured RPM.
     However, Markdown skips structural blocks and reduces session notes to their first sentence. Progression analysis also independently resolves modality models, which can disagree with framework overrides used during generation.
-    Fix: Preserve a versioned prescription and its resolved policy through every client and analytics path. Each client should either represent its required instructions faithfully or declare the unsupported feature. [Markdown rendering (line 67)](/Users/cesarhaerdfeldt/programming/training/src/output.py:67), [analytics model inference (line 1104)](/Users/cesarhaerdfeldt/programming/training/src/progression_tracker.py:1104)
+    Fix: Preserve a versioned prescription and its resolved policy through every client and analytics path. Each client should either represent its required instructions faithfully or declare the unsupported feature. [Markdown rendering (line 67)](../src/output.py#L67), [analytics model inference (line 1104)](../src/progression_tracker.py#L1104)
 The common architectural cause is that multiple stages independently approximate the method, with no final proof that the combined result still fulfills its essential rules.
 My proposed importance × urgency matrix is:
 
