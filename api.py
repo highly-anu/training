@@ -1247,6 +1247,78 @@ def _stored_contract() -> str | None:
     return (current.get('training_contract') or {}).get('id')
 
 
+def _generated_json(resp) -> tuple[dict, int]:
+    """_generate_program_inner answers a response or a (response, status)."""
+    if isinstance(resp, tuple):
+        return resp[0].get_json(), resp[1]
+    return resp.get_json(), resp.status_code
+
+
+@app.post('/api/dev/constraint-impact')
+@require_auth
+def dev_constraint_impact():
+    """What the athlete's equipment, injuries and level change in a program,
+    and which one changes it (Dev Lab ▸ Impact; src/constraint_impact.py).
+
+    Takes generate's body (plus an optional `reference: {equipment,
+    training_level}`) and generates the athlete's program, a reference with
+    nothing in the way, and one run per constraint with only that one lifted —
+    up to five generations, so it runs where the authoring routes do and on at
+    most 12 weeks. An event date would size the program to the event, so it is
+    dropped: the start phase is the request's.
+    """
+    if not _authoring_enabled():
+        return jsonify({'detail': 'Dev Lab tools are disabled on this server'}), 403
+    import copy as _copy
+    from src import constraint_impact
+    from src.selector import _get_unlocked
+
+    body = request.get_json(silent=True) or {}
+    body.pop('event_date', None)
+    body.pop('persist', None)
+    try:
+        body['num_weeks'] = max(1, min(int(body.get('num_weeks') or 4), 12))
+    except (TypeError, ValueError):
+        body['num_weeks'] = 4
+    override = body.pop('reference', None) or {}
+
+    actual, status = _generated_json(_generate_program_inner(_copy.deepcopy(body)))
+    if status != 200:
+        return jsonify(actual), status
+    if not actual.get('weeks'):
+        return jsonify({'feasible': False, 'validation': actual.get('validation')})
+
+    athlete = actual['constraints']
+    data = loader.load_all_data()
+    lib = provenance.scope(data, provenance.resolve_source_policy(actual['goal']))
+    try:
+        framework = loader.load_framework(actual['weeks'][0].get('framework'))
+    except (FileNotFoundError, TypeError):
+        framework = None
+    reference = constraint_impact.reference_constraints(athlete, lib, framework, override)
+
+    programs: dict = {}
+    for name, cons in {'reference': reference,
+                       **constraint_impact.relaxations(athlete, reference)}.items():
+        variant = _copy.deepcopy(body)
+        variant['constraints'] = _copy.deepcopy(cons)
+        if not cons.get('injury_flags'):
+            variant['custom_injury_flags'] = []
+        program, st = _generated_json(_generate_program_inner(variant))
+        programs[name] = program if st == 200 else {'weeks': []}
+
+    result = constraint_impact.analyse(
+        actual, programs.pop('reference'), programs,
+        constraints=athlete, reference_constraints=reference,
+        exercises={**data['exercises'], **lib['exercises']},
+        archetypes={a['id']: a for a in data['archetypes'] if a.get('id')},
+        injury_flags=data['injury_flags'],
+        unlocked=_get_unlocked(athlete.get('training_level', 'intermediate'),
+                               lib['exercises'], lib['level_seeds']),
+    )
+    return jsonify({'feasible': True, 'validation': actual.get('validation'), **result})
+
+
 @app.post('/api/sessions/generate')
 @require_auth
 def generate_session():

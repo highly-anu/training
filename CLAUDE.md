@@ -133,6 +133,7 @@ All prefixed `/api/`:
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
+| POST | `/dev/constraint-impact` | Dev Lab ▸ Impact: generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level) and once per constraint lifted alone; every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier change moved the rotation, and the equipment that would restore most (`src/constraint_impact.py`). ≤ 12 weeks, up to five generations; local dev or `AUTHORING_ENABLED` only |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
 | GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
@@ -1077,6 +1078,7 @@ SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-ses
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
+SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
 ```
 
 The Dev Lab's panels render a recorded `generate?trace=1` answer
