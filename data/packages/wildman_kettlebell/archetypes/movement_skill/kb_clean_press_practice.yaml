@@ -1,0 +1,63 @@
+id: kb_clean_press_practice
+name: Single-Bell Clean and Press Practice
+modality: movement_skill
+category: kettlebell
+duration_estimate_minutes: 15
+required_equipment:
+- kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  notes: ''
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  duration_sec: 180
+- role: clean
+  slot_type: emom
+  notes: 'App adaptation: alternate hands each minute; perform clean repetitions,
+    then rest for the remainder. Intermediate entry assumes a proficient single-bell
+    clean.'
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_clean_single
+  sets: 5
+  reps_per_round: 1
+  work_sec: 60
+  rest_sec: 0
+- role: press
+  slot_type: emom
+  notes: 'App adaptation: alternate hands each minute; strict presses, no push press
+    or jerk. Repeat the same bell and movement throughout the cycle.'
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_press_single
+  sets: 5
+  reps_per_round: 1
+  work_sec: 60
+  rest_sec: 0
+- role: getup
+  slot_type: skill_practice
+  notes: Unloaded get-up positions only; no automatic advancement to a loaded get-up.
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_tgu
+  duration_sec: 120
+sources:
+- https://www.wildmanathletica.com/programming
+notes: 'Repeated single-bell practice in independently progressing modules. Complete
+  the repetitions at the start of each minute and rest for the remainder. Advance
+  only after clean completion at RPE 7 or below. Future exposures are conditional
+  forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing
+  a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression
+  is inferred from the calendar. Technique practice is an app adaptation.
+
+  '

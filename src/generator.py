@@ -474,6 +474,21 @@ def generate(
         )
 
     track_id = (goal.get('track') or {}).get('id')
+    if goal.get('training_contract'):
+        from . import training_contract
+        try:
+            program = training_contract.generate(goal['training_contract'], entries, constraints,
+                                                 {**data, 'injury_flags': injury_flags_data}, policy,
+                                                 loader.load_all_frameworks(), include_trace)
+            training_contract.verify_phase_rules(program, goal)
+        except training_contract.ContractError as exc:
+            return {'weeks': [], 'compromises': [], 'validation_errors': [
+                {'code': 'TRAINING_CONTRACT_UNFULFILLED', 'message': str(exc)}],
+                'training_contract': {'status': 'unfulfilled'}}
+        program['coverage_report'] = _build_coverage_report(program, policy)
+        if output_format == 'dict':
+            return program
+        return format_program(program, goal, constraints, validation)
     program = {'weeks': []}
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
@@ -635,8 +650,8 @@ def generate(
                 mod_id = session['modality']
                 # The week's framework may prescribe a modality its own way
                 # (Filly's strength work as RPE targets); else the modality's.
-                prog = ((framework.get('progression_overrides') or {}).get(mod_id)
-                        or prog_model_for.get(mod_id, 'linear_load'))
+                from .training_contract import resolve_model
+                prog = resolve_model(framework, mod_id, modalities)
 
                 # The session a test stands in for, prescribed as it would have
                 # been: what the week would have trained, recorded on the test
@@ -726,7 +741,9 @@ def generate(
                         populated['provenance'] = tag
 
                 # Complementary recovery work — mobility/rehab exercises targeting stressed patterns
-                comp = _select_complementary(populated.get('exercises', []), fallback_exercises)
+                session_package = (populated.get('archetype') or {}).get('_package')
+                recovery_exercises = data['exercises_by_package'].get(session_package, {})
+                comp = _select_complementary(populated.get('exercises', []), recovery_exercises)
                 if comp:
                     populated['complementary_work'] = [
                         {

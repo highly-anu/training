@@ -130,6 +130,8 @@ def philosophy_to_goal(phil_id: str, all_frameworks: list,
         n = len(bias) or 1
         priorities = {mod: 1.0 / n for mod in bias}
 
+    from .training_contract import load_contract
+    contract = load_contract(phil_id, track['id'])
     return {
         'id': f'_phil_{phil_id}',
         'name': phil.get('name', phil_id),
@@ -144,6 +146,7 @@ def philosophy_to_goal(phil_id: str, all_frameworks: list,
         'framework_selection': framework_selection,
         'primary_sources': [phil_id],
         'minimum_prerequisites': {},
+        **({'training_contract': contract} if contract else {}),
         'incompatible_with': [],
         'notes': phil.get('notes', ''),
     }

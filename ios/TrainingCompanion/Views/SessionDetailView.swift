@@ -323,7 +323,7 @@ struct SessionDetailView: View {
     /// A swap needs the slot the exercise fills; a meta entry or a slot the
     /// server did not name has nothing to rank alternatives for.
     private func canSwap(_ ea: ProgramExerciseAssignment) -> Bool {
-        canEditProgram && currentSession.archetype != nil && ea.slotRole != nil && !ea.meta
+        canEditProgram && currentSession.archetype != nil && ea.slotRole != nil && !ea.meta && ea.load.extra["module_id"] == nil
     }
 
     private func exerciseRow(_ ea: ProgramExerciseAssignment) -> some View {
@@ -350,6 +350,10 @@ struct SessionDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+            if case .bool(true)? = ea.load.extra["conditional"] {
+                Text("Forecast: advance only after clean completion at the prescribed effort.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if let sid = ea.standardId {
                 Label(appState.benchmarks.first { $0.id == sid }?.name ?? sid, systemImage: "trophy")
                     .font(.caption).foregroundStyle(Color.accentColor)

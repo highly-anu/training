@@ -504,6 +504,20 @@ struct BuilderStep4ReviewView: View {
     @EnvironmentObject var appState: AppState
     let onGenerate: () async -> Void
 
+    private var requirements: TrackEntryRequirements? {
+        builder.track(in: appState.philosophies.first { $0.id == builder.selectedPhilosophyId })?.entryRequirements
+    }
+    private var entryReady: Bool {
+        guard let r = requirements else { return true }
+        return r.trainingLevels.contains(builder.constraints.trainingLevel)
+            && Set(requiredSkills).isSubset(of: Set(builder.constraints.masteredExercises))
+            && (r.kettlebellCount < 2 || (builder.constraints.kettlebellCount ?? 0) >= 2)
+    }
+    private var requiredSkills: [String] {
+        requirements?.masteredExercisesByLevel?[builder.constraints.trainingLevel]
+            ?? requirements?.masteredExercises ?? []
+    }
+
     private let dayFmt: DateFormatter = {
         let f = DateFormatter(); f.dateStyle = .medium; return f
     }()
@@ -546,6 +560,27 @@ struct BuilderStep4ReviewView: View {
                 }
             }
 
+            if let r = requirements {
+                Section("Track readiness") {
+                    if !r.trainingLevels.contains(builder.constraints.trainingLevel) {
+                        Text("This track supports \(r.trainingLevels.joined(separator: ", ")) athletes.")
+                    }
+                    ForEach(requiredSkills, id: \.self) { id in
+                        Toggle("Controlled technique: " + id.replacingOccurrences(of: "wk_kb_", with: "").replacingOccurrences(of: "kb_", with: "").replacingOccurrences(of: "_", with: " "), isOn: Binding(
+                            get: { builder.constraints.masteredExercises.contains(id) },
+                            set: { checked in
+                                builder.constraints.masteredExercises.removeAll { $0 == id }
+                                if checked { builder.constraints.masteredExercises.append(id) }
+                            }))
+                    }
+                    if r.kettlebellCount >= 2 {
+                        Toggle("I have two appropriate matching kettlebells", isOn: Binding(
+                            get: { (builder.constraints.kettlebellCount ?? 0) >= 2 },
+                            set: { builder.constraints.kettlebellCount = $0 ? 2 : 1 }))
+                    }
+                }
+            }
+
             Section {
                 Button {
                     Task { await onGenerate() }
@@ -562,7 +597,7 @@ struct BuilderStep4ReviewView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(builder.isGenerating)
+                .disabled(builder.isGenerating || !entryReady)
             }
 
             if let error = builder.generationError {
@@ -622,6 +657,12 @@ private final class SettingsState: ObservableObject {
         eventDate = program.eventDate.flatMap { dayFmt.date(from: $0) }
 
         var c = GenerateConstraints()
+        if case .object(let saved)? = program.currentProgram?.extra["constraints"] {
+            if case .array(let ids)? = saved["mastered_exercises"] {
+                c.masteredExercises = ids.compactMap(\.stringValue)
+            }
+            if case .int(let count)? = saved["kettlebell_count"] { c.kettlebellCount = count }
+        }
         c.trainingLevel = profile.trainingLevel
         c.equipment = profile.equipment
         c.injuryFlags = profile.injuryFlags

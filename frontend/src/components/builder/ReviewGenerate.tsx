@@ -124,6 +124,14 @@ export function ReviewGenerate() {
     [philosophies, selectedPhilosophyIds, selectedTrackId],
   )
   const activeTrack = sourceMode === 'philosophy' || sourceMode === 'blend' ? picked?.track : undefined
+  const requirements = activeTrack?.entry_requirements
+  const requiredSkills = requirements?.mastered_exercises_by_level?.[constraints.training_level ?? 'intermediate']
+    ?? requirements?.mastered_exercises ?? []
+  const entryReady = !requirements || (
+    requirements.training_levels.includes(constraints.training_level ?? 'intermediate') &&
+    requiredSkills.every((id) => constraints.mastered_exercises?.includes(id)) &&
+    (requirements.kettlebell_count < 2 || (constraints.kettlebell_count ?? 0) >= 2)
+  )
   const trackLabel = activeTrack?.name ?? 'Auto-select'
   const startPhaseName = activeTrack?.phases.find((p) => p.id === startPhaseId)?.name
 
@@ -344,6 +352,26 @@ export function ReviewGenerate() {
       )}
 
       {/* Generate button */}
+      {requirements && (
+        <div className="space-y-2 text-sm">
+          {!requirements.training_levels.includes(constraints.training_level ?? 'intermediate') &&
+            <p>This track supports {requirements.training_levels.join(', ')} athletes. Choose a different track or correct your level.</p>}
+          {requiredSkills.map((id) => (
+            <label key={id} className="flex items-center gap-2">
+              <input type="checkbox" checked={constraints.mastered_exercises?.includes(id) ?? false}
+                onChange={(event) => useBuilderStore.getState().updateConstraints({ mastered_exercises: event.target.checked
+                  ? [...(constraints.mastered_exercises ?? []), id]
+                  : (constraints.mastered_exercises ?? []).filter((value) => value !== id) })} />
+              I can perform {id.replace(/^(wk_)?kb_/, '').replaceAll('_', ' ')} with controlled technique.
+            </label>
+          ))}
+          {requirements.kettlebell_count >= 2 && <label className="flex items-center gap-2">
+            <input type="checkbox" checked={(constraints.kettlebell_count ?? 0) >= 2}
+              onChange={(event) => useBuilderStore.getState().updateConstraints({ kettlebell_count: event.target.checked ? 2 : 1 })} />
+            I have two matching kettlebells appropriate for these exercises.
+          </label>}
+        </div>
+      )}
       <motion.div
         animate={{ scale: isPending ? 0.98 : 1 }}
         transition={{ duration: 0.2 }}
@@ -352,7 +380,7 @@ export function ReviewGenerate() {
           size="lg"
           className="w-full gap-2"
           onClick={handleGenerate}
-          disabled={isPending || !canGenerate || hasErrors === true || hasFeasibilityErrors}
+          disabled={isPending || !canGenerate || !entryReady || hasErrors === true || hasFeasibilityErrors}
         >
           {isPending ? (
             <>

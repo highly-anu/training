@@ -49,6 +49,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
     """Return (schema_filename, is_list_file) for a given path, or (None, False)."""
     norm = path.replace('\\', '/')
     basename = os.path.basename(norm)
+    if basename == 'training_contract.yaml':
+        return 'training_contract.schema.json', False
     # Vertical packages name files rather than nesting them in a typed directory.
     if basename == 'philosophy.yaml':
         return 'philosophy.schema.json', False

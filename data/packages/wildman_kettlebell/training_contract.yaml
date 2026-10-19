@@ -1,0 +1,450 @@
+version: 1
+sources:
+- https://www.wildmanathletica.com/programming
+- https://s3.amazonaws.com/kajabi-storefronts-production/sites/2147529643/themes/2148964886/downloads/wm1OoAfESN6SsE7bdmR9_NerdMath_SwingProgram_211011_r1.4.pdf
+- https://programs.wildmanathletica.com/kettlebell-programs
+- https://programs.wildmanathletica.com/snatch
+- https://programs.wildmanathletica.com/tgu
+- https://programs.wildmanathletica.com/blog/the-benefits-of-double-kettlebell-training
+- https://www.youtube.com/watch?v=LpFZMjh80nM
+tracks:
+  general_practice:
+    training_levels:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+    level_seeds:
+      intermediate:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+      advanced:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+      elite:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+    notes: 'Repeated single-bell practice in independently progressing modules. Complete the repetitions
+      at the start of each minute and rest for the remainder. Advance only after clean completion at RPE
+      7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell
+      throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or
+      double-bell progression is inferred from the calendar. Technique practice is an app adaptation.
+
+      '
+    modules:
+    - id: swing
+      name: Nerd Math Two-Hand Swing
+      archetype_id: kb_ballistic_session
+      modality: power
+      training_levels:
+      - novice
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      progression:
+        model: density_cycle
+        reps_start: 6
+        reps_step: 2
+        reps_max: 20
+        rounds:
+        - 10
+        - 20
+      blocks:
+      - role: prep
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 180
+        notes: Rehearse the hinge with a controllable bell; this is preparation, not a load test.
+      - role: main
+        exercise_id: wk_kb_swing_two_hand
+        slot_type: emom
+        loaded: true
+        notes: Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or
+          breathing deteriorates.
+      - role: recovery
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 120
+        notes: Gentle unloaded or very light shoulder circles; omit external load if fatigued.
+    - id: technique
+      name: Hinge and Get-Up Technique
+      archetype_id: kb_movement_skill_session
+      modality: movement_skill
+      training_levels:
+      - novice
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      progression:
+        model: skill_hold
+      blocks:
+      - role: prep
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: hinge
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 300
+        notes: Low-fatigue hinge practice. No automatic weight increases.
+      - role: getup
+        exercise_id: wk_kb_tgu
+        slot_type: skill_practice
+        duration_sec: 360
+        notes: Unloaded get-up positions, one side at a time. Use a shoe or no load until positions are
+          controlled; calendar time never authorizes adding a bell.
+    - id: clean_press
+      name: Single-Bell Clean and Press Practice
+      archetype_id: kb_clean_press_practice
+      modality: movement_skill
+      training_levels:
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      requires_mastery:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+      deload_keep: 0.5
+      progression:
+        model: density_cycle
+        reps_start: 1
+        reps_step: 1
+        reps_max: 5
+        rounds:
+        - 5
+        - 10
+      blocks:
+      - role: prep
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: clean
+        exercise_id: wk_kb_clean_single
+        slot_type: emom
+        loaded: true
+        notes: 'App adaptation: alternate hands each minute; perform clean repetitions, then rest for
+          the remainder. Intermediate entry assumes a proficient single-bell clean.'
+      - role: press
+        exercise_id: wk_kb_press_single
+        slot_type: emom
+        loaded: true
+        notes: 'App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat
+          the same bell and movement throughout the cycle.'
+      - role: getup
+        exercise_id: wk_kb_tgu
+        slot_type: skill_practice
+        duration_sec: 120
+        notes: Unloaded get-up positions only; no automatic advancement to a loaded get-up.
+  pentathlon:
+    deload_phases:
+    - competition
+    training_levels:
+    - intermediate
+    - advanced
+    - elite
+    test_module: pentathlon_events
+    notes: 'Sport-specific event practice, explicitly separate from General Practice. Confirm mastery
+      of all five events before entering. Timed sets advance only after clean completion, never past six
+      minutes; RPM is a scoring ceiling, not an instruction to chase it. The app''s gradual duration ramp
+      is a preparation adaptation, not a claimed official Wildman cycle.
+
+      '
+    modules:
+    - id: pentathlon_events
+      name: Pentathlon Event Practice
+      archetype_id: kb_pentathlon_training
+      modality: strength_endurance
+      training_levels:
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      requires_mastery:
+      - wk_kb_clean_single
+      - wk_kb_long_cycle_press
+      - kb_jerk_single
+      - wk_kb_half_snatch
+      - wk_kb_push_press_single
+      deload_keep: 0.6
+      progression:
+        model: timed_cycle
+        duration_start_sec: 180
+        duration_step_sec: 60
+        duration_max_sec: 360
+      blocks:
+      - role: prep
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 300
+      - role: clean
+        exercise_id: wk_kb_clean_single
+        slot_type: time_domain
+        duration_sec: 180
+        rest_after_sec: 300
+        target_rpm: 20
+        loaded: true
+      - role: long_cycle_press
+        exercise_id: wk_kb_long_cycle_press
+        slot_type: time_domain
+        duration_sec: 180
+        rest_after_sec: 300
+        target_rpm: 10
+        loaded: true
+      - role: jerk
+        exercise_id: kb_jerk_single
+        slot_type: time_domain
+        duration_sec: 180
+        rest_after_sec: 300
+        target_rpm: 20
+        loaded: true
+      - role: half_snatch
+        exercise_id: wk_kb_half_snatch
+        slot_type: time_domain
+        duration_sec: 180
+        rest_after_sec: 300
+        target_rpm: 18
+        loaded: true
+      - role: push_press
+        exercise_id: wk_kb_push_press_single
+        slot_type: time_domain
+        duration_sec: 180
+        target_rpm: 20
+        loaded: true
+      - role: recovery
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 300
+  squat_practice:
+    training_levels: &id001
+    - novice
+    - intermediate
+    - advanced
+    - elite
+    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+      proficiency or a heavier bell. '
+    modules:
+    - id: squat
+      name: Goblet Squat Practice
+      archetype_id: kb_squat_practice
+      modality: movement_skill
+      training_levels: *id001
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      requires_mastery: []
+      progression:
+        model: density_cycle
+        reps_start: 1
+        reps_step: 1
+        reps_max: 5
+        rounds:
+        - 5
+        - 10
+      blocks:
+      - role: prep
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: squat
+        exercise_id: wk_kb_squat_goblet
+        slot_type: emom
+        loaded: true
+        notes: "App adaptation: 1\u20135 controlled goblet squats at the start of each minute. Rest for\
+          \ the remainder. Repeat at the same bell; no automatic complexity increase."
+      - role: recovery
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 120
+  snatch_practice:
+    training_levels: &id002
+    - intermediate
+    - advanced
+    - elite
+    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+      proficiency or a heavier bell. '
+    modules:
+    - id: snatch
+      name: Single-Arm Swing and Snatch Practice
+      archetype_id: kb_snatch_practice
+      modality: power
+      training_levels: *id002
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      requires_mastery:
+      - wk_kb_swing_single_arm
+      - wk_kb_clean_single
+      - wk_kb_snatch
+      progression:
+        model: density_cycle
+        reps_start: 1
+        reps_step: 1
+        reps_max: 5
+        rounds:
+        - 5
+        - 10
+      blocks:
+      - role: prep
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: swing
+        exercise_id: wk_kb_swing_single_arm
+        slot_type: skill_practice
+        duration_sec: 240
+        notes: Alternate sides, brief sets with generous rest inside this practice window. Stop before
+          grip or breathing deteriorates.
+      - role: snatch
+        exercise_id: wk_kb_snatch
+        slot_type: emom
+        loaded: true
+        notes: 'App adaptation, not the purchased snatch protocol: alternate hands each minute; low-repetition
+          clean technique, then rest. A new bell requires a new cycle.'
+      - role: recovery
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 120
+  getup_mobility:
+    training_levels: *id002
+    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+      proficiency or a heavier bell. Practice-window durations include rests; they never mean continuous
+      overhead holds. Use one light bell appropriate for the most demanding movement, or omit this track
+      if that cannot be controlled. '
+    modules:
+    - id: getup_mobility
+      name: Get-Up and Loaded Mobility Practice
+      archetype_id: kb_getup_mobility_practice
+      modality: movement_skill
+      training_levels: *id002
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      requires_mastery:
+      - wk_kb_tgu
+      - kb_windmill
+      - wk_kb_rack_carry
+      - wk_kb_overhead_carry
+      progression:
+        model: skill_hold
+      blocks:
+      - role: prep
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: getup
+        exercise_id: wk_kb_tgu
+        slot_type: skill_practice
+        duration_sec: 360
+        loaded: true
+        notes: Practice singles on alternating sides with rest between repetitions; this is a six-minute
+          practice window, not a continuous hold.
+      - role: windmill
+        exercise_id: kb_windmill
+        slot_type: skill_practice
+        duration_sec: 240
+        loaded: true
+        notes: Alternate sides in small controlled sets with rest; do not chase range or fatigue.
+      - role: rack_carry
+        exercise_id: wk_kb_rack_carry
+        slot_type: skill_practice
+        duration_sec: 240
+        loaded: true
+        notes: Short walks on alternating sides, resting between efforts. Four minutes is the whole practice
+          window, not one uninterrupted carry.
+      - role: overhead_carry
+        exercise_id: wk_kb_overhead_carry
+        slot_type: skill_practice
+        duration_sec: 240
+        loaded: true
+        notes: Short walks on alternating sides with rest. Stop if overhead position deteriorates. Do
+          not carry continuously for the entire practice window.
+  double_bell_practice:
+    training_levels: *id002
+    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+      proficiency or a heavier bell. Requires two matching controllable bells and proficiency in every
+      double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored extension,
+      not an official Wildman cycle. '
+    modules:
+    - id: double_strength
+      name: Double-Bell Strength Practice
+      archetype_id: kb_double_strength_practice
+      modality: max_strength
+      training_levels: *id002
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      requires_mastery:
+      - kb_clean_double
+      - kb_press_double
+      - kb_squat_double
+      progression:
+        model: density_cycle
+        reps_start: 1
+        reps_step: 1
+        reps_max: 5
+        rounds:
+        - 5
+        - 10
+      blocks:
+      - role: prep
+        exercise_id: wk_kb_halo
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: clean
+        exercise_id: kb_clean_double
+        slot_type: emom
+        loaded: true
+      - role: press
+        exercise_id: kb_press_double
+        slot_type: emom
+        loaded: true
+      - role: squat
+        exercise_id: kb_squat_double
+        slot_type: emom
+        loaded: true
+    - id: double_power
+      name: Double-Bell Jerk Technique
+      archetype_id: kb_double_power_practice
+      modality: power
+      training_levels: *id002
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      deload_keep: 0.5
+      requires_mastery:
+      - kb_clean_double
+      - kb_jerk_single
+      - kb_jerk_double
+      progression:
+        model: skill_hold
+      blocks:
+      - role: prep
+        exercise_id: kb_deadlift
+        slot_type: skill_practice
+        duration_sec: 180
+      - role: jerk
+        exercise_id: kb_jerk_double
+        slot_type: skill_practice
+        duration_sec: 360
+        loaded: true
+        notes: 'App adaptation: brief sets of already-proficient double jerks, resting fully between sets.
+          This six-minute window is not a continuous jerk set and is not an IKMF pentathlon event.'
+    requires_kettlebell_pair: true

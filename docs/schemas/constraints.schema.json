@@ -7,6 +7,45 @@
   "required": ["equipment", "days_per_week", "session_time_minutes", "training_level"],
   "additionalProperties": false,
   "properties": {
+    "kettlebell_weights_kg": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "description": "Actual owned bell sizes. No size is inferred from the equipment category."
+    },
+    "mastered_exercises": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "kettlebell_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of matching kettlebells available for a double-bell track. Selected weight is per bell."
+    },
+    "module_progression_state": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "completed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
     "equipment": {
       "type": "array",
       "description": "Equipment the athlete has reliable access to. Used to filter archetypes and exercises.",

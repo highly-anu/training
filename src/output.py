@@ -44,6 +44,8 @@ def _fmt_load(load: dict) -> str:
 
     if 'reps_per_round' in load:
         parts.append(f"{load['reps_per_round']} reps/round")
+        if load.get('weight_kg') is not None:
+            parts.append(f"{load['weight_kg']:g} kg")
 
     if 'target_rounds' in load:
         fmt = load.get('format', 'AMRAP')
@@ -87,8 +89,8 @@ def _fmt_session(session: dict) -> str:
         lines.append('*No exercises assigned.*')
     else:
         for ea in exercises:
-            # Skip meta/structural slots — they're annotated in the archetype notes
             if ea.get('meta'):
+                lines.append(f"- **{ea.get('slot_role', 'Block').replace('_', ' ')}** — {_fmt_load(ea.get('load') or {})}")
                 continue
             ex = ea.get('exercise')
             if ex is None:
@@ -110,6 +112,8 @@ def _fmt_session(session: dict) -> str:
             if role:
                 line += f"  *({role})*"
             lines.append(line)
+            if (ea.get('slot') or {}).get('notes'):
+                lines.append(f"  {(ea.get('slot') or {})['notes']}")
 
     # Complementary recovery work
     comp_work = session.get('complementary_work', [])
@@ -126,8 +130,7 @@ def _fmt_session(session: dict) -> str:
     # Brief archetype note (first sentence only)
     raw_note = arch.get('notes', '').strip()
     if raw_note:
-        first = raw_note.split('.')[0].strip() + '.'
-        lines.append(f'\n> {first}')
+        lines.append(f'\n> {raw_note}')
 
     return '\n'.join(lines)
 

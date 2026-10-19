@@ -28,6 +28,8 @@ def _constraints(**over):
 
 def _gen(phil, track=None, weeks=4, goal=None, **over):
     goal = goal or goals.philosophy_to_goal(phil, FRAMEWORKS, track_id=track)
+    if goal.get('training_contract'):
+        over.setdefault('mastered_exercises', [eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])])
     return generate(goal_id=goal['id'], goal_dict=goal, constraints=_constraints(**over),
                     num_weeks=weeks, output_format='dict')
 
@@ -135,10 +137,9 @@ def test_skips_say_why_and_leave_the_week_as_scheduled():
         return [t['reason'] for t in raw['weeks'][week].get('tests_skipped') or []]
     assert skipped(_gen('gym_jones', weeks=1, start_phase='accumulation', equipment=['barbell', 'plates', 'kettlebell']), 0) \
         == ['equipment_gap'], 'no rower'
-    assert skipped(_gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition',
-                        training_level='novice'), 1) == ['level']
-    assert skipped(_gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition',
-                        session_time_minutes=40), 1) == ['session_too_short']
+    for overrides in ({'training_level': 'novice'}, {'session_time_minutes': 40}):
+        rejected = _gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition', **overrides)
+        assert not rejected['weeks'] and rejected.get('validation_errors'), 'a contract cannot silently lose essential event work'
     assert skipped(_gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition',
                         fatigue_state='overreached'), 1) == ['overreached']
     shoulder = _gen('crossfit', weeks=4, injury_flags=['shoulder_impingement'])
@@ -200,7 +201,7 @@ def test_the_program_carries_tests_and_standards():
         {'id': 'kb_pentathlon_jerk_reps', 'result': 'reps'}, 'the standard survives the slot being stripped'
     novice = _gen(None, goal=goal, weeks=2, start_phase='competition', training_level='novice')
     out2 = api._transform_program(novice, goal, _constraints(), V())
-    assert out2['weeks'][1]['tests_skipped'][0]['reason'] == 'level'
+    assert not out2['weeks'] and novice.get('validation_errors'), 'an unsupported contract level is explicitly refused'
 
     env = {'currentProgram': out, 'programStartDate': '2026-10-05'}
     stripped = copy.deepcopy(env)

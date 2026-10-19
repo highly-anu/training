@@ -85,6 +85,13 @@
                  "intensity_split_shift", "rpe_autoregulation", "pentathlon_rpm", "range_progression"]
       }
     },
+    "prescription_policy": {
+      "enum": [
+        "modality",
+        "framework"
+      ],
+      "description": "Opt-in authority for legacy slot prescriptions; methodology contracts carry explicit per-module models."
+    },
     "progression_model": {
       "type": "string",
       "description": "ID of the progression model that governs advancement in this framework.",

@@ -1,0 +1,55 @@
+id: kb_double_strength_practice
+name: Double-Bell Strength Practice
+modality: max_strength
+category: kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 45
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+- role: clean
+  slot_type: emom
+  duration_minutes: 5
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_clean_double
+  notes: ''
+- role: press
+  slot_type: emom
+  duration_minutes: 5
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_press_double
+  notes: ''
+- role: squat
+  slot_type: emom
+  duration_minutes: 5
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_squat_double
+  notes: ''
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+  proficiency or a heavier bell. Requires two matching controllable bells and proficiency in every double-bell
+  lift. Selected weight is per bell. The jerk technique module is an app-authored extension, not an official
+  Wildman cycle. '

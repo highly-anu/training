@@ -1,0 +1,55 @@
+id: kb_snatch_practice
+name: Single-Arm Swing and Snatch Practice
+modality: power
+category: kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 30
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  notes: ''
+- role: swing
+  slot_type: skill_practice
+  duration_minutes: 4
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_swing_single_arm
+  notes: Alternate sides, brief sets with generous rest inside this practice window. Stop before grip
+    or breathing deteriorates.
+- role: snatch
+  slot_type: emom
+  duration_minutes: 5
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_snatch
+  notes: 'App adaptation, not the purchased snatch protocol: alternate hands each minute; low-repetition
+    clean technique, then rest. A new bell requires a new cycle.'
+- role: recovery
+  slot_type: skill_practice
+  duration_minutes: 2
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+  proficiency or a heavier bell. '

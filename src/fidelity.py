@@ -248,6 +248,17 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
     supplies modalities, injury flags and exercises by id.
     """
     out = _Collector()
+    if program.get('training_contract'):
+        from . import training_contract
+        try:
+            contract = training_contract.load_contract(philosophy['id'], track['id'])
+            if contract is None:
+                raise training_contract.ContractError('The generated program names no installed contract.')
+            training_contract.verify(program, contract, constraints)
+            training_contract.verify_phase_rules(program, {'phase_sequence': phases_mod.phase_sequence_for(track)})
+        except training_contract.ContractError as exc:
+            out.add('training_contract', 'error', None, track['id'], str(exc))
+        return out.findings()
     weeks = program.get('weeks') or []
     phase_by_id = {p['id']: p for p in track.get('phases') or []}
     modalities = library.get('modalities') or {}

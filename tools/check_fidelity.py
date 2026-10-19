@@ -110,7 +110,16 @@ def run(package: str | None = None) -> list[dict]:
             lib = provenance.scope(data, policy)
             label = f"{phil['id']}/{track['id']}"
             n_weeks = sum(int(p.get('weeks') or 1) for p in track['phases'])
-            for profile, constraints in profiles_for(track, frameworks):
+            profiles = profiles_for(track, frameworks)
+            contract = goal.get('training_contract')
+            if contract:
+                profiles += [(f'level-{level}', {**profiles[0][1], 'training_level': level})
+                             for level in contract['training_levels'] if level != profiles[0][1]['training_level']]
+            for profile, constraints in profiles:
+                if contract:
+                    constraints['kettlebell_count'] = 2
+                    constraints['mastered_exercises'] = sorted({eid for m in contract['modules']
+                        if constraints['training_level'] in m['training_levels'] for eid in m.get('requires_mastery', [])})
                 result = validate(goal, constraints, lib['archetypes'], lib['modalities'],
                                   lib['injury_flags'], policy=policy)
                 if not result.feasible:
@@ -122,6 +131,13 @@ def run(package: str | None = None) -> list[dict]:
                     continue
                 program = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints,
                                    num_weeks=n_weeks, output_format='dict', policy=policy)
+                if program.get('validation_errors'):
+                    severity = 'error' if profile.startswith(('ideal-', 'level-')) else 'info'
+                    rows.append({'label': label, 'profile': profile, 'finding': {
+                        'rule': 'contract_unfulfilled', 'severity': severity, 'phase_id': None,
+                        'subject': track['id'], 'detail': str(program['validation_errors']),
+                        'weeks': [], 'key': 'None|contract_unfulfilled|' + track['id']}})
+                    continue
                 days = constraints['days_per_week']
                 out_of_range = {
                     ph['id'] for ph in track['phases']
@@ -200,6 +216,15 @@ def main() -> int:
         if args.package:
             print('--update-baseline needs the whole run (no --package)')
             return 2
+        if os.path.exists(BASELINE):
+            with open(BASELINE) as fh:
+                previous = set(json.load(fh))
+            additions = sorted(set(gated) - previous)
+            if additions:
+                print('Refusing to grow the fidelity baseline; fix the new findings:')
+                for key in additions:
+                    print(f'  - {key}')
+                return 1
         with open(BASELINE, 'w') as fh:
             json.dump(gated, fh, indent=1)
             fh.write('\n')

@@ -94,6 +94,10 @@ def main() -> int:
                     'periodization_week': 1,
                     'fatigue_state': 'normal',
                 }
+                if goal.get('training_contract'):
+                    constraints['kettlebell_count'] = 2
+                    constraints['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules']
+                        for eid in m.get('requires_mastery', [])})
 
                 result = validate(goal, constraints, archetypes,
                                   data['modalities'], data['injury_flags'])

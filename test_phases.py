@@ -147,7 +147,7 @@ def test_route():
 
     r = client.post('/api/programs/generate', json={
         'philosophy_id': 'wildman_kettlebell', 'track_id': 'pentathlon',
-        'constraints': dict(CONSTRAINTS), 'num_weeks': 1})
+        'constraints': dict(CONSTRAINTS, mastered_exercises=goals.philosophy_to_goal('wildman_kettlebell', FRAMEWORKS, 'pentathlon')['training_contract']['modules'][0]['requires_mastery']), 'num_weeks': 1})
     body = r.get_json()
     ok(body['weeks'][0]['phase_id'] == 'event_technique', 'a track pick starts at its first phase')
     ok(body['goal']['track']['id'] == 'pentathlon', 'and the goal names the track')
@@ -165,7 +165,8 @@ def test_route():
     r = client.post('/api/programs/generate', json={
         'philosophy_id': 'wildman_kettlebell',
         'constraints': dict(CONSTRAINTS, days_per_week=4, track_id='pentathlon', start_phase='timed_sets',
-                            training_phase='build', phase='build', periodization_week=3),
+                            training_phase='build', phase='build', periodization_week=3,
+                            mastered_exercises=goals.philosophy_to_goal('wildman_kettlebell', FRAMEWORKS, 'pentathlon')['training_contract']['modules'][0]['requires_mastery']),
         'num_weeks': 2, 'week_in_program': 7})
     weeks = r.get_json()['weeks']
     ok([(w['track_id'], w['phase_id'], w['week_in_phase']) for w in weeks]

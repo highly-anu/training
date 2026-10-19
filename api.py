@@ -34,6 +34,7 @@ from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
 from src.progression import calculate_load
+from src.training_contract import ContractError
 from src.selector import populate_session
 from src.validator import check_level_coverage, validate
 from src.auth import require_auth
@@ -367,6 +368,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     'modality':  session.get('modality'),
                     'archetype': session.get('archetype'),
                     'is_deload': session.get('is_deload', wk.get('is_deload', False)),
+                    **({'modules': session['modules']} if session.get('modules') else {}),
                     'provenance': session.get('provenance'),
                     # The modality this session was scheduled in place of,
                     # when the package had no archetype for it in this phase
@@ -419,6 +421,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         'phase_summary':  _phase_summary(weeks, goal),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
+        **{k: raw[k] for k in ('training_contract', 'module_state') if k in raw},
     }
 
 
@@ -496,7 +499,21 @@ def get_frameworks():
 
 @app.get('/api/philosophies')
 def get_philosophies():
-    return jsonify(loader.load_philosophies())
+    philosophies = loader.load_philosophies()
+    from src.training_contract import load_contract
+    for philosophy in philosophies:
+        for track in philosophy.get('tracks', []):
+            contract = load_contract(philosophy['id'], track['id'])
+            if contract:
+                track['entry_requirements'] = {
+                    'training_levels': contract['training_levels'],
+                    'mastered_exercises': sorted({eid for m in contract['modules'] for eid in m.get('requires_mastery', [])}),
+                    'mastered_exercises_by_level': {level: sorted({eid for m in contract['modules']
+                        if level in m['training_levels'] for eid in m.get('requires_mastery', [])})
+                        for level in contract['training_levels']},
+                    'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
+                }
+    return jsonify(philosophies)
 
 
 @app.get('/api/archetypes')
@@ -844,7 +861,9 @@ def generate_program():
     import traceback as _tb
     body = request.get_json(silent=True) or {}
     try:
-        resp = _generate_program_inner(body)
+        resp = app.make_response(_generate_program_inner(body))
+        if resp.status_code >= 400:
+            return resp
         # Persist only when the caller says this generate is a commit.
         #
         # This used to save unconditionally, and it saved `resp_data` — the bare
@@ -1064,6 +1083,8 @@ def _generate_program_inner(body):
         return jsonify({'detail': str(e)}), 404
     except PhaseResolutionError as e:
         return jsonify({'detail': str(e)}), 422
+    except ContractError as e:
+        return jsonify({'detail': str(e)}), 422
     constraints['track_id'] = goal.get('track', {}).get('id')
     if start_phase:
         constraints['start_phase'] = start_phase
@@ -1146,8 +1167,19 @@ def _generate_program_inner(body):
     include_trace = bool(body.get('include_trace')) or request.args.get('trace') == '1'
 
     if not validation.feasible:
-        raw = {'weeks': []}
+        raw = {'weeks': [], 'validation_errors': list(validation.errors)}
     else:
+        if goal.get('training_contract'):
+            from src import training_contract, health_store
+            from src.db import get_user_program
+            existing = get_user_program(g.user_id) or {}
+            current = existing.get('currentProgram') or {}
+            identity = f"{goal['training_contract']['package']}/{goal['training_contract']['track_id']}@{goal['training_contract']['version']}"
+            supplied_state = constraints.get('module_progression_state')
+            if ((current.get('training_contract') or {}).get('id') == identity
+                    and (supplied_state is None or supplied_state == current.get('module_state'))):
+                constraints['module_progression_state'] = training_contract.confirmed_state(
+                    current, health_store.get_session_logs(g.user_id), goal['training_contract'])
         raw = generate(
             goal_id=goal_ids[0],
             goal_dict=goal_dict_for_generate,
@@ -1162,6 +1194,14 @@ def _generate_program_inner(body):
             policy=policy,
             start_week_number=start_week_number,
         )
+
+    if raw.get('validation_errors'):
+        for error in raw['validation_errors']:
+            if error not in validation.errors:
+                validation.add_error(error['code'], error['message'])
+        result = _transform_program(raw, goal, constraints, validation)
+        result['detail'] = '; '.join(error['message'] for error in raw['validation_errors'])
+        return jsonify(result), 422
 
     # A modality the generator had to schedule as another one because nothing
     # in the package is written for this athlete's level.
@@ -1206,8 +1246,8 @@ def _prog_model_for(modality: str, body: dict, data: dict) -> str:
     modality's — as the generator decides, so a swapped or regenerated
     session matches the rest of its week."""
     fw = loader.load_all_frameworks().get(body.get('framework_id')) if body.get('framework_id') else None
-    override = ((fw or {}).get('progression_overrides') or {}).get(modality)
-    return override or data['modalities'].get(modality, {}).get('progression_model', 'linear_load')
+    from src.training_contract import resolve_model
+    return resolve_model(fw or {}, modality, data['modalities'])
 
 
 def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None]:
@@ -1285,6 +1325,11 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
+    packages = set(primary_sources)
+    if forced_arch and forced_arch.get('_package'):
+        packages.add(forced_arch['_package'])
+    if any(os.path.exists(os.path.join(loader._PACKAGES_DIR, p, 'training_contract.yaml')) for p in packages):
+        return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
     phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
     populated = populate_session(
@@ -1301,6 +1346,9 @@ def _generate_session_inner(body):
 
     if populated.get('archetype') is None:
         return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
+    owner = populated['archetype'].get('_package')
+    if owner and os.path.exists(os.path.join(loader._PACKAGES_DIR, owner, 'training_contract.yaml')):
+        return jsonify({'detail': 'Generate this package through its training contract to preserve module progression.'}), 422
 
     # Apply progression loads
     prog_model = _prog_model_for(modality, body, data)
@@ -1364,6 +1412,8 @@ def substitute_exercise():
     arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
     if arch is None:
         return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
+    if os.path.exists(os.path.join(loader._PACKAGES_DIR, arch.get('_package') or '', 'training_contract.yaml')):
+        return jsonify({'detail': 'This exercise belongs to a fixed training module; regenerate the contract program to change it.'}), 422
     slot_index, slot = next(((i, sl) for i, sl in enumerate(arch.get('slots') or [])
                              if sl.get('role') == slot_role), (None, None))
     if slot is None:
@@ -3044,7 +3094,10 @@ def _fmt_watch_load(slot_type: str, load: dict, rest_until_hr: int | None = None
             if rest and rest_until_hr:
                 return f'{rounds} x {work}s, rest to HR {rest_until_hr}{switch}'
             span = f'{work}s/{rest}s' if rest else f'{work}s'
-            return f'{rounds} x {span}{switch}'
+            reps = _pick(load, 'reps_per_round', 'repsPerRound')
+            bell = _pick(load, 'weight_kg', 'weightKg')
+            return (f'{rounds} x {span}' + (f' · {reps} reps/round' if reps is not None else '')
+                    + (f' @ {bell:g} kg' if bell is not None else '') + switch)
         if mins is not None and rounds is not None:
             return f'{mins} min / {rounds} rounds'
         return _pick(load, 'format') or 'EMOM'
