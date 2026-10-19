@@ -45,8 +45,7 @@ notes: Three event sessions a week from kettlebell-sport practice, implemented b
   length, repeats slightly faster than competition pace, minute intervals on the
   four fast events — plus up to two optional easy runs on free days. A full practice
   pentathlon ends Timed Sets and the test ends Competition. Entry requires confirmed
-  event proficiency; progress is conditional on clean successful exposures. An app
-  adaptation for the IKMF event, not a Wildman program, separate from General Practice.
+  event proficiency; progress is conditional on clean successful exposures. Built for the IKMF event, separate from General Practice.
 expectations:
   min_weeks: 10
   ideal_weeks: 14

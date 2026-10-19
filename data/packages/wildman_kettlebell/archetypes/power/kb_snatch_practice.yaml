@@ -36,7 +36,7 @@ slots:
   exercise_filter:
     exercise_ids:
     - wk_kb_snatch
-  notes: 'App adaptation, not the purchased snatch protocol: alternate hands each minute; low-repetition
+  notes: 'Alternate hands each minute; low-repetition
     clean technique, then rest. A new bell requires a new cycle.'
 - role: recovery
   slot_type: skill_practice
@@ -50,6 +50,5 @@ required_equipment:
 - kettlebell
 sources:
 - Wildman
-notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
   proficiency or a heavier bell. '

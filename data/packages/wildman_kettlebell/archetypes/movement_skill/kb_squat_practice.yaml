@@ -28,7 +28,7 @@ slots:
   exercise_filter:
     exercise_ids:
     - wk_kb_squat_goblet
-  notes: "App adaptation: 1\u20135 controlled goblet squats at the start of each minute. Rest for the\
+  notes: "1\u20135 controlled goblet squats at the start of each minute. Rest for the\
     \ remainder. Repeat at the same bell; no automatic complexity increase."
 - role: recovery
   slot_type: skill_practice
@@ -42,6 +42,5 @@ required_equipment:
 - kettlebell
 sources:
 - Wildman
-notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
   proficiency or a heavier bell. '
