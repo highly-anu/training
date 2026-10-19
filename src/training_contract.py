@@ -163,11 +163,45 @@ def _bell(module: dict, constraints: dict, state: dict) -> float | None:
     return weight
 
 
+def block_options(block: dict) -> list[str]:
+    """The block's exercise and, in the package's order, the substitutes it
+    declares: what the method accepts in its place, never a silent fallback."""
+    return [block['exercise_id'], *(block.get('alternatives') or [])]
+
+
+def _ruled_out(ex: dict, constraints: dict, blocked: tuple | None) -> bool:
+    if not _equipment_ok(ex, set(constraints.get('equipment') or [])):
+        return True
+    if blocked is None:
+        return False
+    ids, patterns = blocked
+    return (ex['id'] in ids or bool(set(ex.get('movement_patterns') or []) & patterns)
+            or bool(set(ex.get('contraindicated_with') or []) & set(constraints.get('injury_flags') or [])))
+
+
+def _choose(block: dict, module: dict, exercises: dict, constraints: dict, blocked: tuple | None) -> str:
+    """The first declared option the athlete can do. With none, a block that
+    declares alternatives refuses naming them all; a single-exercise block
+    returns its exercise, so the equipment or injury check names it."""
+    for eid in block_options(block):
+        if eid not in exercises:
+            raise ContractError(f"{module['id']}: {eid} is absent from the declared exercise catalog.")
+        if not _ruled_out(exercises[eid], constraints, blocked):
+            return eid
+    if len(block_options(block)) > 1:
+        names = ', '.join(exercises[e].get('name', e) for e in block_options(block))
+        raise ContractError(f"{module['id']}: none of {names} fits the equipment or injuries.")
+    return block['exercise_id']
+
+
+def _keep(block: dict, module: dict) -> float:
+    """The share a deload keeps of this block; 0 drops it (BJJ drops live rolling)."""
+    return block.get('deload_keep', module.get('deload_keep', 1))
+
+
 def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
-                state: dict, step: int, deload: bool) -> dict:
-    eid = block['exercise_id']
-    if eid not in exercises:
-        raise ContractError(f"{module['id']}: {eid} is absent from the declared exercise catalog.")
+                state: dict, step: int, deload: bool, blocked: tuple | None = None) -> dict:
+    eid = _choose(block, module, exercises, constraints, blocked)
     ex = exercises[eid]
     if not _equipment_ok(ex, set(constraints.get('equipment') or [])):
         raise ContractError(f"{module['id']}: equipment for {eid} is unavailable.")
@@ -178,10 +212,29 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     if block.get('switch_at_sec'):
         # The scored protocol's hand switch (the watch cue), carried with the test.
         slot['switch_at_sec'] = block['switch_at_sec']
-    if block['slot_type'] == 'emom':
+    if block['slot_type'] in ('sets_reps', 'static_hold'):
+        # Strength and holds at a prescribed effort: the athlete chooses the
+        # load that meets the RPE and records it (RPE autoregulation); a deload
+        # keeps its share of the sets. The block's minutes include its rests.
+        sets = block['sets']
+        if deload:
+            sets = max(1, math.floor(sets * _keep(block, module)))
+        rest = block.get('rest_sec', 60)
+        if block['slot_type'] == 'sets_reps':
+            load = {'sets': sets, 'reps': block['reps'], 'rest_sec': rest}
+            per_set = block['duration_sec'] / block['sets']
+        else:
+            load = {'sets': sets, 'hold_seconds': block['hold_sec'], 'rest_sec': rest}
+            per_set = block['hold_sec'] + rest
+        if block.get('rpe_target') is not None:
+            load['target_rpe'] = block['rpe_target']
+            load['load_note'] = f"Choose the load you finish at RPE {block['rpe_target']:g}, and record it."
+        seconds = math.ceil(sets * per_set / 60) * 60
+        load['duration_minutes'] = seconds // 60
+    elif block['slot_type'] == 'emom':
         rounds, reps = _cycle(module['progression'], step)
         if deload:
-            rounds = max(1, math.floor(rounds * module.get('deload_keep', 1)))
+            rounds = max(1, math.floor(rounds * _keep(block, module)))
         load = {'target_rounds': rounds, 'reps_per_round': reps, 'work_sec': 60,
                 'rest_sec': 0, 'time_minutes': rounds, 'format': 'EMOM',
                 'duration_minutes': rounds}
@@ -192,7 +245,7 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
             p = module['progression']
             seconds = min(p['duration_max_sec'], p['duration_start_sec'] + step * p['duration_step_sec'])
         if deload and not block.get('standard'):
-            seconds = max(60, int(seconds * module.get('deload_keep', 1)))
+            seconds = max(60, int(seconds * _keep(block, module)))
         # Existing phone/watch clients use integral-minute timed blocks. Round
         # the actual work up, then budget that work; never just round its label.
         seconds = math.ceil(seconds / 60) * 60
@@ -209,7 +262,9 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         lo, hi, label = zone_band(block['intensity'])
         if lo is not None:
             load.update(zone_target=label, zone_lower=lo, zone_upper=hi)
-    slot['rest_sec'] = 0  # inter-event recovery is an explicit timed block below
+    # Inter-event recovery is an explicit timed block below; a strength block's
+    # rest between sets is inside its own minutes.
+    slot['rest_sec'] = block.get('rest_sec', 60) if block['slot_type'] in ('sets_reps', 'static_hold') else 0
     if block.get('standard'):
         from .standard_tests import protocol_load
         slot['role'] = block['role']
@@ -238,10 +293,21 @@ def _progresses(block: dict) -> bool:
     return bool(block.get('loaded') or block.get('progresses'))
 
 
-def _module_rows(module, exercises, constraints, state, step, deload):
+def _module_rows(module, exercises, constraints, state, step, deload, blocked=None, left_out=None):
+    """A module's assignments. A block the package marks `optional` that none of
+    its options fits (a dead hang under a shoulder-instability flag) is left out
+    and named in `left_out`; an essential one still refuses."""
     rows = []
     for block in module['blocks']:
-        row = _assignment(block, module, exercises, constraints, state, step, deload)
+        if deload and not block.get('standard') and _keep(block, module) == 0:
+            continue
+        if block.get('optional') and all(
+                eid in exercises and _ruled_out(exercises[eid], constraints, blocked) for eid in block_options(block)):
+            if left_out is not None:
+                left_out.append(f"{module['name']}: {exercises.get(block['exercise_id'], {}).get('name', block['exercise_id'])} "
+                                'left out — no option fits the equipment or injuries')
+            continue
+        row = _assignment(block, module, exercises, constraints, state, step, deload, blocked)
         rows.append(row)
         if block.get('rest_after_sec'):
             # Whole minutes, as every timed block: the session's minutes are
@@ -302,15 +368,40 @@ def _optional_blocker(module: dict, exercises: dict, constraints: dict, state: d
                       blocked_ids: set, blocked_patterns: set) -> str | None:
     """Why an optional module cannot run for this athlete at all, if it cannot."""
     try:
-        rows = _module_rows(module, exercises, constraints, state, 0, False)
+        rows = _module_rows(module, exercises, constraints, state, 0, False, (blocked_ids, blocked_patterns))
     except ContractError as exc:
         return str(exc)
     for row in rows:
         ex = row.get('exercise')
-        if ex and (ex['id'] in blocked_ids or set(ex.get('movement_patterns') or []) & blocked_patterns
-                   or set(ex.get('contraindicated_with') or []) & set(constraints.get('injury_flags') or [])):
+        if ex and _ruled_out(ex, constraints, (blocked_ids, blocked_patterns)):
             return f"{ex.get('name', ex['id'])} conflicts with an active injury restriction"
     return None
+
+
+def active_modules(contract: dict, constraints: dict) -> list[dict]:
+    """The modules this athlete runs: those written for their level, each with
+    its weekly exposures for the days they train (`exposures_by_days` — BJJ's
+    mat sessions grow with the week; 0 leaves a module out), and the bell pair
+    a track asks for. The compiler and the verifier read the same list."""
+    level = constraints.get('training_level', 'intermediate')
+    days = constraints.get('days_per_week', 4)
+    out = []
+    for m in contract['modules']:
+        if level not in m['training_levels']:
+            continue
+        by_days = m.get('exposures_by_days')
+        if by_days:
+            counts = {int(k): v for k, v in by_days.items()}
+            if days < min(counts):
+                raise ContractError(f"{m['name']} needs at least {min(counts)} training days a week.")
+            n = counts[max(k for k in counts if k <= days)]
+            if not n:
+                continue
+            m = {**m, 'exposures_per_week': n}
+        if contract.get('requires_kettlebell_pair'):
+            m = {**m, 'bell_count': 2}
+        out.append(m)
+    return out
 
 
 def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
@@ -326,9 +417,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         count = constraints.get('kettlebell_count', 0)
         if isinstance(count, bool) or not isinstance(count, int) or count < 2:
             raise ContractError('This track requires two matching kettlebells; confirm kettlebell_count of at least 2.')
-    modules = [m for m in contract['modules'] if level in m['training_levels']]
-    if contract.get('requires_kettlebell_pair'):
-        modules = [{**m, 'bell_count': 2} for m in modules]
+    modules = active_modules(contract, constraints)
     if not modules:
         raise ContractError('No training modules are defined for this level.')
     if constraints.get('fatigue_state', 'normal') not in ('normal', 'overreached', 'fresh', 'accumulated'):
@@ -378,9 +467,13 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         deload = (constraints.get('fatigue_state') == 'overreached'
                   or entry.get('phase_id') in contract.get('deload_phases', [])
                   or bool(frequency and entry['week_in_program'] % frequency == 0))
+        # The phase's `exclude_exercises` rule a movement out as an injury
+        # does: a declared alternative or an optional block's absence applies.
+        week_blocked = (blocked_ids | set(entry.get('exclude_exercises') or []), blocked_patterns)
         estimates = {m['id']: sum(r['load']['elapsed_sec'] for r in _module_rows(
                         m, data['exercises_by_package'][contract['package']], constraints, state[m['id']],
-                        cursor[m['id']] + m['exposures_per_week'] - 1, deload)) / 60 for m in modules}
+                        cursor[m['id']] + m['exposures_per_week'] - 1, deload, week_blocked)) / 60
+                     for m in modules}
         from . import standard_tests
         tests = standard_tests.tests_for_week(entry)
         if tests and not contract.get('test_module'):
@@ -429,10 +522,14 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             fit, closes = optional_fit(candidate)
             # Optional work never costs an essential session its own day.
             stacked = sum(len(ms) - 1 for ms in candidate.values())
-            key = (closes, -stacked, sum(len(v) for v in fit.values()))
+            # Alternate kinds of work: two days of the same modality back to
+            # back (two gym sessions, a run of classes) only when nothing else fits.
+            kind = {d: frozenset(m['modality'] for m in ms) for d, ms in candidate.items()}
+            alike = sum(1 for d in kind if kind.get(d % 7 + 1) == kind[d])
+            key = (closes, -stacked, sum(len(v) for v in fit.values()), -alike)
             if best is None or key > best[0]:
                 best = (key, candidate, fit)
-            if key == (True, 0, sum(m['exposures_per_week'] for m in optional)) or i >= 500:
+            if key == (True, 0, sum(m['exposures_per_week'] for m in optional), 0) or i >= 500:
                 break
         if best is None:
             raise ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
@@ -491,13 +588,18 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                                     'in_place_of': m['modality'],
                                     'instead_of': {'archetype': m['archetype_id'], 'minutes': estimates[m['id']], 'buckets': {}}}
                     pending_test = None
+                left_out: list[str] = []
                 rows = _module_rows(m, data['exercises_by_package'][contract['package']], constraints,
-                                    state[m['id']], cursor[m['id']], deload and not test_today)
+                                    state[m['id']], cursor[m['id']], deload and not test_today,
+                                    week_blocked, left_out)
+                for line in left_out:
+                    if line + '.' not in program['compromises']:
+                        program['compromises'].append(line + '.')
                 for ea in rows:
                     ex = ea.get('exercise')
                     if not ex:
                         continue
-                    if ex['id'] in blocked_ids or set(ex.get('movement_patterns') or []) & blocked_patterns or set(ex.get('contraindicated_with') or []) & set(constraints.get('injury_flags') or []):
+                    if _ruled_out(ex, constraints, (blocked_ids, blocked_patterns)):
                         raise ContractError(f"{m['id']}: an essential movement conflicts with an active injury restriction.")
                     if ex['id'] in (entry.get('exclude_exercises') or []):
                         raise ContractError(f"{m['id']}: an essential movement is excluded by this phase.")
@@ -505,7 +607,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                 rounds = next((r['load'].get('target_rounds') for r in rows if r['load'].get('target_rounds')), 1)
                 records.append({'id': m['id'], 'forecast_step': cursor[m['id']],
                                 'archetype_id': m['archetype_id'],
-                                'exercise_ids': [b['exercise_id'] for b in m['blocks'] if _progresses(b)],
+                                # What was prescribed: a declared alternative, never a
+                                # block left out, so confirmed_state reads the right logs.
+                                'exercise_ids': [r['exercise']['id'] for r in rows
+                                                 if r.get('exercise') and r['load'].get('advances_module')],
                                 'rounds': rounds, 'max_rpe': m['max_rpe'],
                                 'requirements': {r['exercise']['id']: {
                                     'rounds': r['load'].get('target_rounds', 1),
@@ -590,9 +695,20 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
                       for w in program['weeks']]}
 
 
+def _sequence_matches(actual: list[str], blocks: list[dict]) -> bool:
+    """Each block in order by one of its options; an optional block may be absent."""
+    i = 0
+    for b in blocks:
+        if i < len(actual) and actual[i] in block_options(b):
+            i += 1
+        elif not b.get('optional'):
+            return False
+    return i == len(actual)
+
+
 def verify(program: dict, contract: dict, constraints: dict) -> None:
     """Independent output acceptance checks; never trust the session label."""
-    expected = {m['id']: m for m in contract['modules'] if constraints.get('training_level', 'intermediate') in m['training_levels']}
+    expected = {m['id']: m for m in active_modules(contract, constraints)}
     last_day = {}
     inventory = constraints.get('kettlebell_weights_kg')
     cursors = {mid: (program.get('module_state', {}).get(mid) or {}).get('completed', 0) for mid in expected}
@@ -617,7 +733,10 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                         raise ContractError('Required recovery spacing was lost.')
                     last_day[mid] = absolute
                     actual = [e['exercise']['id'] for e in session['exercises'] if e['load']['module_id'] == mid and e.get('exercise')]
-                    if actual != [b['exercise_id'] for b in expected[mid]['blocks']]:
+                    dropping = week['is_deload'] and not session.get('test')
+                    blocks = [b for b in expected[mid]['blocks']
+                              if not (dropping and not b.get('standard') and _keep(b, expected[mid]) == 0)]
+                    if not _sequence_matches(actual, blocks):
                         raise ContractError('A module lost its fixed movement sequence.')
                     requirements = {e['exercise']['id']: {
                         'rounds': e['load'].get('target_rounds', 1),
@@ -628,8 +747,10 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                         raise ContractError('A module lost its per-exercise completion requirements.')
                     rests = {e['slot_role']: e['load']['elapsed_sec'] for e in session['exercises']
                              if e['load']['module_id'] == mid and e.get('meta')}
-                    if rests != {f"{mid}_{b['role']}_recovery": b['rest_after_sec']
-                                 for b in expected[mid]['blocks'] if b.get('rest_after_sec')}:
+                    # A test session names its slots by the test's own roles.
+                    present = {e['slot_role'] for e in session['exercises'] if e['load']['module_id'] == mid}
+                    if rests != {f"{mid}_{b['role']}_recovery": math.ceil(b['rest_after_sec'] / 60) * 60
+                                 for b in blocks if b.get('rest_after_sec') and present & {b['role'], f"{mid}_{b['role']}"}}:
                         raise ContractError('A module lost its required inter-event recovery.')
                     spec = expected[mid]['progression']
                     for ea in session['exercises']:
@@ -646,7 +767,8 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                             seconds = (session['test']['protocol_sec'][ea['exercise']['id']] if ea.get('standard') else
                                        min(spec['duration_max_sec'], spec['duration_start_sec'] + record['forecast_step'] * spec['duration_step_sec']))
                             if week['is_deload'] and not session.get('test'):
-                                seconds = max(60, int(seconds * expected[mid].get('deload_keep', 1)))
+                                block = next((b for b in blocks if ea['slot_role'] in (b['role'], f"{mid}_{b['role']}")), {})
+                                seconds = max(60, int(seconds * _keep(block, expected[mid])))
                             seconds = math.ceil(seconds / 60) * 60
                             if load['elapsed_sec'] != seconds or load['duration_minutes'] * 60 != seconds:
                                 raise ContractError('An event duration does not follow its declared progression or test protocol.')
@@ -655,7 +777,8 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                             position = min(record['forecast_step'], len(reps) * len(spec['rounds']) - 1)
                             rounds = spec['rounds'][position // len(reps)]
                             if week['is_deload']:
-                                rounds = max(1, math.floor(rounds * expected[mid].get('deload_keep', 1)))
+                                block = next((b for b in blocks if ea['slot_role'] in (b['role'], f"{mid}_{b['role']}")), {})
+                                rounds = max(1, math.floor(rounds * _keep(block, expected[mid])))
                             if load.get('target_rounds') != rounds or load.get('reps_per_round') != reps[position % len(reps)]:
                                 raise ContractError('A prescription does not follow its declared progression cycle.')
                             if load['elapsed_sec'] != rounds * 60 or load.get('work_sec') != 60:

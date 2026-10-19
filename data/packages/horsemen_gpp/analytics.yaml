@@ -1,13 +1,23 @@
-# What progress means for Horsemen GPP. Volume-based concurrent training for
-# operators: a strength base and an aerobic base built side by side, with
-# rucking as the job-specific load. No entry is marked headline: the four
-# month macro leads with aerobic volume (its framework is RPE-autoregulated,
-# the philosophy volume-based) and the GPP circuits track, which schedules no
-# aerobic base, with the ruck — the first of its entries that applies
-# (src/analytics/document._lead_entry).
+# What progress means for Horsemen GPP. The source's currency is load — a
+# 1RM worked up to on the day, then percentages of it — and its goals for four
+# months are bodyweight multiples (deadlift 2.5, front squat 1.5, bench 1.5,
+# military press 1.0), 3 miles under 20:00 and 200 on the Secret Service
+# Snatch Test; its PT tests are job-specific options. So strength leads, in
+# both tracks. Aerobic volume reads the endurance and recovery days. The ruck
+# entry reads the app's ruck session, an adaptation (the source's only ruck
+# is a 3-mile ruck run); it is not a source benchmark.
 id: horsemen_gpp
 
 progress:
+  - id: strength
+    label: Strength
+    primitive: set_load
+    headline: true
+    scope:
+      modalities: [max_strength]
+      slot_roles: [main_lift, secondary_compound]
+    expected: prescribed
+
   - id: aerobic_volume
     label: Aerobic volume
     primitive: duration
@@ -19,18 +29,18 @@ progress:
     primitive: distance
     scope: {archetypes: [ruck_session], slot_types: [distance]}
 
-  - id: strength
-    label: Strength
-    primitive: set_load
-    scope:
-      modalities: [max_strength]
-      slot_roles: [main_lift, secondary_compound]
-    expected: prescribed
-
-  - id: intensity_split
-    label: Intensity split vs plan
-    primitive: zone_minutes
-    scope: {frameworks: [concurrent_training]}
-    expected: {framework_field: intensity_distribution}
-
-benchmarks: [ruck_12mi_40lb_minutes, run_3mile_minutes, pt_push_ups_3min_reps]
+# The source's goals, then PT test I and PT test II. There is no commons
+# front-squat ratio standard yet.
+benchmarks:
+  - deadlift_bw_ratio
+  - bench_press_bw_ratio
+  - strict_press_bw_ratio
+  - run_3mile_minutes
+  - ssst_reps
+  - pull_up_reps
+  - pt_sit_ups_3min_reps
+  - pt_push_ups_3min_reps
+  - swim_800m_minutes
+  - run_5mile_minutes
+  - bench_press_bodyweight_reps
+  - pull_ups_weighted_25lb_reps

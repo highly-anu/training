@@ -32,13 +32,14 @@ exercises:
   - Horsemen
   - Uphill Athlete
   - Gym Jones
-  notes: 'Horsemen / SOF benchmark: Fan Dance standard = 22km, +1000m elevation, 30kg
-    pack, 4 hours. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
+  notes: >
+    The Horsemen source's only ruck is a 3-mile ruck run with at least 45 lb,
+    followed by lunges, dips and pull-ups in the ruck and a 1-mile run without it;
+    it also uses a rucksack as step-up load. Longer loaded walks are an app
+    adaptation. Uphill Athlete aerobic ruck with 10–20% bodyweight. Gym Jones
     recovery endurance hike: 90–120 min with 20–30# pack. Progressions: distance
-    first, then load, then speed. Simple, durable training modality requiring minimal
-    equipment.
-
-    '
+    first, then load, then speed. Simple, durable training modality requiring
+    minimal equipment.
 - id: back_squat
   name: Back Squat
   category: barbell
@@ -80,10 +81,10 @@ exercises:
   - Starting Strength
   - Horsemen
   - Gym Jones
-  notes: 'Foundational lower-body strength movement. Horsemen standard: 2×BW squat.
-    Starting Strength uses 3×5 linear progression as primary novice driver.
-
-    '
+  notes: >
+    Foundational lower-body strength movement. The Horsemen source uses squats in
+    its workouts but sets no back-squat goal. Starting Strength uses 3×5 linear
+    progression as primary novice driver.
   starting_load_kg:
     novice: 40
     intermediate: 70
@@ -131,11 +132,11 @@ exercises:
   - Gym Jones
   - Horsemen
   - Starting Strength
-  notes: 'Featured prominently in Gym Jones Operator programs (10×2 @ 1-min rest)
-    and Horsemen strength cycles. Horsemen standard: 1.5×BW front squat. Requires
-    wrist mobility and upright torso.
-
-    '
+  notes: >
+    Featured prominently in Gym Jones Operator programs (10×2 @ 1-min rest) and in
+    Horsemen strength days, several of which start by working up to a 1RM front
+    squat. Horsemen goal: 1.5×BW front squat within four months. Requires wrist
+    mobility and upright torso.
   starting_load_kg:
     novice: 30
     intermediate: 55
@@ -225,12 +226,11 @@ exercises:
   - Starting Strength
   - Horsemen
   - Gym Jones
-  notes: 'Horsemen standard: 2.5×BW deadlift. Starting Strength programs 1×5 as
-    novice primary. Gym Jones tests 1RM and builds training percentages from it (80%
-    common). King of posterior-chain loading; prerequisite for all Olympic lifting
-    derivatives.
-
-    '
+  notes: >
+    Horsemen goal: 2.5×BW deadlift within four months. Starting Strength programs
+    1×5 as novice primary. Gym Jones tests 1RM and builds training percentages
+    from it (80% common). King of posterior-chain loading; prerequisite for all
+    Olympic lifting derivatives.
   starting_load_kg:
     novice: 50
     intermediate: 90
@@ -269,11 +269,10 @@ exercises:
     reps: 3
   sources:
   - Horsemen
-  notes: 'Performed standing on plates or blocks (2–4 inch deficit). Increases range
-    of motion demanding greater hip and hamstring recruitment at the bottom. Builds
-    starting strength off the floor.
-
-    '
+  notes: >
+    Performed standing on plates or blocks (2–4 inch deficit). Increases range of
+    motion demanding greater hip and hamstring recruitment at the bottom. Builds
+    starting strength off the floor. Not in the Horsemen source; an app addition.
 - id: bench_press
   name: Bench Press
   category: barbell
@@ -310,10 +309,9 @@ exercises:
   sources:
   - Starting Strength
   - Horsemen
-  notes: 'Horsemen standard: 1.5×BW bench press. Starting Strength uses 3×5 linear
-    progression as novice primary horizontal pressing movement.
-
-    '
+  notes: >
+    Horsemen goal: 1.5×BW bench press within four months. Starting Strength uses
+    3×5 linear progression as novice primary horizontal pressing movement.
   starting_load_kg:
     novice: 35
     intermediate: 60
@@ -357,11 +355,10 @@ exercises:
   sources:
   - Starting Strength
   - Horsemen
-  notes: 'Horsemen standard: 1×BW military press. Starting Strength uses 3×5 linear
-    progression. No leg drive permitted; pure upper-body pressing strength. Foundational
-    prerequisite for all jerk and push-press variants.
-
-    '
+  notes: >
+    Horsemen goal: 1×BW military press within four months. Starting Strength uses
+    3×5 linear progression. No leg drive permitted; pure upper-body pressing
+    strength. Foundational prerequisite for all jerk and push-press variants.
   starting_load_kg:
     novice: 25
     intermediate: 40
@@ -449,11 +446,12 @@ exercises:
   sources:
   - Horsemen
   - Gym Jones
-  notes: 'Drive bar overhead then dip under into quarter squat to catch. Horsemen
-    Olympic Day features jerk in wave patterns (3r/2r/1r) at 80–90%. Tests 1RM in
-    Horsemen power benchmarks.
-
-    '
+  notes: >
+    Drive bar overhead then dip under into quarter squat to catch. Horsemen
+    strength workouts run jerks in percentage waves (80% ×3, 85% ×2, 90% ×1); the
+    source's Olympic-lifting day in month two is light work on form. Its explosive
+    power day works up to a 1RM in the clean, push press, jerk, clean & jerk or
+    snatch.
 - id: split_jerk
   name: Split Jerk
   category: barbell
@@ -491,11 +489,11 @@ exercises:
     reps: 2
   sources:
   - Horsemen
-  notes: 'Drive bar overhead and split legs into lunge position to receive. Most technically
-    demanding jerk variant. Bilateral is false because each repetition uses an asymmetric
-    split stance. Horsemen tests 1RM split jerk.
-
-    '
+  notes: >
+    Drive bar overhead and split legs into lunge position to receive. Most
+    technically demanding jerk variant. Bilateral is false because each repetition
+    uses an asymmetric split stance. The Horsemen source says only "jerk"; the
+    split jerk is an app choice.
 - id: barbell_row
   name: Barbell Row (Bent Over)
   category: barbell
@@ -580,11 +578,11 @@ exercises:
   - Starting Strength
   - Gym Jones
   - Horsemen
-  notes: 'Starting Strength programs 1×5 power clean as the primary upper-back and
-    power movement on alternate days. Gym Jones references clean triplets (EMOM 10
-    min). Horsemen Olympic Day programs cleans in wave patterns at 80–90%.
-
-    '
+  notes: >
+    Starting Strength programs 1×5 power clean as the primary upper-back and power
+    movement on alternate days. Gym Jones references clean triplets (EMOM 10 min).
+    Horsemen strength workouts run cleans in percentage waves at 80–90%; the
+    source's Olympic-lifting day in month two is light work on form.
   starting_load_kg:
     novice: 30
     intermediate: 50
@@ -677,11 +675,10 @@ exercises:
   sources:
   - Horsemen
   - Gym Jones
-  notes: 'Full clean receiving the bar in a full squat. Highest expression of the
-    clean movement. Demands front rack mobility, squat depth, and fast footwork. Horsemen
-    Olympic Day programs at 80–90% in wave patterns.
-
-    '
+  notes: >
+    Full clean receiving the bar in a full squat. Highest expression of the clean
+    movement. Demands front rack mobility, squat depth, and fast footwork. Some
+    Horsemen strength days work up to a 1RM squat clean, then sets at 85–90%.
 - id: hang_squat_clean
   name: Hang Squat Clean
   category: barbell
@@ -767,11 +764,10 @@ exercises:
   sources:
   - Gym Jones
   - Horsemen
-  notes: 'Bar pulled from floor to overhead lockout, receiving above parallel. Horsemen
-    Olympic Day ("Snatch Your Face") programs snatch at 80–90% in waves. Prerequisite
-    to full snatch; builds the hip-to-overhead pathway.
-
-    '
+  notes: >
+    Bar pulled from floor to overhead lockout, receiving above parallel. Horsemen
+    strength workouts ("Snatch Your Face") run the snatch in percentage waves at
+    80–90%. Prerequisite to full snatch; builds the hip-to-overhead pathway.
 - id: hang_power_snatch
   name: Hang Power Snatch
   category: barbell
@@ -809,11 +805,11 @@ exercises:
   sources:
   - Horsemen
   - Gym Jones
-  notes: 'Initiates from hang position above the knee. Removes the floor pull and
-    isolates the second pull and turnover. Useful for coaching overhead position and
-    hip extension timing without the complexity of the full first pull.
-
-    '
+  notes: >
+    Initiates from hang position above the knee. Removes the floor pull and
+    isolates the second pull and turnover. Useful for coaching overhead position
+    and hip extension timing without the complexity of the full first pull. Not in
+    the Horsemen source; an app addition.
 - id: snatch
   name: Snatch
   category: barbell
@@ -857,11 +853,11 @@ exercises:
   sources:
   - Horsemen
   - Gym Jones
-  notes: 'Full Olympic snatch: bar from floor to overhead in one movement, receiving
-    in a full squat. Most technically demanding barbell movement. Horsemen programs
-    at 80–90% in wave patterns. Tests 1RM for power benchmarks.
-
-    '
+  notes: >
+    Full Olympic snatch: bar from floor to overhead in one movement, receiving in
+    a full squat. Most technically demanding barbell movement. Horsemen strength
+    workouts run it in percentage waves at 80–90%, and its explosive power day may
+    test a 1RM.
 - id: barbell_complex
   name: Barbell Complex (Six-Way)
   category: barbell
@@ -908,13 +904,12 @@ exercises:
   sources:
   - Gym Jones
   - Horsemen
-  notes: 'Six-movement barbell warm-up complex used by both Gym Jones and Horsemen:
-    Deadlift → Bent Row → Hang Clean → Front Squat → Push Press → Back Squat
-    (6 reps each, no rest between movements, bar does not touch the floor between
-    the row and clean). Performed for 3–4 sets with progressive loading: 75#–85#–95#–105#.
-    1–2 min rest between sets. Serves as both warm-up and conditioning stimulus.
-
-    '
+  notes: >
+    Horsemen warm-up barbell complex: 6 reps each of deadlift, bent row, hang
+    power clean, front squat, push press, back squat and push-ups — seven
+    movements, and the bar is not put down until the push-ups. Four rounds, at
+    75/85/95/105 lb or 85/95/105/115 lb. Gym Jones runs a similar barbell complex.
+    Serves as both warm-up and conditioning stimulus.
 - id: thruster
   name: Thruster
   category: barbell
@@ -1118,11 +1113,11 @@ exercises:
   sources:
   - Horsemen
   - CrossFit
-  notes: 'Barbell in front-rack position (fingertips on bar, elbows high) while walking.
-    High thoracic mobility and wrist mobility demand. Used in Horsemen-style loaded
-    carry circuits. Heavier loading ceiling than KB variant.
-
-    '
+  notes: >
+    Barbell in front-rack position (fingertips on bar, elbows high) while walking.
+    High thoracic mobility and wrist mobility demand. Not in the Horsemen source;
+    used in the app's loaded carry circuit. Heavier loading ceiling than KB
+    variant.
 - id: overhead_carry_kb
   name: Overhead Carry (Kettlebell)
   category: loaded_carry
@@ -1199,12 +1194,12 @@ exercises:
   sources:
   - Gym Jones
   - Horsemen
-  notes: 'Barbell locked out overhead while walking. Gym Jones programs overhead hold
+  notes: >
+    Barbell locked out overhead while walking. Gym Jones programs overhead hold
     static (300-sec accumulated) as a core/shoulder endurance component; overhead
-    carry is the ambulatory progression. High scapular and rotator cuff demand. Requires
-    solid overhead squat mechanics before loading.
-
-    '
+    carry is the ambulatory progression. High scapular and rotator cuff demand.
+    Requires solid overhead squat mechanics before loading. Not in the Horsemen
+    source; an app addition.
 - id: suitcase_carry
   name: Suitcase Carry (Unilateral)
   category: loaded_carry
@@ -1275,12 +1270,11 @@ exercises:
     distance_m: 20
   sources:
   - Horsemen
-  notes: 'Barbell held in the crook of the elbows, forearms crossed. Chest-level load
-    keeps the centre of mass high and forward. High anterior core demand; upper-back
-    and biceps fatigue is a limiting factor. Horsemen GPP carries this as a sandbag
-    or barbell variation.
-
-    '
+  notes: >
+    Barbell held in the crook of the elbows, forearms crossed. Chest-level load
+    keeps the centre of mass high and forward. High anterior core demand;
+    upper-back and biceps fatigue is a limiting factor. Not in the Horsemen
+    source; an app addition.
 - id: yoke_carry
   name: Yoke Carry
   category: loaded_carry
@@ -1313,12 +1307,11 @@ exercises:
     distance_m: 20
   sources:
   - Horsemen
-  notes: 'A-frame yoke loaded with plates; athlete walks under the yoke with the crossbar
-    across the upper back. Highest absolute load potential in the carry family. Strong-man
-    derivative used in Horsemen GPP for total-body structural durability and compressive
-    loading.
-
-    '
+  notes: >
+    A-frame yoke loaded with plates; athlete walks under the yoke with the
+    crossbar across the upper back. Highest absolute load potential in the carry
+    family. A strongman tool for total-body structural durability and compressive
+    loading. Not in the Horsemen source; an app addition.
 - id: sandbag_shoulder_carry
   name: Sandbag Shoulder Carry
   category: loaded_carry
@@ -1422,13 +1415,12 @@ exercises:
     distance_m: 3000
   sources:
   - Horsemen
-  notes: 'Slow, heavy, deliberate loaded carry as a strength-endurance exercise, distinct
-    from the aerobic ruck (which is higher volume, lower load, time-based). Pack weight
-    ≥30% bodyweight; pace is controlled walk. Horsemen Fan Dance standard: 30kg,
-    22km with +1000m elevation. This entry targets shorter heavy training sets rather
-    than aerobic events.
-
-    '
+  notes: >
+    Slow, heavy, deliberate loaded carry as a strength-endurance exercise,
+    distinct from the aerobic ruck (which is higher volume, lower load,
+    time-based). Pack weight ≥30% bodyweight; pace is controlled walk. This entry
+    targets shorter heavy training sets rather than aerobic events. An app
+    adaptation: the source's only ruck is a 3-mile ruck run with at least 45 lb.
 - id: tire_drag_forward
   name: Tire Drag (Forward)
   category: loaded_carry
@@ -1585,12 +1577,12 @@ exercises:
   - Pavel
   - Horsemen
   - Gym Jones
-  notes: 'Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder
-    height on the backswing hip snap. Horsemen warm-up complex: 1 min two-hand swings.
-    Gym Jones breathing ladder uses swings 1–20 at 53#. Wildman progression begins
-    here. Two hands on the bell; posterior-chain power driver.
-
-    '
+  notes: >
+    Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder
+    height on the backswing hip snap. The Horsemen warm-up list has swing rounds
+    (e.g. 5 rounds of 20 at 44 lb), and its 12-minute complex uses one-arm swings,
+    not two-hand. Gym Jones breathing ladder uses swings 1–20 at 53#. Wildman
+    progression begins here. Two hands on the bell; posterior-chain power driver.
   starting_load_kg:
     novice: 24
     intermediate: 32
@@ -1632,12 +1624,11 @@ exercises:
   - Wildman
   - Pavel
   - Horsemen
-  notes: 'One hand on the bell; free hand assists with balance and counter-rotation.
-    Horsemen warm-up complex: 1 min swings each arm (left then right). Direct prerequisite
-    to single-arm clean and snatch. Anti-rotation demand is greater than two-hand
-    swing.
-
-    '
+  notes: >
+    One hand on the bell; free hand assists with balance and counter-rotation.
+    Horsemen 12-minute complex: 1 min one-arm swings right, then later 1 min left,
+    each followed by a figure 8. Direct prerequisite to single-arm clean and
+    snatch. Anti-rotation demand is greater than two-hand swing.
   starting_load_kg:
     novice: 16
     intermediate: 24
@@ -1773,11 +1764,11 @@ exercises:
   sources:
   - Wildman
   - Horsemen
-  notes: 'Hip dip drives bell off shoulder; arm locks out overhead. Horsemen warm-up
-    protocol: 1 min push press each arm. KB workout standard warm-up cycle includes
-    push press as timed interval. Bridge movement from strict press to jerk.
-
-    '
+  notes: >
+    Hip dip drives bell off shoulder; arm locks out overhead. Not in the Horsemen
+    warm-ups; the source's push presses are barbell or dumbbell. KB workout
+    standard warm-up cycle includes push press as timed interval. Bridge movement
+    from strict press to jerk.
 - id: kb_snatch
   name: Kettlebell Snatch
   category: kettlebell
@@ -1817,12 +1808,12 @@ exercises:
   - Wildman
   - Pavel
   - Horsemen
-  notes: 'Bell punched from hip-hinge to overhead lockout in one movement. Horsemen
-    12-min complex: 1 min snatch each arm. Horsemen SSST standard: 200+ snatches in
-    10 min at 53# (Team Guy standard). KB pentathlon half-snatch: 108 reps in 6 min.
-    KB sport RPM target: 14 RPM at 1 pood.
-
-    '
+  notes: >
+    Bell punched from hip-hinge to overhead lockout in one movement. Horsemen
+    12-min complex: 1 min snatch each arm. Secret Service Snatch Test: snatches in
+    10 min at 53#; the Horsemen scale calls 150 good (the Team Guy Standard) and
+    200 really good, and 200 is the program's four-month goal. KB pentathlon
+    half-snatch: 108 reps in 6 min. KB sport RPM target: 14 RPM at 1 pood.
   starting_load_kg:
     novice: 24
     intermediate: 32
@@ -2172,12 +2163,11 @@ exercises:
     distance_m: 40
   sources:
   - Horsemen
-  notes: 'Bell held in rack position at shoulder while walking. Anti-flexion and anti-rotation
-    demand on the ipsilateral hip and core. Horsemen progressive TGU protocol feeds
-    into rack carry as shoulder stability development. Intermediate between farmer
-    carry and overhead carry.
-
-    '
+  notes: >
+    Bell held in rack position at shoulder while walking. Anti-flexion and
+    anti-rotation demand on the ipsilateral hip and core. Intermediate between
+    farmer carry and overhead carry. Not in the Horsemen source as a carry; an app
+    addition.
 - id: kb_overhead_carry
   name: Kettlebell Overhead Carry
   category: kettlebell
@@ -2213,12 +2203,12 @@ exercises:
     distance_m: 30
   sources:
   - Horsemen
-  notes: 'Bell pressed and held at full overhead lockout while walking. Maximum shoulder
-    stability demand of all carry variants. Scapular upward rotation and packed shoulder
-    essential. Horsemen uses overhead carries in loaded carry circuits. Requires intact
-    shoulder function; contraindicated with most shoulder pathologies.
-
-    '
+  notes: >
+    Bell pressed and held at full overhead lockout while walking. Maximum shoulder
+    stability demand of all carry variants. Scapular upward rotation and packed
+    shoulder essential. The Horsemen 500 m lunge changes carry every 50 m,
+    overhead among them; the loaded carry circuit is an app adaptation. Requires
+    intact shoulder function; contraindicated with most shoulder pathologies.
 - id: kb_complex_12min
   name: Kettlebell 12-Minute Complex (Horsemen Warm-Up)
   category: kettlebell
@@ -2266,14 +2256,13 @@ exercises:
     duration_sec: 720
   sources:
   - Horsemen
-  notes: 'Official Horsemen 12-minute kettlebell warm-up complex at 35# (16kg). Sequence
-    (1 minute each, no rest): two-hand swings, left-arm swings, right-arm swings,
-    figure-eight both directions, clean & press left, clean & press right, slasher-to-halo
-    ×2, snatch left, snatch right, lunge with KB left, lunge with KB right. Total:
-    12 movements, 12 minutes, continuous. Used as warm-up before strength or conditioning
-    sessions.
-
-    '
+  notes: >
+    Horsemen 12-minute kettlebell warm-up complex at 35# (16kg), 1 minute each, no
+    break, bell never set down: one-arm swing right, figure 8 right to left,
+    one-arm swing left, figure 8 left to right, clean & press right, slasher to
+    halo, clean & press left, slasher to halo, snatch right, lunge right leg (bell
+    in left hand), snatch left, lunge left leg. 12 movements, 12 minutes,
+    continuous. Used as a warm-up before training.
 - id: hip_circle
   name: Hip Circle
   category: mobility
@@ -2299,9 +2288,11 @@ exercises:
   sources:
   - Ido Portal
   - Horsemen
-  notes: Standing hip circumduction — large circles in both directions. Standard
-    joint prep for any lower body session. Low threshold entry movement for hip mobility
-    warm-up sequences.
+  notes: >
+    Standing hip circumduction — large circles in both directions. Standard joint
+    prep for any lower body session. Low threshold entry movement for hip mobility
+    warm-up sequences. Not in the Horsemen source, whose only mobility work is
+    shoulder dislocates, the SAM drill and PVC halos; an app addition.
 - id: hip_flexor_stretch
   name: Hip Flexor Stretch (kneeling)
   category: mobility
@@ -2327,9 +2318,11 @@ exercises:
   sources:
   - Horsemen
   - Ido Portal
-  notes: Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior
+  notes: >
+    Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior
     pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and
-    heavy squat/deadlift days.
+    heavy squat/deadlift days. Not in the Horsemen source, whose only mobility
+    work is shoulder dislocates, the SAM drill and PVC halos; an app addition.
 - id: ankle_circle
   name: Ankle Circle
   category: mobility
@@ -2352,8 +2345,11 @@ exercises:
   sources:
   - Horsemen
   - Ido Portal
-  notes: Non-weight-bearing ankle circumduction. Standard joint prep before any lower
-    body or locomotive work. Perform both clockwise and counterclockwise.
+  notes: >
+    Non-weight-bearing ankle circumduction. Standard joint prep before any lower
+    body or locomotive work. Perform both clockwise and counterclockwise. Not in
+    the Horsemen source, whose only mobility work is shoulder dislocates, the SAM
+    drill and PVC halos; an app addition.
 - id: thoracic_extension_foam_roll
   name: Thoracic Extension (foam roll)
   category: mobility
@@ -2378,9 +2374,12 @@ exercises:
   sources:
   - Horsemen
   - Ido Portal
-  notes: Foam roller placed perpendicular to spine at mid-back. Segment-by-segment
-    extension over roller. Avoid rolling lumbar spine directly. Contraindicated with
-    active lumbar disc pathology due to spinal extension load.
+  notes: >
+    Foam roller placed perpendicular to spine at mid-back. Segment-by-segment
+    extension over roller. Avoid rolling lumbar spine directly. Contraindicated
+    with active lumbar disc pathology due to spinal extension load. Not in the
+    Horsemen source, whose only mobility work is shoulder dislocates, the SAM
+    drill and PVC halos; an app addition.
 - id: shoulder_circle
   name: Shoulder Circle
   category: mobility
@@ -2404,9 +2403,11 @@ exercises:
   sources:
   - Ido Portal
   - Horsemen
-  notes: Standing arm circles in both directions at varied speeds. Standard shoulder
-    joint prep before any upper body or overhead work. Both forward and backward directions
-    required.
+  notes: >
+    Standing arm circles in both directions at varied speeds. Standard shoulder
+    joint prep before any upper body or overhead work. Both forward and backward
+    directions required. Not in the Horsemen source, whose only mobility work is
+    shoulder dislocates, the SAM drill and PVC halos; an app addition.
 - id: band_pull_apart
   name: Band Pull-Apart
   category: mobility
@@ -2431,9 +2432,12 @@ exercises:
   sources:
   - Horsemen
   - Ido Portal
-  notes: Horizontal band pull-apart at chest height or overhead. Activates posterior
-    deltoid, infraspinatus, and lower trapezius. Critical for shoulder health maintenance.
-    Prehab staple for any pressing-heavy program.
+  notes: >
+    Horizontal band pull-apart at chest height or overhead. Activates posterior
+    deltoid, infraspinatus, and lower trapezius. Critical for shoulder health
+    maintenance. Prehab staple for any pressing-heavy program. Not in the Horsemen
+    source, whose only mobility work is shoulder dislocates, the SAM drill and PVC
+    halos; an app addition.
 - id: face_pull
   name: Face Pull (band or cable)
   category: mobility
@@ -2458,10 +2462,12 @@ exercises:
     reps: 15
   sources:
   - Horsemen
-  notes: Pull toward face with thumbs-up grip, elbows high and flared. Full external
+  notes: >
+    Pull toward face with thumbs-up grip, elbows high and flared. Full external
     rotation at end range. Targets rotator cuff, posterior deltoid, and lower/mid
-    trapezius. High-frequency exercise; can be performed daily as prehab without recovery
-    cost.
+    trapezius. High-frequency exercise; can be performed daily as prehab without
+    recovery cost. Not in the Horsemen source, whose only mobility work is
+    shoulder dislocates, the SAM drill and PVC halos; an app addition.
 - id: couch_stretch
   name: Couch Stretch (hip flexor/quad)
   category: mobility
@@ -2490,10 +2496,13 @@ exercises:
   sources:
   - Horsemen
   - Ido Portal
-  notes: Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets
-    rectus femoris and hip flexor complex simultaneously. One of the most effective
-    hip extension mobility drills. Contraindicated with acute knee conditions due
-    to end-range knee flexion load.
+  notes: >
+    Rear foot elevated against wall, knee on floor, hip driven toward wall.
+    Targets rectus femoris and hip flexor complex simultaneously. One of the most
+    effective hip extension mobility drills. Contraindicated with acute knee
+    conditions due to end-range knee flexion load. Not in the Horsemen source,
+    whose only mobility work is shoulder dislocates, the SAM drill and PVC halos;
+    an app addition.
 - id: world_greatest_stretch
   name: World Greatest Stretch
   category: mobility
@@ -2520,10 +2529,12 @@ exercises:
     reps: 5
   sources:
   - Horsemen
-  notes: Lunge forward, drop elbow to floor inside front foot, rotate arm overhead
-    — combined hip flexor, thoracic rotation, and ankle mobility in one movement.
-    Standard pre-session prep. Performed slowly with 3-sec pause at each position
-    for maximum benefit.
+  notes: >
+    Lunge forward, drop elbow to floor inside front foot, rotate arm overhead —
+    combined hip flexor, thoracic rotation, and ankle mobility in one movement.
+    Pre-session prep. Performed slowly with 3-sec pause at each position for
+    maximum benefit. Not in the Horsemen source, whose only mobility work is
+    shoulder dislocates, the SAM drill and PVC halos; an app addition.
 - id: neck_rotation
   name: Neck Rotation
   category: mobility
@@ -2546,8 +2557,11 @@ exercises:
     reps: 10
   sources:
   - Horsemen
-  notes: Slow, controlled cervical rotation to each side. Standard joint prep. No
-    forceful range of motion. Contraindicated with active cervical spine injury.
+  notes: >
+    Slow, controlled cervical rotation to each side. Joint prep. No forceful range
+    of motion. Contraindicated with active cervical spine injury. Not in the
+    Horsemen source, whose only mobility work is shoulder dislocates, the SAM
+    drill and PVC halos; an app addition.
 - id: neck_lateral_flexion
   name: Neck Lateral Flexion
   category: mobility
@@ -2570,9 +2584,12 @@ exercises:
     reps: 10
   sources:
   - Horsemen
-  notes: Slow ear-to-shoulder lateral neck flexion. Targets scalenes and lateral cervical
-    musculature. Complements neck rotation in cervical joint prep sequence. Contraindicated
-    with active cervical spine injury.
+  notes: >
+    Slow ear-to-shoulder lateral neck flexion. Targets scalenes and lateral
+    cervical musculature. Complements neck rotation in cervical joint prep
+    sequence. Contraindicated with active cervical spine injury. Not in the
+    Horsemen source, whose only mobility work is shoulder dislocates, the SAM
+    drill and PVC halos; an app addition.
 - id: sb_deadlift
   name: Sandbag Deadlift
   category: sandbag
@@ -2885,10 +2902,12 @@ exercises:
     reps: 20
   sources:
   - Horsemen
-  notes: TGU mechanics with sandbag on shoulder instead of kettlebell overhead. Used
-    in Horsemen warm-ups and SMMF challenges (100 get-ups at 85-95#). Asymmetric load
-    is more forgiving than overhead KB but demands robust bracing. Cited volume —
-    20 reps each shoulder at 80# — is a standard warm-up block.
+  notes: >
+    TGU mechanics with sandbag on shoulder instead of kettlebell overhead. In the
+    Horsemen source: a warm-up of 20 get-ups each shoulder at 80 lb, a
+    power-endurance workout of 100 sandbag get-ups at 85–95 lb, and 100 sandbag
+    get-ups among the SMMF efforts (no load given). Asymmetric load is more
+    forgiving than overhead KB but demands robust bracing.
 - id: sb_lunge
   name: Sandbag Lunge
   category: sandbag
@@ -2920,9 +2939,10 @@ exercises:
     reps: 10
   sources:
   - Horsemen
-  notes: Walking lunge with bag on shoulder or in bearhug. Appears in Horsemen power
-    endurance work ("Counting Dead Bodies") and SMMF 500m lunge challenge. Alternate
-    carry position every 50m in long-distance variants.
+  notes: >
+    Walking lunge with bag on shoulder or in bearhug. The Horsemen SMMF 500 m
+    lunge (10 × 50 m) changes the carry every 50 m. (The source's "Counting Dead
+    Bodies" lunges hold a 45 lb bar or two 25 lb dumbbells, not a sandbag.)
 - id: sb_halfmoon
   name: Sandbag Half Moon
   category: sandbag
@@ -3027,10 +3047,12 @@ exercises:
     reps: 10
   sources:
   - Horsemen
-  notes: Lift bag overhead and throw/slam it down with maximal force. Unlike medicine
+  notes: >
+    Lift bag overhead and throw/slam it down with maximal force. Unlike medicine
     ball slams, the bag doesn't bounce — requires picking it back up, adding a hip
-    hinge rep per slam. Metabolically demanding. Used in Tabata Hell (Horsemen) and
-    conditioning circuits.
+    hinge rep per slam. Metabolically demanding. The Horsemen source's slams
+    (Tabata Hell among them) use a 10–25 lb slam ball; the sandbag slam is an app
+    substitute.
 - id: sb_press_overhead
   name: Sandbag Overhead Press
   category: sandbag
@@ -3107,15 +3129,12 @@ exercises:
     reps: 5
   sources:
   - Horsemen
-  notes: 'Named Horsemen complex — multiple sandbag movements chained without rest.
-    Example sequence: clean to shoulder → 5 deep squats → carry 40ft → drag
-    back (ref: Double Eagle). Other variants chain clean + press + lunge. Used in
-    EMOM format: 2× clean & squat + 3 burpees every minute for 20 min (''Teabag Your
-    Buddy Tonight''). Treat reps as complex rounds — one rep = full sequence.'
-# ── Aerobic base ─────────────────────────────────────────────────────────────
-# The Horsemen PT test includes a 3-mile run under 20:00 and the program runs
-# low-HR recovery sessions at <=65% MHR, but the package owned only `ruck`, so
-# every aerobic session had to be taken from another philosophy.
+  notes: >
+    Horsemen sandbag work chains movements without rest, for example the Double
+    Eagle: sandbag cleaned to the shoulders → 10 deep squats → drag a tire 40 ft →
+    drag it back. Other variants chain clean + press + lunge. The source also has
+    an EMOM of 2 sandbag clean & squats + 3 burpees every minute for 20 min. Treat
+    reps as complex rounds — one rep = full sequence.
 - id: run_zone2
   name: Zone 2 Run
   category: aerobic
@@ -3144,10 +3163,11 @@ exercises:
     duration_sec: 2700
   sources:
   - Horsemen
-  notes: 'Conversational-pace run. The Horsemen aerobic base exists to support
-    repeatable output, not to chase run times — the 3-mile-under-20:00 PT standard
-    is a prerequisite, not the training target. Nasal breathing is the pace check.
-    Recovery-day runs are capped at 65% MHR.'
+  notes: >
+    Easy run. The Horsemen source's endurance days are any cardio for 30–90 min
+    and its recovery days 30–60 min at 65% of max heart rate or less; the zone-2
+    label is the app's. Its 3-mile run under 20:00 is a program goal within four
+    months; the PT test's 3-mile standard is 22:30.
 
 - id: run_tempo_horsemen
   name: Tempo Run (Zone 3)
@@ -3177,9 +3197,9 @@ exercises:
     duration_sec: 1200
   sources:
   - Horsemen
-  notes: 'Sustained comfortably-hard effort, roughly 3-mile race pace. Used to hold
-    the PT-test run standard through the strength-dominant block without spending
-    a full aerobic session on it.'
+  notes: >
+    Hard, sustained run. The Horsemen source runs 3 miles all-out (goal: under
+    20:00) and in the PT test (22:30); the tempo prescription is the app's.
 
 - id: row_zone2
   name: Zone 2 Row
@@ -3203,8 +3223,9 @@ exercises:
     duration_sec: 2400
   sources:
   - Horsemen
-  notes: 'Low-impact aerobic option, and the default when the athlete is carrying
-    accumulated lower-body load from rucking and carries. Damper 4-6, 18-22 SPM.'
+  notes: >
+    Low-impact aerobic option for the endurance and recovery days, both of which
+    the Horsemen source lets be rowed. Damper 4-6, 18-22 SPM (the app's).
 
 - id: bike_zone2
   name: Zone 2 Bike
@@ -3254,11 +3275,10 @@ exercises:
     reps: 15
   sources:
   - Horsemen
-  notes: 'Strict push-up: chest to the floor, full lockout. The PT test counts
-    clean reps in three minutes; resting in the plank is allowed, on the knees
-    is not.
-
-    '
+  notes: >
+    Push-up. The Horsemen PT test counts push-ups in three minutes (minimum 80);
+    the source gives no rules for a rep or for resting, so chest to the floor and
+    full lockout, resting only in the plank, is the app's standard.
 - id: sit_up
   name: Sit-Up (Abmat)
   category: bodyweight
@@ -3282,7 +3302,40 @@ exercises:
     reps: 20
   sources:
   - Horsemen
-  notes: 'Sit-up, feet anchored, hands crossed on the chest. The PT test counts
-    clean reps in three minutes.
-
-    '
+  notes: >
+    Sit-up. The Horsemen PT test counts sit-ups in three minutes (minimum 90); the
+    source gives no rules for a rep, so feet anchored and hands crossed on the
+    chest is the app's standard.
+- id: pull_up
+  name: Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - elbow_tendinopathy
+  progressions:
+    volume: increase_reps_per_set
+    load: add_weight_vest
+  scaling_down: []
+  typical_volume:
+    sets: 5
+    reps: 5
+  sources:
+  - Horsemen
+  notes: >
+    The Horsemen source's most common pulling movement: the PT test opens with
+    max pull-ups (minimum 15), PT test II asks for 15 with 25 lb, and many
+    workouts use rounds of 5-10 or 10 as the substitute for a rope climb. It
+    also uses strict, kipping, weighted and jumping variations. Full dead hang
+    at the bottom, chin over the bar; the strict standard is the app's, as the
+    source does not define a rep.

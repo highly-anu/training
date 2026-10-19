@@ -685,10 +685,14 @@ track — and the fidelity gate (184 of its 228 findings are intensity splits) s
 none of it. The Dev Lab's Impact tab waits: it explains degraded programs, and
 the aim is to stop generating them.
 
-**0. Land what exists (S).** Review and merge `wildman-contract`, then `dev_lab`
-(the main checkout still holds the Codex work uncommitted). The contract changes
-how an existing Wildman program generates: regenerate the athlete's active program
-deliberately, keeping its logged weeks (the handoff confirmed that is safe).
+**0. Land what exists (S) — done 2026-10-19.** `wildman-contract` merged as #172
+(after a review that found the 422-for-every-infeasible regression, split sessions
+refusing contract tracks, requirements ignoring level seeds, iOS never decoding
+them, blends refused, and more — all fixed) and `dev_lab` as #173. CI also caught
+that the loader listed files in the filesystem's order, so Linux (production) and a
+Mac generated different programs from one request; it now sorts. Existing programs
+keep their weeks until the athlete regenerates from tomorrow on, which keeps the
+elapsed days, their logs and matches.
 
 **1. Make the failures fail (M, engine + content).** A generated-sample check over
 every package × track × level (the 2026-10-19 table, reproducible), with each
@@ -736,13 +740,26 @@ time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selecti
 badly the default misrepresents the method and whether its policies exist:
 1. *Starting Strength* — fixed lifts fit today; add exposure-based loading and an
    intermediate Texas Method / Heavy-Light-Medium track.
-2. *BJJ* — protected mat sessions; two or three short S&C sessions counted from them.
+2. *BJJ* — **done 2026-10-19** (`data/packages/bjj/training_contract.yaml`): classes
+   grow with the week and always outnumber strength; strength by effort with joint
+   maintenance inside; deloads drop rolling; declared substitutes and optional
+   blocks. The compiler gained sets × reps and hold blocks, exposures by days,
+   per-block deloads, alternatives and optional blocks.
 3. *Uphill* — a novice track on its published beginner plan; the weekly ramp;
    declared borrowing kept.
 4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
    pattern, conditioning); RPE targets from the framework.
-5. *Horsemen* — re-extract `data/horsemen/horsemen.pdf` first (the audit's source
-   errors), then named workouts as fixed modules.
+5. *Horsemen* — source re-extracted 2026-10-19 (`docs/package-quality-and-generation-audit.md`
+   points at the comparison; all three audit claims confirmed, and much of the
+   package was invented: Fan Dance, the ruck benchmarks, the second track, deloads,
+   RPE, a four-day template, three archetypes). **Stage 1 (corrections, labels,
+   the PT test's real events) is done.** Stage 2 rebuilds it as a contract: each
+   month's day-by-category template, named workouts as fixed modules in rotating
+   pools, circuits, and loads as a percentage of the day's worked-up max — compiler
+   support for all three is needed first. Decisions it waits for: the canonical
+   edition (with or without the API workouts), display names for the profane
+   workouts and the one with a slur, whether the PT test is placed at all, and the
+   partner and facility workouts.
 6. *CrossFit* — after the variation policy.
 7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their

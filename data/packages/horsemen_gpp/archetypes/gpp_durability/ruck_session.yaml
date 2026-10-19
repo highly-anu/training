@@ -15,18 +15,14 @@ applicable_phases:
 sources:
 - Horsemen
 - Uphill Athlete
-notes: 'Rucking session — sustained loaded walking or hiking. The primary GPP and
-  durability builder in Horsemen and SOF-style programming. Develops aerobic base,
-  posterior chain and spinal loading tolerance, foot and ankle durability, and mental
-  conditioning. Progression is via distance, then load, then speed (time-to-task).
-  Elite standard (Fan Dance): 22km, +1000m elevation gain, 30kg pack, under 4 hours.
-  Personal benchmarks: entry = 2km in 10 min with pack; intermediate = 10km in 48
-  min unloaded; advanced = 20km in 2h20 with pack. Ruck in any terrain (flat, hills,
-  trail); elevation gain is premium for mountain/alpine goals. HR should stay at Zone
-  2 on flat; Zone 3 on ascents is acceptable. This is not a run. Load range: 10–30
-  kg. Start athletes at 10–15 kg and progress load only after distance is comfortable.
-
-  '
+notes: >
+  An app adaptation. The source's only ruck is a job-specific workout: a
+  3-mile ruck run with at least 45 lb, then 3 rounds of 50 lunges, 50 dips
+  and 10 pull-ups still wearing the ruck, then a 1-mile run without it. It
+  also uses a rucksack as step-up load in a warm-up. This archetype is
+  instead a steady loaded walk progressed by distance, then load, then
+  speed; its distance and pack weight are the app's, and it carries no
+  benchmark from the source.
 slots:
 - role: ruck_main
   slot_type: distance
@@ -36,18 +32,16 @@ slots:
   exercise_filter:
     movement_pattern: ruck
     category: aerobic
-  notes: "Default 12km ruck. Adjust distance_m at generation time per phase and athlete\
-    \ level:\n  Entry: 5–8 km, 10–15 kg pack\n  Intermediate: 10–15 km, 15–20 kg pack\n\
-    \  Advanced: 15–25 km, 20–30 kg pack\n  Elite: 22 km + 1000m elevation, 30 kg,\
-    \ <4 hours (Fan Dance standard)\nTerrain: flat for base building; add elevation\
-    \ in build and peak phases. Effort: conversational pace on flat sections. Push\
-    \ on hills.\n"
+  notes: >
+    12 km at 20 kg is the app's default, not the source's. Adjust distance
+    and load to the athlete: start lighter and add load only once the
+    distance is comfortable. Conversational pace on the flat; push on hills.
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: Reduce distance by 40% and drop pack weight 5 kg. Deload ruck should feel
-      easy — regenerative not stressful.
+    notes: App scaling; the source has no deload week. Reduce distance by 40% and
+      drop pack weight 5 kg.
   time_limited:
     drop_slots: []
     notes: 'Ruck is a single-slot session. Shorten by reducing distance. Minimum useful

@@ -21,13 +21,13 @@ training_levels:
 sources:
 - Horsemen
 notes: >
-  Steady aerobic work. In the Horsemen macro the aerobic base is infrastructure,
-  not the objective: it exists so power-endurance and job-specific blocks can be
-  repeated without accumulating unrecoverable fatigue, and so the 3-mile PT-test
-  standard holds while the strength block is running. Modality is interchangeable
-  (run, row, bike, ruck) — pick whatever the athlete's current lower-body load can
-  absorb. Recovery-day versions of this session are held at or below 65% MHR, which
-  is the deload scaling below.
+  One archetype for two of the source's day categories. Endurance is any
+  cardio for 30-90 minutes — climb, cycle, hike, paddle, run, row, swim, ski
+  ("+60 min" in months 2 and 4, "+30" in month 3). Recovery is easy,
+  low-impact work for 30-60 minutes at 65% of max heart rate or less, to
+  move blood and flush by-products, or a light rowing and bodyweight
+  recovery workout. The 45-minute zone-2 default below is the app's, not the
+  source's; modality is interchangeable.
 slots:
 - role: aerobic_main
   slot_type: time_domain
@@ -36,9 +36,9 @@ slots:
   exercise_filter:
     category: aerobic
   notes: >
-    45 min continuous at conversational pace. Nasal breathing is the pace check —
-    if you cannot breathe through your nose, slow down. Duration scales with the
-    athlete's session budget; intensity does not.
+    45 min continuous at an easy pace (the app's default). The source's
+    endurance days run 30-90 min; its recovery days 30-60 min at 65% of max
+    heart rate or less.
 - role: cool_down
   slot_type: time_domain
   duration_sec: 300
@@ -50,14 +50,13 @@ scaling:
   deload:
     volume_multiplier: 0.6
     notes: >
-      Active recovery session. Cap heart rate at 65% MHR, 25-30 min, and prefer
-      bike or row over running so the legs unload.
+      App scaling; the source has no deload week (its recovery days are their
+      own category). Cap heart rate at 65% MHR, 25-30 min, bike or row.
   time_limited:
     drop_slots:
     - cool_down
     notes: >
-      Keep the main effort and cut the cool-down. Below 20 min this session is not
-      worth doing as aerobic base — ruck to work instead.
+      Keep the main effort and cut the cool-down.
   equipment_limited:
     substitutions:
     - missing_equipment: open_space

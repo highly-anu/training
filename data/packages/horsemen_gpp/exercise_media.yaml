@@ -89,8 +89,8 @@ bench_press:
   - Elbows at 45–75 degrees to the torso — straight out stresses the shoulder
   description: The bench press is the foundational horizontal pushing movement — a
     bilateral press where the bar descends to the lower chest and is driven to lockout
-    while the feet drive into the floor and the upper back remains tight. Horsemen
-    benchmark is 1.5x bodyweight; Starting Strength builds from 3x5 linear progression.
+    while the feet drive into the floor and the upper back remains tight. The Horsemen
+    goal is 1.5x bodyweight; Starting Strength builds from 3x5 linear progression.
   muscle_diagram:
     highlight_primary:
     - pec
@@ -383,9 +383,10 @@ kb_complex_12min:
   - If a movement breaks down before the minute ends, stop and hold position rather
     than grind through poor reps
   description: The Horsemen 12-minute kettlebell warm-up complex sequences twelve
-    movements — each one minute with no rest — using a single 35 lb (16 kg) bell.
-    The sequence covers two-hand swings, single-arm swings, figure-eights, clean-and-press,
-    slasher-to-halo, snatches, and lunges with the bell. It is not a workout; it is
+    movements — each one minute with no break, the bell never set down — using a
+    single 35 lb (16 kg) bell. In order — one-arm swing right, figure 8, one-arm swing
+    left, figure 8, clean and press right, slasher to halo, clean and press left,
+    slasher to halo, snatch right, lunge right leg, snatch left, lunge left leg. It is not a workout; it is
     a warm-up that doubles as skill consolidation for the full kettlebell vocabulary.
   muscle_diagram:
     highlight_primary:
@@ -593,9 +594,9 @@ kb_push_press_single:
   - Lock out and stand tall; do not lean back to finish the press
   description: The single-arm kettlebell push press uses a sharp leg dip to drive
     the bell overhead, allowing heavier loading than the strict press and developing
-    power transfer from the lower body to the shoulder. Horsemen include it as a timed
-    interval in the warm-up complex (1 minute per arm) and it bridges strict pressing
-    to the jerk.
+    power transfer from the lower body to the shoulder. It bridges strict pressing
+    to the jerk. (It is not in the Horsemen warm-ups, whose push presses are barbell
+    or dumbbell.)
   muscle_diagram:
     highlight_primary:
     - deltoids
@@ -634,8 +635,8 @@ kb_rack_carry:
   description: The kettlebell rack carry holds the bell in the clean rack position
     — elbow tight, bell resting on the forearm at the shoulder — and walks for distance.
     It develops anti-flexion and anti-rotation core demand in a walking pattern and
-    is an intermediate carry between the farmer carry and the overhead carry in the
-    Horsemen progressive carry system.
+    is an intermediate carry between the farmer carry and the overhead carry. (Not
+    in the Horsemen source as a carry.)
   muscle_diagram:
     highlight_primary:
     - core
@@ -681,8 +682,9 @@ kb_snatch:
   description: The kettlebell snatch pulls the bell from the hip-hinge arc to full
     overhead lockout in one movement, punching the hand through the handle at the
     top so the bell rests on the back of the wrist without impact. It is the signature
-    test of the Wildman system and the Horsemen SSST (200+ snatches in 10 minutes
-    at 24 kg). More than any other exercise it combines power, endurance, and skill.
+    test of the Wildman system and of the Secret Service Snatch Test in the Horsemen
+    program (snatches in 10 minutes at 24 kg; 150 is the Team Guy Standard, 200
+    "really good" and the program's goal). More than any other exercise it combines power, endurance, and skill.
   muscle_diagram:
     highlight_primary:
     - glutes
@@ -832,8 +834,8 @@ ruck_carry:
   description: The ruck carry is a short, heavy, deliberate loaded pack carry as a
     strength-endurance training set -- distinct from the long aerobic ruck. Pack weight
     is 30% bodyweight or more; sets are distance-based (400-800m) rather than time-based.
-    Horsemen program heavy ruck carries as a structural loading tool in GPP blocks.
-    The heavy ruck carry transfers directly to the Fan Dance and similar field standards.
+    An app adaptation; the Horsemen source's only ruck is a 3-mile ruck run with
+    at least 45 lb.
   muscle_diagram:
     highlight_primary:
     - glutes
@@ -963,13 +965,12 @@ sb_bent_row:
   - Drive the elbows back and up, pulling the bag to the lower chest
   - Squeeze the shoulder blades together at the top -- the bag should contact the
     lower chest on each rep
-  - Lower slowly -- the eccentric builds the lat and upper back strength that the
-    Horsemen system demands
+  - Lower slowly -- the eccentric builds lat and upper back strength
   description: The sandbag bent-over row applies a horizontal pull from a hinged torso
     position -- approximately 45 degrees -- pulling the bag to the lower chest. The
     bag grip demands significant forearm and lat engagement throughout, as the unstable
     load shifts during the pull and challenges the lats to maintain consistent bar
-    path. It is a Horsemen upper back strength standard.
+    path. (The Horsemen source sets no standard for it.)
   muscle_diagram:
     highlight_primary:
     - lats
@@ -1097,8 +1098,7 @@ sb_clean:
     -- an explosive hip hinge drives the bag from the floor to the shoulder or front
     rack position. The shifting, non-rigid load demands stronger lat engagement at
     pull initiation and a faster pull under the bag to catch it before it separates
-    from the body. It is the second movement in the Horsemen sandbag progression,
-    unlocking all complex work.
+    from the body. It precedes the sandbag clean and press and complex work.
   muscle_diagram:
     highlight_primary:
     - glutes
@@ -1196,8 +1196,8 @@ sb_complex:
   description: The Horsemen sandbag complex chains multiple sandbag movements without
     rest -- clean to shoulder, deep squats, carry, drag, press, and lunge variations
     assembled into a single round. One rep equals a complete sequence. It is the highest-demand
-    sandbag drill in the Horsemen system, appearing in EMOM formats (Double Eagle,
-    "Teabag Your Buddy Tonight") and as standalone power endurance work. All prerequisite
+    sandbag drill in the Horsemen system, appearing in the Double Eagle and in an
+    EMOM of sandbag clean and squats with burpees. All prerequisite
     sandbag lifts must be individually proficient before attempting complexes.
   muscle_diagram:
     highlight_primary:
@@ -1330,8 +1330,9 @@ sb_getup:
   description: The sandbag get-up applies Turkish get-up mechanics to a bag loaded
     on the shoulder rather than a kettlebell held overhead. The asymmetric shoulder
     load is more forgiving than the overhead KB but demands robust bracing and core
-    stability throughout the multi-stage pattern. The Horsemen use this as a warm-up
-    staple (100 get-ups at 85-95 lb) and as a conditioning movement in SMMF challenges.
+    stability throughout the multi-stage pattern. The Horsemen source has a warm-up
+    of 20 each shoulder at 80 lb, a power-endurance workout of 100 at 85-95 lb, and
+    100 sandbag get-ups among its SMMF efforts.
   muscle_diagram:
     highlight_primary:
     - core
@@ -1414,8 +1415,8 @@ sb_lunge:
   - Alternate the shoulder carry side every 50m in long-distance work; stay consistent
     in short sets
   description: The sandbag lunge is a walking lunge with the bag on the shoulder or
-    in a bearhug position. It appears in Horsemen power endurance work and the SMMF
-    500m lunge challenge. The asymmetric shoulder carry demands oblique and lateral
+    in a bearhug position. The Horsemen SMMF 500 m lunge changes the carry every
+    50 m. The asymmetric shoulder carry demands oblique and lateral
     chain bracing with each step, turning a standard lunge into a unilateral carry
     challenge. Bag position alternates every 50m in long-distance variants.
   muscle_diagram:
@@ -1458,8 +1459,8 @@ sb_press_overhead:
     rack position to full overhead lockout. The unstable bag requires significantly
     more shoulder stabilizer activation than a barbell press, as the load shifts laterally
     during the press. The unilateral single-shoulder variant adds a lateral bracing
-    challenge. It is a Horsemen strength standard and prerequisite to the clean and
-    press.
+    challenge. It is a prerequisite to the clean and press. (The Horsemen source
+    sets no standard for it.)
   muscle_diagram:
     highlight_primary:
     - shoulders
@@ -1500,8 +1501,8 @@ sb_slam:
   description: The sandbag slam lifts the bag overhead and throws it to the ground
     with maximal force. Unlike a medicine ball slam, the bag does not bounce -- the
     athlete picks it up after each slam, adding a hip hinge rep per slam and significantly
-    increasing metabolic demand. It appears in Horsemen Tabata Hell and conditioning
-    circuits as a high-output power endurance movement.
+    increasing metabolic demand. A high-output power endurance movement; the Horsemen
+    source's slams (Tabata Hell among them) use a 10-25 lb slam ball instead.
   muscle_diagram:
     highlight_primary:
     - lats
@@ -1661,7 +1662,8 @@ split_jerk:
   description: The split jerk is the most technically demanding overhead movement
     in the barbell system — after driving the bar upward, the athlete splits into
     a lunge position to receive the bar overhead, then recovers. It is the most common
-    competition jerk and allows maximum overhead load. Horsemen test 1RM.
+    competition jerk and allows maximum overhead load. (The Horsemen source says
+    only "jerk".)
   muscle_diagram:
     highlight_primary:
     - deltoids
@@ -1701,7 +1703,7 @@ strict_press:
   - No leg dip — if the hips or knees bend at any point, it becomes a push press
   description: The strict overhead press takes the barbell from a front-rack position
     to full lockout overhead using pure upper-body pressing strength with no leg drive
-    permitted. Horsemen benchmark is 1x bodyweight; Starting Strength builds from
+    permitted. The Horsemen goal is 1x bodyweight; Starting Strength builds from
     3x5. It is the prerequisite for all push press and jerk variants.
   muscle_diagram:
     highlight_primary:
@@ -1807,8 +1809,8 @@ yoke_carry:
   description: The yoke carry walks under an A-frame yoke loaded with plates, the
     crossbar resting across the upper back in a high-bar squat position. It provides
     the highest absolute compressive load of any carry variant and develops total-body
-    structural durability. Horsemen GPP uses it as a strongman-derived tool for building
-    the spinal, hip, and leg capacity required under extreme bilateral loading.
+    structural durability. A strongman-derived tool for the spinal, hip, and leg
+    capacity required under extreme bilateral loading. (Not in the Horsemen source.)
   muscle_diagram:
     highlight_primary:
     - quadriceps
@@ -1854,7 +1856,7 @@ zercher_carry:
     with forearms crossed at chest height -- a high anterior load position that demands
     exceptional anti-flexion core strength and upper-back engagement. The biceps and
     forearms fatigue quickly as the load digs into the soft tissue of the elbow crook.
-    Horsemen program it as a heavy GPP carry variant that no other implement can replicate.
+    A heavy carry variant no other implement replicates. (Not in the Horsemen source.)
   muscle_diagram:
     highlight_primary:
     - core

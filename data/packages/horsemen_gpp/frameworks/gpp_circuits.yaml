@@ -66,29 +66,21 @@ cadence_options:
   5: [[1, 2, 3, 5, 7], [1, 2, 4, 5, 7], [1, 3, 4, 6, 7]]
 
 sources:
-  - "Horsemen Training Program 2008"
-  - "Gym Jones — Operator Fitness I & II (Twight)"
-  - "Dan John — Never Let Go"
-  - "CrossFit — GPP methodology (Glassman)"
+  - "App adaptation; not in the Horsemen Training Program"
 
 notes: >
-  GPP (General Physical Preparedness) circuits build broad work capacity, durability,
-  and repeatable output under fatigue — the Horsemen core standard. Circuit formats
-  include sandbag complexes (5-8 movements, 3-5 rounds), loaded carry circuits
-  (farmer/rack/overhead), and bodyweight circuits (push/pull/hinge/squat time domain).
-  Progression via time-to-task: the same circuit completed faster, with more load, or
-  with less rest. Named benchmarks serve as fixed-task standards (e.g. "Fan Dance":
-  22km, +1000m elevation, 30kg pack, 4h). Horsemen SMMF (Slow Massive Movement)
-  workouts — 100-rep challenges, 500m lunge, 1-mile heavy bag carry — are the
-  extreme end of this framework: single massive efforts testing work capacity and
-  mental durability simultaneously (Twight: "The mind is the primary limiter").
-  Equipment-minimal approach: sandbag, barbell, bodyweight, and a ruck cover the
-  full framework. 4-day Horsemen weekly template: Mon strength complex (sandbag or
-  barbell), Tue conditioning (AMRAP/circuit), Thu loaded carries + bodyweight, Sat
-  long ruck or GPP circuit.
+  An app adaptation, not in the Horsemen source, which has no circuits-only
+  block. GPP (General Physical Preparedness) circuits for broad work
+  capacity, durability and repeatable output under fatigue: sandbag
+  complexes, loaded-carry circuits and bodyweight circuits. Progression is by
+  time-to-task: the same circuit completed faster, with more load, or with
+  less rest. The source's own circuits (short, complementary and focus) and
+  its SMMF efforts are named workouts inside the four-month macro, not this
+  block. Equipment-minimal: a sandbag, a barbell, bodyweight and a ruck cover
+  it.
 
-# The package's own concurrent block unloads every fourth week; the circuits
-# accumulate the same mixed-modal fatigue.
+# An app choice, like the rest of this framework: the Horsemen source has no
+# deload week.
 deload_protocol:
   frequency_weeks: 4
   volume_reduction_pct: 0.6   # share of volume kept

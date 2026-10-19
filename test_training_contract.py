@@ -311,6 +311,88 @@ def test_builder_requirements_are_scoped_to_the_selected_level():
     assert tracks['double_bell_practice']['entry_requirements']['kettlebell_count'] == 2
 
 
+
+def _bjj(weeks=4, **overrides):
+    goal = goals.philosophy_to_goal('bjj', list(loader.load_all_frameworks().values()))
+    c = dict(equipment=['pull_up_bar', 'kettlebell', 'open_space'], days_per_week=5,
+             session_time_minutes=60, training_level='intermediate')
+    c.update(overrides)
+    return generate(None, c, num_weeks=weeks, goal_dict=goal, output_format='dict'), goal, c
+
+
+def _by_archetype(week):
+    out = {}
+    for ss in week['schedule'].values():
+        for s in ss:
+            out.setdefault(s['archetype']['id'], []).append(s)
+    return out
+
+
+def test_bjj_mat_time_leads_the_week():
+    # Mat first (StrengthLog, BJJEE): classes outnumber strength sessions at every
+    # week size, and strength never exceeds two short sessions.
+    for days, classes, strength in ((3, 2, 1), (4, 3, 1), (5, 3, 2), (6, 4, 2), (7, 5, 2)):
+        p, g, c = _bjj(weeks=2, days_per_week=days)
+        tc.verify(p, g['training_contract'], c)
+        week = _by_archetype(p['weeks'][0])
+        n_strength = len(week.get('grappling_sc', [])) + len(week.get('bjj_grip_isometric', []))
+        assert len(week['bjj_class']) == classes and n_strength == strength, (days, {k: len(v) for k, v in week.items()})
+        assert all(s['modality'] == 'combat_sport' for s in week['bjj_class'])
+        assert all(s['modality'] == 'strength_endurance' for k in ('grappling_sc', 'bjj_grip_isometric') for s in week.get(k, []))
+    p, _, _ = _bjj(weeks=1, days_per_week=5)
+    days = {d: ss[0]['archetype']['id'] for d, ss in p['weeks'][0]['schedule'].items()}
+    order = [days[d] for d in sorted(days)]
+    assert all(not (a != 'bjj_class' and b != 'bjj_class') for a, b in zip(order, order[1:])), \
+        f'strength days are not back to back: {order}'
+
+
+def test_bjj_deload_drops_rolling_and_keeps_drilling():
+    p, g, c = _bjj(weeks=4)
+    tc.verify(p, g['training_contract'], c)
+    normal, deload = p['weeks'][0], p['weeks'][3]
+    assert deload['is_deload'] and not normal['is_deload']
+    ids = lambda s: [e['exercise']['id'] for e in s['exercises'] if e.get('exercise')]
+    assert ids(_by_archetype(normal)['bjj_class'][0]) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring', 'bjj_live_rolling']
+    light = _by_archetype(deload)['bjj_class'][0]
+    assert ids(light) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring']
+    drill = next(e for e in light['exercises'] if (e.get('exercise') or {}).get('id') == 'bjj_drilling')
+    assert drill['load']['duration_minutes'] == 20, 'drilling is not cut on a deload'
+
+
+def test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go():
+    p, g, c = _bjj(weeks=1, injury_flags=['shoulder_instability'])
+    tc.verify(p, g['training_contract'], c)
+    week = _by_archetype(p['weeks'][0])
+    rolling = [e['exercise']['id'] for s in week['bjj_class'] for e in s['exercises'] if e['slot_role'] == 'mat_class_rolling']
+    assert set(rolling) == {'bjj_positional_sparring'}, 'positional work stands in for rolling'
+    assert not any(e['exercise']['id'] == 'dead_hang' for k in ('grappling_sc', 'bjj_grip_isometric')
+                   for s in week[k] for e in s['exercises'] if e.get('exercise'))
+    assert any('Dead Hang left out' in line for line in p['compromises'])
+    bare, g, c = _bjj(weeks=1, equipment=['open_space'])
+    tc.verify(bare, g['training_contract'], c)
+    pulls = {e['exercise']['id'] for ss in bare['weeks'][0]['schedule'].values() for s in ss
+             for e in s['exercises'] if e['slot_role'].endswith('pull')}
+    assert pulls == {'bjj_inverted_row'}, pulls
+    strength = next(s for ss in p['weeks'][0]['schedule'].values() for s in ss if s['archetype']['id'] == 'grappling_sc')
+    pull = next(e for e in strength['exercises'] if e['slot_role'] == 'grappling_strength_pull')
+    assert pull['load']['sets'] == 5 and pull['load']['reps'] == 5 and pull['load']['target_rpe'] == 8
+    assert 'RPE 8' in pull['load']['load_note']
+    lumbar, _, _ = _bjj(weeks=1, injury_flags=['lumbar_disc'])
+    assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
+
+
+def test_review_fixes_of_pr_175():
+    # The module record names what was prescribed (an alternative, not the
+    # authored lift), so confirmed_state reads the logs the athlete wrote.
+    p, _, _ = plan(weeks=2)
+    for s in sessions(p):
+        prescribed = {e['exercise']['id'] for e in s['exercises'] if e.get('exercise')}
+        for r in s['modules']:
+            assert r['exercise_ids'] and set(r['exercise_ids']) <= prescribed, (r, prescribed)
+    # Fewer days than the smallest exposures_by_days key refuses.
+    short, _, _ = _bjj(weeks=1, days_per_week=2)
+    assert not short['weeks'] and short['validation_errors']
+
 if __name__ == '__main__':
     suite = unittest.TestSuite(unittest.FunctionTestCase(f) for name, f in list(globals().items())
                                if name.startswith('test_'))

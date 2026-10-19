@@ -1,7 +1,7 @@
 id: grappling_sc
 name: "Grappling S&C (Combat Sport Strength & Conditioning)"
-modality: combat_sport
-category: combat_sport
+modality: strength_endurance
+category: strength
 duration_estimate_minutes: 60
 required_equipment:
   - pull_up_bar
