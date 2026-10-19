@@ -30,7 +30,12 @@ backups/
 # Dev/editor
 .claude/
 .wrangler/
-docs/
+# docs/ stays out, except the JSON schemas the running API validates against:
+# training contracts (src/training_contract.load_contract, on every
+# /philosophies and generate) and the authoring routes. Without them
+# production answered 500 to /api/philosophies.
+docs/*
+!docs/schemas
 *.md
 .idea/
 .vscode/
