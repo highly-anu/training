@@ -16,6 +16,8 @@ import {
 import { cn } from '@/lib/utils'
 import { usePhilosophies } from '@/api/philosophies'
 import { useGenerateWithTrace } from '@/api/programs'
+import { useInjuryFlags } from '@/api/constraints'
+import { resolveTrack, tracksOf } from '@/lib/tracks'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { ValidationPanel } from '@/components/devlab/ValidationPanel'
 import { SchedulerPanel } from '@/components/devlab/SchedulerPanel'
@@ -24,10 +26,11 @@ import { PipelineFlowPanel } from '@/components/devlab/PipelineFlowPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
-import type { EquipmentId, TrainingLevel, TrainingPhase, TracedProgram, WeekData } from '@/api/types'
+import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
 
+// Every id an exercise uses (EquipmentPicker leaves out the ones none does).
 const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
   { id: 'barbell', label: 'Barbell' },
   { id: 'rack', label: 'Rack' },
@@ -35,11 +38,25 @@ const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
   { id: 'kettlebell', label: 'Kettlebell' },
   { id: 'dumbbell', label: 'Dumbbell' },
   { id: 'pull_up_bar', label: 'Pull-up Bar' },
-  { id: 'ruck_pack', label: 'Ruck Pack' },
-  { id: 'open_space', label: 'Open Space' },
   { id: 'rings', label: 'Rings' },
+  { id: 'parallettes', label: 'Parallettes' },
+  { id: 'rope', label: 'Rope Climb' },
+  { id: 'box', label: 'Box' },
+  { id: 'rower', label: 'Rower' },
+  { id: 'bike', label: 'Assault Bike' },
+  { id: 'ski_erg', label: 'Ski Erg' },
+  { id: 'pool', label: 'Pool' },
+  { id: 'ruck_pack', label: 'Ruck Pack' },
   { id: 'sandbag', label: 'Sandbag' },
+  { id: 'jump_rope', label: 'Jump Rope' },
+  { id: 'resistance_band', label: 'Band' },
+  { id: 'sled', label: 'Sled' },
+  { id: 'tire', label: 'Tire' },
+  { id: 'dip_belt', label: 'Dip Belt' },
+  { id: 'open_space', label: 'Open Space' },
 ]
+
+const FATIGUE_STATES: FatigueState[] = ['fresh', 'normal', 'accumulated', 'overreached']
 
 // ─── StepMeta annotation banner ──────────────────────────────────────────────
 
@@ -161,12 +178,24 @@ function InputsPanel({ program }: { program: TracedProgram }) {
             <dd className="font-mono">{constraints.session_time_minutes} min</dd>
             <dt className="text-muted-foreground">Level</dt>
             <dd className="font-mono">{constraints.training_level}</dd>
-            <dt className="text-muted-foreground">Phase</dt>
-            <dd className="font-mono">{constraints.training_phase}</dd>
+            <dt className="text-muted-foreground">Track</dt>
+            <dd className="font-mono">{goal.track?.name ?? constraints.track_id ?? '—'}</dd>
+            <dt className="text-muted-foreground">Start phase</dt>
+            <dd className="font-mono">{program.weeks[0]?.phase_name ?? constraints.start_phase ?? '—'}</dd>
             <dt className="text-muted-foreground">Fatigue state</dt>
             <dd className="font-mono">{constraints.fatigue_state}</dd>
+            <dt className="text-muted-foreground">Injuries</dt>
+            <dd className="flex flex-wrap gap-0.5 mt-0.5">
+              {constraints.injury_flags.length === 0 && <span className="font-mono">none</span>}
+              {constraints.injury_flags.map(f => (
+                <span key={f} className="bg-muted rounded px-1 py-0.5 text-[10px] font-mono">
+                  {f}
+                </span>
+              ))}
+            </dd>
             <dt className="text-muted-foreground">Equipment</dt>
             <dd className="flex flex-wrap gap-0.5 mt-0.5">
+              {constraints.equipment.length === 0 && <span className="font-mono">none</span>}
               {constraints.equipment.map(e => (
                 <span key={e} className="bg-muted rounded px-1 py-0.5 text-[10px] font-mono">
                   {e}
@@ -184,12 +213,17 @@ function InputsPanel({ program }: { program: TracedProgram }) {
 
 export function DevLab() {
   const { data: philosophies = [], isLoading: loadingPhilosophies } = usePhilosophies()
+  const { data: injuryFlagOptions = [] } = useInjuryFlags()
   const generateMutation = useGenerateWithTrace()
 
   // Form state
   const [philosophyId, setPhilosophyId] = useState<string>('')
+  // null = the philosophy's primary track / the track's first phase, as the builder sends.
+  const [trackId, setTrackId] = useState<string | null>(null)
+  const [startPhaseId, setStartPhaseId] = useState<string | null>(null)
   const [level, setLevel] = useState<TrainingLevel>('intermediate')
-  const [phase, setPhase] = useState<TrainingPhase>('base')
+  const [fatigue, setFatigue] = useState<FatigueState>('normal')
+  const [injuryFlags, setInjuryFlags] = useState<InjuryFlagId[]>([])
   const [days, setDays] = useState(4)
   const [sessionTime, setSessionTime] = useState(60)
   const [numWeeks, setNumWeeks] = useState(2)
@@ -205,9 +239,31 @@ export function DevLab() {
   const [activeStep, setActiveStep] = useState('inputs')
   const [outputWeekIdx, setOutputWeekIdx] = useState(0)
 
+  const philosophy = philosophies.find(p => p.id === philosophyId)
+  const tracks = tracksOf(philosophy)
+  const track = resolveTrack(philosophy, trackId)
+  const startPhase = track?.phases.find(p => p.id === startPhaseId) ?? track?.phases[0]
+
+  function selectPhilosophy(id: string) {
+    setPhilosophyId(id)
+    setTrackId(null)
+    setStartPhaseId(null)
+  }
+
+  function selectTrack(id: string) {
+    setTrackId(id)
+    setStartPhaseId(null)
+  }
+
   function toggleEquipment(id: EquipmentId) {
     setEquipment(prev =>
       prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+    )
+  }
+
+  function toggleInjury(id: InjuryFlagId) {
+    setInjuryFlags(prev =>
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     )
   }
 
@@ -216,16 +272,17 @@ export function DevLab() {
     try {
       const data = await generateMutation.mutateAsync({
         philosophyId,
+        trackId: track?.id ?? null,
+        startPhaseId: startPhase?.id ?? null,
         constraints: {
           equipment,
           days_per_week: days,
           session_time_minutes: sessionTime,
           training_level: level,
-          injury_flags: [],
+          injury_flags: injuryFlags,
           avoid_movements: [],
-          training_phase: phase,
           periodization_week: 1,
-          fatigue_state: 'normal',
+          fatigue_state: fatigue,
         },
         numWeeks,
         customInjuryFlags: [],
@@ -326,7 +383,8 @@ export function DevLab() {
               days_per_week: days,
               session_time_minutes: sessionTime,
               training_level: level,
-              training_phase: phase,
+              injury_flags: injuryFlags,
+              fatigue_state: fatigue,
               numWeeks,
             } : undefined}
             initialLockedNode={ontologyNodeId}
@@ -350,7 +408,7 @@ export function DevLab() {
               {/* Philosophy */}
               <div className="min-w-[200px]">
                 <Label className="text-xs mb-1 block">Philosophy</Label>
-                <Select value={philosophyId} onValueChange={setPhilosophyId} disabled={loadingPhilosophies}>
+                <Select value={philosophyId} onValueChange={selectPhilosophy} disabled={loadingPhilosophies}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Select philosophy…" />
                   </SelectTrigger>
@@ -379,18 +437,48 @@ export function DevLab() {
                 </Select>
               </div>
 
-              {/* Phase */}
-              <div className="min-w-[130px]">
-                <Label className="text-xs mb-1 block">Phase</Label>
-                <Select value={phase} onValueChange={v => setPhase(v as TrainingPhase)}>
+              {/* Track */}
+              <div className="min-w-[180px]">
+                <Label className="text-xs mb-1 block">Track</Label>
+                <Select value={track?.id ?? ''} onValueChange={selectTrack} disabled={tracks.length < 2}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tracks.map(t => (
+                      <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Start phase */}
+              <div className="min-w-[200px]">
+                <Label className="text-xs mb-1 block">Start phase</Label>
+                <Select value={startPhase?.id ?? ''} onValueChange={setStartPhaseId} disabled={!track}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(track?.phases ?? []).map(p => (
+                      <SelectItem key={p.id} value={p.id} className="text-xs">
+                        {p.name} <span className="text-muted-foreground">· {p.kind} · {p.weeks}w · {p.framework_id}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Fatigue */}
+              <div className="min-w-[120px]">
+                <Label className="text-xs mb-1 block">Fatigue</Label>
+                <Select value={fatigue} onValueChange={v => setFatigue(v as FatigueState)}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(
-                      ['base', 'build', 'peak', 'taper', 'deload', 'maintenance', 'rehab'] as TrainingPhase[]
-                    ).map(p => (
-                      <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+                    {FATIGUE_STATES.map(f => (
+                      <SelectItem key={f} value={f} className="text-xs">{f}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -471,6 +559,18 @@ export function DevLab() {
             {/* Equipment */}
             <div className="flex flex-wrap gap-1.5 items-center">
               <span className="text-xs text-muted-foreground">Equipment:</span>
+              <button
+                onClick={() => setEquipment(EQUIPMENT_OPTIONS.map(o => o.id))}
+                className="px-2 py-0.5 rounded text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                all
+              </button>
+              <button
+                onClick={() => setEquipment([])}
+                className="px-2 py-0.5 rounded text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                none
+              </button>
               {EQUIPMENT_OPTIONS.map(opt => (
                 <button
                   key={opt.id}
@@ -483,6 +583,26 @@ export function DevLab() {
                   )}
                 >
                   {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Injuries */}
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <span className="text-xs text-muted-foreground">Injuries:</span>
+              {injuryFlagOptions.map(flag => (
+                <button
+                  key={flag.id}
+                  onClick={() => toggleInjury(flag.id)}
+                  title={flag.description}
+                  className={cn(
+                    'px-2 py-0.5 rounded text-xs border transition-colors',
+                    injuryFlags.includes(flag.id)
+                      ? 'bg-destructive/15 border-destructive/40 text-destructive'
+                      : 'border-border text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  {flag.name}
                 </button>
               ))}
             </div>

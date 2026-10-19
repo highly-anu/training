@@ -136,6 +136,8 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
     .sort(([, a], [, b]) => b - a)
 
   const fw = weekTrace.scheduler.framework_selection
+  const allocation = weekTrace.scheduler.allocation
+  const dayAssignment = weekTrace.scheduler.day_assignment
   const frameworkDef = ontology?.frameworks.find(f => f.id === fw.selected_id)
 
   return (
@@ -298,7 +300,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
         reads={['phase priorities', 'framework.sessions_per_week']}
         outputs={['session counts per modality']}
       >
-        {weekTrace.scheduler.allocation ? (
+        {allocation ? (
           <div className="space-y-1.5">
             <div className="flex gap-2 items-center">
               <Label>phase:</Label>
@@ -318,7 +320,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(weekTrace.scheduler.allocation.final)
+                  {Object.entries(allocation.final)
                     .filter(([, v]) => v > 0)
                     .sort(([, a], [, b]) => b - a)
                     .map(([mod, final]) => {
@@ -327,10 +329,10 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                         <tr key={mod}>
                           <td className={`pr-4 ${col?.text ?? 'text-foreground'}`}>{mod.replace(/_/g, ' ')}</td>
                           <td className="text-right pr-4 text-muted-foreground">
-                            {((weekTrace.scheduler.allocation.phase_priorities[mod] ?? 0) * 100).toFixed(0)}%
+                            {((allocation.phase_priorities[mod] ?? 0) * 100).toFixed(0)}%
                           </td>
                           <td className="text-right pr-4 text-muted-foreground">
-                            {(weekTrace.scheduler.allocation.raw[mod] ?? 0).toFixed(2)}
+                            {(allocation.raw[mod] ?? 0).toFixed(2)}
                           </td>
                           <td className="text-right text-foreground/80">{final}</td>
                         </tr>
@@ -354,15 +356,14 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
         reads={['modality.recovery_cost', 'modality.incompatible_in_session_with', 'cadence pattern']}
         outputs={['modality → day mapping']}
       >
-        {weekTrace.scheduler.day_assignment ? (
+        {dayAssignment ? (
           <div className="space-y-2">
             {/* Mini 7-day grid */}
             <div className="grid grid-cols-7 gap-1">
-              {DAY_NAMES.map((name, i) => {
-                const dayNum = i + 1
-                const dayStr = dayNum.toString()
-                const dayMods = weekTrace.scheduler.day_assignment.assignments[dayStr] ?? []
-                const isActive = activeDay === dayStr
+              {DAY_NAMES.map(name => {
+                // The trace keys assignments 'Mon'..'Sun' and sessions by the full day name.
+                const dayMods = dayAssignment.assignments[name] ?? []
+                const isActive = !!activeDay && activeDay.startsWith(name)
                 return (
                   <div
                     key={name}
@@ -390,10 +391,10 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
               })}
             </div>
             {/* Modality order + recovery cost */}
-            {weekTrace.scheduler.day_assignment.modality_order.length > 0 && (
+            {dayAssignment.modality_order.length > 0 && (
               <div className="space-y-0.5">
                 <Label>placement order (by recovery cost):</Label>
-                {weekTrace.scheduler.day_assignment.modality_order.map(mod => {
+                {dayAssignment.modality_order.map(mod => {
                   const modalityDef = ontology?.modalities.find(m => m.id === mod)
                   const col = MODALITY_COLORS[mod as ModalityId]
                   return (

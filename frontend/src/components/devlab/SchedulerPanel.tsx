@@ -9,6 +9,50 @@ interface Props {
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+/** A training contract's week: fixed modules on their days, no allocation. */
+function ContractWeek({ week }: { week: WeekTrace }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
+          <span>Week {week.week_number}</span>
+          <PhaseBadge phase={week.phase as TrainingPhase} />
+          {week.is_deload && <Badge variant="outline" className="text-xs">Deload</Badge>}
+          <Badge variant="secondary" className="font-mono text-xs">{week.scheduler.framework_selection.selected_id}</Badge>
+          <span className="text-xs text-muted-foreground ml-auto font-mono">{week.scheduler.contract}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          Placed by the training contract: each module's movements, weekly exposures and recovery
+          spacing are fixed, so no priorities are allocated and no framework is chosen.
+        </p>
+        <div className="grid grid-cols-7 gap-1">
+          {DAY_NAMES.map((day, i) => {
+            const sessions = week.sessions[day] ?? []
+            return (
+              <div key={day} className="text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">{DAY_LABELS[i]}</p>
+                <div className="min-h-[28px] space-y-0.5">
+                  {sessions.length > 0 ? sessions.map((s, si) => (
+                    <div key={si} className="rounded px-1 py-0.5 text-[9px] font-medium bg-primary/10 text-primary"
+                         title={s.archetype.selected_id ?? s.modality}>
+                      {(s.modules?.length ? s.modules.join(' + ') : s.modality).replace(/_/g, ' ')}
+                    </div>
+                  )) : (
+                    <div className="rounded px-1 py-1 text-[9px] text-muted-foreground/30 text-center">—</div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function SchedulerPanel({ weeks }: Props) {
   return (
@@ -17,6 +61,9 @@ export function SchedulerPanel({ weeks }: Props) {
         const fw = week.scheduler.framework_selection
         const alloc = week.scheduler.allocation
         const assign = week.scheduler.day_assignment
+        if (week.scheduler.contract || !alloc || !assign) {
+          return <ContractWeek key={week.week_number} week={week} />
+        }
 
         return (
           <Card key={week.week_number}>
@@ -97,12 +144,18 @@ export function SchedulerPanel({ weeks }: Props) {
                   Framework selection details
                 </summary>
                 <div className="mt-2 space-y-1 pl-3 border-l border-border">
-                  {fw.forced_override ? (
+                  {fw.selection_reason === 'phase_framework_override' ? (
+                    <p>
+                      Named by the week's phase:{' '}
+                      <code className="bg-muted px-1 rounded">{fw.phase_framework_id ?? fw.selected_id}</code>
+                      <span className="text-muted-foreground"> — the goal's default and alternatives are not consulted.</span>
+                    </p>
+                  ) : fw.forced_override ? (
                     <p>Forced override: <code className="bg-muted px-1 rounded">{fw.forced_override}</code></p>
                   ) : (
                     <>
                       <p>Default: <code className="bg-muted px-1 rounded">{fw.default_id}</code></p>
-                      {fw.alternatives_checked.map((alt, i) => (
+                      {(fw.alternatives_checked ?? []).map((alt, i) => (
                         <p key={i} className={alt.matched ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}>
                           {alt.matched ? '✓' : '○'}{' '}
                           <code className="bg-muted px-1 rounded">{alt.condition}</code>{' '}

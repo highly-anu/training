@@ -64,6 +64,7 @@ export type EquipmentId =
   | 'jump_rope'
   | 'open_space'
   | 'pool'
+  | 'dip_belt'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'
@@ -592,6 +593,8 @@ export interface SlotTrace {
   injury_blocked: boolean
   filter_counts: Record<string, number>
   candidates: CandidateScore[]
+  /** The contract module that placed the slot. */
+  module_id?: string | null
 }
 
 export interface ProgressionEntry {
@@ -609,34 +612,50 @@ export interface ProgressionEntry {
 
 export interface SessionTrace {
   modality: string
+  /** The contract modules the session carries. */
+  modules?: string[]
   archetype: ArchetypeTrace
   slots: SlotTrace[]
   progression: ProgressionEntry[]
 }
 
+/**
+ * How the scheduler chose the week's framework (src/scheduler.select_framework).
+ * Inside a track the week's phase names its framework and decides
+ * (`selection_reason: 'phase_framework_override'`); that path records only the
+ * pick, so the goal's default, its alternatives and the days check are absent.
+ * Every week of every program takes it since tracks landed (2026-10-13).
+ */
 export interface FrameworkSelectionTrace {
-  forced_override: string | null
-  default_id: string
-  alternatives_checked: Array<{ framework_id: string; condition: string; matched: boolean }>
   selected_id: string
   selection_reason: string
+  phase_framework_id?: string | null
+  forced_override?: string | null
+  default_id?: string
+  alternatives_checked?: Array<{ framework_id: string; condition: string; matched: boolean }>
   days_constraint?: { athlete_days: number; framework_min: number; framework_max: number; days_fallback: string | null }
 }
 
+/**
+ * A training contract (src/training_contract.py) places fixed modules: its
+ * week has `contract` and no allocation or day assignment, and its framework
+ * selection reads `training_contract`.
+ */
 export interface SchedulerTrace {
   framework_selection: FrameworkSelectionTrace
-  allocation: {
+  contract?: string
+  allocation?: {
     phase_priorities: Record<string, number>
     raw: Record<string, number>
     final: Record<string, number>
   }
-  day_assignment: {
+  day_assignment?: {
     modality_order: string[]
     day_pool: number[]
     assignments: Record<string, string[]>
   }
   is_deload: boolean
-  deload_freq_weeks: number
+  deload_freq_weeks?: number
 }
 
 export interface WeekTrace {
@@ -651,7 +670,7 @@ export interface WeekTrace {
 export interface GenerationTrace {
   weeks: WeekTrace[]
   primary_sources?: string[]  // Philosophy package IDs (e.g. ['starting_strength'])
-  philosophy_mode?: 'synthetic_goal' | 'explicit_goal'
+  philosophy_mode?: 'synthetic_goal' | 'explicit_goal' | 'training_contract'
 }
 
 export interface TracedProgram extends GeneratedProgram {
