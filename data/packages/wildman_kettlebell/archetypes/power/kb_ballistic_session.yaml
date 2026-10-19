@@ -1,56 +1,53 @@
 id: kb_ballistic_session
-name: "KB Ballistic Power Session (Wildman)"
+name: Nerd Math Two-Hand Swing
 modality: power
 category: kettlebell
-training_levels:
-  - novice
-  - intermediate
-  - advanced
-  - elite
-duration_estimate_minutes: 45
-applicable_phases: [base, build, maintenance, peak]
-
-slots:
-  - role: warmup
-    slot_type: time_domain
-    duration_minutes: 10
-    intensity: low
-    exercise_filter:
-      category: kettlebell
-      movement_pattern: hip_hinge
-
-  - role: skill_work
-    slot_type: skill_practice
-    duration_minutes: 10
-    intensity: moderate
-    exercise_filter:
-      category: kettlebell
-      movement_pattern: ballistic
-
-  - role: main
-    slot_type: time_domain
-    duration_minutes: 20
-    intensity: high
-    exercise_filter:
-      category: kettlebell
-      movement_pattern: ballistic
-
-  - role: cooldown
-    slot_type: skill_practice
-    duration_minutes: 5
-    intensity: low
-    exercise_filter:
-      category: kettlebell
-      movement_pattern: rotation
-
+duration_estimate_minutes: 15
 required_equipment:
-  - kettlebell
+- kettlebell
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  notes: Rehearse the hinge with a controllable bell; this is preparation, not a load
+    test.
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  duration_sec: 180
+- role: main
+  slot_type: emom
+  notes: Two-hand swings at the top of each minute; rest for its remainder. Stop if
+    technique or breathing deteriorates.
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_swing_two_hand
+  sets: 10
+  reps_per_round: 6
+  work_sec: 60
+  rest_sec: 0
+- role: recovery
+  slot_type: skill_practice
+  notes: Gentle unloaded or very light shoulder circles; omit external load if fatigued.
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  duration_sec: 120
 sources:
-  - Wildman
-notes: >
-  Ballistic power session centred on hip-hinge driven movements. Warmup uses halo
-  and deadlift to prime the pattern. Skill block addresses technique at sub-maximal
-  RPM before the main timed work. Main sets are typically 2–10 min at a target RPM
-  well below lactate threshold — breathing stays nasal throughout. TGU cooldown
-  restores shoulder position and doubles as a fatigue check. Progression: increase
-  timed-set duration or RPM, not load, until RPM targets are comfortably met.
+- https://www.wildmanathletica.com/programming
+notes: 'Repeated single-bell practice in independently progressing modules. Complete
+  the repetitions at the start of each minute and rest for the remainder. Advance
+  only after clean completion at RPE 7 or below. Future exposures are conditional
+  forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing
+  a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression
+  is inferred from the calendar. Technique practice is an app adaptation.
+
+  '

@@ -181,6 +181,8 @@ def phase_sequence_for(track: dict) -> list[dict]:
             entry['rotate_main_lifts'] = True
         if ph.get('tests'):
             entry['tests'] = [dict(t) for t in ph['tests']]
+        if ph.get('checks'):
+            entry['checks'] = dict(ph['checks'])
         out.append(entry)
     return out
 

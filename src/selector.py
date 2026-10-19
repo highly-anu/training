@@ -123,6 +123,10 @@ def _equipment_ok(ex: dict, available: set) -> bool:
 
 def _matches_slot_filter(ex: dict, ex_filter: dict, excluded_patterns: set) -> bool:
     """Check category, movement_pattern, and injury exclusion."""
+    if 'bilateral' in ex_filter and ex.get('bilateral') != ex_filter['bilateral']:
+        return False
+    if ex_filter.get('equipment_required') and not set(ex_filter['equipment_required']).issubset(ex.get('equipment') or []):
+        return False
     # Category filter
     req_cat = ex_filter.get('category')
     if req_cat and ex.get('category') != req_cat:
@@ -818,17 +822,22 @@ def populate_session(
             }
         return result
 
-    # Overlay package-specific exercise definitions (prescription fields, etc.)
+    # A session uses only exercises declared in its archetype's exercises.yaml.
+    # Merging the global pool here allowed cross-package picks in blends and
+    # permissive fallback paths, even when the package had no matching exercise.
     arch_package = arch.get('_package')
-    if arch_package and exercises_by_package and arch_package in exercises_by_package:
-        pkg_exs = exercises_by_package[arch_package]
-        exercises = {
-            **exercises,
-            **{
-                ex_id: {**exercises[ex_id], **pkg_ex} if ex_id in exercises else pkg_ex
-                for ex_id, pkg_ex in pkg_exs.items()
-            },
-        }
+    if arch_package and exercises_by_package is not None:
+        # Keep explicitly permitted borrowed exercises; package membership alone
+        # must not erase a declared borrowing contract (Uphill's barbell work).
+        own = exercises_by_package.get(arch_package, {})
+        session_policy = (provenance.SourcePolicy(owner_packages=frozenset({arch_package}),
+                          borrows=policy.borrows, strict=policy.strict) if policy is not None else None)
+        borrowed = {eid: ex for eid, ex in exercises.items() if session_policy is not None
+                    and provenance.allows_exercise(ex, session_policy, modality)}
+        exercises = {**borrowed, **own}
+        package_seeds = {arch_package: (level_seeds or {}).get(arch_package, {})}
+        unlocked = _get_unlocked(training_level, exercises, package_seeds) - excl_ids
+        unlocked -= set(exclude_exercise_ids or ())
 
     # Populate slots
     used_ex_ids = list(recent_ex_ids or [])

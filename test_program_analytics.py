@@ -1175,8 +1175,9 @@ def test_headline_follows_the_track() -> None:
     cons = {'training_level': 'intermediate', 'days_per_week': 4, 'session_time_minutes': 60,
             'equipment': ['kettlebell', 'open_space'], 'injury_flags': [],
             'periodization_week': 1, 'fatigue_state': 'normal'}
-    for track, lead in (('general_practice', 'skills'), ('pentathlon', 'jerk_rpm')):
+    for track, lead in (('general_practice', 'practice_sessions'), ('pentathlon', 'jerk_rpm')):
         goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id=track)
+        cons['mastered_exercises'] = [eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])]
         prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
                                   num_weeks=4, output_format='dict')
         prog = {'goal': goal, 'constraints': cons, 'weeks': prog['weeks']}
@@ -1202,9 +1203,9 @@ def test_headline_follows_the_track() -> None:
             check('GP: cadence does not apply and says it applies in Pentathlon Prep',
                   not by_id['jerk_rpm']['applies']
                   and by_id['jerk_rpm']['appliesIn'][0]['trackId'] == 'pentathlon')
-            check('GP: ballistic timed sets apply (the power session\'s main time block)',
-                  by_id['ballistic_time']['applies'])
-            check('GP: bell weight applies (double-bell strength day)', by_id['bell_weight']['applies'])
+            check('GP: actual swing intervals apply', by_id['swing_intervals']['applies'])
+            check('GP: technique practice applies', by_id['technique_time']['applies'])
+            check('GP: obsolete double-bell load is not advertised', 'bell_weight' not in by_id)
 
 
 def test_headline_summary_words() -> None:

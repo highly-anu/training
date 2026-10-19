@@ -32,6 +32,8 @@ struct ExerciseLogSheet: View {
     @State private var reps: Int? = nil
     @State private var holdSeconds: Int? = nil
     @State private var clean = false
+    @State private var moduleRpe = 0
+    @State private var moduleWeight: Double? = nil
     @State private var isSaving = false
     @State private var loaded = false
 
@@ -49,6 +51,7 @@ struct ExerciseLogSheet: View {
             && SessionLogging.parseClock(clock) == nil
     }
     private var exerciseId: String? { assignment.exercise?.id }
+    private var isModule: Bool { assignment.load.extra["module_id"] != nil }
     /// The cap as a hint, never as a value.
     private var timePlaceholder: String {
         assignment.load.timeMinutes.map { "cap \($0):00" } ?? "m:ss"
@@ -65,9 +68,17 @@ struct ExerciseLogSheet: View {
                     }
                 }
                 if logsSets { setsSection } else { outcomeSection }
-                if slotType == "skill_practice" {
+                if slotType == "skill_practice" || isModule {
                     Section {
                         Toggle("Clean", isOn: $clean)
+                        if isModule {
+                            Stepper(moduleRpe == 0 ? "RPE: not rated" : "RPE: \(moduleRpe)", value: $moduleRpe, in: 0...10)
+                            HStack {
+                                Text("Bell (kg)")
+                                TextField("Weight", value: $moduleWeight, format: .number)
+                                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                            }
+                        }
                     } footer: {
                         Text("Every rep owned. Where the methodology asks, a movement is earned by clean sessions, not by attendance.")
                     }
@@ -186,6 +197,8 @@ struct ExerciseLogSheet: View {
         let load = assignment.load
         let existing = exerciseId.flatMap { appState.sessionLogs[sessionKey]?.exercises[$0] }
         clean = existing?.clean ?? false
+        moduleRpe = existing?.rpe ?? 0
+        moduleWeight = existing?.weightKg ?? assignment.load.weightKg
         if logsSets {
             if let existing, !existing.sets.isEmpty {
                 sets = existing.sets.sorted { $0.setIndex < $1.setIndex }.map {
@@ -235,7 +248,9 @@ struct ExerciseLogSheet: View {
                                          durationSeconds: s, startOffset: nil, endOffset: nil)]
             }
         }
-        if slotType == "skill_practice" { perf.clean = clean }
+        if slotType == "skill_practice" || isModule { perf.clean = clean }
+        if isModule && moduleRpe > 0 { perf.rpe = moduleRpe }
+        if isModule, let weight = moduleWeight, weight > 0 { perf.weightKg = weight }
         await appState.logExercise(sessionKey: sessionKey, exerciseId: exerciseId, performance: perf)
         AppHaptics.success()
         dismiss()

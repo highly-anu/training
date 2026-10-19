@@ -21,7 +21,7 @@ def _data_path(*parts) -> str:
 
 
 def load_framework(framework_id: str) -> dict:
-    for path in glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', f'{framework_id}.yaml')):
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', f'{framework_id}.yaml'))):
         return _load_yaml(path)
     raise FileNotFoundError(f"Framework '{framework_id}' not found")
 
@@ -29,7 +29,7 @@ def load_framework(framework_id: str) -> dict:
 def load_all_frameworks() -> dict:
     """Return dict of framework_id -> framework data for all installed packages."""
     result = {}
-    for path in glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', '*.yaml')):
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', '*.yaml'))):
         fw = _load_yaml(path)
         result[fw['id']] = fw
     return result
@@ -79,7 +79,7 @@ MODALITY_TYPICAL_DURATIONS = {
 def load_all_modalities() -> dict:
     """Return dict of modality_id -> modality data with priority_tier and typical_duration_minutes."""
     result = {}
-    for path in glob.glob(os.path.join(_COMMONS_DIR, 'modalities', '*.yaml')):
+    for path in sorted(glob.glob(os.path.join(_COMMONS_DIR, 'modalities', '*.yaml'))):
         mod = _load_yaml(path)
         mod_id = mod['id']
 
@@ -97,10 +97,13 @@ def load_all_archetypes() -> list:
     """Return list of all archetype dicts, each annotated with _package."""
     result = []
     seen_ids: set = set()
-    for path in glob.glob(
+    # Sorted: the selector breaks ties by load order ("first authored"), and an
+    # unsorted listing is the filesystem's order — production (Linux) and a
+    # Mac generated different programs from the same request.
+    for path in sorted(glob.glob(
         os.path.join(_PACKAGES_DIR, '*', 'archetypes', '**', '*.yaml'),
         recursive=True,
-    ):
+    )):
         arch = _load_yaml(path)
         arch_id = arch.get('id')
         if arch_id not in seen_ids:
@@ -248,7 +251,7 @@ def load_phase_kinds() -> dict:
 def load_philosophies() -> list:
     """Return list of philosophy dicts, each with a system_connections key."""
     fw_map: dict = {}
-    for path in glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', '*.yaml')):
+    for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*', 'frameworks', '*.yaml'))):
         fw = _load_yaml(path)
         sp = fw.get('source_philosophy')
         if sp:
@@ -283,7 +286,7 @@ def load_exercise_media() -> dict:
     global _media_cache
     if _media_cache is None:
         merged: dict = {}
-        for path in glob.glob(os.path.join(_PACKAGES_DIR, '*/exercise_media.yaml')):
+        for path in sorted(glob.glob(os.path.join(_PACKAGES_DIR, '*/exercise_media.yaml'))):
             data = _load_yaml(path)
             if data:
                 merged.update(data)

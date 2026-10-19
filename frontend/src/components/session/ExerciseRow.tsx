@@ -133,7 +133,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
           <div>
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm font-semibold text-foreground">{assignment.exercise.name}</h4>
-              {onSwap && (
+              {onSwap && !assignment.load.module_id && (
                 <button
                   type="button"
                   onClick={onSwap}
@@ -165,7 +165,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
               prescribedSeconds={assignment.load.hold_seconds}
             />
           )}
-          {assignment.slot_type === 'skill_practice' && (
+          {(assignment.slot_type === 'skill_practice' || assignment.load.module_id) && (
             <CleanToggle sessionKey={sessionKey} exerciseId={assignment.exercise.id} clean={logged?.clean === true} />
           )}
           {hasOutcome && (
@@ -179,6 +179,9 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
             />
           )}
         </div>
+        {assignment.load.conditional && (
+          <p className="mt-1.5 text-xs text-muted-foreground">Forecast: advance only after clean completion at the prescribed effort.</p>
+        )}
         {assignment.notes && (
           <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">{assignment.notes}</p>
         )}

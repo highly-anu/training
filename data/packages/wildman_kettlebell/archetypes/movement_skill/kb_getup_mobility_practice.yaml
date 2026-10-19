@@ -1,0 +1,66 @@
+id: kb_getup_mobility_practice
+name: Get-Up and Loaded Mobility Practice
+modality: movement_skill
+category: kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 30
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+- role: getup
+  slot_type: skill_practice
+  duration_minutes: 6
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_tgu
+  notes: Practice singles on alternating sides with rest between repetitions; this is a six-minute practice
+    window, not a continuous hold.
+- role: windmill
+  slot_type: skill_practice
+  duration_minutes: 4
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_windmill
+  notes: Alternate sides in small controlled sets with rest; do not chase range or fatigue.
+- role: rack_carry
+  slot_type: skill_practice
+  duration_minutes: 4
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_rack_carry
+  notes: Short walks on alternating sides, resting between efforts. Four minutes is the whole practice
+    window, not one uninterrupted carry.
+- role: overhead_carry
+  slot_type: skill_practice
+  duration_minutes: 4
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_overhead_carry
+  notes: Short walks on alternating sides with rest. Stop if overhead position deteriorates. Do not carry
+    continuously for the entire practice window.
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+  proficiency or a heavier bell. Practice-window durations include rests; they never mean continuous overhead
+  holds. Use one light bell appropriate for the most demanding movement, or omit this track if that cannot
+  be controlled. '

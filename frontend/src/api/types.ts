@@ -169,6 +169,10 @@ export interface DayConfig {
 }
 
 export interface AthleteConstraints {
+  kettlebell_weights_kg?: number[]
+  mastered_exercises?: string[]
+  kettlebell_count?: number
+  module_progression_state?: Record<string, { completed?: number; weight_kg?: number }>
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
   days_per_week: number
@@ -322,6 +326,13 @@ export interface Archetype {
 // ─── Exercise Load (per session assignment) ───────────────────────────────────
 
 export interface ExerciseLoad {
+  prescription_version?: number
+  progression_model?: string
+  module_id?: string
+  forecast_step?: number
+  conditional?: boolean
+  advances_module?: boolean
+  elapsed_sec?: number
   sets?: number
   reps?: number | string
   weight_kg?: number
@@ -541,6 +552,8 @@ export interface PhaseSummary {
 }
 
 export interface GeneratedProgram {
+  training_contract?: { id: string; version: number; status: string; forecast?: string }
+  module_state?: Record<string, { completed: number; weight_kg?: number }>
   goal: GoalProfile
   constraints: AthleteConstraints
   validation: ValidationResult
@@ -838,6 +851,7 @@ export interface Track {
   name: string
   description?: string
   phases: Phase[]
+  entry_requirements?: { training_levels: string[]; mastered_exercises: string[]; mastered_exercises_by_level?: Record<string, string[]>; kettlebell_count: number }
 }
 
 export interface Philosophy {
@@ -1091,6 +1105,7 @@ export interface SetPerformance {
 }
 
 export interface ExercisePerformance {
+  weightKg?: number
   sets: SetPerformance[]
   rpe?: RPE
   notes?: string

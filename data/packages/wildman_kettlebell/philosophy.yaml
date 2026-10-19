@@ -1,161 +1,255 @@
 id: wildman_kettlebell
-name: "Mark Wildman Kettlebell"
+name: Mark Wildman Kettlebell
 core_principles:
-  - skill_before_load
-  - rpm_based_intensity
-  - anti_glycolytic_training
-  - movement_complexity_progression
-  - minimum_effective_dose
+- skill_before_load
+- repeat_fundamentals
+- independent_module_progression
+- density_before_load
+- nonconsecutive_module_exposures
 scope:
-  - power
-  - strength_endurance
-  - aerobic_base
-  - relative_strength
-  - movement_skill
+- power
+- strength_endurance
+- aerobic_base
+- relative_strength
+- movement_skill
 bias:
-  - power
-  - strength_endurance
-  - movement_skill
+- power
+- strength_endurance
+- movement_skill
 avoid_with:
-  - mixed_modal_conditioning
+- mixed_modal_conditioning
 required_equipment:
-  - kettlebell
+- kettlebell
 intensity_model: operator_readiness
-progression_philosophy: rpm_based
+progression_philosophy: volume_based
 sources:
-  - Wildman
-  - Pavel
-notes: >
-  Kettlebell sport and general practice methodology developed by Mark Wildman.
-  Progression is driven by movement complexity (deadlift → swing → clean → press →
-  push press → snatch → jerk) and RPM targets rather than raw load increases.
-  Anti-glycolytic principle: sets stay below the glycolytic threshold — breathing
-  mechanics and movement quality take priority over grinding. Operator readiness
-  means daily session selection responds to how the athlete actually feels.
-
-# Every modality this philosophy's frameworks prescribe has an archetype in
-# this package; generation never needs to reach into another philosophy.
+- https://www.wildmanathletica.com/programming
+- training_contract.yaml sources (public swing-program FAQ)
+notes: Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules;
+  density and volume advance after clean successful exposures. The calendar never earns a harder movement.
+  Forecasts are conditional. Complementary technique and clean/press cycles are app adaptations of public
+  principles, not a purchased Wildman plan. Pentathlon is a separate sport-specific track requiring demonstrated
+  event proficiency.
 self_contained: true
-
-# Two tracks, because Wildman offers two goals: general practice for the
-# non-competitor, and preparation for the IKMF pentathlon. Each runs its own
-# phases on its own framework. Phase text is drafted from this package's own
-# notes and framework notes — review before relying on it.
 primary_track_id: general_practice
 tracks:
-  - id: general_practice
-    name: "General Practice"
-    description: >
-      Kettlebell practice for the non-competitor: climb the movement complexity
-      ladder, keep sets anti-glycolic, and let RPM and timed-set length lead
-      before load does.
-    phases:
-      - id: foundations
-        name: "Foundations"
-        kind: base
-        weeks: 6
-        framework_id: kb_general_practice
-        focus: "Deadlift, swing and get-up groove"
-        description: >
-          The bottom of the complexity ladder: deadlift, swing and the get-up,
-          practiced until the hinge, the breathing and the bell path are
-          automatic. Sets stay below the glycolytic threshold — nasal breathing
-          and clean mechanics decide when a set ends, not fatigue.
-        adaptations:
-          - "Hinge and ballistic mechanics"
-          - "Breathing matched to the movement"
-          - "Get-up and windmill skill"
-        intensity: "Anti-glycolic — nasal breathing throughout"
-        # The bottom of the ladder: the snatch and the jerk come in The Ladder.
-        exclude_exercises: [wk_kb_snatch, wk_kb_half_snatch, kb_jerk_single, kb_jerk_double, wk_kb_long_cycle_press]
-      - id: ladder
-        name: "The Ladder"
-        kind: build
-        weeks: 6
-        framework_id: kb_general_practice
-        focus: "Clean, press, snatch and jerk"
-        description: >
-          Move up the ladder — clean, press, push press, snatch, jerk — one rung
-          at a time. RPM targets and timed-set length grow as technique matures;
-          load goes up only when the RPM target is met with clean mechanics and
-          nasal breathing.
-        adaptations:
-          - "Movement complexity"
-          - "Sustained output at a target RPM"
-          - "Strength through the overhead lifts"
-        intensity: "Moderate; RPM targets before load"
-      - id: practice
-        name: "Practice"
-        kind: maintenance
-        weeks: 4
-        repeatable: true
-        framework_id: kb_general_practice
-        focus: "Operator-readiness practice"
-        description: >
-          Ongoing practice across the whole ladder. Each day's session is
-          chosen by how the athlete actually feels — operator readiness — and
-          the get-up and windmill stay in the week as skill and durability
-          work. Repeat the block as long as practice continues.
-        adaptations:
-          - "Retained skill across all lifts"
-          - "Durability through the get-up and windmill"
-        intensity: "Readiness-driven"
-  - id: pentathlon
-    name: "Pentathlon Prep"
-    description: >
-      Sport preparation for the IKMF kettlebell pentathlon: clean, long cycle
-      press, jerk, half snatch and strict push press, six minutes each. Not for
-      novices — every one of the five lifts must already be proficient.
-    phases:
-      - id: event_technique
-        name: "Event Technique"
-        kind: base
-        weeks: 4
-        framework_id: kb_pentathlon
-        focus: "All five events, below scoring pace"
-        description: >
-          Practice each of the five events at a pace below its scoring cap,
-          with hand changes and racking positions rehearsed until they cost
-          nothing. Anti-glycolic volume underneath builds the base the timed
-          sets will draw on.
-        adaptations:
-          - "Efficiency in all five lifts"
-          - "Hand-change and rack-position economy"
-        intensity: "Below scoring pace"
-      - id: timed_sets
-        name: "Timed Sets"
-        kind: build
-        weeks: 6
-        framework_id: kb_pentathlon
-        focus: "Six-minute sets toward each event's cap"
-        description: >
-          Sessions build toward six-minute timed sets paced against each
-          event's scoring cap (20, 10, 20, 18 and 20 RPM), with the five-minute
-          rest the competition gives between events.
-        adaptations:
-          - "Six-minute strength endurance per event"
-          - "Pacing against the RPM cap"
-        intensity: "Event pace, rising toward the cap"
-        checks:
-          archetypes_required: [kb_pentathlon_training]
-      - id: competition
-        name: "Competition"
-        kind: peak
-        weeks: 2
-        framework_id: kb_pentathlon
-        focus: "Full pentathlon at target pace"
-        description: >
-          Full pentathlon simulations at target pace, then the test itself.
-          Volume comes down so the event is met fresh.
-        adaptations:
-          - "Five events back to back"
-          - "Arriving fresh for the test"
-        intensity: "Target pace; reduced volume"
-        # The test itself, in the phase's last week, in place of one of its
-        # pentathlon sessions: each event is a result on its own standard.
-        tests:
-          - archetype: kb_pentathlon_test
-            week: last
-        checks:
-          archetypes_required: [kb_pentathlon_training]
-          volume_vs_previous_phase: [-0.6, -0.1]
+- id: general_practice
+  name: General Practice
+  description: Stable swing and complementary practice modules, twice weekly each on nonconsecutive days.
+    Progression is per successful module exposure, independent of phase names.
+  phases:
+  - id: foundations
+    name: Foundations
+    kind: base
+    weeks: 6
+    framework_id: kb_general_practice
+    focus: Learn and repeat the fundamentals
+    description: Practice the same movements at a controllable bell. Novices use unloaded get-up positions.
+      Do not progress through movements merely because weeks have elapsed.
+    adaptations:
+    - Repeated skill practice
+    - Capacity at a stable bell
+    - Density and volume progression
+    intensity: Clean mechanics, RPE 7 or below; rest within every minute
+    exclude_exercises:
+    - wk_kb_snatch
+    - wk_kb_half_snatch
+    - kb_jerk_single
+    - kb_jerk_double
+    - wk_kb_long_cycle_press
+    checks:
+      archetypes_forbidden:
+      - kb_pentathlon_training
+      - kb_double_strength
+      - kb_pentathlon_test
+  - id: ladder
+    name: Density and Volume
+    kind: build
+    weeks: 6
+    framework_id: kb_general_practice
+    focus: Advance repetitions, then volume
+    description: Continue each module cycle without resetting it. Forecasts assume clean completion; recorded
+      outcomes decide the next earned prescription. A higher density or volume does not authorize a heavier
+      bell.
+    adaptations:
+    - Repeated skill practice
+    - Capacity at a stable bell
+    - Density and volume progression
+    intensity: Clean mechanics, RPE 7 or below; rest within every minute
+    checks:
+      archetypes_forbidden:
+      - kb_pentathlon_training
+      - kb_double_strength
+      - kb_pentathlon_test
+  - id: practice
+    name: Repeatable Practice
+    kind: maintenance
+    weeks: 4
+    repeatable: true
+    framework_id: kb_general_practice
+    focus: Repeat or explicitly choose the next cycle
+    description: Retain movement identity. Repeat at the same bell or explicitly start a new cycle after
+      confirming technique and available equipment. Snatches and jerks require a separate proficiency
+      decision.
+    adaptations:
+    - Repeated skill practice
+    - Capacity at a stable bell
+    - Density and volume progression
+    intensity: Clean mechanics, RPE 7 or below; rest within every minute
+    checks:
+      archetypes_forbidden:
+      - kb_pentathlon_training
+      - kb_double_strength
+      - kb_pentathlon_test
+- id: pentathlon
+  name: Pentathlon Prep
+  description: "Sport preparation for the IKMF kettlebell pentathlon: clean, long cycle press, jerk, half\
+    \ snatch and strict push press, six minutes each. An app adaptation from kettlebell-sport practice,\
+    \ not a Wildman program. Not for novices \u2014 every one of the five lifts must already be proficient.\n"
+  phases:
+  - id: event_technique
+    name: Event Technique
+    kind: base
+    weeks: 4
+    framework_id: kb_pentathlon
+    focus: All five events, below scoring pace
+    description: 'Three event sessions a week: the five events back to back at the pace you plan to compete
+      at, repeats a little faster, and minute intervals on the four fast events, with hand changes and
+      racking positions rehearsed until they cost nothing. Easy runs on free days build the aerobic base
+      underneath; they are optional and never take a lifting day.
+
+      '
+    adaptations:
+    - Efficiency in all five lifts
+    - Hand-change and rack-position economy
+    intensity: Below scoring pace
+  - id: timed_sets
+    name: Timed Sets
+    kind: build
+    weeks: 6
+    framework_id: kb_pentathlon
+    focus: Mini-pentathlon sets, then a full practice pentathlon
+    description: 'Event sets reach the mini pentathlon''s four minutes at the five-minute competition
+      rest, paced against each event''s scoring cap (20, 10, 20, 18 and 20 RPM) without chasing it. The
+      phase ends with one full practice pentathlon, six minutes per event, as the rehearsal coaches ask
+      for at least once a cycle.
+
+      '
+    adaptations:
+    - Six-minute strength endurance per event
+    - Pacing against the RPM cap
+    intensity: Event pace, rising toward the cap
+    tests:
+    - archetype: kb_pentathlon_test
+      week: last
+    checks:
+      archetypes_required:
+      - kb_pentathlon_training
+  - id: competition
+    name: Competition
+    kind: peak
+    weeks: 2
+    framework_id: kb_pentathlon
+    focus: Full pentathlon at target pace
+    description: 'Volume comes down so the event is met fresh: shorter event sessions at target pace,
+      then the full pentathlon as the test.
+
+      '
+    adaptations:
+    - Five events back to back
+    - Arriving fresh for the test
+    intensity: Target pace; reduced volume
+    tests:
+    - archetype: kb_pentathlon_test
+      week: last
+    checks:
+      archetypes_required:
+      - kb_pentathlon_training
+      volume_vs_previous_phase:
+      - -0.6
+      - -0.1
+- id: squat_practice
+  name: Squat Practice
+  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+    never grants proficiency or a heavier bell. '
+  phases:
+  - id: squat_practice_repeat
+    name: Repeatable Practice
+    kind: maintenance
+    weeks: 12
+    repeatable: true
+    framework_id: kb_squat_practice
+    focus: Repeat the selected movement family without calendar-based skill advancement
+    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+      time never grants proficiency or a heavier bell. '
+    checks:
+      archetypes_required:
+      - kb_squat_practice
+- id: snatch_practice
+  name: Snatch Practice
+  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+    never grants proficiency or a heavier bell. '
+  phases:
+  - id: snatch_practice_repeat
+    name: Repeatable Practice
+    kind: maintenance
+    weeks: 12
+    repeatable: true
+    framework_id: kb_snatch_practice
+    focus: Repeat the selected movement family without calendar-based skill advancement
+    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+      time never grants proficiency or a heavier bell. '
+    checks:
+      archetypes_required:
+      - kb_snatch_practice
+- id: getup_mobility
+  name: Get-Up and Loaded Mobility
+  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+    never grants proficiency or a heavier bell. Practice-window durations include rests; they never mean
+    continuous overhead holds. Use one light bell appropriate for the most demanding movement, or omit
+    this track if that cannot be controlled. '
+  phases:
+  - id: getup_mobility_repeat
+    name: Repeatable Practice
+    kind: maintenance
+    weeks: 12
+    repeatable: true
+    framework_id: kb_getup_mobility
+    focus: Repeat the selected movement family without calendar-based skill advancement
+    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+      time never grants proficiency or a heavier bell. Practice-window durations include rests; they never
+      mean continuous overhead holds. Use one light bell appropriate for the most demanding movement,
+      or omit this track if that cannot be controlled. '
+    checks:
+      archetypes_required:
+      - kb_getup_mobility_practice
+- id: double_bell_practice
+  name: Double-Bell Practice
+  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+    never grants proficiency or a heavier bell. Requires two matching controllable bells and proficiency
+    in every double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored
+    extension, not an official Wildman cycle. '
+  phases:
+  - id: double_bell_practice_repeat
+    name: Repeatable Practice
+    kind: maintenance
+    weeks: 12
+    repeatable: true
+    framework_id: kb_double_bell_practice
+    focus: Repeat the selected movement family without calendar-based skill advancement
+    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
+      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+      time never grants proficiency or a heavier bell. Requires two matching controllable bells and proficiency
+      in every double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored
+      extension, not an official Wildman cycle. '
+    checks:
+      archetypes_required:
+      - kb_double_strength_practice
+      - kb_double_power_practice

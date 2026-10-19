@@ -1,5 +1,5 @@
 id: kb_antiglycolic_session
-name: KB Anti-Glycolytic Practice (Wildman)
+name: KB Anti-Glycolytic Practice (StrongFirst)
 modality: aerobic_base
 category: kettlebell
 training_levels:
@@ -31,9 +31,10 @@ slots:
 required_equipment:
 - kettlebell
 sources:
-- Wildman
-- Pavel
-notes: 'Anti-glycolytic KB session popularised by Pavel and taught by Wildman. Short
+- Pavel (StrongFirst)
+notes: 'Anti-glycolytic KB session popularised by Pavel (StrongFirst); no Wildman program
+  prescribes it, and Pentathlon Prep does not schedule it (kettlebell sport needs its glycolytic
+  capacity — Girevoy Sport Science). Short
   timed sets (10–20 sec) of swings or snatches alternate with full rest until HR returns
   below ~130 bpm. Total session volume accumulates over 30–40 min; the glycolytic
   system is never taxed. Builds aerobic base and repeatable work capacity without

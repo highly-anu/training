@@ -7,6 +7,7 @@ import type {
   PendingMatch,
   MatchSuggestion,
   SetPerformance,
+  ExercisePerformance,
   FatigueRating,
   MatchConfidence,
 } from '@/api/types'
@@ -63,7 +64,7 @@ interface BioStore {
   setSetPerformance: (sessionKey: string, exerciseId: string, setPerf: SetPerformance) => void
   /** Outcome of a non-set slot — rounds, minutes, kilometres — the fields the analytics engine reads. */
   setExerciseOutcome: (sessionKey: string, exerciseId: string,
-    outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number; holdSec?: number }) => void
+    outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number; holdSec?: number; rpe?: ExercisePerformance['rpe']; weightKg?: number }) => void
   /** Tick (or untick) a skill as practised clean. */
   setExerciseClean: (sessionKey: string, exerciseId: string, clean: boolean) => void
   setSessionNotes: (sessionKey: string, notes: string, fatigueRating?: FatigueRating) => void
@@ -348,9 +349,11 @@ export const useBioStore = create<BioStore>()((set, get) => ({
           [exerciseId]: {
             ...existingEx,
             sets,
-            rounds: outcome.rounds,
-            durationSec: outcome.durationSec,
-            distanceKm: outcome.distanceKm,
+            ...('rounds' in outcome ? { rounds: outcome.rounds } : {}),
+            ...('durationSec' in outcome ? { durationSec: outcome.durationSec } : {}),
+            ...('distanceKm' in outcome ? { distanceKm: outcome.distanceKm } : {}),
+            ...('rpe' in outcome ? { rpe: outcome.rpe } : {}),
+            ...('weightKg' in outcome ? { weightKg: outcome.weightKg } : {}),
           },
         },
       }

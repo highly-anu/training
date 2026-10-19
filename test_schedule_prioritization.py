@@ -21,8 +21,10 @@ constraints_limited = {
     'training_phase': 'base',
 }
 
-# Load philosophy (use Wildman - has lower minimum requirements)
-phil_id = 'wildman_kettlebell'
+# A philosophy on the general scheduler: Wildman, the old choice, is built by
+# its training contract now, which refuses a program without kettlebells
+# rather than exercising the priority tiers and duration matching tested here.
+phil_id = 'crossfit'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 

@@ -60,8 +60,14 @@ def run(only: str | None = None) -> int:
             cons = dict(CONSTRAINTS,
                         days_per_week=exp.get('ideal_days_per_week') or CONSTRAINTS['days_per_week'],
                         session_time_minutes=exp.get('ideal_session_minutes') or CONSTRAINTS['session_time_minutes'])
+            if goal.get('training_contract'):
+                cons['kettlebell_count'] = 2
+                cons['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])})
             prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
                                       num_weeks=WEEKS, output_format='dict')
+            if prog.get('validation_errors'):
+                problems.append(f"{pid}/{track['id']}: {prog['validation_errors']}")
+                continue
             start = date(2026, 1, 5)
             doc = compute_program_analytics(AnalyticsInputs(
                 {'goal': goal, 'constraints': cons, 'weeks': prog['weeks']},

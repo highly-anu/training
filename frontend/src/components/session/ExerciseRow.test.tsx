@@ -135,4 +135,24 @@ describe('ExerciseRow logger dispatch', () => {
     })
     expect(screen.queryByLabelText('Log outcome')).toBeNull()
   })
+
+  it('records module quality, actual bell and effort without losing completed rounds', () => {
+    renderRow({ exercise: { id: 'swing', name: 'Swing', category: 'kettlebell' },
+      slot_type: 'emom', load: { module_id: 'swing', advances_module: true, conditional: true,
+        target_rounds: 10, reps_per_round: 6, time_minutes: 10, work_sec: 60 } })
+    const rounds = screen.getByLabelText('Rounds for swing')
+    fireEvent.change(rounds, { target: { value: '10' } })
+    fireEvent.blur(rounds)
+    const bell = screen.getByLabelText('Bell kg for swing')
+    fireEvent.change(bell, { target: { value: '16' } })
+    fireEvent.blur(bell)
+    const effort = screen.getByLabelText('RPE for swing')
+    fireEvent.change(effort, { target: { value: '6' } })
+    fireEvent.blur(effort)
+    fireEvent.click(screen.getByLabelText('Clean: swing'))
+    const logged = useBioStore.getState().sessionPerformanceLogs['1-Monday-0']?.exercises.swing
+    expect(logged).toMatchObject({ rounds: 10, weightKg: 16, rpe: 6, clean: true })
+    expect(screen.getByText(/Forecast: advance only after/)).toBeInTheDocument()
+    expect(screen.getByText(/6 reps \/ round/)).toBeInTheDocument()
+  })
 })

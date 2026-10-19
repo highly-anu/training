@@ -1,49 +1,46 @@
 id: kb_movement_skill_session
-name: KB Movement Skill Session (Wildman)
+name: Hinge and Get-Up Technique
 modality: movement_skill
 category: kettlebell
-training_levels:
-- novice
-- intermediate
-- advanced
-duration_estimate_minutes: 35
-applicable_phases:
-- base
-- maintenance
-- recovery
-- transition
-- build
-- peak
-slots:
-- role: warmup
-  slot_type: time_domain
-  duration_minutes: 8
-  intensity: low
-  exercise_filter:
-    category: kettlebell
-    movement_pattern: rotation
-- role: main
-  slot_type: skill_practice
-  duration_minutes: 22
-  intensity: moderate
-  exercise_filter:
-    category: kettlebell
-- role: cooldown
-  slot_type: skill_practice
-  duration_minutes: 5
-  intensity: low
-  exercise_filter:
-    category: kettlebell
-    movement_pattern: hip_hinge
+duration_estimate_minutes: 14
 required_equipment:
 - kettlebell
+training_levels:
+- novice
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  notes: ''
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  duration_sec: 180
+- role: hinge
+  slot_type: skill_practice
+  notes: Low-fatigue hinge practice. No automatic weight increases.
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  duration_sec: 300
+- role: getup
+  slot_type: skill_practice
+  notes: Unloaded get-up positions, one side at a time. Use a shoe or no load until
+    positions are controlled; calendar time never authorizes adding a bell.
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_tgu
+  duration_sec: 360
 sources:
-- Wildman
-notes: 'Skill development session covering Wildman''s foundational movement vocabulary:
-  halo, TGU, windmill, and carries. No set is performed while fatigued — quality is
-  the only metric. Appropriate as a standalone session or as the opening block of
-  any other session. Novices use this to develop the TGU before loading swings. Intermediate
-  athletes add windmill and overhead carry. No RPM targets or time pressure; each
-  rep is treated as a practice, not a performance.
+- https://www.wildmanathletica.com/programming
+notes: 'Repeated single-bell practice in independently progressing modules. Complete
+  the repetitions at the start of each minute and rest for the remainder. Advance
+  only after clean completion at RPE 7 or below. Future exposures are conditional
+  forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing
+  a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression
+  is inferred from the calendar. Technique practice is an app adaptation.
 
   '

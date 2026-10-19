@@ -1,0 +1,22 @@
+name: Training contracts
+on:
+  pull_request:
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_training_contract.py', 'test_selection.py', 'test_standard_tests.py', 'test_phases.py', 'api.py', '.github/workflows/training-contract.yml']
+  push:
+    branches: [master]
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'api.py']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt
+      - run: python tools/validate_entities.py data/packages/wildman_kettlebell/
+      - run: python test_training_contract.py
+      - run: python tools/check_exercise_coverage.py
+      - run: python test_selection.py
+      - run: python test_standard_tests.py
+      - run: python test_phases.py
+      - run: python tools/check_fidelity.py

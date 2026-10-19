@@ -1,0 +1,44 @@
+id: kb_getup_mobility
+name: Get-Up and Loaded Mobility (Wildman-inspired)
+source_philosophy: wildman_kettlebell
+goals_served:
+- movement_skill
+sessions_per_week:
+  movement_skill: 2
+modality_priority:
+  committed:
+  - movement_skill
+  core: []
+  supplementary: []
+intensity_distribution:
+  zone1_2_pct: 0.6
+  zone3_pct: 0.3
+  zone4_5_pct: 0.1
+  max_effort_pct: 0.0
+progression_model: complexity
+applicable_when:
+  training_level:
+  - intermediate
+  - advanced
+  - elite
+  days_per_week_min: 2
+  days_per_week_max: 5
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.5
+  intensity_change: maintain
+sources:
+- Wildman
+notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+  proficiency or a heavier bell. Practice-window durations include rests; they never mean continuous overhead
+  holds. Use one light bell appropriate for the most demanding movement, or omit this track if that cannot
+  be controlled. '
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 2
+  ideal_days_per_week: 2
+  min_session_minutes: 30
+  ideal_session_minutes: 30
+  supports_split_days: false

@@ -5,7 +5,8 @@ production database on 2026-09-30; the information-architecture items were added
 from the functionality review of 2026-10-01 (`information-architecture.md`).
 The Garmin items (1, 2 and 5) were added on 2026-10-05 from the Connect IQ
 connection plan, after a read-only look at production; item 4 on 2026-10-09
-from the watch-app demo tests.
+from the watch-app demo tests. Item 9 was rewritten on 2026-10-19 as the combined
+generation-fidelity plan (the Codex audit, its Wildman contract and a re-measurement).
 
 This replaces the phased build roadmap (phases 0–8, all complete), and absorbs
 `next_features.md` (March), `model-generalization-gaps.md` (April),
@@ -44,7 +45,7 @@ deferred is under *Later*.
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
-| 9 | Theory fidelity: what `check_fidelity.py`'s baseline still holds | P1 | M | engine, content |
+| 9 | Generation fidelity: every package built as its method prescribes (absorbs the fidelity baseline) | P1 | L | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
@@ -668,41 +669,93 @@ server. Left open:
    "Benchm…" in the segmented control (it did in fourth place too). Either a
    shorter label on both clients or a scrolling selector in `AppSubTabPicker`.
 
-### 9. Theory fidelity: what the baseline still holds — P1 · M
+### 9. Generation fidelity: every package built as its method prescribes — P1 · L
 
-From the theory-programming alignment of 2026-10-16 (branch
-`theory-programming-alignment`). `tools/check_fidelity.py` generates every
-philosophy × track × profile and reads the result against what the package
-declares; `docs/fidelity-report.md` is the current state and
-`tools/fidelity_baseline.json` the known findings (583 errors before the
-branch, 0 after; the 330 left are warnings). What is left, cheapest first:
+The combined plan of the Codex audit (`docs/package-quality-and-generation-audit.md`,
+the ten root causes and matrix A–I), its Wildman contract
+(`docs/wildman-generation-branch-handoff.md`, `src/training_contract.py`) and the
+2026-10-19 re-measurement and research appended to the audit. It absorbs this
+item's earlier contents (the fidelity baseline, kept below as 2.1–2.6).
 
-1. **Injury substitutions point nowhere (S, content).** 78 of the 126
-   `instead_of` / `use` ids in `injury_flags.yaml` name exercises no package
-   declares (`barbell_squat`, `goblet_squat_light`, `stationary_bike`…). The
-   engine now applies a substitute when both ids resolve
-   (`selector._explain_unfilled`), so every repaired pair starts working.
-2. **Intensity splits that cannot be met (S, content).** The mobility and skill
-   frameworks (Ido Portal, Kelly Starrett, ATG) declare 20–30 % of zone 3–5
-   minutes their archetypes never prescribe; Wildman's and the pentathlon's
-   splits disagree with their own sessions. Either the split or the archetypes'
-   slot intensities is wrong in each — `intensity_split` in the report.
-3. **Uphill base never ramps (M, engine).** `_time_to_task` caps a slot at
-   `base × volume_multiplier(kind)`, and `base` is 1.0, so the "+10 % a week for
-   three weeks" in the base phase's prose is flat from week 1
-   (`volume_ramp`). Needs a ramp that restarts after each deload instead of a
-   kind ceiling.
-4. **Deloads keep more than declared (S).** Slots with a fixed length (BJJ
-   class blocks, skill practice, static holds) and archetypes'
-   `scaling.deload` overrides do not follow `volume_reduction_pct`, so a deload
-   week keeps 60–85 % where the framework says 40–60 % (`deload_size`; BJJ,
-   Wildman, Horsemen GPP circuits, Filly at 45 minutes).
-5. **Real two-a-days and per-day session time (M).** `_add_split_sessions` only
-   ever adds mobility, and `weekly_schedule`'s per-day minutes never reach
-   `session_time_minutes`.
-6. **The framework's `progression_model` still drives no prescription.**
-   Filly, BJJ and ATG declare `rpe_autoregulation`; no modality uses it, so no
-   RPE target is ever written.
+The finding behind it: the contract fixed Wildman, and nothing else moved. Novice
+Gym Jones, Horsemen, Filly and Uphill programs are half to three-quarters
+substitutes, CrossFit is one AMRAP template, BJJ trains the mat once a week in
+five, Starting Strength serves intermediates other sessions inside its novice
+track — and the fidelity gate (184 of its 228 findings are intensity splits) sees
+none of it. The Dev Lab's Impact tab waits: it explains degraded programs, and
+the aim is to stop generating them.
+
+**0. Land what exists (S).** Review and merge `wildman-contract`, then `dev_lab`
+(the main checkout still holds the Codex work uncommitted). The contract changes
+how an existing Wildman program generates: regenerate the athlete's active program
+deliberately, keeping its logged weeks (the handoff confirmed that is safe).
+
+**1. Make the failures fail (M, engine + content).** A generated-sample check over
+every package × track × level (the 2026-10-19 table, reproducible), with each
+package's defining claims as failing rules — not intensity splits:
+- a novice program is not mostly substitutes; a refused level says so instead;
+- BJJ mat sessions cannot be satisfied by gym S&C, and outnumber it;
+- CrossFit varies element count, modality and time domain across a cycle;
+- Starting Strength serves novice LP to novices and a weekly-progression track
+  to intermediates;
+- no session is delivered with every slot empty;
+- the constraint-impact profiles (no equipment, a knee flag, one bell, 3 days)
+  either keep the method or refuse with the constraint that would unblock it.
+Run in CI next to `check_fidelity.py`; its baseline only shrinks. Every step below
+is judged by it.
+
+**2. Shared fixes for the ten packages still on the old generator (S–M).**
+1. *Injury data that resolves (S, content).* 55 of 63 `modified_exercises` pairs
+   and 94 of 143 `excluded_exercises` name no exercise. Point them at catalog ids
+   (or add the substitutes to the packages that need them) and validate the ids in
+   `validate_entities.py`.
+2. *No silent degradation (S).* A session with no exercise left is refused or
+   replaced by a declared substitute, never delivered; `EQUIPMENT_SCALED` stops
+   promising scaling — the 44 archetypes' `scaling.equipment_limited` becomes
+   structured substitutions or goes.
+3. *An acceptance gate for every program (M).* Run the step-1 rules and the
+   fidelity errors at generate time, as the contract's `verify` does: 422 with the
+   reason, never a saved program that breaks its method.
+4. *Level against track (S).* A level a track is not written for is refused with
+   the track that fits (or, until one exists, the honest reason), not served other
+   sessions.
+5. *The fidelity baseline's own items (from before):* intensity splits that cannot
+   be met (content); Uphill's base phase never ramps (engine — becomes the weekly
+   ramp policy below); deloads keep more than declared; real two-a-days and per-day
+   session time; the framework's `progression_model` drives no prescription.
+
+**3. Grow the contract (M each, engine).** The policies the remaining methods need,
+each with a schema field, compiler support, a `verify` check and a test:
+load per confirmed exposure (Starting Strength, Horsemen strength); a weekly ramp
+that restarts after a deload (Uphill, Gym Jones); protected external sessions —
+attendance, not exercises (BJJ classes); variation within declared families and
+time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selection
+(Kelly Starrett, ATG). Optional modules on free days exist (2026-10-19).
+
+**4. Move packages onto contracts (M–L each, content + engine)**, ordered by how
+badly the default misrepresents the method and whether its policies exist:
+1. *Starting Strength* — fixed lifts fit today; add exposure-based loading and an
+   intermediate Texas Method / Heavy-Light-Medium track.
+2. *BJJ* — protected mat sessions; two or three short S&C sessions counted from them.
+3. *Uphill* — a novice track on its published beginner plan; the weekly ramp;
+   declared borrowing kept.
+4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
+   pattern, conditioning); RPE targets from the framework.
+5. *Horsemen* — re-extract `data/horsemen/horsemen.pdf` first (the audit's source
+   errors), then named workouts as fixed modules.
+6. *CrossFit* — after the variation policy.
+7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
+8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
+   advancement markers are sourced.
+
+**5. Wildman follow-ups (from the handoff).** Review the double-jerk block (an app
+invention) and whether advanced and elite should differ from intermediate; test
+the new tracks in both builders and on both watches; close editing paths (moving a
+session) that can break module spacing; generalise catalog reachability
+(`check_exercise_coverage.py`) to every package once each is on a contract.
+
+**6. Then the Dev Lab (S–M).** The Impact tab over `POST /api/dev/constraint-impact`
+and the trace's per-candidate reasons — the step-1 report seen per program.
 
 ### 10. Progress tracking: what phases A–E left open — P2 · M
 

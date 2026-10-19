@@ -1,0 +1,47 @@
+id: kb_squat_practice
+name: Goblet Squat Practice
+modality: movement_skill
+category: kettlebell
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 25
+applicable_phases:
+- base
+- build
+- maintenance
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  notes: ''
+- role: squat
+  slot_type: emom
+  duration_minutes: 5
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_squat_goblet
+  notes: "App adaptation: 1\u20135 controlled goblet squats at the start of each minute. Rest for the\
+    \ remainder. Repeat at the same bell; no automatic complexity increase."
+- role: recovery
+  slot_type: skill_practice
+  duration_minutes: 2
+  intensity: moderate
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+required_equipment:
+- kettlebell
+sources:
+- Wildman
+notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
+  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+  proficiency or a heavier bell. '

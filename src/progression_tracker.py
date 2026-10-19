@@ -957,6 +957,30 @@ def compute_progression_review(
         elif readiness_trend == 'declining':
             readiness_trend = 'improving'
 
+    if program.get('training_contract'):
+        # Replaying a modality's kg/rounds heuristic would reinterpret an EMOM
+        # density cycle as stalled because its round count deliberately holds.
+        # Report earned module positions; the stored prescriptions remain the
+        # source for charts, and generic load adjustments are inapplicable.
+        from . import training_contract
+        identity = program['training_contract']['id']
+        package_track = identity.split('@')[0]
+        package, track_id = package_track.split('/', 1)
+        try:
+            contract = training_contract.load_contract(package, track_id)
+            state = training_contract.confirmed_state(program, session_logs, contract) if contract else {}
+        except training_contract.ContractError:
+            state = {}  # a contract renamed or broken since: report no confirmed positions
+        recommendations = [f"{mid.replace('_', ' ').title()}: {s.get('completed', 0)} clean exposures confirmed. "
+                           "Regenerate after logging outcomes to update the next prescription."
+                           for mid, s in state.items()]
+        return {'period_key': period_key, 'period_type': period,
+                'generated_at': datetime.utcnow().isoformat(), 'overall_score': None,
+                'readiness_trend': readiness_trend, 'avg_readiness': avg_readiness,
+                'compliance_pct': compliance_pct, 'exercise_findings': [],
+                'flags': ['module_progression'], 'recommendations': recommendations,
+                'adjustments': [], 'module_progression': state}
+
     # Exercise history
     ex_history = compute_exercise_history(
         session_logs, program,

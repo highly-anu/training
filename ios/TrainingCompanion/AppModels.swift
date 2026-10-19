@@ -227,9 +227,32 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     let name: String
     let description: String?
     let phases: [PhilosophyPhase]
+    var entryRequirements: TrackEntryRequirements? = nil
 
     /// Every phase's default length, summed — the track run end to end.
     var totalWeeks: Int { phases.reduce(0) { $0 + $1.weeks } }
+
+    // The server's keys are snake_case and `fetchPhilosophies` decodes with a
+    // plain JSONDecoder: without these the requirements never decoded and a
+    // contract track could not be confirmed from the phone.
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, phases
+        case entryRequirements = "entry_requirements"
+    }
+}
+
+struct TrackEntryRequirements: Codable, Hashable {
+    let trainingLevels: [String]
+    let masteredExercises: [String]
+    var masteredExercisesByLevel: [String: [String]]? = nil
+    let kettlebellCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case trainingLevels = "training_levels"
+        case masteredExercises = "mastered_exercises"
+        case masteredExercisesByLevel = "mastered_exercises_by_level"
+        case kettlebellCount = "kettlebell_count"
+    }
 }
 
 /// A phase as its methodology names and describes it. `kind` is the shared
@@ -356,6 +379,7 @@ struct UserProfile: Codable {
 /// the analytics primitives read. Written through `PUT /health/sessions/<key>`
 /// as `{exercises: {<exercise id>: …}}`; the server merges per exercise.
 struct ExercisePerformanceLog: Codable, Equatable {
+    var weightKg: Double? = nil
     var sets: [WatchSetLog]
     var rounds: Int?
     var durationSec: Int?
@@ -376,7 +400,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         self.notes = notes
     }
 
-    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes, clean }
+    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes, clean, weightKg }
 
     /// Rows were written by three clients over time; a malformed set is
     /// dropped and a number stored as 1800.0 reads as 1800.
@@ -389,6 +413,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         rpe = Self.whole(c, .rpe)
         notes = try? c.decodeIfPresent(String.self, forKey: .notes)
         clean = try? c.decodeIfPresent(Bool.self, forKey: .clean)
+        weightKg = try? c.decodeIfPresent(Double.self, forKey: .weightKg)
     }
 
     private static func whole(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Int? {
@@ -406,6 +431,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         try c.encodeIfPresent(rpe, forKey: .rpe)
         try c.encodeIfPresent(clean, forKey: .clean)
         try c.encodeIfPresent(notes, forKey: .notes)
+        try c.encodeIfPresent(weightKg, forKey: .weightKg)
     }
 
     var isEmpty: Bool {
@@ -955,6 +981,8 @@ struct GenerateConstraints: Encodable {
     var sessionTimeMinutes: Int = 60
     var equipment: [String] = []
     var injuryFlags: [String] = []
+    var masteredExercises: [String] = []
+    var kettlebellCount: Int? = nil
     var phase: String? = nil
     /// The legacy start: a phase kind, which the server maps to the first
     /// phase of that kind in the track. `startPhase` wins when both are set.
@@ -975,6 +1003,8 @@ struct GenerateConstraints: Encodable {
         case sessionTimeMinutes = "session_time_minutes"
         case equipment
         case injuryFlags = "injury_flags"
+        case masteredExercises = "mastered_exercises"
+        case kettlebellCount = "kettlebell_count"
         case phase
         case trainingPhase = "training_phase"
         case trackId = "track_id"

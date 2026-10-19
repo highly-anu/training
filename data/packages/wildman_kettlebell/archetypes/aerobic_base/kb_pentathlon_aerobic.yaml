@@ -1,0 +1,28 @@
+id: kb_pentathlon_aerobic
+name: Easy Aerobic Run (Pentathlon GPP)
+modality: aerobic_base
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 30
+applicable_phases:
+- base
+- build
+- peak
+slots:
+- role: run
+  slot_type: time_domain
+  duration_minutes: 30
+  intensity: zone2
+  exercise_filter:
+    exercise_ids:
+    - run_zone2
+  notes: Easy and steady, able to talk throughout.
+required_equipment: []
+sources:
+- Breaking Muscle (Clemente, GPP for kettlebell sport)
+notes: 'Optional general preparation for kettlebell sport: easy steady runs of 20 to 40 minutes on days
+  without lifting, skipped before an event session is. Placed by the Pentathlon Prep training contract
+  only on free days.'

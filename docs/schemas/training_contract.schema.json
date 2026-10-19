@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Executable training contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sources", "tracks"],
+  "properties": {
+    "version": {"const": 1},
+    "sources": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "tracks": {"type": "object", "additionalProperties": {"$ref": "#/definitions/track"}}
+  },
+  "definitions": {
+    "track": {
+      "type": "object", "additionalProperties": false,
+      "required": ["training_levels", "notes", "modules"],
+      "properties": {
+        "training_levels": {"$ref": "#/definitions/levels"},
+        "notes": {"type": "string"},
+        "requires_kettlebell_pair": {"type": "boolean"},
+        "test_module": {"type": "string"},
+        "deload_phases": {"type": "array", "items": {"type": "string"}},
+        "level_seeds": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "modules": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/module"}}
+      }
+    },
+    "levels": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["novice", "intermediate", "advanced", "elite"]}},
+    "module": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "archetype_id", "modality", "training_levels", "exposures_per_week", "min_spacing_days", "max_rpe", "progression", "blocks"],
+      "properties": {
+        "id": {"type": "string"}, "name": {"type": "string"},
+        "archetype_id": {"type": "string"}, "modality": {"type": "string"},
+        "training_levels": {"$ref": "#/definitions/levels"},
+        "exposures_per_week": {"type": "integer", "minimum": 1, "maximum": 3},
+        "min_spacing_days": {"type": "integer", "minimum": 2, "maximum": 7},
+        "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
+        "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "requires_mastery": {"type": "array", "items": {"type": "string"}},
+        "optional": {"type": "boolean", "description": "Supplementary work the method lets the athlete skip: placed only on days no essential module uses, left out with its reason when none is free or its movement is ruled out."},
+        "progression": {
+          "type": "object", "additionalProperties": false, "required": ["model"],
+          "properties": {
+            "model": {"enum": ["density_cycle", "skill_hold", "timed_cycle"]},
+            "reps_start": {"type": "integer", "minimum": 1},
+            "reps_step": {"type": "integer", "minimum": 1},
+            "reps_max": {"type": "integer", "minimum": 1},
+            "rounds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+            "duration_start_sec": {"type": "integer", "minimum": 60},
+            "duration_step_sec": {"type": "integer", "minimum": 1},
+            "duration_max_sec": {"type": "integer", "minimum": 60}
+          },
+          "allOf": [
+            {"if": {"properties": {"model": {"const": "density_cycle"}}}, "then": {"required": ["reps_start", "reps_step", "reps_max", "rounds"]}},
+            {"if": {"properties": {"model": {"const": "timed_cycle"}}}, "then": {"required": ["duration_start_sec", "duration_step_sec", "duration_max_sec"]}}
+          ]
+        },
+        "blocks": {"type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["role", "exercise_id", "slot_type"],
+          "properties": {
+            "role": {"type": "string"}, "exercise_id": {"type": "string"},
+            "slot_type": {"enum": ["emom", "time_domain", "skill_practice"]},
+            "duration_sec": {"type": "integer", "minimum": 60},
+            "rest_after_sec": {"type": "integer", "minimum": 0},
+            "target_rpm": {"type": "number", "exclusiveMinimum": 0},
+            "loaded": {"type": "boolean"}, "notes": {"type": "string"},
+            "standard": {"type": "string"},
+            "progresses": {"type": "boolean", "description": "Carries the module's progression without a bell (an easy run's minutes); a loaded block always does."},
+            "intensity": {"enum": ["zone1", "zone2", "low", "moderate", "high"], "description": "A prescribed intensity; a zone counts the block's heart rate in the analytics."}
+          },
+          "allOf": [{"if": {"properties": {"slot_type": {"enum": ["time_domain", "skill_practice"]}}}, "then": {"required": ["duration_sec"]}}]
+        }}
+      }
+    }
+  }
+}

@@ -946,3 +946,34 @@ exercises:
       intermediate: 12
       advanced: 16
       elite: 24
+
+  - id: run_zone2
+    name: "Easy Aerobic Run"
+    category: aerobic
+    modality:
+      - aerobic_base
+    equipment:
+      - open_space
+    effort: low
+    bilateral: true
+    movement_patterns:
+      - aerobic_monostructural
+      - locomotion
+    requires: []
+    unlocks: []
+    contraindicated_with:
+      - ankle_sprain
+      - achilles_tendinopathy
+      - patellar_tendinopathy
+      - knee_meniscus_post_op
+    progressions:
+      volume: increase_duration
+    scaling_down: []
+    typical_volume:
+      duration_sec: 1800
+    sources:
+      - Breaking Muscle (Clemente, GPP for kettlebell sport)
+    notes: >
+      Easy steady running as general preparation for kettlebell sport, on days
+      without lifting. Pentathlon Prep's optional easy aerobic module; the
+      sport lifts keep the lion's share of the week.

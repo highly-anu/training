@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useBioStore } from '@/store/bioStore'
-import type { ExerciseLoad } from '@/api/types'
+import type { ExerciseLoad, RPE } from '@/api/types'
 import { formatClock, outcomeFieldsFor, parseClock, type OutcomeExercise, type OutcomeField } from '@/lib/outcomeFields'
 
 /**
@@ -84,7 +84,33 @@ export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load
   const logged = fields.some((f) => draft[f] !== '')
 
   return (
-    <div className="flex items-center gap-2" aria-label="Log outcome">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Log outcome">
+      {load.advances_module && (
+        <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          Bell kg
+          <input type="number" min={1} step={0.5} aria-label={`Bell kg for ${exerciseId}`}
+            defaultValue={stored?.weightKg ?? load.weight_kg ?? ''}
+            className="h-6 w-14 rounded border border-border bg-background px-1.5 text-center text-[11px]"
+            onBlur={(event) => {
+              const weightKg = Number(event.target.value)
+              if (Number.isFinite(weightKg) && weightKg > 0) setExerciseOutcome(sessionKey, exerciseId, { weightKg })
+            }} />
+        </label>
+      )}
+      {load.advances_module && (
+        <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          RPE
+          <input type="number" min={1} max={10} step={1}
+            aria-label={`RPE for ${exerciseId}`} defaultValue={stored?.rpe ?? ''}
+            className="h-6 w-14 rounded border border-border bg-background px-1.5 text-center text-[11px]"
+            onBlur={(event) => {
+              const value = Number(event.target.value)
+              if (Number.isInteger(value) && value >= 1 && value <= 10) {
+                setExerciseOutcome(sessionKey, exerciseId, { rpe: value as RPE })
+              }
+            }} />
+        </label>
+      )}
       {fields.map((f) => (
         <label key={f} className="flex items-center gap-1 text-[10px] text-muted-foreground">
           <span className="w-9 text-right">{LABEL[f]}</span>

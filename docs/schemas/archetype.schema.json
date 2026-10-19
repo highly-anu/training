@@ -142,6 +142,11 @@
             "maximum": 1,
             "description": "Exact %1RM if applicable. e.g. 0.80 = 80%."
           },
+          "rpe_target": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
           "rest_sec": {
             "type": "integer",
             "minimum": 0,

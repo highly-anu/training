@@ -63,6 +63,8 @@ def audit_program(raw: dict, policy, ex_index: dict) -> dict:
 
     for session in sessions_of(raw):
         arch = session.get('archetype')
+        session_policy = (provenance.SourcePolicy(owner_packages=frozenset({arch.get('_package')}),
+                          borrows=policy.borrows, strict=policy.strict) if arch else policy)
         if arch:
             pkg = arch.get('_package')
             arch_pkgs[pkg] += 1
@@ -78,6 +80,9 @@ def audit_program(raw: dict, policy, ex_index: dict) -> dict:
             full = ex_index.get(ex.get('id'), ex)
             pkgs = provenance.exercise_packages(full)
             ex_pkgs[pkgs[0] if pkgs else None] += 1
+            if arch and not provenance.allows_exercise(full, session_policy, modality):
+                foreign.append(
+                    f"exercise {ex.get('id')} absent from {arch.get('_package')}/exercises.yaml")
             if not provenance.allows_exercise(full, policy, modality):
                 foreign.append(f"exercise {ex.get('id')} from {pkgs}")
 
@@ -90,6 +95,9 @@ def audit_program(raw: dict, policy, ex_index: dict) -> dict:
             full = ex_index.get(ex['id'], ex)
             pkgs = provenance.exercise_packages(full)
             ex_pkgs[pkgs[0] if pkgs else None] += 1
+            if arch and not provenance.allows_exercise(full, session_policy):
+                foreign.append(
+                    f"complementary {ex['id']} absent from {arch.get('_package')}/exercises.yaml")
             if not provenance.allows_exercise(full, policy):
                 foreign.append(f"complementary {ex['id']} from {pkgs}")
 

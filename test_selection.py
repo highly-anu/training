@@ -255,6 +255,13 @@ def test_single_session_routes() -> None:
     with_phase = offered({'phase_id': 'foundations', 'framework_id': 'kb_general_practice'})
     check('without the phase the banned lifts are on offer', bool(without & banned), str(without))
     check('with it they are not', bool(with_phase) and not with_phase & banned, str(with_phase))
+    # A program built by a training contract keeps its fixed modules: the swap
+    # refuses. Asked of the stored program, so a legacy or blended program swaps.
+    from unittest.mock import patch
+    with patch('src.db.get_user_program',
+               return_value={'currentProgram': {'training_contract': {'id': 'wildman_kettlebell/general_practice@1'}}}):
+        response = client.post('/api/exercises/substitute', json=body)
+    check('a generic swap cannot bypass a fixed module', response.status_code == 422, str(response.get_json())[:200])
 
 
 def test_a_framework_prescribes_its_own_way() -> None:
@@ -297,28 +304,24 @@ def test_a_framework_prescribes_its_own_way() -> None:
 
 def test_substitution_is_recorded() -> None:
     print('a session scheduled as another modality says so')
-    # Wildman's General Practice asks for strength endurance and max strength;
-    # both archetypes start at intermediate, so a novice gets aerobic base in
-    # their place. The swap used to leave no trace.
+    # Contract modules retain their own stimulus at every supported level;
+    # legacy fallback reporting is still exercised by the validator below.
     kb = {'equipment': ['kettlebell'], 'days_per_week': 4, 'session_time_minutes': 40}
     novice = program('wildman_kettlebell', 4, track_id='general_practice', training_level='novice', **kb)
     swapped = [s for _, s in sessions(novice) if s.get('substituted_for')]
-    check('the substituted sessions carry what they replaced',
-          {s['substituted_for'] for s in swapped} == {'strength_endurance', 'max_strength'}
-          and all(s['modality'] == 'aerobic_base' for s in swapped),
+    check('a novice retains the declared Wildman modules without substitution',
+          not swapped and novice['weeks'],
           str([(s['modality'], s.get('substituted_for')) for s in swapped]))
     report = novice['coverage_report']['substituted_sessions']
     check('the coverage report lists them with a week number and a day name',
           len(report) == len(swapped) and all(isinstance(r['week'], int) and isinstance(r['day'], str)
                                               for r in report), str(report[:2]))
-    check('the compromises say it once per modality, naming the level as the cause',
-          sum('for a novice athlete' in c and 'scheduled as aerobic base' in c
-              for c in novice['compromises']) == 2, str(novice['compromises']))
+    check('contract generation introduces no fallback compromises', not novice['compromises'])
     intermediate = program('wildman_kettlebell', 4, track_id='general_practice',
                            training_level='intermediate', **kb)
     check('an intermediate gets the modalities as asked, nothing substituted',
           not intermediate['coverage_report']['substituted_sessions']
-          and {'strength_endurance', 'max_strength'} <= {s['modality'] for _, s in sessions(intermediate)})
+          and {'power', 'movement_skill'} <= {s['modality'] for _, s in sessions(intermediate)})
 
     from src import provenance
     from src.validator import ValidationResult, check_level_coverage
