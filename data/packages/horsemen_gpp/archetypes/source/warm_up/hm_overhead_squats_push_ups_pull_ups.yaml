@@ -1,0 +1,46 @@
+id: hm_overhead_squats_push_ups_pull_ups
+name: Overhead Squats, Push-ups and Pull-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 8
+slots:
+- role: overhead_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - overhead_squat
+    ordered: true
+  notes: >-
+    3 rounds, alternating: 10 overhead squats, 10 push-ups, 3 pull-ups — not for time.
+- role: push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 3 rounds of overhead squats, push-ups and pull-ups. The source gives no load; by
+  its weight-loading rule the choice is the athlete's. Unnamed in the source.

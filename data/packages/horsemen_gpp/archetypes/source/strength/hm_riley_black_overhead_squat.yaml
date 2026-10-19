@@ -1,0 +1,45 @@
+id: hm_riley_black_overhead_squat
+name: Riley Black (Overhead Squat)
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: ladder_1_rep
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  rest_sec: 0
+  exercise_filter:
+    exercise_ids: [overhead_squat]
+    ordered: true
+  load: 95% of 1RM
+  notes: '3 to 5 ladders of 1-2-3 reps: 1 rep on bar 1, 2 on bar 2, 3 on bar 3, with no rest inside a ladder. 18-30
+    reps in all; every rep technically perfect.'
+- role: ladder_2_reps
+  slot_type: sets_reps
+  sets: 5
+  reps: 2
+  rest_sec: 0
+  exercise_filter:
+    exercise_ids: [overhead_squat]
+    ordered: true
+  load: 90% of 1RM
+  notes: Straight from bar 1, no rest.
+- role: ladder_3_reps
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  rest_sec: 180
+  exercise_filter:
+    exercise_ids: [overhead_squat]
+    ordered: true
+  load: 85% of 1RM
+  notes: Straight from bar 2; then rest no less than 3 minutes before the next ladder.
+required_equipment: [barbell, rack, plates]
+sources: [Horsemen]
+notes: 'The Riley Black method on the overhead squat: 3 to 5 ladders of 1-2-3 reps (18-30 reps in all) with progressive
+  loading on three bars set up at 95, 90 and 85% of 1RM, the weight falling as the reps rise. No rest inside a ladder,
+  at least 3 minutes between ladders, and every rep technically perfect. Five ladders are written here, the top
+  of the source''s range.'

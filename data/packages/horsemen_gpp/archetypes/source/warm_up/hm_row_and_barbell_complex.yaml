@@ -1,0 +1,39 @@
+id: hm_row_and_barbell_complex
+name: Row and Barbell Complex
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: row
+  slot_type: distance
+  distance_m: 500
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: Row 500 m, then the complexes.
+- role: barbell_complex
+  slot_type: sets_reps
+  sets: 3
+  reps: 6
+  exercise_filter:
+    exercise_ids:
+    - barbell_complex
+    ordered: true
+  notes: >-
+    3 complexes: 6 reps each of deadlift, bent-over row, hang power clean, front squat, push press,
+    back squat and push-up, without putting the bar down until the push-ups.
+required_equipment:
+- rower
+- barbell
+- plates
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 500 m row, then 3 rounds of the six-way barbell complex. The source gives no load;
+  by its weight-loading rule the choice is the athlete's. Unnamed in the source.

@@ -1,0 +1,29 @@
+id: hm_finger_board_hangs
+name: Finger Board Hangs
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: finger_board_hang
+  slot_type: time_domain
+  duration_sec: 60
+  sets: 5
+  rest_sec: 50
+  exercise_filter:
+    exercise_ids:
+    - fingerboard_hang
+    ordered: true
+  notes: >-
+    5 rounds: 1 minute hanging on the finger board with constant movement, then 50 seconds rest.
+required_equipment:
+- hangboard
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 one-minute hangs on a finger board, moving the whole time, with 50 seconds rest
+  between. Unnamed in the source.

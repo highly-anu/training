@@ -1,0 +1,50 @@
+id: hm_jackie
+name: "Jackie"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 12
+pool_only: true
+
+slots:
+  - role: row
+    slot_type: for_time
+    rounds: 1
+    duration_sec: 600
+    distance_m: 1000
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [row_erg]
+      ordered: true
+    notes: >
+      One pass: row 1000 m, then 50 thrusters, then 30 pull-ups.
+
+  - role: thrusters
+    slot_type: amrap_movement
+    reps_per_round: 50
+    parent_slot_role: row
+    load: "20 kg (45 lb)"
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 30
+    parent_slot_role: row
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+  - rack
+  - rower
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Jackie as the source writes it: a 1000 m row, 50 thrusters at 45 lb and 30
+  pull-ups. The source gives no format; it is run once through for time, as CrossFit runs it.

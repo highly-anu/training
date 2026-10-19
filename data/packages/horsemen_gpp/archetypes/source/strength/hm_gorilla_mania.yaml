@@ -1,0 +1,65 @@
+id: hm_gorilla_mania
+name: Gorilla Mania
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 75
+slots:
+- role: power_snatch
+  slot_type: sets_reps
+  sets: 8
+  reps: 3-2-1-3-3-2-1-3
+  exercise_filter:
+    exercise_ids: [power_snatch]
+    ordered: true
+  load: 80, 85, 90, 80, 80, 85, 90, 80% of 1RM
+  notes: The wave 80% x 3, 85% x 2, 90% x 1, 80% x 3, done twice.
+- role: power_clean
+  slot_type: sets_reps
+  sets: 6
+  reps: 3-2-1-3-2-1
+  exercise_filter:
+    exercise_ids: [power_clean]
+    ordered: true
+  load: 80, 85, 90, 80, 85, 90% of 1RM
+  notes: The wave 80% x 3, 85% x 2, 90% x 1, done twice.
+- role: power_jerk
+  slot_type: sets_reps
+  sets: 6
+  reps: 3-2-1-3-2-1
+  exercise_filter:
+    exercise_ids: [push_jerk]
+    ordered: true
+  load: 80, 85, 90, 80, 85, 90% of 1RM
+  notes: The wave 80% x 3, 85% x 2, 90% x 1, done twice.
+- role: clean_pull
+  slot_type: sets_reps
+  sets: 4
+  reps: 2-3-2-1
+  exercise_filter:
+    exercise_ids: [clean_pull]
+    ordered: true
+  load: 80, 85, 90, 100% of 1RM
+- role: front_squat
+  slot_type: sets_reps
+  sets: 7
+  reps: 2-3-2-2-2-3-3
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: 80, 85, 90, 90, 90, 85, 80% of 1RM
+  notes: 80% x 2, 85% x 3, three sets of 90% x 2, 85% x 3, 80% x 3 (the source's "90% 2r x 3s" read as three sets).
+- role: bench_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 3-2-2
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+  load: 80, 85, 90% of 1RM
+required_equipment: [barbell, rack, plates]
+sources: [Horsemen]
+notes: 'An Olympic lifting day of percentage waves: power snatch and power clean and power jerk (each wave done
+  twice), clean pull, front squat and bench press, every set a percentage of the lift''s 1RM. The source gives no
+  rest and no time. In the source''s templates it stands for the all-Olympic-lifting day (light load, work on form).'

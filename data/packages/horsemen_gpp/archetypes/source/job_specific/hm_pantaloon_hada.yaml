@@ -1,0 +1,114 @@
+id: hm_pantaloon_hada
+name: Pantaloon Hada
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: deadlift_singles
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 90% of today's 1RM
+  notes: 3 singles at 90% of today's deadlift 1RM.
+- role: power_cleans
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - power_clean
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: >-
+    5 rounds, in order: 3 power clean + hang squat clean + mutant maker complexes, 3 sandbag get-ups,
+    a 30 m tire drag — not for time.
+- role: hang_squat_cleans
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - hang_squat_clean
+    ordered: true
+  load: 43 kg (95 lb)
+- role: mutant_makers
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - mutant_maker
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: 'Mutant maker: clean to thruster.'
+- role: sandbag_get_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - sb_getup
+    ordered: true
+  load: 27 kg (60 lb) sandbag
+- role: tire_drag
+  slot_type: distance
+  distance_m: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - tire_drag_forward
+    ordered: true
+  notes: 30 m tire drag.
+- role: lunge_steps
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - kb_walking_lunge_double
+    - db_walking_lunge
+    ordered: true
+  load: 2 x 11 kg (2 x 24 lb)
+  notes: >-
+    3 rounds, alternating: 20 lunge steps holding two kettlebells (or dumbbells), 20 dips — not for time.
+- role: dips
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+required_equipment:
+- barbell
+- plates
+- parallettes
+- sandbag
+- tire
+- open_space
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: work up to a deadlift 1RM and take three singles at
+  90%, five rounds of a barbell complex, sandbag get-ups and a tire drag, then three rounds of loaded
+  lunge steps and dips. The source does not say for time.

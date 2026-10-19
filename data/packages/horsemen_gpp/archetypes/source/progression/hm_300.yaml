@@ -1,0 +1,71 @@
+id: hm_300
+name: '300'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: three_hundred
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 1800
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+  notes: 'For time, in order: 25 pull-ups, 50 deadlifts, 50 push-ups, 50 box jumps, 50 floor wipers, 50 kettlebell
+    clean and presses, 25 pull-ups. The source''s time is 15-30 minutes.'
+- role: deadlift
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 61 kg (135 lb)
+- role: push_up
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [push_up]
+    ordered: true
+- role: box_jump
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: 24 in (61 cm) box.
+- role: floor_wiper
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [floor_wiper]
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: One-count.
+- role: kb_clean_and_press
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [kb_clean_and_press_single]
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: The kettlebell touches the floor between reps.
+- role: pull_up_finish
+  slot_type: amrap_movement
+  parent_slot_role: three_hundred
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+required_equipment: [pull_up_bar, barbell, plates, box, kettlebell]
+sources: [Horsemen]
+notes: 'A 300-rep chipper: 25 pull-ups, 50 deadlifts at 61 kg (135 lb), 50 push-ups, 50 box jumps, 50 floor wipers
+  at 61 kg (135 lb, one-count), 50 kettlebell clean and presses at 16 kg (35 lb) touching the floor each rep, and
+  25 pull-ups, in the source''s 15-30 minutes.'

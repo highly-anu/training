@@ -1,0 +1,74 @@
+id: hm_goldman_sachs
+name: Goldman Sachs
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [squat_clean_push_press]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: clean_squat_push_press_every_40s
+  slot_type: emom
+  work_sec: 40
+  sets: 10
+  reps_per_round: 2
+  exercise_filter:
+    exercise_ids: [squat_clean_push_press]
+    ordered: true
+  load: 75% of today's 1RM
+  notes: 2 squat clean and push presses every 40 seconds for 10 rounds.
+- role: kb_swing
+  slot_type: sets_reps
+  sets: 6
+  reps: 15
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: heavy
+  notes: '6 rounds, alternating: 15 heavy kettlebell swings, 10 bench presses, 30 m tire drag (15 m forward, 15
+    m backward) — not for time.'
+- role: bench_press
+  slot_type: sets_reps
+  sets: 6
+  reps: 10
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+  load: 65% of 1RM
+- role: tire_drag_forward
+  slot_type: distance
+  distance_m: 15
+  sets: 6
+  exercise_filter:
+    exercise_ids: [tire_drag_forward]
+    ordered: true
+- role: tire_drag_backward
+  slot_type: distance
+  distance_m: 15
+  sets: 6
+  exercise_filter:
+    exercise_ids: [tire_drag_backward]
+    ordered: true
+- role: jingle_jangles
+  slot_type: emom
+  work_sec: 30
+  sets: 4
+  rest_sec: 30
+  exercise_filter:
+    exercise_ids: [jingle_jangles]
+    ordered: true
+  notes: 4 rounds of 30 s jingle jangles (5-yard sprints back and forth), 30 s rest.
+required_equipment: [barbell, rack, plates, kettlebell, tire, open_space]
+sources: [Horsemen]
+notes: Work up to a 1-rep max squat clean and push press, then 2 at 75% of it every 40 seconds for 10 rounds, 6
+  rounds of heavy swings, bench presses at 65% of 1RM and a 30 m tire drag, and four 30/30 bouts of jingle jangles.
+  The source does not time it.

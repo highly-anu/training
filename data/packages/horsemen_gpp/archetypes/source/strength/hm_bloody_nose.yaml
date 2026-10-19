@@ -1,0 +1,66 @@
+id: hm_bloody_nose
+name: Bloody Nose
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: deadlift
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  notes: '5 rounds, alternating: 3 deadlifts, 3 bench presses — not for time.'
+- role: bench_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+- role: curtis_p
+  slot_type: sets_reps
+  sets: 3
+  reps: 15-10-5
+  exercise_filter:
+    exercise_ids: [curtis_p]
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: '15-10-5 reps of each, alternating: Curtis P''s, GHD sit-ups, ring dips, back extensions, pull-ups. The
+    source does not say for time. A Curtis P is a hang squat clean, a forward lunge on each leg and a push press.'
+- role: ghd_sit_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 15-10-5
+  exercise_filter:
+    exercise_ids: [ghd_sit_up]
+    ordered: true
+- role: ring_dip
+  slot_type: sets_reps
+  sets: 3
+  reps: 15-10-5
+  exercise_filter:
+    exercise_ids: [ring_dip]
+    ordered: true
+- role: back_extension
+  slot_type: sets_reps
+  sets: 3
+  reps: 15-10-5
+  exercise_filter:
+    exercise_ids: [back_extension]
+    ordered: true
+- role: pull_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 15-10-5
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+required_equipment: [barbell, rack, plates, ghd, rings, pull_up_bar]
+sources: [Horsemen]
+notes: Five rounds of 3 deadlifts and 3 bench presses, then 15-10-5 of Curtis P's at 43 kg (95 lb), GHD sit-ups,
+  ring dips, back extensions and pull-ups. The source does not time it. Where no load is given, the source leaves
+  it to the athlete (its Weight Loading rule).

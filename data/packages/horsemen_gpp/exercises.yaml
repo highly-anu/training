@@ -3339,3 +3339,4414 @@ exercises:
     also uses strict, kipping, weighted and jumping variations. Full dead hang
     at the bottom, chin over the bar; the strict standard is the app's, as the
     source does not define a rep.
+# Movements the Horsemen source prescribes that the catalog lacked. Each is the
+# movement as written: no prerequisites, no default loads.
+- id: kb_clean_and_press_single
+  named_only: true
+  name: Kettlebell Clean and Press (Single-Arm)
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - power
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    One arm cleans the bell to the rack and presses it overhead; one rep is both. The source
+    uses it in its kettlebell warm-up complexes (1 minute each arm), as 5 reps at 44 lb, and
+    in the '300' progression, where the bell touches the floor between reps.
+- id: kb_slasher_to_halo
+  named_only: true
+  name: Kettlebell Slasher to Halo
+  category: kettlebell
+  modality:
+  - mobility
+  - movement_skill
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - neck_strain
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: both hands cradle the handle as for a goblet squat, the bell
+    drops to the right hip, slashes across the body to the left shoulder, circles behind the
+    head, comes over the right shoulder and slashes down to the left hip; then the same in
+    the opposite direction.
+- id: kb_lunge
+  named_only: true
+  name: Kettlebell Lunge (Single Bell)
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Lunges holding one kettlebell, in the hand opposite the working leg. The source's kettlebell
+    warm-up complexes give each leg a minute of lunges, in place in the 10-minute version.
+- id: kb_complex_10min
+  named_only: true
+  name: Kettlebell 10-Minute Complex (Horsemen Warm-Up)
+  category: kettlebell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - movement_skill
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  - vertical_push
+  - olympic_lift
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - hip_flexor_strain
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A warm-up of 10 minutes with one 35, 44 or 53 lb bell: one-arm swing, lunge in place on
+    the left leg, one-arm swing, lunge in place on the right leg, clean and press left, slasher
+    to halo, clean and press right, slasher to halo, figure 8 twice.
+- id: kb_complex_12min_atw
+  named_only: true
+  name: Kettlebell 12-Minute Complex (Around the World Variant)
+  category: kettlebell
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - movement_skill
+  equipment:
+  - kettlebell
+  - box
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - rotation
+  - hip_hinge
+  - ballistic
+  - olympic_lift
+  - vertical_push
+  - step_up
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    The first of the source's 'most common' 12-minute complexes: around the world, figure
+    8s, snatches and step-ups with a 53 lb bell, 1 minute each, without putting the bell down.
+    The definitions say 4 rounds; the Patron (Silver) workout runs 3 rounds onto a 10 in box.
+- id: kb_around_the_world
+  named_only: true
+  name: Kettlebell Around the World
+  category: kettlebell
+  modality:
+  - mobility
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    The bell is passed from hand to hand around the waist, both directions. A minute of it
+    opens the around-the-world 12-minute complex at 53 lb.
+- id: kb_swing_double
+  named_only: true
+  name: Double Kettlebell Swing
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: high
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Two bells swung together, one in each hand. The Big 5-55 ladder swings two 35 lb bells
+    10 down to 1.
+- id: kb_step_up_double
+  named_only: true
+  name: Double Kettlebell Step-Up
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  - box
+  effort: medium
+  bells: 2
+  bilateral: false
+  movement_patterns:
+  - step_up
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Step-ups holding a bell in each hand. D-Day holds two in the rack position; Stairway to
+    Heaven steps onto an 18 in box and a focus circuit onto a 20 in box, both with two 35
+    lb bells.
+- id: kb_two_hand_clean_and_squat
+  named_only: true
+  name: Kettlebell Two-Hand Clean and Squat
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - mixed_modal_conditioning
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    One bell cleaned with both hands and squatted, the bell touching the ground on each rep.
+    One of the source's breathing-ladder movements.
+- id: kb_pull
+  named_only: true
+  name: Kettlebell Pull (Sumo High Pull)
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: grab a kettlebell and perform the same movement as a sumo deadlift
+    high pull. Use kb_pull_double where two bells are prescribed.
+- id: kb_pull_double
+  named_only: true
+  name: Double Kettlebell Pull (Sumo High Pull)
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    The source's kettlebell pull with dual bells, the same movement as a sumo deadlift high
+    pull; four reps with two bells in one complementary circuit.
+- id: kb_sumo_squat_double
+  named_only: true
+  name: Double Kettlebell Sumo Squat
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  effort: medium
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Wide-stance squat with a bell in each hand. The API workouts use two 70 lb bells (10 reps
+    a round) and two 75 lb bells (a 45-second station).
+- id: kb_overhead_lunge
+  named_only: true
+  name: Kettlebell Overhead Lunge (Single-Arm)
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  - movement_skill
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  - vertical_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Walking lunges with one bell locked out overhead. Johnny Walker Red lunges 30 m at 26
+    lb; Possum Stomper lunges 50 m forward with the weak arm and 50 m backward with the strong.
+- id: kb_walking_lunge_double
+  named_only: true
+  name: Double Kettlebell Walking Lunge
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bells: 2
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Walking lunges carrying a bell in each hand: 20 lunge steps with two 24 lb bells, and
+    a job-specific day that lunges every kettlebell in the gym across the room and back.
+- id: kb_crosswalk_carry
+  named_only: true
+  name: Kettlebell Crosswalk Carry
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  - open_space
+  effort: medium
+  bells: 2
+  bilateral: false
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - vertical_push
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    A carry with one bell locked out overhead (high) and a heavier one at the side (low):
+    60 m with 26 lb high and 53 lb low. The 500 m lunge also changes to it among its carries.
+- id: kb_bear_crawl
+  named_only: true
+  name: Kettlebell Bear Crawl
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  - open_space
+  effort: high
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - horizontal_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A bear crawl holding a kettlebell in each hand, as the source's dumbbell crawl holds dumbbells:
+    50 m with two 44 lb bells.
+- id: mr_spectacular
+  named_only: true
+  name: Mr. Spectacular
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - mixed_modal_conditioning
+  equipment:
+  - kettlebell
+  effort: high
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - vertical_push
+  - horizontal_push
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: a two-hand kettlebell clean and press, then put the bells down,
+    walk out on the hands to the push-up position, do a push-up, walk back on the hands, grab
+    the bells and repeat. Five reps with two 35 lb bells.
+- id: kb_clean_double
+  named_only: true
+  name: Double Kettlebell Clean
+  category: kettlebell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - wrist_injury
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Two bells cleaned to the rack together: Johnny Walker Black does 5 two-arm cleans with
+    two 53 lb bells.
+- id: towel_kb_halo
+  named_only: true
+  name: Towel Kettlebell Halo
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - neck_strain
+  sources:
+  - Horsemen
+  notes: >-
+    A halo with the bell held by a towel looped through its handle, which makes it a grip
+    exercise. The source names it without describing it: 35 lb for 30 s on, 15 s off, five
+    times, and 20 reps in a grip-heavy job-specific day.
+- id: towel_kb_swing
+  named_only: true
+  name: Towel Kettlebell Swing
+  category: kettlebell
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    The source prescribes '15x Towel KBs' between towel pull-ups and towel halos without defining
+    it; read here as kettlebell swings gripping a towel looped through the handle.
+- id: single_leg_rdl
+  named_only: true
+  name: One-Leg Romanian Deadlift
+  category: kettlebell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - ankle_sprain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A Romanian deadlift on one leg, 10 reps a round in the API kettlebell workout Hells Bells;
+    the source gives no load.
+- id: db_push_press
+  named_only: true
+  name: Dumbbell Push Press
+  category: accessory
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Push press with a dumbbell in each hand: the warm-ups use two 35 lb dumbbells, and a power-endurance
+    workout 10 reps at 45 lb.
+- id: db_walking_lunge
+  named_only: true
+  name: Dumbbell Walking Lunge
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - dumbbell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Walking lunges holding dumbbells. Tongue Lashing lunges 10 m holding a dumbbell; Counting
+    Dead Bodies alternates 5 lunges and 5 push presses for 400 m holding two 25 lb dumbbells,
+    a 45 lb bar or a similar load.
+- id: db_press
+  named_only: true
+  name: Dumbbell Press (Standing)
+  category: accessory
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    Standing strict press with dumbbells: 8 reps in Russian Aggression; Death to Infidels
+    allows dumbbells or kettlebells for its military press.
+- id: db_bench_press_single_arm
+  named_only: true
+  name: One-Arm Dumbbell Bench Press
+  category: accessory
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    Bench press with one dumbbell, 10 reps each arm in Chin Up. Soldier On. Needs a bench.
+- id: db_crawl
+  named_only: true
+  name: Dumbbell Crawl
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - dumbbell
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - horizontal_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: a bear crawl while holding dumbbells. Distances of 10-20 m with
+    two 25-55 lb dumbbells.
+- id: renegade_man_maker
+  named_only: true
+  name: Renegade Man Maker
+  category: accessory
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - vertical_push
+  - horizontal_push
+  - horizontal_pull
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  - Horsemen
+  notes: >-
+    As the source defines it, after Gym Jones: start standing with two dumbbells (usually
+    25 lb) on the ground, kneel and power clean and press them, drop into the push-up position,
+    do a push-up, row once with each arm, bring the legs back under and repeat.
+- id: db_renegade_row
+  named_only: true
+  name: Renegade Row
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - horizontal_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_instability
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Rows from the push-up position on two dumbbells, one arm at a time; a 45-second station
+    at 20 lb in the API workout Mirror.
+- id: db_row_single_arm
+  named_only: true
+  name: One-Arm Dumbbell Row
+  category: accessory
+  modality:
+  - strength_endurance
+  - max_strength
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Bent-over row with one dumbbell, braced on a bench: 10 reps at 50 lb in Tens, and a 45-second
+    station each side at 50 lb in Mirror.
+- id: db_bent_over_lateral_raise
+  named_only: true
+  name: Bent-Over Lateral Raise (Dumbbell)
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - dumbbell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Lateral raises bent over at the hips, 8-10 reps with 25 lb in the API workouts Crazy 8
+    and Tens.
+- id: db_snatch
+  named_only: true
+  name: Dumbbell Snatch (Single-Arm)
+  category: accessory
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    A dumbbell pulled from the floor to overhead in one movement with one hand: 5 each hand
+    in a job-specific day, a 45-second station each hand at 25 lb in the API workout Mirror.
+- id: db_thruster
+  named_only: true
+  name: Dumbbell Thruster
+  category: accessory
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    A front squat into a press with a dumbbell in each hand: The Cog does 12 with two 25 lb
+    dumbbells.
+- id: db_carry_run
+  named_only: true
+  name: Dumbbell Run Carry
+  category: loaded_carry
+  modality:
+  - anaerobic_intervals
+  - durability
+  equipment:
+  - dumbbell
+  - open_space
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - locomotion
+  - loaded_carry
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A 400 m run carrying one 25 lb dumbbell, followed by 5 get-ups with the same dumbbell,
+    in a power-endurance workout.
+- id: rotator_scarecrow
+  named_only: true
+  name: Rotator Scarecrow
+  category: accessory
+  modality:
+  - durability
+  equipment:
+  - dumbbell
+  effort: low
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    Five reps after pull-ups and dips in Act With a Purpose. The source does not define it;
+    the scarecrow is a rotator-cuff drill: upper arms out at shoulder height, elbows bent
+    to 90 degrees, the forearms rotated up and down with light weights.
+- id: weighted_step_up
+  named_only: true
+  name: Weighted Step-Up
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - box
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - step_up
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Step-ups onto a box carrying a load of the athlete's choice (rucksack, dumbbells, kettlebells):
+    10 minutes onto 20 in as a warm-up, 10 reps at 35 lb, 2 minutes holding the farmer-carry
+    dumbbells, 1 minute rounds onto 20 in on job-specific days.
+- id: one_arm_weighted_sit_up
+  named_only: true
+  name: One-Arm Weighted Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Five each arm in Russian Aggression and in Hook and Bullet (there without a weight). The
+    source does not define it; read as a sit-up holding a weight up in one hand.
+- id: power_clean_and_press
+  named_only: true
+  name: Power Clean and Press
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    A power clean followed by a press overhead; one rep is both. A warm-up of 30 at 135 lb
+    and up, as 6 sets of 5.
+- id: curtis_p
+  named_only: true
+  name: Curtis P
+  category: barbell
+  modality:
+  - strength_endurance
+  - mixed_modal_conditioning
+  - power
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - squat
+  - locomotion
+  - vertical_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it, at the prescribed weight: a hang squat clean, a forward lunge
+    on the right leg, a forward lunge on the left, then a push press; that is one rep. From
+    5 reps to 100 as an SMMF effort; 95 lb in Bloody Nose, 55 lb for 1-minute intervals.
+- id: clean_pull
+  named_only: true
+  name: Clean Pull
+  category: barbell
+  modality:
+  - max_strength
+  - power
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    The clean's pull without the catch. The strength days run it in percentage waves (80%
+    x3, 85% x2, 90% x1, and up to 100%).
+- id: good_morning
+  named_only: true
+  name: Good Morning
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  - neck_strain
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    A hinge with the bar across the upper back. Snatch Your Face waves it at 80-90%; the API
+    workout 1000 Reps does 50 with a 45 lb bar.
+- id: floor_wiper
+  named_only: true
+  name: Floor Wiper
+  category: barbell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_flexion
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    Lying on the back holding a loaded barbell locked out above the chest, the straight legs
+    are raised to one side of the bar and then the other. The source does not define it; it
+    loads it at 135-165 lb, counts '50 one-count' in the '300' progression, and 10 each direction
+    in Hook and Bullet.
+- id: barbell_press_single_arm
+  named_only: true
+  name: One-Arm Standing Barbell Press
+  category: barbell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - vertical_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    Ten one-arm standing barbell presses in Sick and Twisted. The source does not describe
+    it; a barbell gripped at its middle and pressed overhead with one arm.
+- id: press_push_press_push_jerk_complex
+  named_only: true
+  name: Press / Push Press / Push Jerk Complex
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - ballistic
+  - olympic_lift
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A strict press, a push press and a push jerk without putting the bar down; Sick and Twisted
+    does 3 at 95 lb.
+- id: squat_clean_push_press
+  named_only: true
+  name: Squat Clean and Push Press
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - lumbar_disc
+  - hip_flexor_strain
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    A squat clean followed by a push press; one rep is both. Goldman Sachs works up to a 1RM,
+    then 2 reps every 40 s at 75% for 10 rounds.
+- id: the_exercise
+  named_only: true
+  name: '"The Exercise" (Snatch to Overhead Squat)'
+  category: barbell
+  modality:
+  - power
+  - mobility
+  - movement_skill
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - lumbar_disc
+  - knee_meniscus_post_op
+  sources:
+  - Dan John
+  - Horsemen
+  notes: >-
+    As the source defines it, after Dan John: a snatch and, without bringing the weight back
+    down, an overhead squat; that is one rep. One job-specific day uses a power snatch.
+- id: mutant_maker
+  named_only: true
+  name: Mutant Maker (Clean to Thruster)
+  category: barbell
+  modality:
+  - mixed_modal_conditioning
+  - power
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - squat
+  - vertical_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: a clean to a thruster. Pantaloon Hada chains a power clean,
+    a hang squat clean and a mutant maker at 95 lb.
+- id: clean_and_jerk
+  named_only: true
+  name: Clean and Jerk
+  category: barbell
+  modality:
+  - power
+  - max_strength
+  equipment:
+  - barbell
+  - plates
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - olympic_lift
+  - ballistic
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  - hip_flexor_strain
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - CrossFit
+  - Horsemen
+  notes: >-
+    Clean to the shoulders, then jerk overhead. One of the explosive power day's 1RM lifts,
+    and 30 reps at 135 lb for time in Grace.
+- id: sdhp
+  named_only: true
+  name: Sumo Deadlift High Pull
+  category: barbell
+  modality:
+  - power
+  - strength_endurance
+  - mixed_modal_conditioning
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: feet wide, hands close together on the bar; the first part is
+    like a deadlift, then an explosive pull, as in a clean or snatch but with the feet on
+    the ground, bringing the hands up under the chin with the elbows high.
+- id: fat_bar_deadlift
+  named_only: true
+  name: Fat-Bar Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    A deadlift on a thick-handled bar (or a barbell with thick grips), which makes the grip
+    the limit: 10 reps at 105 lb or more.
+- id: romanian_deadlift
+  named_only: true
+  name: Romanian Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A stiff-legged hinge from the hang. The API workouts do 5 at 155 lb in Magnificent 7 and
+    50 with a 45 lb bar in 1000 Reps.
+- id: floor_press
+  named_only: true
+  name: Floor Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - wrist_injury
+  - tennis_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A bench press lying on the floor; 5 reps at 155 lb in the API workout Magnificent 7.
+- id: close_grip_bench
+  named_only: true
+  name: Close-Grip Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - tennis_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Bench press with the hands close together; 50 reps at 135 lb in the API workout Bannister.
+- id: single_arm_deadlift
+  named_only: true
+  name: One-Arm Barbell Deadlift
+  category: barbell
+  modality:
+  - max_strength
+  - durability
+  equipment:
+  - barbell
+  - plates
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - hip_hinge
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A deadlift with one hand on the middle of the bar. The API workout Bannister does 100
+    at 135 lb, 50 each hand.
+- id: standing_twist
+  named_only: true
+  name: Standing Barbell Twist
+  category: barbell
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - barbell
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - neck_strain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Fifty with a 45 lb bar in the API workout 1000 Reps. Not described in the source; the
+    bar rests across the upper back and the torso turns side to side.
+- id: hack_squat
+  named_only: true
+  name: Barbell Hack Squat
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - lumbar_disc
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A squat holding the bar behind the legs. The API workout Triples does 10 at 90 lb on one
+    leg.
+- id: wall_ball
+  named_only: true
+  name: Wall Ball
+  category: accessory
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - medicine_ball
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - shoulder_impingement
+  sources:
+  - CrossFit
+  - Horsemen
+  notes: >-
+    A squat with a medicine ball at the chest, driven up into a throw at a target on the wall.
+    A warm-up of 10, 150 for time in Karen, and 100 with a 20 lb ball in a progression triplet.
+- id: ball_slam
+  named_only: true
+  name: Medicine Ball Slam
+  category: accessory
+  modality:
+  - power
+  - mixed_modal_conditioning
+  equipment:
+  - medicine_ball
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A slam ball lifted overhead and thrown into the floor, with 10-25 lb balls. Tabata Hell
+    rests with the ball overhead, both arms locked out; it is also a breathing-ladder movement.
+- id: med_ball_toss_and_run
+  named_only: true
+  name: Medicine Ball Toss and Run
+  category: accessory
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - medicine_ball
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - shoulder_impingement
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Five per round in a focus circuit; the source does not define it. The ball is thrown for
+    distance and the athlete runs to it.
+- id: med_ball_underhand_throw
+  named_only: true
+  name: Underhand Medicine Ball Throw
+  category: accessory
+  modality:
+  - power
+  equipment:
+  - medicine_ball
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A heavy ball thrown underhand from between the legs with a hip snap: 8-10 reps with 30
+    lb in the API workouts Crazy 8 and Tens; '2 Minutes' has a med ball throw at 16 ft.
+- id: heavy_object_throw
+  named_only: true
+  name: Heavy Object Throw and Carry
+  category: accessory
+  modality:
+  - power
+  - durability
+  equipment:
+  - medicine_ball
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - hip_hinge
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    Throw a heavy object (a rock or a slam ball) 50 m, then pick it up and carry it back to
+    the start point, five times.
+- id: plate_shuffle
+  named_only: true
+  name: Plate Shuffle
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns: []
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Named once (3 rounds, with sit-ups and back extensions) and not defined in the source.
+    Program it only as the source does, alongside its partner movements.
+- id: plate_bent_over_row
+  named_only: true
+  name: Manhole Covers (Plate Bent-Over Row)
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    As the source glosses it: a bent-over row with a 100 lb plate, a 45-second station in
+    the API workout Mirror.
+- id: plate_press
+  named_only: true
+  name: Plate Press
+  category: accessory
+  modality:
+  - strength_endurance
+  equipment:
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A 45-second station with a 45 lb plate in the API workout Mirror. The source does not
+    describe it; a plate held in both hands and pressed.
+- id: farmer_carry_thick_grip
+  named_only: true
+  name: Farmer Carry (Blaster Bars)
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - dumbbell
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - isometric
+  - farmer_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    A farmer carry on blaster bars: thick-handled carry bars, or dumbbells with thick grips.
+    Jagerbomb carries 60 m four times, resting as needed.
+- id: sledgehammer_tire_strike
+  named_only: true
+  name: Sledgehammer Tire Strikes
+  category: accessory
+  modality:
+  - power
+  - strength_endurance
+  - durability
+  equipment:
+  - sledgehammer
+  - tire
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_hinge
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    Sledgehammer swings onto a tire: 25 a round in Cottage Cheese, 30 every minute for 5 minutes,
+    and 80 as one choice in a long chipper.
+- id: tire_flip
+  named_only: true
+  name: Tire Flip
+  category: accessory
+  modality:
+  - power
+  - strength_endurance
+  - durability
+  equipment:
+  - tire
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A heavy tire lifted from the ground and pushed over: 15 every minute for 5 minutes, and
+    20 in Bannister. One API station flips it 'with jumps on ramp', which the source does
+    not explain.
+- id: sled_drag
+  named_only: true
+  name: Sled Drag
+  category: loaded_carry
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sled
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - locomotion
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A loaded sled dragged by a strap or rope: 20 m at 100 lb after front squats, and 25 m
+    of sled or tire drag in Thin Blue Line.
+- id: fast_rope_drag
+  named_only: true
+  name: Fast Rope Drag
+  category: accessory
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - rope
+  - kettlebell
+  effort: high
+  bells: 2
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - tennis_elbow
+  - golfers_elbow
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Two drags every minute for 5 minutes with two 55 lb kettlebells. The source does not describe
+    it; a fast rope tied to the bells is pulled in hand over hand.
+- id: floor_rope_pull
+  named_only: true
+  name: Floor Rope Pull
+  category: accessory
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - rope
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A station in the API workout Triples between the cable crawl and the lunges, not described;
+    a rope lying on the floor pulled in hand over hand.
+- id: rope_slam
+  named_only: true
+  name: Rope Slams
+  category: accessory
+  modality:
+  - anaerobic_intervals
+  - strength_endurance
+  equipment:
+  - rope
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A heavy rope slammed into the ground with both arms, 30 seconds a round in The Gun Show.
+- id: sb_clean_and_squat
+  named_only: true
+  name: Sandbag Clean and Squat
+  category: sandbag
+  modality:
+  - strength_endurance
+  - power
+  - durability
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - olympic_lift
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A sandbag (heavy bag) cleaned to the shoulders and squatted; one rep is both. Two every
+    minute for 20 minutes with 3 burpees at 85-95 lb; 6 with a heavy bag in Soviet Capitalists;
+    3 then a run at 105 lb in Honey Butter.
+- id: sb_run
+  named_only: true
+  name: Sandbag Run
+  category: loaded_carry
+  modality:
+  - durability
+  - anaerobic_intervals
+  equipment:
+  - sandbag
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - loaded_carry
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - ankle_sprain
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Running with a sandbag: 'run 400 m plus hill with sandbag' in He'll Raise Your Taxes,
+    and the run after the heavy-bag clean and squat at 105 lb in Honey Butter. The source
+    gives no carry position.
+- id: sandbag_double_eagle
+  named_only: true
+  name: Sandbag Double Eagle
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  - tire
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - loaded_carry
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: clean a sandbag to the shoulder, pull it around the neck, do
+    10 deep squats, and drag a tire or sled forward 40 ft with the bag on the shoulders; then
+    put the bag in the tire and drag it back to the start, pulling backwards.
+- id: rock_squat_and_carry
+  named_only: true
+  name: Rock Squat and Carry
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - loaded_carry
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: pick up a heavy rock, squat it 3 times and carry it 100 m. Juicy
+    Heartache squats 6 and carries 30 m. A heavy sandbag stands in where there is no rock.
+- id: heavy_bag_twirl
+  named_only: true
+  name: Heavy-Bag Twirl
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Ten (5 each way) with an 80 lb bag in the API workout Mr Smith, and a station in Mirror.
+    Not described in the source; the bag is swung around the body.
+- id: heavy_bag_hip_to_hip
+  named_only: true
+  name: Heavy-Bag Hip to Hip
+  category: sandbag
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - sandbag
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A heavy-bag station in the API workout Mirror, not described; the bag is moved from one
+    hip to the other.
+- id: heavy_bag_mounted_punch
+  named_only: true
+  name: Heavy-Bag Mounted Punches
+  category: sandbag
+  modality:
+  - power
+  - combat_sport
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Punches from the mount on a heavy bag lying on the floor; a station in the API workout
+    Mirror.
+- id: lateral_hop_over_bag
+  named_only: true
+  name: Lateral Hop Over Bag
+  category: sandbag
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - sandbag
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Two-footed hops sideways over a bag lying on the floor: a 2-minute station, 10 per round
+    in Triples, and a heavy-bag station in Mirror.
+- id: squat_air
+  named_only: true
+  name: Air Squat
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A bodyweight squat. Tabata Hell rests in the bottom, thighs parallel to the floor; Chelsea,
+    1775, Johnny Walker Blue and the leg blaster count them by the dozen.
+- id: squat_iso_hold
+  named_only: true
+  name: Squat Isometric Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Holding the squat with the thighs parallel to the floor: 30 s after each minute of step-ups
+    in a job-specific day, and the rest position of the Tabata squats.
+- id: lunge
+  named_only: true
+  name: Lunge
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A bodyweight lunge; the leg blaster does 10 each leg. One job-specific day does 50 per
+    round wearing the ruck.
+- id: walking_lunge
+  named_only: true
+  name: Walking Lunge
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Lunging for distance. The SMMF 500 m lunge goes 10 x 50 m, adding then subtracting weight
+    and changing how it is carried every 50 m (suitcase, farmer, overhead, crosswalk).
+- id: lunge_jumping
+  named_only: true
+  name: Jumping Lunge
+  category: bodyweight
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A lunge that switches legs in the air, counted per leg or in total as the workout says.
+    Also the source's 'split squat jumps', 10 at 25 lb in one API workout.
+- id: squat_jump
+  named_only: true
+  name: Squat Jump
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A jump from the bottom of a squat; the leg blaster does 10, an API workout 5 with 25 lb.
+- id: box_jump
+  named_only: true
+  name: Box Jump
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A jump onto a box, usually 20-24 in; one progression jumps onto a tire. Where the source
+    gives no height, it is the athlete's choice.
+- id: plyo_jump_repeat
+  named_only: true
+  name: Plyo Jump Repeats (Box)
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Repeated box jumps onto a 30 in box, 8-10 reps in the API workouts Crazy 8 and Tens.
+- id: depth_jump
+  named_only: true
+  name: Depth Jump
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A step off a box into an immediate jump. Paired with a broad jump as the chaser to heavy
+    deadlifts, with a box jump in job-specific days, and the source glosses frog hops as depth
+    jumps.
+- id: broad_jump
+  named_only: true
+  name: Broad Jump
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    A standing jump for distance; 3-6 depth-and-broad-jump combinations follow each set of
+    heavy deadlifts, with 5 minutes' rest between sets.
+- id: pistol_squat
+  named_only: true
+  name: One-Leg Squat
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A full squat on one leg, 10 reps in the API workouts Triples and Not So Short and Sweet.
+- id: leg_blaster
+  named_only: true
+  name: Leg Blaster
+  category: bodyweight
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines one: 20 squats, 10 lunges each leg, 10 jumping lunges each leg and
+    10 squat jumps. One a round in Cottage Cheese; 20 of them are a whole session.
+- id: mini_leg_blaster
+  named_only: true
+  name: Mini Leg Blaster
+  category: bodyweight
+  modality:
+  - power
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - Horsemen
+  notes: >-
+    Half a leg blaster, as the source defines it: 10 squats, 5 lunges each leg, 5 jumping
+    lunges each leg and 5 squat jumps.
+- id: weighted_squat
+  named_only: true
+  name: Weighted Squat (Worn Load)
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - ruck_pack
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    120 squats between two 1-mile runs carrying 25 lb in Political Correctness; the source
+    does not say how the squats are loaded, so the worn load (pack or vest) is the reading.
+- id: burpee
+  named_only: true
+  name: Burpee
+  category: bodyweight
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - horizontal_push
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Down to the floor, a push-up, back to the feet and a jump. From 3 a minute alongside sandbag
+    cleans to 70 in Meritorious.
+- id: burpee_pull_up
+  named_only: true
+  name: Burpee Pull-Up
+  category: bodyweight
+  modality:
+  - mixed_modal_conditioning
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - horizontal_push
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A burpee whose jump goes up to the bar into a pull-up: 100 as an SMMF effort, 20-20-10-10
+    in Jonestown Sprint, 17 a round in 1775.
+- id: push_up_clapping
+  named_only: true
+  name: Clapping Push-Up
+  category: bodyweight
+  modality:
+  - power
+  - relative_strength
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up driven hard enough to clap before landing; the source's 'plyo push-up' outside
+    the API workouts.
+- id: plyo_push_up_box
+  named_only: true
+  name: Plyo Push-Up (Box)
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    The API workouts' plyometric push-up with a box of 4-12 in (8-10 reps); the source gives
+    the height, not the form.
+- id: push_up_decline
+  named_only: true
+  name: Decline Push-Up (Feet Elevated)
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - box
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up with the feet higher than the hands: the Stoplight team ladder 1-10-1, and the
+    source's 'elevated push-ups', which do not say which end is raised.
+- id: push_up_ring
+  named_only: true
+  name: Ring Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - rings
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up on rings, 10-15 a round; Death to Infidels and Clockwork Orange put the feet
+    higher than the hands.
+- id: push_up_fingertip
+  named_only: true
+  name: Fingertip Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - durability
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up on the fingertips, 10 a round in a grip-heavy job-specific day.
+- id: push_up_one_arm
+  named_only: true
+  name: One-Arm Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - none
+  effort: high
+  bilateral: false
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    A push-up on one arm: 5 each arm in The Gun Show, 10 in Not So Short and Sweet, and 20
+    in two long chippers.
+- id: push_up_diamond
+  named_only: true
+  name: Diamond Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - tennis_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up with the hands together under the chest, thumbs and index fingers touching;
+    15 a round in The Gun Show.
+- id: parallette_push_up
+  named_only: true
+  name: Parallette Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - parallettes
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A push-up on parallettes, 15 after band-resisted sprint starts in World War II.
+- id: weighted_push_up
+  named_only: true
+  name: Weighted Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - ruck_pack
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    Sixty between two 1-mile runs carrying 25 lb in Political Correctness; the source does
+    not say how they are loaded, so the worn load (pack or vest) is the reading.
+- id: spiderman_push_up
+  named_only: true
+  name: Spiderman Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - mobility
+  equipment:
+  - none
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - horizontal_push
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - hip_flexor_strain
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A push-up bringing one knee to the elbow on the way down, alternating sides; a heavy-bag
+    station in the API workout Mirror, which does not describe it.
+- id: push_up_med_ball_hand_switch
+  named_only: true
+  name: Medicine Ball Hand-Switch Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - power
+  equipment:
+  - medicine_ball
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Five 'hand switches over and back with a full push-up' in Not So Short and Sweet; read
+    as a push-up with one hand on a medicine ball, moving the hands across it between reps.
+- id: push_up_med_ball_close_grip
+  named_only: true
+  name: Close-Grip Medicine Ball Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - medicine_ball
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  - tennis_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A push-up with both hands on a medicine ball; 5 'with pick up' in Not So Short and Sweet,
+    which the source does not explain.
+- id: dip
+  named_only: true
+  name: Dip
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - parallettes
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    A bodyweight dip on parallel bars or parallettes, from 5 to 50 a set across the source;
+    one job-specific day does them wearing the ruck.
+- id: ring_dip
+  named_only: true
+  name: Ring Dip
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - rings
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A dip on rings: 21-15-9 in Elizabeth, 50 in George Washington, 15-10-5 in Bloody Nose.
+- id: handstand_push_up
+  named_only: true
+  name: Handstand Push-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - none
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - wrist_injury
+  - neck_strain
+  sources:
+  - Horsemen
+  notes: >-
+    HSPU in the source's definitions. An SMMF effort does one every 30 s for 50 minutes (100
+    in all); Meritorious opens with 30.
+- id: ring_push_up_hold
+  named_only: true
+  name: Ring Push-Up Position Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - rings
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A static hold on rings at the top of the push-up position, 30 s in Appeal to God.
+- id: plank
+  named_only: true
+  name: Front Plank
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  sources:
+  - Horsemen
+  notes: >-
+    Thirty seconds in Appeal to God. Tabata Hell's push-ups rest locked out at the top (the
+    forward leaning rest), the straight-arm version of the same hold.
+- id: side_plank
+  named_only: true
+  name: Side Plank
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - none
+  effort: low
+  bilateral: false
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    Right and left planks, 30 s each, in Appeal to God.
+- id: kipping_pull_up
+  named_only: true
+  name: Kipping Pull-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - mixed_modal_conditioning
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A pull-up driven by a swing of the hips; 10 a round in Sick and Twisted, 21-15-9 with
+    thrusters in another circuit.
+- id: jumping_pull_up
+  named_only: true
+  name: Jumping Pull-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    A pull-up started with a jump from the floor: 50 in George Washington, 30 a round in Hummer.
+- id: weighted_pull_up
+  named_only: true
+  name: Weighted Pull-Up
+  category: bodyweight
+  modality:
+  - max_strength
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    A pull-up with added load: 15 lb in Ronald Regan, ladders and sets of 3 at 90-95% of a
+    1RM, 15 at 25 lb in PT test II, and a 30 lb medicine ball between the legs in an API workout.
+    Needs a belt, vest or a ball held between the legs.
+- id: clapping_pull_up
+  named_only: true
+  name: Clapping Pull-Up
+  category: bodyweight
+  modality:
+  - power
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - tennis_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    A pull-up driven hard enough to let go and clap at the top: 3-6 as the chaser to heavy
+    weighted pull-ups, and 7 after box jumps in World War II.
+- id: chin_up_close_grip
+  named_only: true
+  name: Close-Grip Chin-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    A chin-up with the palms facing the athlete and the hands close; 10 a round in The Gun
+    Show.
+- id: towel_pull_up
+  named_only: true
+  name: Towel Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - durability
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    A pull-up gripping towels hung over the bar, 10 a round in a grip-heavy job-specific day.
+- id: rope_pull_up
+  named_only: true
+  name: Rope Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  - durability
+  equipment:
+  - rope
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Pull-ups gripping a hanging rope: a 2-minute station in Double/Doubles, and 5 with a 15
+    lb medicine ball between the legs in Triples.
+- id: one_arm_negative_pull_up
+  named_only: true
+  name: One-Arm Negative Pull-Up
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: max
+  bilateral: false
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    From the top of a pull-up, lowered on one arm as slowly as possible; 5 each arm in Enhance
+    Your Freedom.
+- id: rope_climb
+  named_only: true
+  name: Rope Climb
+  category: bodyweight
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - rope
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A 15 ft climb. The source says that without a rope to climb, 10 pull-ups replace each
+    climb.
+- id: dead_hang
+  named_only: true
+  name: Dead Hang
+  category: bodyweight
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    Hanging from a pull-up bar or rings, 30 s four times in Patron (Silver).
+- id: tuck_hang
+  named_only: true
+  name: Tuck Hang
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Hanging with the knees tucked to the chest, 30 s in Appeal to God.
+- id: fingerboard_hang
+  named_only: true
+  name: Fingerboard Hang
+  category: bodyweight
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - hangboard
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - vertical_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - tennis_elbow
+  - golfers_elbow
+  - wrist_injury
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    Hanging from a climber's finger board: a minute with constant movement, then 50 s rest,
+    five times as a warm-up; a minute on, a minute off in Cottage Cheese; Enhance Your Freedom
+    picks a workout on the 'freedom enhancer'.
+- id: system_board_ladder
+  named_only: true
+  name: System Board Ladder
+  category: bodyweight
+  modality:
+  - relative_strength
+  - movement_skill
+  equipment:
+  - hangboard
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - tennis_elbow
+  - golfers_elbow
+  - wrist_injury
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    Five ladders on a climbing system board in Climber's Delight; the source does not set
+    the holds or the rungs.
+- id: knees_to_elbows
+  named_only: true
+  name: Knees to Elbows
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    KTE in the source: hanging from the bar, the knees are raised to touch the elbows. From
+    5 to 40 a set, and 50-40-30-20-10 in Stairway to Heaven.
+- id: ankles_to_bar
+  named_only: true
+  name: Ankles to Bar
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - hip_flexor_strain
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Hanging from the bar, the straight legs are raised until the ankles touch it; from 5 to
+    25 a set across the source.
+- id: windshield_wiper
+  named_only: true
+  name: Windshield Wiper
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_flexion
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    Hanging from the bar with the legs raised, the legs swing side to side like a wiper; 20-30
+    a set in D-Day, Climber's Delight and Bill Brasky. The source does not define it; the
+    hanging form is read from the climbing days it sits in.
+- id: ghd_sit_up
+  named_only: true
+  name: GHD Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - ghd
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    A sit-up on the glute-ham developer, extending back past parallel; also the source's 'glute
+    ham sit-ups'. From 5 to 50 a set.
+- id: band_ghd_sit_up
+  named_only: true
+  name: Band GHD Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - resistance_band
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Ten a round in Sick and Twisted. The source does not define it; read as a GHD-style sit-up
+    with the feet anchored under a band instead of the machine's pads.
+- id: back_extension
+  named_only: true
+  name: Back Extension
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - ghd
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Hips over the pad of a GHD or back-extension bench, the torso lowered and raised; from
+    10 to 50 a set.
+- id: glute_ham_raise
+  named_only: true
+  name: Glute-Ham Raise
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - ghd
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    On the glute-ham developer, the body is lowered from the knees and pulled back up with
+    the hamstrings; 5-10 a round.
+- id: poor_mans_reverse_hyper
+  named_only: true
+  name: Poor Man's Reverse Hyper
+  category: bodyweight
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - box
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Twenty a round in Ben Franklin. The source does not define it; lying face down over a
+    bench or box with the hips at the edge, the straight legs are raised behind without a
+    machine.
+- id: sit_up_weighted
+  named_only: true
+  name: Weighted Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    A sit-up holding a plate, 10 a set: heavy in Honey Butter, 45 lb in two other workouts.
+- id: bench_sit_up
+  named_only: true
+  name: Bench Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Fifteen a round in Political Correctness; not described in the source. A sit-up on a bench
+    with the feet anchored.
+- id: atomic_sit_up
+  named_only: true
+  name: Atomic Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    One hundred in Johnny Walker Blue; the source does not define it. The usual form brings
+    the knees to the chest as the torso sits up, then extends both back out.
+- id: vertical_sit_up
+  named_only: true
+  name: Vertical Sit-Up
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Thirty seconds in Appeal to God; the source names it without describing it.
+- id: v_sit
+  named_only: true
+  name: V-Sit
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Balanced on the seat with straight legs and torso raised in a V, 30 s in Appeal to God.
+- id: legs_raised_hold
+  named_only: true
+  name: Legs-Raised Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    The rest position of Tabata Hell's sit-ups: lying on the back, legs held straight 6-12
+    in above the floor, head off the floor.
+- id: russian_twist
+  named_only: true
+  name: Russian Twist
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Seated with the torso leaned back, turning side to side; 10 each side in Juicy Heartache.
+- id: corkscrew
+  named_only: true
+  name: Corkscrew
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    Ten each side (20 in all) among the trunk work of Hook and Bullet, and a station each
+    side at 25 lb in the API workout Mirror. The source names it without describing it.
+- id: cauldron
+  named_only: true
+  name: Cauldron
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    Ten each direction at 25-30 lb in Ben Franklin and Hook and Bullet. The source does not
+    define it; a weight held in both hands is circled around the body, one direction then
+    the other, like stirring a pot.
+- id: flutter_kick
+  named_only: true
+  name: Flutter Kick
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    Lying on the back, the straight legs kick alternately just above the floor; 90 in a long
+    chipper.
+- id: mountain_climber
+  named_only: true
+  name: Mountain Climber
+  category: bodyweight
+  modality:
+  - anaerobic_intervals
+  - strength_endurance
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - hip_flexor_strain
+  sources:
+  - Horsemen
+  notes: >-
+    From the push-up position the knees are driven alternately to the chest; 30 in Bill Brasky,
+    80 as one choice in a long chipper.
+- id: arm_hauler
+  named_only: true
+  name: Arm Hauler
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    Fifty in Bill Brasky and 80 in a long chipper; the source does not define it. Lying face
+    down, chest and arms off the floor, the straight arms sweep from overhead to the hips
+    and back.
+- id: ab_wheel
+  named_only: true
+  name: Ab Wheel Rollout
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    From the knees, roll an ab wheel out until the body is extended and back; 10 in the API
+    workout Tens. There is no equipment id for an ab wheel; a loaded barbell rolls out the
+    same way.
+- id: bear_crawl
+  named_only: true
+  name: Bear Crawl
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    Crawling on hands and feet, knees off the ground: 25 m in Thin Blue Line, a 2-minute station
+    in Double/Doubles.
+- id: gorilla_drill
+  named_only: true
+  name: Gorilla Drill
+  category: bodyweight
+  modality:
+  - strength_endurance
+  - movement_skill
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - knee_meniscus_post_op
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A station in the API workouts 2 Minutes (30 s, 3 times) and Double/Doubles; the source
+    names it without describing it.
+- id: hurdle_over_under
+  named_only: true
+  name: Hurdle Over/Unders
+  category: bodyweight
+  modality:
+  - power
+  - movement_skill
+  equipment:
+  - hurdles
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - squat
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  - achilles_tendinopathy
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Over/unders on 30 in plyo hurdles: 25 in Bannister and a station in 2 Minutes. The source
+    does not describe them; jump over one hurdle and duck under the next.
+- id: agility_ladder_drill
+  named_only: true
+  name: Agility Ladder Drills
+  category: bodyweight
+  modality:
+  - movement_skill
+  - anaerobic_intervals
+  equipment:
+  - agility_ladder
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Ten minutes of footwork drills on a ladder after the API workout Crazy 8; the source does
+    not name the drills.
+- id: band_sprint_start_forward
+  named_only: true
+  name: Band-Resisted Sprint Start (Forward)
+  category: aerobic
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - resistance_band
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Sprint starts forward against a (green) band, 5 at a time in World War II.
+- id: band_sprint_start_backward
+  named_only: true
+  name: Band-Resisted Sprint Start (Backward)
+  category: aerobic
+  modality:
+  - power
+  - anaerobic_intervals
+  equipment:
+  - resistance_band
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - ballistic
+  - knee_extension
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    Sprint starts backward against a (green) band, 5 at a time in World War II.
+- id: jingle_jangles
+  named_only: true
+  name: Jingle Jangles
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    As the source defines it: a 5-yard back-and-forth sprint between two cones, touching the
+    ground at each. Usually 30 s on, 30 s off; 40 s of it replace a sled where there is none.
+- id: suicide_sprint
+  named_only: true
+  name: Suicide Sprint
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A shuttle sprint to successively farther lines and back; one every 30 s for 10 minutes
+    after 100 sandbag get-ups. The source does not give the distances.
+- id: run_sprint
+  named_only: true
+  name: Sprint
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - power
+  equipment:
+  - open_space
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  - API
+  notes: >-
+    Running all out over a short distance: 100 m sprints (walking back as the rest), 20 m
+    shuttles (10 m out and back) in API workouts, and 10 minutes of high-intensity sprints
+    after Magnificent 7.
+- id: shuttle_run
+  named_only: true
+  name: Shuttle Run
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A 300 m shuttle, five times with 3 minutes' rest; the source does not give the length
+    of each leg.
+- id: run_hard
+  named_only: true
+  name: Run (Set Distance, Hard)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    A run of a set distance inside a workout, at a hard pace: 400 m legs, 270 yd, 0.2 and
+    0.5 miles in the API workouts, and the 1-mile run at the end of a ruck day.
+- id: weighted_run
+  named_only: true
+  name: Weighted Run
+  category: aerobic
+  modality:
+  - aerobic_base
+  - durability
+  equipment:
+  - ruck_pack
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  - loaded_carry
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    A 1-mile run carrying 25 lb, before and after the squats, push-ups and pull-ups of Political
+    Correctness. The source does not say how the load is worn.
+- id: row_erg
+  named_only: true
+  name: Row (Ergometer)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - aerobic_base
+  - mixed_modal_conditioning
+  equipment:
+  - rower
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Horsemen
+  notes: >-
+    Rowing for meters or calories inside a workout or as a test: 250-1000 m pieces, a 2 km
+    in 8 minutes, 500 m in under 1:30, a 5 km all out in under 20 minutes. Recovery-pace rows
+    are row_zone2.
+- id: row_arms_only
+  named_only: true
+  name: Row (Arms Only)
+  category: aerobic
+  modality:
+  - strength_endurance
+  - anaerobic_intervals
+  equipment:
+  - rower
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - Horsemen
+  notes: >-
+    Rowing with the arms alone on damper 10, 250 m in under 1:25, ten rounds in The Gun Show.
+- id: airdyne
+  named_only: true
+  name: Air Bike (Calories)
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - mixed_modal_conditioning
+  equipment:
+  - bike
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  sources:
+  - Horsemen
+  notes: >-
+    Calories on an Airdyne (fan bike), offered in place of the rower: 20-25 calories.
+- id: swim
+  named_only: true
+  name: Swim
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - pool
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Horsemen
+  notes: >-
+    One of the source's endurance (30-90 min) and recovery modes, and the PT test's 800 m
+    (standard 14:30).
+- id: hike
+  named_only: true
+  name: Hike
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  sources:
+  - Horsemen
+  notes: >-
+    One of the source's endurance (30-90 min) and recovery modes; on a recovery day 30-60
+    minutes at 65% of max heart rate or less.
+- id: walk
+  named_only: true
+  name: Walk
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  sources:
+  - Horsemen
+  notes: >-
+    The source's recovery list ends with 'walking the dog': 30-60 minutes at very low heart
+    rate, to move blood and create a demand for food.
+- id: jump_rope_double_under
+  named_only: true
+  name: Double-Under
+  category: aerobic
+  modality:
+  - anaerobic_intervals
+  - movement_skill
+  equipment:
+  - jump_rope
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - CrossFit
+  - Horsemen
+  notes: >-
+    The rope passes under the feet twice per jump: 50-40-30-20-10 in Annie, 2-minute bouts
+    in Fifty, the 'doubles' of Double/Doubles.
+- id: jump_rope_single_under
+  named_only: true
+  name: Jump Rope
+  category: aerobic
+  modality:
+  - aerobic_base
+  - anaerobic_intervals
+  equipment:
+  - jump_rope
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - ballistic
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    Single-under rope skipping, 2 minutes between each station of the API workout 2 Minutes.
+- id: speedball
+  named_only: true
+  name: Speedball (Team Game)
+  category: aerobic
+  modality:
+  - aerobic_base
+  - anaerobic_intervals
+  equipment:
+  - training_partner
+  - open_space
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - aerobic_monostructural
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  - patellar_tendinopathy
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    'The game of the gods': an endurance session of at least one hour, preferably played straight
+    with no substitutes. The source does not give its rules.
+- id: horizontal_cable_crawl
+  named_only: true
+  name: Horizontal Cable Crawl
+  category: accessory
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - cable_machine
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  - locomotion
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  - tennis_elbow
+  - golfers_elbow
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    An API station: twice its length in Bannister, 2 minutes in 2 Minutes, and in Triples.
+    The source does not describe it.
+- id: cable_chop
+  named_only: true
+  name: Chop Station (Cable Chop)
+  category: accessory
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - cable_machine
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    A 2-minute chop station in the API workouts 2 Minutes and Double/Doubles: a diagonal chop
+    across the body against a cable.
+- id: resisted_punch_mount
+  named_only: true
+  name: Resisted Punches from Mount
+  category: accessory
+  modality:
+  - power
+  - combat_sport
+  equipment:
+  - resistance_band
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_impingement
+  sources:
+  - API
+  - Horsemen
+  notes: >-
+    'Resist. Punches (mount)', a 2-minute station in the API workout 2 Minutes: punching against
+    resistance from the mount position. The source does not name the resistance.
+- id: shoulder_dislocate_pvc
+  named_only: true
+  name: Shoulder Dislocate
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - horizontal_pull
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    A stick or PVC pipe held wide in both hands and passed from in front of the hips over
+    the head to behind the back and back again; the warm-ups' 'shoulder dislocate stretch'.
+- id: sam_shoulder_drill
+  named_only: true
+  name: SAM Shoulder Drill (PVC)
+  category: mobility
+  modality:
+  - mobility
+  - movement_skill
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    The source's shoulder mobility drill (SAM) with a PVC pipe: 5 pole presses, 3 halos, 5
+    overhead squats.
+- id: pvc_pole_press
+  named_only: true
+  name: PVC Pole Press
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  sources:
+  - Horsemen
+  notes: >-
+    The press in the SAM drill and the warm-ups' 'shoulder pole presses' (5 reps): a PVC pipe
+    pressed overhead. The source does not describe the grip or path.
+- id: pvc_halo
+  named_only: true
+  name: PVC Halo
+  category: mobility
+  modality:
+  - mobility
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  - neck_strain
+  sources:
+  - Horsemen
+  notes: >-
+    A PVC pipe circled around the head, as the kettlebell halo; 3-5 reps in the SAM drill
+    and the warm-ups.
+- id: pvc_overhead_squat
+  named_only: true
+  name: PVC Overhead Squat
+  category: mobility
+  modality:
+  - mobility
+  - movement_skill
+  equipment:
+  - none
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_instability
+  - knee_meniscus_post_op
+  sources:
+  - Horsemen
+  notes: >-
+    The source's overhead squat (arms locked out above the head, a deep squat) with a PVC
+    pipe; 5 reps in the SAM drill.
+- id: barbell_walking_lunge
+  named_only: true
+  name: Barbell Walking Lunge
+  category: accessory
+  modality:
+  - strength_endurance
+  - durability
+  equipment:
+  - barbell
+  - open_space
+  effort: medium
+  bilateral: false
+  movement_patterns:
+  - squat
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Horsemen
+  notes: Walking lunges holding a barbell. Counting Dead Bodies alternates 5 lunges and 5 push presses
+    for 400 m holding a 45 lb bar (an empty bar, so no plates), two 25 lb dumbbells or a similar load.

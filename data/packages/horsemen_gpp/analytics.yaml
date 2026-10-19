@@ -13,9 +13,12 @@ progress:
     label: Strength
     primitive: set_load
     headline: true
+    # The 4-Month Macro's strength days work up to a 1RM before anything else
+    # (`work_up_1rm*`, prescribed as written): that max is the measure. GPP
+    # Circuits keeps its strength block's main lifts.
     scope:
       modalities: [max_strength]
-      slot_roles: [main_lift, secondary_compound]
+      slot_roles: [main_lift, secondary_compound, "work_up_1rm*"]
     expected: prescribed
 
   - id: aerobic_volume

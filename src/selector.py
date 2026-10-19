@@ -289,8 +289,9 @@ def select_archetype(
     for arch in archetypes:
         if arch.get('modality') != modality:
             continue
-        # A test is placed by its phase (philosophy.yaml `tests:`), never picked.
-        if standard_tests.is_test_only(arch):
+        # A test is placed by its phase (philosophy.yaml `tests:`), never picked;
+        # a named workout only by its day category (src/week_template.py).
+        if standard_tests.is_test_only(arch) or arch.get('pool_only'):
             continue
         n_modality += 1
 
@@ -503,7 +504,8 @@ def select_exercise(
                 continue
             # A test's own exercise (a "2000m Row Time Trial") is prescribed
             # only by a slot that names it, never picked for a circuit's row.
-            if ex.get('test_only') and ex_id not in (ex_filter.get('exercise_ids') or []):
+            # A named workout's movement likewise (exercise `named_only`).
+            if (ex.get('test_only') or ex.get('named_only')) and ex_id not in (ex_filter.get('exercise_ids') or []):
                 continue
             n_pool += 1
 
@@ -580,6 +582,10 @@ def select_exercise(
         forward_bonus = 0.5 if ex.get('unlocks') and not ex_filter.get('exercise_ids') else 0
         # Prefer exercises that have defined movement patterns over joint drills / stub entries
         pattern_bonus = 0.5 if ex.get('movement_patterns') else 0
+        if ex_filter.get('ordered') and ex_filter.get('exercise_ids'):
+            # The written movement first, the source's declared substitutes
+            # after it (a rope climb, or 10 pull-ups without a rope).
+            return (-ex_filter['exercise_ids'].index(ex['id']),)
         if ex_filter.get('exercise_ids'):
             # …and among equals the one used longest ago goes first (recent is
             # oldest → newest), so every event comes round.
@@ -603,8 +609,10 @@ def select_exercise(
     candidates.sort(key=_score_ex, reverse=True)
 
     # Prefer exercises not already used in this session (two-pass: fresh first, fallback to any)
+    # A workout written out in full (an ordered slot) repeats a movement on
+    # purpose — Mirror's KB press right, then left — so it takes the written one.
     fresh = [ex for ex in candidates if ex['id'] not in session_used]
-    selected = (fresh if fresh else candidates)[0]
+    selected = candidates[0] if ex_filter.get('ordered') else (fresh if fresh else candidates)[0]
 
     if not return_trace:
         return selected
@@ -789,7 +797,10 @@ def populate_session(
     # Select archetype
     if forced_archetype is not None:
         arch = forced_archetype
-        arch_trace: dict = {}
+        # Placed, not chosen (a test, a week template's named workout): the
+        # trace keeps the shape the Dev Lab reads, with nothing to compare.
+        arch_trace: dict = {'selected_id': arch.get('id'), 'filter_counts': {}, 'candidates': [],
+                            'selection_reason': session.get('category') or 'forced'}
     elif collect_trace:
         arch_result = select_archetype(
             modality, constraints, phase, is_deload,

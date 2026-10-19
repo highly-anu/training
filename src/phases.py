@@ -181,6 +181,10 @@ def phase_sequence_for(track: dict) -> list[dict]:
             entry['rotate_main_lifts'] = True
         if ph.get('tests'):
             entry['tests'] = [dict(t) for t in ph['tests']]
+        if ph.get('week_templates'):
+            # The source's own week, day by day (Horsemen's month templates).
+            entry['week_templates'] = [list(w) for w in ph['week_templates']]
+            entry['drop_order'] = list(ph.get('drop_order') or [])
         if ph.get('checks'):
             entry['checks'] = dict(ph['checks'])
         out.append(entry)
@@ -270,6 +274,11 @@ def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> d
         entry['exclude_exercises'] = list(phase_entry['exclude_exercises'])
     if phase_entry.get('rotate_main_lifts'):
         entry['rotate_main_lifts'] = True
+    if phase_entry.get('week_templates'):
+        # The week of the phase's template this week runs (they repeat).
+        templates = phase_entry['week_templates']
+        entry['week_template'] = templates[(week_in_phase - 1) % len(templates)]
+        entry['drop_order'] = list(phase_entry.get('drop_order') or [])
     if phase_entry.get('tests'):
         # What src/standard_tests.tests_for_week needs to place the phase's
         # tests by week in the phase (repeating every cycle when repeatable).

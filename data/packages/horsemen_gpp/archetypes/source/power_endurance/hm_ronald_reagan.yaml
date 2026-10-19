@@ -1,0 +1,77 @@
+id: hm_ronald_reagan
+name: Ronald Reagan
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max front squat for the day.
+- role: thrusters
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - thruster
+    ordered: true
+  load: 57 kg (125 lb), heavy
+  notes: 'Rungs from 10 down to 1: thrusters, then weighted pull-ups.'
+- role: weighted_pull_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - weighted_pull_up
+    ordered: true
+  load: 7 kg (15 lb)
+- role: rock_squat_and_carry
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - rock_squat_and_carry
+    ordered: true
+  load: heavy
+  notes: >-
+    3 rounds, alternating: 1 rock squat and carry (pick up a heavy rock, squat 3 times, carry it 100 m),
+    3 heavy get-ups on each shoulder.
+- role: heavy_get_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - sb_getup
+    ordered: true
+  load: heavy
+  notes: Each shoulder.
+required_equipment:
+- barbell
+- rack
+- plates
+- pull_up_bar
+- sandbag
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Work up to a 1RM front squat; then a 10-to-1 ladder of heavy thrusters at 125 lb and pull-ups with 15
+  lb; then 3 rounds of a rock squat and carry and 3 heavy get-ups each shoulder. The blocks after the
+  1RM sit under the title without headings of their own, as in the source's strength workouts, so they
+  are one workout.

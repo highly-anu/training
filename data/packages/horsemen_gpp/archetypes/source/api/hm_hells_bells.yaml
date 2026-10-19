@@ -1,0 +1,64 @@
+id: hm_hells_bells
+name: Hells Bells
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: one_arm_swings
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_single_arm
+    ordered: true
+  notes: >-
+    10 rounds, alternating: 10 one-arm swings (5 each), 10 one-arm clean and presses (5 each), 10 one-leg
+    RDLs, 10 squats, 10 sit-ups — not for time.
+- role: one_arm_clean_and_press
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_clean_and_press_single
+    ordered: true
+  notes: 5 each arm.
+- role: one_leg_rdl
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - single_leg_rdl
+    ordered: true
+- role: squats
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - squat_air
+    ordered: true
+- role: sit_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+required_equipment:
+- kettlebell
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API kettlebell workout tagged MS in the source: ten rounds of one-arm swings, one-arm clean and presses,
+  one-leg RDLs, squats and sit-ups, 10 reps each. The source does not say for time. Where the source gives
+  no load the weight is the athlete's call, by its weight-loading rule.

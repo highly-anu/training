@@ -1,0 +1,28 @@
+id: hm_endurance_cycle_30
+name: Endurance Cycle (30 min)
+modality: aerobic_base
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: endurance
+  slot_type: time_domain
+  duration_sec: 1800
+  intensity: zone2
+  exercise_filter:
+    exercise_ids:
+    - bike_zone2
+    ordered: true
+  notes: Cycle steadily for 30 minutes.
+required_equipment:
+- bike
+sources:
+- Horsemen
+notes: >-
+  The source's ENDURANCE day: any cardiovascular activity for 30-90 minutes. The template calls
+  this day "Endurance (+30 min)"; 30 minutes is its floor, which the app prescribes. The source
+  gives no intensity; Zone 2 is the app's reading.

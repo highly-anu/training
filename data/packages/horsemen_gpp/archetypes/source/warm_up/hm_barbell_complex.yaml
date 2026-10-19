@@ -1,0 +1,33 @@
+id: hm_barbell_complex
+name: Barbell Complex
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: barbell_complex
+  slot_type: sets_reps
+  sets: 4
+  reps: 6
+  load: 34, 39, 43, 48 kg (75, 85, 95, 105 lb)
+  exercise_filter:
+    exercise_ids:
+    - barbell_complex
+    ordered: true
+  notes: >-
+    4 complexes, the bar heavier each time. One complex is 6 reps each of deadlift, bent-over
+    row, hang power clean, front squat, push press, back squat and push-up; sprint through and
+    don't put the bar down until the push-ups.
+required_equipment:
+- barbell
+- plates
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 4 rounds of the six-way barbell complex, loaded progressively. The source gives a
+  second ladder, 39, 43, 48, 52 kg (85, 95, 105, 115 lb), as the start point when working on working-load
+  strength, going higher or lower with the athlete's goals and fitness. Unnamed in the source.

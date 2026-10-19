@@ -1,0 +1,92 @@
+id: hm_ex_wives_and_flat_tires
+name: "Ex Wives & Flat Tires"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 40
+pool_only: true
+
+slots:
+  - role: front_squats
+    slot_type: sets_reps
+    sets: 4
+    reps: 4
+    exercise_filter:
+      exercise_ids: [front_squat]
+      ordered: true
+    notes: >
+      Part 1, 4 rounds, alternating: 4 front squats, 4 bench presses, 4 kettlebell pulls with
+      two kettlebells — the source gives no clock.
+
+  - role: bench_press
+    slot_type: sets_reps
+    sets: 4
+    reps: 4
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+
+  - role: kb_pulls
+    slot_type: sets_reps
+    sets: 4
+    reps: 4
+    exercise_filter:
+      exercise_ids: [kb_pull_double]
+      ordered: true
+    notes: >
+      A sumo deadlift high pull with two kettlebells (the source's definition).
+
+  - role: deadlifts
+    slot_type: sets_reps
+    sets: 8
+    reps: 12
+    load: "84 kg (185 lb)"
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    notes: >
+      Part 2, 8 rounds, alternating: 12 deadlifts, 6 strict pull-ups, 12 elevated push-ups, 12
+      ball slams or box jumps.
+
+  - role: strict_pull_ups
+    slot_type: sets_reps
+    sets: 8
+    reps: 6
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: elevated_push_ups
+    slot_type: sets_reps
+    sets: 8
+    reps: 12
+    exercise_filter:
+      exercise_ids: [push_up_decline]
+      ordered: true
+    notes: >
+      The source writes "elevated push ups" and does not say which end is raised.
+
+  - role: ball_slams_or_box_jumps
+    slot_type: sets_reps
+    sets: 8
+    reps: 12
+    exercise_filter:
+      exercise_ids: [ball_slam, box_jump]
+      ordered: true
+    notes: >
+      The source writes "Ball Slams/Box Jumps": either.
+
+required_equipment:
+  - barbell
+  - box
+  - kettlebell
+  - plates
+  - pull_up_bar
+  - rack
+sources:
+  - Horsemen
+notes: >
+  Two parts: 4 rounds of 4 front squats, bench presses and double-kettlebell pulls, then 8
+  rounds of 12 deadlifts at 185 lb, 6 strict pull-ups, 12 elevated push-ups and 12 ball slams or
+  box jumps. The source says neither for time nor how to rest. Where the source gives no load it
+  is the athlete's choice (its Weight Loading rule).

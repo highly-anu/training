@@ -1,0 +1,174 @@
+id: hm_double_doubles
+name: Double/Doubles
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: doubles_1
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+  notes: >-
+    Done for time at 2 minutes per station, in order: doubles, then each station with doubles between
+    them — vertical rope, KB swings, get-ups, rope pull-ups, tire flips, chop station, gorilla drills,
+    bear crawls, plyo push-ups — and doubles to finish.
+- role: vertical_rope
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - rope_climb
+    - pull_up
+    ordered: true
+  notes: >-
+    Vertical rope climbs. 1 rope climb, or 10 pull-ups without a rope (the source's substitute).
+- role: doubles_2
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: kb_swings
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: Two-arm kettlebell swings.
+- role: doubles_3
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: get_ups
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 20 kg (44 lb)
+- role: doubles_4
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: rope_pull_ups
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - rope_pull_up
+    ordered: true
+- role: doubles_5
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: tire_flips
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - tire_flip
+    ordered: true
+  notes: >-
+    Tire flips with jumps on a ramp; the source does not explain the jumps.
+- role: doubles_6
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: chop_station
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - cable_chop
+    ordered: true
+- role: doubles_7
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: gorilla_drills
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - gorilla_drill
+    ordered: true
+  notes: The source does not describe gorilla drills.
+- role: doubles_8
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: bear_crawls
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - bear_crawl
+    ordered: true
+- role: doubles_9
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: plyo_push_ups
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - plyo_push_up_box
+    ordered: true
+  notes: No box height given.
+- role: doubles_10
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+required_equipment:
+- kettlebell
+- tire
+- rope
+- box
+- jump_rope
+- open_space
+- cable_machine
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API station workout tagged ME/CE in the source, "done for time @ 2 min per station": ten stations
+  of double-unders with nine others between them. Without a rope to climb, 10 pull-ups stand in for the
+  climb (the source's substitute); the rope pull-ups still need a rope. Where the source gives no load
+  the weight is the athlete's call, by its weight-loading rule.

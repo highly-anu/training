@@ -1,0 +1,27 @@
+id: hm_cheech
+name: Cheech
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: row_5k
+  slot_type: for_time
+  rounds: 1
+  distance_m: 5000
+  duration_sec: 1200
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 5,000 m row all out; the source's target is under 20 min.
+required_equipment:
+- rower
+sources:
+- Horsemen
+notes: A 5K row at all-out effort; the source's target is under 20 minutes.

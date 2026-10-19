@@ -146,10 +146,13 @@ def load_all_exercises() -> tuple[dict, dict]:
             # owner mislabels 33/79 horsemen_gpp and 8/13 starting_strength ids.
             # Provenance decisions must read _packages, never _package.
             existing = global_index.get(ex_id)
-            if existing is None:
+            if existing is None or (existing.get('named_only') and not raw_ex.get('named_only')):
+                # A named workout's movement (`named_only`, Horsemen's) never
+                # stands for an id another package declares for open slots:
+                # that package's copy is the global one, whatever sorts first.
                 global_ex = dict(raw_ex)
                 global_ex['_package'] = pkg_id      # display back-compat only
-                global_ex['_packages'] = [pkg_id]
+                global_ex['_packages'] = (existing['_packages'] if existing else []) + [pkg_id]
                 global_index[ex_id] = global_ex
             elif pkg_id not in existing['_packages']:
                 existing['_packages'].append(pkg_id)

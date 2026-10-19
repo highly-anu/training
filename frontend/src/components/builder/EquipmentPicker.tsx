@@ -54,6 +54,7 @@ const EQUIPMENT_GROUPS = [
       { id: 'pull_up_bar' as EquipmentId,  label: 'Pull-up Bar' },
       { id: 'rings' as EquipmentId,        label: 'Rings' },
       { id: 'parallettes' as EquipmentId,  label: 'Parallettes' },
+      { id: 'hangboard' as EquipmentId,    label: 'Hangboard' },
       { id: 'rope' as EquipmentId,         label: 'Rope Climb' },
       { id: 'box' as EquipmentId,          label: 'Box' },
     ],
@@ -83,12 +84,18 @@ const EQUIPMENT_GROUPS = [
       { id: 'medicine_ball' as EquipmentId, label: 'Medicine Ball' },
       { id: 'sled' as EquipmentId,          label: 'Sled' },
       { id: 'tire' as EquipmentId,          label: 'Tire' },
+      { id: 'sledgehammer' as EquipmentId,  label: 'Sledgehammer' },
+      { id: 'cable_machine' as EquipmentId, label: 'Cable Machine' },
+      { id: 'hurdles' as EquipmentId,       label: 'Hurdles' },
+      { id: 'agility_ladder' as EquipmentId, label: 'Agility Ladder' },
+      { id: 'training_partner' as EquipmentId, label: 'Training Partner' },
     ],
   },
 ]
 
-// Items with no exercises — shown grayed out, non-interactive
-const NO_EXERCISES = new Set<EquipmentId>(['ghd', 'medicine_ball', 'sled', 'tire'])
+// Items with no exercises — shown grayed out, non-interactive. Horsemen's
+// named workouts use the GHD, medicine ball, sled and tire (2026-10-19).
+const NO_EXERCISES = new Set<EquipmentId>([])
 
 // Auto-add these when the key item is checked (one-directional)
 const DEPS: Partial<Record<EquipmentId, EquipmentId[]>> = {

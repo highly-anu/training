@@ -1,0 +1,70 @@
+id: hm_dyer_maker
+name: D'yer Mak'er
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: max_rounds
+  slot_type: amrap
+  duration_sec: 3600
+  reps_per_round: 10
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: >-
+    Max rounds in 60 min of: 10 deadlifts, 10 weighted sit-ups, 10 push presses, 10 KB swings, 6 get-ups.
+    Count the rounds.
+- role: weighted_sit_ups
+  slot_type: amrap_movement
+  parent_slot_role: max_rounds
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids:
+    - sit_up_weighted
+    ordered: true
+  load: 20 kg (45 lb)
+- role: push_press
+  slot_type: amrap_movement
+  parent_slot_role: max_rounds
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: 34 kg (75 lb)
+- role: kb_swings
+  slot_type: amrap_movement
+  parent_slot_role: max_rounds
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 24 kg (53 lb)
+- role: get_ups
+  slot_type: amrap_movement
+  parent_slot_role: max_rounds
+  reps_per_round: 6
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 20 kg (45 lb)
+required_equipment:
+- barbell
+- rack
+- plates
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  A job-specific AMRAP: max rounds in 60 minutes of deadlifts, weighted sit-ups, push presses, kettlebell
+  swings and get-ups at the source's fixed loads. The score is the rounds completed.

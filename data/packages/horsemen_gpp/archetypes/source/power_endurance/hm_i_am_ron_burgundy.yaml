@@ -1,0 +1,60 @@
+id: hm_i_am_ron_burgundy
+name: I Am Ron Burgundy
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: kb_get_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: 50 Turkish get-ups on each arm (100 in all), then the 10 rounds.
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+  notes: >-
+    10 rounds, alternating: 5 pull-ups, 10 push-ups, a 30 m farmer carry. The source gives no clock.
+- role: push_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+- role: farmer_carry
+  slot_type: distance
+  distance_m: 30
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - farmer_carry_kb
+    ordered: true
+  notes: The source gives neither the implement nor the weight.
+required_equipment:
+- kettlebell
+- pull_up_bar
+- open_space
+sources:
+- Horsemen
+notes: >-
+  50 kettlebell get-ups at 35 lb on each arm, then 10 rounds of 5 pull-ups, 10 push-ups and a 30 m farmer
+  carry. The 10 rounds sit under the title with no heading of their own, so they are read as the workout's
+  second part. Where no load is written it is the athlete's call, by the source's weight-loading rule.

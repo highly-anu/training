@@ -1,0 +1,91 @@
+id: hm_not_so_short_and_sweet
+name: Not So Short and Sweet
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: back_squats_1
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - back_squat
+    ordered: true
+  load: 125 kg (275 lb)
+  notes: >-
+    3 rounds, in order: 5 squats, 10 one-leg squats, 10 split squat jumps, 5 squats — not for time.
+- role: one_leg_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pistol_squat
+    ordered: true
+- role: split_squat_jumps
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+  load: 11 kg (25 lb)
+- role: back_squats_2
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - back_squat
+    ordered: true
+  load: 125 kg (275 lb)
+- role: one_arm_push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up_one_arm
+    ordered: true
+  notes: >-
+    3 rounds, in order: 10 one-arm push-ups, 5 hand switches, 5 close-grip push-ups on a med ball — not
+    for time.
+- role: hand_switch
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - push_up_med_ball_hand_switch
+    ordered: true
+  load: bodyweight
+  notes: Over the med ball and back with a full push-up.
+- role: close_grip_push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - push_up_med_ball_close_grip
+    ordered: true
+  load: bodyweight
+  notes: Close-grip push-ups on a med ball, with a pick-up.
+required_equipment:
+- barbell
+- rack
+- plates
+- medicine_ball
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged MP in the source: three rounds of heavy back squats at 275 lb around one-leg squats
+  and split squat jumps, then three rounds of one-arm, hand-switch and close-grip med-ball push-ups. The
+  source does not say for time.

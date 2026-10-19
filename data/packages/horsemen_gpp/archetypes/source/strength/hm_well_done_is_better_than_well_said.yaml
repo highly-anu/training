@@ -1,0 +1,73 @@
+id: hm_well_done_is_better_than_well_said
+name: Well Done Is Better Than Well Said
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: deadlift_every_50s
+  slot_type: emom
+  work_sec: 50
+  sets: 10
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 75% of 1RM
+  notes: 3 deadlifts every 50 seconds for 10 rounds (30 in all).
+- role: bench_press_every_50s
+  slot_type: emom
+  work_sec: 50
+  sets: 10
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+  load: 75% of 1RM
+  notes: 3 bench presses every 50 seconds for 10 rounds (30 in all).
+- role: kb_swing
+  slot_type: sets_reps
+  sets: 5
+  reps: 15
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: '5 rounds, alternating: 15 swings, 3 Turkish get-ups each shoulder, 30 m tire drag (15 m forward, 15 m
+    back), 10 weighted sit-ups — not for time.'
+- role: turkish_get_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: Each shoulder.
+- role: tire_drag_forward
+  slot_type: distance
+  distance_m: 15
+  sets: 5
+  exercise_filter:
+    exercise_ids: [tire_drag_forward]
+    ordered: true
+- role: tire_drag_backward
+  slot_type: distance
+  distance_m: 15
+  sets: 5
+  exercise_filter:
+    exercise_ids: [tire_drag_backward]
+    ordered: true
+- role: weighted_sit_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [sit_up_weighted]
+    ordered: true
+  load: 20 kg (45 lb)
+required_equipment: [barbell, rack, plates, kettlebell, tire, open_space]
+sources: [Horsemen]
+notes: Three deadlifts at 75% of 1RM every 50 seconds for 10 rounds, the same with the bench press, then 5 rounds
+  of swings, Turkish get-ups, a 30 m tire drag and weighted sit-ups. The source does not time the rounds.

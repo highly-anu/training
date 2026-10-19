@@ -1,0 +1,46 @@
+id: hm_row_deadlifts_push_ups
+name: Row, Deadlifts and Push-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: row
+  slot_type: distance
+  distance_m: 500
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: Row 500 m, then the rounds.
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  load: 61 kg (135 lb)
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  notes: '3 rounds, alternating: 10 deadlifts, 10 push-ups — not for time.'
+- role: push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+required_equipment:
+- rower
+- barbell
+- plates
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 500 m row, then 3 rounds of 10 deadlifts at 135 lb and 10 push-ups. Unnamed in
+  the source.

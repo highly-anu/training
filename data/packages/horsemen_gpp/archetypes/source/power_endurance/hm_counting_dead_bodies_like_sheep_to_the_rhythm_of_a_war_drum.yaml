@@ -1,0 +1,41 @@
+id: hm_counting_dead_bodies_like_sheep_to_the_rhythm_of_a_war_drum
+name: Counting Dead Bodies Like Sheep to the Rhythm of a War Drum
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: lunges_400m
+  slot_type: distance
+  distance_m: 400
+  exercise_filter:
+    exercise_ids:
+    - barbell_walking_lunge
+    - db_walking_lunge
+    ordered: true
+  load: 20 kg (45 lb) bar, or 2 x 11 kg (2 x 25 lb) dumbbells, or similar
+  notes: >-
+    Holding the load, 5 lunges then 5 push presses, over and over until you have covered 400 m (a lap
+    of a track). The source: 20-30 min.
+- role: push_presses
+  slot_type: amrap_movement
+  parent_slot_role: lunges_400m
+  reps_per_round: 5
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    - db_push_press
+    ordered: true
+  load: the same bar or dumbbells
+  notes: 5 push presses after every 5 lunges, with the same load.
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Five lunges and five push presses, repeated while travelling 400 m, holding a 45 lb bar, two 25 lb dumbbells
+  or a similar load. The source puts it at 20-30 minutes.

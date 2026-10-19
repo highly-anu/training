@@ -1,0 +1,78 @@
+id: hm_juicy_heartache
+name: Juicy Heartache
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [push_press]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: push_press_every_40s
+  slot_type: emom
+  work_sec: 40
+  sets: 10
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids: [push_press]
+    ordered: true
+  load: 75% of today's 1RM
+  notes: 3 push presses every 40 seconds for 10 rounds.
+- role: mr_spectacular
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [mr_spectacular]
+    ordered: true
+  notes: '5 rounds, alternating: 5 Mr. Spectaculars, 5 sandbag half moons each side, 10 Russian twists each side
+    — not for time. A Mr. Spectacular is a two-hand kettlebell clean and press, then a walk-out to a push-up and
+    back.'
+- role: half_moon
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [sb_halfmoon]
+    ordered: true
+  notes: Each side.
+- role: russian_twist
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [russian_twist]
+    ordered: true
+  notes: Each side.
+- role: rock_squat_and_carry
+  slot_type: sets_reps
+  sets: 3
+  reps: 6
+  exercise_filter:
+    exercise_ids: [rock_squat_and_carry]
+    ordered: true
+  load: heavy
+  notes: '3 rounds, alternating: pick up a heavy rock, squat it 6 times and carry it 30 m; then 3 sandbag get-ups
+    each shoulder — not for time.'
+- role: sandbag_get_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 3
+  exercise_filter:
+    exercise_ids: [sb_getup]
+    ordered: true
+  notes: Each shoulder.
+required_equipment: [barbell, rack, plates, kettlebell, sandbag, open_space]
+sources: [Horsemen]
+notes: Work up to a 1-rep max push press, then 3 push presses at 75% of it every 40 seconds for 10 rounds, 5 rounds
+  of Mr. Spectaculars, sandbag half moons and Russian twists, and 3 rounds of heavy rock squat-and-carries with
+  sandbag get-ups. The source does not time it. Where no load is given, the source leaves it to the athlete (its
+  Weight Loading rule).

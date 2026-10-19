@@ -1,0 +1,80 @@
+id: hm_the_gun_show
+name: The Gun Show
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: rope_slams
+  slot_type: time_domain
+  duration_sec: 30
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - rope_slam
+    ordered: true
+  notes: >-
+    10 rounds, in order: rope slams for 30 s, a 250 m arms-only row, 5 one-arm push-ups each arm — not
+    for time.
+- role: arms_only_row
+  slot_type: distance
+  distance_m: 250
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - row_arms_only
+    ordered: true
+  notes: 250 m rowing with the arms only, damper on 10, under 1:25.
+- role: one_arm_push_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - push_up_one_arm
+    ordered: true
+  notes: 5 each arm.
+- role: close_grip_chin_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - chin_up_close_grip
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 10 close-grip chin-ups, 12 sumo deadlift high pulls, 15 diamond push-ups —
+    not for time.
+- role: sdhp
+  slot_type: sets_reps
+  sets: 5
+  reps: 12
+  exercise_filter:
+    exercise_ids:
+    - sdhp
+    ordered: true
+  load: 43 kg (95 lb)
+- role: diamond_push_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - push_up_diamond
+    ordered: true
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+- rower
+- rope
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts, for the arms: ten rounds of rope slams, an arms-only
+  row under 1:25 and one-arm push-ups, then five rounds of close-grip chin-ups, sumo deadlift high pulls
+  and diamond push-ups. The source does not say for time.

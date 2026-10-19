@@ -1,0 +1,89 @@
+id: hm_political_correctness
+name: Political Correctness
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: front_squats
+  slot_type: sets_reps
+  sets: 4
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  notes: >-
+    4 rounds, alternating: 8 front squats, 15 bench sit-ups — not for time.
+- role: bench_sit_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - bench_sit_up
+    ordered: true
+- role: weighted_run_1
+  slot_type: distance
+  distance_m: 1609
+  exercise_filter:
+    exercise_ids:
+    - weighted_run
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: Weighted 1-mile run.
+- role: weighted_squats
+  slot_type: sets_reps
+  sets: 1
+  reps: 120
+  exercise_filter:
+    exercise_ids:
+    - weighted_squat
+    ordered: true
+  notes: >-
+    120 weighted squats. The source gives no load for the squats or the push-ups.
+- role: weighted_push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 60
+  exercise_filter:
+    exercise_ids:
+    - weighted_push_up
+    ordered: true
+  notes: 60 weighted push-ups.
+- role: strict_pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: 30 strict pull-ups.
+- role: weighted_run_2
+  slot_type: distance
+  distance_m: 1609
+  exercise_filter:
+    exercise_ids:
+    - weighted_run
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: Weighted 1-mile run to finish.
+required_equipment:
+- barbell
+- rack
+- plates
+- pull_up_bar
+- ruck_pack
+- open_space
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: four rounds of front squats and bench sit-ups, then
+  a weighted mile, 120 weighted squats, 60 weighted push-ups, 30 strict pull-ups and a second weighted
+  mile with 25 lb. The source does not say for time. Where the source gives no load the weight is the
+  athlete's call, by its weight-loading rule.

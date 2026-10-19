@@ -1,0 +1,53 @@
+id: hm_wasted_love
+name: Wasted Love
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: the_exercise
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids: [the_exercise]
+    ordered: true
+  notes: '3 rounds, alternating: 5 of "The Exercise" (a snatch, then an overhead squat without bringing the weight
+    down), 10 knees to elbows — not for time.'
+- role: knees_to_elbows
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids: [knees_to_elbows]
+    ordered: true
+- role: sandbag_clean_and_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids: [sb_clean_press]
+    ordered: true
+  notes: '3 rounds, alternating: 5 sandbag clean and presses, 10 heavy swings, 15 ball slams — not for time.'
+- role: heavy_swing
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: heavy
+- role: ball_slam
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids: [ball_slam]
+    ordered: true
+  load: 11 kg (25 lb)
+required_equipment: [barbell, plates, pull_up_bar, sandbag, kettlebell, medicine_ball]
+sources: [Horsemen, Dan John]
+notes: Three rounds of Dan John's "The Exercise" (snatch to overhead squat) with knees to elbows, then 3 rounds
+  of sandbag clean and presses, heavy swings and ball slams at 11 kg (25 lb). The source does not time it. Where
+  no load is given, the source leaves it to the athlete (its Weight Loading rule).

@@ -1,0 +1,94 @@
+id: hm_act_with_a_purpose
+name: Act With a Purpose
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: front_squat
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: 85% of today's 1RM
+  notes: '5 rounds, alternating: 3 front squats, 3 box jumps on a 24 in (61 cm) box, 10 m dumbbell crawl — not for
+    time.'
+- role: box_jump
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: 24 in (61 cm) box.
+- role: db_crawl
+  slot_type: distance
+  distance_m: 10
+  sets: 5
+  exercise_filter:
+    exercise_ids: [db_crawl]
+    ordered: true
+  load: 2 x 25 kg (2 x 55 lb)
+- role: thruster
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [thruster]
+    ordered: true
+  notes: '5 rounds, alternating: 10 thrusters, 30 m tire drag, 5 glute-ham raises — not for time.'
+- role: tire_drag
+  slot_type: distance
+  distance_m: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids: [tire_drag_forward]
+    ordered: true
+- role: glute_ham_raise
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [glute_ham_raise]
+    ordered: true
+- role: pull_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+  notes: '5 rounds, alternating: 5 pull-ups, 10 dips, 5 rotator scarecrows — not for time.'
+- role: dip
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [dip]
+    ordered: true
+- role: rotator_scarecrow
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [rotator_scarecrow]
+    ordered: true
+  notes: The source does not describe the movement.
+required_equipment: [barbell, rack, plates, box, dumbbell, open_space, tire, ghd, pull_up_bar, parallettes]
+sources: [Horsemen]
+notes: Work up to a 1-rep max front squat, then 5 rounds of 3 front squats at 85% of it with box jumps and dumbbell
+  crawls, 5 rounds of thrusters, tire drags and glute-ham raises, and 5 rounds of pull-ups, dips and rotator scarecrows.
+  The source does not time it. Where no load is given, the source leaves it to the athlete (its Weight Loading rule).

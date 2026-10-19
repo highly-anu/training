@@ -1,0 +1,78 @@
+id: hm_winter_in_august
+name: Winter in August
+modality: aerobic_base
+category: recovery
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: row_in
+  slot_type: distance
+  distance_m: 1000
+  intensity: zone1
+  exercise_filter:
+    exercise_ids:
+    - row_zone2
+    ordered: true
+  notes: Row 1,000 m at recovery pace.
+- role: bench_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 25-20-15-10-5
+  load: 61 kg (135 lb)
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+  notes: >-
+    25-20-15-10-5, alternating: bench press, ankles to bar, dips, strict pull-ups — not for time.
+- role: ankles_to_bar
+  slot_type: sets_reps
+  sets: 5
+  reps: 25-20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - ankles_to_bar
+    ordered: true
+- role: dips
+  slot_type: sets_reps
+  sets: 5
+  reps: 25-20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 25-20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: Strict.
+- role: row_out
+  slot_type: distance
+  distance_m: 1000
+  intensity: zone1
+  exercise_filter:
+    exercise_ids:
+    - row_zone2
+    ordered: true
+  notes: Row 1,000 m at recovery pace.
+required_equipment:
+- rower
+- barbell
+- rack
+- plates
+- pull_up_bar
+- parallettes
+sources:
+- Horsemen
+notes: >-
+  The source's one named recovery workout: a 1,000 m row at recovery pace, a 25-20-15-10-5 ladder
+  of bench press at 135 lb, ankles to bar, dips and strict pull-ups, and another 1,000 m row at
+  recovery pace. The source does not time it.

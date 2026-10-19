@@ -1,0 +1,31 @@
+id: hm_explosive_power_1rm_push_press
+name: 'Explosive Power: 1RM Push Press'
+modality: power
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max push press for the day.
+required_equipment:
+- barbell
+- rack
+- plates
+sources:
+- Horsemen
+notes: >-
+  The source's explosive power day: a 1RM in one of clean, push press, jerk, clean & jerk or snatch, and
+  nothing else. This is the push press.

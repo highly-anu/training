@@ -1,0 +1,115 @@
+id: hm_crazy_8
+name: Crazy 8
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: hang_cleans
+  slot_type: sets_reps
+  sets: 7
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - hang_power_clean
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: >-
+    Accumulating: exercise 1 and 1 sprint, then exercises 1-2 and 2 sprints, then 1-3 and 3 sprints, up
+    to all seven and 7 sprints — so hang cleans come 7 times and the med ball throws once. 8 reps of each
+    exercise every time.
+- role: squats
+  slot_type: sets_reps
+  sets: 6
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - back_squat
+    ordered: true
+  load: 61 kg (135 lb)
+- role: plyo_jump_repeats
+  slot_type: sets_reps
+  sets: 5
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - plyo_jump_repeat
+    ordered: true
+  notes: Onto a 30 in (76 cm) box.
+- role: plyo_push_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - plyo_push_up_box
+    ordered: true
+  notes: Off a 12 in (30 cm) box.
+- role: bent_over_lateral_raises
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - db_bent_over_lateral_raise
+    ordered: true
+  load: 11 kg (25 lb)
+- role: dips
+  slot_type: sets_reps
+  sets: 2
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+  load: bodyweight
+- role: med_ball_throws
+  slot_type: sets_reps
+  sets: 1
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - med_ball_underhand_throw
+    ordered: true
+  load: 14 kg (30 lb)
+  notes: Done once, in the last round.
+- role: sprints
+  slot_type: distance
+  distance_m: 20
+  sets: 28
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+  notes: >-
+    20 m sprints, 10 m out and 10 m back: 1, then 2, ... then 7 after each pass (28 in all).
+- role: agility_ladder
+  slot_type: time_domain
+  duration_sec: 600
+  exercise_filter:
+    exercise_ids:
+    - agility_ladder_drill
+    ordered: true
+  notes: 10 minutes of agility drills with a ladder after the workout.
+required_equipment:
+- barbell
+- rack
+- plates
+- dumbbell
+- parallettes
+- medicine_ball
+- box
+- open_space
+- agility_ladder
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged MS/SPAG in the source: seven exercises of 8 reps, accumulating one exercise and
+  one more 20 m sprint each pass, then 10 minutes of agility-ladder drills. The source does not say for
+  time.

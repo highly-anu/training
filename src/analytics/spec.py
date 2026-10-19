@@ -41,6 +41,9 @@ DEFAULT_FOR_MODEL: dict[str, tuple[str, object]] = {
     'complexity':            ('unlocks',      'none'),
     'pentathlon_rpm':        ('rate',         'none'),
     'range_progression':     ('hold_seconds', {'load_field': 'hold_seconds'}),
+    # Loads as the source writes them (a percentage of the day's max): what
+    # was lifted is the currency, with nothing computed to expect.
+    'as_written':            ('set_load',     'none'),
 }
 
 # philosophy progression_philosophy → the primitive its section leads with.

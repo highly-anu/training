@@ -1,0 +1,115 @@
+id: hm_till_u_collapse
+name: Till U Collapse
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: till_u_collapse
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 2700
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [power_clean]
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: 'For time, in order: 50 power cleans, 50 sit-ups, 25 pull-ups, 50 kettlebell swings, 25 push-ups, 50 ball
+    slams, 25 calories on the rower or air bike, 50 bench presses, 50 box jumps on a tire, 25 back extensions, 50
+    wall balls, 25 GHD sit-ups, 250 m row.'
+- role: sit_up
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [sit_up]
+    ordered: true
+- role: pull_up
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+- role: kb_swing
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+- role: push_up
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [push_up]
+    ordered: true
+- role: ball_slam
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [ball_slam]
+    ordered: true
+  load: 11 kg (25 lb)
+- role: calories
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [row_erg, airdyne]
+    ordered: true
+  notes: 25 calories on the rower or the air bike.
+- role: bench_press
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+  load: 43 kg (95 lb)
+- role: box_jump_on_tire
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: Jump onto a tire.
+- role: back_extension
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [back_extension]
+    ordered: true
+- role: wall_ball
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [wall_ball]
+    ordered: true
+- role: ghd_sit_up
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [ghd_sit_up]
+    ordered: true
+- role: row_250m
+  slot_type: amrap_movement
+  parent_slot_role: till_u_collapse
+  distance_m: 250
+  exercise_filter:
+    exercise_ids: [row_erg]
+    ordered: true
+  notes: Row 250 m to finish (metres, not reps).
+required_equipment: [barbell, rack, plates, pull_up_bar, kettlebell, medicine_ball, rower, tire, ghd]
+sources: [Horsemen]
+notes: A long chipper of thirteen movements, from 50 power cleans at 43 kg (95 lb) to a 250 m row, each finished
+  before the next. The 25 calories may be rowed or ridden on an air bike. Where no load is given, the source leaves
+  it to the athlete (its Weight Loading rule).

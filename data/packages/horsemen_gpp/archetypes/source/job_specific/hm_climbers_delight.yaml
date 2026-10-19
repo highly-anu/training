@@ -1,0 +1,64 @@
+id: hm_climbers_delight
+name: Climber's Delight
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: system_board_ladders
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - system_board_ladder
+    ordered: true
+  notes: 5 ladders on the system board.
+- role: windshield_wipers
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - windshield_wiper
+    ordered: true
+  notes: >-
+    3 rounds, alternating: 20 windshield wipers, 30 dips, 30 knees to elbows, 20 handstand push-ups —
+    not for time.
+- role: dips
+  slot_type: sets_reps
+  sets: 3
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+- role: knees_to_elbows
+  slot_type: sets_reps
+  sets: 3
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - knees_to_elbows
+    ordered: true
+- role: handstand_push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - handstand_push_up
+    ordered: true
+required_equipment:
+- pull_up_bar
+- parallettes
+- hangboard
+sources:
+- Horsemen
+notes: >-
+  A job-specific workout for climbers: five system-board ladders, then three rounds of windshield wipers,
+  dips, knees to elbows and handstand push-ups. The source does not say for time or give rests.

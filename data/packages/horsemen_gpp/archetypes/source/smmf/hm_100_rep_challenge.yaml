@@ -1,0 +1,21 @@
+id: hm_100_rep_challenge
+name: 100 Rep Challenge
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: big_lift
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids: [deadlift, back_squat, front_squat, bench_press, strict_press, push_press, power_clean]
+  load: 50% of 1RM
+  notes: 100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference.
+    The source gives no time.
+required_equipment: [barbell, plates]
+sources: [Horsemen]
+notes: One hundred reps of any big lift at 50% of 1RM. The source names no lift and gives no time; the deadlift,
+  squats, presses and power clean are offered.

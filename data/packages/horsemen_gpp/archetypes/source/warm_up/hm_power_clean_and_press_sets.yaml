@@ -1,0 +1,29 @@
+id: hm_power_clean_and_press_sets
+name: Power Clean and Press Sets
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: power_clean_and_press
+  slot_type: sets_reps
+  sets: 6
+  reps: 5
+  load: 61 kg (135 lb) or more
+  exercise_filter:
+    exercise_ids:
+    - power_clean_and_press
+    ordered: true
+  notes: 30 power cleans (and press) as 6 sets of 5, at 135 lb or more.
+required_equipment:
+- barbell
+- plates
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 30 power cleans (and press), written "6x5 @ 135# +". The source puts the press in
+  parentheses and gives no rest. Unnamed in the source.

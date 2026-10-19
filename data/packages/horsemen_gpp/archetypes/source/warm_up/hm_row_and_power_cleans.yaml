@@ -1,0 +1,37 @@
+id: hm_row_and_power_cleans
+name: Row and Power Cleans
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: row
+  slot_type: distance
+  distance_m: 250
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: '3 rounds, alternating: row 250 m, 5 power cleans — not for time.'
+- role: power_cleans
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  load: 61 kg (135 lb)
+  exercise_filter:
+    exercise_ids:
+    - power_clean
+    ordered: true
+required_equipment:
+- rower
+- barbell
+- plates
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 3 rounds of a 250 m row and 5 power cleans at 135 lb. Unnamed in the source.

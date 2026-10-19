@@ -1,0 +1,38 @@
+id: hm_dead_storage
+name: Dead Storage
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: dead_storage
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 1800
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [thruster]
+    ordered: true
+  load: 20 kg (45 lb) bar
+  notes: 'For time, in order: 100 thrusters with an empty 20 kg (45 lb) bar, 100 wall balls, 100 ball slams.'
+- role: wall_ball
+  slot_type: amrap_movement
+  parent_slot_role: dead_storage
+  reps_per_round: 100
+  exercise_filter:
+    exercise_ids: [wall_ball]
+    ordered: true
+  load: 9 kg (20 lb) ball
+- role: ball_slam
+  slot_type: amrap_movement
+  parent_slot_role: dead_storage
+  reps_per_round: 100
+  exercise_filter:
+    exercise_ids: [ball_slam]
+    ordered: true
+  load: 9 kg (20 lb) ball
+required_equipment: [barbell, rack, plates, medicine_ball]
+sources: [Horsemen]
+notes: 'A chipper: 100 thrusters with a 20 kg (45 lb) bar, 100 wall balls and 100 ball slams with a 9 kg (20 lb)
+  ball. Source name cleaned of profanity.'

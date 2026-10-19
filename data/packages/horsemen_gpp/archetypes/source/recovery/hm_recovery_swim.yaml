@@ -1,0 +1,28 @@
+id: hm_recovery_swim
+name: Recovery Swim
+modality: aerobic_base
+category: recovery
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: recovery
+  slot_type: time_domain
+  duration_sec: 2400
+  intensity: zone1
+  exercise_filter:
+    exercise_ids:
+    - swim
+    ordered: true
+  notes: Swim easy for 40 minutes, heart rate under 65% of max.
+required_equipment:
+- pool
+sources:
+- Horsemen
+notes: >-
+  The source's RECOVERY day: easy effort, any low-impact movement for 30-60 minutes at a very
+  low heart rate (under 65% of max), to move blood around, flush the previous day's by-products
+  and create a demand for food. 40 minutes is the app's reading inside the source's 30-60.

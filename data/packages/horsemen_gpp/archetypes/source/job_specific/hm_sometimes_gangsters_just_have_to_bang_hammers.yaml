@@ -1,0 +1,194 @@
+id: hm_sometimes_gangsters_just_have_to_bang_hammers
+name: Sometimes Gangsters Just Have to Bang Hammers
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 70
+slots:
+- role: strict_pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: >-
+    A chipper, in order, each movement finished before the next: 10 up to 100 and back down to 10. The
+    source does not say for time.
+- role: handstand_push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - handstand_push_up
+    ordered: true
+- role: overhead_squats
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - overhead_squat
+    ordered: true
+  load: 20 kg (45 lb)
+- role: jumping_lunges
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+- role: row_500m_1
+  slot_type: distance
+  distance_m: 500
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 500 m row, under 1:55.
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 1
+  reps: 60
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 20 kg (44 lb)
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 1
+  reps: 70
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 43 kg (95 lb)
+- role: arm_haulers
+  slot_type: sets_reps
+  sets: 1
+  reps: 80
+  exercise_filter:
+    exercise_ids:
+    - arm_hauler
+    ordered: true
+- role: sit_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 90
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+- role: push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+- role: flutter_kicks
+  slot_type: sets_reps
+  sets: 1
+  reps: 90
+  exercise_filter:
+    exercise_ids:
+    - flutter_kick
+    ordered: true
+- role: sledge_or_mountain_climbers
+  slot_type: sets_reps
+  sets: 1
+  reps: 80
+  exercise_filter:
+    exercise_ids:
+    - sledgehammer_tire_strike
+    - mountain_climber
+    ordered: true
+  notes: 80 sledgehammer strikes on a tire or 80 mountain climbers (pick one).
+- role: push_press
+  slot_type: sets_reps
+  sets: 1
+  reps: 70
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: 29-34 kg (65-75 lb)
+- role: ball_slams
+  slot_type: sets_reps
+  sets: 1
+  reps: 60
+  exercise_filter:
+    exercise_ids:
+    - ball_slam
+    ordered: true
+  load: 9 kg (20 lb)
+- role: row_500m_2
+  slot_type: distance
+  distance_m: 500
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 500 m row, under 1:55.
+- role: kb_snatches
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - kb_snatch
+    - db_snatch
+    ordered: true
+  load: 20 kg (44 lb)
+  notes: 40 kettlebell snatches (a dumbbell will do).
+- role: box_jumps
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: 30 box jumps onto a 20 in (51 cm) box.
+- role: one_arm_push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - push_up_one_arm
+    ordered: true
+- role: kb_get_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 24 kg (53 lb)
+required_equipment:
+- barbell
+- rack
+- plates
+- kettlebell
+- pull_up_bar
+- rower
+- medicine_ball
+- box
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: a long chipper of nineteen movements climbing from 10
+  to 100 reps and back to 10, with a 500 m row under 1:55 at either end of the middle. The sledgehammer
+  strikes may be mountain climbers instead (the source's "pick one"). The source does not say for time.
+  Where the source gives no load the weight is the athlete's call, by its weight-loading rule.

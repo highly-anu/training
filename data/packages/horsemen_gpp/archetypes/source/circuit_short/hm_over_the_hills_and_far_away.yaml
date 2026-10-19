@@ -1,0 +1,47 @@
+id: hm_over_the_hills_and_far_away
+name: "Over the Hills and Far Away"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: deadlifts
+    slot_type: sets_reps
+    sets: 10
+    reps: 10
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    notes: >
+      10 rounds, alternating: 10 deadlifts, 10 ankles to bar, 10 dips — the source gives no
+      clock.
+
+  - role: ankles_to_bar
+    slot_type: sets_reps
+    sets: 10
+    reps: 10
+    exercise_filter:
+      exercise_ids: [ankles_to_bar]
+      ordered: true
+
+  - role: dips
+    slot_type: sets_reps
+    sets: 10
+    reps: 10
+    exercise_filter:
+      exercise_ids: [dip]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - parallettes
+  - plates
+  - pull_up_bar
+sources:
+  - Horsemen
+notes: >
+  Ten rounds of 10 deadlifts, 10 ankles to bar and 10 dips; the source says neither for time nor
+  how to rest. Where the source gives no load it is the athlete's choice (its Weight Loading
+  rule).

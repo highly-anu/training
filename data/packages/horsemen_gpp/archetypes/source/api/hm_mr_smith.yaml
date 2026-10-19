@@ -1,0 +1,69 @@
+id: hm_mr_smith
+name: Mr Smith
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: push_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  notes: >-
+    5 rounds, in order: 10 push-ups, 10 pull-ups, 10 double-KB sumo squats, 10 heavy bag twirls (5 each
+    way), run 0.5 miles — not for time.
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+- role: kb_sumo_squats
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_sumo_squat_double
+    ordered: true
+  load: 2 x 32 kg (2 x 70 lb)
+- role: heavy_bag_twirls
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - heavy_bag_twirl
+    ordered: true
+  load: 36 kg (80 lb)
+  notes: 5 each way.
+- role: run
+  slot_type: distance
+  distance_m: 805
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.5 miles.
+required_equipment:
+- kettlebell
+- pull_up_bar
+- sandbag
+- open_space
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API circuit tagged MP/CP in the source: five rounds of push-ups, pull-ups, double-kettlebell sumo
+  squats, heavy bag twirls and a half-mile run. The source does not say for time.

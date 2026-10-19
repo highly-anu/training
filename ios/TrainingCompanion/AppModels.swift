@@ -1037,6 +1037,7 @@ extension EquipmentItem {
         EquipmentItem(id: "rings",       label: "Rings",       group: "Bodyweight & Gymnastics"),
         EquipmentItem(id: "parallettes", label: "Parallettes", group: "Bodyweight & Gymnastics"),
         EquipmentItem(id: "dip_bar",     label: "Dip Bar",     group: "Bodyweight & Gymnastics"),
+        EquipmentItem(id: "hangboard",   label: "Hangboard",   group: "Bodyweight & Gymnastics"),
         // Aerobic & Conditioning
         EquipmentItem(id: "rower",        label: "Rower",        group: "Aerobic & Conditioning"),
         EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic & Conditioning"),
@@ -1047,6 +1048,8 @@ extension EquipmentItem {
         EquipmentItem(id: "ruck_pack",     label: "Ruck Pack",     group: "GPP & Durability"),
         EquipmentItem(id: "sandbag",       label: "Sandbag",       group: "GPP & Durability"),
         EquipmentItem(id: "sled",          label: "Sled",          group: "GPP & Durability"),
+        EquipmentItem(id: "tire",          label: "Tire",          group: "GPP & Durability"),
+        EquipmentItem(id: "sledgehammer",  label: "Sledgehammer",  group: "GPP & Durability"),
         EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "GPP & Durability"),
         EquipmentItem(id: "box",           label: "Box",           group: "GPP & Durability"),
         // Mobility & Prehab
@@ -1056,6 +1059,10 @@ extension EquipmentItem {
         // General
         EquipmentItem(id: "rope",       label: "Rope",       group: "General"),
         EquipmentItem(id: "open_space", label: "Open Space", group: "General"),
+        EquipmentItem(id: "training_partner", label: "Training Partner", group: "General"),
+        EquipmentItem(id: "cable_machine",    label: "Cable Machine",    group: "General"),
+        EquipmentItem(id: "hurdles",          label: "Hurdles",          group: "General"),
+        EquipmentItem(id: "agility_ladder",   label: "Agility Ladder",   group: "General"),
     ]
 }
 

@@ -1,0 +1,40 @@
+id: hm_clapping_chasers
+name: Clapping Chasers
+modality: power
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: weighted_pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids:
+    - weighted_pull_up
+    ordered: true
+  load: 90-95% of 1RM
+  notes: >-
+    5 rounds: 3 weighted pull-ups, then straight into 3-6 clapping pull-ups as a chaser; 5 min rest between
+    rounds. The 1RM is not worked up to that day.
+- role: clapping_pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 3-6
+  exercise_filter:
+    exercise_ids:
+    - clapping_pull_up
+    ordered: true
+  load: bodyweight
+required_equipment:
+- pull_up_bar
+sources:
+- Horsemen
+notes: >-
+  Five rounds of 3 weighted pull-ups at 90-95% of 1RM chased by 3-6 clapping pull-ups, with 5 minutes
+  of rest between rounds. Source name cleaned of profanity.

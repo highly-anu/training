@@ -1,0 +1,170 @@
+id: hm_triples
+name: Triples
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - rope_climb
+    - pull_up
+    ordered: true
+  notes: >-
+    3 rounds, in order: a vertical rope climb, 5 pull-ups and 5 rope pull-ups with a med ball between
+    the legs, a horizontal cable crawl, a floor rope pull — not for time. 1 rope climb, or 10 pull-ups
+    without a rope (the source's substitute).
+- role: weighted_pull_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - weighted_pull_up
+    ordered: true
+  load: 14 kg (30 lb) med ball between the legs
+- role: rope_pull_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - rope_pull_up
+    ordered: true
+  load: 7 kg (15 lb) med ball between the legs
+- role: cable_crawl
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - horizontal_cable_crawl
+    ordered: true
+  notes: One horizontal cable crawl; the source gives no length or count.
+- role: floor_rope_pull
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - floor_rope_pull
+    ordered: true
+  notes: One floor rope pull; the source gives no length or count.
+- role: heavy_bag_lunges
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - sb_lunge
+    ordered: true
+  notes: >-
+    3 rounds, in order: heavy bag lunges the length of the gym, 5 squat jumps, 10 one-leg squats, 10 one-leg
+    hack squats, 10 lateral hops over the bag — not for time.
+- role: squat_jumps
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - squat_jump
+    ordered: true
+  load: 11 kg (25 lb)
+- role: one_leg_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pistol_squat
+    ordered: true
+- role: hack_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - hack_squat
+    ordered: true
+  load: 41 kg (90 lb)
+  notes: One leg.
+- role: lateral_hops
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - lateral_hop_over_bag
+    ordered: true
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 84 kg (185 lb)
+  notes: >-
+    3 rounds, in order: 5 deadlifts, 5 hang cleans, 5 push presses, 5 front squats, 5 bent-over rows —
+    not for time.
+- role: hang_cleans
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - hang_power_clean
+    ordered: true
+  load: 84 kg (185 lb)
+- role: push_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: 70 kg (155 lb)
+- role: front_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  load: 84 kg (185 lb)
+- role: bent_over_rows
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - barbell_row
+    ordered: true
+  load: 70 kg (155 lb)
+required_equipment:
+- barbell
+- rack
+- plates
+- pull_up_bar
+- sandbag
+- medicine_ball
+- rope
+- cable_machine
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged MP in the source: three triplets of three rounds — rope and pulling work, single-leg
+  and jumping leg work, then a heavy barbell circuit. The source does not say for time. Where the source
+  gives no load the weight is the athlete's call, by its weight-loading rule.

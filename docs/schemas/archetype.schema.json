@@ -181,6 +181,10 @@
                 },
                 "minItems": 1,
                 "description": "Only these exercises may fill the slot (still level, equipment and injury filtered). For a slot whose events are fixed by rules, e.g. a pentathlon's five."
+              },
+              "ordered": {
+                "type": "boolean",
+                "description": "Take exercise_ids in order: the first one the athlete can do. The first is the written movement, the rest the substitutes the source declares (a rope climb, or 10 pull-ups without a rope). Without it the listed exercises rotate."
               }
             },
             "additionalProperties": false
@@ -205,6 +209,10 @@
           "skip_exercise": {
             "type": "boolean",
             "description": "If true, selector skips exercise lookup for this slot."
+          },
+          "load": {
+            "type": "string",
+            "description": "The load as the source writes it, shown with the prescription: '75% of today's 1RM', '24 kg (53 lb)', '1.25x bodyweight', 'heavy'. Read by the as_written progression model."
           },
           "notes": {
             "type": "string"
@@ -392,7 +400,14 @@
           "box",
           "ghd",
           "jump_rope",
-          "open_space"
+          "open_space",
+          "pool",
+          "hangboard",
+          "sledgehammer",
+          "cable_machine",
+          "hurdles",
+          "agility_ladder",
+          "training_partner"
         ]
       },
       "default": []
@@ -428,6 +443,10 @@
     },
     "notes": {
       "type": "string"
+    },
+    "pool_only": {
+      "type": "boolean",
+      "description": "A named workout picked only from a framework day category's pool (a phase's week_templates, src/week_template.py), never by modality: it is prescribed as written and means nothing under another progression model."
     },
     "test": {
       "type": "object",

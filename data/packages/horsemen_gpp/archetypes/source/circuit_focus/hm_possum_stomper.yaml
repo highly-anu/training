@@ -1,0 +1,49 @@
+id: hm_possum_stomper
+name: "Possum Stomper"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: overhead_lunge_forward
+    slot_type: distance
+    sets: 5
+    distance_m: 50
+    load: "12 kg (26 lb)"
+    exercise_filter:
+      exercise_ids: [kb_overhead_lunge]
+      ordered: true
+    notes: >
+      5 rounds, alternating: 50 m one-arm overhead lunge forward (kettlebell in the weak-side
+      hand), 50 m backward (strong side), row 400 m — the source gives no clock.
+
+  - role: overhead_lunge_backward
+    slot_type: distance
+    sets: 5
+    distance_m: 50
+    load: "12 kg (26 lb)"
+    exercise_filter:
+      exercise_ids: [kb_overhead_lunge]
+      ordered: true
+    notes: >
+      Backward, kettlebell in the strong-side hand.
+
+  - role: row
+    slot_type: distance
+    sets: 5
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [row_erg]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - open_space
+  - rower
+sources:
+  - Horsemen
+notes: >
+  Five rounds of 50 m one-arm overhead lunges forward (weak side) and backward (strong side)
+  with a 26 lb kettlebell, and a 400 m row; the source says neither for time nor how to rest.

@@ -1,0 +1,42 @@
+id: hm_fran
+name: "Fran"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 10
+pool_only: true
+
+slots:
+  - role: thrusters
+    slot_type: rounds_for_time
+    rounds: 3
+    duration_sec: 480
+    intensity: max_effort
+    load: "43 kg (95 lb)"
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    notes: >
+      21-15-9 reps of each, for time: thrusters, then pull-ups.
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 21
+    parent_slot_role: thrusters
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: >
+      21, 15 and 9 pull-ups after each set of thrusters.
+
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+  - rack
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Fran as the source writes it: 21-15-9 thrusters at 95 lb and pull-ups. The source
+  writes only the rep scheme; it is run for time, as CrossFit runs it.

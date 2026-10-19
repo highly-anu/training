@@ -1,0 +1,54 @@
+id: hm_joints_up_committee
+name: "Joint's Up Committee"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: row
+    slot_type: distance
+    sets: 11
+    distance_m: 250
+    exercise_filter:
+      exercise_ids: [row_erg]
+      ordered: true
+    notes: >
+      11 rounds, alternating: row 250 m, 5 ankles to bar, 10 push-ups, 15 kettlebell swings —
+      the source gives no clock.
+
+  - role: ankles_to_bar
+    slot_type: sets_reps
+    sets: 11
+    reps: 5
+    exercise_filter:
+      exercise_ids: [ankles_to_bar]
+      ordered: true
+
+  - role: push_ups
+    slot_type: sets_reps
+    sets: 11
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: kb_swings
+    slot_type: sets_reps
+    sets: 11
+    reps: 15
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - pull_up_bar
+  - rower
+sources:
+  - Horsemen
+notes: >
+  Eleven rounds of a 250 m row, 5 ankles to bar, 10 push-ups and 15 kettlebell swings; the
+  source says neither for time nor how to rest. Where the source gives no load it is the
+  athlete's choice (its Weight Loading rule).

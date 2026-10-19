@@ -1,0 +1,73 @@
+id: hm_jagerbomb
+name: Jagerbomb!
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: blaster_bar_farmer_carry
+  slot_type: distance
+  distance_m: 60
+  sets: 4
+  exercise_filter:
+    exercise_ids:
+    - farmer_carry_thick_grip
+    ordered: true
+  notes: >-
+    4 x 60 m farmer carry with blaster bars, rest as needed between carries. The source gives no weight.
+- role: fat_bar_deadlifts
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - fat_bar_deadlift
+    ordered: true
+  load: 48 kg (105 lb)
+  notes: '3 rounds: 10 fat-bar deadlifts, then a 60 m crosswalk carry; rest as needed between.'
+- role: crosswalk_carry
+  slot_type: distance
+  distance_m: 60
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - kb_crosswalk_carry
+    ordered: true
+  load: 12 kg (26 lb) high, 24 kg (53 lb) low
+- role: squats
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - back_squat
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: '10 rounds: 5 squats, then 10 pull-ups.'
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+required_equipment:
+- dumbbell
+- open_space
+- barbell
+- plates
+- kettlebell
+- rack
+- pull_up_bar
+sources:
+- Horsemen
+notes: >-
+  Four 60 m blaster-bar farmer carries; 3 rounds of 10 fat-bar deadlifts at 105 lb and a 60 m crosswalk
+  carry (26 lb high, 53 lb low); 10 rounds of 5 squats at 135 lb and 10 pull-ups. Rest as needed between
+  carries.

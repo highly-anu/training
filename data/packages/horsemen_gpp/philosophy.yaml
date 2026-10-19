@@ -11,6 +11,7 @@ core_principles:
   - block_structure_shifts_from_strength_to_power_endurance_to_job_specific
 scope:
   - max_strength
+  - power
   - strength_endurance
   - aerobic_base
   - mixed_modal_conditioning
@@ -59,9 +60,12 @@ notes: >
   density, accumulation, endurance or recovery — and the workout is picked
   from that category's list of named workouts. Loads come from a 1RM worked up
   to on the day, then percentages of it, fixed loads or multiples of
-  bodyweight; there is no RPE and no deload week. This package simplifies the
-  source: its archetypes stand in for the categories, and the four-month
-  template and the named workouts are not yet encoded as written.
+  bodyweight; there is no RPE and no deload week. The 4-Month Macro track runs
+  the source as written: each month's week templates day by day, every named
+  workout as an archetype in its category's pool, taken in rotation, and
+  prescribed exactly as the source writes it (src/week_template.py). A workout
+  whose equipment the athlete lacks is passed over for the next one; names
+  carrying profanity or a slur are cleaned.
 
 # Every modality concurrent_training and gpp_circuits prescribe now has an
 # archetype in this package. Borrowing, where it happens, is declared below.
@@ -95,18 +99,28 @@ tracks:
           and rest on day 7. Strength days work up to a 1RM in the day's lift,
           then percentages of it, then accessory rounds; there is no RPE.
           The source lists the PT test among its hard job-specific options
-          and never schedules it; testing at the start and the end of the
-          macro is an app adaptation, because the source's goals are for four
-          months.
+          and never schedules it; here it takes the month's first hard
+          job-specific day (week 2) as a baseline for the four-month goals.
         adaptations:
           - "Maximal strength toward the bodyweight goals"
           - "Power endurance and job-specific capacity kept alongside it"
         intensity: "Heavy: a 1RM worked up to on the day, then percentages of it"
-        # App adaptation: the PT test as a baseline in the macro's first week.
+        # The source's example weeks (Training Program pp.3-4), day by day.
+        week_templates:
+          - [strength, job_specific_long, power_endurance, smmf, strength, recovery, rest]
+          - [strength, power_explosive, job_specific_hard, power_endurance, strength, recovery, rest]
+          - [strength, power_cardio, job_specific_short, [progression, breathing_ladder], strength, recovery, rest]
+          - [strength, power_endurance, job_specific_long, circuit_complementary, strength, recovery, rest]
+        # Fewer than six days: recovery, then the rotating day, go first;
+        # the two strength days stay.
+        drop_order: [recovery, smmf, power_explosive, power_cardio, progression, circuit_complementary,
+                     power_endurance, job_specific_short, job_specific_long, job_specific_hard]
+        # The PT test is one of the source's hard job-specific options. As a
+        # baseline it takes the month's first hard job-specific day (week 2).
         tests:
           - archetype: horsemen_pt_test
-            week: first
-            in_place_of: [mixed_modal_conditioning, strength_endurance]
+            week: 2
+            in_place_of: [job_specific_hard, job_specific_long, job_specific_short]
       - id: power_endurance
         name: "Power Endurance"
         kind: build
@@ -123,6 +137,17 @@ tracks:
           - "Repeatable power under fatigue"
           - "Work capacity"
         intensity: "High, in repeated efforts"
+        week_templates:
+          - [power_endurance, job_specific_short, strength_maintenance, power_endurance, endurance_long, recovery, rest]
+          - [power_endurance, circuit_focus, job_specific_long, power_endurance,
+             [strength_maintenance, job_specific_short], {categories: [olympic], light: true}, rest]
+          - [power_endurance, strength_maintenance, job_specific_hard, endurance_long,
+             [power_endurance, circuit_short], recovery, rest]
+          - [power_endurance, job_specific_long, [strength_maintenance, run], progression, power_endurance,
+             {categories: [smmf], light: true}, rest]
+        drop_order: [recovery, smmf, olympic, circuit_focus, progression, endurance_long, circuit_short,
+                     job_specific_short, job_specific_long, strength_maintenance, job_specific_hard,
+                     power_endurance]
       - id: job_specific
         name: "Job Specific"
         kind: specific
@@ -138,6 +163,14 @@ tracks:
           - "Task-specific conditioning"
           - "Grip, climbing and load-carriage capacity"
         intensity: "Hard, job-paced"
+        week_templates:
+          - [job_specific_long, strength, job_specific_short, power_endurance, job_specific_long, recovery, rest]
+          - [job_specific_hard, circuit_short, job_specific_long, job_specific_short, density, recovery, rest]
+          - [job_specific_long, power_endurance, job_specific_short,
+             {categories: [smmf, progression], light: true}, job_specific_long, recovery, rest]
+          - [job_specific_hard, endurance, job_specific_short, strength, job_specific_long, recovery, rest]
+        drop_order: [recovery, smmf, density, circuit_short, endurance, power_endurance, strength,
+                     job_specific_short, job_specific_long, job_specific_hard]
       - id: maintenance
         name: "Maintenance"
         kind: maintenance
@@ -147,19 +180,31 @@ tracks:
         description: >
           Month four holds what the macro built: recovery twice a week at 65%
           of max heart rate or less, circuits, strength, and a hard
-          job-specific day, with rest on day 7. The source lists the PT test
-          among its hard job-specific options and never schedules it; testing
-          at the start and the end of the macro is an app adaptation, because
-          the source's goals are for four months.
+          job-specific day, with rest on day 7. The PT test, one of the
+          source's hard job-specific options, takes the macro's last hard
+          job-specific day: the most rested point of the four months, and the
+          check against their goals.
         adaptations:
           - "Retained strength and conditioning"
           - "Recovery"
         intensity: "Hard days between recovery at ≤65% max HR"
-        # App adaptation: the PT test again in the macro's last week.
+        week_templates:
+          - [circuit_short, strength, {categories: [recovery], warm_up: true}, job_specific_hard,
+             progression, recovery, rest]
+          - [circuit_complementary, strength, {categories: [recovery], warm_up: true}, job_specific_hard,
+             {categories: [smmf], light: true}, recovery, rest]
+          - [circuit_focus, job_specific_hard, {categories: [recovery], warm_up: true}, strength,
+             accumulation, {categories: [recovery], warm_up: true}, rest]
+          - [endurance_long, job_specific_hard, {categories: [recovery], warm_up: true}, strength,
+             circuit_short, recovery, rest]
+        drop_order: [recovery, accumulation, smmf, progression, endurance_long, circuit_complementary,
+                     circuit_focus, circuit_short, job_specific_hard, strength]
+        # And at the end of the macro, on its last hard job-specific day, the
+        # most rested day of the four months: the check against its goals.
         tests:
           - archetype: horsemen_pt_test
             week: last
-            in_place_of: [mixed_modal_conditioning, strength_endurance]
+            in_place_of: [job_specific_hard, job_specific_long, job_specific_short]
   - id: gpp_circuits
     name: "GPP Circuits"
     description: >

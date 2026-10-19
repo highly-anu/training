@@ -1,0 +1,45 @@
+id: hm_johnnie_walker_black
+name: "Johnnie Walker Black"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 12
+pool_only: true
+
+slots:
+  - role: kb_cleans
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    load: "2 x 24 kg (2 x 53 lb)"
+    exercise_filter:
+      exercise_ids: [kb_clean_double]
+      ordered: true
+    notes: >
+      5 rounds, alternating: 5 two-arm kettlebell cleans, 10 ring push-ups, 15 squats — the
+      source gives no clock.
+
+  - role: ring_push_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up_ring]
+      ordered: true
+
+  - role: squats
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - rings
+sources:
+  - Horsemen
+notes: >
+  Five rounds of 5 two-arm cleans with two 53 lb kettlebells, 10 ring push-ups and 15 squats;
+  the source says neither for time nor how to rest.

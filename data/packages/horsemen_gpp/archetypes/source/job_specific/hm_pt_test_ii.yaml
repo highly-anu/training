@@ -1,0 +1,51 @@
+id: hm_pt_test_ii
+name: PT Test II
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: five_mile_run
+  slot_type: distance
+  distance_m: 8047
+  exercise_filter:
+    exercise_ids:
+    - run_tempo_horsemen
+    ordered: true
+  notes: 5-mile run; the source's target is under 35:00.
+- role: bench_press
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+  load: 1x bodyweight
+  notes: 10 bench press reps at bodyweight.
+- role: weighted_pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - weighted_pull_up
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: 15 pull-ups with 25 lb.
+required_equipment:
+- barbell
+- rack
+- plates
+- pull_up_bar
+- open_space
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts, done as a workout: a 5-mile run under 35:00, 10 bench
+  press reps at bodyweight and 15 pull-ups with 25 lb. It is not the PT test the app places as a test,
+  and it is not scored on a standard.

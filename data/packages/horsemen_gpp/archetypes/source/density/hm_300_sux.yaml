@@ -1,0 +1,27 @@
+id: hm_300_sux
+name: 300 Sux!
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: shuttle_300m
+  slot_type: distance
+  distance_m: 300
+  sets: 5
+  rest_sec: 180
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - shuttle_run
+    ordered: true
+  notes: 5 x 300 m shuttle, 3 min rest after each. The source does not give the shuttle's legs.
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: Five 300 m shuttle runs with 3 minutes of rest after each.

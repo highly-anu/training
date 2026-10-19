@@ -1,0 +1,54 @@
+id: hm_not_now_chief_im_in_the_zone
+name: Not Now Chief, I'm in the Zone
+modality: power
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 90-95% of 1RM
+  notes: >-
+    5 rounds: 3 deadlifts, then straight into 3-6 depth jump and broad jump combos as a chaser; 5 min
+    rest between rounds. The 1RM is not worked up to that day.
+- role: depth_jumps
+  slot_type: sets_reps
+  sets: 5
+  reps: 3-6
+  exercise_filter:
+    exercise_ids:
+    - depth_jump
+    ordered: true
+  load: bodyweight
+  notes: Each rep a depth jump landing straight into a broad jump. The source gives no box height.
+- role: broad_jumps
+  slot_type: sets_reps
+  sets: 5
+  reps: 3-6
+  exercise_filter:
+    exercise_ids:
+    - broad_jump
+    ordered: true
+  load: bodyweight
+  notes: The broad jump of each combo, out of the depth jump's landing.
+required_equipment:
+- barbell
+- plates
+- box
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Five rounds of 3 deadlifts at 90-95% of 1RM chased by 3-6 depth jump and broad jump combos, with 5 minutes
+  of rest between rounds.

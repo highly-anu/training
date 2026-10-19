@@ -1,0 +1,71 @@
+id: hm_big_5_55
+name: Big 5-55
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: get_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    - sb_getup
+    ordered: true
+  load: 7 kg (15 lb) sandbag
+  notes: >-
+    Rungs from 10 down to 1. Each rung: Turkish or shoulder get-ups with the sandbag (the rung on each
+    shoulder), double kettlebell swings, jumping lunges (each leg), push-ups (twice the rung), sit-ups
+    (three times the rung).
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_double
+    ordered: true
+  load: 2 x 16 kg (2 x 35 lb)
+- role: jumping_lunges
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+  load: bodyweight
+  notes: Each leg.
+- role: push_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 20-18-16-14-12-10-8-6-4-2
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+- role: sit_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 30-27-24-21-18-15-12-9-6-3
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+  load: bodyweight
+required_equipment:
+- sandbag
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  Five movements on a 10-to-1 ladder, 55 rungs' worth each: Turkish or shoulder get-ups with a 15 lb sandbag,
+  double kettlebell swings at 2 x 35 lb, jumping lunges, push-ups at twice the rung and sit-ups at three
+  times. The source gives no clock.

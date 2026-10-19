@@ -65,6 +65,12 @@ export type EquipmentId =
   | 'open_space'
   | 'pool'
   | 'dip_belt'
+  | 'hangboard'
+  | 'sledgehammer'
+  | 'cable_machine'
+  | 'hurdles'
+  | 'agility_ladder'
+  | 'training_partner'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'
@@ -581,6 +587,8 @@ export interface ArchetypeTrace {
   selected_id: string | null
   filter_counts: Record<string, number>
   candidates: CandidateScore[]
+  /** A placed archetype (a test, a week template's day): why, e.g. its category. */
+  selection_reason?: string
 }
 
 export interface SlotTrace {
@@ -639,11 +647,14 @@ export interface FrameworkSelectionTrace {
 /**
  * A training contract (src/training_contract.py) places fixed modules: its
  * week has `contract` and no allocation or day assignment, and its framework
- * selection reads `training_contract`.
+ * selection reads `training_contract`. A week the source writes day by day
+ * (src/week_template.py) carries its `week_template` instead, likewise with
+ * no allocation.
  */
 export interface SchedulerTrace {
   framework_selection: FrameworkSelectionTrace
   contract?: string
+  week_template?: unknown[]
   allocation?: {
     phase_priorities: Record<string, number>
     raw: Record<string, number>

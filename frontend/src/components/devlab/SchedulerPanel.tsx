@@ -11,8 +11,10 @@ interface Props {
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-/** A training contract's week: fixed modules on their days, no allocation. */
-function ContractWeek({ week }: { week: WeekTrace }) {
+/** A week with no allocation: a training contract's fixed modules, or the
+ * source's own week (a week template), each day a category's named workout. */
+function PlacedWeek({ week }: { week: WeekTrace }) {
+  const templated = !!week.scheduler.week_template
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -26,8 +28,9 @@ function ContractWeek({ week }: { week: WeekTrace }) {
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-xs text-muted-foreground">
-          Placed by the training contract: each module's movements, weekly exposures and recovery
-          spacing are fixed, so no priorities are allocated and no framework is chosen.
+          {templated
+            ? "Written by the source's week: each day is a category, and its workout the next of the category's named workouts the athlete can do as written."
+            : "Placed by the training contract: each module's movements, weekly exposures and recovery spacing are fixed, so no priorities are allocated and no framework is chosen."}
         </p>
         <div className="grid grid-cols-7 gap-1">
           {DAY_NAMES.map((day, i) => {
@@ -39,7 +42,8 @@ function ContractWeek({ week }: { week: WeekTrace }) {
                   {sessions.length > 0 ? sessions.map((s, si) => (
                     <div key={si} className="rounded px-1 py-0.5 text-[9px] font-medium bg-primary/10 text-primary"
                          title={s.archetype.selected_id ?? s.modality}>
-                      {(s.modules?.length ? s.modules.join(' + ') : s.modality).replace(/_/g, ' ')}
+                      {(s.modules?.length ? s.modules.join(' + ')
+                        : templated ? (s.archetype.selection_reason ?? s.modality) : s.modality).replace(/_/g, ' ')}
                     </div>
                   )) : (
                     <div className="rounded px-1 py-1 text-[9px] text-muted-foreground/30 text-center">—</div>
@@ -61,8 +65,8 @@ export function SchedulerPanel({ weeks }: Props) {
         const fw = week.scheduler.framework_selection
         const alloc = week.scheduler.allocation
         const assign = week.scheduler.day_assignment
-        if (week.scheduler.contract || !alloc || !assign) {
-          return <ContractWeek key={week.week_number} week={week} />
+        if (week.scheduler.contract || week.scheduler.week_template || !alloc || !assign) {
+          return <PlacedWeek key={week.week_number} week={week} />
         }
 
         return (

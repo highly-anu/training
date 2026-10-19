@@ -10,9 +10,9 @@ duration_estimate_minutes: 55
 
 # The source's PT test (Training Program p.31), in its order: max pull-ups,
 # sit-ups and push-ups in three minutes each, a 3-mile run — and an 800 m swim,
-# left out here (see notes). Placed at the start and the end of the four-month
-# macro (philosophy.yaml `tests:`, an app adaptation), never picked, and run
-# as written.
+# left out here (see notes). Placed on the first hard job-specific day of the
+# strength month and the last of the maintenance month (philosophy.yaml
+# `tests:`), never picked, and run as written.
 test: {}
 
 slots:
@@ -87,6 +87,7 @@ notes: >
   and a test the athlete cannot do as written is skipped whole. Log the swim
   by hand on its own standard (swim_800m_minutes). The source gives no rest
   between events; the 3 minutes here is the app's. In the source the PT test
-  is one of the hard job-specific options and is never scheduled; running it
-  in the first week of the strength month and the last week of maintenance
-  is an app adaptation. Each event is a result on its own standard.
+  is one of the hard job-specific options and is never scheduled; here it
+  takes the first hard job-specific day of the macro (a baseline, week 2) and
+  the last (the check against the four-month goals). Each event is a result
+  on its own standard.

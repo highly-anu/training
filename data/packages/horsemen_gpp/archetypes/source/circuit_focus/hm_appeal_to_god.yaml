@@ -1,0 +1,113 @@
+id: hm_appeal_to_god
+name: "Appeal to God"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 24
+pool_only: true
+
+slots:
+  - role: ghd_sit_ups
+    slot_type: time_domain
+    sets: 3
+    duration_sec: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [ghd_sit_up]
+      ordered: true
+    notes: >
+      3 rounds, 24 minutes: 30 s of each of GHD sit-up, V-sit, ring push-up hold, tuck hang,
+      right plank, front plank, left plank and vertical sit-up, each followed by 30 s rest in
+      which 5 perfect push-ups must be done.
+
+  - role: v_sit
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [v_sit]
+      ordered: true
+
+  - role: ring_hold
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [ring_push_up_hold]
+      ordered: true
+    notes: >
+      Static hold on rings at the top of the push-up position.
+
+  - role: tuck_hang
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [tuck_hang]
+      ordered: true
+
+  - role: right_plank
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [side_plank]
+      ordered: true
+    notes: >
+      Right side.
+
+  - role: front_plank
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [plank]
+      ordered: true
+
+  - role: left_plank
+    slot_type: static_hold
+    sets: 3
+    hold_seconds: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [side_plank]
+      ordered: true
+    notes: >
+      Left side.
+
+  - role: vertical_sit_ups
+    slot_type: time_domain
+    sets: 3
+    duration_sec: 30
+    rest_sec: 30
+    exercise_filter:
+      exercise_ids: [vertical_sit_up]
+      ordered: true
+    notes: >
+      The source does not define the vertical sit-up.
+
+  - role: rest_push_ups
+    slot_type: sets_reps
+    sets: 24
+    reps: 5
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+    notes: >
+      5 perfect push-ups in each 30 s rest, after every station: 8 per round, 24 in all.
+
+required_equipment:
+  - ghd
+  - pull_up_bar
+  - rings
+sources:
+  - Horsemen
+notes: >
+  Three rounds of eight 30-second stations — GHD sit-up, V-sit, ring push-up hold, tuck hang,
+  right, front and left plank, vertical sit-up — each followed by 30 s rest in which 5 perfect
+  push-ups must be done; 24 minutes in all.

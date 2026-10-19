@@ -82,7 +82,8 @@
       "additionalProperties": {
         "type": "string",
         "enum": ["linear_load", "density", "volume_block", "complexity", "time_to_task",
-                 "intensity_split_shift", "rpe_autoregulation", "pentathlon_rpm", "range_progression"]
+                 "intensity_split_shift", "rpe_autoregulation", "pentathlon_rpm", "range_progression",
+                 "as_written"]
       }
     },
     "prescription_policy": {
@@ -104,8 +105,35 @@
         "intensity_split_shift",
         "rpe_autoregulation",
         "pentathlon_rpm",
-        "range_progression"
+        "range_progression",
+        "as_written"
       ]
+    },
+    "categories": {
+      "type": "object",
+      "description": "Day categories for phases that declare `week_templates` (philosophy.yaml): the source's own kinds of day (Horsemen's strength, power endurance, job specific...). Each is a pool of named-workout archetypes taken in rotation; the generator picks the next one the athlete can do as written (level, equipment, injuries, time). Category ids are what a week template names.",
+      "propertyNames": {"pattern": "^[a-z0-9_]+$"},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "modality", "archetypes"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string"},
+          "modality": {"type": "string", "pattern": "^[a-z0-9_]+$", "description": "The session's modality (colour, analytics family)."},
+          "archetypes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                         "description": "The pool, in the rotation's order."},
+          "warm_up": {"type": "boolean", "default": true, "description": "Prefix the day's session with a workout from `warm_up_category`."},
+          "long_day": {"type": "boolean", "default": false, "description": "Its workouts need time: when the athlete's days differ in length, these days take the longest."},
+          "fallback": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                       "description": "Categories tried in order when no workout of this one fits the athlete; the week says so."},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "warm_up_category": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "The category whose workouts open each templated training day (the source's 'WARM UP, ...')."
     },
     "applicable_when": {
       "type": "object",

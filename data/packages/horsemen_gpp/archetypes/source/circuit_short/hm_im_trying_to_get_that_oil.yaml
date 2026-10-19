@@ -1,0 +1,45 @@
+id: hm_im_trying_to_get_that_oil
+name: "I'm Trying to Get That Oil"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 10
+pool_only: true
+
+slots:
+  - role: power_cleans
+    slot_type: emom
+    sets: 10
+    reps_per_round: 3
+    work_sec: 60
+    exercise_filter:
+      exercise_ids: [power_clean]
+      ordered: true
+    notes: >
+      Every minute for 10 minutes: 3 power cleans, 3 hang squat cleans, 3 push presses.
+
+  - role: hang_squat_cleans
+    slot_type: amrap_movement
+    reps_per_round: 3
+    parent_slot_role: power_cleans
+    exercise_filter:
+      exercise_ids: [hang_squat_clean]
+      ordered: true
+
+  - role: push_presses
+    slot_type: amrap_movement
+    reps_per_round: 3
+    parent_slot_role: power_cleans
+    exercise_filter:
+      exercise_ids: [push_press]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - plates
+  - rack
+sources:
+  - Horsemen
+notes: >
+  Every minute for 10 minutes: 3 power cleans, 3 hang squat cleans and 3 push presses. Where the
+  source gives no load it is the athlete's choice (its Weight Loading rule).

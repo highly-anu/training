@@ -1,0 +1,30 @@
+id: hm_ten_minute_kettlebell_complex
+name: 10-Minute Kettlebell Complex
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: kb_complex
+  slot_type: time_domain
+  duration_sec: 600
+  load: 16, 20 or 24 kg (35, 44 or 53 lb)
+  exercise_filter:
+    exercise_ids:
+    - kb_complex_10min
+    ordered: true
+  notes: >-
+    One kettlebell, in order: 1-arm swing, lunge in place with the left leg, 1-arm swing, lunge
+    in place with the right leg, 1-arm clean and press with the left arm, slasher to halo, 1-arm
+    clean and press with the right arm, slasher to halo, figure 8 twice. The source does not say
+    how long each exercise runs.
+required_equipment:
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 10-minute complex with one kettlebell of 35, 44 or 53 lb. Unnamed in the source.

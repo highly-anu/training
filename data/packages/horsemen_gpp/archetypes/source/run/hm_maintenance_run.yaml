@@ -1,0 +1,28 @@
+id: hm_maintenance_run
+name: Maintenance Run
+modality: aerobic_base
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: run
+  slot_type: distance
+  distance_m: 4828
+  intensity: zone2
+  exercise_filter:
+    exercise_ids:
+    - run_zone2
+    ordered: true
+  notes: Run 3 miles at a steady, conversational effort.
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: >-
+  The run of the source's "Strength (Maintenance) + Run" day. The source writes only "run"; 3
+  miles at a steady, conversational effort is the app's reading, the distance of the program's
+  run goal (3 miles in under 20:00).

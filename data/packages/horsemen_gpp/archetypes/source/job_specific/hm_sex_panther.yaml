@@ -1,0 +1,82 @@
+id: hm_sex_panther
+name: Sex Panther
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: power_cleans
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - power_clean
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 5 power cleans, 5 glute-ham raises — not for time.
+- role: glute_ham_raises
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - glute_ham_raise
+    ordered: true
+- role: the_exercise
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - the_exercise
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 5 of "The Exercise" (power snatch, then an overhead squat without lowering
+    the bar), 5 dumbbell snatches each hand.
+- role: db_snatches
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - db_snatch
+    ordered: true
+  notes: 5 each hand.
+- role: calories
+  slot_type: sets_reps
+  sets: 4
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - airdyne
+    - row_erg
+    ordered: true
+  notes: >-
+    4 rounds, alternating: 20 calories on the Airdyne or rower, 5 get-ups each hand.
+- role: get_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  notes: 5 each hand.
+required_equipment:
+- barbell
+- plates
+- kettlebell
+- dumbbell
+- ghd
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: power cleans with glute-ham raises, "The Exercise" with
+  dumbbell snatches, then calories on an Airdyne or rower with get-ups, each block in rounds. The source
+  does not say for time. Where the source gives no load the weight is the athlete's call, by its weight-loading
+  rule.

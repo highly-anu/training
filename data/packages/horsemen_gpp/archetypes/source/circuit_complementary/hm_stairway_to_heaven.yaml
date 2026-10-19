@@ -1,0 +1,41 @@
+id: hm_stairway_to_heaven
+name: "Stairway to Heaven"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: kb_step_ups
+    slot_type: rounds_for_time
+    rounds: 5
+    duration_sec: 1500
+    intensity: max_effort
+    load: "2 x 16 kg (2 x 35 lb)"
+    exercise_filter:
+      exercise_ids: [kb_step_up_double]
+      ordered: true
+    notes: >
+      50-40-30-20-10 reps of each: kettlebell step-ups onto an 18 in (46 cm) box with two
+      kettlebells, then knees to elbows.
+
+  - role: knees_to_elbows
+    slot_type: amrap_movement
+    reps_per_round: 50
+    parent_slot_role: kb_step_ups
+    exercise_filter:
+      exercise_ids: [knees_to_elbows]
+      ordered: true
+    notes: >
+      50, 40, 30, 20 and 10 knees to elbows after each set of step-ups.
+
+required_equipment:
+  - box
+  - kettlebell
+  - pull_up_bar
+sources:
+  - Horsemen
+notes: >
+  50-40-30-20-10 step-ups onto an 18 in box holding two 35 lb kettlebells, and knees to elbows.
+  The source writes only the rep scheme, no clock.

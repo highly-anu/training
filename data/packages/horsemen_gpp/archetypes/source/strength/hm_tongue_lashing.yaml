@@ -1,0 +1,67 @@
+id: hm_tongue_lashing
+name: Tongue Lashing
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [strict_press]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: press
+  slot_type: sets_reps
+  sets: 6
+  reps: 3
+  exercise_filter:
+    exercise_ids: [strict_press]
+    ordered: true
+  load: 75-80% of today's 1RM
+  notes: '6 rounds, alternating: 3 standing presses, 10 m walking lunges holding dumbbells — not for time.'
+- role: walking_lunge
+  slot_type: distance
+  distance_m: 10
+  sets: 6
+  exercise_filter:
+    exercise_ids: [db_walking_lunge]
+    ordered: true
+  notes: 10 m holding dumbbells; no load given.
+- role: curtis_p
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [curtis_p]
+    ordered: true
+  notes: '5 rounds, alternating: 5 Curtis P''s, 1 rope climb (or 10 pull-ups), 30 s jingle jangles / 30 s rest —
+    not for time. A Curtis P is a hang squat clean, a forward lunge on each leg and a push press.'
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [rope_climb, pull_up]
+    ordered: true
+  notes: 1 rope climb, or 10 pull-ups without a rope.
+- role: jingle_jangles
+  slot_type: time_domain
+  duration_sec: 30
+  sets: 5
+  rest_sec: 30
+  exercise_filter:
+    exercise_ids: [jingle_jangles]
+    ordered: true
+  notes: 30 s of jingle jangles (5-yard sprints back and forth), 30 s rest.
+required_equipment: [barbell, rack, plates, dumbbell, pull_up_bar, open_space]
+sources: [Horsemen]
+notes: Work up to a 1-rep max standing press, then 6 rounds of 3 presses at 75-80% of it with 10 m of dumbbell walking
+  lunges, then 5 rounds of Curtis P's, a rope climb and 30/30 jingle jangles. The source does not time it. Without
+  a rope, 10 pull-ups replace each climb. Where no load is given, the source leaves it to the athlete (its Weight
+  Loading rule).

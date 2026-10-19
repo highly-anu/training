@@ -285,9 +285,14 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
                         f"week ran {w.get('framework')}, the phase names {phase['framework_id']}", wn)
             _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, excl_ids,
                         flagged, injury_flags, modalities, library, constraints,
-                        {**checks, 'exclude_exercises': phase.get('exclude_exercises')})
+                        {**checks, 'exclude_exercises': phase.get('exclude_exercises')},
+                        templated=bool(phase.get('week_templates')))
 
-        _check_shape(out, phase_id, fw, work_weeks, philosophy)
+        if phase.get('week_templates'):
+            # The source writes the week day by day; that is its shape.
+            _check_template(out, phase_id, phase, fw, pweeks, constraints)
+        else:
+            _check_shape(out, phase_id, fw, work_weeks, philosophy)
         _check_intensity(out, phase_id, fw, work_weeks, checks)
         _check_deload(out, phase_id, fw, pweeks, constraints)
         _check_required(out, phase_id, work_weeks, checks)
@@ -300,7 +305,7 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
 
 
 def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, excl_ids,
-                flagged, injury_flags, modalities, library, constraints, checks):
+                flagged, injury_flags, modalities, library, constraints, checks, templated=False):
     wn = w.get('week_number')
     allowed = consecutive_allowances(fw, kind)
     max_zone = checks.get('max_zone')
@@ -379,7 +384,37 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
                     out.add('zone_above_cap', 'error', phase_id, f"{aid}:{eid}",
                             f"{eid} in {aid} reaches Zone {hi}; the phase caps at Zone {max_zone}", wn)
 
-    _check_recovery(out, phase_id, wn, placed, modalities, allowed)
+    if not templated:
+        # A templated week's day order is the source's own.
+        _check_recovery(out, phase_id, wn, placed, modalities, allowed)
+
+
+def _check_template(out, phase_id, phase, fw, pweeks, constraints):
+    """A templated phase runs the source's week: each day the athlete keeps,
+    in its category (a test stands in for the day it replaces). A day left
+    out or run as its declared fallback is the athlete's equipment, injuries
+    or time, which the week's compromises name — information, not drift."""
+    from . import week_template
+    categories = fw.get('categories') or {}
+    templates = phase['week_templates']
+    for w in pweeks:
+        wn = w.get('week_number')
+        template = templates[((w.get('week_in_phase') or 1) - 1) % len(templates)]
+        kept, _ = week_template.training_days(template, constraints.get('days_per_week', 6),
+                                              phase.get('drop_order') or [], categories)
+        want = Counter(spec['categories'][0] for _, spec in kept)
+        got = Counter(s.get('category') for _, s in _sessions(w))
+        for cat, n in (want - got).items():
+            out.add('template_day_missing', 'info', phase_id, cat,
+                    f"{n} {categories.get(cat, {}).get('name', cat)} day(s) of the source's week "
+                    'did not run (see the compromises)', wn)
+        for cat, n in (got - want).items():
+            if cat not in categories:
+                out.add('template_foreign_day', 'error', phase_id, str(cat),
+                        f"a session outside the phase's day categories ({cat})", wn)
+            else:
+                out.add('template_fallback', 'info', phase_id, cat,
+                        f"{n} day(s) ran as {categories[cat]['name']} in place of the written category", wn)
 
 
 def _check_recovery(out, phase_id, wn, placed: dict, modalities: dict, allowed: frozenset):

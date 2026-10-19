@@ -1,0 +1,34 @@
+id: hm_twelve_minute_kettlebell_complex
+name: 12-Minute Kettlebell Complex
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: kb_complex
+  slot_type: time_domain
+  duration_sec: 720
+  load: 16 kg (35 lb)
+  exercise_filter:
+    exercise_ids:
+    - kb_complex_12min
+    ordered: true
+  notes: >-
+    1 minute each, in order: 1-arm swing right, figure 8 right to left, 1-arm swing left, figure
+    8 left to right, clean and press right arm, slasher to halo, clean and press left arm, slasher
+    to halo, snatch right arm, right-leg lunge (KB in the left arm), snatch left arm, left-leg
+    lunge (KB in the right arm). Move straight from one to the next; don't put the KB down or
+    stop moving.
+required_equipment:
+- kettlebell
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A warm-up: twelve one-minute kettlebell exercises back to back, the bell never put down in the
+  12 minutes. The source says other 12-minute complexes may be made up; this is the one it writes
+  out. Unnamed in the source.

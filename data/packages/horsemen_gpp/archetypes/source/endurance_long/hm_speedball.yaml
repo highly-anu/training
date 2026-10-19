@@ -1,0 +1,27 @@
+id: hm_speedball
+name: Speedball
+modality: aerobic_base
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: speedball
+  slot_type: time_domain
+  duration_sec: 3600
+  exercise_filter:
+    exercise_ids:
+    - speedball
+    ordered: true
+  notes: Play a game of at least an hour, preferably straight with no subs.
+required_equipment:
+- training_partner
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Speedball, "the game of the gods": a team game of at least one hour, preferably played straight
+  with no substitutes. The source gives no rules and no intensity.

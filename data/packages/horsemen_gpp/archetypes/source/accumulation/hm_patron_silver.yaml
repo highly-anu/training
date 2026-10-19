@@ -1,0 +1,52 @@
+id: hm_patron_silver
+name: Patron (Silver)
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: kb_complex
+  slot_type: time_domain
+  duration_sec: 720
+  exercise_filter:
+    exercise_ids:
+    - kb_complex_12min_atw
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: >-
+    1 min each of kettlebell around the world (around the waist), figure 8, snatch and step-ups onto a
+    25 cm (10 in) box, 3 times through (12 min). The bell may not be set down during the session.
+- role: fat_bar_deadlifts
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - fat_bar_deadlift
+    ordered: true
+  load: 48 kg (105 lb) or more
+- role: dead_hangs
+  slot_type: static_hold
+  hold_seconds: 30
+  sets: 4
+  exercise_filter:
+    exercise_ids:
+    - dead_hang
+    ordered: true
+  notes: From a pull-up bar or rings.
+required_equipment:
+- kettlebell
+- box
+- barbell
+- plates
+- pull_up_bar
+sources:
+- Horsemen
+notes: >-
+  A 12-minute kettlebell complex at 53 lb (around the world, figure 8, snatch, step-up, a minute each,
+  3 times, never setting the bell down), then 10 fat-bar deadlifts at 105 lb or more and 4 x 30 s dead
+  hangs.

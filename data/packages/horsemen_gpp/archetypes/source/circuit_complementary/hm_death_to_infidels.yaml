@@ -1,0 +1,92 @@
+id: hm_death_to_infidels
+name: "Death to Infidels"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 40
+pool_only: true
+
+slots:
+  - role: front_squats
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    exercise_filter:
+      exercise_ids: [front_squat]
+      ordered: true
+    notes: >
+      Part 1, 5 rounds, alternating: 3 front squats, 3 dumbbell or kettlebell military presses —
+      the source gives no clock.
+
+  - role: military_press
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    exercise_filter:
+      exercise_ids: [db_press, kb_press_single]
+      ordered: true
+    notes: >
+      The source writes "DB/KB Military Press": either.
+
+  - role: power_cleans
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    load: "52 kg (115 lb)"
+    exercise_filter:
+      exercise_ids: [power_clean]
+      ordered: true
+    notes: >
+      Part 2, 5 rounds, alternating: 15 power cleans, 15 ring push-ups with the feet above the
+      hands.
+
+  - role: ring_push_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    exercise_filter:
+      exercise_ids: [push_up_ring]
+      ordered: true
+    notes: >
+      Feet above the hands.
+
+  - role: box_jumps
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    notes: >
+      Part 3, 5 rounds, alternating: 10 box jumps onto 24 in (61 cm), 5 pull-ups, 5 GHD sit-ups.
+
+  - role: pull_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: ghd_sit_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    exercise_filter:
+      exercise_ids: [ghd_sit_up]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - box
+  - ghd
+  - plates
+  - pull_up_bar
+  - rack
+  - rings
+sources:
+  - Horsemen
+notes: >
+  Three parts of 5 rounds: front squats and military presses; power cleans at 115 lb and feet-up
+  ring push-ups; box jumps, pull-ups and GHD sit-ups. The source says neither for time nor how
+  to rest. Where the source gives no load it is the athlete's choice (its Weight Loading rule).

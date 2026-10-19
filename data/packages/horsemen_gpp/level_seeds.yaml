@@ -1,0 +1,20 @@
+# What a Horsemen athlete is assumed to arrive with, per level
+# (loader.load_level_seeds; package-scoped, cascading upward).
+#
+# The source is written for experienced operators — daily 1RM work, Olympic
+# lifts at 80-100%, sandbag get-ups and half moons — and has no novice path.
+# Without these the catalog's sandbag get-up, half moon, sandbag clean and
+# press and kettlebell carries stayed locked below elite, and eleven of its
+# named workouts (Drunken Lullaby, Get Up's Till You Throw Up, Ronald Reagan,
+# Juicy Heartache, Max Out!, Wasted Love, Pantaloon Hada, Massive Move, The
+# Elevator, 100 sandbag get-ups and the sandbag get-up warm-up) could never
+# be prescribed as written.
+seeds:
+  intermediate:
+    - hip_hinge_pattern
+    - bracing_mechanics
+    - vertical_push_pattern
+    - kb_tgu
+    - kb_deadlift
+    - kb_farmer_carry
+    - sb_clean

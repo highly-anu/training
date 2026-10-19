@@ -1,0 +1,101 @@
+id: hm_the_elevator
+name: The Elevator
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: goblet_squats_1
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - kb_squat_goblet
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: 'Floor 1: 20 goblet squats, 100 m sprint.'
+- role: sprint_1
+  slot_type: distance
+  distance_m: 100
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: 'Floor 2: 20 swings, 100 m sprint, 100 m suitcase carry with two bells.'
+- role: sprint_2
+  slot_type: distance
+  distance_m: 100
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+- role: suitcase_carry_two_bells
+  slot_type: distance
+  distance_m: 100
+  exercise_filter:
+    exercise_ids:
+    - kb_farmer_carry_double
+    ordered: true
+  load: 2 x 24 kg (2 x 53 lb)
+- role: goblet_squats_2
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - kb_squat_goblet
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: >-
+    Floor 3: 20 goblet squats, 100 m sprint, 100 m suitcase carry with one bell, 1 "decide and throw".
+- role: sprint_3
+  slot_type: distance
+  distance_m: 100
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+- role: suitcase_carry_one_bell
+  slot_type: distance
+  distance_m: 100
+  exercise_filter:
+    exercise_ids:
+    - kb_suitcase_carry
+    ordered: true
+  load: 24 kg (53 lb)
+- role: decide_and_throw
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - heavy_object_throw
+    ordered: true
+  notes: 1 "decide and throw". The source does not define it; read here as a heavy-object throw.
+required_equipment:
+- kettlebell
+- open_space
+- medicine_ball
+sources:
+- Horsemen
+notes: >-
+  Three floors, each adding a piece: 20 goblet squats and a 100 m sprint; 20 swings, a sprint and a 100
+  m suitcase carry with two 53 lb bells; 20 goblet squats, a sprint, a one-bell suitcase carry and a "decide
+  and throw", which the source does not define.

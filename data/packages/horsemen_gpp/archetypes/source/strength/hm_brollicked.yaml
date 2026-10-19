@@ -1,0 +1,35 @@
+id: hm_brollicked
+name: Brollicked
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: hang_squat_clean
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [hang_squat_clean]
+    ordered: true
+  notes: '5 rounds, alternating: 5 hang squat cleans, 5 bench presses — not for time.'
+- role: bench_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+- role: turkish_get_up
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  notes: 50 Turkish get-ups, 25 each hand.
+required_equipment: [barbell, rack, plates, kettlebell]
+sources: [Horsemen]
+notes: Five rounds of 5 hang squat cleans and 5 bench presses, then 50 Turkish get-ups, 25 each hand. The source
+  does not time it. Where no load is given, the source leaves it to the athlete (its Weight Loading rule).

@@ -1,0 +1,63 @@
+id: hm_thin_blue_line
+name: Thin Blue Line
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 18
+slots:
+- role: burpees
+  slot_type: emom
+  work_sec: 180
+  sets: 6
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+  load: bodyweight
+  notes: >-
+    Every 3 minutes for 6 rounds: 10 burpees, 25 m bear crawl, 25 m sled or tire drag, 20 sit-ups; rest
+    out the 3 minutes.
+- role: bear_crawl
+  slot_type: amrap_movement
+  parent_slot_role: burpees
+  reps_per_round: 1
+  distance_m: 25
+  exercise_filter:
+    exercise_ids:
+    - bear_crawl
+    ordered: true
+  notes: 25 m.
+- role: sled_or_tire_drag
+  slot_type: amrap_movement
+  parent_slot_role: burpees
+  reps_per_round: 1
+  distance_m: 25
+  exercise_filter:
+    exercise_ids:
+    - sled_drag
+    - tire_drag_forward
+    - jingle_jangles
+    ordered: true
+  notes: >-
+    25 m with a sled or a tire; with neither, 40 s of jingle jangles. The source gives no load.
+- role: sit_ups
+  slot_type: amrap_movement
+  parent_slot_role: burpees
+  reps_per_round: 20
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+  load: bodyweight
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Every 3 minutes for 6 rounds: 10 burpees, a 25 m bear crawl, a 25 m sled or tire drag and 20 sit-ups.
+  Where no load is written it is the athlete's call, by the source's weight-loading rule.

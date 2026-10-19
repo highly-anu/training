@@ -1,0 +1,20 @@
+id: hm_100_curtis_ps
+name: 100 Curtis P's
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: curtis_p
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids: [curtis_p]
+    ordered: true
+  notes: '100 Curtis P''s: each a hang squat clean, a forward lunge on each leg and a push press.'
+required_equipment: [barbell, plates]
+sources: [Horsemen]
+notes: One hundred Curtis P's (hang squat clean, a forward lunge on each leg, push press). The source gives no load
+  and no time; the weight is left to the athlete.

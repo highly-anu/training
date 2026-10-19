@@ -340,7 +340,7 @@ def report_level_phase_gaps(frameworks: list, data: dict) -> list[str]:
         phil_id = phil['id']
         # A test is placed by its phase, never selected: it covers no gap.
         archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id
-                      and not standard_tests.is_test_only(a)]
+                      and not standard_tests.is_test_only(a) and not a.get("pool_only")]
         uses: dict = {}                     # framework id -> phase kinds it runs in
         for track in phases.tracks_of(phil):
             for ph in track['phases']:
@@ -373,7 +373,7 @@ def report_coverage() -> int:
     for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
         phil_id = phil['id']
         archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id
-                      and not standard_tests.is_test_only(a)]
+                      and not standard_tests.is_test_only(a) and not a.get("pool_only")]
         have = {a.get('modality') for a in archetypes}
 
         prescribed: set = set()

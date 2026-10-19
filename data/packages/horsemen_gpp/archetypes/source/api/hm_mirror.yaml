@@ -1,0 +1,212 @@
+id: hm_mirror
+name: Mirror
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: db_snatch_right
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - db_snatch
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: >-
+    45 s at each station, in order, until all are finished: DB snatches, right hand.
+- role: db_snatch_left
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - db_snatch
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: DB snatches, left hand.
+- role: renegade_rows
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - db_renegade_row
+    ordered: true
+  load: 9 kg (20 lb)
+- role: db_row_right
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - db_row_single_arm
+    ordered: true
+  load: 23 kg (50 lb)
+  notes: DB bent-over row with a bench, right arm.
+- role: db_row_left
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - db_row_single_arm
+    ordered: true
+  load: 23 kg (50 lb)
+  notes: DB bent-over row with a bench, left arm.
+- role: kb_sumo_squats
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_sumo_squat_double
+    ordered: true
+  load: 2 x 34 kg (2 x 75 lb)
+- role: kb_swing_right
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_single_arm
+    ordered: true
+  notes: KB swing, right arm.
+- role: kb_swing_left
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_single_arm
+    ordered: true
+  notes: KB swing, left arm.
+- role: kb_press_right
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_press_single
+    - db_press
+    ordered: true
+  notes: KB press, right arm (a dumbbell will do).
+- role: kb_press_left
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_press_single
+    - db_press
+    ordered: true
+  notes: KB press, left arm (a dumbbell will do).
+- role: cardio_ladder
+  slot_type: time_domain
+  duration_sec: 45
+  skip_exercise: true
+  notes: >-
+    Cardio ladder (20, 40, 60, 80) as the source writes it; it names neither the mode nor the unit.
+- role: hb_mounted_punch
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - heavy_bag_mounted_punch
+    ordered: true
+  notes: Heavy bag mounted punches.
+- role: hb_twirls
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - heavy_bag_twirl
+    ordered: true
+  notes: Heavy bag twirls.
+- role: hb_hip_to_hip
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - heavy_bag_hip_to_hip
+    ordered: true
+  notes: Heavy bag hip to hip.
+- role: hb_lateral_hops
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - lateral_hop_over_bag
+    ordered: true
+  notes: Lateral hops over the heavy bag.
+- role: hb_spiderman_push_ups
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - spiderman_push_up
+    ordered: true
+  notes: Spiderman push-ups on the heavy bag.
+- role: cardio_1
+  slot_type: time_domain
+  duration_sec: 45
+  skip_exercise: true
+  notes: >-
+    Cardio; the source does not say which.
+- role: manhole_covers
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - plate_bent_over_row
+    ordered: true
+  load: 45 kg (100 lb) plate
+  notes: 'Manhole covers: bent-over row with a plate.'
+- role: corkscrew_right
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - corkscrew
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: Corkscrew, right.
+- role: corkscrew_left
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - corkscrew
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: Corkscrew, left.
+- role: figure_eights
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - kb_figure_eight
+    ordered: true
+  load: 20 kg (45 lb)
+- role: plate_press
+  slot_type: time_domain
+  duration_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - plate_press
+    ordered: true
+  load: 20 kg (45 lb) plate
+- role: cardio_2
+  slot_type: time_domain
+  duration_sec: 45
+  skip_exercise: true
+  notes: >-
+    Cardio; the source does not say which.
+required_equipment:
+- plates
+- kettlebell
+- dumbbell
+- sandbag
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API station workout tagged MP/CP in the source: 45 seconds at each of 23 stations — dumbbell, kettlebell,
+  heavy bag and plate work, mostly mirrored right and left, with cardio between blocks. The cardio's mode
+  is the athlete's choice; the source does not say which. Where the source gives no load the weight is
+  the athlete's call, by its weight-loading rule.

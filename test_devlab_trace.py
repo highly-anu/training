@@ -42,9 +42,11 @@ SCENARIOS: dict[str, dict] = {
     },
     # Injury-blocked slots, a session swapped to another modality because
     # nothing is written for a novice, a level-locked slot and a test session.
-    'horsemen_novice_injured': {
+    # Horsemen runs its source's week templates (src/week_template.py): each
+    # day a named workout forced from its category's pool. It has no novice path.
+    'horsemen_injured': {
         'philosophy_id': 'horsemen_gpp', 'num_weeks': 1,
-        'constraints': {**_ATHLETE, 'days_per_week': 5, 'training_level': 'novice',
+        'constraints': {**_ATHLETE, 'days_per_week': 5, 'training_level': 'intermediate',
                         'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'open_space'],
                         'injury_flags': ['shoulder_impingement', 'lumbar_disc']},
     },

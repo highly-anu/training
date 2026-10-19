@@ -1,0 +1,91 @@
+id: hm_honey_butter
+name: Honey Butter
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: deadlift
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 50% of 1RM, adding weight each round
+  notes: '7 rounds, alternating: 5 deadlifts (start at 50% of 1RM, add weight each round), 10 box jumps on a 24
+    in (61 cm) box, 10 heavy weighted sit-ups — not for time.'
+- role: box_jump
+  slot_type: sets_reps
+  sets: 7
+  reps: 10
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: 24 in (61 cm) box.
+- role: weighted_sit_up
+  slot_type: sets_reps
+  sets: 7
+  reps: 10
+  exercise_filter:
+    exercise_ids: [sit_up_weighted]
+    ordered: true
+  load: heavy
+- role: sandbag_clean_and_squat
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [sb_clean_and_squat]
+    ordered: true
+  load: 48 kg (105 lb)
+  notes: '5 rounds, alternating: clean a heavy bag, squat it 3 times and run with it; 5 bench presses (start at
+    65%, add weight each round); 1 rope climb (or 10 pull-ups) — not for time.'
+- role: sandbag_run
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [sb_run]
+    ordered: true
+  load: 48 kg (105 lb)
+  notes: Run with the bag after the squats; the source does not say how far.
+- role: bench_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+  load: 65% of 1RM, adding weight each round
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [rope_climb, pull_up]
+    ordered: true
+  notes: 1 rope climb, or 10 pull-ups without a rope.
+- role: db_crawl
+  slot_type: distance
+  distance_m: 20
+  sets: 3
+  exercise_filter:
+    exercise_ids: [db_crawl]
+    ordered: true
+  load: 25 kg (55 lb)
+  notes: '3 rounds, alternating: 20 m dumbbell crawl (a bear crawl holding the dumbbells), 5 glute-ham raises —
+    not for time.'
+- role: glute_ham_raise
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids: [glute_ham_raise]
+    ordered: true
+required_equipment: [barbell, rack, plates, box, sandbag, open_space, pull_up_bar, dumbbell, ghd]
+sources: [Horsemen]
+notes: 'The source''s strength-maintenance workout: 7 rounds of deadlifts, box jumps and heavy weighted sit-ups,
+  5 rounds of heavy-bag clean, squat and run with bench presses and rope climbs, and 3 rounds of dumbbell crawls
+  and glute-ham raises. The source does not time it. Without a rope, 10 pull-ups replace each climb.'

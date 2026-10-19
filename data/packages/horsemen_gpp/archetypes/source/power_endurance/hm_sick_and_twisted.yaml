@@ -1,0 +1,102 @@
+id: hm_sick_and_twisted
+name: Sick and Twisted
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: max_strict_pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: max
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+  notes: Max strict pull-ups in one set.
+- role: press_complex
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids:
+    - press_push_press_push_jerk_complex
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: >-
+    5 rounds, alternating: 3 press / push press / push jerk complexes, 5 knees to elbows, 10 kipping pull-ups.
+- role: knees_to_elbows
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - knees_to_elbows
+    ordered: true
+  load: bodyweight
+- role: kipping_pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kipping_pull_up
+    ordered: true
+  load: bodyweight
+- role: bench_presses
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+  notes: '5 rounds, alternating: 5 bench presses, 10 band GHD sit-ups.'
+- role: band_ghd_sit_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - band_ghd_sit_up
+    ordered: true
+  notes: The source does not define the band GHD sit-up.
+- role: one_arm_barbell_presses
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - barbell_press_single_arm
+    ordered: true
+  notes: >-
+    3 rounds, alternating: 10 one-arm standing barbell presses, 15 floor wipers. The source does not say
+    each arm.
+- role: floor_wipers
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - floor_wiper
+    ordered: true
+  load: 75 kg (165 lb)
+required_equipment:
+- pull_up_bar
+- barbell
+- rack
+- plates
+- resistance_band
+sources:
+- Horsemen
+notes: >-
+  A max strict pull-up test, then 5 rounds of a 95 lb press / push press / push jerk complex, knees to
+  elbows and kipping pull-ups, 5 rounds of bench press and band GHD sit-ups, and 3 rounds of one-arm barbell
+  presses and floor wipers at 165 lb. The later blocks have no title of their own and are read as part
+  of it. Where no load is written it is the athlete's call, by the source's weight-loading rule.

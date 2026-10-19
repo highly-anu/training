@@ -1,0 +1,72 @@
+id: hm_five_rounds_deadlift_burpees_swings_pull_ups_push_press
+name: '5 Rounds: Deadlift, Burpees, Swings, Pull-ups, Push Press'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 1x bodyweight
+  notes: >-
+    5 rounds, alternating: 10 deadlifts, 10 burpees, 10 kettlebell swings, 5 pull-ups, 10 dumbbell push
+    presses. The source gives no clock.
+- role: burpees
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+  load: bodyweight
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 25 kg (55 lb)
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+- role: db_push_presses
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - db_push_press
+    ordered: true
+  load: 20 kg (45 lb)
+  notes: The source writes 45 lb without saying one dumbbell or a pair.
+required_equipment:
+- barbell
+- plates
+- kettlebell
+- pull_up_bar
+- dumbbell
+sources:
+- Horsemen
+notes: >-
+  Unnamed in the source. Five rounds of 10 deadlifts at bodyweight, 10 burpees, 10 kettlebell swings at
+  55 lb, 5 pull-ups and 10 dumbbell push presses at 45 lb. It is the second untitled 5-round block after
+  Start Your Face, a whole session of its own.

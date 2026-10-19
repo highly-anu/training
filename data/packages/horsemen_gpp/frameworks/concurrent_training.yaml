@@ -21,13 +21,12 @@ modality_priority:
   supplementary: [strength_endurance]
 
 # The source gives no intensity distribution and no RPE, so none is declared.
-# The schema has no progression model for the source's loading — a 1RM worked
-# up to on the day, then percentages of it, fixed loads or multiples of
-# bodyweight. linear_load is the nearest value: it names load as the currency
-# the analytics read (the generator takes each modality's own model). It does
-# not mean the source adds weight session to session; it states no
-# week-to-week rule.
-progression_model: linear_load
+# Its loads are a 1RM worked up to on the day and percentages of it, fixed
+# weights and multiples of bodyweight, none of which the app can compute or
+# ramp: every slot is prescribed as written (progression.as_written), its
+# `load` text saying what to lift.
+prescription_policy: framework
+progression_model: as_written
 
 applicable_when:
   training_level:
@@ -80,16 +79,15 @@ notes: >
   The weekly build of the Horsemen four-month macro. In the source every week
   is six training days and a rest day: each day is a category — strength,
   power endurance, job specific, SMMF, progression, circuits, density,
-  accumulation, endurance, recovery — and the workout is picked from that
-  category's list of named workouts. Strength days work up to a 1RM in the
-  day's lift, then work at percentages of it; other loads are fixed or
-  multiples of bodyweight. There is no RPE and no deload week; a recovery
-  day (30-60 minutes at 65% of max heart rate or less) and a rest day sit in
-  every week. This framework simplifies that: it allocates sessions by
-  modality and cadence rather than by the source's day categories, and the
-  same allocation serves all four months, although each month's mix differs
-  in the source. Session lengths are the app's; the source gives none in
-  general.
+  accumulation, endurance, recovery — opened by a warm-up from its list, and
+  the workout is picked from that category's list of named workouts. Each
+  phase writes its month's weeks day by day (philosophy.yaml week_templates);
+  the categories below are those lists, taken in rotation. Strength days work
+  up to a 1RM in the day's lift, then work at percentages of it; other loads
+  are fixed or multiples of bodyweight. There is no RPE and no deload week; a
+  recovery day (30-60 minutes at 65% of max heart rate or less) and a rest day
+  sit in every week. sessions_per_week and cadence_options describe the same
+  month for readers that need a modality mix; the templates decide the days.
 
 expectations:
   min_weeks: 12
@@ -100,3 +98,344 @@ expectations:
   ideal_session_minutes: 90
   ideal_long_session_minutes: 120
   supports_split_days: true
+
+# The source's day categories (src/week_template.py): each day of a phase's
+# week_templates draws the next workout of its category the athlete can do as
+# written; a category none fits falls back in the order given, and the week
+# says so. Pools are in the source's order; every workout is pool_only.
+warm_up_category: warm_up
+categories:
+  warm_up:
+    name: "Warm-up"
+    modality: mixed_modal_conditioning
+    warm_up: false
+    archetypes:
+      - hm_barbell_complex
+      - hm_twelve_minute_kettlebell_complex
+      - hm_sandbag_get_ups
+      - hm_wall_ball_and_sit_ups
+      - hm_deadlift_and_kettlebell_clean_and_press
+      - hm_finger_board_hangs
+      - hm_swings_jumping_lunges_push_ups
+      - hm_swing_and_push_press_ladder
+      - hm_power_clean_and_press_sets
+      - hm_squat_jumps_and_clapping_push_ups
+      - hm_ten_minute_step_ups
+      - hm_ten_minute_kettlebell_complex
+      - hm_turkish_get_ups_and_sam_drill
+      - hm_row_and_power_cleans
+      - hm_two_k_row
+      - hm_get_ups_burpees_step_ups
+      - hm_overhead_squats_push_ups_pull_ups
+      - hm_row_and_barbell_complex
+      - hm_row_deadlifts_push_ups
+      - hm_one_mile_tire_drag
+  strength:
+    name: "Strength"
+    modality: max_strength
+    fallback: [strength_maintenance]
+    archetypes:
+      - hm_tongue_lashing
+      - hm_ben_franklin
+      - hm_russian_aggression
+      - hm_riley_black_bench_press
+      - hm_juicy_heartache
+      - hm_goldman_sachs
+      - hm_chin_up_soldier_on
+      - hm_riley_black_deadlift
+      - hm_honey_butter
+      - hm_family_friendly_violence
+      - hm_act_with_a_purpose
+      - hm_riley_black_front_squat
+      - hm_soviet_capitalists
+      - hm_hook_and_bullet
+      - hm_well_done_is_better_than_well_said
+      - hm_riley_black_overhead_squat
+      - hm_bloody_nose
+      - hm_wasted_love
+      - hm_max_out
+      - hm_riley_black_military_press
+      - hm_brollicked
+      - hm_riley_black_squat
+      - hm_riley_black_weighted_pull_up
+  strength_maintenance:
+    name: "Strength (maintenance)"
+    modality: max_strength
+    fallback: [strength]
+    archetypes:
+      - hm_honey_butter
+      - hm_tongue_lashing
+      - hm_riley_black_bench_press
+      - hm_ben_franklin
+      - hm_hook_and_bullet
+      - hm_riley_black_deadlift
+      - hm_well_done_is_better_than_well_said
+      - hm_bloody_nose
+      - hm_riley_black_front_squat
+      - hm_wasted_love
+      - hm_brollicked
+      - hm_riley_black_overhead_squat
+      - hm_riley_black_military_press
+      - hm_riley_black_squat
+      - hm_riley_black_weighted_pull_up
+  olympic:
+    name: "Olympic lifting"
+    modality: power
+    fallback: [power_explosive]
+    archetypes:
+      - hm_snatch_your_face
+      - hm_gorilla_mania
+  power_endurance:
+    name: "Power endurance"
+    modality: mixed_modal_conditioning
+    fallback: [density, circuit_short]
+    archetypes:
+      - hm_palin_in_2012
+      - hm_ten_rounds_pull_dip_push
+      - hm_secret_service_snatch_test
+      - hm_three_mile_run_all_out
+      - hm_counting_dead_bodies_like_sheep_to_the_rhythm_of_a_war_drum
+      - hm_get_ups_till_you_throw_up
+      - hm_tabata_hell
+      - hm_cheech
+      - hm_hell_raise_your_taxes
+      - hm_ten_to_one_grind_ladder
+      - hm_buddy_tonight
+      - hm_drunken_lullaby
+      - hm_i_am_ron_burgundy
+      - hm_start_your_face
+      - hm_five_rounds_run_carry_get_ups_burpees
+      - hm_five_rounds_deadlift_burpees_swings_pull_ups_push_press
+      - hm_your_mama_called
+      - hm_girl_farts
+      - hm_lovely_turd
+      - hm_big_5_55
+      - hm_ronald_reagan
+      - hm_sick_and_twisted
+      - hm_d_day
+  power_explosive:
+    name: "Power (explosive)"
+    modality: power
+    fallback: [power_cardio]
+    archetypes:
+      - hm_explosive_power_1rm_clean
+      - hm_explosive_power_1rm_push_press
+      - hm_explosive_power_1rm_jerk
+      - hm_explosive_power_1rm_clean_and_jerk
+      - hm_explosive_power_1rm_snatch
+      - hm_not_now_chief_im_in_the_zone
+      - hm_clapping_chasers
+  power_cardio:
+    name: "Power (cardio)"
+    modality: mixed_modal_conditioning
+    fallback: [power_explosive]
+    archetypes:
+      - hm_mexicee_mishnun
+      - hm_litvinov_conversion_hgh
+      - hm_yeah_this_collars_popped
+  smmf:
+    name: "SMMF"
+    modality: strength_endurance
+    fallback: [accumulation]
+    archetypes:
+      - hm_hspu_every_30_seconds
+      - hm_100_get_ups
+      - hm_100_rep_challenge
+      - hm_500m_lunge
+      - hm_100_burpee_pull_ups
+      - hm_100_curtis_ps
+      - hm_100_sandbag_get_ups
+      - hm_1_mile_heavy_bag_carry
+      - hm_karen
+  progression:
+    name: "Progression"
+    modality: mixed_modal_conditioning
+    fallback: [circuit_complementary]
+    archetypes:
+      - hm_meritorious
+      - hm_george_washington
+      - hm_sherbert
+      - hm_dead_storage
+      - hm_300
+      - hm_till_u_collapse
+      - hm_hummer
+      - hm_bannister
+      - hm_1000_reps
+      - hm_2_minutes
+      - hm_fifty
+      - hm_double_doubles
+  breathing_ladder:
+    name: "Breathing ladder"
+    modality: mixed_modal_conditioning
+    fallback: [density]
+    archetypes:
+      - hm_breathing_ladder_ball_slam
+      - hm_breathing_ladder_kb_swing
+      - hm_breathing_ladder_kb_snatch
+      - hm_breathing_ladder_kb_clean_and_squat
+      - hm_breathing_ladder_thruster
+  density:
+    name: "Density"
+    modality: mixed_modal_conditioning
+    fallback: [circuit_short]
+    archetypes:
+      - hm_purple_church
+      - hm_slab_city
+      - hm_mad_dog_20_20
+      - hm_thin_blue_line
+      - hm_300_sux
+      - hm_wicked_hangover
+  accumulation:
+    name: "Accumulation"
+    modality: strength_endurance
+    fallback: [smmf]
+    archetypes:
+      - hm_world_war_ii
+      - hm_stoplight
+      - hm_patron_silver
+      - hm_the_elevator
+      - hm_jagerbomb
+      - hm_sumo_baby
+  circuit_short:
+    name: "Circuit (short)"
+    modality: mixed_modal_conditioning
+    fallback: [circuit_focus, circuit_complementary]
+    archetypes:
+      - hm_elizabeth
+      - hm_grace
+      - hm_fran
+      - hm_chelsea
+      - hm_helen
+      - hm_jackie
+      - hm_annie
+      - hm_bad_bush
+      - hm_pbr
+      - hm_over_the_hills_and_far_away
+      - hm_joints_up_committee
+      - hm_poopy_pants
+      - hm_im_trying_to_get_that_oil
+  circuit_complementary:
+    name: "Circuit (complementary)"
+    modality: mixed_modal_conditioning
+    fallback: [circuit_short, circuit_focus]
+    archetypes:
+      - hm_horses_tail
+      - hm_jonestown_sprint
+      - hm_jonesworthy
+      - hm_stairway_to_heaven
+      - hm_louder_than_10
+      - hm_when_the_levee_breaks
+      - hm_johnnie_walker_red
+      - hm_johnnie_walker_green
+      - hm_johnnie_walker_blue
+      - hm_johnnie_walker_black
+      - hm_ex_wives_and_flat_tires
+      - hm_death_to_infidels
+      - hm_magnificent_7
+      - hm_crazy_8
+      - hm_tens
+      - hm_hells_bells
+      - hm_mr_smith
+      - hm_mirror
+      - hm_triples
+      - hm_not_so_short_and_sweet
+  circuit_focus:
+    name: "Circuit (focus)"
+    modality: mixed_modal_conditioning
+    fallback: [circuit_short, circuit_complementary]
+    archetypes:
+      - hm_twister
+      - hm_appeal_to_god
+      - hm_slam_and_step
+      - hm_panama_red
+      - hm_clockwork_orange
+      - hm_flemingway
+      - hm_goosed
+      - hm_fallen_angel_torn_wings
+      - hm_1775
+      - hm_the_cog
+      - hm_possum_stomper
+      - hm_linda
+  job_specific_short:
+    name: "Job specific (short)"
+    modality: durability
+    fallback: [job_specific_long]
+    archetypes:
+      - hm_cottage_cheese
+      - hm_enhance_your_freedom
+      - hm_sex_panther
+      - hm_massive_move
+      - hm_the_gun_show
+  job_specific_long:
+    name: "Job specific (long)"
+    modality: durability
+    long_day: true
+    fallback: [job_specific_short, job_specific_hard]
+    archetypes:
+      - hm_angry_girlfriend
+      - hm_dyer_maker
+      - hm_climbers_delight
+      - hm_ode_to_the_regiment
+      - hm_face_off
+      - hm_political_correctness
+      - hm_pantaloon_hada
+      - hm_pt_test_ii
+      - hm_bill_brasky
+      - hm_royale_with_cheese
+      - hm_sometimes_gangsters_just_have_to_bang_hammers
+  job_specific_hard:
+    name: "Job specific (hard)"
+    modality: durability
+    long_day: true
+    fallback: [job_specific_long, job_specific_short]
+    archetypes:
+      - hm_face_off
+      - hm_political_correctness
+      - hm_pantaloon_hada
+      - hm_sex_panther
+      - hm_pt_test_ii
+      - hm_massive_move
+      - hm_bill_brasky
+      - hm_royale_with_cheese
+      - hm_the_gun_show
+      - hm_sometimes_gangsters_just_have_to_bang_hammers
+  endurance:
+    name: "Endurance (30+ min)"
+    modality: aerobic_base
+    fallback: [endurance_long, recovery]
+    archetypes:
+      - hm_endurance_cycle_30
+      - hm_endurance_hike_30
+      - hm_endurance_run_30
+      - hm_endurance_row_30
+      - hm_endurance_swim_30
+  endurance_long:
+    name: "Endurance (60+ min)"
+    modality: aerobic_base
+    long_day: true
+    fallback: [endurance, recovery]
+    archetypes:
+      - hm_speedball
+      - hm_endurance_cycle_60
+      - hm_endurance_hike_60
+      - hm_endurance_run_60
+      - hm_endurance_row_60
+      - hm_endurance_swim_60
+  run:
+    name: "Run"
+    modality: aerobic_base
+    warm_up: false
+    fallback: [endurance]
+    archetypes:
+      - hm_maintenance_run
+  recovery:
+    name: "Recovery"
+    modality: aerobic_base
+    warm_up: false
+    archetypes:
+      - hm_winter_in_august
+      - hm_recovery_cycle
+      - hm_recovery_hike
+      - hm_recovery_row
+      - hm_recovery_swim
+      - hm_recovery_walk

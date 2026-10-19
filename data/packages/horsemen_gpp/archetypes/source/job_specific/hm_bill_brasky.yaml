@@ -1,0 +1,223 @@
+id: hm_bill_brasky
+name: Bill Brasky
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: >-
+    In order, each set followed by a 250 m row under the time given: 50 pull-ups, 40 knees to elbows,
+    30 windshield wipers, 20 ankles to bar, 50 air squats, 40 jumping lunges, 30 frog hops, 20 jumping
+    squats; then four pairs without rows.
+- role: row_1
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:50 or less.
+- role: knees_to_elbows
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - knees_to_elbows
+    ordered: true
+- role: row_2
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:50 or less.
+- role: windshield_wipers
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - windshield_wiper
+    ordered: true
+- role: row_3
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:50 or less.
+- role: ankles_to_bar
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - ankles_to_bar
+    ordered: true
+- role: row_4
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:55 or less.
+- role: air_squats
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - squat_air
+    ordered: true
+- role: row_5
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:55 or less.
+- role: jumping_lunges
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+- role: row_6
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:55 or less.
+- role: frog_hops
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - depth_jump
+    ordered: true
+  notes: Frog hops — the source glosses them as depth jumps.
+- role: row_7
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 1:00 or less.
+- role: jumping_squats
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - squat_jump
+    ordered: true
+- role: row_8
+  slot_type: distance
+  distance_m: 250
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 250 m row in 0:50 or less.
+- role: push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  notes: >-
+    Then the pairs: 50 push-ups / 50 arm haulers, 40 HSPU / 40 dips, 30 mountain climbers / 30 burpees,
+    20 one-arm push-ups / 20 double-unders.
+- role: arm_haulers
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - arm_hauler
+    ordered: true
+- role: handstand_push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - handstand_push_up
+    ordered: true
+- role: dips
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+- role: mountain_climbers
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - mountain_climber
+    ordered: true
+- role: burpees
+  slot_type: sets_reps
+  sets: 1
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+- role: one_arm_push_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - push_up_one_arm
+    ordered: true
+- role: double_unders
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+required_equipment:
+- pull_up_bar
+- parallettes
+- rower
+- box
+- jump_rope
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: eight bodyweight sets descending 50-40-30-20, each followed
+  by a 250 m row under 50 to 60 seconds, then four pairs of bodyweight movements. The rows carry the source's
+  time targets; the source does not say the whole is for time or give rests.
