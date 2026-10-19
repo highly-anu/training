@@ -16,14 +16,16 @@ an advanced track.
 | Track | Novice unique | Intermediate unique | Advanced unique | Elite unique | Weeks |
 |---|---:|---:|---:|---:|---:|
 | General Practice | 4 | 6 | 6 | 6 | 16 |
-| Pentathlon Prep | unsupported | 7 | 7 | 7 | 12 |
+| Pentathlon Prep | unsupported | 8 | 8 | 8 | 12 |
 | Squat Practice | 3 | 3 | 3 | 3 | 12 |
 | Snatch Practice | unsupported | 4 | 4 | 4 | 12 |
 | Get-Up and Loaded Mobility | unsupported | 5 | 5 | 5 | 12 |
 | Double-Bell Practice | unsupported | 6 | 6 | 6 | 12 |
 
-The union is **20 of 20 catalog IDs**; adding the columns is invalid because many
-tracks share preparation movements. No exercise catalog entries were removed to
+The union is **21 of 21 catalog IDs**; adding the columns is invalid because many
+tracks share preparation movements. Pentathlon Prep's eighth is the easy run of its
+optional general preparation (`run_zone2`, added 2026-10-19); at four days one run
+a week fits, at five both. No exercise catalog entries were removed to
 make the percentage larger.
 
 | Exercise family absent from the original two tracks | New programming path |
@@ -50,6 +52,14 @@ make the percentage larger.
   technique block is an app-authored extension using the existing catalog, not a
   verified official Wildman jerk cycle or a pentathlon event. Its inclusion is an
   explicit programming choice; catalog coverage alone does not establish fidelity.
+- Pentathlon Prep is not a Wildman program (Wildman publishes none). Since
+  2026-10-19 it follows kettlebell-sport practice: three event sessions a week
+  ([RazeBells](https://www.razebells.com/post/valery-fedorenko-gave-us-gold)), the
+  mini pentathlon as the regular rehearsal length
+  ([Kettlebell Nation](https://kettlebellnation.com/the-kettlebell-pentathalon/)),
+  repeats and intervals ([Girya Garage](http://www.giryagarage.com/powerbyparker/2022/8/10/kettlebell-sport-training-styles)),
+  optional easy runs ([Breaking Muscle](https://breakingmuscle.com/a-12-week-gpp-programme-for-kettlebell-sport-athletes/)),
+  on the [IKMF rules](https://ikmf-world.com/disciplines/ikmf-pentathlon).
 - [Tetris scheduling](https://www.wildmanathletica.com/programming): repeated
   movement programs can be scheduled as separate blocks on nonconsecutive days.
 

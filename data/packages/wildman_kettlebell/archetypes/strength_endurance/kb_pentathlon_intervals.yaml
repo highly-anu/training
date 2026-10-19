@@ -1,0 +1,49 @@
+id: kb_pentathlon_intervals
+name: KB Pentathlon Minute Intervals
+modality: strength_endurance
+category: kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 30
+applicable_phases:
+- base
+- build
+- peak
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 5
+  intensity: low
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  notes: ''
+- role: intervals
+  slot_type: emom
+  duration_minutes: 16
+  intensity: high
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_clean_single
+    - kb_jerk_single
+    - wk_kb_half_snatch
+    - wk_kb_push_press_single
+  notes: Each minute, the reps faster than competition pace, then rest for the remainder — about one
+    to one. The long cycle press is left to the volume and repeats sessions.
+- role: recovery
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: low
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+required_equipment:
+- kettlebell
+sources:
+- IKMF
+- Girya Garage (kettlebell sport intervals)
+notes: 'App adaptation from kettlebell-sport practice, not a Wildman program: short sets faster than
+  competition pace at about a 1:1 work-to-rest ratio. Placed by the Pentathlon Prep training contract.'

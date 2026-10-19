@@ -69,6 +69,16 @@ progress:
     - wk_kb_half_snatch
     - wk_kb_push_press_single
   expected: prescribed
+# Pentathlon Prep's optional general preparation: easy runs on free days.
+- id: easy_run_minutes
+  label: Easy running
+  primitive: duration
+  scope:
+    frameworks:
+    - kb_pentathlon
+    exercises:
+    - run_zone2
+  expected: prescribed
 benchmarks:
 - id: kb_pentathlon_clean_reps
   frameworks:

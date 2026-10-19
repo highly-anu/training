@@ -6,16 +6,21 @@ goals_served:
 - power
 - aerobic_base
 sessions_per_week:
-  strength_endurance: 2
+  strength_endurance: 3
+  aerobic_base: 2
 modality_priority:
   committed:
   - strength_endurance
   core: []
-  supplementary: []
+  supplementary:
+  - aerobic_base
+# With both easy runs: preparation, recovery and runs about 45 %, event work
+# about 30 %, the rests between events the rest. Without the optional runs the
+# easy share falls to about a fifth.
 intensity_distribution:
-  zone1_2_pct: 0.5
-  zone3_pct: 0.3
-  zone4_5_pct: 0.2
+  zone1_2_pct: 0.45
+  zone3_pct: 0.25
+  zone4_5_pct: 0.3
   max_effort_pct: 0.0
 progression_model: pentathlon_rpm
 applicable_when:
@@ -23,26 +28,30 @@ applicable_when:
   - intermediate
   - advanced
   - elite
-  days_per_week_min: 2
+  days_per_week_min: 3
   days_per_week_max: 5
 deload_protocol:
   frequency_weeks: 4
   volume_reduction_pct: 0.6
   intensity_change: reduce_slightly
 sources:
-- IKMF
-- Wildman
-- Pavel
-notes: Two nonconsecutive event-practice modules per week, implemented by training_contract.yaml.
-  All five events retain their identity, duration ceiling and rests. Entry requires
-  confirmed event proficiency. Progress is conditional on clean successful exposures;
-  competition practice tapers while the scored test remains exact. This event-preparation
-  track is an app adaptation, separate from General Practice.
+- IKMF (event rules)
+- RazeBells (three sessions a week, volume toward a full pentathlon)
+- Kettlebell Nation (mini pentathlon)
+- Girya Garage (repeats and intervals)
+- Breaking Muscle, Clemente (general preparation for kettlebell sport)
+notes: Three event sessions a week from kettlebell-sport practice, implemented by
+  training_contract.yaml — volume through all five events up to mini-pentathlon
+  length, repeats slightly faster than competition pace, minute intervals on the
+  four fast events — plus up to two optional easy runs on free days. A full practice
+  pentathlon ends Timed Sets and the test ends Competition. Entry requires confirmed
+  event proficiency; progress is conditional on clean successful exposures. An app
+  adaptation for the IKMF event, not a Wildman program, separate from General Practice.
 expectations:
   min_weeks: 10
   ideal_weeks: 14
-  min_days_per_week: 2
-  ideal_days_per_week: 2
-  min_session_minutes: 60
+  min_days_per_week: 3
+  ideal_days_per_week: 5
+  min_session_minutes: 50
   ideal_session_minutes: 60
   supports_split_days: false

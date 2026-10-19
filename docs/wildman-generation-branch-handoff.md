@@ -183,6 +183,37 @@ Twelve weeks on the added tracks is an app practice horizon, not a claim that an
 official paid Wildman program ends then. These tracks are labelled adaptations.
 Do not erase that distinction in future UI copy or fidelity assessments.
 
+## 2026-10-19: Pentathlon Prep rebuilt from kettlebell-sport practice
+
+Committed and rebased onto master, the contract cut Pentathlon Prep to two event
+sessions a week, while master had meanwhile given the track's antiglycolic
+session a heart-rate rest. Asked which mirrors a real program, a search found:
+Wildman publishes no pentathlon or antiglycolic program (his catalog is swing,
+clean & press, get-ups, snatch, deck squat, clubs, bodyweight); IKMF publishes
+the event rules only; practitioners prepare with three sessions a week of volume
+toward a full pentathlon and at least one full practice pentathlon per cycle
+(RazeBells), the mini pentathlon as a frequent predictor (Kettlebell Nation),
+repeats and intervals (Girya Garage), and easy steady runs as skippable general
+preparation (Breaking Muscle, Clemente); kettlebell sport needs its glycolytic
+capacity (Girevoy Sport Science). The user chose to follow that:
+
+- Three essential event modules a week — volume (five events, 3 → 4 minutes,
+  five-minute rests), repeats (5 × 3 minutes slightly faster than competition
+  pace, four-minute rests), minute intervals on the four fast events (6 → 10
+  reps, 4 → 6 rounds) — and an optional easy run, up to twice a week on free days.
+- A full practice pentathlon ends Timed Sets (week 10); the test ends Competition.
+- No antiglycolic work in Pentathlon; the archetype stays, credited to StrongFirst.
+- The track and framework say it is an IKMF / kettlebell-sport adaptation.
+
+Sources: [IKMF rules](https://ikmf-world.com/disciplines/ikmf-pentathlon),
+[RazeBells](https://www.razebells.com/post/valery-fedorenko-gave-us-gold),
+[Kettlebell Nation](https://kettlebellnation.com/the-kettlebell-pentathalon/),
+[Girya Garage](http://www.giryagarage.com/powerbyparker/2022/8/10/kettlebell-sport-training-styles),
+[Breaking Muscle](https://breakingmuscle.com/a-12-week-gpp-programme-for-kettlebell-sport-athletes/),
+[Girevoy Sport Science](https://www.gsscience.com.au/anti-glycolytic-musings-part-1/),
+[Wildman programs](https://www.wildmanathletica.com/all-programs). No official
+IKMF or Fedorenko training program is public; RazeBells' full program is paid.
+
 ## Research and confidence
 
 Sources used during the discussion, with narrower claims than marketing promises:

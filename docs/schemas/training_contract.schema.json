@@ -36,6 +36,7 @@
         "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
+        "optional": {"type": "boolean", "description": "Supplementary work the method lets the athlete skip: placed only on days no essential module uses, left out with its reason when none is free or its movement is ruled out."},
         "progression": {
           "type": "object", "additionalProperties": false, "required": ["model"],
           "properties": {
@@ -63,7 +64,9 @@
             "rest_after_sec": {"type": "integer", "minimum": 0},
             "target_rpm": {"type": "number", "exclusiveMinimum": 0},
             "loaded": {"type": "boolean"}, "notes": {"type": "string"},
-            "standard": {"type": "string"}
+            "standard": {"type": "string"},
+            "progresses": {"type": "boolean", "description": "Carries the module's progression without a bell (an easy run's minutes); a loaded block always does."},
+            "intensity": {"enum": ["zone1", "zone2", "low", "moderate", "high"], "description": "A prescribed intensity; a zone counts the block's heart rate in the analytics."}
           },
           "allOf": [{"if": {"properties": {"slot_type": {"enum": ["time_domain", "skill_practice"]}}}, "then": {"required": ["duration_sec"]}}]
         }}

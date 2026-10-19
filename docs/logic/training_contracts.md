@@ -15,6 +15,28 @@ Other packages retain their legacy generator while their contracts are authored.
 - Post-generation verification rejects unfulfilled contracts. The API returns 422
   and never persists that response. Generic session/exercise swaps cannot bypass it.
 
+## Optional modules and placement
+
+A module marked `optional: true` is supplementary work the method lets the athlete
+skip — Pentathlon Prep's easy runs. It is placed after the essential modules, only
+on days none of them uses, and never after the track's test module in the week;
+when no such day is free, or an injury, avoided movement or missing equipment
+rules its movement out, it is left out and the week and the program's compromises
+say why. It is never a reason to refuse the request.
+
+Essential modules are placed by searching every valid placement (exposures,
+spacing, budget) and keeping the first that (1) puts the test module's session
+last in the week, so a test week differs from its twin only by the test and the
+test closes it; (2) gives no module a shared day it does not need; and (3) fits
+the most optional sessions. Recovery spacing holds across week boundaries too.
+
+A block that progresses without a bell says `progresses: true` (an easy run's
+minutes follow its timed cycle); `intensity: zone2` writes the zone band onto the
+load, so the analytics count that block's heart rate. A scored test is verified
+against its own protocol's minutes, which need not equal the module's weekly
+ceiling (Pentathlon's practice sets stop at four minutes, the events run six), and
+it carries the protocol's hand switch for the watches.
+
 ## Wildman adaptation and sources
 
 The public swing FAQ describes increasing repetitions in fixed minute intervals,

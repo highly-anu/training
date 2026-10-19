@@ -384,18 +384,25 @@ def test_server_fields_both_watches_use():
     # A generated program: the sessions the packages now write this way.
     from src import goals
     from src.generator import generate
+    from src.progression import calculate_load
     frameworks = list(loader.load_all_frameworks().values())
     goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id='pentathlon')
-    prog = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=24, output_format='dict', constraints={
+    events = sorted({e for m in goal['training_contract']['modules'] for e in m.get('requires_mastery') or []})
+    prog = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=12, output_format='dict', constraints={
         'days_per_week': 5, 'session_time_minutes': 75, 'training_level': 'advanced',
         'equipment': ['kettlebell', 'open_space'], 'injury_flags': [], 'periodization_week': 1,
-        'fatigue_state': 'normal'})
+        'fatigue_state': 'normal', 'mastered_exercises': events})
     sessions = [s for w in prog['weeks'] for ss in w['schedule'].values() for s in ss]
-    by_arch = {}
-    for s in sessions:
-        by_arch.setdefault((s.get('archetype') or {}).get('id'), s)
-    ag_s, test_s = by_arch.get('kb_antiglycolic_session'), by_arch.get('kb_pentathlon_test')
-    check('Pentathlon Prep schedules both', ag_s is not None and test_s is not None, str(sorted(k for k in by_arch if k)))
+    test_s = next((s for s in sessions if (s.get('archetype') or {}).get('id') == 'kb_pentathlon_test'), None)
+    check('Pentathlon Prep schedules its test', test_s is not None, str(len(sessions)))
+    # Pentathlon Prep schedules no anti-glycolytic work (kettlebell sport needs its
+    # glycolytic capacity); the archetype is still the package's, so its slot is
+    # prescribed here as the generator would.
+    ag_arch = next(a for a in loader.load_all_data()['archetypes'] if a['id'] == 'kb_antiglycolic_session')
+    ag_slot = ag_arch['slots'][0]
+    ag_s = {'modality': 'aerobic_base', 'archetype': ag_arch, 'exercises': [{
+        'slot_role': ag_slot['role'], 'slot_type': ag_slot['slot_type'], 'exercise': swing, 'slot': ag_slot,
+        'load': calculate_load(swing, ag_slot, 'density', 1, 'base', 'advanced', False)}]}
     if ag_s and test_s:
         main_ex = [e for e in api.encode_watch_session(ag_s, 'k', max_hr=180)['exercises'] if e['slotRole'] == 'main']
         check('its anti-glycolytic rest waits for the heart rate',

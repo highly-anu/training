@@ -104,8 +104,8 @@ tracks:
 - id: pentathlon
   name: Pentathlon Prep
   description: "Sport preparation for the IKMF kettlebell pentathlon: clean, long cycle press, jerk, half\
-    \ snatch and strict push press, six minutes each. Not for novices \u2014 every one of the five lifts\
-    \ must already be proficient.\n"
+    \ snatch and strict push press, six minutes each. An app adaptation from kettlebell-sport practice,\
+    \ not a Wildman program. Not for novices \u2014 every one of the five lifts must already be proficient.\n"
   phases:
   - id: event_technique
     name: Event Technique
@@ -113,9 +113,10 @@ tracks:
     weeks: 4
     framework_id: kb_pentathlon
     focus: All five events, below scoring pace
-    description: 'Practice each of the five events at a pace below its scoring cap, with hand changes
-      and racking positions rehearsed until they cost nothing. Anti-glycolic volume underneath builds
-      the base the timed sets will draw on.
+    description: 'Three event sessions a week: the five events back to back at the pace you plan to compete
+      at, repeats a little faster, and minute intervals on the four fast events, with hand changes and
+      racking positions rehearsed until they cost nothing. Easy runs on free days build the aerobic base
+      underneath; they are optional and never take a lifting day.
 
       '
     adaptations:
@@ -127,15 +128,20 @@ tracks:
     kind: build
     weeks: 6
     framework_id: kb_pentathlon
-    focus: Six-minute sets toward each event's cap
-    description: 'Sessions build toward six-minute timed sets paced against each event''s scoring cap
-      (20, 10, 20, 18 and 20 RPM), with the five-minute rest the competition gives between events.
+    focus: Mini-pentathlon sets, then a full practice pentathlon
+    description: 'Event sets reach the mini pentathlon''s four minutes at the five-minute competition
+      rest, paced against each event''s scoring cap (20, 10, 20, 18 and 20 RPM) without chasing it. The
+      phase ends with one full practice pentathlon, six minutes per event, as the rehearsal coaches ask
+      for at least once a cycle.
 
       '
     adaptations:
     - Six-minute strength endurance per event
     - Pacing against the RPM cap
     intensity: Event pace, rising toward the cap
+    tests:
+    - archetype: kb_pentathlon_test
+      week: last
     checks:
       archetypes_required:
       - kb_pentathlon_training
@@ -145,8 +151,8 @@ tracks:
     weeks: 2
     framework_id: kb_pentathlon
     focus: Full pentathlon at target pace
-    description: 'Full pentathlon simulations at target pace, then the test itself. Volume comes down
-      so the event is met fresh.
+    description: 'Volume comes down so the event is met fresh: shorter event sessions at target pace,
+      then the full pentathlon as the test.
 
       '
     adaptations:

@@ -249,7 +249,8 @@ def test_the_phase_summary_lists_its_tests():
                                                 'name': 'KB Pentathlon — Clean (reps in 6 min)'}
     assert 'kb_pentathlon_test' not in {a['id'] for a in comp['archetypes']}, 'a test is not a session the phase trains'
     assert any(c.startswith('Test: KB Pentathlon') for c in comp['changes']), comp['changes']
-    assert comp['sessions_per_week'].get('strength_endurance') == 2.0, 'the test counts as the session it replaced'
+    # Volume, repeats and intervals: three a week, the test counted as the volume session.
+    assert comp['sessions_per_week'].get('strength_endurance') == 3.0, 'the test counts as the session it replaced'
 
 
 # ── fidelity ─────────────────────────────────────────────────────────────────

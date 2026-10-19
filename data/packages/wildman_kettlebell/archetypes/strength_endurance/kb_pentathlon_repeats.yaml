@@ -1,0 +1,52 @@
+id: kb_pentathlon_repeats
+name: KB Pentathlon Event Repeats
+modality: strength_endurance
+category: kettlebell
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 40
+applicable_phases:
+- base
+- build
+- peak
+slots:
+- role: prep
+  slot_type: skill_practice
+  duration_minutes: 5
+  intensity: low
+  exercise_filter:
+    exercise_ids:
+    - kb_deadlift
+  notes: ''
+- role: events
+  slot_type: time_domain
+  duration_minutes: 15
+  intensity: high
+  paced: true
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_clean_single
+    - wk_kb_long_cycle_press
+    - kb_jerk_single
+    - wk_kb_half_snatch
+    - wk_kb_push_press_single
+  notes: Five three-minute sets, one per event, a little faster than planned competition pace; four
+    minutes between sets.
+- role: recovery
+  slot_type: skill_practice
+  duration_minutes: 3
+  intensity: low
+  exercise_filter:
+    exercise_ids:
+    - wk_kb_halo
+  notes: ''
+required_equipment:
+- kettlebell
+sources:
+- IKMF
+- Girya Garage (kettlebell sport repeats)
+notes: 'App adaptation from kettlebell-sport practice, not a Wildman program: repeats are three-to-five-minute
+  sets slightly faster than competition pace, resting the set plus one to two minutes. Placed by the
+  Pentathlon Prep training contract.'

@@ -102,23 +102,85 @@ def test_actual_bells_and_mastery_are_not_guessed():
     assert not p['weeks'] and 'mastery' in p['validation_errors'][0]['message']
 
 
+def _module_ids(session):
+    return [m['id'] for m in session['modules']]
+
+
 def test_pentathlon_keeps_the_five_events_and_test_protocol():
+    # Kettlebell-sport practice, not a Wildman program: volume through the five
+    # events capped at the mini pentathlon's four minutes, repeats of three-minute
+    # sets, minute intervals on the four fast events, a full practice pentathlon
+    # closing Timed Sets and the test closing Competition.
     g, _ = setup('pentathlon')
     mastery = g['training_contract']['modules'][0]['requires_mastery']
     p, g, c = plan(track='pentathlon', weeks=12, session_time_minutes=90, mastered_exercises=mastery)
     assert len(p['weeks']) == 12
     tc.verify(p, g['training_contract'], c)
+    for w in p['weeks']:
+        mods = sorted(m for ss in w['schedule'].values() for s in ss for m in _module_ids(s))
+        assert [m for m in mods if m.startswith('pentathlon_')] == [
+            'pentathlon_events', 'pentathlon_intervals', 'pentathlon_repeats'], mods
     for s in sessions(p):
         events = [e for e in s['exercises'] if e['slot_type'] == 'time_domain' and e.get('exercise')]
-        assert [e['exercise']['id'] for e in events] == mastery
-        assert all(e['load']['duration_minutes'] <= 6 for e in events)
-        assert len([e for e in s['exercises'] if e.get('meta')]) == 4, 'event rests are executable blocks'
-    tests = [s for s in sessions(p) if s.get('test')]
-    assert len(tests) == 1
-    final_week = p['weeks'][-1]['schedule']
-    assert tests[0] in final_week[max(final_week)], 'final test uses the last scheduled exposure'
-    assert len([e for e in tests[0]['exercises'] if e.get('standard')]) == 5
-    assert all(e['load']['duration_minutes'] == 6 for e in tests[0]['exercises'] if e.get('standard'))
+        if _module_ids(s) == ['pentathlon_events']:
+            assert [e['exercise']['id'] for e in events] == mastery
+            assert all(e['load']['duration_minutes'] <= (6 if s.get('test') else 4) for e in events)
+            assert len([e for e in s['exercises'] if e.get('meta')]) == 4, 'event rests are executable blocks'
+        elif _module_ids(s) == ['pentathlon_repeats']:
+            assert [e['exercise']['id'] for e in events] == mastery
+            assert all(e['load']['duration_minutes'] <= 3 for e in events)
+            assert {e['load']['duration_minutes'] for e in s['exercises'] if e.get('meta')} <= {4, 3, 2}
+        elif _module_ids(s) == ['pentathlon_intervals']:
+            emoms = [e for e in s['exercises'] if e['slot_type'] == 'emom']
+            assert [e['exercise']['id'] for e in emoms] == [
+                'wk_kb_clean_single', 'kb_jerk_single', 'wk_kb_half_snatch', 'wk_kb_push_press_single']
+            assert all(6 <= e['load']['reps_per_round'] <= 10 for e in emoms)
+    tests = [(w['week_number'], s) for w in p['weeks'] for ss in w['schedule'].values() for s in ss if s.get('test')]
+    assert [n for n, _ in tests] == [10, 12], 'a practice pentathlon ends Timed Sets, the test ends Competition'
+    for n, t in tests:
+        week = p['weeks'][n - 1]['schedule']
+        assert t in week[max(week)], 'a test is the last session of its week'
+        assert len([e for e in t['exercises'] if e.get('standard')]) == 5
+        assert all(e['load']['duration_minutes'] == 6 for e in t['exercises'] if e.get('standard'))
+
+
+def test_pentathlon_runs_are_optional_and_take_only_free_days():
+    g, _ = setup('pentathlon')
+    mastery = g['training_contract']['modules'][0]['requires_mastery']
+
+    def runs(program):
+        return [(w['week_number'], d) for w in program['weeks'] for d, ss in w['schedule'].items()
+                for s in ss if 'easy_aerobic' in _module_ids(s)]
+
+    five, g, c = plan(track='pentathlon', weeks=4, days_per_week=5, mastered_exercises=mastery)
+    tc.verify(five, g['training_contract'], c)
+    assert len(runs(five)) == 8 and not five['compromises'], 'two easy runs a week at five days'
+    for w in five['weeks']:
+        days = {d: _module_ids(s) for d, ss in w['schedule'].items() for s in ss}
+        assert all(len(m) == 1 for m in days.values()), 'a run never shares a lifting day'
+        events_day = next(d for d, m in days.items() if m == ['pentathlon_events'])
+        assert events_day == max(days), 'nothing optional after the volume session'
+    run = next(e for s in sessions(five) for e in s['exercises'] if (e.get('exercise') or {}).get('id') == 'run_zone2')
+    assert run['load']['zone_upper'] == 2 and run['load']['advances_module'] and 'load_note' not in run['load']
+
+    three, _, _ = plan(track='pentathlon', weeks=2, days_per_week=3, mastered_exercises=mastery)
+    assert three['weeks'] and not runs(three), 'three days are the three event sessions'
+    assert three['compromises'] == ['Easy Aerobic Run: 0 of 2 weekly sessions — no free training day for it.']
+
+    no_run, _, _ = plan(track='pentathlon', weeks=2, days_per_week=5, mastered_exercises=mastery,
+                        avoid_movements=['locomotion'])
+    assert no_run['weeks'] and not runs(no_run), 'a run ruled out is left out, not a refusal'
+    assert 'conflicts with an active injury restriction' in no_run['compromises'][0]
+
+
+def test_optional_modules_and_spacing_across_weeks():
+    module = {'id': 'm', 'exposures_per_week': 2, 'min_spacing_days': 2}
+    assert tc._place_optional(module, 30, [4, 5], 60, {}) == [4], 'adjacent free days fit one'
+    assert tc._place_optional(module, 30, [3, 6], 60, {}) == [3, 6]
+    assert tc._place_optional(module, 90, [3, 6], 60, {}) == [], 'too long for the day'
+    placements = list(tc._placements([{'id': 'a', 'exposures_per_week': 1, 'min_spacing_days': 2}],
+                                     {'a': 30}, [1, 3, 5], 60))
+    assert [sorted(p) for p in placements] == [[1], [3], [5]], 'every placement, in preference order'
 
 
 def test_output_gate_catches_corrupt_cycles_and_phase_rules():
