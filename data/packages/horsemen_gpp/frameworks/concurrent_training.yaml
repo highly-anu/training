@@ -20,13 +20,14 @@ modality_priority:
   core: [mixed_modal_conditioning, durability]
   supplementary: [strength_endurance]
 
-intensity_distribution:
-  zone1_2_pct: 0.30
-  zone3_pct: 0.15
-  zone4_5_pct: 0.25
-  max_effort_pct: 0.30
-
-progression_model: rpe_autoregulation
+# The source gives no intensity distribution and no RPE, so none is declared.
+# The schema has no progression model for the source's loading — a 1RM worked
+# up to on the day, then percentages of it, fixed loads or multiples of
+# bodyweight. linear_load is the nearest value: it names load as the currency
+# the analytics read (the generator takes each modality's own model). It does
+# not mean the source adds weight session to session; it states no
+# week-to-week rule.
+progression_model: linear_load
 
 applicable_when:
   training_level:
@@ -62,10 +63,8 @@ incompatible_with:
       to 10-15 min movement prep before existing sessions rather than standalone
       daily sessions.
 
-deload_protocol:
-  frequency_weeks: 4
-  volume_reduction_pct: 0.60
-  intensity_change: reduce_slightly
+# No deload_protocol: the source has no deload week. Every week carries a
+# recovery day (≤65% max HR) and a rest day instead.
 
 # Index 0 = most spread-out (used for taper/deload); others are 2-on-1-off variants
 cadence_options:
@@ -75,28 +74,28 @@ cadence_options:
   6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
 
 sources:
-  - "Horsemen Training Program 2008"
-  - "Gym Jones — Operator Fitness I & II (Twight)"
-  - "Concurrent Training: A Meta-Analysis, Wilson et al."
-  - "Uphill Athlete — Concurrent supplementary strength protocols"
+  - "data/horsemen/horsemen.pdf (Horsemen Training Program 2008)"
 
 notes: >
-  Concurrent training alternates strength and conditioning sessions within the same
-  week. The primary challenge is interference: endurance adaptations (mitochondrial
-  biogenesis, slow-twitch hypertrophy) can blunt strength/power adaptations when
-  both are maximally pursued. Fatigue management is the governing concern, not
-  progressive overload on any single quality. Goal priority weighting drives session
-  allocation: a goal profile with aerobic_base 0.5 + max_strength 0.2 allocates
-  more session slots and total weekly volume to aerobic work. Horsemen 4-day template
-  (Mon strength, Tue conditioning, Thu carries + bodyweight, Sat long ruck/GPP) is
-  a canonical implementation. RPE autoregulation governs load daily to account for
-  accumulated fatigue across modalities.
+  The weekly build of the Horsemen four-month macro. In the source every week
+  is six training days and a rest day: each day is a category — strength,
+  power endurance, job specific, SMMF, progression, circuits, density,
+  accumulation, endurance, recovery — and the workout is picked from that
+  category's list of named workouts. Strength days work up to a 1RM in the
+  day's lift, then work at percentages of it; other loads are fixed or
+  multiples of bodyweight. There is no RPE and no deload week; a recovery
+  day (30-60 minutes at 65% of max heart rate or less) and a rest day sit in
+  every week. This framework simplifies that: it allocates sessions by
+  modality and cadence rather than by the source's day categories, and the
+  same allocation serves all four months, although each month's mix differs
+  in the source. Session lengths are the app's; the source gives none in
+  general.
 
 expectations:
   min_weeks: 12
   ideal_weeks: 16
   min_days_per_week: 4
-  ideal_days_per_week: 5
+  ideal_days_per_week: 6
   min_session_minutes: 60
   ideal_session_minutes: 90
   ideal_long_session_minutes: 120

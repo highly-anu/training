@@ -3,15 +3,16 @@ name: "Horsemen PT Test"
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
-  - novice
   - intermediate
   - advanced
   - elite
-duration_estimate_minutes: 50
+duration_estimate_minutes: 55
 
-# A test of three standards — push-ups and sit-ups in three minutes and a
-# 3-mile run — placed at the start and the end of the four-month macro
-# (philosophy.yaml `tests:`), never picked, and run as written.
+# The source's PT test (Training Program p.31), in its order: max pull-ups,
+# sit-ups and push-ups in three minutes each, a 3-mile run — and an 800 m swim,
+# left out here (see notes). Placed at the start and the end of the four-month
+# macro (philosophy.yaml `tests:`, an app adaptation), never picked, and run
+# as written.
 test: {}
 
 slots:
@@ -21,27 +22,48 @@ slots:
     intensity: zone2
     exercise_filter:
       exercise_ids: [run_zone2]
-    notes: "10 min easy jog with a few push-ups and sit-ups to wake the pattern."
+    notes: >
+      10 min easy jog with a few pull-ups, sit-ups and push-ups. The source
+      opens training days with a warm-up from its list; this one is the
+      app's.
 
-  - role: push_ups
-    slot_type: time_domain
-    duration_minutes: 3
-    rest_sec: 300
+  - role: pull_ups
+    slot_type: sets_reps
+    sets: 1
+    reps: 15
+    rest_sec: 180
     intensity: max_effort
     exercise_filter:
-      exercise_ids: [push_up]
-    standard: pt_push_ups_3min_reps
-    notes: "Three minutes. Count clean reps only: chest to the floor, full lockout."
+      exercise_ids: [pull_up]
+    standard: pull_up_reps
+    notes: >
+      Max pull-ups in one set; 15 is the source's minimum, so keep going past
+      it. Log the reps. Rest is not given in the source; 3 minutes is the
+      app's.
 
   - role: sit_ups
     slot_type: time_domain
     duration_minutes: 3
-    rest_sec: 300
+    rest_sec: 180
     intensity: max_effort
     exercise_filter:
       exercise_ids: [sit_up]
     standard: pt_sit_ups_3min_reps
-    notes: "Three minutes, feet anchored. Count clean reps."
+    notes: >
+      Max sit-ups in three minutes; the source's minimum is 90. Rest is not
+      given in the source; 3 minutes is the app's.
+
+  - role: push_ups
+    slot_type: time_domain
+    duration_minutes: 3
+    rest_sec: 180
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [push_up]
+    standard: pt_push_ups_3min_reps
+    notes: >
+      Max push-ups in three minutes; the source's minimum is 80. Rest is not
+      given in the source; 3 minutes is the app's.
 
   - role: run_3_mile
     slot_type: for_time
@@ -50,14 +72,21 @@ slots:
     exercise_filter:
       exercise_ids: [run_tempo_horsemen]
     standard: run_3mile_minutes
-    notes: "3 miles for time on a flat, measured course. Log the time."
+    notes: "3 miles for time on a flat, measured course; the source's standard is 22:30. Log the time."
 
 required_equipment:
+  - pull_up_bar
   - open_space
 sources:
   - Horsemen
 notes: >
-  The Horsemen PT standards as one test: push-ups in three minutes, sit-ups in
-  three minutes, then the 3-mile run, five minutes between pieces. Run in the
-  first week of the strength phase for a baseline and the last week of
-  maintenance to close the macro; each piece is a result on its own standard.
+  The Horsemen PT test in the source's order: max pull-ups (minimum 15),
+  sit-ups in three minutes (90), push-ups in three minutes (80), a 3-mile run
+  (22:30). The source's fifth event, an 800 m swim (14:30), is left out — an
+  app adaptation: it needs a pool, which almost no athlete's equipment lists,
+  and a test the athlete cannot do as written is skipped whole. Log the swim
+  by hand on its own standard (swim_800m_minutes). The source gives no rest
+  between events; the 3 minutes here is the app's. In the source the PT test
+  is one of the hard job-specific options and is never scheduled; running it
+  in the first week of the strength month and the last week of maintenance
+  is an app adaptation. Each event is a result on its own standard.

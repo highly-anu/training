@@ -15,17 +15,15 @@ applicable_phases:
 sources:
 - Gym Jones
 - Horsemen
-notes: 'Rotating loaded carry circuit using three carry variations: farmer carry (bilateral
-  or suitcase), rack carry (single or double KB at chest), and overhead carry (single
-  or double KB locked out). Each variation stresses a different stability demand —
-  farmer is grip and lat, rack is anti-rotation and thoracic, overhead is shoulder
-  stability and core bracing under load. Distance or time per variation; circuit repeated
-  3–5 rounds. Gym Jones includes farmer carry and bear crawl with DBs as a loaded
-  carry complex. Horsemen uses loaded carries as active rest between strength sets
-  and as standalone GPP. This is durability training — moderate load, sustained tension,
-  quality posture throughout. Not a cardio workout; not a max strength workout.
-
-  '
+notes: >
+  An app adaptation, not in the Horsemen source. A rotating carry circuit:
+  farmer, rack and overhead carries, 3-5 rounds, each stressing a different
+  stability demand — grip and lats, anti-rotation and thoracic posture,
+  shoulder stability and bracing. Moderate load and quality posture; not a
+  cardio or max-strength workout. In the source, carries appear only inside
+  named workouts — 30-60 m farmer carries, suitcase and crosswalk carries, a
+  500 m lunge that changes carry every 50 m, heavy-bag carries — with no
+  carry circuit and no rack or overhead carry circuit.
 slots:
 - role: joint_prep
   slot_type: time_domain
@@ -84,8 +82,8 @@ scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: Reduce to 2 circuit rounds. Drop farmer carry load 20%, rack and overhead
-      load 15%.
+    notes: App scaling; the source has no deload week. Reduce to 2 circuit rounds,
+      drop farmer carry load 20%, rack and overhead load 15%.
   time_limited:
     drop_slots:
     - overhead_carry

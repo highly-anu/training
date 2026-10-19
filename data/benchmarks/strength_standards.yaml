@@ -7,7 +7,6 @@
     1-rep max back squat expressed as a multiple of bodyweight. The most
     broadly applicable measure of lower-body strength and overall athletic
     development. Squat strength is a proxy for general development (Rippetoe).
-    Horsemen standard: 2.0–2.5×BW.
   test_protocol: >
     After a thorough warm-up (multiple progressive sets), perform 1 rep
     maximum effort back squat to legal depth (hip crease below knee).
@@ -26,14 +25,13 @@
       male: 2.00
       female: 1.50
       note: >
-        Strong intermediate. Horsemen lower-range standard.
-        Suitable for most tactical/mountain objectives.
+        Strong intermediate. Suitable for most tactical/mountain objectives.
     elite:
       male: 2.50
       female: 2.00
       note: >
-        Horsemen performance goal. Competitive powerlifting territory.
-        Upper end of tactical athlete range.
+        Competitive powerlifting territory. Upper end of tactical athlete
+        range.
   goal_relevance:
     - sof_operator
     - max_strength_focus
@@ -45,10 +43,10 @@
     exercises: [back_squat, mf_back_squat]
   sources:
     - starting_strength
-    - horsemen_gpp
     - gym_jones
   notes: >
-    Horsemen benchmark is 2.5×BW. SS novice completion is 1.5×BW.
+    SS novice completion is 1.5×BW. The Horsemen program sets no back-squat
+    number (its goals are deadlift and front squat).
     Female standards reflect strength-to-weight ratios adjusted for
     average sex-based lean mass distribution.
 
@@ -60,7 +58,7 @@
   description: >
     1-rep max conventional deadlift expressed as a multiple of bodyweight.
     The deadlift is the most complete measure of posterior chain and overall
-    pulling strength. Horsemen standard is 2.5×BW.
+    pulling strength. The Horsemen program sets 2.5×BW as a goal.
   test_protocol: >
     Conventional or sumo stance (record which). After a thorough warm-up,
     perform 1 rep maximum effort deadlift from floor. Rest 3–5 min between
@@ -78,7 +76,7 @@
       male: 2.50
       female: 2.00
       note: >
-        Horsemen benchmark. Serious athletic standard applicable to
+        The Horsemen program's goal. Serious athletic standard applicable to
         tactical, mountain, and strength-sport contexts.
     elite:
       male: 3.00
@@ -98,7 +96,7 @@
     - horsemen_gpp
     - gym_jones
   notes: >
-    Horsemen target is 2.5×BW. Elite 3.0×BW is world-class powerlifting
+    The Horsemen program's goal is 2.5×BW. Elite 3.0×BW is world-class powerlifting
     territory. Tactical standards typically target the advanced tier (2.5×BW).
 
 - id: strict_press_bw_ratio
@@ -109,7 +107,7 @@
   description: >
     1-rep max strict overhead press (no leg drive) expressed as a multiple
     of bodyweight. A demanding test of shoulder and overhead pressing strength.
-    Horsemen standard is 1.0×BW military press.
+    The Horsemen program sets a 1.0×BW military press as a goal.
   test_protocol: >
     Standing strict press: feet hip-width, no knee bend, bar from rack or
     cleaned to shoulders. After warm-up, perform 1 rep max overhead.
@@ -127,7 +125,7 @@
       male: 1.00
       female: 0.75
       note: >
-        Horsemen military press standard. Strong athletic baseline
+        The Horsemen program's military press goal. Strong athletic baseline
         for pressing-dependent activities.
     elite:
       male: 1.25
@@ -145,7 +143,7 @@
     - starting_strength
     - horsemen_gpp
   notes: >
-    Horsemen benchmark is 1×BW military press. SS novice completion is 0.75×BW.
+    The Horsemen program's goal is a 1×BW military press. SS novice completion is 0.75×BW.
     One of the most honest upper-body strength tests as no momentum assistance
     is permitted.
 
@@ -156,7 +154,7 @@
   lower_is_better: false
   description: >
     1-rep max flat barbell bench press expressed as a multiple of bodyweight.
-    Standard test of horizontal pushing strength. Horsemen benchmark is 1.5×BW.
+    Standard test of horizontal pushing strength. The Horsemen program's goal is 1.5×BW.
   test_protocol: >
     Flat bench, bar to chest, full lockout. No extreme arch (powerlifting
     federation rules acceptable). After warm-up, perform 1 rep max.
@@ -173,7 +171,7 @@
     advanced:
       male: 1.50
       female: 1.10
-      note: Horsemen benchmark. Strong upper-body pressing standard.
+      note: The Horsemen program's goal. Strong upper-body pressing standard.
     elite:
       male: 2.00
       female: 1.50
@@ -190,7 +188,7 @@
     - horsemen_gpp
     - starting_strength
   notes: >
-    Horsemen benchmark is 1.5×BW. Horsemen PT Test II includes 10×BW bench
+    The Horsemen program's goal is 1.5×BW. Horsemen PT Test II includes 10×BW bench
     press (10 reps at bodyweight), which is a strength endurance variant.
 
 - id: power_clean_bw_ratio
@@ -221,7 +219,7 @@
       female: 0.85
       note: >
         Strong power output. Tactical and mountain athlete standard.
-        Horsemen Olympic day range.
+        The range of the Horsemen strength workouts' percentage waves.
     elite:
       male: 1.35
       female: 1.00
@@ -241,7 +239,7 @@
     - horsemen_gpp
     - crossfit
   notes: >
-    Horsemen Olympic day workouts use 80–90% 1RM in wave patterns.
+    Horsemen strength workouts wave power cleans at 80–90% of the day's 1RM (its Olympic day is light form work).
     Power clean is a key SS program exercise at intermediate level.
 
 - id: pull_up_reps
@@ -252,7 +250,7 @@
   description: >
     Maximum consecutive strict dead-hang pull-ups (chin over bar, full arm
     extension at bottom). The most practical measure of relative upper-body
-    pulling strength and bodyweight mastery. Horsemen PT standard is 15+.
+    pulling strength and bodyweight mastery. The Horsemen PT test minimum is 15.
   test_protocol: >
     Dead hang from bar (overhand grip, shoulder-width). From full arm extension,
     pull until chin clears bar. No kipping, no momentum. Count reps to failure.
@@ -291,7 +289,7 @@
     - starting_strength
     - crossfit
   notes: >
-    Horsemen PT standard is 15+ strict pull-ups. Horsemen PT Test II
+    The Horsemen PT test minimum is 15 pull-ups. Horsemen PT Test II
     requires 15 reps at +25# added weight — use pull_up_weighted_bw_ratio
     for that standard. Female standards reflect body composition differences
     in upper-body lean mass.

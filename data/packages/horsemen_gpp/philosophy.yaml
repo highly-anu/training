@@ -6,7 +6,7 @@ core_principles:
   - repeatable_output_under_fatigue
   - simple_equipment_sandbag_barbell_kb_bodyweight_rower
   - function_under_extreme_environment_and_operational_load
-  - strength_standards_are_prerequisites_not_goals
+  - strength_and_conditioning_goals_reached_within_four_months
   - job_specific_conditioning_drives_programming_in_later_phases
   - block_structure_shifts_from_strength_to_power_endurance_to_job_specific
 scope:
@@ -19,15 +19,16 @@ bias:
   - durability
   - strength_endurance
   - mixed_modal_conditioning
-avoid_with:
-  - max_strength
-  - aerobic_base
+avoid_with: []
 required_equipment:
   - barbell
   - plates
   - kettlebell
+  - dumbbell
   - sandbag
   - pull_up_bar
+  - rings
+  - ghd
   - rower
   - box
   - medicine_ball
@@ -35,36 +36,51 @@ required_equipment:
   - tire
   - rope
 intensity_model: block_periodization
-progression_philosophy: volume_based
+# The source loads from a 1RM worked up to on the day, then percentages of
+# it, fixed loads or multiples of bodyweight — load is its currency.
+progression_philosophy: load_based
 sources:
   - "data/horsemen/horsemen.pdf (Horsemen Training Program 2008)"
 notes: >
-  4-month macro: Month 1 strength-dominant (4×strength/14 days), Month 2
-  power-endurance dominant, Month 3 job-specific dominant, Month 4 maintenance.
-  Draws explicitly from Gym Jones (Twight), Mountain Athlete (Shaul), CrossFit
-  (Glassman), and Dan John. Strength standards are prerequisites for the program,
-  not training goals: deadlift 2.5× BW, front squat 1.5× BW, bench 1.5× BW,
-  military press 1× BW. PT test standards: 15+ pull-ups, 200+ SSST reps (KB snatch
-  10min @ 53#), 3-mile run under 20:00. Sandbag get-ups, barbell complexes, and
-  SMMF (Slow Massive Movement) challenges are signature formats. Recovery sessions
-  are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black,
-  Russian Aggression, SMMF) are distinct from generic archetypes.
+  Written by "the Horsemen" for special-operations operators ("Team guys") to
+  build a broad operator base of fitness. It states no prerequisites and has
+  no novice path; daily 1RM work, Olympic lifts at 80-100% and gymnastics such
+  as handstand push-ups and rope climbs assume an experienced athlete. Its
+  numbers are goals to reach within four months, not entry standards:
+  deadlift 2.5x, front squat 1.5x, bench press 1.5x and military press 1.0x
+  bodyweight, 3 miles in under 20:00, and at least 200 on the Secret Service
+  Snatch Test (SSST). The PT test is a separate list: max pull-ups (minimum
+  15), sit-ups in 3 minutes (90), push-ups in 3 minutes (80), a 3-mile run
+  (22:30) and an 800 m swim (14:30). The program is four 28-day months —
+  strength, power endurance, job specific, maintenance — run two or three
+  times. Every week is six sessions and a rest day, with recovery days (30-60
+  minutes at 65% of max heart rate or less) built in. Each day is a category —
+  strength, power endurance, job specific, SMMF, progression, circuits,
+  density, accumulation, endurance or recovery — and the workout is picked
+  from that category's list of named workouts. Loads come from a 1RM worked up
+  to on the day, then percentages of it, fixed loads or multiples of
+  bodyweight; there is no RPE and no deload week. This package simplifies the
+  source: its archetypes stand in for the categories, and the four-month
+  template and the named workouts are not yet encoded as written.
 
 # Every modality concurrent_training and gpp_circuits prescribe now has an
 # archetype in this package. Borrowing, where it happens, is declared below.
 self_contained: true
 
-# Two tracks: the 4-month macro on concurrent training, and GPP circuits as a
-# repeating block. Phase text is drafted from this package's own notes and
-# framework notes — review before relying on it.
+# Two tracks: the source's four-month macro, and GPP circuits — an app
+# adaptation with no counterpart in the source — as a repeating block. Phase
+# text follows the source's month templates (Training Program pp.3-6).
 primary_track_id: four_month_macro
 tracks:
   - id: four_month_macro
     name: "4-Month Macro"
     description: >
-      Month by month from strength to the job: strength-dominant, then
-      power-endurance, then job-specific, then maintenance. The strength
-      standards are prerequisites for entering it, not its goals.
+      The source's four months — strength, power endurance, job specific,
+      maintenance — each a 28-day template started on the 1st of the month,
+      with the days left over free, and the whole run two or three times.
+      Every week is six training days and a rest day. The strength and
+      conditioning numbers the source names are what it aims to reach in
+      four months.
     phases:
       - id: strength
         name: "Strength"
@@ -73,14 +89,20 @@ tracks:
         framework_id: concurrent_training
         focus: "Strength-dominant month"
         description: >
-          Month one leans on strength — four strength exposures every two
-          weeks — with conditioning held at a level that does not interfere.
-          RPE autoregulation sets the day's load against accumulated fatigue.
+          Month one: strength twice a week, on days 1 and 5; a job-specific
+          day, a power-endurance day and one rotating day (SMMF, power, a
+          progression workout or a circuit) between them; recovery on day 6
+          and rest on day 7. Strength days work up to a 1RM in the day's lift,
+          then percentages of it, then accessory rounds; there is no RPE.
+          The source lists the PT test among its hard job-specific options
+          and never schedules it; testing at the start and the end of the
+          macro is an app adaptation, because the source's goals are for four
+          months.
         adaptations:
-          - "Maximal and relative strength"
-          - "Fatigue management across modalities"
-        intensity: "Heavy strength; conditioning held back"
-        # The macro's baseline: the PT standards in its first week.
+          - "Maximal strength toward the bodyweight goals"
+          - "Power endurance and job-specific capacity kept alongside it"
+        intensity: "Heavy: a 1RM worked up to on the day, then percentages of it"
+        # App adaptation: the PT test as a baseline in the macro's first week.
         tests:
           - archetype: horsemen_pt_test
             week: first
@@ -92,9 +114,11 @@ tracks:
         framework_id: concurrent_training
         focus: "Power-endurance month"
         description: >
-          Month two turns strength into repeatable output: barbell complexes,
-          sandbag work and conditioning that asks for power again and again
-          under fatigue.
+          Month two puts power endurance first — about four sessions every two
+          weeks: runs with get-ups, the Secret Service Snatch Test, Tabata, a
+          5K row, EMOMs. Strength drops to maintenance, about twice in two
+          weeks, beside job-specific days, an endurance session of 60 minutes
+          or more, recovery and a rest day each week.
         adaptations:
           - "Repeatable power under fatigue"
           - "Work capacity"
@@ -106,13 +130,14 @@ tracks:
         framework_id: concurrent_training
         focus: "Job-specific month"
         description: >
-          Month three shapes the work to the job: rucks, loaded carries, named
-          workouts and the PT-test events, so fitness is expressed in the forms
-          it will be needed.
+          Month three makes job-specific days most of the week: climbing and
+          grip work, leg blasters, a ruck run, the PT tests, tire and sled
+          work. Strength and power endurance alternate around them, with
+          recovery on day 6 and rest on day 7.
         adaptations:
           - "Task-specific conditioning"
-          - "Load-carriage durability"
-        intensity: "Task-paced"
+          - "Grip, climbing and load-carriage capacity"
+        intensity: "Hard, job-paced"
       - id: maintenance
         name: "Maintenance"
         kind: maintenance
@@ -120,14 +145,17 @@ tracks:
         framework_id: concurrent_training
         focus: "Maintenance month"
         description: >
-          Month four holds what the macro built at a sustainable dose, with
-          low-heart-rate recovery sessions (65% of max or less) between the
-          hard days.
+          Month four holds what the macro built: recovery twice a week at 65%
+          of max heart rate or less, circuits, strength, and a hard
+          job-specific day, with rest on day 7. The source lists the PT test
+          among its hard job-specific options and never schedules it; testing
+          at the start and the end of the macro is an app adaptation, because
+          the source's goals are for four months.
         adaptations:
           - "Retained strength and conditioning"
           - "Recovery"
-        intensity: "Sustainable; recovery at ≤65% max HR"
-        # The macro's close: the PT standards again in its last week.
+        intensity: "Hard days between recovery at ≤65% max HR"
+        # App adaptation: the PT test again in the macro's last week.
         tests:
           - archetype: horsemen_pt_test
             week: last
@@ -135,8 +163,9 @@ tracks:
   - id: gpp_circuits
     name: "GPP Circuits"
     description: >
-      Broad work capacity and durability through circuits, carries and
-      fixed-task benchmarks, repeated as a block.
+      An app adaptation, not in the Horsemen source: broad work capacity and
+      durability through circuits, carries and fixed tasks, repeated as a
+      block.
     phases:
       - id: gpp_block
         name: "GPP Block"
@@ -146,12 +175,10 @@ tracks:
         framework_id: gpp_circuits
         focus: "Work capacity and durability"
         description: >
-          Sandbag complexes, loaded-carry circuits and bodyweight circuits,
-          progressed by time-to-task: the same circuit faster, heavier or with
-          less rest. Named benchmarks and SMMF efforts test work capacity and
-          mental durability at once.
+          An app adaptation, not in the Horsemen source. Sandbag, loaded-carry
+          and bodyweight circuits progressed by time-to-task: the same circuit
+          faster, heavier or with less rest.
         adaptations:
           - "General work capacity"
           - "Durability under load"
-          - "Mental durability"
         intensity: "Time-to-task"

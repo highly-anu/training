@@ -14,17 +14,15 @@ applicable_phases:
 sources:
 - Horsemen
 - Gym Jones
-notes: 'Horsemen-style 5–8 movement sandbag complex performed for 3–5 rounds. No rest
-  between movements within a round; rest 60–90 seconds between rounds. Total session
-  time is honest GPP work — the athlete accumulates fatigue across diverse movement
-  patterns with the same implement. Sandbag loads range 60–95 lb; select load based
-  on the athlete''s capacity for quality reps across all movements. If any movement
-  breaks down before the round is complete, load is too heavy. Horsemen philosophy:
-  durability and repeatable output under fatigue, not peak strength. Movements include:
-  clean & press, front squat, bent row, deadlift, lunge, shoulder carry, get-up, half
-  moon (arc overhead from side to side), double eagle (shoulder + squat + drag).
-
-  '
+notes: >
+  An app adaptation, not in the Horsemen source, which has no sandbag
+  complex of this kind. A 5-8 movement sandbag complex for 3-5 rounds, no
+  rest between movements and 60-90 seconds between rounds; if any movement
+  breaks down before the round is done, the load is too heavy. The source's
+  sandbag work is inside its named workouts: get-ups, clean and squat, half
+  moons, the Double Eagle (clean to the shoulders, 10 deep squats, drag a
+  tire 40 ft and back), squat jumps, clean and press, and heavy-bag carries
+  and runs, at 15-105 lb.
 slots:
 - role: warm_up_movement
   slot_type: time_domain
@@ -58,8 +56,8 @@ scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.9
-    notes: Reduce to 2 rounds. Drop load 20%. Maintain all movement patterns. Extend
-      rest to 90–120 sec between rounds.
+    notes: App scaling; the source has no deload week. Reduce to 2 rounds, drop
+      load 20%, extend rest to 90–120 sec between rounds.
   time_limited:
     drop_slots:
     - conditioning_finisher

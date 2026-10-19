@@ -21,14 +21,16 @@ sources:
 - Gym Jones
 - Dan John
 notes: >
-  Month 1 of the Horsemen macro is strength-dominant — roughly four strength
-  sessions per fourteen days. The standards the program names are prerequisites
-  rather than goals: deadlift 2.5x bodyweight, front squat 1.5x, bench 1.5x,
-  military press 1x. An athlete who has them trains here to hold them while the
-  later blocks do the work; an athlete who does not spends this block earning them.
-  One main lift taken heavy, one secondary compound, then pulling and carrying
-  accessory work. Not a bodybuilding session: total working sets stay low so the
-  session does not compete with the conditioning days around it.
+  The source's strength days start by working up to a 1RM in the day's lift
+  — front squat, deadlift, standing press, push press, squat clean and
+  others — then work at percentages of it (for example 10 x 3 at 75% every
+  40 seconds, or 5 x 3 at 85%), then two or three rounds of accessory work.
+  Month 1 runs strength twice a week. This block's slots simplify that: a
+  squat main lift at a fixed percentage, a press, a hinge accessory and a
+  carry, with no daily 1RM slot yet, and the main lift is always a squat
+  where the source's varies by workout. The bodyweight numbers the source
+  names (deadlift 2.5x, front squat 1.5x, bench 1.5x, military press 1x) are
+  the program's goals within four months.
 slots:
 - role: warm_up
   slot_type: time_domain
@@ -37,9 +39,9 @@ slots:
   exercise_filter:
     category: mobility
   notes: >
-    Thoracic extension, hip flexor and ankle work, then empty-bar and ramping
-    warm-up sets of the main lift. Do not skip the ramp — the first working set
-    should not be the first heavy set.
+    Mobility, then empty-bar and ramping warm-up sets of the main lift. The
+    app's warm-up; the source opens training days with a loaded warm-up from
+    its list.
 - role: main_lift
   slot_type: sets_reps
   sets: 5
@@ -51,9 +53,9 @@ slots:
     movement_pattern: squat
     category: barbell
   notes: >
-    Squat or deadlift variant, 5x3 to 5x5 at 82-88% of 1RM. Stop the session's
-    main work if bar speed collapses — the Horsemen strength block feeds the rest
-    of the program and is not the place to grind singles.
+    Squat variant, 5 x 3-5 at about 85% of 1RM — the app's simplification. In
+    the source the day's lift is worked up to a 1RM first, and the
+    percentage work is read from that day's max.
 - role: secondary_compound
   slot_type: sets_reps
   sets: 3
@@ -65,8 +67,8 @@ slots:
     movement_pattern: press
     category: barbell
   notes: >
-    Press or bench, 3x5 at 70-78%. Alternate strict press and bench across the
-    block so both standards are maintained.
+    Press or bench, 3x5 at 70-78% (the app's). Alternate strict press and
+    bench across the block; both carry a bodyweight goal in the source.
 - role: posterior_accessory
   slot_type: sets_reps
   sets: 3
@@ -86,15 +88,16 @@ slots:
   exercise_filter:
     movement_pattern: carry
   notes: >
-    4 x 40 m heavy carry. Farmer, rack or zercher. This is the bridge between the
-    strength block and the durability work the program is actually built around.
+    4 x 40 m heavy carry (the app's). Source strength days end with
+    accessory rounds that often include a carry, crawl, sled or tire drag.
 scaling:
   deload:
     volume_multiplier: 0.6
     intensity_pct: 0.85
     notes: >
-      Drop to 3 working sets on the main lift at 70-75%, keep the secondary
-      compound at 2 sets, cut the carry finisher.
+      App scaling; the source has no deload week. Drop to 3 working sets on
+      the main lift at 70-75%, keep the secondary compound at 2 sets, cut the
+      carry finisher.
   time_limited:
     drop_slots:
     - posterior_accessory

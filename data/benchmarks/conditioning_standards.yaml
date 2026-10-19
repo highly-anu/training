@@ -60,38 +60,41 @@
   metric_type: reps
   lower_is_better: false
   description: >
-    10-minute kettlebell snatch test using a 24kg (53 lb) bell. Can switch
-    hands as many times as needed; cannot put the bell down. The premier test
-    of power endurance, grip endurance, aerobic capacity, and mental toughness
-    in the Horsemen and tactical fitness world. Team Guy Standard is 200 reps.
-    Record is 275 reps per Horsemen documentation.
+    10-minute kettlebell snatch test with a 24kg (53 lb) bell for men,
+    switching hands as often as needed. A test of power endurance, grip
+    endurance, aerobic capacity and mental toughness. The Horsemen program
+    lists it as a power-endurance workout and sets 200 as its four-month goal;
+    its scale is 100 lethargic, 150 good (the Team Guy Standard), 200 really
+    good, 250 ridiculous, 275 the record.
   test_protocol: >
-    Use a 24kg (53 lb) kettlebell for male athletes (16kg/35 lb for females).
-    From a standing start, snatch the bell continuously for 10 full minutes.
-    Can switch hands freely but may not rest the bell on the ground, rack it
-    on the forearm, or otherwise stop movement. Count every completed snatch
-    rep (hand switch counts as a rep opportunity — must lock out overhead for
-    each rep to count). Record total reps at 10:00. Test should be attempted
-    only after establishing solid snatch mechanics and adequate grip conditioning.
+    Use a 24kg (53 lb) kettlebell for male athletes (16kg/35 lb for females,
+    this app's choice; the source names only the men's bell). Snatch for 10
+    full minutes, switching hands freely; each rep counts only when locked out
+    overhead. Record total reps at 10:00. The Horsemen source gives two rule
+    sets. "Official" (Gentlemen's) rules: the bell may be set down. "Tier One"
+    rules: it may not — one transfer swing per hand change, and rest only with
+    the bell locked out overhead. Note which rules a result was done under;
+    the levels do not distinguish them. Attempt only after establishing solid
+    snatch mechanics and adequate grip conditioning.
   levels:
     entry:
       male: 100
       female: 80
       note: >
-        Basic work capacity. Can complete the test without putting the bell
-        down. Starting point for serious snatch conditioning.
+        Horsemen: 100 is "lethargic". Basic work capacity; the starting point
+        for serious snatch conditioning.
     intermediate:
       male: 150
       female: 120
       note: >
-        Horsemen Team Guy Standard is described at 150 range in program notes.
-        Solid tactical fitness baseline. Denotes real work capacity.
+        Horsemen: 150 is "good", the Team Guy Standard. Solid tactical fitness
+        baseline; real work capacity.
     advanced:
       male: 200
       female: 160
       note: >
-        Horsemen Team Guy Standard (200 reps). Represents elite tactical
-        conditioning. Requires systematic training to achieve.
+        Horsemen: 200 is "really good" and the program's four-month goal.
+        Requires systematic training to achieve.
     elite:
       male: 250
       female: 200
@@ -106,8 +109,9 @@
     - horsemen_gpp
     - wildman_kettlebell
   notes: >
-    Horsemen documentation: 200+ reps = Team Guy Standard; 250 = "ridiculous";
-    275 = record. Female standard uses 16kg (35 lb) bell. This test combines
+    Horsemen Training Program scale: 100 lethargic, 150 good (Team Guy
+    Standard), 200 really good (the program's goal), 250 ridiculous, 275
+    record. Female standard uses 16kg (35 lb) bell. This test combines
     aerobic, anaerobic, grip, and mental endurance in a single 10-minute window —
     it is both a benchmark and a training tool. SSST prep requires progressive
     KB snatch volume work over 4–8 weeks before testing.
